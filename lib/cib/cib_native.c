@@ -276,20 +276,21 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     cib->call_timeout = PCMK__IPC_TIMEOUT;
 
-    if (type == cib_command) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_RW;
+    switch (type) {
+        case cib_command:
+        case cib_command_nonblocking:
+            // @COMPAT cib_command_nonblocking is deprecated since 3.0.2
+            cib->state = cib_connected_command;
+            channel = PCMK__SERVER_BASED_RW;
+            break;
 
-    } else if (type == cib_command_nonblocking) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_SHM;
+        case cib_query:
+            cib->state = cib_connected_query;
+            channel = PCMK__SERVER_BASED_RO;
+            break;
 
-    } else if (type == cib_query) {
-        cib->state = cib_connected_query;
-        channel = PCMK__SERVER_BASED_RO;
-
-    } else {
-        return -ENOTCONN;
+        default:
+            return -ENOTCONN;
     }
 
     pcmk__trace("Connecting %s channel", channel);

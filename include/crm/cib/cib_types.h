@@ -53,6 +53,8 @@ enum cib_conn_type {
     cib_query,
 
     cib_no_connection,
+
+    //! \deprecated Use \c cib_command instead
     cib_command_nonblocking,
 };
 

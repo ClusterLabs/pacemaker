@@ -155,13 +155,11 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name,
-                                cib_command_nonblocking);
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
         // A short wait that usually avoids stalling the FSA
         sleep(1);
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name,
-                                    cib_command_nonblocking);
+        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     }
 
     if (rc != pcmk_ok) {
