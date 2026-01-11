@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <inttypes.h>               // PRIu32
-#include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
 #include <stdint.h>                 // uint32_t
 #include <stdlib.h>                 // free
@@ -64,7 +63,7 @@ based_cpg_dispatch(cpg_handle_t handle,
                      pcmk__xe_get(msg, PCMK__XA_SRC));
     }
 
-    based_process_request(msg, true, NULL);
+    based_process_request(msg, NULL);
 
     pcmk__xml_free(xml);
     free(data);

@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <errno.h>                      // ECONNREFUSED, ENOMEM
-#include <stdbool.h>
 #include <stddef.h>                     // NULL, size_t
 #include <stdint.h>                     // int32_t, uint32_t
 #include <sys/types.h>                  // gid_t, uid_t
@@ -198,7 +197,7 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         goto cleanup;
     }
 
-    based_process_request(msg, true, client);
+    based_process_request(msg, client);
 
 cleanup:
     pcmk__xml_free(msg);

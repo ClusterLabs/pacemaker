@@ -648,17 +648,14 @@ send_peer_reply(xmlNode *msg, const char *originator)
  * \internal
  * \brief Handle an IPC or CPG message containing a request
  *
- * \param[in,out] request     Request XML
- * \param[in]     privileged  If \c true, operations with
- *                            \c cib__op_attr_privileged can be run
- * \param[in]     client      IPC client that sent request (\c NULL if request
- *                            came from CPG)
+ * \param[in,out] request  Request XML
+ * \param[in]     client   IPC client that sent request (\c NULL if request came
+ *                         from CPG)
  *
  * \return Standard Pacemaker return code
  */
 int
-based_process_request(xmlNode *request, bool privileged,
-                      const pcmk__client_t *client)
+based_process_request(xmlNode *request, const pcmk__client_t *client)
 {
     // @TODO: Break into multiple smaller functions
     uint32_t call_options = cib_none;
@@ -779,12 +776,7 @@ based_process_request(xmlNode *request, bool privileged,
 
     start_time = time(NULL);
 
-    if (!privileged
-        && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
-
-        rc = EACCES;
-
-    } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         rc = cib__perform_op_ro(op_function, request, &based_cib, &output);
 
     } else {
