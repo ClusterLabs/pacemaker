@@ -35,56 +35,38 @@ static GHashTable *operation_table = NULL;
 
 static const cib__operation_t cib_ops[] = {
     {
-        PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete,
-        cib__op_attr_modifies|cib__op_attr_privileged
+        PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete, cib__op_attr_modifies
     },
     {
         PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
     {
         PCMK__CIB_REQUEST_BUMP, cib__op_bump,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
     {
         PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_replaces
-        |cib__op_attr_writes_through
+        cib__op_attr_modifies|cib__op_attr_replaces|cib__op_attr_writes_through
     },
     {
         PCMK__CIB_REQUEST_CREATE, cib__op_create,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
     {
         PCMK__CIB_REQUEST_DELETE, cib__op_delete,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
     {
         PCMK__CIB_REQUEST_ERASE, cib__op_erase,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_replaces
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_replaces|cib__op_attr_transaction
     },
     {
-        PCMK__CIB_REQUEST_IS_PRIMARY, cib__op_is_primary,
-        cib__op_attr_privileged
+        PCMK__CIB_REQUEST_IS_PRIMARY, cib__op_is_primary, cib__op_attr_none
     },
     {
         PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
     {
         PCMK__CIB_REQUEST_NOOP, cib__op_noop, cib__op_attr_none
@@ -95,7 +77,7 @@ static const cib__operation_t cib_ops[] = {
     {
         // @COMPAT: Drop cib__op_attr_modifies when we drop legacy mode support
         PCMK__CIB_REQUEST_PRIMARY, cib__op_primary,
-        cib__op_attr_modifies|cib__op_attr_privileged|cib__op_attr_local
+        cib__op_attr_modifies|cib__op_attr_local
     },
     {
         PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
@@ -103,7 +85,6 @@ static const cib__operation_t cib_ops[] = {
     {
         PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
         cib__op_attr_modifies
-        |cib__op_attr_privileged
         |cib__op_attr_replaces
         |cib__op_attr_writes_through
         |cib__op_attr_transaction
@@ -112,19 +93,17 @@ static const cib__operation_t cib_ops[] = {
         PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_local
     },
     {
-        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary,
-        cib__op_attr_privileged|cib__op_attr_local
+        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary, cib__op_attr_local
     },
     {
-        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_privileged
+        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_none
     },
     {
-        PCMK__CIB_REQUEST_SYNC, cib__op_sync, cib__op_attr_privileged
+        PCMK__CIB_REQUEST_SYNC, cib__op_sync, cib__op_attr_none
     },
     {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
         cib__op_attr_modifies
-        |cib__op_attr_privileged
         |cib__op_attr_writes_through
         |cib__op_attr_transaction
     },
