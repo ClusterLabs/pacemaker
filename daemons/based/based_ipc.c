@@ -30,7 +30,6 @@
 
 static qb_ipcs_service_t *ipcs_ro = NULL;
 static qb_ipcs_service_t *ipcs_rw = NULL;
-static qb_ipcs_service_t *ipcs_shm = NULL;
 
 /*!
  * \internal
@@ -304,7 +303,7 @@ static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
 void
 based_ipc_init(void)
 {
-    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
+    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipc_ro_callbacks,
                           &ipc_rw_callbacks);
 }
 
@@ -323,11 +322,6 @@ based_ipc_cleanup(void)
     if (ipcs_rw != NULL) {
         pcmk__drop_all_clients(ipcs_rw);
         g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
-    }
-
-    if (ipcs_shm != NULL) {
-        pcmk__drop_all_clients(ipcs_shm);
-        g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
     }
 
     /* Drop remote clients here because they're part of the IPC client table and

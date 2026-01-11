@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2025 the Pacemaker project contributors
+ * Copyright 2006-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -61,7 +61,6 @@ extern "C" {
 
 #define PCMK__SERVER_BASED_RO		"cib_ro"
 #define PCMK__SERVER_BASED_RW		"cib_rw"
-#define PCMK__SERVER_BASED_SHM		"cib_shm"
 
 /*
  * IPC commands that can be sent to Pacemaker daemons

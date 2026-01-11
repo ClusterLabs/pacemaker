@@ -30,7 +30,6 @@
 
 static qb_ipcs_service_t *cib_ro = NULL;
 static qb_ipcs_service_t *cib_rw = NULL;
-static qb_ipcs_service_t *cib_shm = NULL;
 
 static qb_ipcs_service_t *attrd_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
@@ -518,7 +517,7 @@ ipc_proxy_init(void)
 {
     ipc_clients = pcmk__strkey_table(NULL, NULL);
 
-    pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_shm, &cib_proxy_callbacks_ro,
+    pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_proxy_callbacks_ro,
                           &cib_proxy_callbacks_rw);
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
     pcmk__serve_fenced_ipc(&fencer_ipcs, &fencer_proxy_callbacks);
@@ -539,7 +538,7 @@ ipc_proxy_cleanup(void)
     g_clear_pointer(&ipc_providers, g_list_free);
     g_clear_pointer(&ipc_clients, g_hash_table_destroy);
 
-    pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
+    pcmk__stop_based_ipc(cib_ro, cib_rw);
 
     g_clear_pointer(&attrd_ipcs, qb_ipcs_destroy);
     g_clear_pointer(&fencer_ipcs, qb_ipcs_destroy);
@@ -548,5 +547,4 @@ ipc_proxy_cleanup(void)
 
     cib_ro = NULL;
     cib_rw = NULL;
-    cib_shm = NULL;
 }
