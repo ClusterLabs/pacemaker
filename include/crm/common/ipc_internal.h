@@ -254,9 +254,6 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                            struct qb_ipcs_service_handlers *ro_cb,
                            struct qb_ipcs_service_handlers *rw_cb);
 
-void pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
-                          qb_ipcs_service_t *ipcs_rw);
-
 static inline const char *
 pcmk__ipc_sys_name(const char *ipc_name, const char *fallback)
 {

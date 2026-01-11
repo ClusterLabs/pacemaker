@@ -1049,23 +1049,6 @@ pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
 
 /*!
  * \internal
- * \brief Destroy IPC servers for the CIB manager API
- *
- * \param[in,out] ipcs_ro  IPC server for read-only the CIB manager API
- * \param[in,out] ipcs_rw  IPC server for read/write the CIB manager API
- *
- * \note This is a convenience function for calling qb_ipcs_destroy() for each
- *       argument.
- */
-void
-pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro, qb_ipcs_service_t *ipcs_rw)
-{
-    qb_ipcs_destroy(ipcs_ro);
-    qb_ipcs_destroy(ipcs_rw);
-}
-
-/*!
- * \internal
  * \brief Add an IPC server to the main loop for the controller API
  *
  * \param[in] cb  IPC callbacks
