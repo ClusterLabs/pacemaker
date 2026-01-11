@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -201,6 +201,8 @@ done:
     // Run mainloop
     controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(controld_globals.mainloop);
+    g_main_loop_unref(controld_globals.mainloop);
+
     if (pcmk__is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
         pcmk__info("Inhibiting automated respawn");
         exit_code = CRM_EX_FATAL;

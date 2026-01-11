@@ -162,6 +162,7 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker scheduler successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 
 done:
     g_strfreev(options.remainder);

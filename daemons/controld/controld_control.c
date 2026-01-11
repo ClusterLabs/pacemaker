@@ -277,8 +277,6 @@ crmd_exit(crm_exit_t exit_code)
                     g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
-        /* Won't do anything yet, since we're inside it now */
-        g_main_loop_unref(mloop);
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }

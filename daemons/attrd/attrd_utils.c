@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -80,7 +80,6 @@ attrd_shutdown(int nsig)
         crm_exit(CRM_EX_OK);
     } else {
         g_main_loop_quit(mloop);
-        g_main_loop_unref(mloop);
     }
 }
 
@@ -102,6 +101,7 @@ void
 attrd_run_mainloop(void)
 {
     g_main_loop_run(mloop);
+    g_clear_pointer(&mloop, g_main_loop_unref);
 }
 
 /* strlen("value") */
