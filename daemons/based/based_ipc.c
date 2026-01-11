@@ -61,17 +61,16 @@ based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
  * \internal
  * \brief Handle a message from an IPC connection
  *
- * \param[in,out] c           Established IPC connection
- * \param[in]     data        The message data read from the connection - this
- *                            can be a complete IPC message or just a part of
- *                            one if it's very large
- * \param[in]     privileged  If \c true, operations with
- *                            \c cib__op_attr_privileged can be run
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[in]     size  Unused
  *
  * \return 0 in all cases
  */
 static int32_t
-dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
+based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -87,9 +86,6 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
-
-    pcmk__trace("Dispatching %sprivileged request from client %s",
-                (privileged? "" : "un"), client->id);
 
     rc = pcmk__ipc_msg_append(&client->buffer, data);
 
@@ -203,45 +199,9 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         return 0;
     }
 
-    based_process_request(msg, privileged, client);
+    based_process_request(msg, true, client);
     pcmk__xml_free(msg);
     return 0;
-}
-
-/*!
- * \internal
- * \brief Handle a message from a read-only IPC connection
- *
- * \param[in,out] c     Established IPC connection
- * \param[in]     data  The message data read from the connection - this can be
- *                      a complete IPC message or just a part of one if it's
- *                      very large
- * \param[in]     size  Unused
- *
- * \return 0 in all cases
- */
-static int32_t
-based_ipc_dispatch_ro(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    return dispatch_common(c, data, false);
-}
-
-/*!
- * \internal
- * \brief Handle a message from a read/write IPC connection
- *
- * \param[in,out] c     Established IPC connection
- * \param[in]     data  The message data read from the connection - this can be
- *                      a complete IPC message or just a part of one if it's
- *                      very large
- * \param[in]     size  Unused
- *
- * \return 0 in all cases
- */
-static int32_t
-based_ipc_dispatch_rw(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    return dispatch_common(c, data, true);
 }
 
 /*!
@@ -280,18 +240,10 @@ based_ipc_destroy(qb_ipcs_connection_t *c)
     based_ipc_closed(c);
 }
 
-static struct qb_ipcs_service_handlers ipc_ro_callbacks = {
+static struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = based_ipc_accept,
     .connection_created = NULL,
-    .msg_process = based_ipc_dispatch_ro,
-    .connection_closed = based_ipc_closed,
-    .connection_destroyed = based_ipc_destroy,
-};
-
-static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
-    .connection_accept = based_ipc_accept,
-    .connection_created = NULL,
-    .msg_process = based_ipc_dispatch_rw,
+    .msg_process = based_ipc_dispatch,
     .connection_closed = based_ipc_closed,
     .connection_destroyed = based_ipc_destroy,
 };
@@ -303,8 +255,7 @@ static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
 void
 based_ipc_init(void)
 {
-    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipc_ro_callbacks,
-                          &ipc_rw_callbacks);
+    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipc_callbacks, &ipc_callbacks);
 }
 
 /*!
