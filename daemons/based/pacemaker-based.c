@@ -330,7 +330,7 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     pcmk__notice("Starting Pacemaker CIB manager");
 
-    old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
+    old_instance = crm_ipc_new(PCMK__SERVER_BASED_RW, 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
          * pcmk__err()
