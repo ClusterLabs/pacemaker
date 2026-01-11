@@ -1029,6 +1029,9 @@ pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
                       struct qb_ipcs_service_handlers *ro_cb,
                       struct qb_ipcs_service_handlers *rw_cb)
 {
+    pcmk__assert((ipcs_ro != NULL) && (*ipcs_ro == NULL) && (ro_cb != NULL)
+                 && (ipcs_rw != NULL) && (*ipcs_rw == NULL) && (rw_cb != NULL));
+
     *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO, QB_IPC_SHM,
                                        ro_cb);
 
@@ -1055,6 +1058,8 @@ pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
 qb_ipcs_service_t *
 pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert(cb != NULL);
+
     return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_SHM, cb);
 }
 
@@ -1071,6 +1076,8 @@ void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_attrd),
                                     QB_IPC_SHM, cb);
 
@@ -1119,6 +1126,8 @@ void
 pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(pcmk_ipc_fenced),
                                               QB_IPC_SHM, cb, QB_LOOP_HIGH);
 
@@ -1144,6 +1153,8 @@ void
 pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_pacemakerd),
                                     QB_IPC_SHM, cb);
 
@@ -1175,6 +1186,8 @@ void
 pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
                            struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_schedulerd),
                                     QB_IPC_SHM, cb);
 
