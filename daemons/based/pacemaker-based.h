@@ -39,6 +39,6 @@ void based_set_local_node_dc(bool value);
 bool based_shutting_down(void);
 bool based_stand_alone(void);
 
-void based_terminate(crm_exit_t exit_status);
+void based_quit_main_loop(crm_exit_t ec);
 
 #endif // PACEMAKER_BASED__H

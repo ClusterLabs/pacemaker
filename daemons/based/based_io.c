@@ -93,6 +93,10 @@ write_cib_async(gpointer user_data)
     pid_t pid = 0;
     int blackbox_state = qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0);
 
+    if (based_shutting_down()) {
+        pcmk__info("Skipping CIB write during shutdown");
+    }
+
     /* Disable blackbox logging before the fork to avoid two processes writing
      * to the same shared memory. The disable should not be done in the child,
      * because this would close shared memory files in the parent.

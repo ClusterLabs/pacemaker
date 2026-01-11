@@ -69,6 +69,10 @@ digest_timer_cb(gpointer data)
 {
     xmlNode *ping = NULL;
 
+    if (based_shutting_down()) {
+        return G_SOURCE_REMOVE;
+    }
+
     if (!based_get_local_node_dc()) {
         // Only the DC sends a ping
         return G_SOURCE_REMOVE;
@@ -685,6 +689,11 @@ based_process_request(xmlNode *request, bool privileged,
 
     xmlNode *output = NULL;
     time_t start_time = 0;
+
+    if (based_shutting_down()) {
+        pcmk__info("Ignoring pending CIB request during shutdown");
+        return ENOTCONN;
+    }
 
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);

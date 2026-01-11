@@ -229,6 +229,7 @@ static void
 based_cleanup(void)
 {
     based_callbacks_cleanup();
+    based_cluster_disconnect();
     based_io_cleanup();
     based_ipc_cleanup();
     based_remote_cleanup();
@@ -239,48 +240,39 @@ based_cleanup(void)
 
 /*!
  * \internal
- * \brief Clean up data structures and exit
+ * \brief Set an exit code and quit the main loop
  *
- * \param[in] exit_status  Exit code
+ * \param[in] ec  Exit code
  */
 void
-based_terminate(crm_exit_t exit_status)
+based_quit_main_loop(crm_exit_t ec)
 {
-    shutting_down = true;
-    based_cleanup();
-
-    if (exit_status != CRM_EX_OK) {
-        /* After calling g_main_loop_quit(), sources that have already been
-         * dispatched are still executed. On error, skip that and exit
-         * immediately after cleaning up data structures.
-         *
-         * @TODO Is this necessary? It would be nice to do the cleanup at the
-         * end of main(). If so, then one (complicated) option would be to keep
-         * track of all main loop sources and destroy them so that
-         * g_main_dispatch() ignores them.
-         */
-        crm_exit(exit_status);
-    }
-
-    based_cluster_disconnect();
-
-    // There should be no way to get here without the main loop running
-    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop),
-              crm_exit(exit_status));
-
-    g_main_loop_quit(mainloop);
-}
-
-static void
-based_shutdown(int nsig)
-{
-    if (based_shutting_down()) {
-        // Already shutting down
+    if (shutting_down) {
         return;
     }
 
     shutting_down = true;
-    based_terminate(CRM_EX_OK);
+    exit_code = ec;
+
+    // There should be no way to get here without the main loop running
+    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop),
+              crm_exit(exit_code));
+
+    g_main_loop_quit(mainloop);
+}
+
+/*!
+ * \internal
+ * \brief Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+based_shutdown(int nsig)
+{
+    based_quit_main_loop(CRM_EX_OK);
 }
 
 int
@@ -419,7 +411,6 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    based_cluster_disconnect();
     based_cleanup();
 
     pcmk__output_and_clear_error(&error, out);

@@ -541,6 +541,11 @@ cib_remote_listen(gpointer user_data)
         .destroy = based_remote_client_destroy,
     };
 
+    if (based_shutting_down()) {
+        pcmk__info("Ignoring new remote connection during shutdown");
+        return 0;
+    }
+
     /* accept the connection */
     laddr = sizeof(addr);
     memset(&addr, 0, sizeof(addr));
