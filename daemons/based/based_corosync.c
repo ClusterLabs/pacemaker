@@ -29,18 +29,6 @@
 
 static pcmk_cluster_t *cluster = NULL;
 
-static void
-based_peer_callback(xmlNode *msg)
-{
-    const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
-
-    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
-    }
-
-    based_process_request(msg, true, NULL);
-}
-
 #if SUPPORT_COROSYNC
 static void
 based_cpg_dispatch(cpg_handle_t handle,
@@ -68,8 +56,15 @@ based_cpg_dispatch(cpg_handle_t handle,
         free(data);
         return;
     }
+
     pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    based_peer_callback(xml);
+
+    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
+        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME,
+                     pcmk__xe_get(msg, PCMK__XA_SRC));
+    }
+
+    based_process_request(msg, true, NULL);
 
     pcmk__xml_free(xml);
     free(data);

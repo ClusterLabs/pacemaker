@@ -461,6 +461,9 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \param[in,out] cluster  Initialized cluster object to connect
  *
  * \return Standard Pacemaker return code
+ *
+ * \note This initializes the node caches on success by calling
+ *       \c pcmk__get_node().
  */
 int
 pcmk__corosync_connect(pcmk_cluster_t *cluster)
