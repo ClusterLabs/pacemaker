@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EOPNOTSUPP
-#include <stdbool.h>
 #include <stddef.h>                 // NULL
 #include <stdlib.h>                 // free
 
@@ -80,11 +79,9 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
                 || (host != NULL)) {
 
                 rc = EOPNOTSUPP;
+
             } else {
-                /* Commit-transaction is a privileged operation. If we reached
-                 * this point, the request came from a privileged connection.
-                 */
-                rc = based_process_request(request, true, client);
+                rc = based_process_request(request, client);
             }
         }
 

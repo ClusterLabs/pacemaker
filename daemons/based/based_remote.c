@@ -369,7 +369,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         based_update_notify_flags(command, client);
     }
 
-    based_process_request(command, true, client);
+    based_process_request(command, client);
 }
 
 static int
