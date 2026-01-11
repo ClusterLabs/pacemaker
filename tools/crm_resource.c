@@ -2374,9 +2374,7 @@ done:
     cib__clean_up_connection(&cib_conn);
     pcmk_free_ipc_api(controld_api);
     pcmk_free_scheduler(scheduler);
-    if (mainloop != NULL) {
-        g_main_loop_unref(mainloop);
-    }
+    g_clear_pointer(&mainloop, g_main_loop_unref);
 
     pcmk__output_and_clear_error(&error, out);
 

@@ -77,7 +77,6 @@ attrd_shutdown(int nsig)
         crm_exit(CRM_EX_OK);
     } else {
         g_main_loop_quit(mloop);
-        g_main_loop_unref(mloop);
     }
 }
 
@@ -99,6 +98,7 @@ void
 attrd_run_mainloop(void)
 {
     g_main_loop_run(mloop);
+    g_clear_pointer(&mloop, g_main_loop_unref);
 }
 
 /* strlen("value") */
