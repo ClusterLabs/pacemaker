@@ -65,14 +65,11 @@ attrd_shutdown(int nsig)
         peer_protocol_vers = NULL;
     }
 
-    if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
-        /* If there's no main loop active, just exit. This should be possible
-         * only if we get SIGTERM in brief windows at start-up and shutdown.
-         */
-        crm_exit(CRM_EX_OK);
-    } else {
-        g_main_loop_quit(mloop);
-    }
+    // There should be no way to get here without the main loop running
+    CRM_CHECK((mloop != NULL) && g_main_loop_is_running(mloop),
+              crm_exit(CRM_EX_OK));
+
+    g_main_loop_quit(mloop);
 }
 
 /*!
