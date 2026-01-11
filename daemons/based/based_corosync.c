@@ -30,29 +30,15 @@
 static pcmk_cluster_t *cluster = NULL;
 
 static void
-based_peer_callback(xmlNode *msg, void *private_data)
+based_peer_callback(xmlNode *msg)
 {
-    const char *reason = NULL;
     const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
-
-    if (pcmk__peer_cache == NULL) {
-        reason = "membership not established";
-        goto bail;
-    }
 
     if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
         pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
     }
 
     based_process_request(msg, true, NULL);
-    return;
-
-  bail:
-    if (reason) {
-        const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
-
-        pcmk__warn("Discarding %s message from %s: %s", op, originator, reason);
-    }
 }
 
 #if SUPPORT_COROSYNC
@@ -83,7 +69,7 @@ based_cpg_dispatch(cpg_handle_t handle,
         return;
     }
     pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    based_peer_callback(xml, NULL);
+    based_peer_callback(xml);
 
     pcmk__xml_free(xml);
     free(data);
