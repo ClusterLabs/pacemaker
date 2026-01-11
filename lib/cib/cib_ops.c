@@ -115,10 +115,12 @@ static const cib__operation_t cib_ops[] = {
         PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_privileged
     },
     {
-        PCMK__CIB_REQUEST_SYNC_TO_ALL, cib__op_sync_all, cib__op_attr_privileged
+        PCMK__CIB_REQUEST_SYNC_TO_ALL, cib__op_sync_to_all,
+        cib__op_attr_privileged
     },
     {
-        PCMK__CIB_REQUEST_SYNC_TO_ONE, cib__op_sync_one, cib__op_attr_privileged
+        PCMK__CIB_REQUEST_SYNC_TO_ONE, cib__op_sync_to_one,
+        cib__op_attr_privileged
     },
     {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
@@ -166,49 +168,26 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
 }
 
 int
-cib_process_query(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+cib__process_apply_patch(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer)
 {
-    xmlNode *obj_root = NULL;
-    int result = pcmk_ok;
+    const bool force = pcmk__is_set(options, cib_force_diff);
+    const char *originator = NULL;
 
-    pcmk__trace("Processing %s for %s section", op,
-                pcmk__s(section, "unspecified"));
-
-    if (options & cib_xpath) {
-        return cib_process_xpath(op, options, section, req, input,
-                                 existing_cib, result_cib, answer);
+    if (req != NULL) {
+        originator = pcmk__xe_get(req, PCMK__XA_SRC);
     }
 
-    CRM_CHECK(*answer == NULL, pcmk__xml_free(*answer));
-    *answer = NULL;
+    pcmk__trace("Processing \"%s\" event from %s%s", op, originator,
+                (force? " (global update)" : ""));
 
-    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
-        section = NULL;
+    if (*result_cib != existing_cib) {
+        pcmk__xml_free(*result_cib);
     }
+    *result_cib = pcmk__xml_copy(NULL, existing_cib);
 
-    obj_root = pcmk_find_cib_element(existing_cib, section);
-
-    if (obj_root == NULL) {
-        result = -ENXIO;
-
-    } else if (options & cib_no_children) {
-        xmlNode *shallow = pcmk__xe_create(*answer,
-                                           (const char *) obj_root->name);
-
-        pcmk__xe_copy_attrs(shallow, obj_root, pcmk__xaf_none);
-        *answer = shallow;
-
-    } else {
-        *answer = obj_root;
-    }
-
-    if (result == pcmk_ok && *answer == NULL) {
-        pcmk__err("Error creating query response");
-        result = -ENOMSG;
-    }
-
-    return result;
+    return xml_apply_patchset(*result_cib, input, TRUE);
 }
 
 static int
@@ -239,56 +218,9 @@ update_counter(xmlNode *xml_obj, const char *field, bool reset)
 }
 
 int
-cib_process_erase(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                  xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    int result = pcmk_ok;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
-    *result_cib = createEmptyCib(0);
-    pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
-    update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
-    *answer = NULL;
-
-    return result;
-}
-
-int
-cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
-{
-    int rc = 0;
-    const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
-    const char *original_schema = NULL;
-    const char *new_schema = NULL;
-
-    *answer = NULL;
-    pcmk__trace("Processing \"%s\" event with max=%s", op, max_schema);
-
-    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
-    rc = pcmk__update_schema(result_cib, max_schema, true,
-                             !pcmk__is_set(options, cib_verbose));
-    rc = pcmk_rc2legacy(rc);
-    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
-
-    if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
-        update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
-        update_counter(*result_cib, PCMK_XA_EPOCH, true);
-        update_counter(*result_cib, PCMK_XA_NUM_UPDATES, true);
-        return pcmk_ok;
-    }
-
-    return rc;
-}
-
-int
-cib_process_bump(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+cib__process_bump(const char *op, int options, const char *section,
+                  xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                  xmlNode **result_cib, xmlNode **answer)
 {
     int result = pcmk_ok;
 
@@ -301,214 +233,8 @@ cib_process_bump(const char *op, int options, const char *section, xmlNode * req
     return result;
 }
 
-int
-cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
-                    xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                    xmlNode ** answer)
-{
-    int result = pcmk_ok;
-
-    pcmk__trace("Processing %s for %s section", op,
-                pcmk__s(section, "unspecified"));
-
-    if (options & cib_xpath) {
-        return cib_process_xpath(op, options, section, req, input,
-                                 existing_cib, result_cib, answer);
-    }
-
-    *answer = NULL;
-
-    if (input == NULL) {
-        return -EINVAL;
-    }
-
-    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
-        section = NULL;
-
-    } else if (pcmk__xe_is(input, section)) {
-        section = NULL;
-    }
-
-    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
-        int updates = 0;
-        int epoch = 0;
-        int admin_epoch = 0;
-
-        int replace_updates = 0;
-        int replace_epoch = 0;
-        int replace_admin_epoch = 0;
-
-        const char *reason = NULL;
-        const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
-        const char *digest = pcmk__xe_get(req, PCMK_XA_DIGEST);
-
-        if (digest) {
-            char *digest_verify = pcmk__digest_xml(input, true);
-
-            if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
-                pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
-                          "(expected)",
-                          peer, digest_verify, digest);
-                reason = "digest mismatch";
-
-            } else {
-                pcmk__info("Digest matched on replace from %s: %s", peer,
-                           digest);
-            }
-            free(digest_verify);
-
-        } else {
-            pcmk__trace("No digest to verify");
-        }
-
-        cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
-        cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
-
-        if (replace_admin_epoch < admin_epoch) {
-            reason = PCMK_XA_ADMIN_EPOCH;
-
-        } else if (replace_admin_epoch > admin_epoch) {
-            /* no more checks */
-
-        } else if (replace_epoch < epoch) {
-            reason = PCMK_XA_EPOCH;
-
-        } else if (replace_epoch > epoch) {
-            /* no more checks */
-
-        } else if (replace_updates < updates) {
-            reason = PCMK_XA_NUM_UPDATES;
-        }
-
-        if (reason != NULL) {
-            pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
-                       "current %s is greater than the replacement",
-                       replace_admin_epoch, replace_epoch,
-                       replace_updates, peer, admin_epoch, epoch, updates,
-                       reason);
-            result = -pcmk_err_old_data;
-        } else {
-            pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
-                       admin_epoch, epoch, updates,
-                       replace_admin_epoch, replace_epoch, replace_updates,
-                       peer);
-        }
-
-        if (*result_cib != existing_cib) {
-            pcmk__xml_free(*result_cib);
-        }
-        *result_cib = pcmk__xml_copy(NULL, input);
-
-    } else {
-        xmlNode *obj_root = NULL;
-
-        obj_root = pcmk_find_cib_element(*result_cib, section);
-        result = pcmk__xe_replace_match(obj_root, input);
-        result = pcmk_rc2legacy(result);
-        if (result != pcmk_ok) {
-            pcmk__trace("No matching object to replace");
-        }
-    }
-
-    return result;
-}
-
 static int
-delete_child(xmlNode *child, void *userdata)
-{
-    xmlNode *obj_root = userdata;
-
-    if (pcmk__xe_delete_match(obj_root, child) != pcmk_rc_ok) {
-        pcmk__trace("No matching object to delete: %s=%s", child->name,
-                    pcmk__xe_id(child));
-    }
-
-    return pcmk_rc_ok;
-}
-
-int
-cib_process_delete(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    xmlNode *obj_root = NULL;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (options & cib_xpath) {
-        return cib_process_xpath(op, options, section, req, input,
-                                 existing_cib, result_cib, answer);
-    }
-
-    if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
-        return -EINVAL;
-    }
-
-    obj_root = pcmk_find_cib_element(*result_cib, section);
-    if (pcmk__xe_is(input, section)) {
-        pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
-    } else {
-        delete_child(input, obj_root);
-    }
-
-    return pcmk_ok;
-}
-
-int
-cib_process_modify(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    xmlNode *obj_root = NULL;
-    uint32_t flags = pcmk__xaf_none;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    if (options & cib_xpath) {
-        return cib_process_xpath(op, options, section, req, input,
-                                 existing_cib, result_cib, answer);
-    }
-
-    if (input == NULL) {
-        pcmk__err("Cannot perform modification with no data");
-        return -EINVAL;
-    }
-
-    obj_root = pcmk_find_cib_element(*result_cib, section);
-    if (obj_root == NULL) {
-        xmlNode *tmp_section = NULL;
-        const char *path = pcmk_cib_parent_name_for(section);
-
-        if (path == NULL) {
-            return -EINVAL;
-        }
-
-        tmp_section = pcmk__xe_create(NULL, section);
-        cib_process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
-                          NULL, result_cib, answer);
-        pcmk__xml_free(tmp_section);
-
-        obj_root = pcmk_find_cib_element(*result_cib, section);
-    }
-
-    CRM_CHECK(obj_root != NULL, return -EINVAL);
-
-    if (pcmk__is_set(options, cib_score_update)) {
-        flags |= pcmk__xaf_score_update;
-    }
-
-    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
-        if (options & cib_can_create) {
-            pcmk__xml_copy(obj_root, input);
-        } else {
-            return -ENXIO;
-        }
-    }
-
-    return pcmk_ok;
-}
-
-static int
-add_cib_object(xmlNode * parent, xmlNode * new_obj)
+add_cib_object(xmlNode *parent, xmlNode *new_obj)
 {
     const char *object_name = NULL;
     const char *object_id = NULL;
@@ -568,8 +294,9 @@ update_results(xmlNode *failed, xmlNode *target, const char *operation, int rc)
 }
 
 int
-cib_process_create(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                   xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+cib__process_create(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
 {
     xmlNode *failed = NULL;
     int result = pcmk_ok;
@@ -595,8 +322,8 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     }
 
     if (section == NULL) {
-        return cib_process_modify(op, options, section, req, input, existing_cib, result_cib,
-                                  answer);
+        return cib__process_modify(op, options, section, req, input,
+                                   existing_cib, result_cib, answer);
     }
 
     // @COMPAT Deprecated since 2.1.8
@@ -638,32 +365,32 @@ cib_process_create(const char *op, int options, const char *section, xmlNode * r
     return result;
 }
 
-int
-cib_process_diff(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
-{
-    const bool force = pcmk__is_set(options, cib_force_diff);
-    const char *originator = NULL;
-
-    if (req != NULL) {
-        originator = pcmk__xe_get(req, PCMK__XA_SRC);
-    }
-
-    pcmk__trace("Processing \"%s\" event from %s%s", op, originator,
-                (force? " (global update)" : ""));
-
-    if (*result_cib != existing_cib) {
-        pcmk__xml_free(*result_cib);
-    }
-    *result_cib = pcmk__xml_copy(NULL, existing_cib);
-
-    return xml_apply_patchset(*result_cib, input, TRUE);
-}
-
-int
-cib_process_xpath(const char *op, int options, const char *section,
-                  const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                  xmlNode **result_cib, xmlNode **answer)
+/*!
+ * \internal
+ * \brief Query or modify a CIB
+ *
+ * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
+ * \param[in]     options       Flag set of \c cib_call_options
+ * \param[in]     section       XPath to query or modify
+ * \param[in]     req           unused
+ * \param[in]     input         Portion of CIB to modify (used with
+ *                              PCMK__CIB_REQUEST_CREATE,
+ *                              PCMK__CIB_REQUEST_MODIFY, and
+ *                              PCMK__CIB_REQUEST_REPLACE)
+ * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
+ * \param[in,out] result_cib    CIB copy to make changes in (used with
+ *                              PCMK__CIB_REQUEST_CREATE,
+ *                              PCMK__CIB_REQUEST_MODIFY,
+ *                              PCMK__CIB_REQUEST_DELETE, and
+ *                              PCMK__CIB_REQUEST_REPLACE)
+ * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
+ *
+ * \return Legacy Pacemaker return code
+ */
+static int
+process_xpath(const char *op, int options, const char *section,
+              const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+              xmlNode **result_cib, xmlNode **answer)
 {
     int num_results = 0;
     int rc = pcmk_ok;
@@ -828,5 +555,309 @@ cib_process_xpath(const char *op, int options, const char *section,
 
 done:
     xmlXPathFreeObject(xpathObj);
+    return rc;
+}
+
+static int
+delete_child(xmlNode *child, void *userdata)
+{
+    xmlNode *obj_root = userdata;
+
+    if (pcmk__xe_delete_match(obj_root, child) != pcmk_rc_ok) {
+        pcmk__trace("No matching object to delete: %s=%s", child->name,
+                    pcmk__xe_id(child));
+    }
+
+    return pcmk_rc_ok;
+}
+
+int
+cib__process_delete(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *obj_root = NULL;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (options & cib_xpath) {
+        return process_xpath(op, options, section, req, input, existing_cib,
+                             result_cib, answer);
+    }
+
+    if (input == NULL) {
+        pcmk__err("Cannot perform modification with no data");
+        return -EINVAL;
+    }
+
+    obj_root = pcmk_find_cib_element(*result_cib, section);
+    if (pcmk__xe_is(input, section)) {
+        pcmk__xe_foreach_child(input, NULL, delete_child, obj_root);
+    } else {
+        delete_child(input, obj_root);
+    }
+
+    return pcmk_ok;
+}
+
+int
+cib__process_erase(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
+{
+    int result = pcmk_ok;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (*result_cib != existing_cib) {
+        pcmk__xml_free(*result_cib);
+    }
+    *result_cib = createEmptyCib(0);
+    pcmk__xe_copy_attrs(*result_cib, existing_cib, pcmk__xaf_none);
+    update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
+    *answer = NULL;
+
+    return result;
+}
+
+int
+cib__process_modify(const char *op, int options, const char *section,
+                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                    xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *obj_root = NULL;
+    uint32_t flags = pcmk__xaf_none;
+
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (options & cib_xpath) {
+        return process_xpath(op, options, section, req, input, existing_cib,
+                             result_cib, answer);
+    }
+
+    if (input == NULL) {
+        pcmk__err("Cannot perform modification with no data");
+        return -EINVAL;
+    }
+
+    obj_root = pcmk_find_cib_element(*result_cib, section);
+    if (obj_root == NULL) {
+        xmlNode *tmp_section = NULL;
+        const char *path = pcmk_cib_parent_name_for(section);
+
+        if (path == NULL) {
+            return -EINVAL;
+        }
+
+        tmp_section = pcmk__xe_create(NULL, section);
+        process_xpath(PCMK__CIB_REQUEST_CREATE, 0, path, NULL, tmp_section,
+                      NULL, result_cib, answer);
+        pcmk__xml_free(tmp_section);
+
+        obj_root = pcmk_find_cib_element(*result_cib, section);
+    }
+
+    CRM_CHECK(obj_root != NULL, return -EINVAL);
+
+    if (pcmk__is_set(options, cib_score_update)) {
+        flags |= pcmk__xaf_score_update;
+    }
+
+    if (pcmk__xe_update_match(obj_root, input, flags) != pcmk_rc_ok) {
+        if (options & cib_can_create) {
+            pcmk__xml_copy(obj_root, input);
+        } else {
+            return -ENXIO;
+        }
+    }
+
+    return pcmk_ok;
+}
+
+int
+cib__process_query(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *obj_root = NULL;
+    int result = pcmk_ok;
+
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
+
+    if (options & cib_xpath) {
+        return process_xpath(op, options, section, req, input, existing_cib,
+                             result_cib, answer);
+    }
+
+    CRM_CHECK(*answer == NULL, pcmk__xml_free(*answer));
+    *answer = NULL;
+
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
+        section = NULL;
+    }
+
+    obj_root = pcmk_find_cib_element(existing_cib, section);
+
+    if (obj_root == NULL) {
+        result = -ENXIO;
+
+    } else if (options & cib_no_children) {
+        xmlNode *shallow = pcmk__xe_create(*answer,
+                                           (const char *) obj_root->name);
+
+        pcmk__xe_copy_attrs(shallow, obj_root, pcmk__xaf_none);
+        *answer = shallow;
+
+    } else {
+        *answer = obj_root;
+    }
+
+    if (result == pcmk_ok && *answer == NULL) {
+        pcmk__err("Error creating query response");
+        result = -ENOMSG;
+    }
+
+    return result;
+}
+
+int
+cib__process_replace(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer)
+{
+    int result = pcmk_ok;
+
+    pcmk__trace("Processing %s for %s section", op,
+                pcmk__s(section, "unspecified"));
+
+    if (options & cib_xpath) {
+        return process_xpath(op, options, section, req, input, existing_cib,
+                             result_cib, answer);
+    }
+
+    *answer = NULL;
+
+    if (input == NULL) {
+        return -EINVAL;
+    }
+
+    if (pcmk__str_eq(PCMK__XE_ALL, section, pcmk__str_casei)) {
+        section = NULL;
+
+    } else if (pcmk__xe_is(input, section)) {
+        section = NULL;
+    }
+
+    if (pcmk__xe_is(input, PCMK_XE_CIB)) {
+        int updates = 0;
+        int epoch = 0;
+        int admin_epoch = 0;
+
+        int replace_updates = 0;
+        int replace_epoch = 0;
+        int replace_admin_epoch = 0;
+
+        const char *reason = NULL;
+        const char *peer = pcmk__xe_get(req, PCMK__XA_SRC);
+        const char *digest = pcmk__xe_get(req, PCMK_XA_DIGEST);
+
+        if (digest) {
+            char *digest_verify = pcmk__digest_xml(input, true);
+
+            if (!pcmk__str_eq(digest_verify, digest, pcmk__str_casei)) {
+                pcmk__err("Digest mis-match on replace from %s: %s vs. %s "
+                          "(expected)",
+                          peer, digest_verify, digest);
+                reason = "digest mismatch";
+
+            } else {
+                pcmk__info("Digest matched on replace from %s: %s", peer,
+                           digest);
+            }
+            free(digest_verify);
+
+        } else {
+            pcmk__trace("No digest to verify");
+        }
+
+        cib_version_details(existing_cib, &admin_epoch, &epoch, &updates);
+        cib_version_details(input, &replace_admin_epoch, &replace_epoch, &replace_updates);
+
+        if (replace_admin_epoch < admin_epoch) {
+            reason = PCMK_XA_ADMIN_EPOCH;
+
+        } else if (replace_admin_epoch > admin_epoch) {
+            /* no more checks */
+
+        } else if (replace_epoch < epoch) {
+            reason = PCMK_XA_EPOCH;
+
+        } else if (replace_epoch > epoch) {
+            /* no more checks */
+
+        } else if (replace_updates < updates) {
+            reason = PCMK_XA_NUM_UPDATES;
+        }
+
+        if (reason != NULL) {
+            pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
+                       "current %s is greater than the replacement",
+                       replace_admin_epoch, replace_epoch,
+                       replace_updates, peer, admin_epoch, epoch, updates,
+                       reason);
+            result = -pcmk_err_old_data;
+        } else {
+            pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s",
+                       admin_epoch, epoch, updates,
+                       replace_admin_epoch, replace_epoch, replace_updates,
+                       peer);
+        }
+
+        if (*result_cib != existing_cib) {
+            pcmk__xml_free(*result_cib);
+        }
+        *result_cib = pcmk__xml_copy(NULL, input);
+
+    } else {
+        xmlNode *obj_root = NULL;
+
+        obj_root = pcmk_find_cib_element(*result_cib, section);
+        result = pcmk__xe_replace_match(obj_root, input);
+        result = pcmk_rc2legacy(result);
+        if (result != pcmk_ok) {
+            pcmk__trace("No matching object to replace");
+        }
+    }
+
+    return result;
+}
+
+int
+cib__process_upgrade(const char *op, int options, const char *section,
+                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                     xmlNode **result_cib, xmlNode **answer)
+{
+    int rc = 0;
+    const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
+    const char *original_schema = NULL;
+    const char *new_schema = NULL;
+
+    *answer = NULL;
+    pcmk__trace("Processing \"%s\" event with max=%s", op, max_schema);
+
+    original_schema = pcmk__xe_get(existing_cib, PCMK_XA_VALIDATE_WITH);
+    rc = pcmk__update_schema(result_cib, max_schema, true,
+                             !pcmk__is_set(options, cib_verbose));
+    rc = pcmk_rc2legacy(rc);
+    new_schema = pcmk__xe_get(*result_cib, PCMK_XA_VALIDATE_WITH);
+
+    if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
+        update_counter(*result_cib, PCMK_XA_ADMIN_EPOCH, false);
+        update_counter(*result_cib, PCMK_XA_EPOCH, true);
+        update_counter(*result_cib, PCMK_XA_NUM_UPDATES, true);
+        return pcmk_ok;
+    }
+
     return rc;
 }
