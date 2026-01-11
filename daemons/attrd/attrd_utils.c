@@ -57,14 +57,6 @@ attrd_shutdown(int nsig)
     // Tell various functions not to do anthing
     shutting_down = true;
 
-    // Don't respond to signals while shutting down
-    mainloop_destroy_signal(SIGTERM);
-    mainloop_destroy_signal(SIGCHLD);
-    mainloop_destroy_signal(SIGPIPE);
-    mainloop_destroy_signal(SIGUSR1);
-    mainloop_destroy_signal(SIGUSR2);
-    mainloop_destroy_signal(SIGTRAP);
-
     attrd_free_waitlist();
     attrd_free_confirmations();
 
