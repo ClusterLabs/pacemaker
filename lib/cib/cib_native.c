@@ -279,14 +279,12 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     switch (type) {
         case cib_command:
         case cib_command_nonblocking:
-            // @COMPAT cib_command_nonblocking is deprecated since 3.0.2
+        case cib_query:
+            /* @COMPAT cib_command_nonblocking and cib_query are deprecated
+             * since 3.0.2
+             */
             cib->state = cib_connected_command;
             channel = PCMK__SERVER_BASED_RW;
-            break;
-
-        case cib_query:
-            cib->state = cib_connected_query;
-            channel = PCMK__SERVER_BASED_RO;
             break;
 
         default:

@@ -1,7 +1,7 @@
 """Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["PatternSelector"]
-__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 from pacemaker.buildoptions import BuildOptions
@@ -177,7 +177,7 @@ class Corosync2Patterns(BasePatterns):
             r"error.*: Operation 'reboot' .* using FencingFail returned ",
             r"getinfo response error: 1$",
             r"sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
-            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* (failed|closed)",
+            r"sbd.* pcmk:\s*error:.*Connection to cib_rw.* (failed|closed)",
         ]
 
         self._bad_news = [
