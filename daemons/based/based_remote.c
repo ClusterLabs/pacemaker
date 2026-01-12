@@ -85,6 +85,54 @@ remote_auth_timeout_cb(gpointer data)
 
 /*!
  * \internal
+ * \brief Read (more) TLS handshake data from a client
+ *
+ * \param[in,out] client  IPC client
+ *
+ * \retval  0  on success or more data needed
+ * \retval -1  on error
+ */
+static int
+based_read_handshake_data(pcmk__client_t *client)
+{
+    int rc = pcmk__read_handshake_data(client);
+
+    if (rc == EAGAIN) {
+        /* No more data is available at the moment. Just return for now; we'll
+         * get invoked again once the client sends more.
+         */
+        return 0;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        return -1;
+    }
+
+    if (client->remote->auth_timeout != 0) {
+        g_source_remove(client->remote->auth_timeout);
+        client->remote->auth_timeout = 0;
+    }
+
+    pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
+    pcmk__debug("Completed TLS handshake with remote client %s",
+                pcmk__client_name(client));
+
+    /* Now that the handshake is done, see if any client TLS certificate is
+     * close to its expiration date and log if so. If a TLS certificate is not
+     * in use, this function will just return so we don't need to check for the
+     * session type here.
+     */
+    pcmk__tls_check_cert_expiration(client->remote->tls_session);
+
+    // Require the client to authenticate within this time
+    client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
+                                                      remote_auth_timeout_cb,
+                                                      client);
+    return 0;
+}
+
+/*!
+ * \internal
  * \brief Check whether a given user is a member of \c CRM_DAEMON_GROUP
  *
  * \param[in] user  User name
@@ -386,36 +434,7 @@ cib_remote_msg(gpointer data)
     if ((PCMK__CLIENT_TYPE(client) == pcmk__client_tls)
         && !pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
 
-        int rc = pcmk__read_handshake_data(client);
-
-        if (rc == EAGAIN) {
-            /* No more data is available at the moment. Just return for now;
-             * we'll get invoked again once the client sends more.
-             */
-            return 0;
-        } else if (rc != pcmk_rc_ok) {
-            return -1;
-        }
-
-        pcmk__debug("Completed TLS handshake with remote client %s",
-                    client_name);
-        pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
-        if (client->remote->auth_timeout) {
-            g_source_remove(client->remote->auth_timeout);
-        }
-
-        /* Now that the handshake is done, see if any client TLS certificate is
-         * close to its expiration date and log if so.  If a TLS certificate is not
-         * in use, this function will just return so we don't need to check for the
-         * session type here.
-         */
-        pcmk__tls_check_cert_expiration(client->remote->tls_session);
-
-        // Require the client to authenticate within this time
-        client->remote->auth_timeout = pcmk__create_timer(REMOTE_AUTH_TIMEOUT,
-                                                          remote_auth_timeout_cb,
-                                                          client);
-        return 0;
+        return based_read_handshake_data(client);
     }
 
     rc = pcmk__read_available_remote_data(client->remote);
