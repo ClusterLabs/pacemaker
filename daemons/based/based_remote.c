@@ -421,11 +421,11 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 }
 
 static int
-cib_remote_msg(gpointer data)
+based_remote_client_dispatch(gpointer data)
 {
-    xmlNode *command = NULL;
+    int rc = pcmk_rc_ok;
+    xmlNode *msg = NULL;
     pcmk__client_t *client = data;
-    int rc;
     const char *client_name = pcmk__client_name(client);
 
     pcmk__trace("Remote %s message received for client %s",
@@ -466,45 +466,44 @@ cib_remote_msg(gpointer data)
             return -1;
     }
 
-    /* must pass auth before we will process anything else */
+    // Must pass auth before we will process anything else
     if (!pcmk__is_set(client->flags, pcmk__client_authenticated)) {
-        xmlNode *reg;
-        const char *user = NULL;
+        xmlNode *cib_result = NULL;
 
-        command = pcmk__remote_message_xml(client->remote);
-        if (!cib_remote_auth(command)) {
-            pcmk__xml_free(command);
+        msg = pcmk__remote_message_xml(client->remote);
+        if (!cib_remote_auth(msg)) {
+            pcmk__xml_free(msg);
             return -1;
         }
 
-        pcmk__set_client_flags(client, pcmk__client_authenticated);
-        g_source_remove(client->remote->auth_timeout);
-        client->remote->auth_timeout = 0;
-        client->name = pcmk__xe_get_copy(command, PCMK_XA_NAME);
-
-        user = pcmk__xe_get(command, PCMK_XA_USER);
-        if (user) {
-            client->user = pcmk__str_copy(user);
+        if (client->remote->auth_timeout != 0) {
+            g_source_remove(client->remote->auth_timeout);
+            client->remote->auth_timeout = 0;
         }
 
-        pcmk__notice("Remote connection accepted for authenticated user %s "
-                     QB_XS " client %s",
-                     pcmk__s(user, ""), client_name);
+        pcmk__set_client_flags(client, pcmk__client_authenticated);
 
-        /* send ACK */
-        reg = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
-        pcmk__xe_set(reg, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-        pcmk__xe_set(reg, PCMK__XA_CIB_CLIENTID, client->id);
-        pcmk__remote_send_xml(client->remote, reg);
-        pcmk__xml_free(reg);
-        pcmk__xml_free(command);
+        client->name = pcmk__xe_get_copy(msg, PCMK_XA_NAME);
+        client->user = pcmk__xe_get_copy(msg, PCMK_XA_USER);
+
+        pcmk__notice("Remote connection accepted for authenticated user %s "
+                     QB_XS " client %s", client->user,
+                     pcmk__client_name(client));
+
+        cib_result = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
+        pcmk__xe_set(cib_result, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        pcmk__xe_set(cib_result, PCMK__XA_CIB_CLIENTID, client->id);
+        pcmk__remote_send_xml(client->remote, cib_result);
+
+        pcmk__xml_free(cib_result);
+        pcmk__xml_free(msg);
     }
 
-    command = pcmk__remote_message_xml(client->remote);
-    if (command != NULL) {
+    msg = pcmk__remote_message_xml(client->remote);
+    if (msg != NULL) {
         pcmk__trace("Remote message received from client %s", client_name);
-        cib_handle_remote_msg(client, command);
-        pcmk__xml_free(command);
+        cib_handle_remote_msg(client, msg);
+        pcmk__xml_free(msg);
     }
 
     return 0;
@@ -569,7 +568,7 @@ cib_remote_listen(gpointer user_data)
     pcmk__client_t *new_client = NULL;
 
     static struct mainloop_fd_callbacks remote_client_fd_callbacks = {
-        .dispatch = cib_remote_msg,
+        .dispatch = based_remote_client_dispatch,
         .destroy = based_remote_client_destroy,
     };
 
