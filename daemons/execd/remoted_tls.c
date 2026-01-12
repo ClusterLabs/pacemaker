@@ -135,8 +135,8 @@ lrmd_remote_client_msg(gpointer data)
         pcmk__debug("Unrecognizable IPC data from PID %d", client->pid);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-        pcmk__ipc_send_ack(client, id, client->flags, PCMK__XE_NACK, NULL,
-                           CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, crm_ipc_client_response, PCMK__XE_NACK,
+                           NULL, CRM_EX_PROTOCOL);
     } else {
         pcmk__request_t request = {
             .ipc_client     = client,
