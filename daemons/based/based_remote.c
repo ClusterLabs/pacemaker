@@ -437,17 +437,30 @@ cib_remote_msg(gpointer data)
         return based_read_handshake_data(client);
     }
 
+    rc = pcmk__remote_ready(client->remote, 0);
+    switch (rc) {
+        case pcmk_rc_ok:
+            break;
+
+        case ETIME:
+            // No message available to read
+            return 0;
+
+        default:
+            pcmk__trace("Error polling remote client: %s", pcmk_rc_str(rc));
+            return -1;
+    }
+
     rc = pcmk__read_available_remote_data(client->remote);
     switch (rc) {
         case pcmk_rc_ok:
             break;
 
         case EAGAIN:
-            /* We haven't read the whole message yet */
+            // We haven't read the whole message yet
             return 0;
 
         default:
-            /* Error */
             pcmk__trace("Error reading from remote client: %s",
                         pcmk_rc_str(rc));
             return -1;
