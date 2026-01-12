@@ -39,11 +39,12 @@ static int ssock = -1;
 
 /*!
  * \internal
- * \brief Read (more) TLS handshake data from client
+ * \brief Read (more) TLS handshake data from a client
  *
- * \param[in,out] client  IPC client doing handshake
+ * \param[in,out] client  IPC client
  *
- * \return 0 on success or more data needed, -1 on error
+ * \retval  0  on success or more data needed
+ * \retval -1  on error
  */
 static int
 remoted__read_handshake_data(pcmk__client_t *client)
@@ -51,24 +52,27 @@ remoted__read_handshake_data(pcmk__client_t *client)
     int rc = pcmk__read_handshake_data(client);
 
     if (rc == EAGAIN) {
-        /* No more data is available at the moment. Just return for now;
-         * we'll get invoked again once the client sends more.
+        /* No more data is available at the moment. Just return for now; we'll
+         * get invoked again once the client sends more.
          */
         return 0;
-    } else if (rc != pcmk_rc_ok) {
+    }
+
+    if (rc != pcmk_rc_ok) {
         return -1;
     }
 
-    if (client->remote->auth_timeout) {
+    if (client->remote->auth_timeout != 0) {
         g_source_remove(client->remote->auth_timeout);
+        client->remote->auth_timeout = 0;
     }
-    client->remote->auth_timeout = 0;
 
     pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
-    pcmk__notice("Remote client connection accepted");
+    pcmk__notice("Connection from remote client %s accepted",
+                 pcmk__client_name(client));
 
     /* Now that the handshake is done, see if any client TLS certificate is
-     * close to its expiration date and log if so.  If a TLS certificate is not
+     * close to its expiration date and log if so. If a TLS certificate is not
      * in use, this function will just return so we don't need to check for the
      * session type here.
      */
