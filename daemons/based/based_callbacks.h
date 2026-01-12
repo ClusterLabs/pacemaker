@@ -17,6 +17,6 @@
 void based_callbacks_init(void);
 void based_callbacks_cleanup(void);
 
-int based_process_request(xmlNode *request, const pcmk__client_t *client);
+int based_handle_request(pcmk__request_t *request);
 
 #endif // BASED_CALLBACKS__H

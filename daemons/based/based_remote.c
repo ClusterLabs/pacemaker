@@ -517,8 +517,7 @@ based_remote_client_message(pcmk__client_t *client, xmlNode *msg)
             pcmk__set_request_flags(&request, pcmk__request_sync);
         }
 
-        based_process_request(request.xml, request.ipc_client);
-        pcmk__reset_request(&request);
+        based_handle_request(&request);
     }
 }
 

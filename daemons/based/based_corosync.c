@@ -68,8 +68,7 @@ based_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
                          pcmk__xe_get(request.xml, PCMK__XA_SRC));
         }
 
-        based_process_request(request.xml, request.ipc_client);
-        pcmk__reset_request(&request);
+        based_handle_request(&request);
     }
 }
 
