@@ -473,37 +473,16 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 static void
 forward_request(xmlNode *request)
 {
-    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
     const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
-    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
-    const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
-    const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     pcmk__node_status_t *peer = NULL;
-
-    int log_level = LOG_INFO;
-
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_NOOP, pcmk__str_none)) {
-        log_level = LOG_DEBUG;
-    }
-
-    do_crm_log(log_level,
-               "Forwarding %s operation for section %s to %s (origin=%s/%s/%s)",
-               pcmk__s(op, "invalid"),
-               pcmk__s(section, "all"),
-               pcmk__s(host, "all"),
-               pcmk__s(originator, "local"),
-               pcmk__s(client_name, "unspecified"),
-               pcmk__s(call_id, "unspecified"));
-
-    pcmk__xe_set(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
     if (host != NULL) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    pcmk__cluster_send_message(peer, pcmk_ipc_based, request);
 
-    // Return the request to its original state
+    // Set PCMK__XA_CIB_DELEGATED_FROM only temporarily
+    pcmk__xe_set(request, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, request);
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
