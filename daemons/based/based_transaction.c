@@ -60,20 +60,27 @@ based_transaction_source_str(const pcmk__client_t *client, const char *origin)
  * \return Standard Pacemaker return code
  */
 static int
-process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
+process_transaction_requests(xmlNode *transaction, pcmk__client_t *client,
                              const char *source)
 {
-    for (xmlNode *request = pcmk__xe_first_child(transaction,
-                                                 PCMK__XE_CIB_COMMAND, NULL,
-                                                 NULL);
-         request != NULL;
-         request = pcmk__xe_next(request, PCMK__XE_CIB_COMMAND)) {
+    for (xmlNode *xml = pcmk__xe_first_child(transaction, PCMK__XE_CIB_COMMAND,
+                                             NULL, NULL);
+         xml != NULL; xml = pcmk__xe_next(xml, PCMK__XE_CIB_COMMAND)) {
 
-        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-        const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
+        int rc = pcmk_rc_ok;
+        uint32_t call_options = cib_none;
+        const char *op = pcmk__xe_get(xml, PCMK__XA_CIB_OP);
+        const char *host = pcmk__xe_get(xml, PCMK__XA_CIB_HOST);
         const cib__operation_t *operation = NULL;
-        int rc = cib__get_operation(op, &operation);
 
+        rc = pcmk__xe_get_flags(xml, PCMK__XA_CIB_CALLOPT, &call_options,
+                                cib_none);
+        if (rc != pcmk_rc_ok) {
+            pcmk__warn("Couldn't parse options from request: %s",
+                       pcmk_rc_str(rc));
+        }
+
+        rc = cib__get_operation(op, &operation);
         if (rc == pcmk_rc_ok) {
             if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)
                 || (host != NULL)) {
@@ -81,21 +88,43 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
                 rc = EOPNOTSUPP;
 
             } else {
-                rc = based_process_request(request, client);
+                /* @FIXME It would be better for this function to accept a
+                 * pcmk__request_t argument and reuse it. In particular, the
+                 * values below for ipc_id and ipc_flags are intended as sane
+                 * placeholders.
+                 */
+                pcmk__request_t request = {
+                    .ipc_client     = client,
+                    .ipc_id         = client->request_id,
+                    .ipc_flags      = crm_ipc_flags_none,
+                    .peer           = NULL,
+                    .xml            = xml,
+                    .call_options   = call_options,
+                    .result         = PCMK__UNKNOWN_RESULT,
+                };
+
+                request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CIB_OP);
+                CRM_CHECK(request.op != NULL, return 0);
+
+                if (pcmk__is_set(request.call_options, cib_sync_call)) {
+                    pcmk__set_request_flags(&request, pcmk__request_sync);
+                }
+
+                rc = based_process_request(request.xml, request.ipc_client);
+                pcmk__reset_request(&request);
             }
         }
 
         if (rc != pcmk_rc_ok) {
             pcmk__err("Aborting CIB transaction for %s due to failed %s "
-                      "request: %s",
-                      source, op, pcmk_rc_str(rc));
-            pcmk__log_xml_info(request, "Failed request");
+                      "request: %s", source, op, pcmk_rc_str(rc));
+            pcmk__log_xml_info(xml, "failed");
             return rc;
         }
 
         pcmk__trace("Applied %s request to transaction working CIB for %s", op,
                     source);
-        pcmk__log_xml_trace(request, "Successful request");
+        pcmk__log_xml_trace(xml, "successful");
     }
 
     return pcmk_rc_ok;
@@ -120,7 +149,7 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
  *       success, and for freeing it on failure.
  */
 int
-based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+based_commit_transaction(xmlNode *transaction, pcmk__client_t *client,
                          const char *origin, xmlNode **result_cib)
 {
     xmlNode *saved_cib = based_cib;
