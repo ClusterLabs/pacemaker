@@ -286,24 +286,45 @@ bail:
 #endif
 }
 
+/*!
+ * \internal
+ * \brief Try to authenticate a remote client based on the message in its buffer
+ *
+ * Read the first message from the client's buffer. Validate that it's a well-
+ * formed remote client authentication request. Parse the username and password.
+ * Ensure that the user is a member of \c CRM_DAEMON_GROUP and use the
+ * credentials to authenticate the user via PAM (if available). Finally, on
+ * success, set the \c pcmk__client_authenticated flag, and send a reply
+ * informing the client of its success and its client ID.
+ *
+ * \param[in,out] client  Remote CIB manager client
+ *
+ * \return \c true if \p client authenticated successfully, or \c false
+ *         otherwise
+ */
 static bool
-cib_remote_auth(xmlNode *msg, const char *client_name)
+based_remote_client_auth(pcmk__client_t *client)
 {
+    // @TODO If we want to debug/trace-log an auth message, strip password first
     const char *op = NULL;
     const char *user = NULL;
     const char *password = NULL;
+    const char *client_name = pcmk__client_name(client);
+    xmlNode *msg = NULL;
+    xmlNode *cib_result = NULL;
 
+    msg = pcmk__remote_message_xml(client->remote);
     if (msg == NULL) {
         pcmk__warn("Rejecting remote client %s: Unrecognizable message",
                    client_name);
-        return false;
+        goto done;
     }
 
     if (!pcmk__xe_is(msg, PCMK__XE_CIB_COMMAND)) {
         pcmk__warn("Rejecting remote client %s: Expected element "
                    "'" PCMK__XE_CIB_COMMAND "', got '%s'", client_name,
                    msg->name);
-        return false;
+        goto done;
     }
 
     op = pcmk__xe_get(msg, PCMK_XA_OP);
@@ -311,7 +332,7 @@ cib_remote_auth(xmlNode *msg, const char *client_name)
         pcmk__warn("Rejecting remote client %s: Expected "
                    PCMK_XA_OP "='authenticate', got " PCMK_XA_OP "='%s'",
                    client_name, op);
-        return false;
+        goto done;
     }
 
     user = pcmk__xe_get(msg, PCMK_XA_USER);
@@ -319,16 +340,53 @@ cib_remote_auth(xmlNode *msg, const char *client_name)
     if ((user == NULL) || (password == NULL)) {
         pcmk__warn("Rejecting remote client %s: No %s given", client_name,
                    ((user == NULL)? "username" : "password"));
-        return false;
+        goto done;
     }
 
     if (!pcmk__is_user_in_group(user, CRM_DAEMON_GROUP)) {
         pcmk__notice("Rejecting remote client %s: User %s is not a member of "
                      "group %s", client_name, user, CRM_DAEMON_GROUP);
-        return false;
+        goto done;
     }
 
-    return authenticate_user(user, password, client_name);
+    if (!authenticate_user(user, password, client_name)) {
+        // Error already logged
+        goto done;
+    }
+
+    // @FIXME Should this be done regardless of whether auth succeeds?
+    if (client->remote->auth_timeout != 0) {
+        g_source_remove(client->remote->auth_timeout);
+        client->remote->auth_timeout = 0;
+    }
+
+    pcmk__set_client_flags(client, pcmk__client_authenticated);
+
+    // @TODO What sets PCMK_XA_NAME? Added by commit 22832641.
+    client->name = pcmk__xe_get_copy(msg, PCMK_XA_NAME);
+    client->user = pcmk__str_copy(user);
+
+    // Setting client->name may have changed the return value
+    client_name = pcmk__client_name(client);
+
+    pcmk__notice("Remote connection accepted for authenticated user %s "
+                 QB_XS " client %s", client->user, client_name);
+
+    // Notify client of success and of its ID
+    cib_result = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
+    pcmk__xe_set(cib_result, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(cib_result, PCMK__XA_CIB_CLIENTID, client->id);
+
+    pcmk__remote_send_xml(client->remote, cib_result);
+
+done:
+    if (!pcmk__is_set(client->flags, pcmk__client_authenticated)) {
+        pcmk__log_xml_debug(msg, "rejected");
+    }
+
+    pcmk__xml_free(msg);
+    pcmk__xml_free(cib_result);
+    return pcmk__is_set(client->flags, pcmk__client_authenticated);
 }
 
 static void
@@ -439,38 +497,11 @@ based_remote_client_dispatch(gpointer data)
             return -1;
     }
 
-    // Must pass auth before we will process anything else
-    if (!pcmk__is_set(client->flags, pcmk__client_authenticated)) {
-        xmlNode *cib_result = NULL;
+    // Client must authenticate before we will process anything else
+    if (!pcmk__is_set(client->flags, pcmk__client_authenticated)
+        && !based_remote_client_auth(client)) {
 
-        msg = pcmk__remote_message_xml(client->remote);
-        if (!cib_remote_auth(msg, pcmk__client_name(client))) {
-            pcmk__log_xml_debug(msg, "rejected");
-            pcmk__xml_free(msg);
-            return -1;
-        }
-
-        if (client->remote->auth_timeout != 0) {
-            g_source_remove(client->remote->auth_timeout);
-            client->remote->auth_timeout = 0;
-        }
-
-        pcmk__set_client_flags(client, pcmk__client_authenticated);
-
-        client->name = pcmk__xe_get_copy(msg, PCMK_XA_NAME);
-        client->user = pcmk__xe_get_copy(msg, PCMK_XA_USER);
-
-        pcmk__notice("Remote connection accepted for authenticated user %s "
-                     QB_XS " client %s", client->user,
-                     pcmk__client_name(client));
-
-        cib_result = pcmk__xe_create(NULL, PCMK__XE_CIB_RESULT);
-        pcmk__xe_set(cib_result, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-        pcmk__xe_set(cib_result, PCMK__XA_CIB_CLIENTID, client->id);
-        pcmk__remote_send_xml(client->remote, cib_result);
-
-        pcmk__xml_free(cib_result);
-        pcmk__xml_free(msg);
+        return -1;
     }
 
     msg = pcmk__remote_message_xml(client->remote);
