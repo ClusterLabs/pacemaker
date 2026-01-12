@@ -1020,28 +1020,21 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
  * \internal
  * \brief Add an IPC server to the main loop for the CIB manager API
  *
- * \param[out] ipcs_ro   New IPC server for read-only CIB manager API
- * \param[out] ipcs_rw   New IPC server for read/write CIB manager API
- * \param[in]  ro_cb     IPC callbacks for read-only API
- * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
  *
  * \note This function exits fatally on error.
  */
 void
-pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
-                      struct qb_ipcs_service_handlers *ro_cb,
-                      struct qb_ipcs_service_handlers *rw_cb)
+pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs,
+                      struct qb_ipcs_service_handlers *cb)
 {
-    pcmk__assert((ipcs_ro != NULL) && (*ipcs_ro == NULL) && (ro_cb != NULL)
-                 && (ipcs_rw != NULL) && (*ipcs_rw == NULL) && (rw_cb != NULL));
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO, QB_IPC_SHM,
-                                       ro_cb);
+    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_based),
+                                    QB_IPC_SHM, cb);
 
-    *ipcs_rw = mainloop_add_ipc_server(PCMK__SERVER_BASED_RW, QB_IPC_SHM,
-                                       rw_cb);
-
-    if ((*ipcs_ro == NULL) || (*ipcs_rw == NULL)) {
+    if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
                    pcmk__server_log_name(pcmk_ipc_based));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "

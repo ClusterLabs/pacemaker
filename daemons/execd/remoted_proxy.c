@@ -29,8 +29,7 @@
 #include "pacemaker-execd.h"            // lrmd_server_send_notify
 
 static qb_ipcs_service_t *attrd_ipcs = NULL;
-static qb_ipcs_service_t *based_ipcs_ro = NULL;
-static qb_ipcs_service_t *based_ipcs_rw = NULL;
+static qb_ipcs_service_t *based_ipcs = NULL;
 static qb_ipcs_service_t *crmd_ipcs = NULL;
 static qb_ipcs_service_t *fencer_ipcs = NULL;
 static qb_ipcs_service_t *pacemakerd_ipcs = NULL;
@@ -503,8 +502,7 @@ ipc_proxy_init(void)
     ipc_clients = pcmk__strkey_table(NULL, NULL);
 
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
-    pcmk__serve_based_ipc(&based_ipcs_ro, &based_ipcs_rw,
-                          &based_proxy_callbacks, &based_proxy_callbacks);
+    pcmk__serve_based_ipc(&based_ipcs, &based_proxy_callbacks);
     pcmk__serve_fenced_ipc(&fencer_ipcs, &fencer_proxy_callbacks);
     pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
     crmd_ipcs = pcmk__serve_controld_ipc(&crmd_proxy_callbacks);
@@ -524,8 +522,7 @@ ipc_proxy_cleanup(void)
     g_clear_pointer(&ipc_clients, g_hash_table_destroy);
 
     g_clear_pointer(&attrd_ipcs, qb_ipcs_destroy);
-    g_clear_pointer(&based_ipcs_ro, qb_ipcs_destroy);
-    g_clear_pointer(&based_ipcs_rw, qb_ipcs_destroy);
+    g_clear_pointer(&based_ipcs, qb_ipcs_destroy);
     g_clear_pointer(&crmd_ipcs, qb_ipcs_destroy);
     g_clear_pointer(&fencer_ipcs, qb_ipcs_destroy);
     g_clear_pointer(&pacemakerd_ipcs, qb_ipcs_destroy);

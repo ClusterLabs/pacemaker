@@ -27,8 +27,7 @@
 
 #include "pacemaker-based.h"
 
-static qb_ipcs_service_t *ipcs_ro = NULL;
-static qb_ipcs_service_t *ipcs_rw = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
 
 /*!
  * \internal
@@ -254,7 +253,7 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
 void
 based_ipc_init(void)
 {
-    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipc_callbacks, &ipc_callbacks);
+    pcmk__serve_based_ipc(&ipcs, &ipc_callbacks);
 }
 
 /*!
@@ -264,14 +263,9 @@ based_ipc_init(void)
 void
 based_ipc_cleanup(void)
 {
-    if (ipcs_ro != NULL) {
-        pcmk__drop_all_clients(ipcs_ro);
-        g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
-    }
-
-    if (ipcs_rw != NULL) {
-        pcmk__drop_all_clients(ipcs_rw);
-        g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
+    if (ipcs != NULL) {
+        pcmk__drop_all_clients(ipcs);
+        g_clear_pointer(&ipcs, qb_ipcs_destroy);
     }
 
     /* Drop remote clients here because they're part of the IPC client table and
