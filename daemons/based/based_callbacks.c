@@ -336,13 +336,6 @@ static bool
 parse_peer_options(const cib__operation_t *operation, xmlNode *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
-    /* TODO: What happens when an update comes in after node A
-     * requests the CIB from node B, but before it gets the reply (and
-     * sends out the replace operation)?
-     *
-     * (This may no longer be relevant since legacy mode was dropped; need to
-     * trace code more closely to check.)
-     */
     const char *host = NULL;
     const char *delegated = pcmk__xe_get(request, PCMK__XA_CIB_DELEGATED_FROM);
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
