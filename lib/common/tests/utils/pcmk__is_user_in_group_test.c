@@ -17,23 +17,23 @@
 static int
 setup(void **state)
 {
-    pcmk__mock_grent = true;
+    pcmk__mock_getgrnam = true;
     return 0;
 }
 
 static int
 teardown(void **state)
 {
-    pcmk__mock_grent = false;
+    pcmk__mock_getgrnam = false;
     return 0;
 }
 
 static void
 null_args(void **state)
 {
-    assert_false(pcmk__is_user_in_group(NULL, NULL));
-    assert_false(pcmk__is_user_in_group(NULL, "grp0"));
-    assert_false(pcmk__is_user_in_group("user0", NULL));
+    pcmk__assert_asserts(pcmk__is_user_in_group(NULL, NULL));
+    pcmk__assert_asserts(pcmk__is_user_in_group(NULL, "grp0"));
+    pcmk__assert_asserts(pcmk__is_user_in_group("user0", NULL));
 }
 
 static void

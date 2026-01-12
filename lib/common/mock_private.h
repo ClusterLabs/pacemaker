@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,17 +66,13 @@ extern bool pcmk__mock_getpid;
 pid_t __real_getpid(void);
 pid_t __wrap_getpid(void);
 
-extern bool pcmk__mock_grent;
-void __real_setgrent(void);
-void __wrap_setgrent(void);
-struct group * __wrap_getgrent(void);
-struct group * __real_getgrent(void);
-void __wrap_endgrent(void);
-void __real_endgrent(void);
-
 extern bool pcmk__mock_getpwnam;
 struct passwd *__real_getpwnam(const char *name);
 struct passwd *__wrap_getpwnam(const char *name);
+
+extern bool pcmk__mock_getgrnam;
+struct group *__real_getgrnam(const char *name);
+struct group *__wrap_getgrnam(const char *name);
 
 extern bool pcmk__mock_readlink;
 ssize_t __real_readlink(const char *restrict path, char *restrict buf,

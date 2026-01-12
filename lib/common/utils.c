@@ -71,32 +71,23 @@ pcmk_common_cleanup(void)
 bool
 pcmk__is_user_in_group(const char *user, const char *group)
 {
-    struct group *grent;
-    char **gr_mem;
+    const struct group *group_entry = NULL;
 
-    if (user == NULL || group == NULL) {
+    pcmk__assert((user != NULL) && (group != NULL));
+
+    group_entry = getgrnam(group);
+    if (group_entry == NULL) {
         return false;
     }
-    
-    setgrent();
-    while ((grent = getgrent()) != NULL) {
-        if (grent->gr_mem == NULL) {
-            continue;
-        }
 
-        if(strcmp(group, grent->gr_name) != 0) {
-            continue;
-        }
+    for (const char *const *member = (const char *const *) group_entry->gr_mem;
+         *member != NULL; member++) {
 
-        gr_mem = grent->gr_mem;
-        while (*gr_mem != NULL) {
-            if (!strcmp(user, *gr_mem++)) {
-                endgrent();
-                return true;
-            }
+        if (pcmk__str_eq(user, *member, pcmk__str_none)) {
+            return true;
         }
     }
-    endgrent();
+
     return false;
 }
 

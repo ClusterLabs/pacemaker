@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2025 the Pacemaker project contributors
+# Copyright 2021-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -19,16 +19,14 @@ CLEANFILES = *.log *.trs
 
 WRAPPED = abort 		\
 	  calloc		\
-	  endgrent		\
 	  fopen 		\
 	  getenv		\
 	  getpid		\
-	  getgrent		\
+	  getgrnam		\
 	  getpwnam		\
 	  readlink		\
 	  realloc 		\
 	  setenv		\
-	  setgrent		\
 	  strdup 		\
 	  unsetenv
 
