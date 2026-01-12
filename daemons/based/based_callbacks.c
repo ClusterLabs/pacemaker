@@ -492,7 +492,7 @@ forward_request(pcmk__request_t *request)
 }
 
 static int
-based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
+based_perform_op_rw(pcmk__request_t *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **output)
 {
     const char *feature_set = pcmk__xe_get(based_cib,
@@ -500,21 +500,16 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
     xmlNode *result_cib = based_cib;
     xmlNode *cib_diff = NULL;
 
-    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
-    uint32_t call_options = cib_none;
-
+    const char *originator = pcmk__xe_get(request->xml, PCMK__XA_SRC);
     bool config_changed = false;
     int rc = pcmk_rc_ok;
-
-    pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     /* result_cib must not be modified after cib__perform_op_rw() returns.
      *
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
-    rc = cib__perform_op_rw(cib_undefined, op_function, request,
+    rc = cib__perform_op_rw(cib_undefined, op_function, request->xml,
                             &config_changed, &result_cib, &cib_diff, output);
 
     /* On validation error, include the schema-violating result CIB in any reply
@@ -527,7 +522,9 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
     }
 
     // Discard result for failure or dry run
-    if ((rc != pcmk_rc_ok) || pcmk__any_flags_set(call_options, cib_dryrun)) {
+    if ((rc != pcmk_rc_ok)
+        || pcmk__any_flags_set(request->call_options, cib_dryrun)) {
+
         if (result_cib != based_cib) {
             pcmk__xml_free(result_cib);
         }
@@ -542,12 +539,13 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
          * An exception is a request within a transaction. Since a transaction
          * is atomic, intermediate results must not be written to disk.
          */
-        const bool to_disk = !pcmk__is_set(call_options, cib_transaction)
+        const bool to_disk = !pcmk__is_set(request->call_options,
+                                           cib_transaction)
                              && (config_changed
                                  || pcmk__is_set(operation->flags,
                                                  cib__op_attr_writes_through));
 
-        rc = based_activate_cib(result_cib, to_disk, op);
+        rc = based_activate_cib(result_cib, to_disk, request->op);
     }
 
     /* @COMPAT Nodes older than feature set 3.19.0 don't support transactions.
@@ -562,7 +560,7 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         && pcmk__str_eq(originator, OUR_NODENAME, pcmk__str_casei)
         && (pcmk__compare_versions(feature_set, "3.19.0") < 0)) {
 
-        sync_our_cib(request, true);
+        sync_our_cib(request->xml, true);
     }
 
     if (cib_diff != NULL) {
@@ -572,10 +570,10 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
     mainloop_timer_start(digest_timer);
 
 done:
-    if (!pcmk__any_flags_set(call_options,
+    if (!pcmk__any_flags_set(request->call_options,
                              cib_dryrun|cib_inhibit_notify|cib_transaction)) {
 
-        based_diff_notify(request, rc, cib_diff);
+        based_diff_notify(request->xml, rc, cib_diff);
     }
 
     pcmk__xml_free(cib_diff);
@@ -789,7 +787,7 @@ based_handle_request(pcmk__request_t *request)
         rc = cib__perform_op_ro(op_function, request->xml, &based_cib, &output);
 
     } else {
-        rc = based_perform_op_rw(request->xml, operation, op_function, &output);
+        rc = based_perform_op_rw(request, operation, op_function, &output);
     }
 
     log_op_result(request->xml, operation, rc, difftime(time(NULL), start_time));
