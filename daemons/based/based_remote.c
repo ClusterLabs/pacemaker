@@ -432,7 +432,32 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         client->name = pcmk__str_copy(client->id);
     }
 
-    /* unset dangerous options */
+    /* Unset dangerous options.
+     *
+     * @TODO These were commented as "dangerous" with no explanation when this
+     * code was added by commit 8e08a242 (2007). We usually process whatever
+     * message we receive, taking a "submit a malformed request at your own
+     * risk" view. Our client API and CLI tools should not be able to submit a
+     * malformed request. A malicious user would have to send it directly,
+     * without our tools. If they have that level of access and are able to
+     * authenticate their request, then they can cause havoc regardless of
+     * whether we remove these "dangerous" attributes that shouldn't be present
+     * in a remote client's request.
+     *
+     * This seems overly paranoid, and seems like an arbitrary place to be
+     * paranoid.
+     *
+     * Best guesses about how they might be dangerous (or not):
+     * * PCMK_XA_SRC: This is mostly used for logging. Perhaps the CIB could get
+     *   synced to the wrong host, or local client notifications could get sent
+     *   on the wrong host?
+     * * PCMK__XA_CIB_HOST: It seems as if this should be allowed. Our client
+     *   code actually sets this, apparently as a destination node.
+     *   cib_remote_perform_op() takes a host argument and passes it to
+     *   cib__create_op(), which sets it as PCMK__XA_CIB_HOST.
+     * * PCMK__XA_CIB_UPDATE: This can prevent CIB versions from being updated,
+     *   because the update is treated as a sync.
+     */
     pcmk__xe_remove_attr(command, PCMK__XA_SRC);
     pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
     pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
