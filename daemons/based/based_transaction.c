@@ -110,8 +110,7 @@ process_transaction_requests(xmlNode *transaction, pcmk__client_t *client,
                     pcmk__set_request_flags(&request, pcmk__request_sync);
                 }
 
-                rc = based_process_request(request.xml, request.ipc_client);
-                pcmk__reset_request(&request);
+                rc = based_handle_request(&request);
             }
         }
 

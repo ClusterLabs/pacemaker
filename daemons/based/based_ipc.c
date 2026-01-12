@@ -204,8 +204,7 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
             pcmk__set_request_flags(&request, pcmk__request_sync);
         }
 
-        based_process_request(request.xml, request.ipc_client);
-        pcmk__reset_request(&request);
+        based_handle_request(&request);
     }
 
 cleanup:
