@@ -130,6 +130,64 @@ based_read_handshake_data(pcmk__client_t *client)
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Parse a remote client auth message
+ *
+ * This first validates that the message is a well-formed remote client
+ * authentication request and then extracts the username and password
+ * attributes.
+ *
+ * \param[in]  msg          Message from remote client
+ * \param[out] user         Where to store username
+ * \param[out] password     Where to store password
+ * \param[in]  client_name  Remote client name (for logging only)
+ *
+ * \return \c true if \p msg is a well-formed authentication request, or
+ *         \c false otherwise.
+ *
+ * \note \p *user and \p *password are set to \c NULL on error.
+ */
+static bool
+parse_auth_message(const xmlNode *msg, const char **user, const char **password,
+                   const char *client_name)
+{
+    const char *op = NULL;
+
+    if (msg == NULL) {
+        pcmk__warn("Rejecting remote client %s: Unrecognizable message",
+                   client_name);
+        return false;
+    }
+
+    if (!pcmk__xe_is(msg, PCMK__XE_CIB_COMMAND)) {
+        pcmk__warn("Rejecting remote client %s: Expected "
+                   "element '" PCMK__XE_CIB_COMMAND "', got '%s'", client_name,
+                   (const char *) msg->name);
+        return false;
+    }
+
+    op = pcmk__xe_get(msg, PCMK_XA_OP);
+    if (!pcmk__str_eq(op, "authenticate", pcmk__str_none)) {
+        pcmk__warn("Rejecting remote client %s: Expected "
+                   PCMK_XA_OP "='authenticate', got " PCMK_XA_OP "='%s'", op);
+        return false;
+    }
+
+    *user = pcmk__xe_get(msg, PCMK_XA_USER);
+    *password = pcmk__xe_get(msg, PCMK__XA_PASSWORD);
+
+    if ((*user == NULL) || (*password == NULL)) {
+        pcmk__warn("Rejecting remote client %s: No %s given", client_name,
+                   ((*user == NULL)? "username" : "password"));
+        *user = NULL;
+        *password = NULL;
+        return false;
+    }
+
+    return true;
+}
+
 #ifdef HAVE_PAM
 /*!
  * \internal
@@ -304,7 +362,6 @@ static bool
 based_remote_client_auth(pcmk__client_t *client)
 {
     // @TODO If we want to debug/trace-log an auth message, strip password first
-    const char *op = NULL;
     const char *user = NULL;
     const char *password = NULL;
     const char *client_name = pcmk__client_name(client);
@@ -312,32 +369,8 @@ based_remote_client_auth(pcmk__client_t *client)
     xmlNode *cib_result = NULL;
 
     msg = pcmk__remote_message_xml(client->remote);
-    if (msg == NULL) {
-        pcmk__warn("Rejecting remote client %s: Unrecognizable message",
-                   client_name);
-        goto done;
-    }
-
-    if (!pcmk__xe_is(msg, PCMK__XE_CIB_COMMAND)) {
-        pcmk__warn("Rejecting remote client %s: Expected "
-                   "element '" PCMK__XE_CIB_COMMAND "', got '%s'", client_name,
-                   (const char *) msg->name);
-        goto done;
-    }
-
-    op = pcmk__xe_get(msg, PCMK_XA_OP);
-    if (!pcmk__str_eq(op, "authenticate", pcmk__str_none)) {
-        pcmk__warn("Rejecting remote client %s: Expected "
-                   PCMK_XA_OP "='authenticate', got " PCMK_XA_OP "='%s'", op);
-        goto done;
-    }
-
-    user = pcmk__xe_get(msg, PCMK_XA_USER);
-    password = pcmk__xe_get(msg, PCMK__XA_PASSWORD);
-
-    if ((user == NULL) || (password == NULL)) {
-        pcmk__warn("Rejecting remote client %s: No %s given", client_name,
-                   ((user == NULL)? "username" : "password"));
+    if (!parse_auth_message(msg, &user, &password, client_name)) {
+        // Error already logged
         goto done;
     }
 
