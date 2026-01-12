@@ -28,42 +28,86 @@
 
 static pcmk_cluster_t *cluster = NULL;
 
-#if SUPPORT_COROSYNC
 static void
-based_cpg_dispatch(cpg_handle_t handle,
-                   const struct cpg_name *groupName,
-                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+based_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
-    char *data = NULL;
-    const char *from = NULL;
-    xmlNode *xml = NULL;
+    int rc = pcmk_rc_ok;
 
     if (based_shutting_down()) {
-        pcmk__info("Ignoring CPG message from node %" PRIu32 " during shutdown",
-                   nodeid);
+        pcmk__info("Ignoring CPG message from %s[%" PRIu32 "] during shutdown",
+                   peer->name, peer->cluster_layer_id);
         return;
-    }
 
-    data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = NULL,
+            .ipc_id         = 0,
+            .ipc_flags      = 0,
+            .peer           = peer->name,
+            .xml            = xml,
+            .call_options   = cib_none,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        rc = pcmk__xe_get_flags(xml, PCMK__XA_CIB_CALLOPT,
+                                (uint32_t *) &request.call_options, cib_none);
+        if (rc != pcmk_rc_ok) {
+            pcmk__warn("Couldn't parse options from request: %s",
+                       pcmk_rc_str(rc));
+        }
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CIB_OP);
+        CRM_CHECK(request.op != NULL, return);
+
+        if (pcmk__is_set(request.call_options, cib_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        if (pcmk__xe_get(request.xml, PCMK__XA_CIB_CLIENTNAME) == NULL) {
+            pcmk__xe_set(request.xml, PCMK__XA_CIB_CLIENTNAME,
+                         pcmk__xe_get(request.xml, PCMK__XA_SRC));
+        }
+
+        based_process_request(request.xml, request.ipc_client);
+        pcmk__reset_request(&request);
+    }
+}
+
+#if SUPPORT_COROSYNC
+/*!
+ * \internal
+ * \brief Callback for when a peer message is received
+ *
+ * \param[in]     handle      Cluster connection
+ * \param[in]     group_name  Group that \p nodeid is a member of
+ * \param[in]     nodeid      Peer node that sent \p msg
+ * \param[in]     pid         Process that sent \p msg
+ * \param[in,out] msg         Received message
+ * \param[in]     msg_len     Length of \p msg
+ */
+static void
+based_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
+                   uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
+{
+    xmlNode *xml = NULL;
+    const char *from = NULL;
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
+
     if (data == NULL) {
         return;
     }
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        pcmk__err("Invalid XML: '%.120s'", data);
-        free(data);
-        return;
+        pcmk__err("Bad message received from %s[%" PRIu32 "]: '%.120s'", from,
+                  nodeid, data);
+
+    } else {
+        pcmk__xe_set(xml, PCMK__XA_SRC, from);
+        based_peer_message(pcmk__get_node(nodeid, from, NULL,
+                                          pcmk__node_search_cluster_member),
+                           xml);
     }
-
-    pcmk__xe_set(xml, PCMK__XA_SRC, from);
-
-    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME,
-                     pcmk__xe_get(msg, PCMK__XA_SRC));
-    }
-
-    based_process_request(msg, NULL);
 
     pcmk__xml_free(xml);
     free(data);
