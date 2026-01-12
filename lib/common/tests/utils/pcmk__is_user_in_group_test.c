@@ -11,7 +11,6 @@
 
 #include <crm/common/unittest_internal.h>
 
-#include "../../crmcommon_private.h"
 #include "mock_private.h"
 
 static int
