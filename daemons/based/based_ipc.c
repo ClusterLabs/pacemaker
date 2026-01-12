@@ -70,13 +70,13 @@ based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static int32_t
 based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    int rc = pcmk_rc_ok;
     uint32_t id = 0;
     uint32_t flags = 0;
     uint32_t call_options = cib_none;
     xmlNode *msg = NULL;
     pcmk__client_t *client = pcmk__find_client(c);
     const char *op = NULL;
+    int rc = pcmk_rc_ok;
 
     // Sanity-check, and parse XML from IPC data
     CRM_CHECK(client != NULL, return 0);
@@ -123,18 +123,13 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     if (client->name == NULL) {
         const char *value = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
 
-        if (value == NULL) {
-            client->name = pcmk__itoa(client->pid);
-        } else {
-            client->name = pcmk__str_copy(value);
-        }
+        client->name = pcmk__assert_asprintf("%s.%u", pcmk__s(value, "unknown"),
+                                             client->pid);
     }
 
     rc = pcmk__xe_get_flags(msg, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
     if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request from IPC client %s: %s",
-                   client->name, pcmk_rc_str(rc));
-        pcmk__log_xml_info(msg, "bad-call-opts");
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     /* Requests with cib_transaction set should not be sent to based directly
@@ -149,7 +144,7 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
     if (pcmk__is_set(call_options, cib_sync_call)) {
-        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
+        pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
 
         // If false, the client has two synchronous events in flight
         CRM_LOG_ASSERT(client->request_id == 0);
@@ -163,8 +158,6 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     CRM_LOG_ASSERT(client->user != NULL);
     pcmk__update_acl_user(msg, PCMK__XA_CIB_USER, client->user);
-
-    pcmk__log_xml_trace(msg, "ipc-request");
 
     op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
@@ -194,10 +187,29 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         }
 
         pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL, status);
-        return 0;
+
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = call_options,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CIB_OP);
+        CRM_CHECK(request.op != NULL, return 0);
+
+        if (pcmk__is_set(request.call_options, cib_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        based_process_request(request.xml, request.ipc_client);
+        pcmk__reset_request(&request);
     }
 
-    based_process_request(msg, client);
     pcmk__xml_free(msg);
     return 0;
 }
