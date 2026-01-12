@@ -349,14 +349,14 @@ log_local_options(const pcmk__client_t *client,
 }
 
 static bool
-parse_peer_options(const cib__operation_t *operation, xmlNode *request,
+parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
-    const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
-    const char *delegated = pcmk__xe_get(request, PCMK__XA_CIB_DELEGATED_FROM);
-    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *originator = pcmk__xe_get(request, PCMK__XA_SRC);
-    const char *reply_to = pcmk__xe_get(request, PCMK__XA_CIB_ISREPLYTO);
+    const char *host = pcmk__xe_get(request->xml, PCMK__XA_CIB_HOST);
+    const char *delegated = pcmk__xe_get(request->xml,
+                                         PCMK__XA_CIB_DELEGATED_FROM);
+    const char *originator = pcmk__xe_get(request->xml, PCMK__XA_SRC);
+    const char *reply_to = pcmk__xe_get(request->xml, PCMK__XA_CIB_ISREPLYTO);
 
     bool is_reply = pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei);
 
@@ -364,12 +364,12 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         originator = "peer";
     }
 
-    if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
-        process_ping_reply(request);
+    if (is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
+        process_ping_reply(request->xml);
         return false;
     }
 
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
+    if (pcmk__str_eq(request->op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
         /* @COMPAT We stopped sending shutdown requests as of 3.0.2. During a
          * rolling upgrade, the requesting node expects a reply. We might as
          * well continue sending one until we no longer support rolling upgrades
@@ -379,9 +379,11 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         return true;
     }
 
-    if (is_reply && pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
-        pcmk__trace("Will notify local clients for %s reply from %s", op,
-                    originator);
+    if (is_reply
+        && pcmk__str_eq(request->op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
+
+        pcmk__trace("Will notify local clients for %s reply from %s",
+                    request->op, originator);
         *process = false;
         *needs_reply = false;
         *local_notify = true;
@@ -389,12 +391,14 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if ((reply_to != NULL)
-        && pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE, pcmk__str_none)) {
+        && pcmk__str_eq(request->op, PCMK__CIB_REQUEST_REPLACE,
+                        pcmk__str_none)) {
 
         // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
         delegated = reply_to;
 
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_UPGRADE, pcmk__str_none)) {
+    } else if (pcmk__str_eq(request->op, PCMK__CIB_REQUEST_UPGRADE,
+                            pcmk__str_none)) {
         /* Only the DC (node with the oldest software) should process
          * this operation if PCMK__XA_CIB_SCHEMA_MAX is unset.
          *
@@ -405,8 +409,9 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
          * Except this time PCMK__XA_CIB_SCHEMA_MAX will be set which puts a
          * limit on how far newer nodes will go
          */
-        const char *max = pcmk__xe_get(request, PCMK__XA_CIB_SCHEMA_MAX);
-        const char *upgrade_rc = pcmk__xe_get(request, PCMK__XA_CIB_UPGRADE_RC);
+        const char *max = pcmk__xe_get(request->xml, PCMK__XA_CIB_SCHEMA_MAX);
+        const char *upgrade_rc = pcmk__xe_get(request->xml,
+                                              PCMK__XA_CIB_UPGRADE_RC);
 
         pcmk__trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
                     (is_reply? "reply" : "request"),
@@ -416,10 +421,10 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         if (upgrade_rc != NULL) {
             // Our upgrade request was rejected by DC, notify clients of result
             pcmk__assert(is_reply);
-            pcmk__xe_set(request, PCMK__XA_CIB_RC, upgrade_rc);
+            pcmk__xe_set(request->xml, PCMK__XA_CIB_RC, upgrade_rc);
 
-            pcmk__trace("Will notify local clients for %s reply from %s", op,
-                        originator);
+            pcmk__trace("Will notify local clients for %s reply from %s",
+                        request->op, originator);
             *process = false;
             *needs_reply = false;
             *local_notify = true;
@@ -435,26 +440,27 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
-        pcmk__trace("Processing %s request sent to us from %s", op, originator);
+        pcmk__trace("Processing %s request sent to us from %s", request->op,
+                    originator);
         return true;
     }
 
     if (host != NULL) {
-        pcmk__trace("Ignoring %s request intended for CIB manager on %s", op,
-                    host);
+        pcmk__trace("Ignoring %s request intended for CIB manager on %s",
+                    request->op, host);
         return false;
     }
 
-    if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
+    if (!is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
         return true;
     }
 
     *needs_reply = false;
     pcmk__trace("Processing %s request broadcast by %s call %s on %s "
-                "(local clients will%s be notified)", op,
-                pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME),
+                "(local clients will%s be notified)", request->op,
+                pcmk__s(pcmk__xe_get(request->xml, PCMK__XA_CIB_CLIENTNAME),
                         "client"),
-                pcmk__s(pcmk__xe_get(request, PCMK__XA_CIB_CALLID),
+                pcmk__s(pcmk__xe_get(request->xml, PCMK__XA_CIB_CALLID),
                         "without ID"),
                 originator, (*local_notify? "" : "not"));
     return true;
@@ -749,7 +755,7 @@ based_handle_request(pcmk__request_t *request)
 
         log_local_options(request->ipc_client, operation, host, request->op);
 
-    } else if (!parse_peer_options(operation, request->xml, &local_notify,
+    } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
         pcmk__reset_request(request);
         return pcmk_rc_ok;
