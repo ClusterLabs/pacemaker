@@ -395,6 +395,10 @@ based_remote_client_auth(pcmk__client_t *client)
 
     // @TODO What sets PCMK_XA_NAME? Added by commit 22832641.
     client->name = pcmk__xe_get_copy(msg, PCMK_XA_NAME);
+    if (client->name == NULL) {
+        client->name = pcmk__str_copy(client->id);
+    }
+
     client->user = pcmk__str_copy(user);
 
     // Setting client->name may have changed the return value
@@ -417,19 +421,31 @@ done:
 }
 
 static void
-cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
+based_remote_client_message(pcmk__client_t *client, xmlNode *msg)
 {
     int rc = pcmk_rc_ok;
     uint32_t call_options = cib_none;
-    const char *op = pcmk__xe_get(command, PCMK__XA_CIB_OP);
+    const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
-    if (!pcmk__xe_is(command, PCMK__XE_CIB_COMMAND)) {
-        pcmk__log_xml_trace(command, "bad");
+    if (!pcmk__xe_is(msg, PCMK__XE_CIB_COMMAND)) {
+        pcmk__debug("Unrecognizable remote data from client %s",
+                    pcmk__client_name(client));
         return;
     }
 
-    if (client->name == NULL) {
-        client->name = pcmk__str_copy(client->id);
+    rc = pcmk__xe_get_flags(msg, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
+    }
+
+    /* Requests with cib_transaction set should not be sent to based directly
+     * (that is, outside of a commit-transaction request)
+     */
+    if (pcmk__is_set(call_options, cib_transaction)) {
+        pcmk__warn("Ignoring CIB request from remote client %s with "
+                   "cib_transaction flag set outside of any transaction",
+                   pcmk__client_name(client));
+        return;
     }
 
     /* Unset dangerous options.
@@ -458,49 +474,52 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
      * * PCMK__XA_CIB_UPDATE: This can prevent CIB versions from being updated,
      *   because the update is treated as a sync.
      */
-    pcmk__xe_remove_attr(command, PCMK__XA_SRC);
-    pcmk__xe_remove_attr(command, PCMK__XA_CIB_HOST);
-    pcmk__xe_remove_attr(command, PCMK__XA_CIB_UPDATE);
+    pcmk__xe_remove_attr(msg, PCMK__XA_SRC);
+    pcmk__xe_remove_attr(msg, PCMK__XA_CIB_HOST);
+    pcmk__xe_remove_attr(msg, PCMK__XA_CIB_UPDATE);
 
-    pcmk__xe_set(command, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(command, PCMK__XA_CIB_CLIENTID, client->id);
-    pcmk__xe_set(command, PCMK__XA_CIB_CLIENTNAME, client->name);
-    pcmk__xe_set(command, PCMK__XA_CIB_USER, client->user);
-
-    if (pcmk__xe_get(command, PCMK__XA_CIB_CALLID) == NULL) {
+    // Similarly impossible via our API/tools. cib__create_op() sets this.
+    if (pcmk__xe_get(msg, PCMK__XA_CIB_CALLID) == NULL) {
         char *call_uuid = pcmk__generate_uuid();
 
-        /* fix the command */
-        pcmk__xe_set(command, PCMK__XA_CIB_CALLID, call_uuid);
+        pcmk__xe_set(msg, PCMK__XA_CIB_CALLID, call_uuid);
         free(call_uuid);
     }
 
-    rc = pcmk__xe_get_flags(command, PCMK__XA_CIB_CALLOPT, &call_options,
-                            cib_none);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request from remote client %s: "
-                   "%s", client->name, pcmk_rc_str(rc));
-        pcmk__log_xml_info(command, "bad-call-opts");
-    }
+    pcmk__xe_set(msg, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTID, client->id);
+    pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, client->name);
+    pcmk__xe_set(msg, PCMK__XA_CIB_USER, client->user);
 
-    /* Requests with cib_transaction set should not be sent to based directly
-     * (that is, outside of a commit-transaction request)
-     */
-    if (pcmk__is_set(call_options, cib_transaction)) {
-        pcmk__warn("Ignoring CIB request from remote client %s with "
-                   "cib_transaction flag set outside of any transaction",
-                   client->name);
-        pcmk__log_xml_info(command, "no-transaction");
-        return;
-    }
-
-    pcmk__log_xml_trace(command, "remote-request");
+    pcmk__log_xml_trace(msg, "remote-request");
 
     if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
-        based_update_notify_flags(command, client);
-    }
+        based_update_notify_flags(msg, client);
 
-    based_process_request(command, client);
+    } else {
+        /* @TODO Should ipc_id be set to a nonzero value? client->request_id
+         * needs to match it if so, since pcmk__request_sync is set.
+         */
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = 0,
+            .ipc_flags      = crm_ipc_flags_none,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = call_options,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CIB_OP);
+        CRM_CHECK(request.op != NULL, return);
+
+        if (pcmk__is_set(request.call_options, cib_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        based_process_request(request.xml, request.ipc_client);
+        pcmk__reset_request(&request);
+    }
 }
 
 static int
@@ -557,12 +576,9 @@ based_remote_client_dispatch(gpointer data)
     }
 
     msg = pcmk__remote_message_xml(client->remote);
-    if (msg != NULL) {
-        pcmk__trace("Remote message received from client %s", client_name);
-        cib_handle_remote_msg(client, msg);
-        pcmk__xml_free(msg);
-    }
+    based_remote_client_message(client, msg);
 
+    pcmk__xml_free(msg);
     return 0;
 }
 

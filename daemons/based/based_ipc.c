@@ -139,7 +139,6 @@ based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         pcmk__warn("Ignoring CIB request from IPC client %s with "
                    "cib_transaction flag set outside of any transaction",
                    client->name);
-        pcmk__log_xml_info(msg, "no-transaction");
         return 0;
     }
 
