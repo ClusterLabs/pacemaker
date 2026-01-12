@@ -17,6 +17,7 @@ check_PROGRAMS += pcmk__daemon_user_test
 check_PROGRAMS += pcmk__fail_attr_name_test
 check_PROGRAMS += pcmk__failcount_name_test
 check_PROGRAMS += pcmk__getpid_s_test
+check_PROGRAMS += pcmk__is_user_in_group_test
 check_PROGRAMS += pcmk__lastfailure_name_test
 check_PROGRAMS += pcmk__lookup_user_test
 check_PROGRAMS += pcmk__realloc_test
