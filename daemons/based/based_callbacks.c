@@ -795,8 +795,7 @@ based_handle_request(pcmk__request_t *request)
 
 done:
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
-        && needs_reply && !based_stand_alone()
-        && (request->ipc_client == NULL)) {
+        && needs_reply && !based_stand_alone()) {
 
         send_peer_reply(reply, originator);
     }
