@@ -202,6 +202,10 @@ fenced_cluster_connect(void)
 void
 fenced_cluster_disconnect(void)
 {
+    if (fenced_cluster == NULL) {
+        return;
+    }
+
     pcmk_cluster_disconnect(fenced_cluster);
     pcmk_cluster_free(fenced_cluster);
 }
