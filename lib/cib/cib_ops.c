@@ -35,9 +35,6 @@ static GHashTable *operation_table = NULL;
 
 static const cib__operation_t cib_ops[] = {
     {
-        PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete, cib__op_attr_modifies
-    },
-    {
         PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
         cib__op_attr_modifies|cib__op_attr_transaction
     },
