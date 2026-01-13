@@ -515,7 +515,7 @@ based_perform_op_rw(pcmk__request_t *request, const cib__operation_t *operation,
 
     if (result_cib != based_cib) {
         /* Always write to disk for successful ops with the writes-through flag
-         * set. This also avoids the need to detect ordering changes.
+         * set.
          *
          * An exception is a request within a transaction. Since a transaction
          * is atomic, intermediate results must not be written to disk.
