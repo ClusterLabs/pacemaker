@@ -33,7 +33,6 @@ extern "C" {
 #define PCMK__CIB_REQUEST_REPLACE       "cib_replace"
 #define PCMK__CIB_REQUEST_APPLY_PATCH   "cib_apply_diff"
 #define PCMK__CIB_REQUEST_UPGRADE       "cib_upgrade"
-#define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
 #define PCMK__CIB_REQUEST_NOOP          "noop"
 #define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
@@ -65,7 +64,6 @@ enum cib__op_attr {
  * \brief Types of CIB operations
  */
 enum cib__op_type {
-    cib__op_abs_delete,
     cib__op_apply_patch,
     cib__op_bump,
     cib__op_commit_transact,

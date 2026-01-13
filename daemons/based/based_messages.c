@@ -29,27 +29,6 @@
 
 #include "pacemaker-based.h"
 
-/*!
- * \internal
- * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
- *
- * \param[in] req      Ignored
- * \param[in] cib      Ignored
- * \param[in] answer   Ignored
- *
- * \return \c EINVAL
- *
- * \note This is unimplemented and simply returns an error.
- */
-int
-based_process_abs_delete(xmlNode *req, xmlNode **cib, xmlNode **answer)
-{
-    /* @COMPAT Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed. Note that
-     * external clients with Pacemaker versions < 3.0.0 can send it.
-     */
-    return EINVAL;
-}
-
 int
 based_process_commit_transact(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
