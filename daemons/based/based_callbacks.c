@@ -514,17 +514,15 @@ based_perform_op_rw(pcmk__request_t *request, const cib__operation_t *operation,
     }
 
     if (result_cib != based_cib) {
-        /* Always write to disk for successful ops with the writes-through flag
-         * set.
-         *
-         * An exception is a request within a transaction. Since a transaction
+        /* Write to disk on config change or successful upgrade (which may
+         * update PCMK_XA_VALIDATE_WITH without changing the configuration),
+         * unless the request is part of a transaction. Since a transaction
          * is atomic, intermediate results must not be written to disk.
          */
         const bool to_disk = !pcmk__is_set(request->call_options,
                                            cib_transaction)
                              && (config_changed
-                                 || pcmk__is_set(operation->flags,
-                                                 cib__op_attr_writes_through));
+                                 || (operation->type == cib__op_upgrade));
 
         rc = based_activate_cib(result_cib, to_disk, request->op);
     }
