@@ -795,10 +795,6 @@ based_handle_request(pcmk__request_t *request)
         reply = create_cib_reply(request->xml, rc, output);
     }
 
-    if ((output != NULL) && (output->doc != based_cib->doc)) {
-        pcmk__xml_free(output);
-    }
-
 done:
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
         && needs_reply && !based_stand_alone()) {
@@ -810,6 +806,10 @@ done:
         do_local_notify((process? reply : request->xml), client_id,
                         pcmk__is_set(request->call_options, cib_sync_call),
                         (request->ipc_client == NULL));
+    }
+
+    if ((output != NULL) && (output->doc != based_cib->doc)) {
+        pcmk__xml_free(output);
     }
 
     pcmk__xml_free(reply);
