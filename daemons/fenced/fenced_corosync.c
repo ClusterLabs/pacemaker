@@ -207,5 +207,5 @@ fenced_cluster_disconnect(void)
     }
 
     pcmk_cluster_disconnect(fenced_cluster);
-    pcmk_cluster_free(fenced_cluster);
+    g_clear_pointer(&fenced_cluster, pcmk_cluster_free);
 }
