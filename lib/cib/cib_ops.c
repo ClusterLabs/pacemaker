@@ -72,7 +72,7 @@ static const cib__operation_t cib_ops[] = {
         CRM_OP_PING, cib__op_ping, cib__op_attr_none
     },
     {
-        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary, cib__op_attr_local
+        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary, cib__op_attr_none
     },
     {
         PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
@@ -85,10 +85,10 @@ static const cib__operation_t cib_ops[] = {
         |cib__op_attr_transaction
     },
     {
-        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_local
+        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_none
     },
     {
-        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary, cib__op_attr_local
+        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary, cib__op_attr_none
     },
     {
         PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_none

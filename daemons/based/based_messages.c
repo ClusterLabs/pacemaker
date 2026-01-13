@@ -123,6 +123,9 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
+    // This should always be processed locally and never addressed to any host
+    CRM_CHECK(pcmk__xe_get(req, PCMK__XA_CIB_HOST) == NULL, return EOPNOTSUPP);
+
     if (!based_get_local_node_dc()) {
         pcmk__info("We are now in R/W mode");
         based_set_local_node_dc(true);
@@ -142,6 +145,9 @@ based_process_schemas(xmlNode *req, xmlNode **cib, xmlNode **answer)
     const char *after_ver = NULL;
     GList *schemas = NULL;
     GList *already_included = NULL;
+
+    // This should always be processed locally and never addressed to any host
+    CRM_CHECK(pcmk__xe_get(req, PCMK__XA_CIB_HOST) == NULL, return EOPNOTSUPP);
 
     *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
@@ -179,6 +185,9 @@ based_process_schemas(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_secondary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
+    // This should always be processed locally and never addressed to any host
+    CRM_CHECK(pcmk__xe_get(req, PCMK__XA_CIB_HOST) == NULL, return EOPNOTSUPP);
+
     if (based_get_local_node_dc()) {
         pcmk__info("We are now in R/O mode");
         based_set_local_node_dc(false);
