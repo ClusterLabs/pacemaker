@@ -676,24 +676,25 @@ validate_transaction_request(const xmlNode *request)
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
-    int rc = cib__get_operation(op, &operation);
+    int rc = pcmk_rc_ok;
 
+    rc = cib__get_operation(op, &operation);
     if (rc != pcmk_rc_ok) {
         // cib__get_operation() logs error
         return rc;
     }
 
-    if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)) {
+    if (operation->type == cib__op_commit_transact) {
         pcmk__err("Operation %s is not supported in CIB transactions", op);
         return EOPNOTSUPP;
     }
 
     if (host != NULL) {
         pcmk__err("Operation targeting a specific node (%s) is not supported "
-                  "in a CIB transaction",
-                  host);
+                  "in a CIB transaction", host);
         return EOPNOTSUPP;
     }
+
     return pcmk_rc_ok;
 }
 
