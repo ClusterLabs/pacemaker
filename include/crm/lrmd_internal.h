@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,12 +11,17 @@
 #define PCMK__CRM_LRMD_INTERNAL__H
 
 #include <stdint.h>                     // uint32_t
+
 #include <glib.h>                       // GList, GHashTable, gpointer
+#include <gnutls/gnutls.h>              // gnutls_datum_t
 #include <libxml/tree.h>                // xmlNode
+
 #include <crm/common/internal.h>        // pcmk__output_t, pcmk__remote_t, pcmk__action_result_t
 #include <crm/common/ipc.h>             // crm_ipc_t
 #include <crm/common/mainloop.h>        // mainloop_io_t, ipc_client_callbacks
-#include <crm/lrmd.h>           // lrmd_t, lrmd_event_data_t, lrmd_rsc_info_t
+#include <crm/common/results.h>         // ocf_exitcode
+#include <crm/lrmd.h>                   // lrmd_t, lrmd_event_data_t, lrmd_rsc_info_t
+#include <crm/lrmd_events.h>            // lrmd_event_data_t
 
 #ifdef __cplusplus
 extern "C" {
