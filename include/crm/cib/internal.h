@@ -40,18 +40,6 @@ extern "C" {
 
 /*!
  * \internal
- * \brief Flags for CIB operation attributes
- */
-enum cib__op_attr {
-    //! No special attributes
-    cib__op_attr_none           = 0,
-
-    //! May modify state (of the CIB itself or of the CIB manager)
-    cib__op_attr_modifies       = (UINT32_C(1) << 1),
-};
-
-/*!
- * \internal
  * \brief Types of CIB operations
  */
 enum cib__op_type {
@@ -89,7 +77,7 @@ typedef int (*cib__op_fn_t)(xmlNode *request, xmlNode **cib, xmlNode **output);
 typedef struct cib__operation_s {
     const char *name;
     enum cib__op_type type;
-    uint32_t flags; //!< Group of <tt>enum cib__op_attr</tt> flags
+    bool modifies_cib;
 } cib__operation_t;
 
 typedef struct cib_notify_client_s {

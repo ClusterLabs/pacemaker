@@ -146,7 +146,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
 
     bool changed = false;
-    bool read_only = false;
     xmlNode *result_cib = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *local_output = NULL;
@@ -167,9 +166,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
-
-    if (read_only) {
+    if (!operation->modifies_cib) {
         rc = cib__perform_op_ro(op_function, request, &private->cib_xml,
                                 &local_output);
     } else {
@@ -189,7 +186,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         // Show validation errors to stderr
         pcmk__validate_xml(result_cib, NULL, NULL);
 
-    } else if ((rc == pcmk_rc_ok) && !read_only) {
+    } else if ((rc == pcmk_rc_ok) && operation->modifies_cib) {
         if (result_cib != private->cib_xml) {
             pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
