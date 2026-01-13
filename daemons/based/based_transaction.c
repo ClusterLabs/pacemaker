@@ -82,7 +82,7 @@ process_transaction_requests(xmlNode *transaction, pcmk__client_t *client,
 
         rc = cib__get_operation(op, &operation);
         if (rc == pcmk_rc_ok) {
-            if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)
+            if ((operation->type == cib__op_commit_transact)
                 || (host != NULL)) {
 
                 rc = EOPNOTSUPP;

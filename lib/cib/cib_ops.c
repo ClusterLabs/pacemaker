@@ -36,31 +36,26 @@ static GHashTable *operation_table = NULL;
 static const cib__operation_t cib_ops[] = {
     {
         PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        cib__op_attr_modifies
     },
     {
-        PCMK__CIB_REQUEST_BUMP, cib__op_bump,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_BUMP, cib__op_bump, cib__op_attr_modifies
     },
     {
         PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
         cib__op_attr_modifies
     },
     {
-        PCMK__CIB_REQUEST_CREATE, cib__op_create,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_CREATE, cib__op_create, cib__op_attr_modifies
     },
     {
-        PCMK__CIB_REQUEST_DELETE, cib__op_delete,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_DELETE, cib__op_delete, cib__op_attr_modifies
     },
     {
-        PCMK__CIB_REQUEST_ERASE, cib__op_erase,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_ERASE, cib__op_erase, cib__op_attr_modifies
     },
     {
-        PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_MODIFY, cib__op_modify, cib__op_attr_modifies
     },
     {
         PCMK__CIB_REQUEST_NOOP, cib__op_noop, cib__op_attr_none
@@ -75,8 +70,7 @@ static const cib__operation_t cib_ops[] = {
         PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
     },
     {
-        PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_REPLACE, cib__op_replace, cib__op_attr_modifies
     },
     {
         PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_none
@@ -91,8 +85,7 @@ static const cib__operation_t cib_ops[] = {
         PCMK__CIB_REQUEST_SYNC, cib__op_sync, cib__op_attr_none
     },
     {
-        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
-        cib__op_attr_modifies|cib__op_attr_transaction
+        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade, cib__op_attr_modifies
     },
 };
 
