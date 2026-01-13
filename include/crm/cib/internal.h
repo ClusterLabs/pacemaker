@@ -87,15 +87,15 @@ enum cib__op_type {
     cib__op_primary,
     cib__op_query,
     cib__op_replace,
+    cib__op_schemas,
     cib__op_secondary,
     cib__op_shutdown,
-    cib__op_sync_all,
-    cib__op_sync_one,
+    cib__op_sync_to_all,
+    cib__op_sync_to_one,
     cib__op_upgrade,
-    cib__op_schemas,
 };
 
-gboolean cib_read_config(GHashTable * options, xmlNode * current_cib);
+void cib_read_config(GHashTable *options, xmlNode *current_cib);
 
 typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
                             xmlNode *, xmlNode *, xmlNode **, xmlNode **);
@@ -200,67 +200,41 @@ void cib_native_notify(gpointer data, gpointer user_data);
 
 int cib__get_operation(const char *op, const cib__operation_t **operation);
 
-int cib_process_query(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer);
+int cib__process_apply_patch(const char *op, int options, const char *section,
+                             xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                             xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_erase(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer);
+int cib__process_bump(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_bump(const char *op, int options, const char *section, xmlNode * req,
-                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                     xmlNode ** answer);
+int cib__process_create(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_replace(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer);
+int cib__process_delete(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_create(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
+int cib__process_erase(const char *op, int options, const char *section,
+                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                       xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_modify(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
+int cib__process_modify(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_delete(const char *op, int options, const char *section, xmlNode * req,
-                       xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                       xmlNode ** answer);
+int cib__process_query(const char *op, int options, const char *section,
+                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                       xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_diff(const char *op, int options, const char *section, xmlNode * req,
-                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                     xmlNode ** answer);
+int cib__process_replace(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer);
 
-int cib_process_upgrade(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer);
-
-/*!
- * \internal
- * \brief Query or modify a CIB
- *
- * \param[in]     op            PCMK__CIB_REQUEST_* operation to be performed
- * \param[in]     options       Flag set of \c cib_call_options
- * \param[in]     section       XPath to query or modify
- * \param[in]     req           unused
- * \param[in]     input         Portion of CIB to modify (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[in,out] existing_cib  Input CIB (used with PCMK__CIB_REQUEST_QUERY)
- * \param[in,out] result_cib    CIB copy to make changes in (used with
- *                              PCMK__CIB_REQUEST_CREATE,
- *                              PCMK__CIB_REQUEST_MODIFY,
- *                              PCMK__CIB_REQUEST_DELETE, and
- *                              PCMK__CIB_REQUEST_REPLACE)
- * \param[out]    answer        Query result (used with PCMK__CIB_REQUEST_QUERY)
- *
- * \return Legacy Pacemaker return code
- */
-int cib_process_xpath(const char *op, int options, const char *section,
-                      const xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                      xmlNode **result_cib, xmlNode ** answer);
+int cib__process_upgrade(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,

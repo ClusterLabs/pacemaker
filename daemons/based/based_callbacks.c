@@ -653,7 +653,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
     } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         pcmk__info("Detected legacy %s global update from %s", op, originator);
-        send_sync_request(NULL);
+        send_sync_request();
         return false;
 
     } else if (is_reply

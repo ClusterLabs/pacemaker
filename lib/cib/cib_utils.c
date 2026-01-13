@@ -730,14 +730,14 @@ cib_native_notify(gpointer data, gpointer user_data)
     pcmk__trace("Callback invoked...");
 }
 
-gboolean
+void
 cib_read_config(GHashTable * options, xmlNode * current_cib)
 {
     xmlNode *config = NULL;
     crm_time_t *now = NULL;
 
     if (options == NULL || current_cib == NULL) {
-        return FALSE;
+        return;
     }
 
     now = crm_time_new(NULL);
@@ -758,8 +758,6 @@ cib_read_config(GHashTable * options, xmlNode * current_cib)
     pcmk__validate_cluster_options(options);
 
     crm_time_free(now);
-
-    return TRUE;
 }
 
 int
@@ -824,8 +822,8 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
     }
 
     if (input != NULL) {
-        rc = cib_process_diff(NULL, cib_none, NULL, event, diff, input, output,
-                              NULL);
+        rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
+                                      output, NULL);
 
         if (rc != pcmk_ok) {
             pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc),

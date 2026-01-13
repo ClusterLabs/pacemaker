@@ -36,104 +36,141 @@ bool based_is_primary = false;
 
 xmlNode *the_cib = NULL;
 
-int
-cib_process_shutdown_req(const char *op, int options, const char *section, xmlNode * req,
-                         xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                         xmlNode ** answer)
-{
-    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-
-    *answer = NULL;
-
-    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
-        pcmk__info("Peer %s is requesting to shut down", host);
-        return pcmk_ok;
-    }
-
-    if (!cib_shutdown_flag) {
-        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
-        return -EINVAL;
-    }
-
-    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
-    terminate_cib(CRM_EX_OK);
-    return pcmk_ok;
-}
-
-// @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
-int
-cib_process_noop(const char *op, int options, const char *section, xmlNode *req,
-                 xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
-                 xmlNode **answer)
-{
-    pcmk__trace("Processing \"%s\" event", op);
-    *answer = NULL;
-    return pcmk_ok;
-}
-
-int
-cib_process_readwrite(const char *op, int options, const char *section, xmlNode * req,
-                      xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                      xmlNode ** answer)
-{
-    int result = pcmk_ok;
-
-    pcmk__trace("Processing \"%s\" event", op);
-
-    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_IS_PRIMARY, pcmk__str_none)) {
-        if (based_is_primary) {
-            result = pcmk_ok;
-        } else {
-            result = -EPERM;
-        }
-        return result;
-    }
-
-    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_PRIMARY, pcmk__str_none)) {
-        if (!based_is_primary) {
-            pcmk__info("We are now in R/W mode");
-            based_is_primary = true;
-        } else {
-            pcmk__debug("We are still in R/W mode");
-        }
-
-    } else if (based_is_primary) {
-        pcmk__info("We are now in R/O mode");
-        based_is_primary = false;
-    }
-
-    return result;
-}
-
 /* Set to 1 when a sync is requested, incremented when a diff is ignored,
  * reset to 0 when a sync is received
  */
 static int sync_in_progress = 0;
 
-void
-send_sync_request(const char *host)
+/*!
+ * \internal
+ * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
+ *
+ * \param[in] op            Ignored
+ * \param[in] options       Ignored
+ * \param[in] section       Ignored
+ * \param[in] req           Ignored
+ * \param[in] input         Ignored
+ * \param[in] existing_cib  Ignored
+ * \param[in] result_cib    Ignored
+ * \param[in] answer        Ignored
+ *
+ * \return \c -EINVAL
+ *
+ * \note This is unimplemented and simply returns an error.
+ */
+int
+based_process_abs_delete(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer)
 {
-    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
-    pcmk__node_status_t *peer = NULL;
-
-    pcmk__info("Requesting re-sync from %s", (host? host : "all peers"));
-    sync_in_progress = 1;
-
-    pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
-    pcmk__xe_set(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
-
-    if (host != NULL) {
-        peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
-    }
-    pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
-    pcmk__xml_free(sync_me);
+    /* @COMPAT Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed. Note that
+     * external clients with Pacemaker versions < 3.0.0 can send it.
+     */
+    return -EINVAL;
 }
 
 int
-cib_process_ping(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+based_process_apply_patch(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer)
+{
+    int rc = pcmk_ok;
+
+    if (sync_in_progress > MAX_DIFF_RETRY) {
+        /* Don't ignore diffs forever; the last request may have been lost.
+         * If the diff fails, we'll ask for another full resync.
+         */
+        sync_in_progress = 0;
+    }
+
+    // The primary instance should never ignore a diff
+    if (sync_in_progress && !based_is_primary) {
+        int source[] = { 0, 0, 0 };
+        int target[] = { 0, 0, 0 };
+
+        pcmk__xml_patchset_versions(input, source, target);
+
+        sync_in_progress++;
+        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
+                     "progress)",
+                     source[0], source[1], source[2],
+                     target[0], target[1], target[2]);
+        return -pcmk_err_diff_resync;
+    }
+
+    rc = cib__process_apply_patch(op, options, section, req, input,
+                                  existing_cib, result_cib, answer);
+    pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
+                (based_is_primary? "primary": "secondary"));
+
+    if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
+        pcmk__xml_free(*result_cib);
+        *result_cib = NULL;
+        send_sync_request();
+
+    } else if (rc == -pcmk_err_diff_resync) {
+        rc = -pcmk_err_diff_failed;
+        if (options & cib_force_diff) {
+            pcmk__warn("Not requesting full refresh in R/W mode");
+        }
+    }
+
+    return rc;
+}
+
+int
+based_process_commit_transact(const char *op, int options, const char *section,
+                              xmlNode *req, xmlNode *input,
+                              xmlNode *existing_cib, xmlNode **result_cib,
+                              xmlNode **answer)
+{
+    /* On success, our caller will activate *result_cib locally, trigger a
+     * replace notification if appropriate, and sync *result_cib to all nodes.
+     * On failure, our caller will free *result_cib.
+     */
+    int rc = pcmk_rc_ok;
+    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
+    const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
+    pcmk__client_t *client = pcmk__find_client_by_id(client_id);
+
+    rc = based_commit_transaction(input, client, origin, result_cib);
+
+    if (rc != pcmk_rc_ok) {
+        char *source = based_transaction_source_str(client, origin);
+
+        pcmk__err("Could not commit transaction for %s: %s", source,
+                  pcmk_rc_str(rc));
+        free(source);
+    }
+    return pcmk_rc2legacy(rc);
+}
+
+int
+based_process_is_primary(const char *op, int options, const char *section,
+                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                         xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
+    return (based_is_primary? pcmk_ok : -EPERM);
+}
+
+// @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
+int
+based_process_noop(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+    *answer = NULL;
+    return pcmk_ok;
+}
+
+int
+based_process_ping(const char *op, int options, const char *section,
+                   xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                   xmlNode **result_cib, xmlNode **answer)
 {
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
     const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
@@ -180,15 +217,145 @@ cib_process_ping(const char *op, int options, const char *section, xmlNode * req
 }
 
 int
-cib_process_sync(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                 xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+based_process_primary(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode ** answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (!based_is_primary) {
+        pcmk__info("We are now in R/W mode");
+        based_is_primary = true;
+
+    } else {
+        pcmk__debug("We are still in R/W mode");
+    }
+
+    return pcmk_ok;
+}
+
+int
+based_process_replace(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode **answer)
+{
+    int rc = cib__process_replace(op, options, section, req, input,
+                                  existing_cib, result_cib, answer);
+
+    if ((rc == pcmk_ok) && pcmk__xe_is(input, PCMK_XE_CIB)) {
+        sync_in_progress = 0;
+    }
+    return rc;
+}
+
+int
+based_process_schemas(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode **answer)
+{
+    xmlNode *wrapper = NULL;
+    xmlNode *data = NULL;
+
+    const char *after_ver = NULL;
+    GList *schemas = NULL;
+    GList *already_included = NULL;
+
+    *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
+
+    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
+    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    if (data == NULL) {
+        pcmk__warn("No data specified in request");
+        return -EPROTO;
+    }
+
+    after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
+    if (after_ver == NULL) {
+        pcmk__warn("No version specified in request");
+        return -EPROTO;
+    }
+
+    /* The client requested all schemas after the latest one we know about, which
+     * means the client is fully up-to-date.  Return a properly formatted reply
+     * with no schemas.
+     */
+    if (pcmk__str_eq(after_ver, pcmk__highest_schema_name(), pcmk__str_none)) {
+        return pcmk_ok;
+    }
+
+    schemas = pcmk__schema_files_later_than(after_ver);
+
+    for (GList *iter = schemas; iter != NULL; iter = iter->next) {
+        pcmk__build_schema_xml_node(*answer, iter->data, &already_included);
+    }
+
+    g_list_free_full(schemas, free);
+    g_list_free_full(already_included, free);
+    return pcmk_ok;
+}
+
+int
+based_process_secondary(const char *op, int options, const char *section,
+                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                        xmlNode **result_cib, xmlNode **answer)
+{
+    pcmk__trace("Processing \"%s\" event", op);
+
+    if (based_is_primary) {
+        pcmk__info("We are now in R/O mode");
+        based_is_primary = false;
+
+    } else {
+        pcmk__debug("We are still in R/O mode");
+    }
+
+    return pcmk_ok;
+}
+
+int
+based_process_shutdown(const char *op, int options, const char *section,
+                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                       xmlNode **result_cib, xmlNode **answer)
+{
+    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
+
+    *answer = NULL;
+
+    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
+        pcmk__info("Peer %s is requesting to shut down", host);
+        return pcmk_ok;
+    }
+
+    if (!cib_shutdown_flag) {
+        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
+        return -EINVAL;
+    }
+
+    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
+    terminate_cib(CRM_EX_OK);
+    return pcmk_ok;
+}
+
+int
+based_process_sync_to_all(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer)
 {
     return sync_our_cib(req, true);
 }
 
 int
-cib_process_upgrade_server(const char *op, int options, const char *section, xmlNode * req, xmlNode * input,
-                           xmlNode * existing_cib, xmlNode ** result_cib, xmlNode ** answer)
+based_process_sync_to_one(const char *op, int options, const char *section,
+                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                          xmlNode **result_cib, xmlNode **answer)
+{
+    return sync_our_cib(req, false);
+}
+
+int
+based_process_upgrade(const char *op, int options, const char *section,
+                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
+                      xmlNode **result_cib, xmlNode **answer)
 {
     int rc = pcmk_ok;
 
@@ -200,8 +367,8 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
          * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
          * performs the upgrade (and notifies its local clients) here.
          */
-        return cib_process_upgrade(
-            op, options, section, req, input, existing_cib, result_cib, answer);
+        return cib__process_upgrade(op, options, section, req, input,
+                                    existing_cib, result_cib, answer);
 
     } else {
         xmlNode *scratch = pcmk__xml_copy(NULL, existing_cib);
@@ -281,85 +448,21 @@ cib_process_upgrade_server(const char *op, int options, const char *section, xml
     return rc;
 }
 
-int
-cib_process_sync_one(const char *op, int options, const char *section, xmlNode * req,
-                     xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                     xmlNode ** answer)
+void
+send_sync_request(void)
 {
-    return sync_our_cib(req, false);
-}
+    xmlNode *sync_me = pcmk__xe_create(NULL, "sync-me");
+    pcmk__node_status_t *peer = NULL;
 
-int
-cib_server_process_diff(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer)
-{
-    int rc = pcmk_ok;
+    pcmk__info("Requesting re-sync from all peers");
+    sync_in_progress = 1;
 
-    if (sync_in_progress > MAX_DIFF_RETRY) {
-        /* Don't ignore diffs forever; the last request may have been lost.
-         * If the diff fails, we'll ask for another full resync.
-         */
-        sync_in_progress = 0;
-    }
+    pcmk__xe_set(sync_me, PCMK__XA_T, PCMK__VALUE_CIB);
+    pcmk__xe_set(sync_me, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SYNC_TO_ONE);
+    pcmk__xe_set(sync_me, PCMK__XA_CIB_DELEGATED_FROM, OUR_NODENAME);
 
-    // The primary instance should never ignore a diff
-    if (sync_in_progress && !based_is_primary) {
-        int source[] = { 0, 0, 0 };
-        int target[] = { 0, 0, 0 };
-
-        pcmk__xml_patchset_versions(input, source, target);
-
-        sync_in_progress++;
-        pcmk__notice("Not applying diff %d.%d.%d -> %d.%d.%d (sync in "
-                     "progress)",
-                     source[0], source[1], source[2],
-                     target[0], target[1], target[2]);
-        return -pcmk_err_diff_resync;
-    }
-
-    rc = cib_process_diff(op, options, section, req, input, existing_cib, result_cib, answer);
-    pcmk__trace("result: %s (%d), %s", pcmk_strerror(rc), rc,
-                (based_is_primary? "primary": "secondary"));
-
-    if ((rc == -pcmk_err_diff_resync) && !based_is_primary) {
-        pcmk__xml_free(*result_cib);
-        *result_cib = NULL;
-        send_sync_request(NULL);
-
-    } else if (rc == -pcmk_err_diff_resync) {
-        rc = -pcmk_err_diff_failed;
-        if (options & cib_force_diff) {
-            pcmk__warn("Not requesting full refresh in R/W mode");
-        }
-    }
-
-    return rc;
-}
-
-int
-cib_process_replace_svr(const char *op, int options, const char *section, xmlNode * req,
-                        xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                        xmlNode ** answer)
-{
-    int rc =
-        cib_process_replace(op, options, section, req, input, existing_cib, result_cib, answer);
-
-    if ((rc == pcmk_ok) && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        sync_in_progress = 0;
-    }
-    return rc;
-}
-
-/* @COMPAT: Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed
- * (At least external client code <3.0.0 can send it)
- */
-int
-cib_process_delete_absolute(const char *op, int options, const char *section, xmlNode * req,
-                            xmlNode * input, xmlNode * existing_cib, xmlNode ** result_cib,
-                            xmlNode ** answer)
-{
-    return -EINVAL;
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, sync_me);
+    pcmk__xml_free(sync_me);
 }
 
 static xmlNode *
@@ -443,77 +546,4 @@ sync_our_cib(xmlNode *request, bool all)
     pcmk__xml_free(replace_request);
     free(digest);
     return result;
-}
-
-int
-cib_process_commit_transaction(const char *op, int options, const char *section,
-                               xmlNode *req, xmlNode *input,
-                               xmlNode *existing_cib, xmlNode **result_cib,
-                               xmlNode **answer)
-{
-    /* On success, our caller will activate *result_cib locally, trigger a
-     * replace notification if appropriate, and sync *result_cib to all nodes.
-     * On failure, our caller will free *result_cib.
-     */
-    int rc = pcmk_rc_ok;
-    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
-    const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
-    pcmk__client_t *client = pcmk__find_client_by_id(client_id);
-
-    rc = based_commit_transaction(input, client, origin, result_cib);
-
-    if (rc != pcmk_rc_ok) {
-        char *source = based_transaction_source_str(client, origin);
-
-        pcmk__err("Could not commit transaction for %s: %s", source,
-                  pcmk_rc_str(rc));
-        free(source);
-    }
-    return pcmk_rc2legacy(rc);
-}
-
-int
-cib_process_schemas(const char *op, int options, const char *section, xmlNode *req,
-                    xmlNode *input, xmlNode *existing_cib, xmlNode **result_cib,
-                    xmlNode **answer)
-{
-    xmlNode *wrapper = NULL;
-    xmlNode *data = NULL;
-
-    const char *after_ver = NULL;
-    GList *schemas = NULL;
-    GList *already_included = NULL;
-
-    *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
-
-    wrapper = pcmk__xe_first_child(req, PCMK__XE_CIB_CALLDATA, NULL, NULL);
-    data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-    if (data == NULL) {
-        pcmk__warn("No data specified in request");
-        return -EPROTO;
-    }
-
-    after_ver = pcmk__xe_get(data, PCMK_XA_VERSION);
-    if (after_ver == NULL) {
-        pcmk__warn("No version specified in request");
-        return -EPROTO;
-    }
-
-    /* The client requested all schemas after the latest one we know about, which
-     * means the client is fully up-to-date.  Return a properly formatted reply
-     * with no schemas.
-     */
-    if (pcmk__str_eq(after_ver, pcmk__highest_schema_name(), pcmk__str_none)) {
-        return pcmk_ok;
-    }
-
-    schemas = pcmk__schema_files_later_than(after_ver);
-
-    for (GList *iter = schemas; iter != NULL; iter = iter->next) {
-        pcmk__build_schema_xml_node(*answer, iter->data, &already_included);
-    }
-
-    g_list_free_full(schemas, free);
-    g_list_free_full(already_included, free);
-    return pcmk_ok;
 }

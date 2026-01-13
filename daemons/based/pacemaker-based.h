@@ -21,6 +21,7 @@
 #include <crm/common/internal.h>    // pcmk__client_t
 
 #include "based_io.h"
+#include "based_messages.h"
 #include "based_operation.h"
 #include "based_notify.h"
 #include "based_transaction.h"
@@ -36,9 +37,7 @@ enum cib_client_flags {
     cib_notify_diff    = (UINT64_C(1) << 4),
 };
 
-extern bool based_is_primary;
 extern GHashTable *config_hash;
-extern xmlNode *the_cib;
 
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
@@ -63,50 +62,6 @@ int cib_process_request(xmlNode *request, bool privileged,
                         const pcmk__client_t *cib_client);
 void cib_shutdown(int nsig);
 void terminate_cib(int exit_status);
-
-int cib_process_shutdown_req(const char *op, int options, const char *section,
-                             xmlNode *req, xmlNode *input,
-                             xmlNode *existing_cib, xmlNode **result_cib,
-                             xmlNode **answer);
-int cib_process_noop(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer);
-int cib_process_ping(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer);
-int cib_process_readwrite(const char *op, int options, const char *section,
-                          xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                          xmlNode **result_cib, xmlNode **answer);
-int cib_process_replace_svr(const char *op, int options, const char *section,
-                            xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                            xmlNode **result_cib, xmlNode **answer);
-int cib_server_process_diff(const char *op, int options, const char *section,
-                            xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                            xmlNode **result_cib, xmlNode **answer);
-int cib_process_sync(const char *op, int options, const char *section,
-                     xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                     xmlNode **result_cib, xmlNode **answer);
-int cib_process_sync_one(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                         xmlNode **result_cib, xmlNode **answer);
-int cib_process_delete_absolute(const char *op, int options,
-                                const char *section, xmlNode *req,
-                                xmlNode *input, xmlNode *existing_cib,
-                                xmlNode **result_cib, xmlNode **answer);
-int cib_process_upgrade_server(const char *op, int options, const char *section,
-                               xmlNode *req, xmlNode *input,
-                               xmlNode *existing_cib, xmlNode **result_cib,
-                               xmlNode **answer);
-int cib_process_commit_transaction(const char *op, int options,
-                                   const char *section, xmlNode *req,
-                                   xmlNode *input, xmlNode *existing_cib,
-                                   xmlNode **result_cib, xmlNode **answer);
-int cib_process_schemas(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer);
-
-void send_sync_request(const char *host);
-int sync_our_cib(xmlNode *request, bool all);
 
 static inline const char *
 cib_config_lookup(const char *opt)
