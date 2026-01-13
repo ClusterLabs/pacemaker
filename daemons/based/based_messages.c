@@ -286,6 +286,7 @@ done:
 static xmlNode *
 cib_msg_copy(const xmlNode *msg)
 {
+    // @FIXME Copying CIB_CALLOPT seems problematic if it has cib_discard_reply
     static const char *field_list[] = {
         PCMK__XA_T,
         PCMK__XA_CIB_CLIENTID,

@@ -333,6 +333,14 @@ static bool
 parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
+    /* Don't send replies for modifying ops because they already get forwarded
+     * to all nodes. Also don't send a reply if the client specifically told us
+     * not to.
+     */
+    const bool can_reply = !operation->modifies_cib
+                           && !pcmk__is_set(request->call_options,
+                                            cib_discard_reply);
+
     const char *host = pcmk__xe_get(request->xml, PCMK__XA_CIB_HOST);
     const char *delegated = pcmk__xe_get(request->xml,
                                          PCMK__XA_CIB_DELEGATED_FROM);
@@ -376,8 +384,12 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
                         pcmk__str_none)) {
 
         // sync_our_cib() sets PCMK__XA_CIB_ISREPLYTO
-        *needs_reply = true;
         delegated = reply_to;
+
+        /* @FIXME can_reply is always false here because cib__op_replace has
+         * modifies_cib=true. Should we be sending a reply here?
+         */
+        *needs_reply = can_reply;
 
     } else if (pcmk__str_eq(request->op, PCMK__CIB_REQUEST_UPGRADE,
                             pcmk__str_none)) {
@@ -423,7 +435,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", request->op,
                     originator);
-        *needs_reply = true;
+        *needs_reply = can_reply;
         return true;
     }
 
@@ -434,7 +446,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
     }
 
     if (!is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
-        *needs_reply = true;
+        *needs_reply = can_reply;
         return true;
     }
 
@@ -647,8 +659,6 @@ based_handle_request(pcmk__request_t *request)
     bool needs_reply = false;   // Whether to build a reply
     bool local_notify = false;  // Whether to notify (local) requester
 
-    xmlNode *reply = NULL;
-
     int rc = pcmk_rc_ok;
     const char *originator = pcmk__xe_get(request->xml, PCMK__XA_SRC);
     const char *host = pcmk__xe_get(request->xml, PCMK__XA_CIB_HOST);
@@ -737,7 +747,6 @@ based_handle_request(pcmk__request_t *request)
     }
 
     if (pcmk__is_set(request->call_options, cib_discard_reply)) {
-        needs_reply = false;
         local_notify = false;
         pcmk__trace("Client is not interested in the reply");
     }
@@ -746,11 +755,7 @@ based_handle_request(pcmk__request_t *request)
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
-
-        if (!pcmk__is_set(request->call_options, cib_discard_reply)) {
-            reply = create_cib_reply(request->xml, rc, based_cib);
-        }
-
+        output = based_cib;
         goto done;
     }
 
@@ -769,13 +774,12 @@ based_handle_request(pcmk__request_t *request)
 
     log_op_result(request->xml, operation, rc, difftime(time(NULL), start_time));
 
-    if (!pcmk__is_set(request->call_options, cib_discard_reply)) {
-        reply = create_cib_reply(request->xml, rc, output);
-    }
-
 done:
-    if (!operation->modifies_cib && needs_reply) {
+    if (needs_reply) {
+        xmlNode *reply = create_cib_reply(request->xml, rc, output);
+
         send_peer_reply(reply, originator);
+        pcmk__xml_free(reply);
     }
 
     if (local_notify && (client_id != NULL)) {
