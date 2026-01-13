@@ -92,9 +92,7 @@ static const cib__operation_t cib_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
-        cib__op_attr_modifies
-        |cib__op_attr_writes_through
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
 };
 
