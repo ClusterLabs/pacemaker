@@ -978,7 +978,7 @@ cib__process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
     // pcmk__update_schema() may free the original validate-with string
     original_schema = pcmk__xe_get_copy(*cib, PCMK_XA_VALIDATE_WITH);
 
-    rc = pcmk__update_schema(&updated, max_schema, true,
+    rc = pcmk__update_schema(&updated, max_schema,
                              !pcmk__is_set(options, cib_verbose));
     *cib = pcmk__xml_replace_with_copy(*cib, updated);
     pcmk__xml_free(updated);

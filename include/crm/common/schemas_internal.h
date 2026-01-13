@@ -40,7 +40,7 @@ bool pcmk__validate_xml(xmlNode *xml, xmlRelaxNGValidityErrorFunc error_handler,
                         void *error_handler_context);
 bool pcmk__configured_schema_validates(xmlNode *xml);
 int pcmk__update_schema(xmlNode **xml, const char *max_schema_name,
-                        bool transform, bool to_logs);
+                        bool to_logs);
 void pcmk__warn_if_schema_deprecated(const char *schema);
 
 int pcmk__update_configured_schema(xmlNode **xml, bool to_logs);

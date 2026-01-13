@@ -1108,16 +1108,13 @@ get_configured_schema(const xmlNode *xml)
  *                                 after being transformed)
  * \param[in]     max_schema_name  If not NULL, do not update \p xml to any
  *                                 schema later than this one
- * \param[in]     transform        If false, do not update \p xml to any schema
- *                                 that requires an XSL transform
  * \param[in]     to_logs          If false, certain validation errors will be
  *                                 sent to stderr rather than logged
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
-                    bool to_logs)
+pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool to_logs)
 {
     int max_stable_schemas = xml_latest_schema_index();
     int max_schema_index = 0;
@@ -1183,7 +1180,7 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
         }
 
         // coverity[null_field] The index check ensures entry->next is not NULL
-        if (!transform || (current_schema->transforms == NULL)
+        if ((current_schema->transforms == NULL)
             || validate_with_silent((*xml)->doc, entry->next->data)) {
             /* The next schema either doesn't require a transform or validates
              * successfully even without the transform. Skip the transform and
@@ -1210,8 +1207,9 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
 
     if ((best_schema != NULL)
         && (best_schema->schema_index > original_schema->schema_index)) {
-        pcmk__info("%s the configuration schema to %s",
-                   (transform? "Transformed" : "Upgraded"), best_schema->name);
+
+        pcmk__info("Transformed the configuration schema to %s",
+                   best_schema->name);
         pcmk__xe_set(*xml, PCMK_XA_VALIDATE_WITH, best_schema->name);
     }
     return rc;
@@ -1257,7 +1255,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
 
         entry = NULL;
         converted = pcmk__xml_copy(NULL, *xml);
-        if (pcmk__update_schema(&converted, NULL, true, to_logs) == pcmk_rc_ok) {
+        if (pcmk__update_schema(&converted, NULL, to_logs) == pcmk_rc_ok) {
             new_schema_name = pcmk__xe_get(converted, PCMK_XA_VALIDATE_WITH);
             entry = pcmk__get_schema(new_schema_name);
         }
