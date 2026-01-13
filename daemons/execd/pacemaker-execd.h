@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,19 +8,21 @@
  */
 
 #ifndef PACEMAKER_EXECD__H
-#  define PACEMAKER_EXECD__H
+#define PACEMAKER_EXECD__H
 
-#  include <glib.h>
-#  include <crm/common/internal.h>
-#  include <crm/lrmd.h>
-#  include <crm/stonith-ng.h>
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // uint32_t
+#include <time.h>                   // time_t
 
-#  include <gnutls/gnutls.h>
+#include <glib.h>                   // GList, GHashTable, GMainLoop, gpointer
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__action_result_t
+#include <crm/common/mainloop.h>    // crm_trigger_t
+#include <crm/stonith-ng.h>         // stonith_t
 
 extern GHashTable *rsc_list;
 extern time_t start_time;
-
-extern struct qb_ipcs_service_handlers lrmd_ipc_callbacks;
 
 typedef struct lrmd_rsc_s {
     char *rsc_id;
@@ -99,8 +101,11 @@ void execd_unregister_handlers(void);
 
 void lrmd_drain_alerts(GMainLoop *mloop);
 
-void execd_process_message(pcmk__client_t *c, uint32_t id, uint32_t flags,
-                          xmlNode *msg);
+bool execd_invalid_msg(xmlNode *msg);
+void execd_handle_request(pcmk__request_t *request);
+
+void execd_ipc_init(void);
+void execd_ipc_cleanup(void);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
 void execd_send_generic_notify(int rc, xmlNode *request);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,17 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <unistd.h>
+#include <errno.h>                      // EREMOTEIO, ENOMEM
+#include <stdint.h>                     // int32_t, uint32_t
+#include <stdlib.h>                     // NULL, free, size_t
+#include <sys/types.h>                  // gid_t, uid_t
 
-#include "pacemaker-execd.h"
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/services.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/ipc.h>
-#include <crm/cib/internal.h>
-#include <crm/fencing/internal.h>
+#include <glib.h>                       // g_byte_array_free, g_list_*
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qbipcs.h>                  // qb_ipcs_connection_t
+#include <qb/qblog.h>                   // QB_XS
+
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>             // crm_ipc_flags
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc_str
+#include <crm/crm.h>                    // CRM_SYSTEM_CRMD
+#include <crm/lrmd.h>                   // LRMD_IPC_OP_DESTROY
+
+#include "pacemaker-execd.h"            // lrmd_server_send_notify
 
 static qb_ipcs_service_t *cib_ro = NULL;
 static qb_ipcs_service_t *cib_rw = NULL;
@@ -61,19 +68,19 @@ ipc_proxy_get_provider(void)
  * \internal
  * \brief Accept a client connection on a proxy IPC server
  *
- * \param[in] c            Client's IPC connection
- * \param[in] uid          Client's user ID
- * \param[in] gid          Client's group ID
- * \param[in] ipc_channel  Name of IPC server to proxy
+ * \param[in,out] c            New connection
+ * \param[in]     uid          Client user id
+ * \param[in]     gid          Client group id
+ * \param[in]     ipc_channel  Name of IPC server to proxy
  *
- * \return pcmk_ok on success, -errno on error
+ * \return 0 on success, -errno on error
  */
 static int32_t
-ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc_channel)
+ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid, const char *ipc_channel)
 {
-    pcmk__client_t *client;
+    pcmk__client_t *client = NULL;
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
-    xmlNode *msg;
+    xmlNode *msg = NULL;
 
     if (ipc_proxy == NULL) {
         pcmk__warn("Cannot proxy IPC connection from uid %d gid %d to %s "
@@ -116,13 +123,13 @@ ipc_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid, const char *ipc
 }
 
 static int32_t
-crmd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+crmd_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, CRM_SYSTEM_CRMD);
 }
 
 static int32_t
-attrd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+attrd_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, PCMK__VALUE_ATTRD);
 }
@@ -134,19 +141,19 @@ fencer_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 }
 
 static int32_t
-pacemakerd_proxy_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+pacemakerd_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     return -EREMOTEIO;
 }
 
 static int32_t
-cib_proxy_accept_rw(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+cib_proxy_accept_rw(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RW);
 }
 
 static int32_t
-cib_proxy_accept_ro(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
+cib_proxy_accept_ro(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RO);
 }
@@ -161,7 +168,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
                                             NULL);
     xmlNode *msg = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    pcmk__client_t *ipc_client;
+    pcmk__client_t *ipc_client = NULL;
     int rc = pcmk_rc_ok;
 
     if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_ACK, pcmk__str_casei)) {
@@ -229,8 +236,20 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Handle a message from an IPC connection
+ *
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[size]   size  Unused
+ *
+ * \return 0 in all cases
+ */
 static int32_t
-ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
+ipc_proxy_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -295,14 +314,9 @@ ipc_proxy_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
-    if (!request) {
+    if (request == NULL) {
         return 0;
     }
-
-    CRM_CHECK(client != NULL, pcmk__err("Invalid client");
-              pcmk__xml_free(request); return FALSE);
-    CRM_CHECK(client->id != NULL, pcmk__err("Invalid client: %p", client);
-              pcmk__xml_free(request); return FALSE);
 
     /* This ensures that synced request/responses happen over the event channel
      * in the controller, allowing the controller to process the messages async.
@@ -357,40 +371,55 @@ ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \return 0 (i.e. do not re-run this callback)
+ */
 static int32_t
-ipc_proxy_closed(qb_ipcs_connection_t * c)
+ipc_proxy_closed(qb_ipcs_connection_t *c)
 {
     pcmk__client_t *client = pcmk__find_client(c);
-    pcmk__client_t *ipc_proxy;
 
     if (client == NULL) {
-        return 0;
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
+    } else {
+        pcmk__client_t *ipc_proxy = pcmk__find_client_by_id(client->userdata);
+
+        pcmk__trace("Cleaning up closed client connection %p", c);
+
+        if (ipc_proxy != NULL) {
+            xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+            pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
+            pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
+            lrmd_server_send_notify(ipc_proxy, msg);
+            pcmk__xml_free(msg);
+        }
+
+        g_hash_table_remove(ipc_clients, client->id);
+        g_clear_pointer(&client->userdata, free);
+        pcmk__free_client(client);
     }
 
-    ipc_proxy = pcmk__find_client_by_id(client->userdata);
-
-    pcmk__trace("Connection %p", c);
-
-    if (ipc_proxy) {
-        xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-        pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
-        pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
-        lrmd_server_send_notify(ipc_proxy, msg);
-        pcmk__xml_free(msg);
-    }
-
-    g_hash_table_remove(ipc_clients, client->id);
-
-    free(client->userdata);
-    client->userdata = NULL;
-    pcmk__free_client(client);
     return 0;
 }
 
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in] c  Connection to destroy
+ *
+ * \note We handle a destroyed connection the same as a closed one,
+ *       but we need a separate handler because the return type is different.
+ */
 static void
-ipc_proxy_destroy(qb_ipcs_connection_t * c)
+ipc_proxy_destroy(qb_ipcs_connection_t *c)
 {
-    pcmk__trace("Connection %p", c);
+    pcmk__trace("Destroying client connection %p", c);
     ipc_proxy_closed(c);
 }
 
@@ -507,19 +536,16 @@ ipc_proxy_init(void)
 void
 ipc_proxy_cleanup(void)
 {
-    if (ipc_providers) {
-        g_list_free(ipc_providers);
-        ipc_providers = NULL;
-    }
-    if (ipc_clients) {
-        g_hash_table_destroy(ipc_clients);
-        ipc_clients = NULL;
-    }
+    g_clear_pointer(&ipc_providers, g_list_free);
+    g_clear_pointer(&ipc_clients, g_hash_table_destroy);
+
     pcmk__stop_based_ipc(cib_ro, cib_rw, cib_shm);
-    qb_ipcs_destroy(attrd_ipcs);
-    qb_ipcs_destroy(fencer_ipcs);
-    qb_ipcs_destroy(pacemakerd_ipcs);
-    qb_ipcs_destroy(crmd_ipcs);
+
+    g_clear_pointer(&attrd_ipcs, qb_ipcs_destroy);
+    g_clear_pointer(&fencer_ipcs, qb_ipcs_destroy);
+    g_clear_pointer(&pacemakerd_ipcs, qb_ipcs_destroy);
+    g_clear_pointer(&crmd_ipcs, qb_ipcs_destroy);
+
     cib_ro = NULL;
     cib_rw = NULL;
     cib_shm = NULL;

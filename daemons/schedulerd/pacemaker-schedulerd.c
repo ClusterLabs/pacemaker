@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -176,6 +176,7 @@ void
 pengine_shutdown(int nsig)
 {
     schedulerd_ipc_cleanup();
+    schedulerd_unregister_handlers();
 
     if (logger_out != NULL) {
         logger_out->finish(logger_out, exit_code, true, NULL);

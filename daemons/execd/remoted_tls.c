@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,24 +9,28 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
-#include <unistd.h>
+#include <errno.h>                      // errno, EAGAIN, ETIME
+#include <netdb.h>                      // addrinfo, freeaddrinfo
+#include <netinet/in.h>                 // INET6_ADDRSTRLEN, IPPROTO_*
+#include <stdbool.h>                    // bool, true
+#include <stdlib.h>                     // NULL, free
+#include <string.h>                     // memset
+#include <sys/socket.h>                 // setsockopt, AF_INET6, bind
+#include <unistd.h>                     // close
 
-#include <crm/crm.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-#include <crm/lrmd_internal.h>
+#include <glib.h>                       // gpointer, TRUE, FALSE
+#include <gnutls/gnutls.h>              // gnutls_bye, gnutls_datum_t
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // QB_XS
 
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
+#include <crm/common/internal.h>
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/results.h>         // pcmk_rc_str, pcmk_rc_*
+#include <crm/common/util.h>            // crm_default_remote_port
+#include <crm/lrmd_internal.h>          // lrmd__init_remote_key
 
-#include "pacemaker-execd.h"
-
-#include <gnutls/gnutls.h>
+#include "pacemaker-execd.h"            // client_disconnect_cleanup
 
 #define LRMD_REMOTE_AUTH_TIMEOUT 10000
 
@@ -83,9 +87,8 @@ remoted__read_handshake_data(pcmk__client_t *client)
 static int
 lrmd_remote_client_msg(gpointer data)
 {
-    int id = 0;
     int rc = pcmk_rc_ok;
-    xmlNode *request = NULL;
+    xmlNode *msg = NULL;
     pcmk__client_t *client = data;
 
     if (!pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
@@ -122,17 +125,41 @@ lrmd_remote_client_msg(gpointer data)
             return -1;
     }
 
-    request = pcmk__remote_message_xml(client->remote);
-    if (request == NULL) {
-        return 0;
+    msg = pcmk__remote_message_xml(client->remote);
+
+    if (msg == NULL) {
+        pcmk__debug("Unrecognizable IPC data from PID %d", client->pid);
+    } else if (execd_invalid_msg(msg)) {
+        int id = 0;
+
+        pcmk__debug("Unrecognizable IPC data from PID %d", client->pid);
+
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
+        pcmk__ipc_send_ack(client, id, crm_ipc_client_response, PCMK__XE_NACK,
+                           NULL, CRM_EX_PROTOCOL);
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = 0,
+            .ipc_flags      = crm_ipc_flags_none,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
+        CRM_CHECK(request.op != NULL, goto done);
+
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID,
+                         (int *) &request.ipc_id);
+        pcmk__trace("Processing remote client request %d", request.ipc_id);
+
+        execd_handle_request(&request);
     }
 
-    pcmk__xe_get_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-    pcmk__trace("Processing remote client request %d", id);
-
-    execd_process_message(client, id, client->flags, request);
-    pcmk__xml_free(request);
-
+done:
+    pcmk__xml_free(msg);
     return 0;
 }
 

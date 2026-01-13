@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -65,7 +65,7 @@ fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
         pcmk__request_t request = {
             .ipc_client     = NULL,
             .ipc_id         = 0,
-            .ipc_flags      = 0,
+            .ipc_flags      = crm_ipc_flags_none,
             .peer           = peer->name,
             .xml            = xml,
             .call_options   = st_opt_none,

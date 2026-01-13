@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,18 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <signal.h>
-#include <stdbool.h>
-#include <sys/types.h>
+#include <errno.h>                  // ENOTCONN
+#include <signal.h>                 // SIGTERM
+#include <stdbool.h>                // true
+#include <stdlib.h>                 // unsetenv
+#include <syslog.h>                 // LOG_INFO
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/services.h>
-#include <crm/common/ipc.h>
-#include <crm/common/mainloop.h>
-#include <crm/fencing/internal.h>           // stonith__api_new()
-#include <crm/lrmd_internal.h>
+#include <glib.h>                   // G_OPTION_*
+#include <qb/qblog.h>               // QB_XS
+
+#include <crm/common/ipc.h>         // crm_ipc_flags
+#include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/options.h>     // PCMK_VALUE_NONE
+#include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*, crm_exit
+#include <crm/crm.h>                // crm_system_name
+#include <crm/fencing/internal.h>   // stonith__api_free, stonith__api_connect_retry
+#include <crm/lrmd_internal.h>      // lrmd__remote_send_xml
+#include <crm/stonith-ng.h>         // stonith_s, stonith_t, stonith_state
 
 #include "pacemaker-execd.h"
 
@@ -35,7 +41,6 @@
 #endif
 
 static GMainLoop *mainloop = NULL;
-static qb_ipcs_service_t *ipcs = NULL;
 static stonith_t *fencer_api = NULL;
 time_t start_time;
 
@@ -179,23 +184,18 @@ exit_executor(void)
     pcmk__info("Terminating with %d client%s", nclients,
                pcmk__plural_s(nclients));
     stonith__api_free(fencer_api);
-
-    if (ipcs) {
-        mainloop_del_ipc_server(ipcs);
-    }
+    execd_ipc_cleanup();
 
 #ifdef PCMK__COMPILE_REMOTE
     execd_stop_tls_server();
     ipc_proxy_cleanup();
 #endif
 
-    pcmk__client_cleanup();
-    execd_unregister_handlers();
-
     if (mainloop) {
         lrmd_drain_alerts(mainloop);
     }
 
+    execd_unregister_handlers();
     g_hash_table_destroy(rsc_list);
 
     // @TODO End mainloop instead so all cleanup is done
@@ -431,13 +431,8 @@ main(int argc, char **argv)
     }
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
-    if (ipcs == NULL) {
-        pcmk__err("Failed to create IPC server: shutting down and inhibiting "
-                  "respawn");
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
+
+    execd_ipc_init();
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -615,11 +615,12 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
-        CRM_CHECK(request.op != NULL, return 0);
+        CRM_CHECK(request.op != NULL, goto done);
 
         attrd_handle_request(&request);
     }
 
+done:
     pcmk__xml_free(xml);
     return 0;
 }
@@ -632,16 +633,18 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_destroyed = attrd_ipc_destroy
 };
 
+/*!
+ * \internal
+ * \brief Clean up attrd IPC communication
+ */
 void
 attrd_ipc_cleanup(void)
 {
     if (ipcs != NULL) {
         pcmk__drop_all_clients(ipcs);
-        qb_ipcs_destroy(ipcs);
-        ipcs = NULL;
+        g_clear_pointer(&ipcs, qb_ipcs_destroy);
     }
 
-    attrd_unregister_handlers();
     pcmk__client_cleanup();
 }
 
