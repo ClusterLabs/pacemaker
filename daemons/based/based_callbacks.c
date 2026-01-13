@@ -712,7 +712,6 @@ based_handle_request(pcmk__request_t *request)
 
     rc = cib__get_operation(request->op, &operation);
     if (rc != pcmk_rc_ok) {
-        /* TODO: construct error reply? */
         pcmk__err("Pre-processing of command failed: %s", pcmk_rc_str(rc));
         pcmk__reset_request(request);
         return rc;
