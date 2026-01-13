@@ -584,7 +584,7 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
     int epoch = 0;
     int num_updates = 0;
 
-    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+    if (!operation->modifies_cib) {
         level = LOG_TRACE;
 
     } else if (rc != pcmk_rc_ok) {
@@ -716,7 +716,7 @@ based_handle_request(pcmk__request_t *request)
     } else if (request->ipc_client != NULL) {
         // Forward modifying and non-local requests via cluster
         if (!based_stand_alone()
-            && (pcmk__is_set(operation->flags, cib__op_attr_modifies)
+            && (operation->modifies_cib
                 || !pcmk__str_eq(host, OUR_NODENAME,
                                  pcmk__str_casei|pcmk__str_null_matches))) {
 
@@ -761,7 +761,7 @@ based_handle_request(pcmk__request_t *request)
 
     start_time = time(NULL);
 
-    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+    if (!operation->modifies_cib) {
         rc = cib__perform_op_ro(op_function, request->xml, &based_cib, &output);
 
     } else {
@@ -775,9 +775,7 @@ based_handle_request(pcmk__request_t *request)
     }
 
 done:
-    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
-        && needs_reply && !based_stand_alone()) {
-
+    if (!operation->modifies_cib && needs_reply && !based_stand_alone()) {
         send_peer_reply(reply, originator);
     }
 

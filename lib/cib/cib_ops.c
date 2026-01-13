@@ -35,57 +35,55 @@ static GHashTable *operation_table = NULL;
 
 static const cib__operation_t cib_ops[] = {
     {
-        PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
-        cib__op_attr_modifies
+        PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch, true
     },
     {
-        PCMK__CIB_REQUEST_BUMP, cib__op_bump, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_BUMP, cib__op_bump, true
     },
     {
-        PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
-        cib__op_attr_modifies
+        PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact, true
     },
     {
-        PCMK__CIB_REQUEST_CREATE, cib__op_create, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_CREATE, cib__op_create, true
     },
     {
-        PCMK__CIB_REQUEST_DELETE, cib__op_delete, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_DELETE, cib__op_delete, true
     },
     {
-        PCMK__CIB_REQUEST_ERASE, cib__op_erase, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_ERASE, cib__op_erase, true
     },
     {
-        PCMK__CIB_REQUEST_MODIFY, cib__op_modify, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_MODIFY, cib__op_modify, true
     },
     {
-        PCMK__CIB_REQUEST_NOOP, cib__op_noop, cib__op_attr_none
+        PCMK__CIB_REQUEST_NOOP, cib__op_noop, false
     },
     {
-        CRM_OP_PING, cib__op_ping, cib__op_attr_none
+        CRM_OP_PING, cib__op_ping, false
     },
     {
-        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary, cib__op_attr_none
+        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary, false
     },
     {
-        PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
+        PCMK__CIB_REQUEST_QUERY, cib__op_query, false
     },
     {
-        PCMK__CIB_REQUEST_REPLACE, cib__op_replace, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_REPLACE, cib__op_replace, true
     },
     {
-        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_none
+        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, false
     },
     {
-        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary, cib__op_attr_none
+        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary, false
     },
     {
-        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_none
+        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, false
     },
     {
-        PCMK__CIB_REQUEST_SYNC, cib__op_sync, cib__op_attr_none
+        PCMK__CIB_REQUEST_SYNC, cib__op_sync, false
     },
     {
-        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade, cib__op_attr_modifies
+        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade, true
     },
 };
 
