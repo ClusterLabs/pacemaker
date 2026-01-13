@@ -24,7 +24,6 @@ static const cib__op_fn_t op_functions[] = {
     [cib__op_create]           = cib__process_create,
     [cib__op_delete]           = cib__process_delete,
     [cib__op_erase]            = cib__process_erase,
-    [cib__op_is_primary]       = based_process_is_primary,
     [cib__op_modify]           = cib__process_modify,
     [cib__op_noop]             = based_process_noop,
     [cib__op_ping]             = based_process_ping,
