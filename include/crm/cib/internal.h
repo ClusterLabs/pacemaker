@@ -50,9 +50,6 @@ enum cib__op_attr {
     //! May modify state (of the CIB itself or of the CIB manager)
     cib__op_attr_modifies       = (UINT32_C(1) << 1),
 
-    //! Must only be processed locally
-    cib__op_attr_local          = (UINT32_C(1) << 3),
-
     //! Replaces CIB
     cib__op_attr_replaces       = (UINT32_C(1) << 4),
 

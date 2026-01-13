@@ -315,28 +315,9 @@ process_ping_reply(const xmlNode *reply)
 }
 
 static void
-log_local_options(const pcmk__client_t *client,
-                  const cib__operation_t *operation, const char *host,
+log_local_options(const pcmk__client_t *client, const char *host,
                   const char *op)
 {
-    if (pcmk__is_set(operation->flags, cib__op_attr_local)) {
-        /* @COMPAT Currently host is ignored. At a compatibility break, throw an
-         * error (from based_process_request() or earlier) if host is not NULL
-         * or OUR_NODENAME.
-         */
-        pcmk__trace("Processing always-local %s op from client %s", op,
-                    pcmk__client_name(client));
-
-        if (pcmk__str_eq(host, OUR_NODENAME,
-                         pcmk__str_casei|pcmk__str_null_matches)) {
-            return;
-        }
-
-        pcmk__warn("Operation '%s' is always local but its target host is set "
-                   "to '%s'", op, host);
-        return;
-    }
-
     if (based_stand_alone()) {
         pcmk__trace("Processing %s op from client %s (stand-alone)", op,
                     pcmk__client_name(client));
@@ -737,7 +718,6 @@ based_handle_request(pcmk__request_t *request)
     } else if (request->ipc_client != NULL) {
         // Forward modifying and non-local requests via cluster
         if (!based_stand_alone()
-            && !pcmk__is_set(operation->flags, cib__op_attr_local)
             && (pcmk__is_set(operation->flags, cib__op_attr_modifies)
                 || !pcmk__str_eq(host, OUR_NODENAME,
                                  pcmk__str_casei|pcmk__str_null_matches))) {
@@ -751,7 +731,7 @@ based_handle_request(pcmk__request_t *request)
         needs_reply = false;
         local_notify = true;
 
-        log_local_options(request->ipc_client, operation, host, request->op);
+        log_local_options(request->ipc_client, host, request->op);
 
     } else if (!parse_peer_options(operation, request, &local_notify,
                                    &needs_reply, &process)) {
