@@ -330,7 +330,7 @@ cibadmin_post_upgrade(pcmk__output_t *out, cib_t *cib_conn, int call_options,
 
         if (cib_conn->cmds->query(cib_conn, NULL, &obj,
                                   call_options) == pcmk_ok) {
-            pcmk__update_schema(&obj, NULL, true, false);
+            pcmk__update_schema(&obj, NULL, false);
         }
         pcmk__xml_free(obj);
     }

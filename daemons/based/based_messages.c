@@ -226,7 +226,7 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
         return pcmk_rc_cib_corrupt;
     }
 
-    rc = pcmk__update_schema(&scratch, NULL, true, true);
+    rc = pcmk__update_schema(&scratch, NULL, true);
     new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {

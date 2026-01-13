@@ -954,7 +954,7 @@ cib__process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
 
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &options, cib_none);
 
-    rc = pcmk__update_schema(&updated, max_schema, true,
+    rc = pcmk__update_schema(&updated, max_schema,
                              !pcmk__is_set(options, cib_verbose));
     *cib = pcmk__xml_replace_with_copy(*cib, updated);
     pcmk__xml_free(updated);
