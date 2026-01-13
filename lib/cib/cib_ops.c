@@ -62,9 +62,6 @@ static const cib__operation_t cib_ops[] = {
         cib__op_attr_modifies|cib__op_attr_replaces|cib__op_attr_transaction
     },
     {
-        PCMK__CIB_REQUEST_IS_PRIMARY, cib__op_is_primary, cib__op_attr_none
-    },
-    {
         PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
         cib__op_attr_modifies|cib__op_attr_transaction
     },

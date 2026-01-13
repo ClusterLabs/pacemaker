@@ -75,13 +75,6 @@ based_process_commit_transact(xmlNode *req, xmlNode **cib, xmlNode **answer)
     return rc;
 }
 
-int
-based_process_is_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
-{
-    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
-    return (based_get_local_node_dc()? pcmk_rc_ok : EPERM);
-}
-
 // @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
 int
 based_process_noop(xmlNode *req, xmlNode **cib, xmlNode **answer)

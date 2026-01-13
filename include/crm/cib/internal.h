@@ -24,7 +24,6 @@ extern "C" {
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
 #define PCMK__CIB_REQUEST_SYNC          "cib_sync"
-#define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
 #define PCMK__CIB_REQUEST_BUMP          "cib_bump"
 #define PCMK__CIB_REQUEST_QUERY         "cib_query"
 #define PCMK__CIB_REQUEST_CREATE        "cib_create"
@@ -76,7 +75,6 @@ enum cib__op_type {
     cib__op_create,
     cib__op_delete,
     cib__op_erase,
-    cib__op_is_primary,
     cib__op_modify,
     cib__op_noop,
     cib__op_ping,
