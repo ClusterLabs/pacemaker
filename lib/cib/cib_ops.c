@@ -75,9 +75,7 @@ static const cib__operation_t cib_ops[] = {
         CRM_OP_PING, cib__op_ping, cib__op_attr_none
     },
     {
-        // @COMPAT: Drop cib__op_attr_modifies when we drop legacy mode support
-        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary,
-        cib__op_attr_modifies|cib__op_attr_local
+        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary, cib__op_attr_local
     },
     {
         PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
