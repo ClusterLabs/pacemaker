@@ -49,9 +49,6 @@ enum cib__op_attr {
     //! May modify state (of the CIB itself or of the CIB manager)
     cib__op_attr_modifies       = (UINT32_C(1) << 1),
 
-    //! Replaces CIB
-    cib__op_attr_replaces       = (UINT32_C(1) << 4),
-
     //! Writes to disk on success
     cib__op_attr_writes_through = (UINT32_C(1) << 5),
 
