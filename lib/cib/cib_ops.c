@@ -44,7 +44,7 @@ static const cib__operation_t cib_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
-        cib__op_attr_modifies|cib__op_attr_writes_through
+        cib__op_attr_modifies
     },
     {
         PCMK__CIB_REQUEST_CREATE, cib__op_create,
@@ -76,9 +76,7 @@ static const cib__operation_t cib_ops[] = {
     },
     {
         PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
-        cib__op_attr_modifies
-        |cib__op_attr_writes_through
-        |cib__op_attr_transaction
+        cib__op_attr_modifies|cib__op_attr_transaction
     },
     {
         PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_none
