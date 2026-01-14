@@ -322,9 +322,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
      * to all nodes. Also don't send a reply if the client specifically told us
      * not to.
      */
-    const bool can_reply = !operation->modifies_cib
-                           && !pcmk__is_set(request->call_options,
-                                            cib_discard_reply);
+    const bool can_reply = !operation->modifies_cib;
 
     const char *host = pcmk__xe_get(request->xml, PCMK__XA_CIB_HOST);
     const char *delegated = pcmk__xe_get(request->xml,
@@ -722,16 +720,6 @@ based_handle_request(pcmk__request_t *request)
     } else {
         parse_peer_options(operation, request, &local_notify, &needs_reply,
                            &process);
-    }
-
-    if (pcmk__is_set(request->call_options, cib_discard_reply)) {
-        local_notify = false;
-        pcmk__trace("Client is not interested in the reply");
-    }
-
-    if (operation->modifies_cib) {
-        // A modifying request gets processed by each node, so no need to reply
-        needs_reply = false;
     }
 
     if (!process) {
