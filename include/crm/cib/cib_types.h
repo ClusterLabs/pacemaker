@@ -8,16 +8,13 @@
  */
 
 #ifndef PCMK__CRM_CIB_CIB_TYPES__H
-#  define PCMK__CRM_CIB_CIB_TYPES__H
+#define PCMK__CRM_CIB_CIB_TYPES__H
 
-#  include <stdbool.h>
-#  include <stdint.h>           // UINT32_C
+#include <stdbool.h>
+#include <stdint.h>             // UINT32_C
 
-#  include <glib.h>             // gboolean, GList
-#  include <libxml/tree.h>      // xmlNode
-
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
+#include <glib.h>               // gboolean, GList
+#include <libxml/tree.h>        // xmlNode
 
 #ifdef __cplusplus
 extern "C" {

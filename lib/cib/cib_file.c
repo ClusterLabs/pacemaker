@@ -9,24 +9,29 @@
  */
 
 #include <crm_internal.h>
-#include <unistd.h>
-#include <limits.h>
+
+#include <errno.h>                  // errno, EINVAL, ENOENT, ENXIO, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <pwd.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t, UINT32_C
+#include <stdio.h>                  // fprintf, rename, stderr
+#include <stdlib.h>                 // calloc, free, getenv, mkstemp
+#include <string.h>                 // strcmp, strdup, strerror, strrchr
+#include <sys/stat.h>               // fchmod, stat, umask, S_*
+#include <sys/types.h>              // gid_t, uid_t
+#include <unistd.h>                 // chown, close, fchown, link, unlink, etc.
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_err_*, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
 
 #define CIB_SERIES "cib"
 #define CIB_SERIES_MAX 100

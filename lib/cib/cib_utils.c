@@ -7,20 +7,33 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
-#include <unistd.h>
+
+#include <errno.h>                  // errno, EACCES, EAGAIN, EALREADY, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <sys/utsname.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // free, getenv
+#include <syslog.h>                 // LOG_CRIT, LOG_INFO
 
-#include <glib.h>
+#include <glib.h>                   // gboolean, GHashTable, g_*, etc.
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, createEmptyCib, etc.
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*
+#include <crm/common/acl.h>         // pcmk_acl_*, xml_acl_*
+#include <crm/common/cib.h>         // pcmk_find_cib_element
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/iso8601.h>     // crm_time_*
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/nvpair.h>      // pcmk_unpack_nvpair_blocks
+#include <crm/common/options.h>     // PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_err_*, pcmk_ok, etc.
+#include <crm/common/rules.h>       // pcmk_rule_input_t
+#include <crm/common/xml.h>         // xml_*_patchset, PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                // CRM_FEATURE_SET, crm_system_name
 
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)

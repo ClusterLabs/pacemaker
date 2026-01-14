@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,10 +8,11 @@
  */
 
 #ifndef PCMK__CRM_CIB_UTIL__H
-#  define PCMK__CRM_CIB_UTIL__H
+#define PCMK__CRM_CIB_UTIL__H
 
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
+
 #include <crm/cib/cib_types.h>  // cib_t
 
 #ifdef __cplusplus
@@ -58,4 +59,4 @@ int cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
 }
 #endif
 
-#endif
+#endif  // PCMK__CRM_CIB_UTIL__H

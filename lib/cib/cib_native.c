@@ -10,22 +10,23 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <crm_internal.h>
-#include <unistd.h>
+#include <errno.h>                  // ECOMM, EINVAL, ENOMSG, ENOTCONN, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free
+#include <sys/types.h>              // ssize_t
 
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*, G_*, FALSE, TRUE
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, remove_cib_op_callback
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_REQUEST_QUERY
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, crm_log_xml_explicit
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_ok, pcmk_ok, pcmk_strerror, etc.
+#include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 typedef struct cib_native_opaque_s {
     char *token;
