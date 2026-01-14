@@ -106,7 +106,9 @@ write_cib_async(gpointer user_data)
         pcmk__err("Disabling disk writes after fork failure: %s",
                   strerror(errno));
         writes_enabled = false;
-        return G_SOURCE_REMOVE;
+
+        // Remove trigger from main loop
+        return 0;
     }
 
     if (pid > 0) {
@@ -117,7 +119,10 @@ write_cib_async(gpointer user_data)
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
         }
 
-        return G_SOURCE_CONTINUE;
+        /* Mark job as running and keep trigger. write_cib_cb() will mark it as
+         * complete.
+         */
+        return -1;
     }
 
     /* Write the CIB. Note that this modifies the_cib, but this child is about
