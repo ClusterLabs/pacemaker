@@ -609,14 +609,9 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
     originator = pcmk__s(originator, "local");
     client_name = pcmk__s(client_name, "client");
 
-    /* @FIXME based_cib should always be non-NULL, but that's currently not the
-     * case during shutdown
-     */
-    if (based_cib != NULL) {
-        pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
-        pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
-        pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
-    }
+    pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
+    pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
+    pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
 
     do_crm_log(level,
                "Completed %s operation for section %s: %s (rc=%d, "
