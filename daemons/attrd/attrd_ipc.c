@@ -510,7 +510,7 @@ attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
  *
  * \param[in] c  Connection to destroy
  *
- * \return FALSE (i.e. do not re-run this callback)
+ * \return 0 (do not re-run this callback)
  */
 static int32_t
 attrd_ipc_closed(qb_ipcs_connection_t *c)
@@ -531,7 +531,7 @@ attrd_ipc_closed(qb_ipcs_connection_t *c)
         pcmk__free_client(client);
     }
 
-    return FALSE;
+    return 0;
 }
 
 /*!
