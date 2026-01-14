@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,14 +10,11 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 
 #include <glib.h>               // GString, etc.
-#include <gnutls/crypto.h>      // gnutls_hash_fast(), gnutls_hash_get_len()
-#include <gnutls/gnutls.h>      // gnutls_strerror()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
