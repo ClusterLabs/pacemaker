@@ -775,7 +775,7 @@ based_handle_request(pcmk__request_t *request)
     }
 
 done:
-    if (!operation->modifies_cib && needs_reply && !based_stand_alone()) {
+    if (!operation->modifies_cib && needs_reply) {
         send_peer_reply(reply, originator);
     }
 
