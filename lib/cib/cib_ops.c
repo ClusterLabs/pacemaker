@@ -491,18 +491,39 @@ process_xpath(const char *op, int options, const char *section,
             break;
 
         } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_QUERY, pcmk__str_none)) {
+            if (match->type != XML_ELEMENT_NODE
+                && pcmk__is_set(options, cib_xpath_address)) {
+               /* @COMPAT cib_xpath_address is deprecated since 3.0.2
+                * For a non-element, handle cib_xpath_address with its
+                * corresponding element.
+                */
+               match = pcmk__xpath_match_element(match);
+               if (match == NULL) {
+                   continue;
+               }
 
-            if (options & cib_no_children) {
-                xmlNode *shallow = pcmk__xe_create(*answer,
-                                                   (const char *) match->name);
+            } else if (match->type != XML_ELEMENT_NODE) {
+                xmlNode *match_element = pcmk__xpath_match_element(match);
+                xmlNode *brief = NULL;
 
-                pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
-
-                if (*answer == NULL) {
-                    *answer = shallow;
+                if (match_element == NULL) {
+                    continue;
                 }
 
-            } else if (options & cib_xpath_address) {
+                // Create an element with the corresponding element name
+                brief = pcmk__xe_create(*answer,
+                                        (const char *) match_element->name);
+                pcmk__xe_set(brief, PCMK_XA_ID, pcmk__xe_id(match_element));
+                pcmk__xml_copy(brief, match);
+
+                if (*answer == NULL) {
+                    *answer = brief;
+                }
+
+                continue;
+            }
+
+            if (options & cib_xpath_address) {
                 // @COMPAT cib_xpath_address is deprecated since 3.0.2
                 char *path = NULL;
                 xmlNode *parent = match;
@@ -532,6 +553,16 @@ process_xpath(const char *op, int options, const char *section,
                 parent = pcmk__xe_create(*answer, PCMK__XE_XPATH_QUERY_PATH);
                 pcmk__xe_set(parent, PCMK_XA_ID, path);
                 free(path);
+
+            } else if (options & cib_no_children) {
+                xmlNode *shallow = pcmk__xe_create(*answer,
+                                                   (const char *) match->name);
+
+                pcmk__xe_copy_attrs(shallow, match, pcmk__xaf_none);
+
+                if (*answer == NULL) {
+                    *answer = shallow;
+                }
 
             } else if (*answer) {
                 pcmk__xml_copy(*answer, match);
