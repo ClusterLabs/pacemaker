@@ -14,10 +14,12 @@ halibdir	= $(CRM_DAEMON_DIR)
 
 halib_PROGRAMS	= pacemaker-based
 
-noinst_HEADERS = based_io.h
+noinst_HEADERS = based_callbacks.h
+noinst_HEADERS += based_io.h
 noinst_HEADERS += based_messages.h
 noinst_HEADERS += based_notify.h
 noinst_HEADERS += based_operation.h
+noinst_HEADERS += based_remote.h
 noinst_HEADERS += based_transaction.h
 noinst_HEADERS += pacemaker-based.h
 
@@ -32,6 +34,7 @@ pacemaker_based_LDADD += $(CLUSTERLIBS) $(PAM_LIBS)
 pacemaker_based_SOURCES = pacemaker-based.c
 pacemaker_based_SOURCES += based_callbacks.c
 pacemaker_based_SOURCES += based_io.c
+pacemaker_based_SOURCES += based_ipc.c
 pacemaker_based_SOURCES += based_messages.c
 pacemaker_based_SOURCES += based_notify.c
 pacemaker_based_SOURCES += based_operation.c

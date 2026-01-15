@@ -52,22 +52,7 @@ typedef struct {
  */
 void pcmk__free_tls(pcmk__tls_t *tls);
 
-/*!
- * \internal
- * \brief Initialize a new TLS object
- *
- * Unlike \p pcmk__new_tls_session, this function is used for creating the
- * global environment for TLS connections.
- *
- * \param[in,out] tls       The object to be allocated and initialized
- * \param[in]     server    Is this a server or not?
- * \param[in]     cred_type What type of gnutls credentials are in use?
- *                          (GNUTLS_CRD_* constants)
- *
- * \returns Standard Pacemaker return code
- */
-int pcmk__init_tls(pcmk__tls_t **tls, bool server,
-                   gnutls_credentials_type_t cred_type);
+int pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk);
 
 /*!
  * \internal

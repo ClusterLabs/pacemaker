@@ -995,17 +995,16 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
 }
 
 void
-mainloop_del_fd(mainloop_io_t * client)
+mainloop_del_fd(mainloop_io_t *client)
 {
-    if (client != NULL) {
-        pcmk__trace("Removing client %s[%p]", client->name, client);
-        if (client->source) {
-            /* Results in mainloop_gio_destroy() being called just
-             * before the source is removed from mainloop
-             */
-            g_source_remove(client->source);
-        }
+    if ((client == NULL) || (client->source == 0)) {
+        return;
     }
+
+    pcmk__trace("Removing client %s[%p]", client->name, client);
+
+    // mainloop_gio_destroy() gets called during source removal
+    g_source_remove(client->source);
 }
 
 static GList *child_list = NULL;

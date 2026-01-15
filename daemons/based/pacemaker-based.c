@@ -31,7 +31,6 @@
 #include <crm/common/logging.h>     // crm_log_*
 #include <crm/common/mainloop.h>    // mainloop_add_signal
 #include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
-#include <crm/common/xml.h>         // PCMK_XA_REMOTE_*_PORT
 
 #include "pacemaker-based.h"
 
@@ -47,14 +46,9 @@ gchar *cib_root = NULL;
 
 gboolean stand_alone = FALSE;
 
-int remote_fd = 0;
-int remote_tls_fd = 0;
-
 GHashTable *config_hash = NULL;
 
 static void cib_init(void);
-void cib_shutdown(int nsig);
-static bool startCib(void);
 
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -207,7 +201,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    mainloop_add_signal(SIGTERM, cib_shutdown);
+    mainloop_add_signal(SIGTERM, based_shutdown);
 
     based_io_init();
 
@@ -282,7 +276,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     /* If main loop returned, clean up and exit. We disconnect in case
-     * terminate_cib(-1) was called.
+     * based_terminate(-1) was called.
      */
     pcmk_cluster_disconnect(crm_cluster);
     pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
@@ -331,7 +325,7 @@ cib_cs_dispatch(cpg_handle_t handle,
         return;
     }
     pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    cib_peer_callback(xml, NULL);
+    based_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
     free(data);
@@ -345,7 +339,7 @@ cib_cs_destroy(gpointer user_data)
     } else {
         pcmk__crit("Exiting immediately after losing connection to cluster "
                    "layer");
-        terminate_cib(CRM_EX_DISCONNECT);
+        based_terminate(CRM_EX_DISCONNECT);
     }
 }
 #endif
@@ -361,7 +355,7 @@ cib_peer_update_callback(enum pcmk__node_update type,
                 && (pcmk__ipc_client_count() == 0)) {
 
                 pcmk__info("Exiting after no more peers or clients remain");
-                terminate_cib(-1);
+                based_terminate(-1);
             }
             break;
 
@@ -373,6 +367,18 @@ cib_peer_update_callback(enum pcmk__node_update type,
 static void
 cib_init(void)
 {
+    // based_read_cib() returns new, non-NULL XML, so this should always succeed
+    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
+        pcmk__crit("Bug: failed to activate CIB. Terminating %s.",
+                   pcmk__server_log_name(pcmk_ipc_based));
+        crm_exit(CRM_EX_SOFTWARE);
+    }
+
+    config_hash = pcmk__strkey_table(free, free);
+    cib_read_config(config_hash, the_cib);
+
+    based_remote_init();
+
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
@@ -382,13 +388,6 @@ cib_init(void)
         pcmk_cpg_set_confchg_fn(crm_cluster, pcmk__cpg_confchg_cb);
     }
 #endif // SUPPORT_COROSYNC
-
-    config_hash = pcmk__strkey_table(free, free);
-
-    if (!startCib()) {
-        pcmk__crit("Cannot start CIB... terminating");
-        crm_exit(CRM_EX_NOINPUT);
-    }
 
     if (!stand_alone) {
         pcmk__cluster_set_status_callback(&cib_peer_update_callback);
@@ -405,29 +404,4 @@ cib_init(void)
     if (stand_alone) {
         based_is_primary = true;
     }
-}
-
-static bool
-startCib(void)
-{
-    xmlNode *cib = based_read_cib();
-    int port = 0;
-
-    if (based_activate_cib(cib, true, "start") != pcmk_rc_ok) {
-        return false;
-    }
-
-    cib_read_config(config_hash, cib);
-
-    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_TLS_PORT), &port);
-    if (port >= 0) {
-        remote_tls_fd = init_remote_listener(port, true);
-    }
-
-    pcmk__scan_port(pcmk__xe_get(cib, PCMK_XA_REMOTE_CLEAR_PORT), &port);
-    if (port >= 0) {
-        remote_fd = init_remote_listener(port, false);
-    }
-
-    return true;
 }

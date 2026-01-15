@@ -204,7 +204,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                xmlNode **result_cib, xmlNode **diff, xmlNode **output)
 {
     const bool dry_run = pcmk__is_set(call_options, cib_dryrun);
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     bool check_schema = true;
     bool make_copy = true;
     xmlNode *top = NULL;
@@ -219,10 +219,10 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     pcmk__trace("Begin %s%s%s op", (dry_run? "dry run of " : ""),
                 (is_query? "read-only " : ""), op);
 
-    CRM_CHECK(output != NULL, return -ENOMSG);
-    CRM_CHECK(current_cib != NULL, return -ENOMSG);
-    CRM_CHECK(result_cib != NULL, return -ENOMSG);
-    CRM_CHECK(config_changed != NULL, return -ENOMSG);
+    CRM_CHECK(output != NULL, return ENOMSG);
+    CRM_CHECK(current_cib != NULL, return ENOMSG);
+    CRM_CHECK(result_cib != NULL, return ENOMSG);
+    CRM_CHECK(config_changed != NULL, return ENOMSG);
 
     if(output) {
         *output = NULL;
@@ -232,7 +232,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     *config_changed = false;
 
     if (fn == NULL) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     if (is_query) {
@@ -245,13 +245,14 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
             if (cib_filtered == NULL) {
                 pcmk__debug("Pre-filtered the entire cib");
-                return -EACCES;
+                return EACCES;
             }
             cib_ro = cib_filtered;
             pcmk__log_xml_trace(cib_ro, "filtered");
         }
 
         rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
+        rc = pcmk_legacy2rc(rc);
 
         if(output == NULL || *output == NULL) {
             /* nothing */
@@ -294,6 +295,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         }
 
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
+        rc = pcmk_legacy2rc(rc);
 
         /* If scratch points to a new object now (for example, after an erase
          * operation), then *current_cib should point to the same object.
@@ -314,6 +316,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
                     &scratch, output);
+        rc = pcmk_legacy2rc(rc);
 
         /* @TODO This appears to be a hack to determine whether scratch points
          * to a new object now, without saving the old pointer (which may be
@@ -327,21 +330,21 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             }
             pcmk__xml_mark_changes(*current_cib, scratch);
         }
-        CRM_CHECK(*current_cib != scratch, return -EINVAL);
+        CRM_CHECK(*current_cib != scratch, return EINVAL);
     }
 
     xml_acl_disable(scratch); /* Allow the system to make any additional changes */
 
-    if (rc == pcmk_ok && scratch == NULL) {
-        rc = -EINVAL;
+    if ((rc == pcmk_rc_ok) && (scratch == NULL)) {
+        rc = EINVAL;
         goto done;
 
-    } else if(rc == pcmk_ok && xml_acl_denied(scratch)) {
+    } else if ((rc == pcmk_rc_ok) && xml_acl_denied(scratch)) {
         pcmk__trace("ACL rejected part or all of the proposed changes");
-        rc = -EACCES;
+        rc = EACCES;
         goto done;
 
-    } else if (rc != pcmk_ok) {
+    } else if (rc != pcmk_rc_ok) {
         goto done;
     }
 
@@ -358,7 +361,6 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__err("Discarding update with feature set '%s' greater than "
                       "our own '%s'",
                       new_version, CRM_FEATURE_SET);
-            rc = pcmk_rc2legacy(rc);
             goto done;
         }
     }
@@ -375,7 +377,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                       PCMK_XA_ADMIN_EPOCH, old, new, call_options);
             pcmk__log_xml_warn(req, "Bad Op");
             pcmk__log_xml_warn(input, "Bad Data");
-            rc = -pcmk_err_old_data;
+            rc = pcmk_rc_old_data;
 
         } else if (old == new) {
             pcmk__xe_get_int(scratch, PCMK_XA_EPOCH, &new);
@@ -385,7 +387,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                           PCMK_XA_EPOCH, old, new, call_options);
                 pcmk__log_xml_warn(req, "Bad Op");
                 pcmk__log_xml_warn(input, "Bad Data");
-                rc = -pcmk_err_old_data;
+                rc = pcmk_rc_old_data;
             }
         }
     }
@@ -474,7 +476,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         const char *schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
         if (schema == NULL) {
-            rc = -pcmk_err_cib_corrupt;
+            rc = pcmk_rc_cib_corrupt;
         }
 
         pcmk__xe_add_last_written(scratch);
@@ -508,9 +510,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     }
 
     pcmk__trace("Perform validation: %s", pcmk__btoa(check_schema));
-    if ((rc == pcmk_ok) && check_schema
+    if ((rc == pcmk_rc_ok) && check_schema
         && !pcmk__configured_schema_validates(scratch)) {
-        rc = -pcmk_err_schema_validation;
+        rc = pcmk_rc_schema_validation;
     }
 
   done:
@@ -520,7 +522,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     /* @TODO: This may not work correctly with !make_copy, since we don't
      * keep the original CIB.
      */
-    if ((rc != pcmk_ok) && cib_acl_enabled(patchset_cib, user)
+    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)
         && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
 
         if (*result_cib == NULL) {
