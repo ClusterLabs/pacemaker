@@ -346,7 +346,6 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
     }
 
     if (is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
-        *needs_reply = false;
         return;
     }
 
@@ -357,6 +356,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
          * from versions earlier than 3.0.2. (If the requesting node doesn't
          * receive a reply, it simply exits with CRM_EX_ERROR after 10 seconds.)
          */
+        *needs_reply = true;
         return;
     }
 
@@ -366,7 +366,6 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
         pcmk__trace("Will notify local clients for %s reply from %s",
                     request->op, originator);
         *process = false;
-        *needs_reply = false;
         *local_notify = true;
         return;
     }
@@ -407,7 +406,6 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
             pcmk__trace("Will notify local clients for %s reply from %s",
                         request->op, originator);
             *process = false;
-            *needs_reply = false;
             *local_notify = true;
             return;
         }
@@ -415,7 +413,6 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
         if ((max == NULL) && !based_get_local_node_dc()) {
             // Ignore broadcast client requests when we're not the DC
             *process = false;
-            *needs_reply = false;
             return;
         }
     }
@@ -425,6 +422,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", request->op,
                     originator);
+        *needs_reply = true;
         return;
     }
 
@@ -432,15 +430,14 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
         pcmk__trace("Ignoring %s request intended for CIB manager on %s",
                     request->op, host);
         *process = false;
-        *needs_reply = false;
         return;
     }
 
     if (!is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
+        *needs_reply = true;
         return;
     }
 
-    *needs_reply = false;
     pcmk__trace("Processing %s request broadcast by %s call %s on %s "
                 "(local clients will%s be notified)", request->op,
                 pcmk__s(pcmk__xe_get(request->xml, PCMK__XA_CIB_CLIENTNAME),
@@ -646,7 +643,7 @@ based_handle_request(pcmk__request_t *request)
 {
     // @TODO: Break into multiple smaller functions
     bool process = true;        // Whether to process request locally now
-    bool needs_reply = true;    // Whether to build a reply
+    bool needs_reply = false;   // Whether to build a reply
     bool local_notify = false;  // Whether to notify (local) requester
 
     xmlNode *reply = NULL;
@@ -712,7 +709,6 @@ based_handle_request(pcmk__request_t *request)
          * CIB copy, and we don't notify for individual requests because the
          * entire transaction is atomic.
          */
-        needs_reply = false;
         pcmk__trace("Processing %s op from %s/%s on %s locally because it's "
                     "part of a transaction", request->op, client_name, call_id,
                     pcmk__xe_get(request->xml, PCMK__XA_SRC));
@@ -730,7 +726,6 @@ based_handle_request(pcmk__request_t *request)
         }
 
         // Process locally and notify local client; no peer to reply to
-        needs_reply = false;
         local_notify = true;
 
         log_local_options(request->ipc_client, host, request->op);
