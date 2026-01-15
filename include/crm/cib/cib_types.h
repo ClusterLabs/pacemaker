@@ -167,6 +167,7 @@ typedef struct cib_api_operations_s {
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
 
+    //! \deprecated This method will be removed and should not be used
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 

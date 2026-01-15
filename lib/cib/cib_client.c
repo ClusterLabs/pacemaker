@@ -230,6 +230,7 @@ cib_client_register_callback(cib_t *cib, int call_id, int timeout,
                                              callback_name, callback, NULL);
 }
 
+// @COMPAT Deprecated
 static int
 cib_client_noop(cib_t * cib, int call_options)
 {
@@ -247,14 +248,16 @@ cib_client_ping(cib_t * cib, xmlNode ** output_data, int call_options)
 static int
 cib_client_query(cib_t * cib, const char *section, xmlNode ** output_data, int call_options)
 {
-    return cib->cmds->query_from(cib, NULL, section, output_data, call_options);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL, section, NULL,
+                           output_data, call_options, cib->user);
 }
 
+// @COMPAT Deprecated
 static int
 cib_client_query_from(cib_t * cib, const char *host, const char *section,
                       xmlNode ** output_data, int call_options)
 {
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, host, section, NULL,
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL, section, NULL,
                            output_data, call_options, cib->user);
 }
 
@@ -286,7 +289,7 @@ cib_client_upgrade(cib_t * cib, int call_options)
                            NULL, call_options, cib->user);
 }
 
-// @COMPAT cib_api_operations_t:sync is deprecated since 3.0.2
+// @COMPAT Deprecated
 static int
 cib_client_sync(cib_t * cib, const char *section, int call_options)
 {
@@ -644,12 +647,8 @@ cib_new_variant(void)
     new_cib->cmds->register_callback = cib_client_register_callback;
     new_cib->cmds->register_callback_full = cib_client_register_callback_full;
 
-    new_cib->cmds->noop = cib_client_noop; // Deprecated method
     new_cib->cmds->ping = cib_client_ping;
     new_cib->cmds->query = cib_client_query;
-    new_cib->cmds->sync = cib_client_sync;
-
-    new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
 
     new_cib->cmds->set_primary = set_primary;
@@ -670,6 +669,11 @@ cib_new_variant(void)
     new_cib->cmds->set_user = cib_client_set_user;
 
     new_cib->cmds->fetch_schemas = cib_client_fetch_schemas;
+
+    // @COMPAT Deprecated methods
+    new_cib->cmds->noop = cib_client_noop;
+    new_cib->cmds->sync = cib_client_sync;
+    new_cib->cmds->query_from = cib_client_query_from;
 
     return new_cib;
 }
