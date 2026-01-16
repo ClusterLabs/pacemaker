@@ -295,10 +295,11 @@ shadow_xml(pcmk__output_t *out, va_list args)
     enum shadow_disp_flags flags G_GNUC_UNUSED =
         (enum shadow_disp_flags) va_arg(args, int);
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_SHADOW,
-                                   PCMK_XA_INSTANCE, instance,
-                                   PCMK_XA_FILE, filename,
-                                   NULL);
+    xmlNode *xml = NULL;
+
+    xml = pcmk__output_xml_create_parent(out, PCMK_XE_SHADOW);
+    pcmk__xe_set(xml, PCMK_XA_INSTANCE, instance);
+    pcmk__xe_set(xml, PCMK_XA_FILE, filename);
 
     if (content != NULL) {
         GString *buf = g_string_sized_new(1024);

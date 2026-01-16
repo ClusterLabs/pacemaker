@@ -968,11 +968,9 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
                 }
 
                 remote = pcmk__xe_create(remotes, PCMK_XE_NODE);
-                pcmk__xe_set_props(remote,
-                                   PCMK_XA_ID, node->name,
-                                   PCMK__XA_NODE_STATE, node->state,
-                                   PCMK__XA_CONNECTION_HOST, node->conn_host,
-                                   NULL);
+                pcmk__xe_set(remote, PCMK_XA_ID, node->name);
+                pcmk__xe_set(remote, PCMK__XA_NODE_STATE, node->state);
+                pcmk__xe_set(remote, PCMK__XA_CONNECTION_HOST, node->conn_host);
             }
         }
     }

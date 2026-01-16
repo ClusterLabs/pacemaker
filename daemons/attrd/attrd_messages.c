@@ -24,9 +24,10 @@ int minimum_protocol_version = -1;
 static GHashTable *attrd_handlers = NULL;
 
 static bool
-is_sync_point_attr(xmlAttrPtr attr, void *data)
+is_sync_point_attr(const xmlAttr *attr, void *data)
 {
-    return pcmk__str_eq((const char *) attr->name, PCMK__XA_ATTR_SYNC_POINT, pcmk__str_none);
+    return pcmk__str_eq((const char *) attr->name, PCMK__XA_ATTR_SYNC_POINT,
+                        pcmk__str_none);
 }
 
 static int

@@ -844,14 +844,15 @@ static int
 md5_sum_xml(pcmk__output_t *out, va_list args)
 {
     const char *digest = va_arg(args, const char *);
+    xmlNode *xml = NULL;
 
     if (digest == NULL) {
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_create_xml_node(out, PCMK_XE_MD5_SUM,
-                                 PCMK_XA_DIGEST, digest,
-                                 NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_MD5_SUM);
+    pcmk__xe_set(xml, PCMK_XA_DIGEST, digest);
+
     return pcmk_rc_ok;
 }
 
@@ -1170,8 +1171,8 @@ main(int argc, char **argv)
                 goto done;
             }
 
-            // @COMPAT Fail if pcmk_acl_required(username)
-            if (pcmk_acl_required(username)) {
+            // @COMPAT Fail if pcmk__acl_required(username)
+            if (pcmk__acl_required(username)) {
                 out->err(out,
                          "Warning: cibadmin is being run as user %s, which is "
                          "subject to ACLs. As a result, ACLs for user %s may "
