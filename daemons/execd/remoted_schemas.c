@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -144,7 +144,7 @@ get_schema_files(void)
         _exit(CRM_EX_OSERR);
     }
 
-    rc = cib->cmds->signon(cib, crm_system_name, cib_query);
+    rc = cib->cmds->signon(cib, crm_system_name, cib_command);
     rc = pcmk_legacy2rc(rc);
     if (rc != pcmk_rc_ok) {
         pcmk__err("Could not connect to the CIB manager: %s", pcmk_rc_str(rc));

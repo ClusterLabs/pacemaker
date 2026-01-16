@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,6 @@ struct trigger_s {
     gboolean trigger;
     void *user_data;
     guint id;
-
 };
 
 struct mainloop_timer_s {
@@ -40,6 +39,21 @@ struct mainloop_timer_s {
         GSourceFunc cb;
         void *userdata;
 };
+
+static GHashTable *mainloop_children = NULL;
+static qb_array_t *gio_map = NULL;
+
+static void
+child_free(mainloop_child_t *child)
+{
+    if (child->timerid != 0) {
+        pcmk__trace("Removing timer %d", child->timerid);
+        g_source_remove(child->timerid);
+        child->timerid = 0;
+    }
+    free(child->desc);
+    free(child);
+}
 
 static gboolean
 crm_trigger_prepare(GSource * source, gint * timeout)
@@ -335,6 +349,8 @@ mainloop_destroy_signal_entry(int sig)
  * \note The true signal handler merely sets a mainloop trigger to call this
  *       dispatch function via the mainloop. Therefore, the dispatch function
  *       does not need to be async-safe.
+ * \note The added signal handler gets freed by \c mainloop_cleanup() if it is
+ *       not freed manually using \c mainloop_destroy_signal().
  */
 gboolean
 mainloop_add_signal(int sig, void (*dispatch) (int sig))
@@ -398,15 +414,17 @@ mainloop_destroy_signal(int sig)
     return TRUE;
 }
 
-static qb_array_t *gio_map = NULL;
-
+/*!
+ * \internal
+ * \brief Free data structures used for the mainloop
+ *
+ * \todo This is incomplete. Free other data structures created in this file.
+ */
 void
-mainloop_cleanup(void) 
+mainloop_cleanup(void)
 {
-    if (gio_map != NULL) {
-        qb_array_free(gio_map);
-        gio_map = NULL;
-    }
+    g_clear_pointer(&mainloop_children, g_hash_table_destroy);
+    g_clear_pointer(&gio_map, qb_array_free);
 
     for (int sig = 0; sig < NSIG; ++sig) {
         mainloop_destroy_signal_entry(sig);
@@ -595,31 +613,6 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
     .dispatch_del = gio_poll_dispatch_del,
 };
 
-static enum qb_ipc_type
-pick_ipc_type(enum qb_ipc_type requested)
-{
-    const char *env = pcmk__env_option(PCMK__ENV_IPC_TYPE);
-
-    if (env && strcmp("shared-mem", env) == 0) {
-        return QB_IPC_SHM;
-    } else if (env && strcmp("socket", env) == 0) {
-        return QB_IPC_SOCKET;
-    } else if (env && strcmp("posix", env) == 0) {
-        return QB_IPC_POSIX_MQ;
-    } else if (env && strcmp("sysv", env) == 0) {
-        return QB_IPC_SYSV_MQ;
-    } else if (requested == QB_IPC_NATIVE) {
-        /* We prefer shared memory because the server never blocks on
-         * send.  If part of a message fits into the socket, libqb
-         * needs to block until the remainder can be sent also.
-         * Otherwise the client will wait forever for the remaining
-         * bytes.
-         */
-        return QB_IPC_SHM;
-    }
-    return requested;
-}
-
 qb_ipcs_service_t *
 mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
                         struct qb_ipcs_service_handlers *callbacks)
@@ -639,7 +632,7 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
         gio_map = qb_array_create_2(64, sizeof(struct gio_to_qb_poll), 1);
     }
 
-    server = qb_ipcs_create(name, 0, pick_ipc_type(type), callbacks);
+    server = qb_ipcs_create(name, 0, QB_IPC_NATIVE, callbacks);
 
     if (server == NULL) {
         pcmk__err("Could not create %s IPC server: %s (%d)", name,
@@ -672,21 +665,6 @@ mainloop_del_ipc_server(qb_ipcs_service_t * server)
         qb_ipcs_destroy(server);
     }
 }
-
-struct mainloop_io_s {
-    char *name;
-    void *userdata;
-
-    int fd;
-    guint source;
-    crm_ipc_t *ipc;
-    GIOChannel *channel;
-
-    int (*dispatch_fn_ipc) (const char *buffer, ssize_t length, gpointer userdata);
-    int (*dispatch_fn_io) (gpointer userdata);
-    void (*destroy_fn) (gpointer userdata);
-
-};
 
 /*!
  * \internal
@@ -954,43 +932,41 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
                 struct mainloop_fd_callbacks * callbacks)
 {
     mainloop_io_t *client = NULL;
+    const GIOCondition condition = G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR;
 
-    if (fd >= 0) {
-        client = calloc(1, sizeof(mainloop_io_t));
-        if (client == NULL) {
-            return NULL;
-        }
-        client->name = strdup(name);
-        client->userdata = userdata;
-
-        if (callbacks) {
-            client->destroy_fn = callbacks->destroy;
-            client->dispatch_fn_io = callbacks->dispatch;
-        }
-
-        client->fd = fd;
-        client->channel = g_io_channel_unix_new(fd);
-        client->source =
-            g_io_add_watch_full(client->channel, priority,
-                                (G_IO_IN | G_IO_HUP | G_IO_NVAL | G_IO_ERR), mainloop_gio_callback,
-                                client, mainloop_gio_destroy);
-
-        /* Now that mainloop now holds a reference to channel,
-         * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
-         *
-         * This means that channel will be free'd by:
-         * g_main_context_dispatch() or g_source_remove()
-         *  -> g_source_destroy_internal()
-         *      -> g_source_callback_unref()
-         * shortly after mainloop_gio_destroy() completes
-         */
-        g_io_channel_unref(client->channel);
-        pcmk__trace("Added connection %d for %s[%p].%d", client->source,
-                    client->name, client, fd);
-    } else {
+    if (fd < 0) {
         errno = EINVAL;
+        return NULL;
     }
 
+    client = pcmk__assert_alloc(1, sizeof(mainloop_io_t));
+    client->name = pcmk__str_copy(name);
+    client->userdata = userdata;
+
+    if (callbacks != NULL) {
+        client->destroy_fn = callbacks->destroy;
+        client->dispatch_fn_io = callbacks->dispatch;
+    }
+
+    client->fd = fd;
+    client->channel = g_io_channel_unix_new(fd);
+    client->source = g_io_add_watch_full(client->channel, priority, condition,
+                                         mainloop_gio_callback, client,
+                                         mainloop_gio_destroy);
+
+    /* Now that mainloop now holds a reference to channel, thanks to
+     * g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
+     *
+     * This means that channel will be free'd by:
+     * g_main_context_dispatch() or g_source_remove()
+     *  -> g_source_destroy_internal()
+     *      -> g_source_callback_unref()
+     * shortly after mainloop_gio_destroy() completes
+     */
+    g_io_channel_unref(client->channel);
+
+    pcmk__trace("Added connection %d for %s[%p].%d", client->source,
+                client->name, client, fd);
     return client;
 }
 
@@ -1003,11 +979,14 @@ mainloop_del_fd(mainloop_io_t *client)
 
     pcmk__trace("Removing client %s[%p]", client->name, client);
 
-    // mainloop_gio_destroy() gets called during source removal
+    /* g_source_remove() marks the source as destroyed, unsets the source
+     * callback (mainloop_gio_callback()), and destroys the callback data (the
+     * client) via the notify function (mainloop_gio_destroy()). We can rely on
+     * mainloop_gio_callback() not getting called again for this source, and on
+     * the client being destroyed.
+     */
     g_source_remove(client->source);
 }
-
-static GList *child_list = NULL;
 
 pid_t
 mainloop_child_pid(mainloop_child_t * child)
@@ -1039,48 +1018,41 @@ mainloop_clear_child_userdata(mainloop_child_t * child)
     child->privatedata = NULL;
 }
 
-/* good function name */
-static void
-child_free(mainloop_child_t *child)
-{
-    if (child->timerid != 0) {
-        pcmk__trace("Removing timer %d", child->timerid);
-        g_source_remove(child->timerid);
-        child->timerid = 0;
-    }
-    free(child->desc);
-    free(child);
-}
-
-/* terrible function name */
 static int
-child_kill_helper(mainloop_child_t *child)
+child_kill_helper(const mainloop_child_t *child)
 {
-    int rc;
-    if (child->flags & mainloop_leave_pid_group) {
+    int rc = 0;
+
+    if (pcmk__is_set(child->flags, mainloop_leave_pid_group)) {
         pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
                     (long long) child->pid);
         rc = kill(child->pid, SIGKILL);
+
     } else {
         pcmk__debug("Killing PID %lld's entire process group",
                     (long long) child->pid);
         rc = kill(-child->pid, SIGKILL);
     }
 
-    if (rc < 0) {
-        if (errno != ESRCH) {
-            pcmk__err("kill(%d, KILL) failed: %s", child->pid, strerror(errno));
-        }
-        return -errno;
+    if (rc == 0) {
+        return pcmk_rc_ok;
     }
-    return 0;
+
+    rc = errno;
+    if (rc == ESRCH) {
+        return rc;
+    }
+
+    pcmk__err("kill(%lld, KILL) failed: %s", (long long) child->pid,
+              strerror(rc));
+    return rc;
 }
 
 static gboolean
 child_timeout_callback(gpointer p)
 {
     mainloop_child_t *child = p;
-    int rc = 0;
+    int rc = pcmk_rc_ok;
 
     child->timerid = 0;
     if (child->timeout) {
@@ -1090,7 +1062,7 @@ child_timeout_callback(gpointer p)
     }
 
     rc = child_kill_helper(child);
-    if (rc == -ESRCH) {
+    if (rc == ESRCH) {
         /* Nothing left to do. pid doesn't exist */
         return FALSE;
     }
@@ -1111,15 +1083,16 @@ child_waitpid(mainloop_child_t *child, int flags)
     int signo = 0;
     int status = 0;
     int exitcode = 0;
-    bool callback_needed = true;
 
     rc = waitpid(child->pid, &status, flags);
+
     if (rc == 0) { // WNOHANG in flags, and child status is not available
         pcmk__trace("Child process %lld (%s) still active",
                     (long long) child->pid, child->desc);
-        callback_needed = false;
+        return false;
+    }
 
-    } else if (rc != child->pid) {
+    if (rc != child->pid) {
         /* According to POSIX, possible conditions:
          * - child->pid was non-positive (process group or any child),
          *   and rc is specific child
@@ -1131,8 +1104,8 @@ child_waitpid(mainloop_child_t *child, int flags)
          */
         signo = SIGCHLD;
         exitcode = 1;
-        pcmk__notice("Wait for child process %d (%s) interrupted: %s",
-                     child->pid, child->desc, pcmk_rc_str(errno));
+        pcmk__notice("Wait for child process %lld (%s) interrupted: %s",
+                     (long long) child->pid, child->desc, strerror(errno));
 
     } else if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
@@ -1148,37 +1121,45 @@ child_waitpid(mainloop_child_t *child, int flags)
 #ifdef WCOREDUMP // AIX, SunOS, maybe others
     } else if (WCOREDUMP(status)) {
         core = 1;
-        pcmk__err("Child process %d (%s) dumped core", child->pid, child->desc);
+        pcmk__err("Child process %lld (%s) dumped core", (long long) child->pid,
+                  child->desc);
 #endif
 
     } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
         pcmk__trace("Child process %lld (%s) stopped or continued",
                     (long long) child->pid, child->desc);
-        callback_needed = false;
+        return false;
     }
 
-    if (callback_needed && child->exit_fn) {
+    if (child->exit_fn != NULL) {
         child->exit_fn(child, core, signo, exitcode);
     }
-    return callback_needed;
+
+    return true;
+}
+
+static gboolean
+child_waitpid_no_hang(gpointer key, gpointer value, gpointer user_data)
+{
+    mainloop_child_t *child = value;
+
+    if (!child_waitpid(child, WNOHANG)) {
+        return FALSE;
+    }
+
+    pcmk__trace("Removing completed process %lld from child table",
+                (long long) child->pid);
+    return TRUE;
 }
 
 static void
 child_death_dispatch(int signal)
 {
-    for (GList *iter = child_list; iter; ) {
-        GList *saved = iter;
-        mainloop_child_t *child = iter->data;
-
-        iter = iter->next;
-        if (child_waitpid(child, WNOHANG)) {
-            pcmk__trace("Removing completed process %lld from child list",
-                        (long long) child->pid);
-            child_list = g_list_remove_link(child_list, saved);
-            g_list_free(saved);
-            child_free(child);
-        }
+    if (mainloop_children == NULL) {
+        return;
     }
+
+    g_hash_table_foreach_remove(mainloop_children, child_waitpid_no_hang, NULL);
 }
 
 static gboolean
@@ -1196,54 +1177,78 @@ child_signal_init(gpointer p)
 gboolean
 mainloop_child_kill(pid_t pid)
 {
-    GList *iter;
+    /* It is impossible to block SIGKILL. This allows us to call waitpid()
+     * without the WNOHANG flag.
+     */
+    int waitflags = 0;
+    int rc = pcmk_rc_ok;
+    char *pid_s = NULL;
     mainloop_child_t *child = NULL;
-    mainloop_child_t *match = NULL;
-    /* It is impossible to block SIGKILL, this allows us to
-     * call waitpid without WNOHANG flag.*/
-    int waitflags = 0, rc = 0;
+    gboolean killed = FALSE;
 
-    for (iter = child_list; iter != NULL && match == NULL; iter = iter->next) {
-        child = iter->data;
-        if (pid == child->pid) {
-            match = child;
-        }
+    if (mainloop_children == NULL) {
+        // We're not tracking any children, so don't kill this PID
+        goto done;
     }
 
-    if (match == NULL) {
-        return FALSE;
+    pid_s = pcmk__assert_asprintf("%lld", (long long) pid);
+    child = g_hash_table_lookup(mainloop_children, pid_s);
+
+    if (child == NULL) {
+        // We're not tracking a child with this PID, so don't kill it
+        goto done;
     }
 
-    rc = child_kill_helper(match);
-    if(rc == -ESRCH) {
-        /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
-         * SIGCHLD and let handler clean it up as normal (so we get the correct
-         * return code/status). The blocking alternative would be to call
-         * child_waitpid(match, 0).
+    rc = child_kill_helper(child);
+    if (rc == ESRCH) {
+        /* kill() didn't find the PID. Assume this means the process is in some
+         * intermediate stage of exiting. Wait until we get SIGCHLD and let
+         * the handler clean it up as normal, so that we get the correct return
+         * code/status. The blocking alternative would be to call
+         * child_waitpid(child, 0).
+         *
+         * Treat this as success in the meantime.
          */
         pcmk__trace("Waiting for signal that child process %lld completed",
-                    (long long) match->pid);
-        return TRUE;
+                    (long long) child->pid);
+        killed = TRUE;
+        goto done;
+    }
 
-    } else if(rc != 0) {
-        /* If KILL for some other reason set the WNOHANG flag since we
-         * can't be certain what happened.
+    if (rc != pcmk_rc_ok) {
+        /* If kill() failed for some other reason, set the WNOHANG flag, since
+         * we can't be certain what happened.
          */
         waitflags = WNOHANG;
     }
 
-    if (!child_waitpid(match, waitflags)) {
-        /* not much we can do if this occurs */
-        return FALSE;
+    if (!child_waitpid(child, waitflags)) {
+        /* waitpid() didn't find the child. This shouldn't happen if kill()
+         * succeeded. In any case, there's no obviously good way to proceed.
+         * Treat this as a failure.
+         *
+         * @TODO Should we call the child's exit_fn with a failure here, and/or
+         * free the mainloop_child_t? We can hope that we successfully wait on
+         * it in response to a SIGCHLD that comes later. But we might just never
+         * do anything with this child again.
+         *
+         * @TODO Consider using GSubprocess for all subprocess tracking.
+         */
+        goto done;
     }
 
-    child_list = g_list_remove(child_list, match);
-    child_free(match);
-    return TRUE;
+    g_hash_table_remove(mainloop_children, pid_s);
+    killed = TRUE;
+
+done:
+    free(pid_s);
+    return killed;
 }
 
 /* Create/Log a new tracked process
  * To track a process group, use -pid
+ *
+ * Newly created child will be freed by mainloop_cleanup(), if not sooner.
  *
  * @TODO Using a non-positive pid (i.e. any child, or process group) would
  *       likely not be useful since we will free the child after the first
@@ -1256,6 +1261,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
                               pcmk__mainloop_child_exit_fn_t exit_fn)
 {
     static bool need_init = TRUE;
+    bool is_new = false;
     mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
 
     child->pid = pid;
@@ -1270,7 +1276,17 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
         child->timerid = pcmk__create_timer(timeout, child_timeout_callback, child);
     }
 
-    child_list = g_list_append(child_list, child);
+    if (mainloop_children == NULL) {
+        mainloop_children = pcmk__strkey_table(free,
+                                               (GDestroyNotify) child_free);
+    }
+
+    is_new = g_hash_table_insert(mainloop_children,
+                                 pcmk__assert_asprintf("%lld", (long long) pid),
+                                 child);
+
+    // It should be impossible to have this PID in mainloop_children already
+    CRM_LOG_ASSERT(is_new);
 
     if(need_init) {
         need_init = FALSE;
@@ -1282,6 +1298,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
     }
 }
 
+// Newly created child will be freed by mainloop_cleanup(), if not sooner
 void
 mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
                    pcmk__mainloop_child_exit_fn_t exit_fn)

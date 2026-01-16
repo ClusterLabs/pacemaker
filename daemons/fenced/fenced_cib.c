@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -507,27 +507,17 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         patchset = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
         rc = xml_apply_patchset(local_cib, patchset, TRUE);
-        switch (rc) {
-            case pcmk_ok:
-            case -pcmk_err_old_data:
-                /* @TODO Full refresh (with or without query) in case of
-                 * -pcmk_err_old_data? It seems wrong to call
-                 * stonith_device_remove() based on primitive deletion in an
-                 * old diff.
-                 */
-                break;
-            case -pcmk_err_diff_resync:
-            case -pcmk_err_diff_failed:
+
+        if (rc != pcmk_ok) {
+            if ((rc == -pcmk_err_old_data) || (rc == -pcmk_err_diff_failed)) {
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
-                pcmk__xml_free(local_cib);
-                local_cib = NULL;
-                break;
-            default:
+            } else {
                 pcmk__warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
                            rc);
-                pcmk__xml_free(local_cib);
-                local_cib = NULL;
+            }
+
+            g_clear_pointer(&local_cib, pcmk__xml_free);
         }
     }
 

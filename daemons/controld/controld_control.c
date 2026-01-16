@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -141,8 +141,7 @@ crmd_fast_exit(crm_exit_t exit_code)
     if (controld_globals.logger_out != NULL) {
         controld_globals.logger_out->finish(controld_globals.logger_out,
                                             exit_code, true, NULL);
-        pcmk__output_free(controld_globals.logger_out);
-        controld_globals.logger_out = NULL;
+        g_clear_pointer(&controld_globals.logger_out, pcmk__output_free);
     }
 
     crm_exit(exit_code);
@@ -178,8 +177,7 @@ crmd_exit(crm_exit_t exit_code)
 
     if(ipcs) {
         pcmk__trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
+        g_clear_pointer(&ipcs, mainloop_del_ipc_server);
     }
 
     controld_close_attrd_ipc();
@@ -225,8 +223,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
-    mainloop_destroy_trigger(config_read_trigger);
-    config_read_trigger = NULL;
+    g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
 
     controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();
@@ -238,20 +235,11 @@ crmd_exit(crm_exit_t exit_code)
     controld_cleanup_fencing_history_sync(NULL, true);
     controld_free_sched_timer();
 
-    free(controld_globals.our_uuid);
-    controld_globals.our_uuid = NULL;
-
-    free(controld_globals.dc_name);
-    controld_globals.dc_name = NULL;
-
-    free(controld_globals.dc_version);
-    controld_globals.dc_version = NULL;
-
-    free(controld_globals.cluster_name);
-    controld_globals.cluster_name = NULL;
-
-    free(controld_globals.te_uuid);
-    controld_globals.te_uuid = NULL;
+    g_clear_pointer(&controld_globals.our_uuid, free);
+    g_clear_pointer(&controld_globals.dc_name, free);
+    g_clear_pointer(&controld_globals.dc_version, free);
+    g_clear_pointer(&controld_globals.cluster_name, free);
+    g_clear_pointer(&controld_globals.te_uuid, free);
 
     free_max_generation();
     controld_destroy_failed_sync_table();
@@ -289,19 +277,15 @@ crmd_exit(crm_exit_t exit_code)
                     g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
-        /* Won't do anything yet, since we're inside it now */
-        g_main_loop_unref(mloop);
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }
 
-    cib_delete(controld_globals.cib_conn);
-    controld_globals.cib_conn = NULL;
+    g_clear_pointer(&controld_globals.cib_conn, cib_delete);
 
     throttle_fini();
 
-    pcmk_cluster_free(controld_globals.cluster);
-    controld_globals.cluster = NULL;
+    g_clear_pointer(&controld_globals.cluster, pcmk_cluster_free);
 
     /* Graceful */
     pcmk__trace("Done preparing for exit with status %d (%s)", exit_code,
@@ -456,8 +440,7 @@ do_stop(long long action, enum crmd_fsa_cause cause,
         fsa_data_t *msg_data)
 {
     pcmk__trace("Stopping IPC server");
-    mainloop_del_ipc_server(ipcs);
-    ipcs = NULL;
+    g_clear_pointer(&ipcs, mainloop_del_ipc_server);
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 

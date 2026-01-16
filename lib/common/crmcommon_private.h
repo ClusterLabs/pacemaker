@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 the Pacemaker project contributors
+ * Copyright 2018-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -145,9 +145,6 @@ void pcmk__free_acls(GList *acls);
 
 G_GNUC_INTERNAL
 void pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user);
-
-G_GNUC_INTERNAL
-bool pcmk__is_user_in_group(const char *user, const char *group);
 
 G_GNUC_INTERNAL
 void pcmk__apply_acl(xmlNode *xml);

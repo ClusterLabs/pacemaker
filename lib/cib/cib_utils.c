@@ -1,26 +1,39 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2025 the Pacemaker project contributors
+ * Later changes copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
-#include <unistd.h>
+
+#include <errno.h>                  // errno, EACCES, EAGAIN, EALREADY, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <sys/utsname.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // free, getenv
+#include <syslog.h>                 // LOG_CRIT, LOG_INFO
 
-#include <glib.h>
+#include <glib.h>                   // gboolean, GHashTable, g_*, etc.
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, createEmptyCib, etc.
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*
+#include <crm/common/acl.h>         // pcmk_acl_*, xml_acl_*
+#include <crm/common/cib.h>         // pcmk_find_cib_element
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/iso8601.h>     // crm_time_*
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/nvpair.h>      // pcmk_unpack_nvpair_blocks
+#include <crm/common/options.h>     // PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_err_*, pcmk_ok, etc.
+#include <crm/common/rules.h>       // pcmk_rule_input_t
+#include <crm/common/xml.h>         // xml_*_patchset, PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                // CRM_FEATURE_SET, crm_system_name
 
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
@@ -100,9 +113,9 @@ createEmptyCib(int cib_epoch)
     pcmk__xe_set(cib_root, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
     pcmk__xe_set(cib_root, PCMK_XA_VALIDATE_WITH, pcmk__highest_schema_name());
 
+    pcmk__xe_set_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
     pcmk__xe_set_int(cib_root, PCMK_XA_EPOCH, cib_epoch);
     pcmk__xe_set_int(cib_root, PCMK_XA_NUM_UPDATES, 0);
-    pcmk__xe_set_int(cib_root, PCMK_XA_ADMIN_EPOCH, 0);
 
     config = pcmk__xe_create(cib_root, PCMK_XE_CONFIGURATION);
     pcmk__xe_create(cib_root, PCMK_XE_STATUS);
@@ -129,22 +142,148 @@ createEmptyCib(int cib_epoch)
     return cib_root;
 }
 
+static void
+read_config(GHashTable *options, xmlNode *current_cib)
+{
+    crm_time_t *now = NULL;
+    pcmk_rule_input_t rule_input = { 0, };
+    xmlNode *config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
+
+    if (config == NULL) {
+        return;
+    }
+
+    now = crm_time_new(NULL);
+    rule_input.now = now;
+
+    pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                              PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                              options, NULL);
+    crm_time_free(now);
+}
+
 static bool
 cib_acl_enabled(xmlNode *xml, const char *user)
 {
+    const char *value = NULL;
+    GHashTable *options = NULL;
     bool rc = false;
 
-    if(pcmk_acl_required(user)) {
-        const char *value = NULL;
-        GHashTable *options = pcmk__strkey_table(free, free);
-
-        cib_read_config(options, xml);
-        value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
-        rc = pcmk__is_true(value);
-        g_hash_table_destroy(options);
+    if ((xml == NULL) || !pcmk_acl_required(user)) {
+        return false;
     }
 
-    pcmk__trace("CIB ACL is %s", (rc? "enabled" : "disabled"));
+    options = pcmk__strkey_table(free, free);
+    read_config(options, xml);
+    value = pcmk__cluster_option(options, PCMK_OPT_ENABLE_ACL);
+
+    rc = pcmk__is_true(value);
+    g_hash_table_destroy(options);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Get call data from a CIB request
+ *
+ * \param[in] request  CIB request XML
+ *
+ * \return Call data added by \c cib__set_calldata(), or \c NULL if none is
+ *         found
+ */
+xmlNode *
+cib__get_calldata(const xmlNode *request)
+{
+    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
+                                            NULL, NULL);
+
+    return pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+}
+
+/*!
+ * \internal
+ * \brief Add call data to a CIB request
+ *
+ * Add a copy of \p data to a new \c PCMK__XE_CIB_CALLDATA child of \p request.
+ *
+ * \param[in,out] request  CIB request XML
+ * \param[in]     data     Call data to add a copy of (if \c NULL, do nothing)
+ */
+void
+cib__set_calldata(xmlNode *request, xmlNode *data)
+{
+    xmlNode *wrapper = NULL;
+
+    if (data == NULL) {
+        return;
+    }
+
+    wrapper = pcmk__xe_create(request, PCMK__XE_CIB_CALLDATA);
+    pcmk__xml_copy(wrapper, data);
+}
+
+int
+cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+                   xmlNode **output)
+{
+    int rc = pcmk_rc_ok;
+    const char *op = NULL;
+    const char *section = NULL;
+    const char *user = NULL;
+
+    xmlNode *cib = NULL;
+    xmlNode *cib_filtered = NULL;
+
+    pcmk__assert((fn != NULL) && (req != NULL)
+                 && (current_cib != NULL) && (*current_cib != NULL)
+                 && (output != NULL) && (*output == NULL));
+
+    op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+    section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
+    user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+
+    cib = *current_cib;
+
+    if (cib_acl_enabled(cib, user)
+        && xml_acl_filtered_copy(user, cib, cib, &cib_filtered)) {
+
+        if (cib_filtered == NULL) {
+            pcmk__debug("Pre-filtered the entire cib");
+            return EACCES;
+        }
+        cib = cib_filtered;
+        pcmk__log_xml_trace(cib, "filtered");
+    }
+
+    pcmk__trace("Processing %s for section '%s', user '%s'", op,
+                pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
+    pcmk__log_xml_trace(req, "request");
+
+    rc = fn(req, &cib, output);
+
+    if (cib_filtered == *output) {
+        // Let the caller have this copy
+        return rc;
+    }
+
+    if (*output == NULL) {
+        goto done;
+    }
+
+    if ((*output)->doc == (*current_cib)->doc) {
+        // Trust the caller to check this and not free *output
+        goto done;
+    }
+
+    if ((cib_filtered == NULL) || ((*output)->doc != cib_filtered->doc)) {
+        goto done;
+    }
+
+    // We're about to free the document of which *output is a part
+    *output = pcmk__xml_copy(NULL, *output);
+
+done:
+    pcmk__xml_free(cib_filtered);
     return rc;
 }
 
@@ -196,155 +335,235 @@ should_copy_cib(const char *op, const char *section, int call_options)
     return true;
 }
 
-int
-cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
-               cib__op_fn_t fn, bool is_query, const char *section,
-               xmlNode *req, xmlNode *input, bool manage_counters,
-               bool *config_changed, xmlNode **current_cib,
-               xmlNode **result_cib, xmlNode **diff, xmlNode **output)
+/*!
+ * \internal
+ * \brief Validate that a new CIB's feature set is not newer than ours
+ *
+ * Return an error if the new CIB's feature set is newer than ours.
+ *
+ * \param[in] new_cib  Result CIB after performing operation
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+check_new_feature_set(const xmlNode *new_cib)
 {
-    const bool dry_run = pcmk__is_set(call_options, cib_dryrun);
-    int rc = pcmk_rc_ok;
-    bool check_schema = true;
-    bool make_copy = true;
-    xmlNode *top = NULL;
-    xmlNode *scratch = NULL;
-    xmlNode *patchset_cib = NULL;
-    xmlNode *local_diff = NULL;
+    const char *new_version = pcmk__xe_get(new_cib, PCMK_XA_CRM_FEATURE_SET);
+    int rc = pcmk__check_feature_set(new_version);
 
-    const char *user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
-    const bool enable_acl = cib_acl_enabled(*current_cib, user);
-    bool with_digest = false;
-
-    pcmk__trace("Begin %s%s%s op", (dry_run? "dry run of " : ""),
-                (is_query? "read-only " : ""), op);
-
-    CRM_CHECK(output != NULL, return ENOMSG);
-    CRM_CHECK(current_cib != NULL, return ENOMSG);
-    CRM_CHECK(result_cib != NULL, return ENOMSG);
-    CRM_CHECK(config_changed != NULL, return ENOMSG);
-
-    if(output) {
-        *output = NULL;
+    if (rc == pcmk_rc_ok) {
+        return pcmk_rc_ok;
     }
 
-    *result_cib = NULL;
-    *config_changed = false;
+    pcmk__err("Discarding update with feature set %s greater than our own (%s)",
+              new_version, CRM_FEATURE_SET);
+    return rc;
+}
 
-    if (fn == NULL) {
-        return EINVAL;
+/*!
+ * \internal
+ * \brief Validate that a new CIB has a newer version attribute than an old CIB
+ *
+ * Return an error if the value of the given attribute is higher in the old CIB
+ * than in the new CIB.
+ *
+ * \param[in] attr     Name of version attribute to check
+ * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
+ * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
+ * \param[in] request  CIB request
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p old_cib only has to contain the top-level \c PCMK_XE_CIB element. It
+ *       might not be a full CIB.
+ */
+static int
+check_cib_version_attr(const char *attr, const xmlNode *old_cib,
+                       const xmlNode *new_cib, const xmlNode *request)
+{
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    int old_version = 0;
+    int new_version = 0;
+
+    pcmk__xe_get_int(old_cib, attr, &old_version);
+    pcmk__xe_get_int(new_cib, attr, &new_version);
+
+    if (old_version < new_version) {
+        return pcmk_rc_ok;
     }
 
-    if (is_query) {
-        xmlNode *cib_ro = *current_cib;
-        xmlNode *cib_filtered = NULL;
+    if (old_version == new_version) {
+        return pcmk_rc_undetermined;
+    }
 
-        if (enable_acl
-            && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                     &cib_filtered)) {
+    pcmk__err("%s went backwards in %s request: %d -> %d", attr, op,
+              old_version, new_version);
+    pcmk__log_xml_warn(request, "bad-request");
 
-            if (cib_filtered == NULL) {
-                pcmk__debug("Pre-filtered the entire cib");
-                return EACCES;
-            }
-            cib_ro = cib_filtered;
-            pcmk__log_xml_trace(cib_ro, "filtered");
-        }
+    return pcmk_rc_old_data;
+}
 
-        rc = (*fn) (op, call_options, section, req, input, cib_ro, result_cib, output);
-        rc = pcmk_legacy2rc(rc);
+/*!
+ * \internal
+ * \brief Validate that a new CIB has newer versions than an old CIB
+ *
+ * Return an error if:
+ * - \c PCMK_XA_ADMIN_EPOCH is newer in the old CIB than in the new CIB; or
+ * - The \c PCMK_XA_ADMIN_EPOCH attributes are equal and \c PCMK_XA_EPOCH is
+ *   newer in the old CIB than in the new CIB.
+ *
+ * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
+ * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
+ * \param[in] request  CIB request
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note \p old_cib only has to contain the top-level \c PCMK_XE_CIB element. It
+ *       might not be a full CIB.
+ */
+static int
+check_cib_versions(const xmlNode *old_cib, const xmlNode *new_cib,
+                   const xmlNode *request)
+{
+    int rc = check_cib_version_attr(PCMK_XA_ADMIN_EPOCH, old_cib, new_cib,
+                                    request);
 
-        if(output == NULL || *output == NULL) {
-            /* nothing */
-
-        } else if(cib_filtered == *output) {
-            cib_filtered = NULL; /* Let them have this copy */
-
-        } else if (*output == *current_cib) {
-            /* They already know not to free it */
-
-        } else if(cib_filtered && (*output)->doc == cib_filtered->doc) {
-            /* We're about to free the document of which *output is a part */
-            *output = pcmk__xml_copy(NULL, *output);
-
-        } else if ((*output)->doc == (*current_cib)->doc) {
-            /* Give them a copy they can free */
-            *output = pcmk__xml_copy(NULL, *output);
-        }
-
-        pcmk__xml_free(cib_filtered);
+    if (rc != pcmk_rc_undetermined) {
         return rc;
     }
 
-    make_copy = should_copy_cib(op, section, call_options);
-
-    if (!make_copy) {
-        /* Conditional on v2 patch style */
-
-        scratch = *current_cib;
-
-        // Make a copy of the top-level element to store version details
-        top = pcmk__xe_create(NULL, (const char *) scratch->name);
-        pcmk__xe_copy_attrs(top, scratch, pcmk__xaf_none);
-        patchset_cib = top;
-
-        pcmk__xml_commit_changes(scratch->doc);
-        pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
-        if (enable_acl) {
-            pcmk__enable_acl(*current_cib, scratch, user);
-        }
-
-        rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
-        rc = pcmk_legacy2rc(rc);
-
-        /* If scratch points to a new object now (for example, after an erase
-         * operation), then *current_cib should point to the same object.
-         *
-         * @TODO Enable tracking and ACLs and calculate changes? Change tracking
-         * and unpacked ACLs didn't carry over to new object.
-         */
-        *current_cib = scratch;
-
-    } else {
-        scratch = pcmk__xml_copy(NULL, *current_cib);
-        patchset_cib = *current_cib;
-
-        pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
-        if (enable_acl) {
-            pcmk__enable_acl(*current_cib, scratch, user);
-        }
-
-        rc = (*fn) (op, call_options, section, req, input, *current_cib,
-                    &scratch, output);
-        rc = pcmk_legacy2rc(rc);
-
-        /* @TODO This appears to be a hack to determine whether scratch points
-         * to a new object now, without saving the old pointer (which may be
-         * invalid now) for comparison. Confirm this, and check more clearly.
-         */
-        if (!pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_tracking)) {
-            pcmk__trace("Inferring changes after %s op", op);
-            pcmk__xml_commit_changes(scratch->doc);
-            if (enable_acl) {
-                pcmk__enable_acl(*current_cib, scratch, user);
-            }
-            pcmk__xml_mark_changes(*current_cib, scratch);
-        }
-        CRM_CHECK(*current_cib != scratch, return EINVAL);
+    // @TODO Why aren't we checking PCMK_XA_NUM_UPDATES if epochs are equal?
+    rc = check_cib_version_attr(PCMK_XA_EPOCH, old_cib, new_cib, request);
+    if (rc == pcmk_rc_undetermined) {
+        rc = pcmk_rc_ok;
     }
 
-    xml_acl_disable(scratch); /* Allow the system to make any additional changes */
+    return rc;
+}
 
-    if ((rc == pcmk_rc_ok) && (scratch == NULL)) {
+/*!
+ * \internal
+ * \brief Set values for update origin host, client, and user in new CIB
+ *
+ * \param[in,out] new_cib  Result CIB after performing operation
+ * \param[in]     request  CIB request (source of origin info)
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+set_update_origin(xmlNode *new_cib, const xmlNode *request)
+{
+    const char *origin = pcmk__xe_get(request, PCMK__XA_SRC);
+    const char *client = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
+    const char *user = pcmk__xe_get(request, PCMK__XA_CIB_USER);
+    const char *schema = pcmk__xe_get(new_cib, PCMK_XA_VALIDATE_WITH);
+
+    if (schema == NULL) {
+        return pcmk_rc_cib_corrupt;
+    }
+
+    pcmk__xe_add_last_written(new_cib);
+    pcmk__warn_if_schema_deprecated(schema);
+
+    // pacemaker-1.2 is the earliest schema version that allow these attributes
+    if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") < 0) {
+        return pcmk_rc_ok;
+    }
+
+    if (origin != NULL) {
+        pcmk__xe_set(new_cib, PCMK_XA_UPDATE_ORIGIN, origin);
+    } else {
+        pcmk__xe_remove_attr(new_cib, PCMK_XA_UPDATE_ORIGIN);
+    }
+
+    if (client != NULL) {
+        pcmk__xe_set(new_cib, PCMK_XA_UPDATE_CLIENT, client);
+    } else {
+        pcmk__xe_remove_attr(new_cib, PCMK_XA_UPDATE_CLIENT);
+    }
+
+    if (user != NULL) {
+        pcmk__xe_set(new_cib, PCMK_XA_UPDATE_USER, user);
+    } else {
+        pcmk__xe_remove_attr(new_cib, PCMK_XA_UPDATE_USER);
+    }
+
+    return pcmk_rc_ok;
+}
+
+int
+cib__perform_op_rw(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+                   bool *config_changed, xmlNode **cib, xmlNode **diff,
+                   xmlNode **output)
+{
+    int rc = pcmk_rc_ok;
+
+    const char *op = NULL;
+    const char *section = NULL;
+    const char *user = NULL;
+    uint32_t call_options = cib_none;
+    bool enable_acl = false;
+    bool manage_version = true;
+
+    /* PCMK_XE_CIB element containing version numbers from before the operation.
+     * This may or may not point to a full CIB XML tree. Do not free, as this
+     * will be used as an alias for another pointer.
+     */
+    xmlNode *old_versions = NULL;
+
+    xmlNode *top = NULL;
+
+    pcmk__assert((fn != NULL) && (req != NULL)
+                 && (config_changed != NULL) && (!*config_changed)
+                 && (cib != NULL) && (*cib != NULL)
+                 && (diff != NULL) && (*diff == NULL)
+                 && (output != NULL) && (*output == NULL));
+
+    op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
+    section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
+    user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
+    pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
+
+    enable_acl = cib_acl_enabled(*cib, user);
+
+    pcmk__trace("Processing %s for section '%s', user '%s'", op,
+                pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
+    pcmk__log_xml_trace(req, "request");
+
+    if (!should_copy_cib(op, section, call_options)) {
+        // Make a copy of the top-level element to store version details
+        top = pcmk__xe_create(NULL, (const char *) (*cib)->name);
+        pcmk__xe_copy_attrs(top, *cib, pcmk__xaf_none);
+        old_versions = top;
+
+    } else {
+        old_versions = *cib;
+        *cib = pcmk__xml_copy(NULL, *cib);
+    }
+
+    pcmk__xml_commit_changes((*cib)->doc);
+    pcmk__xml_doc_set_flags((*cib)->doc, pcmk__xf_tracking);
+    if (enable_acl) {
+        pcmk__enable_acl(*cib, *cib, user);
+    }
+
+    rc = fn(req, cib, output);
+
+    // Allow ourselves to make any additional necessary changes
+    xml_acl_disable(*cib);
+
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (*cib == NULL) {
         rc = EINVAL;
         goto done;
+    }
 
-    } else if ((rc == pcmk_rc_ok) && xml_acl_denied(scratch)) {
+    if (xml_acl_denied(*cib)) {
         pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = EACCES;
-        goto done;
-
-    } else if (rc != pcmk_rc_ok) {
         goto done;
     }
 
@@ -352,193 +571,76 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
      * supported.  All we care about in that case is the schema version, which
      * is checked elsewhere.
      */
-    if (scratch && (cib == NULL || cib->variant != cib_file)) {
-        const char *new_version = pcmk__xe_get(scratch,
-                                               PCMK_XA_CRM_FEATURE_SET);
-
-        rc = pcmk__check_feature_set(new_version);
+    if (variant != cib_file) {
+        rc = check_new_feature_set(*cib);
         if (rc != pcmk_rc_ok) {
-            pcmk__err("Discarding update with feature set '%s' greater than "
-                      "our own '%s'",
-                      new_version, CRM_FEATURE_SET);
             goto done;
         }
     }
 
-    if (patchset_cib != NULL) {
-        int old = 0;
-        int new = 0;
+    rc = check_cib_versions(old_versions, *cib, req);
 
-        pcmk__xe_get_int(scratch, PCMK_XA_ADMIN_EPOCH, &new);
-        pcmk__xe_get_int(patchset_cib, PCMK_XA_ADMIN_EPOCH, &old);
+    pcmk__strip_xml_text(*cib);
 
-        if (old > new) {
-            pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
-                      PCMK_XA_ADMIN_EPOCH, old, new, call_options);
-            pcmk__log_xml_warn(req, "Bad Op");
-            pcmk__log_xml_warn(input, "Bad Data");
-            rc = pcmk_rc_old_data;
-
-        } else if (old == new) {
-            pcmk__xe_get_int(scratch, PCMK_XA_EPOCH, &new);
-            pcmk__xe_get_int(patchset_cib, PCMK_XA_EPOCH, &old);
-            if (old > new) {
-                pcmk__err("%s went backwards: %d -> %d (Opts: %#x)",
-                          PCMK_XA_EPOCH, old, new, call_options);
-                pcmk__log_xml_warn(req, "Bad Op");
-                pcmk__log_xml_warn(input, "Bad Data");
-                rc = pcmk_rc_old_data;
-            }
-        }
-    }
-
-    pcmk__trace("Massaging CIB contents");
-    pcmk__strip_xml_text(scratch);
-
-    if (make_copy) {
-        static time_t expires = 0;
-        time_t tm_now = time(NULL);
-
-        if (expires < tm_now) {
-            expires = tm_now + 60;  /* Validate clients are correctly applying v2-style diffs at most once a minute */
-            with_digest = true;
-        }
-    }
-
-    local_diff = xml_create_patchset(0, patchset_cib, scratch,
-                                     config_changed, manage_counters);
-
-    pcmk__log_xml_changes(LOG_TRACE, scratch);
-    pcmk__xml_commit_changes(scratch->doc);
-
-    if(local_diff) {
-        if (with_digest) {
-            pcmk__xml_patchset_add_digest(local_diff, scratch);
-        }
-        pcmk__log_xml_patchset(LOG_INFO, local_diff);
-        pcmk__log_xml_trace(local_diff, "raw patch");
-    }
-
-    if (make_copy && (local_diff != NULL)) {
-        // Original to compare against doesn't exist
-        pcmk__if_tracing(
-            {
-                // Validate the calculated patch set
-                int test_rc = pcmk_ok;
-                int format = 1;
-                xmlNode *cib_copy = pcmk__xml_copy(NULL, patchset_cib);
-
-                pcmk__xe_get_int(local_diff, PCMK_XA_FORMAT, &format);
-                test_rc = xml_apply_patchset(cib_copy, local_diff,
-                                             manage_counters);
-
-                if (test_rc != pcmk_ok) {
-                    pcmk__xml_write_temp_file(cib_copy, "PatchApply:calculated",
-                                              NULL);
-                    pcmk__xml_write_temp_file(patchset_cib, "PatchApply:input",
-                                              NULL);
-                    pcmk__xml_write_temp_file(scratch, "PatchApply:actual",
-                                              NULL);
-                    pcmk__xml_write_temp_file(local_diff, "PatchApply:diff",
-                                              NULL);
-                    pcmk__err("v%d patchset error, patch failed to apply: %s "
-                              "(%d)",
-                              format, pcmk_rc_str(pcmk_legacy2rc(test_rc)),
-                              test_rc);
-                }
-                pcmk__xml_free(cib_copy);
-            },
-            {}
-        );
-    }
-
-    if (pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)) {
-        /* Throttle the amount of costly validation we perform due to status updates
-         * a) we don't really care whats in the status section
-         * b) we don't validate any of its contents at the moment anyway
+    if (pcmk__xe_attr_is_true(req, PCMK__XA_CIB_UPDATE)) {
+        /* This is a replace operation as a reply to a sync request. Keep
+         * whatever versions are in the received CIB.
          */
-        check_schema = false;
+        manage_version = false;
     }
 
-    /* === scratch must not be modified after this point ===
-     * Exceptions, anything in:
+    /* If we didn't make a copy, the diff will only be accurate for the
+     * top-level PCMK_XE_CIB element
+     */
+    *diff = xml_create_patchset(0, old_versions, *cib, config_changed,
+                                manage_version);
 
-     static filter_t filter[] = {
-     { 0, PCMK_XA_CRM_DEBUG_ORIGIN },
-     { 0, PCMK_XA_CIB_LAST_WRITTEN },
-     { 0, PCMK_XA_UPDATE_ORIGIN },
-     { 0, PCMK_XA_UPDATE_CLIENT },
-     { 0, PCMK_XA_UPDATE_USER },
-     };
+    /* pcmk__xml_commit_changes() resets document private data, so call it even
+     * if there were no changes.
+     */
+    pcmk__xml_commit_changes((*cib)->doc);
+
+    if (*diff == NULL) {
+        goto done;
+    }
+
+    pcmk__log_xml_patchset(LOG_INFO, *diff);
+
+    /* *cib must not be modified after this point, except for the attributes for
+     * which pcmk__xa_filterable() returns true
      */
 
     if (*config_changed && !pcmk__is_set(call_options, cib_no_mtime)) {
-        const char *schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
-
-        if (schema == NULL) {
-            rc = pcmk_rc_cib_corrupt;
-        }
-
-        pcmk__xe_add_last_written(scratch);
-        pcmk__warn_if_schema_deprecated(schema);
-
-        /* Make values of origin, client, and user in scratch match
-         * the ones in req (if the schema allows the attributes)
-         */
-        if (pcmk__cmp_schemas_by_name(schema, "pacemaker-1.2") >= 0) {
-            const char *origin = pcmk__xe_get(req, PCMK__XA_SRC);
-            const char *client = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTNAME);
-
-            if (origin != NULL) {
-                pcmk__xe_set(scratch, PCMK_XA_UPDATE_ORIGIN, origin);
-            } else {
-                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_ORIGIN);
-            }
-
-            if (client != NULL) {
-                pcmk__xe_set(scratch, PCMK_XA_UPDATE_CLIENT, user);
-            } else {
-                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
-            }
-
-            if (user != NULL) {
-                pcmk__xe_set(scratch, PCMK_XA_UPDATE_USER, user);
-            } else {
-                pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_USER);
-            }
+        rc = set_update_origin(*cib, req);
+        if (rc != pcmk_rc_ok) {
+            goto done;
         }
     }
 
-    pcmk__trace("Perform validation: %s", pcmk__btoa(check_schema));
-    if ((rc == pcmk_rc_ok) && check_schema
-        && !pcmk__configured_schema_validates(scratch)) {
+    // Skip validation for status-only updates, since we allow anything there
+    if ((rc == pcmk_rc_ok)
+        && !pcmk__str_eq(section, PCMK_XE_STATUS, pcmk__str_casei)
+        && !pcmk__configured_schema_validates(*cib)) {
+
         rc = pcmk_rc_schema_validation;
     }
 
-  done:
-
-    *result_cib = scratch;
-
-    /* @TODO: This may not work correctly with !make_copy, since we don't
+done:
+    /* @TODO This may not work correctly when !should_copy_cib(), since we don't
      * keep the original CIB.
      */
-    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)
-        && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
+    if ((rc != pcmk_rc_ok) && cib_acl_enabled(old_versions, user)) {
+        xmlNode *saved_cib = *cib;
 
-        if (*result_cib == NULL) {
-            pcmk__debug("Pre-filtered the entire cib result");
+        if (xml_acl_filtered_copy(user, old_versions, *cib, cib)) {
+            if (*cib == NULL) {
+                pcmk__debug("Pre-filtered the entire cib result");
+            }
+            pcmk__xml_free(saved_cib);
         }
-        pcmk__xml_free(scratch);
-    }
-
-    if(diff) {
-        *diff = local_diff;
-    } else {
-        pcmk__xml_free(local_diff);
     }
 
     pcmk__xml_free(top);
-    pcmk__trace("Done");
     return rc;
 }
 
@@ -548,7 +650,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
                const char *user_name, const char *client_name,
                xmlNode **op_msg)
 {
-    CRM_CHECK((cib != NULL) && (op_msg != NULL), return -EPROTO);
+    CRM_CHECK((cib != NULL) && (op_msg != NULL), return EPROTO);
 
     *op_msg = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
 
@@ -568,14 +670,9 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     pcmk__trace("Sending call options: %.8lx, %d", (long) call_options,
                 call_options);
     pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
+    cib__set_calldata(*op_msg, data);
 
-    if (data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(*op_msg, PCMK__XE_CIB_CALLDATA);
-
-        pcmk__xml_copy(wrapper, data);
-    }
-
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 /*!
@@ -592,24 +689,25 @@ validate_transaction_request(const xmlNode *request)
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
-    int rc = cib__get_operation(op, &operation);
+    int rc = pcmk_rc_ok;
 
+    rc = cib__get_operation(op, &operation);
     if (rc != pcmk_rc_ok) {
         // cib__get_operation() logs error
         return rc;
     }
 
-    if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)) {
+    if (operation->type == cib__op_commit_transact) {
         pcmk__err("Operation %s is not supported in CIB transactions", op);
         return EOPNOTSUPP;
     }
 
     if (host != NULL) {
         pcmk__err("Operation targeting a specific node (%s) is not supported "
-                  "in a CIB transaction",
-                  host);
+                  "in a CIB transaction", host);
         return EOPNOTSUPP;
     }
+
     return pcmk_rc_ok;
 }
 
@@ -620,11 +718,13 @@ validate_transaction_request(const xmlNode *request)
  * \param[in,out] cib      CIB client whose transaction to extend
  * \param[in,out] request  Request to add to transaction
  *
- * \return Legacy Pacemaker return code
+ * \return Standard Pacemaker return code
  */
 int
 cib__extend_transaction(cib_t *cib, xmlNode *request)
 {
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+    const char *client_id = NULL;
     int rc = pcmk_rc_ok;
 
     pcmk__assert((cib != NULL) && (request != NULL));
@@ -637,18 +737,16 @@ cib__extend_transaction(cib_t *cib, xmlNode *request)
 
     if (rc == pcmk_rc_ok) {
         pcmk__xml_copy(cib->transaction, request);
-
-    } else {
-        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-        const char *client_id = NULL;
-
-        cib->cmds->client_id(cib, NULL, &client_id);
-        pcmk__err("Failed to add '%s' operation to transaction for client %s: "
-                  "%s",
-                  op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
-        pcmk__log_xml_info(request, "failed");
+        return pcmk_rc_ok;
     }
-    return pcmk_rc2legacy(rc);
+
+    cib->cmds->client_id(cib, NULL, &client_id);
+
+    pcmk__err("Failed to add '%s' operation to transaction for client %s: %s",
+              op, pcmk__s(client_id, "(unidentified)"), pcmk_rc_str(rc));
+    pcmk__log_xml_info(request, "failed");
+
+    return rc;
 }
 
 void
@@ -658,12 +756,9 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
-        xmlNode *wrapper = NULL;
-
         pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         pcmk__xe_get_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
-        output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        output = cib__get_calldata(msg);
     }
 
     blob = cib__lookup_id(call_id);
@@ -674,11 +769,6 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 
     if (cib == NULL) {
         pcmk__debug("No cib object supplied");
-    }
-
-    if (rc == -pcmk_err_diff_resync) {
-        /* This is an internal value that clients do not and should not care about */
-        rc = pcmk_ok;
     }
 
     if (blob && blob->callback && (rc == pcmk_ok || blob->only_success == FALSE)) {
@@ -732,43 +822,15 @@ cib_native_notify(gpointer data, gpointer user_data)
     pcmk__trace("Callback invoked...");
 }
 
-void
-cib_read_config(GHashTable * options, xmlNode * current_cib)
-{
-    xmlNode *config = NULL;
-    crm_time_t *now = NULL;
-
-    if (options == NULL || current_cib == NULL) {
-        return;
-    }
-
-    now = crm_time_new(NULL);
-
-    g_hash_table_remove_all(options);
-
-    config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
-    if (config) {
-        pcmk_rule_input_t rule_input = {
-            .now = now,
-        };
-
-        pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                                  options, NULL);
-    }
-
-    pcmk__validate_cluster_options(options);
-
-    crm_time_free(now);
-}
-
 int
 cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
-    /* Note: *output_data gets set only for create and query requests. There are
-     * a lot of opportunities to clean up, clarify, check/enforce things, etc.
+    /* @COMPAT *output_data gets set only for create and query requests. Setting
+     * it for create requests is deprecated since 2.1.8. When that behavior is
+     * removed, we can restrict freeing it to read-only operations
+     * (cib__perform_op_ro()).
      */
     int (*delegate)(cib_t *cib, const char *op, const char *host,
                     const char *section, xmlNode *data, xmlNode **output_data,
@@ -815,7 +877,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
                                    NULL);
     diff = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    if (rc < pcmk_ok || diff == NULL) {
+    if ((rc < pcmk_ok) || (diff == NULL)) {
         return rc;
     }
 
@@ -823,24 +885,29 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         pcmk__log_xml_patchset(level, diff);
     }
 
-    if (input != NULL) {
-        rc = cib__process_apply_patch(NULL, cib_none, NULL, event, diff, input,
-                                      output, NULL);
-
-        if (rc != pcmk_ok) {
-            pcmk__debug("Update didn't apply: %s (%d) %p", pcmk_strerror(rc),
-                        rc, *output);
-
-            if (rc == -pcmk_err_old_data) {
-                pcmk__trace("Masking error, we already have the supplied "
-                            "update");
-                return pcmk_ok;
-            }
-            pcmk__xml_free(*output);
-            *output = NULL;
-            return rc;
-        }
+    if (input == NULL) {
+        return rc;
     }
+
+    if (*output != input) {
+        pcmk__xml_free(*output);
+        *output = pcmk__xml_copy(NULL, input);
+    }
+
+    rc = xml_apply_patchset(*output, diff, true);
+    if (rc == pcmk_ok) {
+        return pcmk_ok;
+    }
+
+    pcmk__debug("Update didn't apply: %s (%d)", pcmk_strerror(rc), rc);
+
+    if (rc == -pcmk_err_old_data) {
+        // Mask this error, since it means we already have the supplied update
+        return pcmk_ok;
+    }
+
+    // Some other error
+    g_clear_pointer(output, pcmk__xml_free);
     return rc;
 }
 

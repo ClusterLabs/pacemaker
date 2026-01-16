@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2025 the Pacemaker project contributors
+ * Later changes copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,24 +9,29 @@
  */
 
 #include <crm_internal.h>
-#include <unistd.h>
-#include <limits.h>
+
+#include <errno.h>                  // errno, EINVAL, ENOENT, ENXIO, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <pwd.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t, UINT32_C
+#include <stdio.h>                  // fprintf, rename, stderr
+#include <stdlib.h>                 // calloc, free, getenv, mkstemp
+#include <string.h>                 // strcmp, strdup, strerror, strrchr
+#include <sys/stat.h>               // fchmod, stat, umask, S_*
+#include <sys/types.h>              // gid_t, uid_t
+#include <unistd.h>                 // chown, close, fchown, link, unlink, etc.
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_err_*, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
 
 #define CIB_SERIES "cib"
 #define CIB_SERIES_MAX 100
@@ -138,47 +143,42 @@ get_client(const char *client_id)
 static int
 process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
-    int call_id = 0;
     uint32_t call_options = cib_none;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
-                                            NULL, NULL);
-    xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     bool changed = false;
-    bool read_only = false;
     xmlNode *result_cib = NULL;
     xmlNode *cib_diff = NULL;
+    xmlNode *local_output = NULL;
 
     file_opaque_t *private = cib->variant_opaque;
+
+    if (output != NULL) {
+        *output = NULL;
+    }
 
     // We error checked these in callers
     cib__get_operation(op, &operation);
     op_function = get_op_function(operation);
 
-    pcmk__xe_get_int(request, PCMK__XA_CIB_CALLID, &call_id);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
-
-    // Mirror the logic in prepare_input() in the CIB manager
-    if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
-
-        data = pcmk_find_cib_element(data, section);
+    if (!operation->modifies_cib) {
+        rc = cib__perform_op_ro(op_function, request, &private->cib_xml,
+                                &local_output);
+    } else {
+        result_cib = private->cib_xml;
+        rc = cib__perform_op_rw(cib_file, op_function, request, &changed,
+                                &result_cib, &cib_diff, &local_output);
     }
-
-    rc = cib_perform_op(cib, op, call_options, op_function, read_only, section,
-                        request, data, true, &changed, &private->cib_xml,
-                        &result_cib, &cib_diff, output);
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         /* The rest of the logic applies only to the transaction as a whole, not
@@ -189,11 +189,9 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     if (rc == pcmk_rc_schema_validation) {
         // Show validation errors to stderr
-        pcmk__validate_xml(result_cib, NULL, NULL, NULL);
+        pcmk__validate_xml(result_cib, NULL, NULL);
 
-    } else if ((rc == pcmk_rc_ok) && !read_only) {
-        pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
-
+    } else if ((rc == pcmk_rc_ok) && operation->modifies_cib) {
         if (result_cib != private->cib_xml) {
             pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
@@ -201,12 +199,30 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         set_file_flags(private, file_flag_dirty);
     }
 
+    if (local_output == NULL) {
+        goto done;
+    }
+
+    if ((output != NULL) && (local_output->doc != private->cib_xml->doc)) {
+        *output = local_output;
+        goto done;
+    }
+
+    if (output != NULL) {
+        *output = pcmk__xml_copy(NULL, local_output);
+        goto done;
+    }
+
+    if (local_output->doc != private->cib_xml->doc) {
+        pcmk__xml_free(local_output);
+    }
+
 done:
-    if ((result_cib != private->cib_xml) && (result_cib != *output)) {
+    if (result_cib != private->cib_xml) {
         pcmk__xml_free(result_cib);
     }
     pcmk__xml_free(cib_diff);
-    return pcmk_rc2legacy(rc);
+    return rc;
 }
 
 /*!
@@ -236,7 +252,8 @@ process_transaction_requests(cib_t *cib, xmlNode *transaction)
 
         int rc = process_request(cib, request, &output);
 
-        rc = pcmk_legacy2rc(rc);
+        pcmk__xml_free(output);
+
         if (rc != pcmk_rc_ok) {
             pcmk__err("Aborting transaction for CIB file client (%s) on file "
                       "'%s' due to failed %s request: %s",
@@ -279,11 +296,9 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
               return pcmk_rc_no_transaction);
 
     /* *result_cib should be a copy of private->cib_xml (created by
-     * cib_perform_op()). If not, make a copy now. Change tracking isn't
-     * strictly required here because:
-     * * Each request in the transaction will have changes tracked and ACLs
-     *   checked if appropriate.
-     * * cib_perform_op() will infer changes for the commit request at the end.
+     * cib__perform_op_rw()). If not, make a copy now. Change tracking isn't
+     * strictly required here because each request in the transaction will have
+     * changes tracked and ACLs checked if appropriate.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
               *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
@@ -316,11 +331,10 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 }
 
 static int
-process_commit_transact(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer)
+process_commit_transact(xmlNode *req, xmlNode **cib_xml, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
+    xmlNode *input = cib__get_calldata(req);
     const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
     cib_t *cib = NULL;
 
@@ -329,7 +343,7 @@ process_commit_transact(const char *op, int options, const char *section,
     cib = get_client(client_id);
     CRM_CHECK(cib != NULL, return -EINVAL);
 
-    rc = commit_transaction(cib, input, result_cib);
+    rc = commit_transaction(cib, input, cib_xml);
     if (rc != pcmk_rc_ok) {
         file_opaque_t *private = cib->variant_opaque;
 
@@ -414,43 +428,41 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 {
     int rc = pcmk_ok;
     xmlNode *request = NULL;
-    xmlNode *output = NULL;
     file_opaque_t *private = cib->variant_opaque;
 
     const cib__operation_t *operation = NULL;
 
-    pcmk__info("Handling %s operation for %s as %s",
-               pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
+    pcmk__info("Handling %s operation for %s as %s", pcmk__s(op, "invalid"),
+               pcmk__s(section, "entire CIB"),
                pcmk__s(user_name, "default user"));
 
-    if (output_data != NULL) {
-        *output_data = NULL;
-    }
-
     if (cib->state == cib_disconnected) {
-        return -ENOTCONN;
+        rc = ENOTCONN;
+        goto done;
     }
 
     rc = cib__get_operation(op, &operation);
-    rc = pcmk_rc2legacy(rc);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         // @COMPAT: At compatibility break, use rc directly
-        return -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
+        goto done;
     }
 
     if (get_op_function(operation) == NULL) {
         // @COMPAT: At compatibility break, use EOPNOTSUPP
         pcmk__err("Operation %s is not supported by CIB file clients", op);
-        return -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
+        goto done;
     }
 
     cib__set_call_options(call_options, "file operation", cib_no_mtime);
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &request);
-    if (rc != pcmk_ok) {
-        return rc;
+    if (rc != pcmk_rc_ok) {
+        goto done;
     }
+
     pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
     pcmk__xe_set(request, PCMK__XA_CIB_CLIENTID, private->id);
 
@@ -459,25 +471,11 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         goto done;
     }
 
-    rc = process_request(cib, request, &output);
-
-    if ((output_data != NULL) && (output != NULL)) {
-        if (output->doc == private->cib_xml->doc) {
-            *output_data = pcmk__xml_copy(NULL, output);
-        } else {
-            *output_data = output;
-        }
-    }
+    rc = process_request(cib, request, output_data);
 
 done:
-    if ((output != NULL)
-        && (output->doc != private->cib_xml->doc)
-        && ((output_data == NULL) || (output != *output_data))) {
-
-        pcmk__xml_free(output);
-    }
     pcmk__xml_free(request);
-    return rc;
+    return pcmk_rc2legacy(rc);
 }
 
 /*!

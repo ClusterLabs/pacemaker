@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,31 +9,32 @@
 
 #include <crm_internal.h>
 
-#include <unistd.h>
+#include <errno.h>                  // EAGAIN, EINVAL, ENOMSG, ENOTCONN, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <netdb.h>
-#include <termios.h>
-#include <sys/socket.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free
+#include <string.h>                 // strdup
+#include <sys/socket.h>             // shutdown, SHUT_RDWR
+#include <time.h>                   // time, time_t
+#include <unistd.h>                 // close
 
-#include <glib.h>
+#include <glib.h>                   // gboolean, gpointer, g_*, G_*, etc.
+#include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_*
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-
-#include <gnutls/gnutls.h>
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_ok, pcmk_strerror, etc.
+#include <crm/common/xml.h>         // PCMK_XA_OP, PCMK_XA_USER
+#include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
 static pcmk__tls_t *tls = NULL;
-
-#include <arpa/inet.h>
 
 typedef struct cib_remote_opaque_s {
     int port;
@@ -78,6 +79,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &op_msg);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         return rc;
     }
@@ -85,7 +87,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
         pcmk__xml_free(op_msg);
-        return rc;
+        return pcmk_rc2legacy(rc);
     }
 
     pcmk__trace("Sending %s message to the CIB manager", op);
@@ -96,11 +98,12 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
     pcmk__xml_free(op_msg);
 
-    if ((call_options & cib_discard_reply)) {
+    if (pcmk__is_set(call_options, cib_discard_reply)) {
         pcmk__trace("Discarding reply");
         return pcmk_ok;
+    }
 
-    } else if (!(call_options & cib_sync_call)) {
+    if (!pcmk__is_set(call_options, cib_sync_call)) {
         return cib->call_id;
     }
 
@@ -162,11 +165,6 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         rc = -EPROTO;
     }
 
-    if (rc == -pcmk_err_diff_resync) {
-        /* This is an internal value that clients do not and should not care about */
-        rc = pcmk_ok;
-    }
-
     if (rc == pcmk_ok || rc == -EPERM) {
         pcmk__log_xml_debug(op_reply, "passed");
 
@@ -175,13 +173,8 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         pcmk__log_xml_warn(op_reply, "failed");
     }
 
-    if (output_data == NULL) {
-        /* do nothing more */
-
-    } else if (!(call_options & cib_discard_reply)) {
-        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
-                                                NULL, NULL);
-        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+    if (output_data != NULL) {
+        xmlNode *tmp = cib__get_calldata(op_reply);
 
         if (tmp == NULL) {
             pcmk__trace("No output in reply to \"%s\" command %d", op,

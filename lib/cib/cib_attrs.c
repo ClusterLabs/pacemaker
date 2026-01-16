@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,22 +9,23 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-
-#include <crm/crm.h>
-
+#include <errno.h>                  // EINVAL, ENOMSG, ENOTUNIQ, ENXIO
 #include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <unistd.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // free
+#include <string.h>                 // strdup
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <libgen.h>
+#include <glib.h>                   // g_*, gboolean, GString, TRUE, FALSE, etc.
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/common/xml.h>
-#include <crm/cib/internal.h>
+#include <crm/common/internal.h>    // pcmk__str_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/nvpair.h>      // crm_create_nvpair_xml
+#include <crm/common/options.h>     // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_ok, CRM_EX_OK, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
+#include <crm/cib.h>                // cib_*, *_delegate, query_node_uuid
+#include <crm/cib/internal.h>       // cib__*, PCMK___CIB_*
 
 static pcmk__output_t *
 new_output_object(const char *ty)

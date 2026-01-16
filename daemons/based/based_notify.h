@@ -16,8 +16,6 @@
 
 int based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client);
 
-void based_diff_notify(const char *op, int result, const char *call_id,
-                       const char *client_id, const char *client_name,
-                       const char *origin, xmlNode *update, xmlNode *diff);
+void based_diff_notify(const xmlNode *request, int rc, xmlNode *diff);
 
 #endif // BASED_NOTIFY__H

@@ -12,27 +12,33 @@
 
 #include <stdbool.h>
 
-#include <glib.h>                   // gboolean, gchar, GHashTable, GMainLoop
+#include <glib.h>                   // gchar
 
-#include <crm/cluster.h>            // pcmk_cluster_t
+#include <crm/common/results.h>     // crm_exit_t
 
 #include "based_callbacks.h"
+#include "based_corosync.h"
 #include "based_io.h"
+#include "based_ipc.h"
 #include "based_messages.h"
 #include "based_operation.h"
 #include "based_notify.h"
 #include "based_remote.h"
 #include "based_transaction.h"
 
-#define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
+#define OUR_NODENAME    \
+    (based_stand_alone()? "localhost" : based_cluster_node_name())
 
-extern GHashTable *config_hash;
-
-extern GMainLoop *mainloop;
-extern pcmk_cluster_t *crm_cluster;
-extern gboolean stand_alone;
-extern bool cib_shutdown_flag;
+extern xmlNode *based_cib;
 extern gchar *cib_root;
 extern int cib_status;
+
+bool based_get_local_node_dc(void);
+void based_set_local_node_dc(bool value);
+
+bool based_shutting_down(void);
+bool based_stand_alone(void);
+
+void based_quit_main_loop(crm_exit_t ec);
 
 #endif // PACEMAKER_BASED__H

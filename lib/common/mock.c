@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -223,9 +223,9 @@ __wrap_getpid(void)
 }
 
 
-/* setgrent(), getgrent() and endgrent()
+/* getgrnam()
  *
- * If pcmk__mock_grent is set to true, getgrent() will behave as if the only
+ * If pcmk__mock_getgrnam is set to true, getgrnam() will behave as if the only
  * groups on the system are:
  *
  * - grp0 (user0, user1)
@@ -233,10 +233,7 @@ __wrap_getpid(void)
  * - grp2 (user2, user1)
  */
 
-bool pcmk__mock_grent = false;
-
-// Index of group that will be returned next from getgrent()
-static int group_idx = 0;
+bool pcmk__mock_getgrnam = false;
 
 // Data used for testing
 static const char* grp0_members[] = {
@@ -260,43 +257,28 @@ static const char* grp2_members[] = {
  * string literal = const char* (cannot be changed b/c ? )
  *                  vs. char* (it's getting casted to this)
  */
-static const int NUM_GROUPS = 3;
 static struct group groups[] = {
     {(char*)"grp0", (char*)"", 0, (char**)grp0_members},
     {(char*)"grp1", (char*)"", 1, (char**)grp1_members},
     {(char*)"grp2", (char*)"", 2, (char**)grp2_members},
 };
 
-// This function resets the group_idx to 0.
-void
-__wrap_setgrent(void) {
-    if (pcmk__mock_grent) {
-        group_idx = 0;
-    } else {
-        __real_setgrent();
-    }
-}
-
-/* This function returns the next group entry in the list of groups, or
- * NULL if there aren't any left.
- * group_idx is a global variable which keeps track of where you are in the list
+/* This function returns the group entry whose name matches the argument, or
+ * NULL if no match is found.
  */
 struct group *
-__wrap_getgrent(void) {
-    if (pcmk__mock_grent) {
-        if (group_idx >= NUM_GROUPS) {
-            return NULL;
+__wrap_getgrnam(const char *name) {
+    if (pcmk__mock_getgrnam) {
+        for (int i = 0; i < PCMK__NELEM(groups); i++) {
+            if (pcmk__str_eq(groups[i].gr_name, name, pcmk__str_none)) {
+                return &groups[i];
+            }
         }
-        return &groups[group_idx++];
-    } else {
-        return __real_getgrent();
-    }
-}
 
-void
-__wrap_endgrent(void) {
-    if (!pcmk__mock_grent) {
-        __real_endgrent();
+        return NULL;
+
+    } else {
+        return __real_getgrnam(name);
     }
 }
 

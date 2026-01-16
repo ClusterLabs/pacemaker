@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -119,13 +119,21 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
+    /* @TODO Either decouple this from cluster disconnection, or move the caches
+     * to pcmk_cluster_t as suggested in comments in membership.c.
+     */
+    pcmk__cluster_destroy_node_caches();
+
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+
     pcmk__info("Disconnecting from %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
             pcmk__corosync_disconnect(cluster);
-            pcmk__cluster_destroy_node_caches();
             return pcmk_rc_ok;
 #endif // SUPPORT_COROSYNC
 
