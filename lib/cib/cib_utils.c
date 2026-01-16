@@ -179,7 +179,6 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
 
     xmlNode *cib_ro = NULL;
     xmlNode *cib_filtered = NULL;
-    xmlNode *result_cib = NULL;
 
     pcmk__assert((op != NULL) && (fn != NULL) && (req != NULL)
                  && (current_cib != NULL) && (*current_cib != NULL)
@@ -204,7 +203,7 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
                 pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
     pcmk__log_xml_trace(req, "request");
 
-    rc = fn(op, call_options, section, req, input, cib_ro, &result_cib, output);
+    rc = fn(op, call_options, section, req, input, cib_ro, &cib_ro, output);
 
     if (*output == NULL) {
         // Do nothing
@@ -227,7 +226,6 @@ cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
     }
 
     pcmk__xml_free(cib_filtered);
-    CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
 
     return rc;
 }
