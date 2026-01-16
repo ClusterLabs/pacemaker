@@ -329,7 +329,7 @@ log_local_options(const pcmk__client_t *client, const char *host,
     }
 }
 
-static bool
+static void
 parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
@@ -347,7 +347,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
 
     if (is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
         *needs_reply = false;
-        return true;
+        return;
     }
 
     if (pcmk__str_eq(request->op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
@@ -357,7 +357,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
          * from versions earlier than 3.0.2. (If the requesting node doesn't
          * receive a reply, it simply exits with CRM_EX_ERROR after 10 seconds.)
          */
-        return true;
+        return;
     }
 
     if (is_reply
@@ -368,7 +368,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
         *process = false;
         *needs_reply = false;
         *local_notify = true;
-        return true;
+        return;
     }
 
     if ((reply_to != NULL)
@@ -409,12 +409,14 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
             *process = false;
             *needs_reply = false;
             *local_notify = true;
-            return true;
+            return;
         }
 
         if ((max == NULL) && !based_get_local_node_dc()) {
             // Ignore broadcast client requests when we're not the DC
-            return false;
+            *process = false;
+            *needs_reply = false;
+            return;
         }
     }
 
@@ -423,17 +425,19 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", request->op,
                     originator);
-        return true;
+        return;
     }
 
     if (host != NULL) {
         pcmk__trace("Ignoring %s request intended for CIB manager on %s",
                     request->op, host);
-        return false;
+        *process = false;
+        *needs_reply = false;
+        return;
     }
 
     if (!is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
-        return true;
+        return;
     }
 
     *needs_reply = false;
@@ -444,7 +448,6 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
                 pcmk__s(pcmk__xe_get(request->xml, PCMK__XA_CIB_CALLID),
                         "without ID"),
                 originator, (*local_notify? "" : "not"));
-    return true;
 }
 
 /*!
@@ -732,10 +735,9 @@ based_handle_request(pcmk__request_t *request)
 
         log_local_options(request->ipc_client, host, request->op);
 
-    } else if (!parse_peer_options(operation, request, &local_notify,
-                                   &needs_reply, &process)) {
-        pcmk__reset_request(request);
-        return pcmk_rc_ok;
+    } else {
+        parse_peer_options(operation, request, &local_notify, &needs_reply,
+                           &process);
     }
 
     if (pcmk__is_set(request->call_options, cib_discard_reply)) {
