@@ -744,6 +744,10 @@ based_handle_request(pcmk__request_t *request)
         pcmk__trace("Client is not interested in the reply");
     }
 
+    if (!process) {
+        goto done;
+    }
+
     if (cib_status != pcmk_rc_ok) {
         rc = cib_status;
         pcmk__err("Ignoring request because cluster configuration is invalid "
@@ -753,10 +757,6 @@ based_handle_request(pcmk__request_t *request)
             reply = create_cib_reply(request->xml, rc, based_cib);
         }
 
-        goto done;
-    }
-
-    if (!process) {
         goto done;
     }
 
