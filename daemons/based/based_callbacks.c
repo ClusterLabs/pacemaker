@@ -346,8 +346,8 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
     }
 
     if (is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
-        process_ping_reply(request->xml);
-        return false;
+        *needs_reply = false;
+        return true;
     }
 
     if (pcmk__str_eq(request->op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
@@ -649,6 +649,7 @@ based_handle_request(pcmk__request_t *request)
     xmlNode *reply = NULL;
 
     int rc = pcmk_rc_ok;
+    const char *op = pcmk__xe_get(request->xml, PCMK__XA_CIB_OP);
     const char *originator = pcmk__xe_get(request->xml, PCMK__XA_SRC);
     const char *host = pcmk__xe_get(request->xml, PCMK__XA_CIB_HOST);
     const char *call_id = pcmk__xe_get(request->xml, PCMK__XA_CIB_CALLID);
@@ -761,7 +762,12 @@ based_handle_request(pcmk__request_t *request)
 
     start_time = time(NULL);
 
-    if (!operation->modifies_cib) {
+    if (pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)
+        && pcmk__str_eq(reply_to, OUR_NODENAME, pcmk__str_casei)) {
+
+        process_ping_reply(request->xml);
+
+    } else if (!operation->modifies_cib) {
         rc = cib__perform_op_ro(op_function, request->xml, &based_cib, &output);
 
     } else {
