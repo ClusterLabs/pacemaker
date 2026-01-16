@@ -166,6 +166,13 @@ based_process_ping(const char *op, int options, const char *section,
                    xmlNode *req, xmlNode *input, xmlNode *existing_cib,
                    xmlNode **result_cib, xmlNode **answer)
 {
+    /* existing_cib and *result_cib should be identical. In the absence of ACL
+     * filtering, they should also match the_cib. However, they may be copies
+     * filtered based on the current CIB user's ACLs. In that case, our log
+     * messages can use info from the full CIB, and the answer can include the
+     * digest of the full CIB. But the answer should hide the version attributes
+     * if they're not visible to the CIB user.
+     */
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
     const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
     char *digest = pcmk__digest_xml(the_cib, true);
@@ -180,29 +187,30 @@ based_process_ping(const char *op, int options, const char *section,
 
     wrapper = pcmk__xe_create(*answer, PCMK__XE_CIB_CALLDATA);
 
-    if (the_cib != NULL) {
+    if (*result_cib != NULL) {
+        // Use *result_cib so that ACL filtering is applied to the answer
         pcmk__if_tracing(
             {
                 /* Append additional detail so the receiver can log the
                  * differences
                  */
-                pcmk__xml_copy(wrapper, the_cib);
+                pcmk__xml_copy(wrapper, *result_cib);
             },
             {
                 // Always include at least the version details
-                const char *name = (const char *) the_cib->name;
+                const char *name = (const char *) (*result_cib)->name;
                 xmlNode *shallow = pcmk__xe_create(wrapper, name);
 
-                pcmk__xe_copy_attrs(shallow, the_cib, pcmk__xaf_none);
+                pcmk__xe_copy_attrs(shallow, *result_cib, pcmk__xaf_none);
             }
         );
     }
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
                host, digest,
-               pcmk__xe_get(existing_cib, PCMK_XA_ADMIN_EPOCH),
-               pcmk__xe_get(existing_cib, PCMK_XA_EPOCH),
-               pcmk__xe_get(existing_cib, PCMK_XA_NUM_UPDATES));
+               pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
+               pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
