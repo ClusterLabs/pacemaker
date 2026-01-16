@@ -118,8 +118,14 @@ enum cib_call_options {
     cib_sync_call       = (UINT32_C(1) << 12),
 
     cib_no_mtime        = (UINT32_C(1) << 13),
+
+    //! \deprecated This value will be removed in a future release
     cib_inhibit_notify  = (UINT32_C(1) << 16),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_force_diff      = (UINT32_C(1) << 28),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 };
 
 typedef struct cib_s cib_t;

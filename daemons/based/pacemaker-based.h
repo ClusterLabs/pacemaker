@@ -12,7 +12,7 @@
 
 #include <stdbool.h>
 
-#include <glib.h>                   // gboolean, gchar, GHashTable, GMainLoop
+#include <glib.h>                   // gboolean, gchar, GMainLoop
 
 #include <crm/cluster.h>            // pcmk_cluster_t
 
@@ -25,8 +25,6 @@
 #include "based_transaction.h"
 
 #define OUR_NODENAME (stand_alone? "localhost" : crm_cluster->priv->node_name)
-
-extern GHashTable *config_hash;
 
 extern GMainLoop *mainloop;
 extern pcmk_cluster_t *crm_cluster;
