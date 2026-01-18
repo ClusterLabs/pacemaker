@@ -215,13 +215,13 @@ pcmk__cluster_send_message(const pcmk__node_status_t *node,
     switch (pcmk_get_cluster_layer()) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
-            return pcmk__cpg_send_xml(data, node, service);
+            pcmk__cpg_send_xml(data, node, service);
+            return true;
 #endif  // SUPPORT_COROSYNC
 
         default:
-            break;
+            return false;
     }
-    return false;
 }
 
 /*!

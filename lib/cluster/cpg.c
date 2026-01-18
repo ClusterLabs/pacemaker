@@ -908,10 +908,8 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  * \param[in] data   Data to send
  * \param[in] node   Cluster node to send message to
  * \param[in] dest   Type of message to send
- *
- * \return \c true on success, or \c false otherwise
  */
-static bool
+static void
 send_cpg_text(const char *data, const pcmk__node_status_t *node,
               enum pcmk_ipc_server dest)
 {
@@ -1020,8 +1018,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     cs_message_queue = g_list_append(cs_message_queue, iov);
     crm_cs_flush(&pcmk_cpg_handle);
-
-    return true;
 }
 
 /*!
@@ -1031,19 +1027,15 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
  * \param[in] msg   XML message to send
  * \param[in] node  Cluster node to send message to
  * \param[in] dest  Type of message to send
- *
- * \return TRUE on success, otherwise FALSE
  */
-bool
+void
 pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
                    enum pcmk_ipc_server dest)
 {
-    bool rc = true;
     GString *data = g_string_sized_new(1024);
 
     pcmk__xml_string(msg, 0, data, 0);
 
-    rc = send_cpg_text(data->str, node, dest);
+    send_cpg_text(data->str, node, dest);
     g_string_free(data, TRUE);
-    return rc;
 }
