@@ -217,14 +217,14 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
         return cib__process_upgrade(req, cib, answer);
     }
 
-    scratch = pcmk__xml_copy(NULL, *cib);
-
     original_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
     if (original_schema == NULL) {
         pcmk__info("Rejecting upgrade request from %s: No "
                    PCMK_XA_VALIDATE_WITH, host);
         return pcmk_rc_cib_corrupt;
     }
+
+    scratch = pcmk__xml_copy(NULL, *cib);
 
     rc = pcmk__update_schema(&scratch, NULL, true);
     new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
