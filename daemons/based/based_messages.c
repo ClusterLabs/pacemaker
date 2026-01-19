@@ -272,9 +272,8 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
         pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
         pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
         pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, pcmk_rc2legacy(rc));
-        if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
-            pcmk__warn("Could not send CIB upgrade result to %s", host);
-        }
+
+        pcmk__cluster_send_message(origin, pcmk_ipc_based, up);
         pcmk__xml_free(up);
     }
 
@@ -355,9 +354,9 @@ sync_our_cib(const xmlNode *request, bool all)
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    if (!pcmk__cluster_send_message(peer, pcmk_ipc_based, replace_request)) {
-        rc = ENOTCONN;
-    }
+
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, replace_request);
+
     pcmk__xml_free(replace_request);
     free(digest);
     return rc;

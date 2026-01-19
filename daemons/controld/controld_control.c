@@ -117,9 +117,7 @@ do_shutdown_req(long long action, enum crmd_fsa_cause cause,
     msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
-    if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
-        register_fsa_error(I_ERROR, msg_data);
-    }
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);
     pcmk__xml_free(msg);
 }
 

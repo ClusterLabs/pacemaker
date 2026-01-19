@@ -1130,18 +1130,14 @@ handle_request(xmlNode *stored_msg, enum crmd_fsa_cause cause)
         name = pcmk__xe_get(stored_msg, PCMK_XA_UNAME);
 
         if(cause == C_IPC_MESSAGE) {
+            pcmk__notice("Instructing peers to remove references to node %s/%d",
+                         name, id);
+
             msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                                     CRM_SYSTEM_CRMD, CRM_OP_RM_NODE_CACHE,
                                     NULL);
-            if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
-                pcmk__err("Could not instruct peers to remove references to "
-                          "node %s/%u",
-                          name, id);
-            } else {
-                pcmk__notice("Instructing peers to remove references to node "
-                             "%s/%u",
-                             name, id);
-            }
+
+            pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);
             pcmk__xml_free(msg);
 
         } else {
