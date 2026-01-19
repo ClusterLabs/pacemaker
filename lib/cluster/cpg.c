@@ -910,7 +910,7 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
  * \param[in] dest   Type of message to send
  */
 static void
-send_cpg_text(const char *data, const pcmk__node_status_t *node,
+send_cpg_text(const GString *data, const pcmk__node_status_t *node,
               enum pcmk_ipc_server dest)
 {
     static int msg_id = 0;
@@ -927,10 +927,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     }
     if ((local_name_len == 0) && (local_name != NULL)) {
         local_name_len = strlen(local_name);
-    }
-
-    if (data == NULL) {
-        data = "";
     }
 
     if (local_pid == 0) {
@@ -971,18 +967,18 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
         memcpy(msg->sender.uname, local_name, msg->sender.size);
     }
 
-    msg->size = 1 + strlen(data);
+    msg->size = data->len + 1;
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
 
     if (msg->size < PCMK__BZ2_THRESHOLD) {
         msg = pcmk__realloc(msg, msg->header.size);
-        memcpy(msg->data, data, msg->size);
+        memcpy(msg->data, data->str, msg->size);
 
     } else {
         char *compressed = NULL;
         unsigned int new_size = 0;
 
-        if (pcmk__compress(data, (unsigned int) msg->size, 0, &compressed,
+        if (pcmk__compress(data->str, (unsigned int) msg->size, 0, &compressed,
                            &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(pcmk__cpg_msg_t) + new_size;
@@ -994,7 +990,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
         } else {
             msg = pcmk__realloc(msg, msg->header.size);
-            memcpy(msg->data, data, msg->size);
+            memcpy(msg->data, data->str, msg->size);
         }
 
         free(compressed);
@@ -1007,11 +1003,12 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     if (msg->compressed_size > 0) {
         pcmk__trace("Queueing CPG message %" PRIu32 " to %s "
                     "(%zu bytes, %" PRIu32 " bytes compressed payload): %.200s",
-                    msg->id, target, iov->iov_len, msg->compressed_size, data);
+                    msg->id, target, iov->iov_len, msg->compressed_size,
+                    data->str);
     } else {
         pcmk__trace("Queueing CPG message %" PRIu32 " to %s "
                     "(%zu bytes, %" PRIu32 " bytes payload): %.200s",
-                    msg->id, target, iov->iov_len, msg->size, data);
+                    msg->id, target, iov->iov_len, msg->size, data->str);
     }
 
     free(target);
@@ -1036,6 +1033,6 @@ pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
 
     pcmk__xml_string(msg, 0, data, 0);
 
-    send_cpg_text(data->str, node, dest);
+    send_cpg_text(data, node, dest);
     g_string_free(data, TRUE);
 }
