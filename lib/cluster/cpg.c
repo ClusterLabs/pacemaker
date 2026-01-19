@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdint.h>                     // uint32_t
 #include <sys/socket.h>
-#include <sys/types.h>                  // size_t
+#include <sys/types.h>                  // pid_t, size_t
 #include <sys/utsname.h>
 
 #include <bzlib.h>
@@ -52,7 +52,7 @@ static int cs_message_timer = 0;
 
 struct pcmk__cpg_host_s {
     uint32_t id;
-    uint32_t pid;
+    uint32_t pid;               // For logging only
     gboolean local;             // Unused but needed for compatibility
     enum pcmk_ipc_server type;  // For logging only
     uint32_t size;
@@ -915,7 +915,7 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
 {
     static const char *local_name = NULL;
     static size_t local_name_len = 0;
-    static int local_pid = 0;
+    static pid_t local_pid = 0;
     static int msg_id = 0;
 
     char *target = NULL;
@@ -932,6 +932,7 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
         }
 
         local_pid = getpid();
+        CRM_LOG_ASSERT((local_pid > 0) && (local_pid <= UINT32_MAX));
     }
 
     msg = pcmk__assert_alloc(1, sizeof(pcmk__cpg_msg_t));
@@ -956,7 +957,7 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
 
     msg->sender.id = 0;
     msg->sender.type = pcmk__parse_server(crm_system_name);
-    msg->sender.pid = local_pid;
+    msg->sender.pid = (uint32_t) local_pid;
     msg->sender.size = (uint32_t) local_name_len;
     memcpy(msg->sender.uname, local_name, local_name_len);
 
