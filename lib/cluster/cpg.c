@@ -80,7 +80,7 @@ typedef struct pcmk__cpg_msg_s pcmk__cpg_msg_t;
 
 static void crm_cs_flush(gpointer data);
 
-#define msg_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
+#define msg_data_len(msg) (msg->is_compressed? msg->compressed_size : msg->size)
 
 #define cs_repeat(rc, counter, max, code) do {                          \
         rc = code;                                                      \
@@ -999,21 +999,15 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     iov->iov_base = msg;
     iov->iov_len = msg->header.size;
 
-    if (msg->compressed_size > 0) {
-        pcmk__trace("Queueing CPG message %" PRIu32 " to %s "
-                    "(%zu bytes, %" PRIu32 " bytes compressed payload): %.200s",
-                    msg->id, target, iov->iov_len, msg->compressed_size,
-                    data->str);
-    } else {
-        pcmk__trace("Queueing CPG message %" PRIu32 " to %s "
-                    "(%zu bytes, %" PRIu32 " bytes payload): %.200s",
-                    msg->id, target, iov->iov_len, msg->size, data->str);
-    }
-
-    free(target);
+    pcmk__trace("Queueing CPG message %" PRIu32 " to %s (%zu bytes, "
+                "%" PRIu32 " bytes %spayload): %.200s",
+                msg->id, target, iov->iov_len, msg_data_len(msg),
+                (msg->is_compressed? "compressed " : ""), data->str);
 
     cs_message_queue = g_list_append(cs_message_queue, iov);
     crm_cs_flush(&pcmk_cpg_handle);
+
+    free(target);
 }
 
 /*!
