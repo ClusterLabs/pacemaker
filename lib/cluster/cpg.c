@@ -945,7 +945,6 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
         if (node->name != NULL) {
             target = pcmk__str_copy(node->name);
             msg->host.size = strlen(node->name);
-            memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->name, msg->host.size);
 
         } else {
@@ -961,7 +960,6 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     msg->sender.type = pcmk__parse_server(crm_system_name);
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
-    memset(msg->sender.uname, 0, MAX_NAME);
 
     if ((local_name != NULL) && (msg->sender.size != 0)) {
         memcpy(msg->sender.uname, local_name, msg->sender.size);
