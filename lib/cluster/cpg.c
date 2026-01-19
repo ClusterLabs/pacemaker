@@ -903,15 +903,15 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
 
 /*!
  * \internal
- * \brief Send string data via Corosync CPG
+ * \brief Send an XML message via Corosync CPG
  *
- * \param[in] data   Data to send
- * \param[in] node   Cluster node to send message to
- * \param[in] dest   Type of message to send
+ * \param[in] msg   XML message to send
+ * \param[in] node  Cluster node to send message to
+ * \param[in] dest  Type of message to send
  */
-static void
-send_cpg_text(const GString *data, const pcmk__node_status_t *node,
-              enum pcmk_ipc_server dest)
+void
+pcmk__cpg_send_xml(const xmlNode *xml, const pcmk__node_status_t *node,
+                   enum pcmk_ipc_server dest)
 {
     static const char *local_name = NULL;
     static size_t local_name_len = 0;
@@ -921,6 +921,7 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
+    GString *data = NULL;
 
     // @TODO Refactor to take a cluster object and use its node name?
     if (local_name == NULL) {
@@ -960,6 +961,9 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     msg->sender.pid = (uint32_t) local_pid;
     msg->sender.size = (uint32_t) local_name_len;
     memcpy(msg->sender.uname, local_name, local_name_len);
+
+    data = g_string_sized_new(1024);
+    pcmk__xml_string(xml, 0, data, 0);
 
     msg->size = data->len + 1;
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
@@ -1008,24 +1012,5 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     crm_cs_flush(&pcmk_cpg_handle);
 
     free(target);
-}
-
-/*!
- * \internal
- * \brief Send an XML message via Corosync CPG
- *
- * \param[in] msg   XML message to send
- * \param[in] node  Cluster node to send message to
- * \param[in] dest  Type of message to send
- */
-void
-pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                   enum pcmk_ipc_server dest)
-{
-    GString *data = g_string_sized_new(1024);
-
-    pcmk__xml_string(msg, 0, data, 0);
-
-    send_cpg_text(data, node, dest);
     g_string_free(data, TRUE);
 }
