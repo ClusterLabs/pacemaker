@@ -964,6 +964,11 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     msg->size = data->len + 1;
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
 
+    /* @FIXME This is a mess of conversions among size_t, unsigned int, and
+     * uint32_t. It might be worth sending multipart messages, as we do in our
+     * IPC library and as Netlink does. This is also the only caller of
+     * pcmk__compress(), so we could get rid of it if this no longer needed it.
+     */
     if (msg->size < PCMK__BZ2_THRESHOLD) {
         msg = pcmk__realloc(msg, msg->header.size);
         memcpy(msg->data, data->str, msg->size);
