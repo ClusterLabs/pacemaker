@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,17 +25,9 @@ simple_compress(void **state)
     char *result = pcmk__assert_alloc(1024, sizeof(char));
     unsigned int len;
 
-    assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len), pcmk_rc_ok);
+    assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, &result, &len),
+                     pcmk_rc_ok);
     assert_memory_equal(result, SIMPLE_COMPRESSED, 13);
-}
-
-static void
-max_too_small(void **state)
-{
-    char *result = pcmk__assert_alloc(1024, sizeof(char));
-    unsigned int len;
-
-    assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, 10, &result, &len), EFBIG);
 }
 
 static void
@@ -50,7 +42,7 @@ calloc_fails(void **state) {
             expect_uint_value(__wrap_calloc, nmemb,
                               (size_t) ((40 * 1.01) + 601));
             expect_uint_value(__wrap_calloc, size, sizeof(char));
-            pcmk__compress(SIMPLE_DATA, 40, 0, &result, &len);
+            pcmk__compress(SIMPLE_DATA, 40, &result, &len);
             pcmk__mock_calloc = false;  // Use the real calloc()
         }
     );
@@ -58,5 +50,4 @@ calloc_fails(void **state) {
 
 PCMK__UNIT_TEST(NULL, NULL,
                 cmocka_unit_test(simple_compress),
-                cmocka_unit_test(max_too_small),
                 cmocka_unit_test(calloc_fails))

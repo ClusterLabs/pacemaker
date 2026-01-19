@@ -585,15 +585,14 @@ pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
  *
  * \param[in]  data        Data to compress
  * \param[in]  length      Number of characters of data to compress
- * \param[in]  max         Maximum size of compressed data (or 0 to estimate)
  * \param[out] result      Where to store newly allocated compressed result
  * \param[out] result_len  Where to store actual compressed length of result
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__compress(const char *data, unsigned int length, unsigned int max,
-               char **result, unsigned int *result_len)
+pcmk__compress(const char *data, unsigned int length, char **result,
+               unsigned int *result_len)
 {
     int rc;
     char *compressed = NULL;
@@ -603,17 +602,15 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     struct timespec before_t;
 #endif
 
-    if (max == 0) {
-        max = (length * 1.01) + 601; // Size guaranteed to hold result
-    }
+    // Size guaranteed to hold result. (@TODO Why 601? See commit 4e20d332.)
+    *result_len = (length * 1.01) + 601;
 
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &before_t);
 #endif
 
-    compressed = pcmk__assert_alloc((size_t) max, sizeof(char));
+    compressed = pcmk__assert_alloc((size_t) *result_len, sizeof(char));
 
-    *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
                                   PCMK__BZ2_BLOCKS, 0, PCMK__BZ2_WORK);
     rc = pcmk__bzlib2rc(rc);
