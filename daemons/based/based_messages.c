@@ -201,9 +201,6 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
 
     xmlNode *scratch = NULL;
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
-    const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
-    const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
     pcmk__node_status_t *origin = NULL;
@@ -230,22 +227,12 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
     new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
-        xmlNode *up = pcmk__xe_create(NULL, __func__);
-
         rc = pcmk_rc_ok;
         pcmk__notice("Upgrade request from %s verified", host);
 
-        pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
-        pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-        pcmk__xe_set(up, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
-        pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
-        pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
-
-        pcmk__cluster_send_message(NULL, pcmk_ipc_based, up);
-
-        pcmk__xml_free(up);
+        pcmk__xe_set(req, PCMK__XA_CIB_DELEGATED_FROM, host);
+        pcmk__xe_set(req, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_based, req);
         goto done;
     }
 
@@ -262,19 +249,10 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
                ((origin != NULL)? origin->name : "lost"));
 
     if (origin != NULL) {
-        xmlNode *up = pcmk__xe_create(NULL, __func__);
-
-        pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
-        pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-        pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
-        pcmk__xe_set(up, PCMK__XA_CIB_ISREPLYTO, host);
-        pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
-        pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, pcmk_rc2legacy(rc));
-
-        pcmk__cluster_send_message(origin, pcmk_ipc_based, up);
-        pcmk__xml_free(up);
+        pcmk__xe_set(req, PCMK__XA_CIB_DELEGATED_FROM, host);
+        pcmk__xe_set(req, PCMK__XA_CIB_ISREPLYTO, host);
+        pcmk__xe_set_int(req, PCMK__XA_CIB_UPGRADE_RC, pcmk_rc2legacy(rc));
+        pcmk__cluster_send_message(origin, pcmk_ipc_based, req);
     }
 
 done:
