@@ -914,7 +914,7 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
               enum pcmk_ipc_server dest)
 {
     static const char *local_name = NULL;
-    static int local_name_len = 0;
+    static size_t local_name_len = 0;
     static int local_pid = 0;
     static int msg_id = 0;
 
@@ -928,6 +928,7 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
 
         if (local_name != NULL) {
             local_name_len = strlen(local_name);
+            pcmk__assert(local_name_len <= UINT32_MAX);
         }
 
         local_pid = getpid();
@@ -956,11 +957,8 @@ send_cpg_text(const GString *data, const pcmk__node_status_t *node,
     msg->sender.id = 0;
     msg->sender.type = pcmk__parse_server(crm_system_name);
     msg->sender.pid = local_pid;
-    msg->sender.size = local_name_len;
-
-    if ((local_name != NULL) && (msg->sender.size != 0)) {
-        memcpy(msg->sender.uname, local_name, msg->sender.size);
-    }
+    msg->sender.size = (uint32_t) local_name_len;
+    memcpy(msg->sender.uname, local_name, local_name_len);
 
     msg->size = data->len + 1;
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
