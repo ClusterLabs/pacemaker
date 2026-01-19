@@ -913,32 +913,29 @@ static void
 send_cpg_text(const GString *data, const pcmk__node_status_t *node,
               enum pcmk_ipc_server dest)
 {
-    static int msg_id = 0;
-    static int local_pid = 0;
-    static int local_name_len = 0;
     static const char *local_name = NULL;
+    static int local_name_len = 0;
+    static int local_pid = 0;
+    static int msg_id = 0;
 
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
 
+    // @TODO Refactor to take a cluster object and use its node name?
     if (local_name == NULL) {
         local_name = pcmk__cluster_local_node_name();
-    }
-    if ((local_name_len == 0) && (local_name != NULL)) {
-        local_name_len = strlen(local_name);
-    }
 
-    if (local_pid == 0) {
+        if (local_name != NULL) {
+            local_name_len = strlen(local_name);
+        }
+
         local_pid = getpid();
     }
 
     msg = pcmk__assert_alloc(1, sizeof(pcmk__cpg_msg_t));
-
-    msg_id++;
-    msg->id = msg_id;
+    msg->id = ++msg_id;
     msg->header.error = CS_OK;
-
     msg->host.type = dest;
 
     if (node != NULL) {
