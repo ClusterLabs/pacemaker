@@ -12,11 +12,9 @@
 #include <unistd.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>         // uint32_t, uint64_t
 #include <stdarg.h>
 #include <string.h>
-#include <ctype.h>
 #include <errno.h>
 
 #include <sys/types.h>
@@ -1166,52 +1164,6 @@ clear_gnutls_datum(gnutls_datum_t *datum)
     datum->size = 0;
 }
 
-#define KEY_READ_LEN 256    // Chunk size for reading key from file
-
-// \return Standard Pacemaker return code
-static int
-read_gnutls_key(const char *location, gnutls_datum_t *key)
-{
-    FILE *stream = NULL;
-    size_t buf_len = KEY_READ_LEN;
-
-    if ((location == NULL) || (key == NULL)) {
-        return EINVAL;
-    }
-
-    stream = fopen(location, "r");
-    if (stream == NULL) {
-        return errno;
-    }
-
-    key->data = gnutls_malloc(buf_len);
-    key->size = 0;
-    while (!feof(stream)) {
-        int next = fgetc(stream);
-
-        if (next == EOF) {
-            if (!feof(stream)) {
-                pcmk__warn("Pacemaker Remote key read was partially successful "
-                           "(copy in memory may be corrupted)");
-            }
-            break;
-        }
-        if (key->size == buf_len) {
-            buf_len = key->size + KEY_READ_LEN;
-            key->data = gnutls_realloc(key->data, buf_len);
-            pcmk__assert(key->data);
-        }
-        key->data[key->size++] = (unsigned char) next;
-    }
-    fclose(stream);
-
-    if (key->size == 0) {
-        clear_gnutls_datum(key);
-        return ENOKEY;
-    }
-    return pcmk_rc_ok;
-}
-
 // Cache the most recently used Pacemaker Remote authentication key
 
 struct key_cache_s {
@@ -1276,7 +1228,8 @@ static int
 get_remote_key(const char *location, gnutls_datum_t *key)
 {
     static struct key_cache_s key_cache = { 0, };
-    int rc = pcmk_rc_ok;
+    gchar *contents = NULL;
+    gsize len = 0;
 
     if ((location == NULL) || (key == NULL)) {
         return EINVAL;
@@ -1291,11 +1244,17 @@ get_remote_key(const char *location, gnutls_datum_t *key)
         }
     }
 
-    rc = read_gnutls_key(location, key);
-    if (rc != pcmk_rc_ok) {
-        return rc;
+    if (!g_file_get_contents(location, &contents, &len, NULL)) {
+        return ENOKEY;
     }
+
+    key->size = len;
+    key->data = gnutls_malloc(key->size);
+    pcmk__assert(key->data);
+    memcpy(key->data, contents, key->size);
+
     cache_key(&key_cache, key, location);
+    g_free(contents);
     return pcmk_rc_ok;
 }
 
