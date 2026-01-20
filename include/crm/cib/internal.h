@@ -21,22 +21,22 @@ extern "C" {
 #endif
 
 // Request types for CIB manager IPC/CPG
-#define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
-#define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
-#define PCMK__CIB_REQUEST_SYNC          "cib_sync"
-#define PCMK__CIB_REQUEST_BUMP          "cib_bump"
-#define PCMK__CIB_REQUEST_QUERY         "cib_query"
-#define PCMK__CIB_REQUEST_CREATE        "cib_create"
-#define PCMK__CIB_REQUEST_MODIFY        "cib_modify"
-#define PCMK__CIB_REQUEST_DELETE        "cib_delete"
-#define PCMK__CIB_REQUEST_ERASE         "cib_erase"
-#define PCMK__CIB_REQUEST_REPLACE       "cib_replace"
-#define PCMK__CIB_REQUEST_APPLY_PATCH   "cib_apply_diff"
-#define PCMK__CIB_REQUEST_UPGRADE       "cib_upgrade"
-#define PCMK__CIB_REQUEST_NOOP          "noop"
-#define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
+#define PCMK__CIB_REQUEST_APPLY_PATCH       "cib_apply_diff"
+#define PCMK__CIB_REQUEST_BUMP              "cib_bump"
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
-#define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
+#define PCMK__CIB_REQUEST_CREATE            "cib_create"
+#define PCMK__CIB_REQUEST_DELETE            "cib_delete"
+#define PCMK__CIB_REQUEST_ERASE             "cib_erase"
+#define PCMK__CIB_REQUEST_MODIFY            "cib_modify"
+#define PCMK__CIB_REQUEST_NOOP              "noop"
+#define PCMK__CIB_REQUEST_PRIMARY           "cib_master"
+#define PCMK__CIB_REQUEST_QUERY             "cib_query"
+#define PCMK__CIB_REQUEST_REPLACE           "cib_replace"
+#define PCMK__CIB_REQUEST_SCHEMAS           "cib_schemas"
+#define PCMK__CIB_REQUEST_SECONDARY         "cib_slave"
+#define PCMK__CIB_REQUEST_SHUTDOWN          "cib_shutdown_req"
+#define PCMK__CIB_REQUEST_SYNC              "cib_sync"
+#define PCMK__CIB_REQUEST_UPGRADE           "cib_upgrade"
 
 /*!
  * \internal
