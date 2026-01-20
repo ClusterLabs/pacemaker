@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1029,8 +1029,6 @@ patchset_process_digest(xmlNode *patch, const xmlNode *source,
 
     pcmk__xe_set(patch, PCMK_XA_DIGEST, digest);
     free(digest);
-
-    return;
 }
 
 // LCOV_EXCL_STOP

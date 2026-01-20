@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -537,8 +537,6 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
          */
         order_actions(probe, then->action, flags);
     }
-
-    return;
 }
 
 /*!
