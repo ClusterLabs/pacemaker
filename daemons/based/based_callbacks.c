@@ -315,21 +315,6 @@ process_ping_reply(const xmlNode *reply)
 }
 
 static void
-log_local_options(const pcmk__client_t *client, const char *host,
-                  const char *op)
-{
-    if (based_stand_alone()) {
-        pcmk__trace("Processing %s op from client %s (stand-alone)", op,
-                    pcmk__client_name(client));
-
-    } else {
-        pcmk__trace("Processing %saddressed %s op from client %s",
-                    ((host != NULL)? "locally " : "un"), op,
-                    pcmk__client_name(client));
-    }
-}
-
-static void
 parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
                    bool *local_notify, bool *needs_reply, bool *process)
 {
@@ -435,16 +420,7 @@ parse_peer_options(const cib__operation_t *operation, pcmk__request_t *request,
 
     if (!is_reply && pcmk__str_eq(request->op, CRM_OP_PING, pcmk__str_none)) {
         *needs_reply = true;
-        return;
     }
-
-    pcmk__trace("Processing %s request broadcast by %s call %s on %s "
-                "(local clients will%s be notified)", request->op,
-                pcmk__s(pcmk__xe_get(request->xml, PCMK__XA_CIB_CLIENTNAME),
-                        "client"),
-                pcmk__s(pcmk__xe_get(request->xml, PCMK__XA_CIB_CALLID),
-                        "without ID"),
-                originator, (*local_notify? "" : "not"));
 }
 
 /*!
@@ -720,6 +696,8 @@ based_handle_request(pcmk__request_t *request)
                 || !pcmk__str_eq(host, OUR_NODENAME,
                                  pcmk__str_casei|pcmk__str_null_matches))) {
 
+            pcmk__trace("Forwarding %s op from %s/%s", request->op, client_name,
+                        call_id);
             forward_request(request);
             pcmk__reset_request(request);
             return pcmk_rc_ok;
@@ -727,8 +705,6 @@ based_handle_request(pcmk__request_t *request)
 
         // Process locally and notify local client; no peer to reply to
         local_notify = true;
-
-        log_local_options(request->ipc_client, host, request->op);
 
     } else {
         parse_peer_options(operation, request, &local_notify, &needs_reply,
