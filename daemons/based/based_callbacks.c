@@ -717,6 +717,11 @@ based_handle_request(pcmk__request_t *request)
         pcmk__trace("Client is not interested in the reply");
     }
 
+    if (operation->modifies_cib) {
+        // A modifying request gets processed by each node, so no need to reply
+        needs_reply = false;
+    }
+
     if (!process) {
         goto done;
     }
@@ -726,10 +731,7 @@ based_handle_request(pcmk__request_t *request)
         pcmk__err("Ignoring request because cluster configuration is invalid "
                   "(please repair and restart): %s", pcmk_rc_str(rc));
 
-        if (needs_reply) {
-            reply = create_cib_reply(request->xml, rc, based_cib);
-        }
-
+        output = based_cib;
         goto done;
     }
 
@@ -749,12 +751,9 @@ based_handle_request(pcmk__request_t *request)
 
     log_op_result(request->xml, operation, rc, difftime(time(NULL), start_time));
 
+done:
     if (needs_reply) {
         reply = create_cib_reply(request->xml, rc, output);
-    }
-
-done:
-    if (!operation->modifies_cib && needs_reply) {
         send_peer_reply(reply, originator);
     }
 
