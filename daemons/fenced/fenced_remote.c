@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -435,8 +435,6 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
 
     pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, bcast);
     pcmk__xml_free(bcast);
-
-    return;
 }
 
 /*!

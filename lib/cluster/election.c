@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -329,7 +329,6 @@ election_vote(pcmk_cluster_t *cluster)
 
     pcmk__debug("Started election round %u", cluster->priv->election->count);
     election_timeout_start(cluster);
-    return;
 }
 
 /*!

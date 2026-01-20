@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -174,8 +174,6 @@ remote_proxy_disconnect_by_node(const char * node_name)
             mainloop_del_ipc_client(proxy->source);
         }
     }
-
-    return;
 }
 
 static void

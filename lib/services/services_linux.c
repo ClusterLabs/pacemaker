@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -232,7 +232,6 @@ static void
 sigchld_close(int fd)
 {
     // Pipe will be closed in sigchld_cleanup()
-    return;
 }
 
 static bool

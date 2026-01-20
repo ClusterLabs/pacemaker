@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2025 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -173,8 +173,6 @@ post_disconnect(pcmk_ipc_api_t *api)
     }
     private = api->api_data;
     private->state = pcmk_pacemakerd_state_invalid;
-
-    return;
 }
 
 static bool

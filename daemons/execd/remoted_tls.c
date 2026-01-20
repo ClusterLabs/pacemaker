@@ -193,7 +193,6 @@ lrmd_remote_client_destroy(gpointer user_data)
     }
 
     lrmd_client_destroy(client);
-    return;
 }
 
 static gboolean
@@ -262,7 +261,6 @@ static void
 tls_server_dropped(gpointer user_data)
 {
     pcmk__notice("TLS server session ended");
-    return;
 }
 
 // \return 0 on success, -1 on error (gnutls_psk_server_credentials_function)
