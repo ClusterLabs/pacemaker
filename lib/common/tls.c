@@ -13,11 +13,12 @@
 #include <signal.h>                 // signal, SIGPIPE, SIG_IGN
 #include <stdbool.h>                // bool
 #include <stdlib.h>                 // NULL, getenv, free
-#include <string.h>                 // strdup
+#include <string.h>                 // memcpy, strdup
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
 
-#include <gnutls/gnutls.h>          // gnutls_strerror, GNUTLS_E_SUCCESS
+#include <glib.h>                   // g_file_get_contents
+#include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_E_SUCCESS
 #include <gnutls/x509.h>            // gnutls_x509_*
 #include <qb/qblog.h>               // QB_XS
 
@@ -541,4 +542,37 @@ pcmk__x509_enabled(void)
             !pcmk__str_empty(getenv("CIB_ca_file"))) &&
            (!pcmk__str_empty(pcmk__env_option(PCMK__ENV_KEY_FILE)) ||
             !pcmk__str_empty(getenv("CIB_key_file")));
+}
+
+void
+pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
+{
+    pcmk__assert((dest != NULL) && (source != NULL) && (source->data != NULL));
+
+    dest->data = gnutls_malloc(source->size);
+    pcmk__mem_assert(dest->data);
+
+    memcpy(dest->data, source->data, source->size);
+    dest->size = source->size;
+}
+
+int
+pcmk__load_key(const char *location, gnutls_datum_t *key)
+{
+    gchar *contents = NULL;
+    gsize len = 0;
+
+    pcmk__assert((location != NULL) && (key != NULL));
+
+    if (!g_file_get_contents(location, &contents, &len, NULL)) {
+        return ENOKEY;
+    }
+
+    key->size = len;
+    key->data = gnutls_malloc(key->size);
+    pcmk__mem_assert(key->data);
+    memcpy(key->data, contents, key->size);
+
+    g_free(contents);
+    return pcmk_rc_ok;
 }

@@ -1146,47 +1146,6 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     return rc;
 }
 
-static void
-copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
-{
-    pcmk__assert((dest != NULL) && (source != NULL) && (source->data != NULL));
-
-    dest->data = gnutls_malloc(source->size);
-    pcmk__mem_assert(dest->data);
-
-    memcpy(dest->data, source->data, source->size);
-    dest->size = source->size;
-}
-
-static int
-get_remote_key(const char *location, gnutls_datum_t *key)
-{
-    gchar *contents = NULL;
-    gsize len = 0;
-
-    if ((location == NULL) || (key == NULL)) {
-        return EINVAL;
-    }
-
-    if (remote_key.data != NULL) {
-        copy_gnutls_datum(key, &remote_key);
-        return pcmk_rc_ok;
-    }
-
-    if (!g_file_get_contents(location, &contents, &len, NULL)) {
-        return ENOKEY;
-    }
-
-    key->size = len;
-    key->data = gnutls_malloc(key->size);
-    pcmk__assert(key->data);
-    memcpy(key->data, contents, key->size);
-
-    copy_gnutls_datum(&remote_key, key);
-    g_free(contents);
-    return pcmk_rc_ok;
-}
-
 /*!
  * \internal
  * \brief Initialize the Pacemaker Remote authentication key
@@ -1214,10 +1173,17 @@ lrmd__init_remote_key(gnutls_datum_t *key)
         need_env = false;
     }
 
+    if (remote_key.data != NULL) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
     // Try location in environment variable, if set
     if (env_location != NULL) {
-        rc = get_remote_key(env_location, key);
+        rc = pcmk__load_key(env_location, &remote_key);
+
         if (rc == pcmk_rc_ok) {
+            pcmk__copy_key(key, &remote_key);
             return pcmk_rc_ok;
         }
 
@@ -1227,8 +1193,10 @@ lrmd__init_remote_key(gnutls_datum_t *key)
     }
 
     // Try default location, if environment wasn't explicitly set to it
-    rc = get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key);
+    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key);
+
     if (rc == pcmk_rc_ok) {
+        pcmk__copy_key(key, &remote_key);
         return pcmk_rc_ok;
     }
 

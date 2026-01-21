@@ -206,6 +206,26 @@ int pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc);
  */
 bool pcmk__x509_enabled(void);
 
+/*!
+ * \internal
+ * \brief Copy an authentication key
+ *
+ * \param[out] dest    Where to copy the authentication key
+ * \param[in]  source  The authentication key to copy
+ */
+void pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source);
+
+/*!
+ * \internal
+ * \brief Attempt to load an authentication key from disk
+ *
+ * \param[in]  location  The file path to read from
+ * \param[out] dest      Where to store the authentication key
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__load_key(const char *location, gnutls_datum_t *key);
+
 #ifdef __cplusplus
 }
 #endif
