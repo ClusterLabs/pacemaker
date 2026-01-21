@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,12 +9,23 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdlib.h>
+#include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <signal.h>                 // signal, SIGPIPE, SIG_IGN
+#include <stdbool.h>                // bool
+#include <stdlib.h>                 // NULL, getenv, free
+#include <string.h>                 // strdup
+#include <syslog.h>                 // LOG_WARNING
+#include <time.h>                   // time, time_t
 
-#include <gnutls/gnutls.h>
-#include <gnutls/x509.h>
+#include <gnutls/gnutls.h>          // gnutls_strerror, GNUTLS_E_SUCCESS
+#include <gnutls/x509.h>            // gnutls_x509_*
+#include <qb/qblog.h>               // QB_XS
+
+#include <crm/common/internal.h>
+#include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/lrmd.h>               // DEFAULT_REMOTE_USERNAME
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
