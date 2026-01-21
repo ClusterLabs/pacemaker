@@ -61,6 +61,8 @@ static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
 static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
+static gnutls_datum_t remote_key = { NULL, 0 };
+
 typedef struct lrmd_private_s {
     uint64_t type;
     char *token;
@@ -1156,78 +1158,9 @@ copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
     dest->size = source->size;
 }
 
-static void
-clear_gnutls_datum(gnutls_datum_t *datum)
-{
-    gnutls_free(datum->data);
-    datum->data = NULL;
-    datum->size = 0;
-}
-
-// Cache the most recently used Pacemaker Remote authentication key
-
-struct key_cache_s {
-    time_t updated;         // When cached key was read (valid for 1 minute)
-    const char *location;   // Where cached key was read from
-    gnutls_datum_t key;     // Cached key
-};
-
-static bool
-key_is_cached(struct key_cache_s *key_cache)
-{
-    return key_cache->updated != 0;
-}
-
-static bool
-key_cache_expired(struct key_cache_s *key_cache)
-{
-    return (time(NULL) - key_cache->updated) >= 60;
-}
-
-static void
-clear_key_cache(struct key_cache_s *key_cache)
-{
-    clear_gnutls_datum(&(key_cache->key));
-    if ((key_cache->updated != 0) || (key_cache->location != NULL)) {
-        key_cache->updated = 0;
-        key_cache->location = NULL;
-        pcmk__debug("Cleared Pacemaker Remote key cache");
-    }
-}
-
-static void
-get_cached_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
-{
-    copy_gnutls_datum(key, &(key_cache->key));
-    pcmk__debug("Using cached Pacemaker Remote key from %s",
-                pcmk__s(key_cache->location, "unknown location"));
-}
-
-static void
-cache_key(struct key_cache_s *key_cache, gnutls_datum_t *key,
-          const char *location)
-{
-    key_cache->updated = time(NULL);
-    key_cache->location = location;
-    copy_gnutls_datum(&(key_cache->key), key);
-    pcmk__debug("Using (and cacheing) Pacemaker Remote key from %s",
-                pcmk__s(location, "unknown location"));
-}
-
-/*!
- * \internal
- * \brief Get Pacemaker Remote authentication key from file or cache
- *
- * \param[in]  location         Path to key file to try (this memory must
- *                              persist across all calls of this function)
- * \param[out] key              Key from location or cache
- *
- * \return Standard Pacemaker return code
- */
 static int
 get_remote_key(const char *location, gnutls_datum_t *key)
 {
-    static struct key_cache_s key_cache = { 0, };
     gchar *contents = NULL;
     gsize len = 0;
 
@@ -1235,13 +1168,9 @@ get_remote_key(const char *location, gnutls_datum_t *key)
         return EINVAL;
     }
 
-    if (key_is_cached(&key_cache)) {
-        if (key_cache_expired(&key_cache)) {
-            clear_key_cache(&key_cache);
-        } else {
-            get_cached_key(&key_cache, key);
-            return pcmk_rc_ok;
-        }
+    if (remote_key.data != NULL) {
+        copy_gnutls_datum(key, &remote_key);
+        return pcmk_rc_ok;
     }
 
     if (!g_file_get_contents(location, &contents, &len, NULL)) {
@@ -1253,7 +1182,7 @@ get_remote_key(const char *location, gnutls_datum_t *key)
     pcmk__assert(key->data);
     memcpy(key->data, contents, key->size);
 
-    cache_key(&key_cache, key, location);
+    copy_gnutls_datum(&remote_key, key);
     g_free(contents);
     return pcmk_rc_ok;
 }
