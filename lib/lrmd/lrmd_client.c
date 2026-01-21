@@ -9,37 +9,38 @@
 
 #include <crm_internal.h>
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>         // uint32_t, uint64_t
-#include <stdarg.h>
-#include <string.h>
-#include <errno.h>
+#include <errno.h>                  // EINVAL, ENOMEM, ENOTCONN
+#include <stdbool.h>                // true, bool, false
+#include <stdint.h>                 // uint32_t, uint64_t
+#include <stdlib.h>                 // NULL, free, calloc
+#include <string.h>                 // strdup, strcmp, strlen
+#include <sys/types.h>              // time_t, ssize_t
+#include <time.h>                   // time
+#include <unistd.h>                 // close
 
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <glib.h>                   // g_list_free_full, gpointer
+#include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
+#include <libxml/parser.h>          // xmlNode
+#include <qb/qbdefs.h>              // QB_MAX
+#include <qb/qblog.h>               // QB_XS
 
-#include <glib.h>
-#include <dirent.h>
-
-#include <crm/crm.h>
-#include <crm/lrmd.h>
-#include <crm/lrmd_internal.h>
-#include <crm/services.h>
-#include <crm/services_internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-
-#include <crm/stonith-ng.h>
+#include <crm/common/actions.h>     // PCMK_DEFAULT_ACTION_TIMEOUT_MS
+#include <crm/common/agents.h>      // PCMK_RESOURCE_CLASS_STONITH
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/mainloop.h>    // mainloop_set_trigger
+#include <crm/common/nvpair.h>      // hash2smartfield, xml2list
+#include <crm/common/options.h>     // PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_rc2legacy
+#include <crm/common/util.h>        // crm_default_remote_port
+#include <crm/crm.h>                // CRM_OP_REGISTER, CRM_SYSTEM_LRMD
 #include <crm/fencing/internal.h>   // stonith__*
-
-#include <gnutls/gnutls.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <crm/lrmd.h>               // lrmd_t, lrmd_s, lrmd_key_value_t
+#include <crm/lrmd_events.h>        // lrmd_event_*
+#include <crm/lrmd_internal.h>      // lrmd__init_remote_key
+#include <crm/services.h>           // services_action_free
+#include <crm/services_internal.h>  // services__copy_result
 
 #define MAX_TLS_RECV_WAIT 10000
 
