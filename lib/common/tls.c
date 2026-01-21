@@ -17,7 +17,7 @@
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
 
-#include <glib.h>                   // g_file_get_contents
+#include <glib.h>                   // g_clear_pointer, g_file_get_contents
 #include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_E_SUCCESS
 #include <gnutls/x509.h>            // gnutls_x509_*
 #include <qb/qblog.h>               // QB_XS
@@ -144,7 +144,6 @@ pcmk__free_tls(pcmk__tls_t *tls)
     }
 
     free(tls);
-    tls = NULL;
 }
 
 int
@@ -166,8 +165,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     if (server) {
         rc = pcmk__init_tls_dh(&(*tls)->dh_params);
         if (rc != pcmk_rc_ok) {
-            pcmk__free_tls(*tls);
-            *tls = NULL;
+            g_clear_pointer(tls, pcmk__free_tls);
             return rc;
         }
     }
@@ -227,8 +225,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
 
         rc = tls_load_x509_data(*tls);
         if (rc != pcmk_rc_ok) {
-            pcmk__free_tls(*tls);
-            *tls = NULL;
+            g_clear_pointer(tls, pcmk__free_tls);
             return rc;
         }
     } else {    // GNUTLS_CRD_PSK
