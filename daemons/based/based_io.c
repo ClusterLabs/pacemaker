@@ -171,6 +171,7 @@ readCibXmlFile(const char *dir, const char *file, gboolean discard_status)
     if (pcmk__daemon_can_write(dir, file) == FALSE
             || pcmk__daemon_can_write(dir, sigfile) == FALSE) {
         cib_status = -EACCES;
+        free(sigfile);
         return NULL;
     }
 
