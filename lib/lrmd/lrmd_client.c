@@ -1492,7 +1492,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (native->tls == NULL) {
         rc = pcmk__init_tls(&native->tls, false, true);
 
-        if (rc != pcmk_rc_ok) {
+        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
             lrmd_tls_connection_destroy(lrmd);
             return rc;
         }
