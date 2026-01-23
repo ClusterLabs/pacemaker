@@ -1,7 +1,7 @@
 """Fence a running node and wait for it to restart."""
 
 __all__ = ["StonithdTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
@@ -94,7 +94,7 @@ class StonithdTest(CTSTest):
             # 255 == broken pipe, ie. the node was fenced as expected
             self._logger.log(f"Locally originated fencing returned {rc}")
 
-        with Timer(self._logger, self.name, "fence"):
+        with Timer(self.name, "fence"):
             matched = watch.look_for_all()
 
         self.set_timer("reform")

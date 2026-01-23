@@ -1,7 +1,7 @@
 """Toggle nodes in and out of maintenance mode."""
 
 __all__ = ["MaintenanceMode"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -71,7 +71,7 @@ class MaintenanceMode(CTSTest):
         if enabled:
             self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
-        with Timer(self._logger, self.name, f"recover{action}"):
+        with Timer(self.name, f"recover{action}"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -91,7 +91,7 @@ class MaintenanceMode(CTSTest):
 
         self._cm.add_dummy_rsc(node, self._rid)
 
-        with Timer(self._logger, self.name, "addDummy"):
+        with Timer(self.name, "addDummy"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -110,7 +110,7 @@ class MaintenanceMode(CTSTest):
         watch.set_watch()
         self._cm.remove_dummy_rsc(node, self._rid)
 
-        with Timer(self._logger, self.name, "removeDummy"):
+        with Timer(self.name, "removeDummy"):
             watch.look_for_all()
 
         if watch.unmatched:

@@ -1,7 +1,7 @@
 """Base classes for CTS tests."""
 
 __all__ = ["CTSTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -76,7 +76,7 @@ class CTSTest:
     def set_timer(self, key="test"):
         """Set the start time of the given timer to now, and return that time."""
         if key not in self._timers:
-            self._timers[key] = Timer(self._logger, self.name, key)
+            self._timers[key] = Timer(self.name, key)
 
         self._timers[key].start()
         return self._timers[key].start_time

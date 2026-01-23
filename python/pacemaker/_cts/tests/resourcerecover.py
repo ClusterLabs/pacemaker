@@ -1,6 +1,6 @@
 """Fail a random resource and verify its fail count increases."""
 
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.audits import AuditResource
@@ -134,7 +134,7 @@ class ResourceRecover(CTSTest):
 
         self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
-        with Timer(self._logger, self.name, "recover"):
+        with Timer(self.name, "recover"):
             watch.look_for_all()
 
         self._cm.cluster_stable()

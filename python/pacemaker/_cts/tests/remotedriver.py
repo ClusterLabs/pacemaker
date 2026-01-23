@@ -1,7 +1,7 @@
 """Base classes for CTS tests."""
 
 __all__ = ["RemoteDriver"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -253,7 +253,7 @@ class RemoteDriver(CTSTest):
 
         self._add_connection_rsc(node)
 
-        with Timer(self._logger, self.name, "remoteMetalInit"):
+        with Timer(self.name, "remoteMetalInit"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -278,7 +278,7 @@ class RemoteDriver(CTSTest):
             self.fail("failed to move remote node connection resource")
             return
 
-        with Timer(self._logger, self.name, "remoteMetalMigrate"):
+        with Timer(self.name, "remoteMetalMigrate"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -306,7 +306,7 @@ class RemoteDriver(CTSTest):
 
         self._rsh(node, "rm -f /var/run/resource-agents/Dummy*")
 
-        with Timer(self._logger, self.name, "remoteRscFail"):
+        with Timer(self.name, "remoteRscFail"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -336,7 +336,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("Waiting for remote node to be fenced.")
 
-        with Timer(self._logger, self.name, "remoteMetalFence"):
+        with Timer(self.name, "remoteMetalFence"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -364,7 +364,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("Waiting for remote node to rejoin cluster after being fenced.")
 
-        with Timer(self._logger, self.name, "remoteMetalRestart"):
+        with Timer(self.name, "remoteMetalRestart"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -394,7 +394,7 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to place remote resource on remote node.")
             return
 
-        with Timer(self._logger, self.name, "remoteMetalRsc"):
+        with Timer(self.name, "remoteMetalRsc"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -444,7 +444,7 @@ class RemoteDriver(CTSTest):
         if self._remote_node_added:
             pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._remote_node))
 
-        with Timer(self._logger, self.name, "remoteMetalCleanup"):
+        with Timer(self.name, "remoteMetalCleanup"):
             self._resume_pcmk_remote(node)
 
             if self._remote_rsc_added:
