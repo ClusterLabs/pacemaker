@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.timer import Timer
@@ -79,7 +80,7 @@ class StonithdTest(CTSTest):
             # no confirmation, but pacemaker should be watching and
             # fence the node again
 
-            self._logger.log(f"Fencing command on {origin} to fence {node} timed out")
+            logging.log(f"Fencing command on {origin} to fence {node} timed out")
 
         elif origin != node and rc != 0:
             self.debug("Waiting for the cluster to recover")
@@ -88,18 +89,18 @@ class StonithdTest(CTSTest):
             self.debug("Waiting for fenced node to come back up")
             self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
-            self._logger.log(f"Fencing command on {origin} failed to fence {node} (rc={rc})")
+            logging.log(f"Fencing command on {origin} failed to fence {node} (rc={rc})")
 
         elif origin == node and rc != 255:
             # 255 == broken pipe, ie. the node was fenced as expected
-            self._logger.log(f"Locally originated fencing returned {rc}")
+            logging.log(f"Locally originated fencing returned {rc}")
 
         with Timer(self.name, "fence"):
             matched = watch.look_for_all()
 
         self.set_timer("reform")
         if watch.unmatched:
-            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
+            logging.log(f"Patterns not found: {watch.unmatched!r}")
 
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()

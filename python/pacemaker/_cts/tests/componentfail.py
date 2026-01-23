@@ -1,11 +1,12 @@
 """Kill a pacemaker daemon and test how the cluster recovers."""
 
 __all__ = ["ComponentFail"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -139,7 +140,7 @@ class ComponentFail(CTSTest):
         # check for logs indicating a graceful recovery
         matched = watch.look_for_all(allow_multiple_matches=True)
         if watch.unmatched:
-            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
+            logging.log(f"Patterns not found: {watch.unmatched!r}")
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self._cm.cluster_stable(self._env["start_time"])

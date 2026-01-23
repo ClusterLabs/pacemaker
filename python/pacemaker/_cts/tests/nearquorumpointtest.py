@@ -1,9 +1,10 @@
 """Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
 __all__ = ["NearQuorumPointTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -89,7 +90,7 @@ class NearQuorumPointTest(CTSTest):
             self._cm.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
-        self._logger.log(f"Warn: Patterns not found: {watch.unmatched!r}")
+        logging.log(f"Warn: Patterns not found: {watch.unmatched!r}")
 
         # get the "bad" nodes
         upnodes = []
@@ -113,9 +114,9 @@ class NearQuorumPointTest(CTSTest):
             return self.success()
 
         if upnodes:
-            self._logger.log(f"Warn: Unstoppable nodes: {upnodes!r}")
+            logging.log(f"Warn: Unstoppable nodes: {upnodes!r}")
 
         if downnodes:
-            self._logger.log(f"Warn: Unstartable nodes: {downnodes!r}")
+            logging.log(f"Warn: Unstartable nodes: {downnodes!r}")
 
         return self.failure()

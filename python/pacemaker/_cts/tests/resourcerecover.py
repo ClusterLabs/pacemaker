@@ -3,6 +3,7 @@
 __copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -50,7 +51,7 @@ class ResourceRecover(CTSTest):
         # List all resources active on the node (skip test if none)
         resourcelist = self._cm.active_resources(node)
         if not resourcelist:
-            self._logger.log(f"No active resources on {node}")
+            logging.log(f"No active resources on {node}")
             return self.skipped()
 
         # Choose one resource at random
@@ -113,14 +114,14 @@ class ResourceRecover(CTSTest):
         if rc != 0 or len(lines) != 1:
             lines = [line.strip() for line in lines]
             s = " // ".join(lines)
-            self._logger.log(f"crm_failcount on {node} failed ({rc}): {s}")
+            logging.log(f"crm_failcount on {node} failed ({rc}): {s}")
             return -1
 
         try:
             failcount = int(lines[0])
         except (IndexError, ValueError):
             s = " ".join(lines)
-            self._logger.log(f"crm_failcount output on {node} unparseable: {s}")
+            logging.log(f"crm_failcount output on {node} unparseable: {s}")
             return -1
 
         return failcount

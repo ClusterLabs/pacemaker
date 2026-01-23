@@ -9,6 +9,7 @@ import time
 import subprocess
 import tempfile
 
+from pacemaker._cts import logging
 from pacemaker._cts.CTS import Process
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -70,7 +71,7 @@ class RemoteDriver(CTSTest):
         self.failed = True
 
         # Always log the failure.
-        self._logger.log(msg)
+        logging.log(msg)
 
         # Use first failure as test status, as it's likely to be most useful.
         if not self.fail_string:

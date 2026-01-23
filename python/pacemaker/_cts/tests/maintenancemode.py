@@ -6,6 +6,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import re
 
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -159,7 +160,7 @@ class MaintenanceMode(CTSTest):
             self.debug(f"Found all {managed_str} resources on {node}")
             return True
 
-        self._logger.log(f"Could not find all {managed_str} resources on {node}. {managed_rscs}")
+        logging.log(f"Could not find all {managed_str} resources on {node}. {managed_rscs}")
         return False
 
     def __call__(self, node):
@@ -178,7 +179,7 @@ class MaintenanceMode(CTSTest):
         # this list to verify all the resources become managed again.
         managed_rscs = self._managed_rscs(node)
         if not managed_rscs:
-            self._logger.log(f"No managed resources on {node}")
+            logging.log(f"No managed resources on {node}")
             return self.skipped()
 
         # insert a fake resource we can fail during maintenance mode
