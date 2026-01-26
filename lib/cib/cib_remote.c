@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -357,6 +357,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     xmlNode *answer = NULL;
     xmlNode *login = NULL;
+    const char *msg_type = NULL;
+    const char *tmp_ticket = NULL;
 
     static struct mainloop_fd_callbacks cib_fd_callbacks = { 0, };
 
@@ -429,28 +431,30 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     answer = pcmk__remote_message_xml(connection);
 
-    pcmk__log_xml_trace(answer, "Reply");
     if (answer == NULL) {
+        rc = -EPROTO;
+        goto done;
+    }
+
+    pcmk__log_xml_trace(answer, "reg-reply");
+
+    /* grab the token */
+    msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
+    tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
+
+    if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+        pcmk__err("Invalid registration message: %s", msg_type);
+        rc = -EPROTO;
+
+    } else if (tmp_ticket == NULL) {
         rc = -EPROTO;
 
     } else {
-        /* grab the token */
-        const char *msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
-        const char *tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
-
-        if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-            pcmk__err("Invalid registration message: %s", msg_type);
-            rc = -EPROTO;
-
-        } else if (tmp_ticket == NULL) {
-            rc = -EPROTO;
-
-        } else {
-            connection->token = strdup(tmp_ticket);
-        }
+        connection->token = strdup(tmp_ticket);
     }
-    pcmk__xml_free(answer);
-    answer = NULL;
+
+done:
+    g_clear_pointer(&answer, pcmk__xml_free);
 
     if (rc != 0) {
         cib_tls_close(cib);
