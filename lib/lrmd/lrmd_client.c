@@ -1021,10 +1021,15 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
 
-    /* If we received a NACK in response, the executor thinks we originally
-     * sent an invalid message.
+    /* If we received an ACK with an error status in response, the executor
+     * thinks we originally sent an invalid message.
+     *
+     * NOTE: At the moment, all ACK messages sent in the handshake process
+     * will have an error status.  However, this may change in the future so
+     * we'll let those fall through to the rest of the message handling below
+     * so we get some log messages should we change that in the future.
      */
-    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         int status = 0;
 
         rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
