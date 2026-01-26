@@ -323,9 +323,24 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
             goto done;
         }
 
-        msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
-
         pcmk__log_xml_trace(reply, "reg-reply");
+
+        /* If we received a NACK in response, based thinks we originally
+         * sent an invalid message.
+         */
+        if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+            int status = 0;
+
+            rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+
+            if ((rc == pcmk_rc_ok) && (status != 0)) {
+                pcmk__err("Received error response from CIB manager: %s",
+                          crm_exit_str(status));
+                return -EPROTO;
+            }
+        }
+
+        msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
 
         if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
             pcmk__info("Reply to CIB registration message has unknown type "
