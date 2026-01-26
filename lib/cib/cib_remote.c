@@ -438,6 +438,21 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     pcmk__log_xml_trace(answer, "reg-reply");
 
+    /* If we received a NACK in response, based thinks we originally
+     * sent an invalid message.
+     */
+    if (pcmk__xe_is(answer, PCMK__XE_NACK)) {
+        int status = 0;
+
+        rc = pcmk__xe_get_int(answer, PCMK_XA_STATUS, &status);
+
+        if ((rc == pcmk_rc_ok) && (status != 0)) {
+            pcmk__err("Received error response from CIB manager: %s",
+                      crm_exit_str(status));
+            return -EPROTO;
+        }
+    }
+
     /* grab the token */
     msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
     tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
