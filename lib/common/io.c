@@ -157,6 +157,7 @@ pcmk__read_series_sequence(const char *directory, const char *series,
         crm_debug("Could not read sequence number from series file %s: %s",
                   series_file, pcmk_rc_str(rc));
         fclose(fp);
+        free(series_file);
         return rc;
     }
     fclose(fp);
