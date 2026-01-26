@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2025 the Pacemaker project contributors
+ * Later changes copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -315,32 +315,34 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (rc == pcmk_ok) {
         xmlNode *reply = NULL;
+        const char *msg_type = NULL;
 
         if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
-                         &reply) > 0) {
-            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
+                         &reply) <= 0) {
+            rc = -ECOMM;
+            goto done;
+        }
 
-            pcmk__log_xml_trace(reply, "reg-reply");
+        msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
 
-            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-                pcmk__info("Reply to CIB registration message has unknown type "
-                           "'%s'",
-                           msg_type);
-                rc = -EPROTO;
+        pcmk__log_xml_trace(reply, "reg-reply");
 
-            } else {
-                native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
-                if (native->token == NULL) {
-                    rc = -EPROTO;
-                }
-            }
-            pcmk__xml_free(reply);
+        if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+            pcmk__info("Reply to CIB registration message has unknown type "
+                       "'%s'",
+                       msg_type);
+            rc = -EPROTO;
 
         } else {
-            rc = -ECOMM;
+            native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
+            if (native->token == NULL) {
+                rc = -EPROTO;
+            }
         }
-        pcmk__xml_free(hello);
     }
+
+done:
+    pcmk__xml_free(hello);
 
     if (rc == pcmk_ok) {
         pcmk__info("Successfully connected to CIB manager for %s", name);
