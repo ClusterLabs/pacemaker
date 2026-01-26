@@ -1021,6 +1021,22 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
 
+    /* If we received a NACK in response, the executor thinks we originally
+     * sent an invalid message.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+        int status = 0;
+
+        rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+
+        if ((rc == pcmk_rc_ok) && (status != 0)) {
+            pcmk__err("Received error response from executor: %s",
+                      crm_exit_str(status));
+            pcmk__log_xml_err(reply, "Bad reply");
+            return EPROTO;
+        }
+    }
+
     pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
     rc = pcmk_legacy2rc(rc);
 
