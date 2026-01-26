@@ -438,10 +438,15 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     pcmk__log_xml_trace(answer, "reg-reply");
 
-    /* If we received a NACK in response, based thinks we originally
-     * sent an invalid message.
+    /* If we received an ACK with an error status in response, based
+     * thinks we originally sent an invalid message.
+     *
+     * NOTE: At the moment, all ACK messages sent in the signon process
+     * will have an error status.  However, this may change in the future so
+     * we'll let those fall through to the rest of the message handling below
+     * so we get some log messages should we change that in the future.
      */
-    if (pcmk__xe_is(answer, PCMK__XE_NACK)) {
+    if (pcmk__xe_is(answer, PCMK__XE_ACK)) {
         int status = 0;
 
         rc = pcmk__xe_get_int(answer, PCMK_XA_STATUS, &status);
