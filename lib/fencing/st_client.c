@@ -1197,10 +1197,14 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         goto done;
     }
 
-    /* If we received a NACK in response, fenced thinks we originally
-     * sent an invalid message.
+    /* If we got an ACK in response, it came from fenced_ipc_dispatch and
+     * indicates we originally sent an invalid message.  At the moment, those
+     * ACKs can only ever have a status of CRM_EX_PROTOCOL.  Handle them here.
+     *
+     * In the future, if we receive ACKs with non-error status, let them fall
+     * through to be processed by the rest of the message handling below.
      */
-    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         int status = 0;
 
         rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
