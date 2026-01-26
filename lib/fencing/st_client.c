@@ -1197,6 +1197,21 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         goto done;
     }
 
+    /* If we received a NACK in response, fenced thinks we originally
+     * sent an invalid message.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+        int status = 0;
+
+        rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+
+        if ((rc == pcmk_rc_ok) && (status != 0)) {
+            pcmk__err("Received error response from CIB manager: %s",
+                      crm_exit_str(status));
+            return -EPROTO;
+        }
+    }
+
     msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
 
     native->token = pcmk__xe_get_copy(reply, PCMK__XA_ST_CLIENTID);
