@@ -325,10 +325,18 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
         pcmk__log_xml_trace(reply, "reg-reply");
 
-        /* If we received a NACK in response, based thinks we originally
-         * sent an invalid message.
+        /* If we got an ACK in response, it came from dispatch_common and means
+         * one of two things:
+         *
+         * (1) We originally sent a PCMK__VALUE_CIB_NOTIFY and based is ACKing
+         *     that it's received and processed it.  These ACKs will have a
+         *     status of CRM_EX_OK.  We'll let them fall through to be processed
+         *     by the rest of the message handling below.
+         * (2) We originally sent an invalid message.  At the moment, these ACKs
+         *     can only ever have a status of CRM_EX_PROTOCOL.  Handle them
+         *     here.
          */
-        if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+        if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
             int status = 0;
 
             rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);

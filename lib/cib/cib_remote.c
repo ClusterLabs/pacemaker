@@ -438,10 +438,15 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     pcmk__log_xml_trace(answer, "reg-reply");
 
-    /* If we received a NACK in response, based thinks we originally
-     * sent an invalid message.
+    /* If we got an ACK in response, it came from handle_unknown_request in
+     * execd and indicates we originally sent an invalid message.  At the
+     * moment, those ACKs can only ever have a status of CRM_EX_PROTOCOL.
+     * Handle them here.
+     *
+     * In the future, if we receive ACKs with non-error status, let them fall
+     * through to be processed by the rest of the message handling below.
      */
-    if (pcmk__xe_is(answer, PCMK__XE_NACK)) {
+    if (pcmk__xe_is(answer, PCMK__XE_ACK)) {
         int status = 0;
 
         rc = pcmk__xe_get_int(answer, PCMK_XA_STATUS, &status);
