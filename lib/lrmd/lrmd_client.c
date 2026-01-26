@@ -1021,10 +1021,14 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
 
-    /* If we received a NACK in response, the executor thinks we originally
-     * sent an invalid message.
+    /* If we got an ACK in response, it came from execd_ipc_dispatch and
+     * indicates we originally sent an invalid message.  At the moment, those
+     * ACKs can only ever have a status of CRM_EX_PROTOCOL.  Handle them here.
+     *
+     * In the future, if we receive ACKs with non-error status, let them fall
+     * through to be processed by the rest of the message handling below.
      */
-    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
         int status = 0;
 
         rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
