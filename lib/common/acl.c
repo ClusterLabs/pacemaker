@@ -538,8 +538,7 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     }
 
     if (docpriv->acls) {
-        g_list_free_full(docpriv->acls, free_acl);
-        docpriv->acls = NULL;
+        g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
     } else {
         pcmk__trace("User '%s' without ACLs denied access to entire XML "
