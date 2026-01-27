@@ -19,6 +19,30 @@
 
 /*!
  * \internal
+ * \brief Add an attribute to a table mapping attribute names to XML flags
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Flags table (<tt>GHashTable *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+static bool
+add_attr_to_flags_table(const xmlAttr *attr, void *user_data)
+{
+    GHashTable *attr_flags = user_data;
+
+    const xml_node_private_t *nodepriv = attr->_private;
+    uint32_t flags = ((nodepriv != NULL)? nodepriv->flags : pcmk__xf_none);
+
+    g_hash_table_insert(attr_flags, pcmk__str_copy((const char *) attr->name),
+                        GUINT_TO_POINTER((guint) flags));
+    return true;
+}
+
+/*!
+ * \internal
  * \brief Sort an XML element's attributes and compare against a reference
  *
  * This also verifies that any flags set on the original attributes are
@@ -33,20 +57,11 @@ static void
 assert_order(xmlNode *test_xml, const xmlNode *reference_xml)
 {
     GHashTable *attr_flags = pcmk__strkey_table(free, NULL);
-    xmlAttr *test_attr = NULL;
-    xmlAttr *ref_attr = NULL;
+    const xmlAttr *test_attr = NULL;
+    const xmlAttr *ref_attr = NULL;
 
     // Save original flags
-    for (xmlAttr *attr = pcmk__xe_first_attr(test_xml); attr != NULL;
-         attr = attr->next) {
-
-        xml_node_private_t *nodepriv = attr->_private;
-        uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
-
-        g_hash_table_insert(attr_flags,
-                            pcmk__str_copy((const char *) attr->name),
-                            GUINT_TO_POINTER((guint) flags));
-    }
+    pcmk__xe_foreach_const_attr(test_xml, add_attr_to_flags_table, attr_flags);
 
     pcmk__xe_sort_attrs(test_xml);
 
@@ -141,11 +156,9 @@ already_sorted(void **state)
         }
     }
 
-    pcmk__xe_set_props(reference_xml,
-                       "admin", "john",
-                       "dummy", "value",
-                       "location", "usa",
-                       NULL);
+    pcmk__xe_set(reference_xml, "admin", "john");
+    pcmk__xe_set(reference_xml, "dummy", "value");
+    pcmk__xe_set(reference_xml, "location", "usa");
 
     assert_order(test_xml, reference_xml);
 
@@ -184,11 +197,9 @@ need_sort(void **state)
         }
     }
 
-    pcmk__xe_set_props(reference_xml,
-                       "admin", "john",
-                       "dummy", "value",
-                       "location", "usa",
-                       NULL);
+    pcmk__xe_set(reference_xml, "admin", "john");
+    pcmk__xe_set(reference_xml, "dummy", "value");
+    pcmk__xe_set(reference_xml, "location", "usa");
 
     assert_order(test_xml, reference_xml);
 

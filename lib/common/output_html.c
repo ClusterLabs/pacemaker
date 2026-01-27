@@ -125,7 +125,7 @@ html_init(pcmk__output_t *out) {
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
-    pcmk__output_xml_create_parent(out, "body", NULL);
+    pcmk__output_xml_create_parent(out, "body");
 
     return true;
 }
@@ -193,9 +193,9 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     if (stylesheet_link != NULL) {
         htmlNodePtr link_node = pcmk__xe_create(head_node, "link");
-        pcmk__xe_set_props(link_node, "rel", "stylesheet",
-                           "href", stylesheet_link,
-                           NULL);
+
+        pcmk__xe_set(link_node, "rel", "stylesheet");
+        pcmk__xe_set(link_node, "href", stylesheet_link);
     }
 
     if (g_slist_length(priv->errors) > 0) {
@@ -324,7 +324,7 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
      */
     q_len = g_queue_get_length(priv->parent_q);
     if (q_len > 2) {
-        pcmk__output_xml_create_parent(out, "li", NULL);
+        pcmk__output_xml_create_parent(out, "li");
     }
 
     if (format != NULL) {
@@ -346,7 +346,9 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
         free(buf);
     }
 
-    node = pcmk__output_xml_create_parent(out, "ul", NULL);
+    node = pcmk__output_xml_create_parent(out, "ul");
+
+    // @FIXME This looks like an incorrect double-push; check this
     g_queue_push_tail(priv->parent_q, node);
 }
 
@@ -405,7 +407,7 @@ html_is_quiet(pcmk__output_t *out) {
 static void
 html_spacer(pcmk__output_t *out) {
     pcmk__assert(out != NULL);
-    pcmk__output_create_xml_node(out, "br", NULL);
+    pcmk__output_create_xml_node(out, "br");
 }
 
 static void
@@ -492,10 +494,8 @@ pcmk__html_create(xmlNode *parent, const char *name, const char *id,
 {
     xmlNode *node = pcmk__xe_create(parent, name);
 
-    pcmk__xe_set_props(node,
-                       PCMK_XA_CLASS, class_name,
-                       PCMK_XA_ID, id,
-                       NULL);
+    pcmk__xe_set(node, PCMK_XA_CLASS, class_name);
+    pcmk__xe_set(node, PCMK_XA_ID, id);
     return node;
 }
 

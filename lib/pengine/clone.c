@@ -220,8 +220,7 @@ pcmk_resource_t *
 pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     bool removed = false;
-    char *inc_num = NULL;
-    char *inc_max = NULL;
+    char *max_instances = NULL;
     pcmk_resource_t *child_rsc = NULL;
     xmlNode *child_copy = NULL;
     clone_variant_data_t *clone_data = NULL;
@@ -237,13 +236,11 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         removed = true;
     }
 
+    max_instances = pcmk__itoa(clone_data->clone_max);
+
     // Allocate instance numbers in numerical order (starting at 0)
-    inc_num = pcmk__itoa(clone_data->total_clones);
-    inc_max = pcmk__itoa(clone_data->clone_max);
-
     child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
-
-    pcmk__xe_set(child_copy, PCMK__META_CLONE, inc_num);
+    pcmk__xe_set_int(child_copy, PCMK__META_CLONE, clone_data->total_clones);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {
@@ -260,13 +257,11 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
         pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
 
-    pcmk__insert_meta(child_rsc->priv, PCMK_META_CLONE_MAX, inc_max);
+    pcmk__insert_meta(child_rsc->priv, PCMK_META_CLONE_MAX, max_instances);
     pcmk__rsc_trace(rsc, "Added %s instance %s", rsc->id, child_rsc->id);
 
-  bail:
-    free(inc_num);
-    free(inc_max);
-
+bail:
+    free(max_instances);
     return child_rsc;
 }
 
@@ -570,6 +565,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         }
 
         if (!printed_header) {
+            xmlNode *xml = NULL;
             const char *multi_state = pcmk__flag_text(rsc->flags,
                                                       pcmk__rsc_promotable);
             const char *unique = pcmk__flag_text(rsc->flags, pcmk__rsc_unique);
@@ -577,7 +573,6 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                                                       pcmk__rsc_maintenance);
             const char *managed = pcmk__flag_text(rsc->flags,
                                                   pcmk__rsc_managed);
-            const char *disabled = pcmk__btoa(pe__resource_is_disabled(rsc));
             const char *failed = pcmk__flag_text(rsc->flags, pcmk__rsc_failed);
             const char *ignored = pcmk__flag_text(rsc->flags,
                                                   pcmk__rsc_ignore_failure);
@@ -586,21 +581,21 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
             printed_header = TRUE;
 
-            rc = pe__name_and_nvpairs_xml(out, true, PCMK_XE_CLONE,
-                                          PCMK_XA_ID, rsc->id,
-                                          PCMK_XA_MULTI_STATE, multi_state,
-                                          PCMK_XA_UNIQUE, unique,
-                                          PCMK_XA_MAINTENANCE, maintenance,
-                                          PCMK_XA_MANAGED, managed,
-                                          PCMK_XA_DISABLED, disabled,
-                                          PCMK_XA_FAILED, failed,
-                                          PCMK_XA_FAILURE_IGNORED, ignored,
-                                          PCMK_XA_TARGET_ROLE, target_role,
-                                          PCMK_XA_DESCRIPTION, desc,
-                                          NULL);
-            pcmk__assert(rc == pcmk_rc_ok);
+            xml = pcmk__output_xml_create_parent(out, PCMK_XE_CLONE);
+            pcmk__xe_set(xml, PCMK_XA_ID, rsc->id);
+            pcmk__xe_set(xml, PCMK_XA_MULTI_STATE, multi_state);
+            pcmk__xe_set(xml, PCMK_XA_UNIQUE, unique);
+            pcmk__xe_set(xml, PCMK_XA_MAINTENANCE, maintenance);
+            pcmk__xe_set(xml, PCMK_XA_MANAGED, managed);
+            pcmk__xe_set_bool(xml, PCMK_XA_DISABLED,
+                              pe__resource_is_disabled(rsc));
+            pcmk__xe_set(xml, PCMK_XA_FAILED, failed);
+            pcmk__xe_set(xml, PCMK_XA_FAILURE_IGNORED, ignored);
+            pcmk__xe_set(xml, PCMK_XA_TARGET_ROLE, target_role);
+            pcmk__xe_set(xml, PCMK_XA_DESCRIPTION, desc);
         }
 
+        rc = pcmk_rc_ok;
         out->message(out, (const char *) child_rsc->priv->xml->name,
                      show_opts, child_rsc, only_node, all);
     }

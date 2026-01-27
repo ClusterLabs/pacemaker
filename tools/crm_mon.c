@@ -176,6 +176,7 @@ crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
     enum pcmk_pacemakerd_state state =
         (enum pcmk_pacemakerd_state) va_arg(args, int);
     const char *state_s = NULL;
+    xmlNode *xml = NULL;
 
     if (out->dest != stdout) {
         out->reset(out);
@@ -185,10 +186,9 @@ crm_mon_disconnected_xml(pcmk__output_t *out, va_list args)
         state_s = pcmk_pacemakerd_api_daemon_state_enum2text(state);
     }
 
-    pcmk__output_create_xml_node(out, PCMK_XE_CRM_MON_DISCONNECTED,
-                                 PCMK_XA_DESCRIPTION, desc,
-                                 PCMK_XA_PACEMAKERD_STATE, state_s,
-                                 NULL);
+    xml = pcmk__output_create_xml_node(out, PCMK_XE_CRM_MON_DISCONNECTED);
+    pcmk__xe_set(xml, PCMK_XA_DESCRIPTION, desc);
+    pcmk__xe_set(xml, PCMK_XA_PACEMAKERD_STATE, state_s);
 
     out->finish(out, CRM_EX_DISCONNECT, true, NULL);
     return pcmk_rc_ok;

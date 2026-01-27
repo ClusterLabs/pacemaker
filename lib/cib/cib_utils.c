@@ -134,7 +134,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 {
     bool rc = false;
 
-    if(pcmk_acl_required(user)) {
+    if (pcmk__acl_required(user)) {
         const char *value = NULL;
         GHashTable *options = pcmk__strkey_table(free, free);
 
@@ -239,9 +239,9 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         xmlNode *cib_ro = *current_cib;
         xmlNode *cib_filtered = NULL;
 
-        if (enable_acl
-            && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                     &cib_filtered)) {
+        if (enable_acl) {
+            cib_filtered = pcmk__acl_filtered_copy(user, (*current_cib)->doc,
+                                                   *current_cib);
 
             if (cib_filtered == NULL) {
                 pcmk__debug("Pre-filtered the entire cib");
@@ -291,7 +291,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         pcmk__xml_commit_changes(scratch->doc);
         pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acl(*current_cib, scratch, user);
+            pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
         }
 
         rc = (*fn) (op, call_options, section, req, input, scratch, &scratch, output);
@@ -311,7 +311,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
         pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acl(*current_cib, scratch, user);
+            pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
         }
 
         rc = (*fn) (op, call_options, section, req, input, *current_cib,
@@ -326,7 +326,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__trace("Inferring changes after %s op", op);
             pcmk__xml_commit_changes(scratch->doc);
             if (enable_acl) {
-                pcmk__enable_acl(*current_cib, scratch, user);
+                pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
             }
             pcmk__xml_mark_changes(*current_cib, scratch);
         }
@@ -338,13 +338,17 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     if ((rc == pcmk_rc_ok) && (scratch == NULL)) {
         rc = EINVAL;
         goto done;
+    }
 
-    } else if ((rc == pcmk_rc_ok) && xml_acl_denied(scratch)) {
+    if ((rc == pcmk_rc_ok)
+        && pcmk__xml_doc_all_flags_set(scratch->doc, pcmk__xf_acl_denied)) {
+
         pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = EACCES;
         goto done;
+    }
 
-    } else if (rc != pcmk_rc_ok) {
+    if (rc != pcmk_rc_ok) {
         goto done;
     }
 
@@ -522,8 +526,8 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
     /* @TODO: This may not work correctly with !make_copy, since we don't
      * keep the original CIB.
      */
-    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)
-        && xml_acl_filtered_copy(user, patchset_cib, scratch, result_cib)) {
+    if ((rc != pcmk_rc_ok) && cib_acl_enabled(patchset_cib, user)) {
+        *result_cib = pcmk__acl_filtered_copy(user, patchset_cib->doc, scratch);
 
         if (*result_cib == NULL) {
             pcmk__debug("Pre-filtered the entire cib result");

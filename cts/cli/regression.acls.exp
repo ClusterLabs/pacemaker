@@ -537,7 +537,7 @@ crm_attribute: Error performing operation: Permission denied
 * Passed: crm_attribute         - unknownguy: Set fencing-enabled
 =#=#=#= Begin test: unknownguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Lack of ACL denies user 'unknownguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
-pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
+check_creation_disallowed 	trace: ACLs disallow creation of <primitive> with id="dummy"
 cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: unknownguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - unknownguy: Create a resource
@@ -555,7 +555,7 @@ crm_attribute: Error performing operation: Permission denied
 * Passed: crm_attribute         - l33t-haxor: Set fencing-enabled
 =#=#=#= Begin test: l33t-haxor: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Parent ACL denies user 'l33t-haxor' read/write access to /cib/configuration/resources/primitive[@id='dummy']
-pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
+check_creation_disallowed 	trace: ACLs disallow creation of <primitive> with id="dummy"
 cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: l33t-haxor: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - l33t-haxor: Create a resource
@@ -639,7 +639,7 @@ crm_attribute: Error performing operation: Permission denied
 =#=#=#= End test: niceguy: Set enable-acl - Insufficient privileges (4) =#=#=#=
 * Passed: crm_attribute         - niceguy: Set enable-acl
 =#=#=#= Begin test: niceguy: Set fencing-enabled =#=#=#=
-pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bootstrap-options-fencing-enabled"
+check_creation_disallowed 	trace: ACLs allow creation of <nvpair> with id="cib-bootstrap-options-fencing-enabled"
 =#=#=#= Current cib after: niceguy: Set fencing-enabled =#=#=#=
 <cib epoch="10" num_updates="0" admin_epoch="0">
   <configuration>
@@ -716,7 +716,7 @@ pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="cib-bo
 * Passed: crm_attribute         - niceguy: Set fencing-enabled
 =#=#=#= Begin test: niceguy: Create a resource =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy']
-pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy"
+check_creation_disallowed 	trace: ACLs disallow creation of <primitive> with id="dummy"
 cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Create a resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Create a resource
@@ -1041,8 +1041,8 @@ crm_resource: Error performing operation: Insufficient privileges
 * Passed: crm_resource          - l33t-haxor: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
-pcmk__apply_creation_acl 	trace: Creation of <meta_attributes> scaffolding with id="dummy-meta_attributes" is implicitly allowed
-pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
+check_creation_disallowed 	trace: Creation of <meta_attributes> scaffolding with id="dummy-meta_attributes" is implicitly allowed
+check_creation_disallowed 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Stopped
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="14" num_updates="0" admin_epoch="0">
@@ -1293,7 +1293,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-target-role name=target-role
 * Passed: crm_resource          - niceguy: Remove a resource meta attribute
 =#=#=#= Begin test: niceguy: Create a resource meta attribute =#=#=#=
 unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
-pcmk__apply_creation_acl 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
+check_creation_disallowed 	trace: ACLs allow creation of <nvpair> with id="dummy-meta_attributes-target-role"
 Set 'dummy' option: id=dummy-meta_attributes-target-role set=dummy-meta_attributes name=target-role value=Started
 =#=#=#= Current cib after: niceguy: Create a resource meta attribute =#=#=#=
 <cib epoch="16" num_updates="0" admin_epoch="0">
@@ -1514,7 +1514,7 @@ cibadmin: CIB API call failed: Permission denied
 =#=#=#= Begin test: niceguy: Replace - create resource =#=#=#=
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib[@epoch]
 pcmk__check_acl 	trace: Default ACL denies user 'niceguy' read/write access to /cib/configuration/resources/primitive[@id='dummy2']
-pcmk__apply_creation_acl 	trace: ACLs disallow creation of <primitive> with id="dummy2"
+check_creation_disallowed 	trace: ACLs disallow creation of <primitive> with id="dummy2"
 cibadmin: CIB API call failed: Permission denied
 =#=#=#= End test: niceguy: Replace - create resource - Insufficient privileges (4) =#=#=#=
 * Passed: cibadmin              - niceguy: Replace - create resource
@@ -2546,7 +2546,7 @@ cibadmin: CIB API call failed: Permission denied
   <status/>
 </cib>
 =#=#=#= Begin test: mike: Create another resource =#=#=#=
-pcmk__apply_creation_acl 	trace: ACLs allow creation of <primitive> with id="dummy2"
+check_creation_disallowed 	trace: ACLs allow creation of <primitive> with id="dummy2"
 =#=#=#= Current cib after: mike: Create another resource =#=#=#=
 <cib epoch="26" num_updates="0" admin_epoch="0">
   <configuration>

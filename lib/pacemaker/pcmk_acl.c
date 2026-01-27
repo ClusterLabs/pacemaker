@@ -215,7 +215,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return EINVAL;
     }
 
-    if (!pcmk_acl_required(cred)) {
+    if (!pcmk__acl_required(cred)) {
         /* nothing to evaluate */
         return pcmk_rc_already;
     }
@@ -233,7 +233,7 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return EINVAL;
     }
 
-    pcmk__enable_acl(target, target, cred);
+    pcmk__enable_acls(target->doc, target->doc, cred);
 
     ret = annotate_with_siblings(target);
 

@@ -114,19 +114,31 @@ G_GNUC_INTERNAL
 const char *pcmk__xml_element_type_text(xmlElementType type);
 
 G_GNUC_INTERNAL
+void pcmk__xml_tree_foreach_remove(xmlNode *xml, bool (*fn)(xmlNode *));
+
+G_GNUC_INTERNAL
 bool pcmk__xml_reset_node_flags(xmlNode *xml, void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__xml_set_parent_flags(xmlNode *xml, uint64_t flags);
 
 G_GNUC_INTERNAL
+void pcmk__xml_doc_clear_flags(xmlDoc *doc, uint32_t flags);
+
+G_GNUC_INTERNAL
 void pcmk__xml_new_private_data(xmlNode *xml);
+
+G_GNUC_INTERNAL
+void pcmk__xml_reset_doc_private_data(xml_doc_private_t *docpriv);
 
 G_GNUC_INTERNAL
 void pcmk__xml_free_private_data(xmlNode *xml);
 
 G_GNUC_INTERNAL
 void pcmk__xml_free_node(xmlNode *xml);
+
+G_GNUC_INTERNAL
+int pcmk__xml_free_position(xmlNode *node, int position);
 
 G_GNUC_INTERNAL
 xmlDoc *pcmk__xml_new_doc(void);
@@ -144,16 +156,13 @@ G_GNUC_INTERNAL
 void pcmk__free_acls(GList *acls);
 
 G_GNUC_INTERNAL
-void pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user);
-
-G_GNUC_INTERNAL
 bool pcmk__is_user_in_group(const char *user, const char *group);
 
 G_GNUC_INTERNAL
-void pcmk__apply_acl(xmlNode *xml);
+void pcmk__apply_acls(xmlDoc *doc);
 
 G_GNUC_INTERNAL
-void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
+void pcmk__check_creation_acls(xmlNode *xml);
 
 G_GNUC_INTERNAL
 int pcmk__xa_remove(xmlAttr *attr, bool force);
@@ -172,10 +181,7 @@ G_GNUC_INTERNAL
 void pcmk__mark_xml_node_dirty(xmlNode *xml);
 
 G_GNUC_INTERNAL
-bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
-
-G_GNUC_INTERNAL
-void pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer);
+bool pcmk__dump_xml_attr(const xmlAttr *attr, void *user_data);
 
 G_GNUC_INTERNAL
 int pcmk__xe_set_score(xmlNode *target, const char *name, const char *value);
