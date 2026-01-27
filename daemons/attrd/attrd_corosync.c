@@ -489,6 +489,12 @@ broadcast_unseen_local_values(void)
     }
 }
 
+/*!
+ * \internal
+ * \brief Initialize \c attrd_cluster and connect to the cluster layer
+ *
+ * \return Standard Pacemaker return code
+ */
 int
 attrd_cluster_connect(void)
 {
@@ -514,11 +520,19 @@ attrd_cluster_connect(void)
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Disconnect from the cluster layer and free \c attrd_cluster
+ */
 void
 attrd_cluster_disconnect(void)
 {
+    if (attrd_cluster == NULL) {
+        return;
+    }
+
     pcmk_cluster_disconnect(attrd_cluster);
-    pcmk_cluster_free(attrd_cluster);
+    g_clear_pointer(&attrd_cluster, pcmk_cluster_free);
 }
 
 void

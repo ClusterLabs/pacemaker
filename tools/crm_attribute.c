@@ -66,7 +66,6 @@ struct {
     char *attr_value;
     char *dest_node;
     gchar *dest_uname;
-    gboolean inhibit;
     gchar *set_name;
     char *set_type;
     gchar *type;
@@ -312,28 +311,12 @@ static GOptionEntry addl_entries[] = {
       NULL
     },
 
-    { "inhibit-policy-engine", '!', G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_NONE, &options.inhibit,
-      NULL, NULL
-    },
-
     { NULL }
 };
 
 static GOptionEntry deprecated_entries[] = {
-    { "attr-id", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_STRING, &options.attr_id,
-      NULL, NULL
-    },
-
     // NOTE: resource-agents <4.2.0 (2018-10-24) uses this option
     { "attr-name", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, attr_name_cb,
-      NULL, NULL
-    },
-
-    { "attr-value", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, update_cb,
-      NULL, NULL
-    },
-
-    { "delete-attr", 0, G_OPTION_FLAG_HIDDEN, G_OPTION_ARG_CALLBACK, delete_cb,
       NULL, NULL
     },
 
@@ -810,11 +793,6 @@ main(int argc, char **argv)
                     "-p/--promotion must be called from an OCF resource agent "
                     "or with a resource ID specified");
         goto done;
-    }
-
-    if (options.inhibit) {
-        pcmk__warn("Inhibiting notifications for this update");
-        cib__set_call_options(cib_opts, crm_system_name, cib_inhibit_notify);
     }
 
     rc = cib__create_signon(&the_cib);

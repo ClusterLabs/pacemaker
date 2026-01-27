@@ -199,9 +199,7 @@ cib_notify_send(const xmlNode *xml)
 }
 
 void
-based_diff_notify(const char *op, int result, const char *call_id,
-                  const char *client_id, const char *client_name,
-                  const char *origin, xmlNode *update, xmlNode *diff)
+based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
 {
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
@@ -212,14 +210,27 @@ based_diff_notify(const char *op, int result, const char *call_id,
 
     update_msg = pcmk__xe_create(NULL, PCMK__XE_NOTIFY);
 
+    /* We could simplify by copying all attributes from request. We would just
+     * have to ensure that there are never "private" attributes that we want to
+     * hide from external clients with notify callbacks.
+     */
     pcmk__xe_set(update_msg, PCMK__XA_T, PCMK__VALUE_CIB_NOTIFY);
     pcmk__xe_set(update_msg, PCMK__XA_SUBT, PCMK__VALUE_CIB_DIFF_NOTIFY);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_OP, op);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTID, client_id);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTNAME, client_name);
-    pcmk__xe_set(update_msg, PCMK__XA_CIB_CALLID, call_id);
-    pcmk__xe_set(update_msg, PCMK__XA_SRC, origin);
-    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, result);
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_OP,
+                 pcmk__xe_get(request, PCMK__XA_CIB_OP));
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID));
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CLIENTNAME,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME));
+
+    pcmk__xe_set(update_msg, PCMK__XA_CIB_CALLID,
+                 pcmk__xe_get(request, PCMK__XA_CIB_CALLID));
+
+    pcmk__xe_set(update_msg, PCMK__XA_SRC, pcmk__xe_get(request, PCMK__XA_SRC));
+    pcmk__xe_set_int(update_msg, PCMK__XA_CIB_RC, pcmk_rc2legacy(rc));
 
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);

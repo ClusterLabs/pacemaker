@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,16 +8,13 @@
  */
 
 #ifndef PCMK__CRM_CIB_CIB_TYPES__H
-#  define PCMK__CRM_CIB_CIB_TYPES__H
+#define PCMK__CRM_CIB_CIB_TYPES__H
 
-#  include <stdbool.h>
-#  include <stdint.h>           // UINT32_C
+#include <stdbool.h>
+#include <stdint.h>             // UINT32_C
 
-#  include <glib.h>             // gboolean, GList
-#  include <libxml/tree.h>      // xmlNode
-
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
+#include <glib.h>               // gboolean, GList
+#include <libxml/tree.h>        // xmlNode
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,6 +38,7 @@ enum cib_state {
     cib_connected_command,
 
     // NOTE: sbd (as of at least 1.5.2) uses this value
+    //! \deprecated Look for \c cib_connected_command instead
     cib_connected_query,
 
     cib_disconnected
@@ -50,9 +48,12 @@ enum cib_conn_type {
     cib_command,
 
     // NOTE: sbd (as of at least 1.5.2) uses this value
+    //! \deprecated Use \c cib_command instead
     cib_query,
 
     cib_no_connection,
+
+    //! \deprecated Use \c cib_command instead
     cib_command_nonblocking,
 };
 
@@ -118,15 +119,24 @@ enum cib_call_options {
     cib_sync_call       = (UINT32_C(1) << 12),
 
     cib_no_mtime        = (UINT32_C(1) << 13),
+
+    //! \deprecated This value will be removed in a future release
     cib_inhibit_notify  = (UINT32_C(1) << 16),
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+    //! \deprecated This value will be removed in a future release
     cib_force_diff      = (UINT32_C(1) << 28),
+#endif // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 };
 
 typedef struct cib_s cib_t;
 
 typedef struct cib_api_operations_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
-    // @COMPAT At compatibility break, drop name (always use crm_system_name)
+    /* @COMPAT At a compatibility break, drop name (always use crm_system_name)
+     * and type (always use cib_command -- cib_file and cib_remote already do
+     * this).
+     */
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
 
     // NOTE: sbd (as of at least 1.5.2) uses this
@@ -157,10 +167,13 @@ typedef struct cib_api_operations_s {
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
 
+    //! \deprecated This method will be removed and should not be used
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
+    //! \deprecated Do not use
     int (*sync) (cib_t *cib, const char *section, int call_options);
+
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
                       int call_options);
     int (*upgrade) (cib_t *cib, int call_options);

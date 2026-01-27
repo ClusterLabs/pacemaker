@@ -155,13 +155,11 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
-    rc = cib_conn->cmds->signon(cib_conn, crm_system_name,
-                                cib_command_nonblocking);
+    rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     if (rc != pcmk_ok) {
         // A short wait that usually avoids stalling the FSA
         sleep(1);
-        rc = cib_conn->cmds->signon(cib_conn, crm_system_name,
-                                    cib_command_nonblocking);
+        rc = cib_conn->cmds->signon(cib_conn, crm_system_name, cib_command);
     }
 
     if (rc != pcmk_ok) {
@@ -729,22 +727,16 @@ controld_record_pending_op(const char *node_name, const lrmd_rsc_info_t *rsc,
 static void
 cib_rsc_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    switch (rc) {
-        case pcmk_ok:
-        case -pcmk_err_diff_failed:
-        case -pcmk_err_diff_resync:
-            pcmk__trace("Resource history update completed (call=%d rc=%d)",
-                        call_id, rc);
-            break;
-        default:
-            if (call_id > 0) {
-                pcmk__warn("Resource history update %d failed: %s "
-                           QB_XS " rc=%d",
-                           call_id, pcmk_strerror(rc), rc);
-            } else {
-                pcmk__warn("Resource history update failed: %s " QB_XS " rc=%d",
-                           pcmk_strerror(rc), rc);
-            }
+    if (rc == pcmk_ok) {
+        pcmk__trace("Resource history update completed (call=%d rc=%d)",
+                    call_id, rc);
+
+    } else if (call_id > 0) {
+        pcmk__warn("Resource history update %d failed: %s " QB_XS " rc=%d",
+                   call_id, pcmk_strerror(rc), rc);
+    } else {
+        pcmk__warn("Resource history update failed: %s " QB_XS " rc=%d",
+                   pcmk_strerror(rc), rc);
     }
 
     if (call_id == pending_rsc_update) {

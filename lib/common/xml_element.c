@@ -734,38 +734,6 @@ pcmk__xe_delete_match(xmlNode *xml, xmlNode *search)
 
 /*!
  * \internal
- * \brief Replace one XML node with a copy of another XML node
- *
- * This function handles change tracking and applies ACLs.
- *
- * \param[in,out] old  XML node to replace
- * \param[in]     new  XML node to copy as replacement for \p old
- *
- * \note This frees \p old.
- */
-static void
-replace_node(xmlNode *old, xmlNode *new)
-{
-    // Pass old for its doc; it won't remain the parent of new
-    new = pcmk__xml_copy(old, new);
-    old = xmlReplaceNode(old, new);
-
-    // old == NULL means memory allocation error
-    pcmk__assert(old != NULL);
-
-    // May be unnecessary but avoids slight changes to some test outputs
-    pcmk__xml_tree_foreach(new, pcmk__xml_reset_node_flags, NULL);
-
-    if (pcmk__xml_doc_all_flags_set(new->doc, pcmk__xf_tracking)) {
-        // Replaced sections may have included relevant ACLs
-        pcmk__apply_acl(new);
-    }
-    pcmk__xml_mark_changes(old, new);
-    pcmk__xml_free_node(old);
-}
-
-/*!
- * \internal
  * \brief Replace one XML subtree with a copy of another if the two match
  *
  * A match is defined as follows:
@@ -805,7 +773,7 @@ replace_xe_if_matching(xmlNode *xml, void *user_data)
 
     pcmk__log_xml_trace(xml, "replace-match");
     pcmk__log_xml_trace(replace, "replace-with");
-    replace_node(xml, replace);
+    pcmk__xml_replace_with_copy(xml, replace);
 
     // Found a match and replaced it; stop traversing tree
     return false;

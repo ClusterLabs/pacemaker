@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1020,59 +1020,27 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
  * \internal
  * \brief Add an IPC server to the main loop for the CIB manager API
  *
- * \param[out] ipcs_ro   New IPC server for read-only CIB manager API
- * \param[out] ipcs_rw   New IPC server for read/write CIB manager API
- * \param[out] ipcs_shm  New IPC server for shared-memory CIB manager API
- * \param[in]  ro_cb     IPC callbacks for read-only API
- * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
  *
  * \note This function exits fatally on error.
- * \note There is no actual difference between the three IPC endpoints other
- *       than their names.
  */
-void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
-                           qb_ipcs_service_t **ipcs_rw,
-                           qb_ipcs_service_t **ipcs_shm,
-                           struct qb_ipcs_service_handlers *ro_cb,
-                           struct qb_ipcs_service_handlers *rw_cb)
+void
+pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs,
+                      struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs_ro = mainloop_add_ipc_server(PCMK__SERVER_BASED_RO,
-                                       QB_IPC_NATIVE, ro_cb);
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
 
-    *ipcs_rw = mainloop_add_ipc_server(PCMK__SERVER_BASED_RW,
-                                       QB_IPC_NATIVE, rw_cb);
+    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_based),
+                                    QB_IPC_SHM, cb);
 
-    *ipcs_shm = mainloop_add_ipc_server(PCMK__SERVER_BASED_SHM,
-                                        QB_IPC_SHM, rw_cb);
-
-    if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
+    if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
                    pcmk__server_log_name(pcmk_ipc_based));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
         crm_exit(CRM_EX_FATAL);
     }
-}
-
-/*!
- * \internal
- * \brief Destroy IPC servers for the CIB manager API
- *
- * \param[out] ipcs_ro   IPC server for read-only the CIB manager API
- * \param[out] ipcs_rw   IPC server for read/write the CIB manager API
- * \param[out] ipcs_shm  IPC server for shared-memory the CIB manager API
- *
- * \note This is a convenience function for calling qb_ipcs_destroy() for each
- *       argument.
- */
-void
-pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
-                     qb_ipcs_service_t *ipcs_rw,
-                     qb_ipcs_service_t *ipcs_shm)
-{
-    qb_ipcs_destroy(ipcs_ro);
-    qb_ipcs_destroy(ipcs_rw);
-    qb_ipcs_destroy(ipcs_shm);
 }
 
 /*!
@@ -1086,7 +1054,9 @@ pcmk__stop_based_ipc(qb_ipcs_service_t *ipcs_ro,
 qb_ipcs_service_t *
 pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
 {
-    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_NATIVE, cb);
+    pcmk__assert(cb != NULL);
+
+    return mainloop_add_ipc_server(CRM_SYSTEM_CRMD, QB_IPC_SHM, cb);
 }
 
 /*!
@@ -1102,8 +1072,10 @@ void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_attrd),
-                                    QB_IPC_NATIVE, cb);
+                                    QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1150,8 +1122,10 @@ void
 pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(pcmk_ipc_fenced),
-                                              QB_IPC_NATIVE, cb, QB_LOOP_HIGH);
+                                              QB_IPC_SHM, cb, QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1175,8 +1149,10 @@ void
 pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_pacemakerd),
-                                    QB_IPC_NATIVE, cb);
+                                    QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
@@ -1206,8 +1182,10 @@ void
 pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
                            struct qb_ipcs_service_handlers *cb)
 {
+    pcmk__assert((ipcs != NULL) && (*ipcs == NULL) && (cb != NULL));
+
     *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_schedulerd),
-                                    QB_IPC_NATIVE, cb);
+                                    QB_IPC_SHM, cb);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",

@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2025 the Pacemaker project contributors
+ * Later changes copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,22 +10,23 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <crm_internal.h>
-#include <unistd.h>
+#include <errno.h>                  // ECOMM, EINVAL, ENOMSG, ENOTCONN, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free
+#include <sys/types.h>              // ssize_t
 
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*, G_*, FALSE, TRUE
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, remove_cib_op_callback
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_REQUEST_QUERY
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, crm_log_xml_explicit
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_ok, pcmk_ok, pcmk_strerror, etc.
+#include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 typedef struct cib_native_opaque_s {
     char *token;
@@ -68,12 +69,14 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &op_msg);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         return rc;
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
+        rc = pcmk_rc2legacy(rc);
         goto done;
     }
 
@@ -101,9 +104,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     rc = pcmk_ok;
     pcmk__xe_get_int(op_reply, PCMK__XA_CIB_CALLID, &reply_id);
     if (reply_id == cib->call_id) {
-        xmlNode *wrapper = pcmk__xe_first_child(op_reply, PCMK__XE_CIB_CALLDATA,
-                                                NULL, NULL);
-        xmlNode *tmp = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        xmlNode *tmp = cib__get_calldata(op_reply);
 
         pcmk__trace("Synchronous reply %d received", reply_id);
         if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
@@ -139,11 +140,6 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
     switch (rc) {
         case pcmk_ok:
         case -EPERM:
-            break;
-
-            /* This is an internal value that clients do not and should not care about */
-        case -pcmk_err_diff_resync:
-            rc = pcmk_ok;
             break;
 
             /* These indicate internal problems */
@@ -281,20 +277,19 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     cib->call_timeout = PCMK__IPC_TIMEOUT;
 
-    if (type == cib_command) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_RW;
+    switch (type) {
+        case cib_command:
+        case cib_command_nonblocking:
+        case cib_query:
+            /* @COMPAT cib_command_nonblocking and cib_query are deprecated
+             * since 3.0.2
+             */
+            cib->state = cib_connected_command;
+            channel = PCMK__SERVER_BASED_RW;
+            break;
 
-    } else if (type == cib_command_nonblocking) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_SHM;
-
-    } else if (type == cib_query) {
-        cib->state = cib_connected_query;
-        channel = PCMK__SERVER_BASED_RO;
-
-    } else {
-        return -ENOTCONN;
+        default:
+            return -ENOTCONN;
     }
 
     pcmk__trace("Connecting %s channel", channel);
@@ -311,6 +306,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
     if (rc == pcmk_ok) {
         rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
                             cib_sync_call, NULL, name, &hello);
+        rc = pcmk_rc2legacy(rc);
     }
 
     if (rc == pcmk_ok) {

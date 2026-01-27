@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,13 +8,13 @@
  */
 
 #ifndef PCMK__CRM_CIB__H
-#  define PCMK__CRM_CIB__H
+#define PCMK__CRM_CIB__H
 
-#  include <glib.h>             // gboolean
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
-#  include <crm/cib/cib_types.h>
-#  include <crm/cib/util.h>
+#include <glib.h>               // gboolean
+
+// cib.h is a wrapper for the following headers
+#include <crm/cib/cib_types.h>
+#include <crm/cib/util.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -27,7 +27,7 @@ extern "C" {
  */
 
 // Use pcmk__compare_versions() for doing comparisons
-#  define CIB_FEATURE_SET "2.0"
+#define CIB_FEATURE_SET "2.0"
 
 /* Core functions */
 
@@ -46,7 +46,7 @@ void cib_free_notify(cib_t *cib);
 void cib_free_callbacks(cib_t *cib);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-void cib_delete(cib_t * cib);
+void cib_delete(cib_t *cib);
 
 void cib_dump_pending_callbacks(void);
 int num_cib_op_callbacks(void);
@@ -62,4 +62,4 @@ void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 #include <crm/cib_compat.h>
 #endif
 
-#endif
+#endif  // PCMK__CRM_CIB__H

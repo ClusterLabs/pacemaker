@@ -7,11 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
-#ifndef BASED_REMOTE__H
-#define BASED_REMOTE__H
+#ifndef BASED_COROSYNC__H
+#define BASED_COROSYNC__H
 
-void based_remote_init(void);
-void based_remote_cleanup(void);
-void based_drop_remote_clients(void);
+int based_cluster_connect(void);
+void based_cluster_disconnect(void);
+const char *based_cluster_node_name(void);
 
-#endif // BASED_REMOTE__H
+#endif // BASED_COROSYNC__H

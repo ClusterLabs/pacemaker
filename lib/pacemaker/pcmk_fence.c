@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -222,6 +222,7 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
 
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 
     free(async_fence_data.name);
 

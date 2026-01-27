@@ -161,8 +161,8 @@ pcmk_cib_parent_name_for(const char *element_name)
 /*!
  * \brief Find an element in the CIB
  *
- * \param[in,out] cib           Top-level CIB XML to search
- * \param[in]     element_name  Name of CIB element to search for
+ * \param[in] cib           Top-level CIB XML to search
+ * \param[in] element_name  Name of CIB element to search for
  *
  * \return XML element in \p cib corresponding to \p element_name
  *         (or \p cib itself if element is unknown or not found)

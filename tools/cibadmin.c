@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -330,7 +330,7 @@ cibadmin_post_upgrade(pcmk__output_t *out, cib_t *cib_conn, int call_options,
 
         if (cib_conn->cmds->query(cib_conn, NULL, &obj,
                                   call_options) == pcmk_ok) {
-            pcmk__update_schema(&obj, NULL, true, false);
+            pcmk__update_schema(&obj, NULL, false);
         }
         pcmk__xml_free(obj);
     }
@@ -349,7 +349,7 @@ cibadmin_post_default(pcmk__output_t *out, cib_t *cib_conn, int call_options,
             && pcmk__xe_is(output, PCMK_XE_CIB)) {
 
             // Show validation errors to stderr
-            pcmk__validate_xml(output, NULL, NULL, NULL);
+            pcmk__validate_xml(output, NULL, NULL);
         }
         return pcmk_rc2exitc(cib_rc);
     }

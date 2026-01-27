@@ -743,7 +743,7 @@ cts-cli
 * Passed: crm_shadow            - Get active shadow instance's diff (copied) (XML)
 =#=#=#= Begin test: Get active shadow instance's diff (after changes) =#=#=#=
 Diff: --- 1.1.173 2
-Diff: +++ 1.4.1 (null)
+Diff: +++ 1.4.1 (no digest)
 -- /cib/configuration/op_defaults
 +  /cib:  @epoch=4, @num_updates=1
 +  /cib/configuration/resources/primitive[@id='dummy']:  @description=desc
@@ -800,7 +800,7 @@ To prevent accidental destruction of the cluster, the --force flag is required i
 * Passed: crm_shadow            - Commit shadow instance (force)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit) =#=#=#=
 Diff: --- 1.2.0 2
-Diff: +++ 1.4.1 (null)
+Diff: +++ 1.4.1 (no digest)
 +  /cib:  @epoch=4, @num_updates=1
 ++ /cib/status:  <node_state id="3" uname="cluster03" in_ccm="true" crmd="online" crm-debug-origin="do_update_resource" join="member" expected="member"/>
 =#=#=#= End test: Get active shadow instance's diff (after commit) - Error occurred (1) =#=#=#=
@@ -810,7 +810,7 @@ Diff: +++ 1.4.1 (null)
 * Passed: crm_shadow            - Commit shadow instance (force) (all)
 =#=#=#= Begin test: Get active shadow instance's diff (after commit all) =#=#=#=
 Diff: --- 1.4.2 2
-Diff: +++ 1.4.1 (null)
+Diff: +++ 1.4.1 (no digest)
 +  /cib:  @num_updates=1
 =#=#=#= End test: Get active shadow instance's diff (after commit all) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (after commit all)
@@ -1322,7 +1322,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= End test: Create empty shadow instance (file already exists) (force) (XML) - OK (0) =#=#=#=
 * Passed: crm_shadow            - Create empty shadow instance (file already exists) (force) (XML)
 =#=#=#= Begin test: Get active shadow instance's contents (empty CIB) =#=#=#=
-<cib epoch="1" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -1336,7 +1336,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 =#=#=#= Begin test: Get active shadow instance's contents (empty CIB) (XML) =#=#=#=
 <pacemaker-result api-version="X" request="crm_shadow --output-as=xml --display">
   <shadow instance="cts-cli">
-    <content><![CDATA[<cib epoch="1" num_updates="0" admin_epoch="0">
+    <content><![CDATA[<cib admin_epoch="0" epoch="1" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -1353,7 +1353,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 * Passed: crm_shadow            - Get active shadow instance's contents (empty CIB) (XML)
 =#=#=#= Begin test: Get active shadow instance's diff (empty CIB) =#=#=#=
 Diff: --- 1.1.173 2
-Diff: +++ 0.1.0 (null)
+Diff: +++ 0.1.0 (no digest)
 -- /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']
 -- /cib/configuration/nodes/node[@id='1']
 -- /cib/configuration/nodes/node[@id='2']
@@ -1374,7 +1374,7 @@ Diff: +++ 0.1.0 (null)
 -- /cib/status/node_state[@id='1']
 -- /cib/status/node_state[@id='httpd-bundle-0']
 -- /cib/status/node_state[@id='httpd-bundle-1']
-+  /cib:  @validate-with=pacemaker-X, @num_updates=0, @admin_epoch=0
++  /cib:  @validate-with=pacemaker-X, @admin_epoch=0, @epoch=1, @num_updates=0
 -- /cib:  @cib-last-written, @update-origin, @update-client, @update-user, @have-quorum, @dc-uuid
 =#=#=#= End test: Get active shadow instance's diff (empty CIB) - Error occurred (1) =#=#=#=
 * Passed: crm_shadow            - Get active shadow instance's diff (empty CIB)
@@ -1410,8 +1410,9 @@ Diff: +++ 0.1.0 (null)
     <change-list>
       <change-attr name="crm_feature_set" operation="set" value=""/>
       <change-attr name="validate-with" operation="set" value="pacemaker-X"/>
-      <change-attr name="num_updates" operation="set" value="0"/>
       <change-attr name="admin_epoch" operation="set" value="0"/>
+      <change-attr name="epoch" operation="set" value="1"/>
+      <change-attr name="num_updates" operation="set" value="0"/>
       <change-attr name="cib-last-written" operation="unset"/>
       <change-attr name="update-origin" operation="unset"/>
       <change-attr name="update-client" operation="unset"/>
@@ -1420,7 +1421,7 @@ Diff: +++ 0.1.0 (null)
       <change-attr name="dc-uuid" operation="unset"/>
     </change-list>
     <change-result>
-      <cib epoch="1" num_updates="0" admin_epoch="0"/>
+      <cib admin_epoch="0" epoch="1" num_updates="0"/>
     </change-result>
   </change>
 </diff>
@@ -1445,7 +1446,7 @@ A new shadow instance was created. To begin using it, enter the following into y
 * Passed: crm_shadow            - Active shadow instance no different from active CIB after reset
 =#=#=#= Begin test: Active shadow instance differs from active CIB after change =#=#=#=
 Diff: --- 1.1.173 2
-Diff: +++ 1.2.0 (null)
+Diff: +++ 1.2.0 (no digest)
 +  /cib:  @epoch=2, @num_updates=0
 ++ /cib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']:  <nvpair id="cib-bootstrap-options-admin_epoch" name="admin_epoch" value="99"/>
 =#=#=#= End test: Active shadow instance differs from active CIB after change - Error occurred (1) =#=#=#=

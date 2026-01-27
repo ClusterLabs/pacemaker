@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,29 +9,33 @@
 
 #include <crm_internal.h>
 
-#include <arpa/inet.h>
-#include <inttypes.h>                   // PRIu64, etc.
-#include <netdb.h>
-#include <netinet/in.h>
+#include <errno.h>                  // ENXIO, EINVAL
+#include <inttypes.h>               // PRIu32, PRIu64, PRIx32
 #include <stdbool.h>
-#include <stdint.h>                     // uint32_t, etc.
-#include <sys/socket.h>
-#include <sys/utsname.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t, uint64_t
+#include <stdio.h>                  // sscanf
+#include <stdlib.h>                 // free
+#include <string.h>                 // strerror, strchr
+#include <sys/types.h>              // gid_t, pid_t, uid_t
+#include <unistd.h>                 // sleep
 
-#include <bzlib.h>
-#include <corosync/cfg.h>
-#include <corosync/cmap.h>
-#include <corosync/corodefs.h>
-#include <corosync/corotypes.h>
-#include <corosync/hdb.h>
-#include <corosync/quorum.h>
-#include <qb/qbipcc.h>
-#include <qb/qbutil.h>
+#include <corosync/cmap.h>          // cmap_*
+#include <corosync/corotypes.h>     // cs_*, CS_*
+#include <corosync/quorum.h>        // quorum_*
+#include <glib.h>                   // gboolean, gpointer, g_*, G_PRIORITY_HIGH
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/cluster/internal.h>
-#include <crm/common/ipc.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm/cluster.h>            // pcmk_cluster_*, etc.
+#include <crm/cluster/internal.h>   // pcmk__cluster_private_t members
+#include <crm/common/internal.h>    // pcmk__corosync2rc, pcmk__err, etc.
+#include <crm/common/ipc.h>         // crm_ipc_is_authentic_process
+#include <crm/common/logging.h>     // CRM_LOG_ASSERT
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/options.h>     // PCMK_VALUE_MEMBER
+#include <crm/common/results.h>     // CRM_EX_FATAL, crm_exit, pcmk_rc_*, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
 
 #include "crmcluster_private.h"
 
@@ -457,6 +461,9 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \param[in,out] cluster  Initialized cluster object to connect
  *
  * \return Standard Pacemaker return code
+ *
+ * \note This initializes the node caches on success by calling
+ *       \c pcmk__get_node().
  */
 int
 pcmk__corosync_connect(pcmk_cluster_t *cluster)
@@ -465,8 +472,6 @@ pcmk__corosync_connect(pcmk_cluster_t *cluster)
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
     pcmk__node_status_t *local_node = NULL;
     int rc = pcmk_rc_ok;
-
-    pcmk__cluster_init_node_caches();
 
     if (cluster_layer != pcmk_cluster_layer_corosync) {
         pcmk__err("Invalid cluster layer: %s " QB_XS " cluster_layer=%d",

@@ -455,7 +455,7 @@ cluster_summary(pcmk__output_t *out, va_list args) {
         const char *client = pcmk__xe_get(scheduler->input,
                                           PCMK_XA_UPDATE_CLIENT);
         const char *origin = pcmk__xe_get(scheduler->input,
-                                               PCMK_XA_UPDATE_ORIGIN);
+                                          PCMK_XA_UPDATE_ORIGIN);
 
         PCMK__OUTPUT_LIST_HEADER(out, false, rc, "Cluster Summary");
         out->message(out, "cluster-times", scheduler->priv->local_node_name,

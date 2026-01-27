@@ -475,10 +475,11 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker daemon successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
+
     pacemakerd_ipc_cleanup();
     pacemakerd_unregister_handlers();
 
-    g_main_loop_unref(mainloop);
 #if SUPPORT_COROSYNC
     cluster_disconnect_cfg();
 #endif

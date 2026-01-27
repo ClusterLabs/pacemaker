@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,22 +8,27 @@
  */
 
 #include <crm_internal.h>
-#include <unistd.h>
+
+#include <errno.h>                  // errno, EEXIST, EINVAL, ETIME, etc.
+#include <pwd.h>                    // getpwuid, struct passwd
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <pwd.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free, getenv, setenv, unsetenv
+#include <string.h>                 // strcmp, strerror
+#include <sys/stat.h>               // mkdir
+#include <unistd.h>                 // geteuid
 
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <glib.h>                   // gboolean, g_*, G_SOURCE_CONTINUE, etc.
+#include <libxml/tree.h>            // xmlNode
 
-#include <glib.h>
-
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*, etc.
+#include <crm/common/internal.h>    // pcmk__str_*, pcmk__trace, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_strerror, pcmk_ok, etc.
+#include <crm/common/xml.h>         // PCMK_XA_VERSION
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
+#include <crm/crm.h>                // CRM_OP_PING
 
 static GHashTable *cib_op_callback_table = NULL;
 
@@ -225,6 +230,7 @@ cib_client_register_callback(cib_t *cib, int call_id, int timeout,
                                              callback_name, callback, NULL);
 }
 
+// @COMPAT Deprecated
 static int
 cib_client_noop(cib_t * cib, int call_options)
 {
@@ -242,14 +248,16 @@ cib_client_ping(cib_t * cib, xmlNode ** output_data, int call_options)
 static int
 cib_client_query(cib_t * cib, const char *section, xmlNode ** output_data, int call_options)
 {
-    return cib->cmds->query_from(cib, NULL, section, output_data, call_options);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL, section, NULL,
+                           output_data, call_options, cib->user);
 }
 
+// @COMPAT Deprecated
 static int
 cib_client_query_from(cib_t * cib, const char *host, const char *section,
                       xmlNode ** output_data, int call_options)
 {
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, host, section, NULL,
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_QUERY, NULL, section, NULL,
                            output_data, call_options, cib->user);
 }
 
@@ -281,6 +289,7 @@ cib_client_upgrade(cib_t * cib, int call_options)
                            NULL, call_options, cib->user);
 }
 
+// @COMPAT Deprecated
 static int
 cib_client_sync(cib_t * cib, const char *section, int call_options)
 {
@@ -290,8 +299,8 @@ cib_client_sync(cib_t * cib, const char *section, int call_options)
 static int
 cib_client_sync_from(cib_t * cib, const char *host, const char *section, int call_options)
 {
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC_TO_ALL, host, section,
-                           NULL, NULL, call_options, cib->user);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC, host, section, NULL,
+                           NULL, call_options, cib->user);
 }
 
 static int
@@ -638,12 +647,8 @@ cib_new_variant(void)
     new_cib->cmds->register_callback = cib_client_register_callback;
     new_cib->cmds->register_callback_full = cib_client_register_callback_full;
 
-    new_cib->cmds->noop = cib_client_noop; // Deprecated method
     new_cib->cmds->ping = cib_client_ping;
     new_cib->cmds->query = cib_client_query;
-    new_cib->cmds->sync = cib_client_sync;
-
-    new_cib->cmds->query_from = cib_client_query_from;
     new_cib->cmds->sync_from = cib_client_sync_from;
 
     new_cib->cmds->set_primary = set_primary;
@@ -664,6 +669,11 @@ cib_new_variant(void)
     new_cib->cmds->set_user = cib_client_set_user;
 
     new_cib->cmds->fetch_schemas = cib_client_fetch_schemas;
+
+    // @COMPAT Deprecated methods
+    new_cib->cmds->noop = cib_client_noop;
+    new_cib->cmds->sync = cib_client_sync;
+    new_cib->cmds->query_from = cib_client_query_from;
 
     return new_cib;
 }

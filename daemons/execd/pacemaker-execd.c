@@ -450,6 +450,7 @@ main(int argc, char **argv)
                  "accepting connections");
     pcmk__notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 
     /* should never get here */
     exit_executor();
