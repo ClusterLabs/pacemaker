@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,12 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdlib.h>
+#include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <signal.h>                 // signal, SIGPIPE, SIG_IGN
+#include <stdbool.h>                // bool
+#include <stdlib.h>                 // NULL, getenv, free
+#include <string.h>                 // memcpy, strdup
+#include <syslog.h>                 // LOG_WARNING
+#include <time.h>                   // time, time_t
 
-#include <gnutls/gnutls.h>
-#include <gnutls/x509.h>
+#include <glib.h>                   // g_clear_pointer, g_file_get_contents
+#include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_E_SUCCESS
+#include <gnutls/x509.h>            // gnutls_x509_*
+#include <qb/qblog.h>               // QB_XS
+
+#include <crm/common/internal.h>
+#include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/lrmd.h>               // DEFAULT_REMOTE_USERNAME
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
@@ -132,36 +144,8 @@ pcmk__free_tls(pcmk__tls_t *tls)
     }
 
     free(tls);
-    tls = NULL;
 }
 
-/*!
- * \internal
- * \brief Initialize a new TLS object
- *
- * This function initializes \p tls as an environment for TLS connections. This
- * is in contrast to \c pcmk__new_tls_session(), which initializes a single
- * session within that environment.
- *
- * X.509 certificates are used if configured via environment variables.
- * Otherwise, we fall back to either pre-shared keys (PSK) or anonymous
- * authentication, depending on the value of \p have_psk.
- *
- * \param[out] tls       Where to store new TLS object
- * \param[in]  server    Current process is a server if \c true or a client if
- *                       \c false
- * \param[in]  have_psk  If X.509 certificates are not enabled, then use
- *                       \c GNUTLS_CRD_PSK (pre-shared keys) if this is \c true
- *                       or \c GNUTLS_CRD_ANON (anonymous authentication) if
- *                       this is \c false
- *
- * \return Standard Pacemaker return code
- *
- * \note CIB remote clients and the CIB manager's remote listener are the only
- *       things that use anonymous authentication when X.509 is disabled. Task
- *       T961 is open to implement PSK for those. The only other callers are
- *       executor clients and listeners, which already use PSK.
- */
 int
 pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
 {
@@ -181,8 +165,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     if (server) {
         rc = pcmk__init_tls_dh(&(*tls)->dh_params);
         if (rc != pcmk_rc_ok) {
-            pcmk__free_tls(*tls);
-            *tls = NULL;
+            g_clear_pointer(tls, pcmk__free_tls);
             return rc;
         }
     }
@@ -242,8 +225,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
 
         rc = tls_load_x509_data(*tls);
         if (rc != pcmk_rc_ok) {
-            pcmk__free_tls(*tls);
-            *tls = NULL;
+            g_clear_pointer(tls, pcmk__free_tls);
             return rc;
         }
     } else {    // GNUTLS_CRD_PSK
@@ -385,17 +367,6 @@ error:
     return NULL;
 }
 
-/*!
- * \internal
- * \brief Get the socket file descriptor for a remote connection's TLS session
- *
- * \param[in] remote  Remote connection
- *
- * \return Socket file descriptor for \p remote
- *
- * \note The remote connection's \c tls_session must have already been
- *       initialized using \c pcmk__new_tls_session().
- */
 int
 pcmk__tls_get_client_sock(const pcmk__remote_t *remote)
 {
@@ -568,4 +539,37 @@ pcmk__x509_enabled(void)
             !pcmk__str_empty(getenv("CIB_ca_file"))) &&
            (!pcmk__str_empty(pcmk__env_option(PCMK__ENV_KEY_FILE)) ||
             !pcmk__str_empty(getenv("CIB_key_file")));
+}
+
+void
+pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
+{
+    pcmk__assert((dest != NULL) && (source != NULL) && (source->data != NULL));
+
+    dest->data = gnutls_malloc(source->size);
+    pcmk__mem_assert(dest->data);
+
+    memcpy(dest->data, source->data, source->size);
+    dest->size = source->size;
+}
+
+int
+pcmk__load_key(const char *location, gnutls_datum_t *key)
+{
+    gchar *contents = NULL;
+    gsize len = 0;
+
+    pcmk__assert((location != NULL) && (key != NULL));
+
+    if (!g_file_get_contents(location, &contents, &len, NULL)) {
+        return ENOKEY;
+    }
+
+    key->size = len;
+    key->data = gnutls_malloc(key->size);
+    pcmk__mem_assert(key->data);
+    memcpy(key->data, contents, key->size);
+
+    g_free(contents);
+    return pcmk_rc_ok;
 }

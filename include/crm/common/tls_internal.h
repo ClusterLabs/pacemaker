@@ -52,6 +52,33 @@ typedef struct {
  */
 void pcmk__free_tls(pcmk__tls_t *tls);
 
+/*!
+ * \internal
+ * \brief Initialize a new TLS object
+ *
+ * This function initializes \p tls as an environment for TLS connections. This
+ * is in contrast to \c pcmk__new_tls_session(), which initializes a single
+ * session within that environment.
+ *
+ * X.509 certificates are used if configured via environment variables.
+ * Otherwise, we fall back to either pre-shared keys (PSK) or anonymous
+ * authentication, depending on the value of \p have_psk.
+ *
+ * \param[out] tls       Where to store new TLS object
+ * \param[in]  server    Current process is a server if \c true or a client if
+ *                       \c false
+ * \param[in]  have_psk  If X.509 certificates are not enabled, then use
+ *                       \c GNUTLS_CRD_PSK (pre-shared keys) if this is \c true
+ *                       or \c GNUTLS_CRD_ANON (anonymous authentication) if
+ *                       this is \c false
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note CIB remote clients and the CIB manager's remote listener are the only
+ *       things that use anonymous authentication when X.509 is disabled. Task
+ *       T961 is open to implement PSK for those. The only other callers are
+ *       executor clients and listeners, which already use PSK.
+ */
 int pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk);
 
 /*!
@@ -82,6 +109,17 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  */
 gnutls_session_t pcmk__new_tls_session(pcmk__tls_t *tls, int csock);
 
+/*!
+ * \internal
+ * \brief Get the socket file descriptor for a remote connection's TLS session
+ *
+ * \param[in] remote  Remote connection
+ *
+ * \return Socket file descriptor for \p remote
+ *
+ * \note The remote connection's \c tls_session must have already been
+ *       initialized using \c pcmk__new_tls_session().
+ */
 int pcmk__tls_get_client_sock(const pcmk__remote_t *remote);
 
 /*!
@@ -167,6 +205,26 @@ int pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc);
  *         etc/sysconfig/pacemaker.in), otherwise false
  */
 bool pcmk__x509_enabled(void);
+
+/*!
+ * \internal
+ * \brief Copy an authentication key
+ *
+ * \param[out] dest    Where to copy the authentication key
+ * \param[in]  source  The authentication key to copy
+ */
+void pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source);
+
+/*!
+ * \internal
+ * \brief Attempt to load an authentication key from disk
+ *
+ * \param[in]  location  The file path to read from
+ * \param[out] dest      Where to store the authentication key
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__load_key(const char *location, gnutls_datum_t *key);
 
 #ifdef __cplusplus
 }

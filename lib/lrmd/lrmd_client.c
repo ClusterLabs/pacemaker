@@ -9,39 +9,38 @@
 
 #include <crm_internal.h>
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>         // uint32_t, uint64_t
-#include <stdarg.h>
-#include <string.h>
-#include <ctype.h>
-#include <errno.h>
+#include <errno.h>                  // EINVAL, ENOMEM, ENOTCONN
+#include <stdbool.h>                // true, bool, false
+#include <stdint.h>                 // uint32_t, uint64_t
+#include <stdlib.h>                 // NULL, free, calloc
+#include <string.h>                 // strdup, strcmp, strlen
+#include <sys/types.h>              // time_t, ssize_t
+#include <time.h>                   // time
+#include <unistd.h>                 // close
 
-#include <sys/types.h>
-#include <sys/wait.h>
+#include <glib.h>                   // g_list_free_full, gpointer
+#include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
+#include <libxml/parser.h>          // xmlNode
+#include <qb/qbdefs.h>              // QB_MAX
+#include <qb/qblog.h>               // QB_XS
 
-#include <glib.h>
-#include <dirent.h>
-
-#include <crm/crm.h>
-#include <crm/lrmd.h>
-#include <crm/lrmd_internal.h>
-#include <crm/services.h>
-#include <crm/services_internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-
-#include <crm/stonith-ng.h>
+#include <crm/common/actions.h>     // PCMK_DEFAULT_ACTION_TIMEOUT_MS
+#include <crm/common/agents.h>      // PCMK_RESOURCE_CLASS_STONITH
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/mainloop.h>    // mainloop_set_trigger
+#include <crm/common/nvpair.h>      // hash2smartfield, xml2list
+#include <crm/common/options.h>     // PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_rc2legacy
+#include <crm/common/util.h>        // crm_default_remote_port
+#include <crm/crm.h>                // CRM_OP_REGISTER, CRM_SYSTEM_LRMD
 #include <crm/fencing/internal.h>   // stonith__*
-
-#include <gnutls/gnutls.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
-#include <netdb.h>
+#include <crm/lrmd.h>               // lrmd_t, lrmd_s, lrmd_key_value_t
+#include <crm/lrmd_events.h>        // lrmd_event_*
+#include <crm/lrmd_internal.h>      // lrmd__init_remote_key
+#include <crm/services.h>           // services_action_free
+#include <crm/services_internal.h>  // services__copy_result
 
 #define MAX_TLS_RECV_WAIT 10000
 
@@ -62,6 +61,8 @@ static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static void lrmd_tls_connection_destroy(gpointer userdata);
 static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
+
+static gnutls_datum_t remote_key = { NULL, 0 };
 
 typedef struct lrmd_private_s {
     uint64_t type;
@@ -1146,159 +1147,6 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     return rc;
 }
 
-static void
-copy_gnutls_datum(gnutls_datum_t *dest, gnutls_datum_t *source)
-{
-    pcmk__assert((dest != NULL) && (source != NULL) && (source->data != NULL));
-
-    dest->data = gnutls_malloc(source->size);
-    pcmk__mem_assert(dest->data);
-
-    memcpy(dest->data, source->data, source->size);
-    dest->size = source->size;
-}
-
-static void
-clear_gnutls_datum(gnutls_datum_t *datum)
-{
-    gnutls_free(datum->data);
-    datum->data = NULL;
-    datum->size = 0;
-}
-
-#define KEY_READ_LEN 256    // Chunk size for reading key from file
-
-// \return Standard Pacemaker return code
-static int
-read_gnutls_key(const char *location, gnutls_datum_t *key)
-{
-    FILE *stream = NULL;
-    size_t buf_len = KEY_READ_LEN;
-
-    if ((location == NULL) || (key == NULL)) {
-        return EINVAL;
-    }
-
-    stream = fopen(location, "r");
-    if (stream == NULL) {
-        return errno;
-    }
-
-    key->data = gnutls_malloc(buf_len);
-    key->size = 0;
-    while (!feof(stream)) {
-        int next = fgetc(stream);
-
-        if (next == EOF) {
-            if (!feof(stream)) {
-                pcmk__warn("Pacemaker Remote key read was partially successful "
-                           "(copy in memory may be corrupted)");
-            }
-            break;
-        }
-        if (key->size == buf_len) {
-            buf_len = key->size + KEY_READ_LEN;
-            key->data = gnutls_realloc(key->data, buf_len);
-            pcmk__assert(key->data);
-        }
-        key->data[key->size++] = (unsigned char) next;
-    }
-    fclose(stream);
-
-    if (key->size == 0) {
-        clear_gnutls_datum(key);
-        return ENOKEY;
-    }
-    return pcmk_rc_ok;
-}
-
-// Cache the most recently used Pacemaker Remote authentication key
-
-struct key_cache_s {
-    time_t updated;         // When cached key was read (valid for 1 minute)
-    const char *location;   // Where cached key was read from
-    gnutls_datum_t key;     // Cached key
-};
-
-static bool
-key_is_cached(struct key_cache_s *key_cache)
-{
-    return key_cache->updated != 0;
-}
-
-static bool
-key_cache_expired(struct key_cache_s *key_cache)
-{
-    return (time(NULL) - key_cache->updated) >= 60;
-}
-
-static void
-clear_key_cache(struct key_cache_s *key_cache)
-{
-    clear_gnutls_datum(&(key_cache->key));
-    if ((key_cache->updated != 0) || (key_cache->location != NULL)) {
-        key_cache->updated = 0;
-        key_cache->location = NULL;
-        pcmk__debug("Cleared Pacemaker Remote key cache");
-    }
-}
-
-static void
-get_cached_key(struct key_cache_s *key_cache, gnutls_datum_t *key)
-{
-    copy_gnutls_datum(key, &(key_cache->key));
-    pcmk__debug("Using cached Pacemaker Remote key from %s",
-                pcmk__s(key_cache->location, "unknown location"));
-}
-
-static void
-cache_key(struct key_cache_s *key_cache, gnutls_datum_t *key,
-          const char *location)
-{
-    key_cache->updated = time(NULL);
-    key_cache->location = location;
-    copy_gnutls_datum(&(key_cache->key), key);
-    pcmk__debug("Using (and cacheing) Pacemaker Remote key from %s",
-                pcmk__s(location, "unknown location"));
-}
-
-/*!
- * \internal
- * \brief Get Pacemaker Remote authentication key from file or cache
- *
- * \param[in]  location         Path to key file to try (this memory must
- *                              persist across all calls of this function)
- * \param[out] key              Key from location or cache
- *
- * \return Standard Pacemaker return code
- */
-static int
-get_remote_key(const char *location, gnutls_datum_t *key)
-{
-    static struct key_cache_s key_cache = { 0, };
-    int rc = pcmk_rc_ok;
-
-    if ((location == NULL) || (key == NULL)) {
-        return EINVAL;
-    }
-
-    if (key_is_cached(&key_cache)) {
-        if (key_cache_expired(&key_cache)) {
-            clear_key_cache(&key_cache);
-        } else {
-            get_cached_key(&key_cache, key);
-            return pcmk_rc_ok;
-        }
-    }
-
-    rc = read_gnutls_key(location, key);
-    if (rc != pcmk_rc_ok) {
-        return rc;
-    }
-    cache_key(&key_cache, key, location);
-    return pcmk_rc_ok;
-}
-
 /*!
  * \internal
  * \brief Initialize the Pacemaker Remote authentication key
@@ -1326,10 +1174,17 @@ lrmd__init_remote_key(gnutls_datum_t *key)
         need_env = false;
     }
 
+    if (remote_key.data != NULL) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
     // Try location in environment variable, if set
     if (env_location != NULL) {
-        rc = get_remote_key(env_location, key);
+        rc = pcmk__load_key(env_location, &remote_key);
+
         if (rc == pcmk_rc_ok) {
+            pcmk__copy_key(key, &remote_key);
             return pcmk_rc_ok;
         }
 
@@ -1339,8 +1194,10 @@ lrmd__init_remote_key(gnutls_datum_t *key)
     }
 
     // Try default location, if environment wasn't explicitly set to it
-    rc = get_remote_key(DEFAULT_REMOTE_KEY_LOCATION, key);
+    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key);
+
     if (rc == pcmk_rc_ok) {
+        pcmk__copy_key(key, &remote_key);
         return pcmk_rc_ok;
     }
 
@@ -1635,7 +1492,7 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     if (native->tls == NULL) {
         rc = pcmk__init_tls(&native->tls, false, true);
 
-        if (rc != pcmk_rc_ok) {
+        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
             lrmd_tls_connection_destroy(lrmd);
             return rc;
         }
