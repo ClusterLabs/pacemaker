@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -3297,12 +3297,13 @@ handle_unknown_request(pcmk__request_t *request)
 static xmlNode *
 handle_register_request(pcmk__request_t *request)
 {
-    xmlNode *reply = pcmk__xe_create(NULL, "reply");
+    xmlNode *reply = NULL;
 
     if (request->peer != NULL) {
         return handle_unknown_request(request);
     }
 
+    reply = pcmk__xe_create(NULL, "reply");
     pcmk__xe_set(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
     pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
