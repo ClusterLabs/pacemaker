@@ -484,23 +484,17 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
 
     *result = NULL;
     if ((xml == NULL) || !pcmk_acl_required(user)) {
-        pcmk__trace("Not filtering XML because ACLs not required for user '%s'",
-                    user);
         return false;
     }
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
+
     target = pcmk__xml_copy(NULL, xml);
-    if (target == NULL) {
-        return true;
-    }
+    docpriv = target->doc->_private;
 
     pcmk__enable_acl(acl_source, target, user);
 
-    docpriv = target->doc->_private;
-    for (const GList *iter = docpriv->acls; (iter != NULL) && (target != NULL);
-         iter = iter->next) {
-
+    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
         const xml_acl_t *acl = iter->data;
         xmlXPathObject *xpath_obj = NULL;
         int num_results = 0;
