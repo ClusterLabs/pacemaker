@@ -3418,8 +3418,7 @@ handle_notify_request(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
 
-    return pcmk__ipc_create_ack(request->ipc_flags, PCMK__XE_ACK, NULL,
-                                CRM_EX_OK);
+    return pcmk__ipc_create_ack(request->ipc_flags, NULL, CRM_EX_OK);
 }
 
 // STONITH_OP_RELAY
