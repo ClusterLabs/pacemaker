@@ -221,10 +221,10 @@ xmlNode *pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
     pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (ver), (st))
 
 int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                          uint32_t request, uint32_t flags, const char *tag,
-                          const char *ver, crm_exit_t status);
+                          uint32_t request, uint32_t flags, const char *ver,
+                          crm_exit_t status);
 #define pcmk__ipc_send_ack(c, req, flags, tag, ver, st) \
-    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
+    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (ver), (st))
 
 int pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
                           uint16_t index, struct iovec **result, ssize_t *bytes);
