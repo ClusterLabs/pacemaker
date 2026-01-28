@@ -992,7 +992,6 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  * \param[in] c         Client to send ack to
  * \param[in] request   Request ID being replied to
  * \param[in] flags     IPC flags to use when sending
- * \param[in] tag       Element name to use for acknowledgement
  * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Status code to send with acknowledgement
  *
@@ -1000,20 +999,23 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  */
 int
 pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                      uint32_t request, uint32_t flags, const char *tag,
-                      const char *ver, crm_exit_t status)
+                      uint32_t request, uint32_t flags, const char *ver,
+                      crm_exit_t status)
 {
     int rc = pcmk_rc_ok;
     xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, ver, status);
 
-    if (ack != NULL) {
-        pcmk__trace("Ack'ing IPC message from client %s as <%s status=%d>",
-                    pcmk__client_name(c), tag, status);
-        pcmk__log_xml_trace(ack, "sent-ack");
-        c->request_id = 0;
-        rc = pcmk__ipc_send_xml(c, request, ack, flags);
-        pcmk__xml_free(ack);
+    if (ack == NULL) {
+        return rc;
     }
+
+    pcmk__trace("Ack'ing IPC message from client %s as <" PCMK__XE_ACK
+                " status=%d>",
+                pcmk__client_name(c), status);
+    pcmk__log_xml_trace(ack, "sent-ack");
+    c->request_id = 0;
+    rc = pcmk__ipc_send_xml(c, request, ack, flags);
+    pcmk__xml_free(ack);
     return rc;
 }
 
