@@ -122,8 +122,7 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 
     if (msg == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
-                           CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
@@ -200,7 +199,7 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
             status = CRM_EX_INVALID_PARAM;
         }
 
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL, status);
+        pcmk__ipc_send_ack(client, id, flags, NULL, status);
         return 0;
     }
 
