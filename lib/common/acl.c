@@ -47,6 +47,32 @@ pcmk__free_acls(GList *acls)
     g_list_free_full(acls, free_acl);
 }
 
+/*!
+ * \internal
+ * \brief Parse an ACL mode from a string
+ *
+ * \param[in] text  String to parse
+ *
+ * \return ACL mode corresponding to \p text
+ */
+static enum pcmk__xml_flags
+parse_acl_mode(const char *text)
+{
+    if (pcmk__str_eq(text, PCMK_VALUE_READ, pcmk__str_none)) {
+        return pcmk__xf_acl_read;
+    }
+
+    if (pcmk__str_eq(text, PCMK_VALUE_WRITE, pcmk__str_none)) {
+        return pcmk__xf_acl_write;
+    }
+
+    if (pcmk__str_eq(text, PCMK_VALUE_DENY, pcmk__str_none)) {
+        return pcmk__xf_acl_deny;
+    }
+
+    return pcmk__xf_none;
+}
+
 static GList *
 create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 {
@@ -103,6 +129,65 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
 
 /*!
  * \internal
+ * \brief Unpack a \c PCMK_XE_ACL_PERMISSION element to an \c xml_acl_t
+ *
+ * Append the new \c xml_acl_t object to a list.
+ *
+ * \param[in]     xml   Permission element to unpack
+ * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
+ *
+ * \return On success, \p acls with the new item appended, or a new list
+ *         containing only the new item if \p acls is \c NULL. On failure,
+ *         \p acls (unmodified).
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__free_acls().
+ */
+static GList *
+unpack_acl_permission(const xmlNode *xml, GList *acls)
+{
+    const char *id = pcmk__xe_id(xml);
+    const char *type = (const char *) xml->name;
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    const char *kind_s = pcmk__xe_get(xml, PCMK_XA_KIND);
+    enum pcmk__xml_flags kind = pcmk__xf_none;
+
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_warn("<%s> element in <%s> %s has no " PCMK_XA_ID " "
+                          "attribute", type, parent_type, parent_id);
+
+        // Set a value to use for logging and continue unpacking
+        id = "without ID";
+    }
+
+    if (kind_s == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with no "
+                         PCMK_XA_KIND " attribute", type, id, parent_type,
+                         parent_id);
+        return acls;
+    }
+
+    kind = parse_acl_mode(kind_s);
+    if (kind == pcmk__xf_none) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with unknown "
+                         "ACL kind '%s'", type, id, parent_type, parent_id,
+                         kind_s);
+        return acls;
+    }
+
+    pcmk__trace("Unpacking <%s> element %s (in <%s> %s) with "
+                PCMK_XA_KIND "='%s'", type, id, parent_type, parent_id, kind_s);
+
+    return create_acl(xml, acls, kind);
+}
+
+/*!
+ * \internal
  * \brief Unpack a user, group, or role subtree of the ACLs section
  *
  * \param[in]     acl_top    XML of entire ACLs section
@@ -121,25 +206,7 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
          child != NULL; child = pcmk__xe_next(child, NULL)) {
 
         if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
-            const char *kind = pcmk__xe_get(child, PCMK_XA_KIND);
-
-            pcmk__assert(kind != NULL);
-            pcmk__trace("Unpacking <" PCMK_XE_ACL_PERMISSION "> element of "
-                        "kind '%s'",
-                        kind);
-
-            if (pcmk__str_eq(kind, PCMK_VALUE_READ, pcmk__str_none)) {
-                acls = create_acl(child, acls, pcmk__xf_acl_read);
-
-            } else if (pcmk__str_eq(kind, PCMK_VALUE_WRITE, pcmk__str_none)) {
-                acls = create_acl(child, acls, pcmk__xf_acl_write);
-
-            } else if (pcmk__str_eq(kind, PCMK_VALUE_DENY, pcmk__str_none)) {
-                acls = create_acl(child, acls, pcmk__xf_acl_deny);
-
-            } else {
-                pcmk__warn("Ignoring unknown ACL kind '%s'", kind);
-            }
+            acls = unpack_acl_permission(child, acls);
 
         } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
             const char *ref_role = pcmk__xe_get(child, PCMK_XA_ID);
@@ -150,25 +217,21 @@ parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
                 continue;
             }
 
-            for (xmlNode *role = pcmk__xe_first_child(acl_top, NULL, NULL,
-                                                      NULL);
-                 role != NULL; role = pcmk__xe_next(role, NULL)) {
+            for (const xmlNode *role = pcmk__xe_first_child(acl_top,
+                                                            PCMK_XE_ACL_ROLE,
+                                                            NULL, NULL);
+                 role != NULL; role = pcmk__xe_next(role, PCMK_XE_ACL_ROLE)) {
 
-                const char *role_id = NULL;
+                const char *role_id = pcmk__xe_id(role);
 
-                if (!pcmk__xe_is(role, PCMK_XE_ACL_ROLE)) {
+                if (!pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
                     continue;
                 }
 
-                role_id = pcmk__xe_get(role, PCMK_XA_ID);
-
-                if (pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
-                    pcmk__trace("Unpacking referenced role '%s' in <%s> "
-                                "element",
-                                role_id, acl_entry->name);
-                    acls = parse_acl_entry(acl_top, role, acls);
-                    break;
-                }
+                pcmk__trace("Unpacking referenced role '%s' in <%s> element",
+                            role_id, acl_entry->name);
+                acls = parse_acl_entry(acl_top, role, acls);
+                break;
             }
         }
     }
@@ -214,92 +277,73 @@ acl_to_text(enum pcmk__xml_flags flags)
     return "none";
 }
 
-void
-pcmk__apply_acl(xmlNode *xml)
+static void
+apply_acl(xmlNode *match, void *user_data)
 {
-    GList *aIter = NULL;
-    xml_doc_private_t *docpriv = NULL;
+    const xml_acl_t *acl = user_data;
     xml_node_private_t *nodepriv = NULL;
-    xmlXPathObject *xpathObj = NULL;
+    GString *path = NULL;
 
-    pcmk__assert(xml != NULL);
-
-    docpriv = xml->doc->_private;
-
-    if (!pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_acl_enabled)) {
-        pcmk__trace("Skipping ACLs for user '%s' because not enabled for this "
-                    "XML", pcmk__s(docpriv->acl_user, "(unknown)"));
+    /* @COMPAT If the ACL's XPath matches a node that is neither an element nor
+     * a document, we apply the ACL to the parent element rather than to the
+     * matched node. For example, if the XPath matches a "score" attribute, then
+     * it applies to every element that contains a "score" attribute. That is,
+     * the XPath expression "//@score" matches all attributes named "score", but
+     * we apply the ACL to all elements containing such an attribute.
+     *
+     * This behavior is incorrect from an XPath standpoint and is thus confusing
+     * and counterintuitive. The correct way to match all elements containing a
+     * "score" attribute is to use an XPath predicate: "// *[@score]". (Space
+     * inserted after slashes so that GCC doesn't throw an error about nested
+     * comments.)
+     *
+     * Additionally, if an XPath expression matches the entire document (for
+     * example, "/"), then the ACL applies to the document's root element if it
+     * exists.
+     *
+     * These behaviors should be changed so that the ACL applies to the nodes
+     * matched by the XPath expression, or so that it doesn't apply at all if
+     * applying an ACL to an attribute doesn't make sense.
+     *
+     * Unfortunately, we document in Pacemaker Explained that matching
+     * attributes is a valid way to match elements: "Attributes may be specified
+     * in the XPath to select particular elements, but the permissions apply to
+     * the entire element."
+     *
+     * So we have to keep this behavior at least until a compatibility break.
+     * Even then, it's not feasible in the general case to transform such XPath
+     * expressions using XSLT.
+     */
+    match = pcmk__xpath_match_element(match);
+    if (match == NULL) {
         return;
     }
 
-    for (aIter = docpriv->acls; aIter != NULL; aIter = aIter->next) {
-        int max = 0, lpc = 0;
-        xml_acl_t *acl = aIter->data;
+    nodepriv = match->_private;
+    pcmk__set_xml_flags(nodepriv, acl->mode);
 
-        xpathObj = pcmk__xpath_search(xml->doc, acl->xpath);
-        max = pcmk__xpath_num_results(xpathObj);
+    path = pcmk__element_xpath(match);
+    pcmk__trace("Applied %s ACL to %s matched by %s", acl_to_text(acl->mode),
+                path->str, acl->xpath);
+    g_string_free(path, TRUE);
+}
 
-        for (lpc = 0; lpc < max; lpc++) {
-            xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
+void
+pcmk__apply_acls(xmlDoc *doc)
+{
+    xml_doc_private_t *docpriv = NULL;
 
-            if (match == NULL) {
-                continue;
-            }
+    pcmk__assert(doc != NULL);
+    docpriv = doc->_private;
 
-            /* @COMPAT If the ACL's XPath matches a node that is neither an
-             * element nor a document, we apply the ACL to the parent element
-             * rather than to the matched node. For example, if the XPath
-             * matches a "score" attribute, then it applies to every element
-             * that contains a "score" attribute. That is, the XPath expression
-             * "//@score" matches all attributes named "score", but we apply the
-             * ACL to all elements containing such an attribute.
-             *
-             * This behavior is incorrect from an XPath standpoint and is thus
-             * confusing and counterintuitive. The correct way to match all
-             * elements containing a "score" attribute is to use an XPath
-             * predicate: "// *[@score]". (Space inserted after slashes so that
-             * GCC doesn't throw an error about nested comments.)
-             *
-             * Additionally, if an XPath expression matches the entire document
-             * (for example, "/"), then the ACL applies to the document's root
-             * element if it exists.
-             *
-             * These behaviors should be changed so that the ACL applies to the
-             * nodes matched by the XPath expression, or so that it doesn't
-             * apply at all if applying an ACL to an attribute doesn't make
-             * sense.
-             *
-             * Unfortunately, we document in Pacemaker Explained that matching
-             * attributes is a valid way to match elements: "Attributes may be
-             * specified in the XPath to select particular elements, but the
-             * permissions apply to the entire element."
-             *
-             * So we have to keep this behavior at least until a compatibility
-             * break. Even then, it's not feasible in the general case to
-             * transform such XPath expressions using XSLT.
-             */
-            match = pcmk__xpath_match_element(match);
-            if (match == NULL) {
-                continue;
-            }
+    if (!pcmk__xml_doc_all_flags_set(doc, pcmk__xf_acl_enabled)) {
+        return;
+    }
 
-            nodepriv = match->_private;
-            pcmk__set_xml_flags(nodepriv, acl->mode);
+    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
+        const xml_acl_t *acl = iter->data;
 
-            // Build a GString only if tracing is enabled
-            pcmk__if_tracing(
-                {
-                    GString *path = pcmk__element_xpath(match);
-                    pcmk__trace("Applying %s ACL to %s matched by %s",
-                                acl_to_text(acl->mode), path->str, acl->xpath);
-                    g_string_free(path, TRUE);
-                },
-                {}
-            );
-        }
-        pcmk__trace("Applied %s ACL %s (%d match%s)", acl_to_text(acl->mode),
-                    acl->xpath, max, ((max == 1)? "" : "es"));
-        xmlXPathFreeObject(xpathObj);
+        pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl, (void *) acl);
     }
 }
 
@@ -317,57 +361,54 @@ pcmk__apply_acl(xmlNode *xml)
  * \param[in]     user    Username whose ACLs need to be unpacked
  */
 void
-pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user)
+pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
 {
     xml_doc_private_t *docpriv = NULL;
+    xmlNode *acls = NULL;
 
-    if ((target == NULL) || (target->doc == NULL)
-        || (target->doc->_private == NULL)) {
+    pcmk__assert(target != NULL);
+
+    docpriv = target->doc->_private;
+    if (!pcmk_acl_required(user) || (docpriv->acls != NULL)) {
         return;
     }
 
-    docpriv = target->doc->_private;
-    if (!pcmk_acl_required(user)) {
-        pcmk__trace("Not unpacking ACLs because not required for user '%s'",
-                    user);
+    pcmk__str_update(&docpriv->acl_user, user);
 
-    } else if (docpriv->acls == NULL) {
-        xmlNode *acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
-                                             PCMK__LOG_NEVER);
+    acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
+                                PCMK__LOG_NEVER);
 
-        pcmk__str_update(&(docpriv->acl_user), user);
+    for (const xmlNode *child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
+         child != NULL; child = pcmk__xe_next(child, NULL)) {
 
-        if (acls) {
-            xmlNode *child = NULL;
+        const bool is_target = pcmk__xe_is(child, PCMK_XE_ACL_TARGET);
+        const bool is_group = pcmk__xe_is(child, PCMK_XE_ACL_GROUP);
+        const char *id = NULL;
 
-            for (child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
-                 child != NULL; child = pcmk__xe_next(child, NULL)) {
-
-                if (pcmk__xe_is(child, PCMK_XE_ACL_TARGET)) {
-                    const char *id = pcmk__xe_get(child, PCMK_XA_NAME);
-
-                    if (id == NULL) {
-                        id = pcmk__xe_get(child, PCMK_XA_ID);
-                    }
-
-                    if (id && strcmp(id, user) == 0) {
-                        pcmk__debug("Unpacking ACLs for user '%s'", id);
-                        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
-                    }
-                } else if (pcmk__xe_is(child, PCMK_XE_ACL_GROUP)) {
-                    const char *id = pcmk__xe_get(child, PCMK_XA_NAME);
-
-                    if (id == NULL) {
-                        id = pcmk__xe_get(child, PCMK_XA_ID);
-                    }
-
-                    if (id && pcmk__is_user_in_group(user,id)) {
-                        pcmk__debug("Unpacking ACLs for group '%s'", id);
-                        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
-                    }
-                }
-            }
+        if (!is_target && !is_group) {
+            continue;
         }
+
+        id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME), pcmk__xe_id(child));
+        if (id == NULL) {
+            // Not possible with schema validation enabled
+            continue;
+        }
+
+        if (is_target) {
+            if (!pcmk__str_eq(id, user, pcmk__str_none)) {
+                continue;
+            }
+            pcmk__debug("Unpacking ACLs for user '%s'", id);
+
+        } else {
+            if (!pcmk__is_user_in_group(user, id)) {
+                continue;
+            }
+            pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id, user);
+        }
+
+        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
     }
 }
 
@@ -385,9 +426,9 @@ pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
     if (target == NULL) {
         return;
     }
-    pcmk__unpack_acl(acl_source, target, user);
+    pcmk__unpack_acls(acl_source, target, user);
     pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
-    pcmk__apply_acl(target);
+    pcmk__apply_acls(target->doc);
 }
 
 static inline bool
@@ -413,6 +454,24 @@ test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
 
 /*!
  * \internal
+ * \brief Check whether an XML attribute's name is not \c PCMK_XA_ID
+ *
+ * \param[in] attr       Attribute to check
+ * \param[in] user_data  Ignored
+ *
+ * \return \c true if the attribute's name is not \c PCMK_XA_ID, or \c false
+ *         otherwise
+ *
+ * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
+ */
+static bool
+attr_is_not_id(xmlAttr *attr, void *user_data)
+{
+    return !pcmk__str_eq((const char *) attr->name, PCMK_XA_ID, pcmk__str_none);
+}
+
+/*!
+ * \internal
  * \brief Rid XML tree of all unreadable nodes and node properties
  *
  * \param[in,out] xml   Root XML node to be purged of attributes
@@ -426,7 +485,6 @@ static bool
 purge_xml_attributes(xmlNode *xml)
 {
     xmlNode *child = NULL;
-    xmlAttr *xIter = NULL;
     bool readable_children = false;
     xml_node_private_t *nodepriv = xml->_private;
 
@@ -436,25 +494,17 @@ purge_xml_attributes(xmlNode *xml)
         return true;
     }
 
-    xIter = xml->properties;
-    while (xIter != NULL) {
-        xmlAttr *tmp = xIter;
-        const char *prop_name = (const char *)xIter->name;
+    pcmk__xe_remove_matching_attrs(xml, true, attr_is_not_id, NULL);
 
-        xIter = xIter->next;
-        if (strcmp(prop_name, PCMK_XA_ID) == 0) {
-            continue;
-        }
-
-        pcmk__xa_remove(tmp, true);
-    }
-
-    child = pcmk__xml_first_child(xml);
-    while ( child != NULL ) {
+    child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
+    while (child != NULL) {
         xmlNode *tmp = child;
 
-        child = pcmk__xml_next(child);
-        readable_children |= purge_xml_attributes(tmp);
+        child = pcmk__xe_next(child, NULL);
+
+        if (purge_xml_attributes(tmp)) {
+            readable_children = true;
+        }
     }
 
     if (!readable_children) {
@@ -479,65 +529,57 @@ bool
 xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
                       xmlNode **result)
 {
-    GList *aIter = NULL;
     xmlNode *target = NULL;
     xml_doc_private_t *docpriv = NULL;
 
     *result = NULL;
     if ((xml == NULL) || !pcmk_acl_required(user)) {
-        pcmk__trace("Not filtering XML because ACLs not required for user '%s'",
-                    user);
         return false;
     }
 
-    pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
     target = pcmk__xml_copy(NULL, xml);
-    if (target == NULL) {
-        return true;
-    }
+    docpriv = target->doc->_private;
 
     pcmk__enable_acl(acl_source, target, user);
 
-    docpriv = target->doc->_private;
-    for(aIter = docpriv->acls; aIter != NULL && target; aIter = aIter->next) {
-        int max = 0;
-        xml_acl_t *acl = aIter->data;
+    pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
-        if (acl->mode != pcmk__xf_acl_deny) {
-            /* Nothing to do */
+    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
+        const xml_acl_t *acl = iter->data;
+        xmlXPathObject *xpath_obj = NULL;
+        int num_results = 0;
 
-        } else if (acl->xpath) {
-            int lpc = 0;
-            xmlXPathObject *xpathObj = pcmk__xpath_search(target->doc,
-                                                          acl->xpath);
-
-            max = pcmk__xpath_num_results(xpathObj);
-            for(lpc = 0; lpc < max; lpc++) {
-                xmlNode *match = pcmk__xpath_result(xpathObj, lpc);
-
-                if (match == NULL) {
-                    continue;
-                }
-
-                // @COMPAT See COMPAT comment in pcmk__apply_acl()
-                match = pcmk__xpath_match_element(match);
-                if (match == NULL) {
-                    continue;
-                }
-
-                if (!purge_xml_attributes(match) && (match == target)) {
-                    pcmk__trace("ACLs deny user '%s' access to entire XML "
-                                "document",
-                                user);
-                    xmlXPathFreeObject(xpathObj);
-                    return true;
-                }
-            }
-            pcmk__trace("ACLs deny user '%s' access to %s (%d %s)", user,
-                        acl->xpath, max,
-                        pcmk__plural_alt(max, "match", "matches"));
-            xmlXPathFreeObject(xpathObj);
+        if ((acl->mode != pcmk__xf_acl_deny) || (acl->xpath == NULL)) {
+            continue;
         }
+
+        xpath_obj = pcmk__xpath_search(target->doc, acl->xpath);
+        num_results = pcmk__xpath_num_results(xpath_obj);
+
+        for (int i = 0; i < num_results; i++) {
+            xmlNode *match = pcmk__xpath_result(xpath_obj, i);
+
+            if (match == NULL) {
+                continue;
+            }
+
+            // @COMPAT See COMPAT comment in pcmk__apply_acls()
+            match = pcmk__xpath_match_element(match);
+            if (match == NULL) {
+                continue;
+            }
+
+            if (!purge_xml_attributes(match) && (match == target)) {
+                pcmk__trace("ACLs deny user '%s' access to entire XML document",
+                            user);
+                xmlXPathFreeObject(xpath_obj);
+                return true;
+            }
+        }
+        pcmk__trace("ACLs deny user '%s' access to %s (%d match%s)", user,
+                    acl->xpath, num_results,
+                    pcmk__plural_alt(num_results, "", "es"));
+        xmlXPathFreeObject(xpath_obj);
     }
 
     if (!purge_xml_attributes(target)) {
@@ -545,22 +587,15 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
         return true;
     }
 
-    if (docpriv->acls) {
-        g_list_free_full(docpriv->acls, free_acl);
-        docpriv->acls = NULL;
-
-    } else {
+    if (docpriv->acls == NULL) {
         pcmk__trace("User '%s' without ACLs denied access to entire XML "
-                    "document",
-                    user);
+                    "document", user);
         pcmk__xml_free(target);
-        target = NULL;
+        return true;
     }
 
-    if (target) {
-        *result = target;
-    }
-
+    g_clear_pointer(&docpriv->acls, pcmk__free_acls);
+    *result = target;
     return true;
 }
 
@@ -698,7 +733,7 @@ xml_acl_disable(xmlNode *xml)
         xml_doc_private_t *docpriv = xml->doc->_private;
 
         /* Catch anything that was created but shouldn't have been */
-        pcmk__apply_acl(xml);
+        pcmk__apply_acls(xml->doc);
         pcmk__apply_creation_acl(xml, false);
         pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
