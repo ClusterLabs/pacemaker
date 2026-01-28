@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -382,8 +382,7 @@ confirmation_timeout_cb(gpointer data)
                         client->id);
             pcmk__ipc_send_ack(client, action->ipc_id,
                                action->flags|crm_ipc_client_response,
-                               PCMK__XE_ACK, ATTRD_PROTOCOL_VERSION,
-                               CRM_EX_TIMEOUT);
+                               ATTRD_PROTOCOL_VERSION, CRM_EX_TIMEOUT);
 
             g_hash_table_iter_remove(&iter);
             pcmk__trace("%u requests now in expected confirmations table",
