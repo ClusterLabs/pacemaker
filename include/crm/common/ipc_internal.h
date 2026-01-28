@@ -216,9 +216,9 @@ void pcmk__drop_all_clients(qb_ipcs_service_t *s);
 void pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
 xmlNode *pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
-                                 const char *tag, const char *ver, crm_exit_t status);
+                                 const char *ver, crm_exit_t status);
 #define pcmk__ipc_create_ack(flags, tag, ver, st) \
-    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (tag), (ver), (st))
+    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (ver), (st))
 
 int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
                           uint32_t request, uint32_t flags, const char *tag,
