@@ -1,7 +1,7 @@
 """ClusterManager class for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["ClusterManager"]
-__copyright__ = """Copyright 2000-2025 the Pacemaker project contributors.
+__copyright__ = """Copyright 2000-2026 the Pacemaker project contributors.
 Certain portions by Huang Zhen <zhenhltc@cn.ibm.com> are copyright 2004
 International Business Machines. The version control history for this file
 may have further details."""
@@ -19,7 +19,7 @@ from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.cib import ConfigFactory
 from pacemaker._cts.environment import EnvFactory
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogWatcher
@@ -56,7 +56,6 @@ class ClusterManager(UserDict):
         self.__instance_errors_to_ignore = []
 
         self._cib_installed = False
-        self._logger = LogFactory()
 
         self.env = EnvFactory().getInstance()
         self.expected_status = {}
@@ -88,11 +87,11 @@ class ClusterManager(UserDict):
 
     def log(self, args):
         """Log a message."""
-        self._logger.log(args)
+        logging.log(args)
 
     def debug(self, args):
         """Log a debug message."""
-        self._logger.debug(args)
+        logging.debug(args)
 
     def upcount(self):
         """Return how many nodes are up."""
@@ -188,7 +187,7 @@ class ClusterManager(UserDict):
                     self.__instance_errors_to_ignore.append(self.templates["Pat:Fencing_start"] % peer)
 
             if not peer:
-                self._logger.log(f"ERROR: Unknown stonith match: {shot!r}")
+                logging.log(f"ERROR: Unknown stonith match: {shot!r}")
 
             elif peer not in peer_list:
                 self.debug(f"Found peer: {peer}")
@@ -222,7 +221,7 @@ class ClusterManager(UserDict):
                     time.sleep(self.env["start_time"])
 
                 if not self.stat_cm(peer):
-                    self._logger.log(f"ERROR: Peer {peer} failed to restart after being fenced")
+                    logging.log(f"ERROR: Peer {peer} failed to restart after being fenced")
                     return None
 
         return peer_list
@@ -260,7 +259,7 @@ class ClusterManager(UserDict):
 
     def start_cm(self, node, verbose=False):
         """Start up the cluster manager on a given node."""
-        log_fn = self._logger.log if verbose else self.debug
+        log_fn = logging.log if verbose else self.debug
         log_fn(f"Starting {self.name} on node {node}")
 
         if node not in self.expected_status:
@@ -288,7 +287,7 @@ class ClusterManager(UserDict):
         self.expected_status[node] = "any"
 
         if self.stat_cm(node) and self.cluster_stable(self.env["dead_time"]):
-            self._logger.log(f"{node} was already started")
+            logging.log(f"{node} was already started")
             return True
 
         stonith = self.prepare_fencing_watcher()
@@ -296,7 +295,7 @@ class ClusterManager(UserDict):
 
         (rc, _) = self.rsh(node, self.templates["StartCmd"])
         if rc != 0:
-            self._logger.log(f"Warn: Start command failed on node {node}")
+            logging.log(f"Warn: Start command failed on node {node}")
             self.fencing_cleanup(node, stonith)
             return False
 
@@ -305,7 +304,7 @@ class ClusterManager(UserDict):
 
         if watch.unmatched:
             for regex in watch.unmatched:
-                self._logger.log(f"Warn: Startup pattern not found: {regex}")
+                logging.log(f"Warn: Startup pattern not found: {regex}")
 
         if watch_result and self.cluster_stable(self.env["dead_time"]):
             self.fencing_cleanup(node, stonith)
@@ -315,12 +314,12 @@ class ClusterManager(UserDict):
             self.fencing_cleanup(node, stonith)
             return True
 
-        self._logger.log(f"Warn: Start failed for node {node}")
+        logging.log(f"Warn: Start failed for node {node}")
         return False
 
     def start_cm_async(self, node, verbose=False):
         """Start up the cluster manager on a given node without blocking."""
-        log_fn = self._logger.log if verbose else self.debug
+        log_fn = logging.log if verbose else self.debug
         log_fn(f"Starting {self.name} on node {node}")
 
         self._install_config(node)
@@ -329,7 +328,7 @@ class ClusterManager(UserDict):
 
     def stop_cm(self, node, verbose=False, force=False):
         """Stop the cluster manager on a given node."""
-        log_fn = self._logger.log if verbose else self.debug
+        log_fn = logging.log if verbose else self.debug
         log_fn(f"Stopping {self.name} on node {node}")
 
         if self.expected_status[node] != "up" and not force:
@@ -342,7 +341,7 @@ class ClusterManager(UserDict):
             self.cluster_stable(self.env["dead_time"])
             return True
 
-        self._logger.log(f"ERROR: Could not stop {self.name} on node {node}")
+        logging.log(f"ERROR: Could not stop {self.name} on node {node}")
         return False
 
     def stop_cm_async(self, node):
@@ -392,10 +391,10 @@ class ClusterManager(UserDict):
         watch.look_for_all()
         if watch.unmatched:
             for regex in watch.unmatched:
-                self._logger.log(f"Warn: Startup pattern not found: {regex}")
+                logging.log(f"Warn: Startup pattern not found: {regex}")
 
         if not self.cluster_stable():
-            self._logger.log("Cluster did not stabilize")
+            logging.log("Cluster did not stabilize")
             return False
 
         return True
@@ -440,7 +439,7 @@ class ClusterManager(UserDict):
 
             (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % node)
             if rc != 0:
-                self._logger.log(f"Could not break the communication between {target} and {node}: {rc}")
+                logging.log(f"Could not break the communication between {target} and {node}: {rc}")
                 return False
 
             self.debug(f"Communication cut between {target} and {node}")

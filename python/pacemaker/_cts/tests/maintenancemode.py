@@ -1,11 +1,12 @@
 """Toggle nodes in and out of maintenance mode."""
 
 __all__ = ["MaintenanceMode"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -71,7 +72,7 @@ class MaintenanceMode(CTSTest):
         if enabled:
             self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
-        with Timer(self._logger, self.name, f"recover{action}"):
+        with Timer(self.name, f"recover{action}"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -91,7 +92,7 @@ class MaintenanceMode(CTSTest):
 
         self._cm.add_dummy_rsc(node, self._rid)
 
-        with Timer(self._logger, self.name, "addDummy"):
+        with Timer(self.name, "addDummy"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -110,7 +111,7 @@ class MaintenanceMode(CTSTest):
         watch.set_watch()
         self._cm.remove_dummy_rsc(node, self._rid)
 
-        with Timer(self._logger, self.name, "removeDummy"):
+        with Timer(self.name, "removeDummy"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -159,7 +160,7 @@ class MaintenanceMode(CTSTest):
             self.debug(f"Found all {managed_str} resources on {node}")
             return True
 
-        self._logger.log(f"Could not find all {managed_str} resources on {node}. {managed_rscs}")
+        logging.log(f"Could not find all {managed_str} resources on {node}. {managed_rscs}")
         return False
 
     def __call__(self, node):
@@ -178,7 +179,7 @@ class MaintenanceMode(CTSTest):
         # this list to verify all the resources become managed again.
         managed_rscs = self._managed_rscs(node)
         if not managed_rscs:
-            self._logger.log(f"No managed resources on {node}")
+            logging.log(f"No managed resources on {node}")
             return self.skipped()
 
         # insert a fake resource we can fail during maintenance mode

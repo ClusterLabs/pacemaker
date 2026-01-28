@@ -1,13 +1,13 @@
 """Base classes for CTS tests."""
 
 __all__ = ["CTSTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 
+from pacemaker._cts import logging
 from pacemaker._cts.environment import EnvFactory
-from pacemaker._cts.logging import LogFactory
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.timer import Timer
 from pacemaker._cts.watcher import LogWatcher
@@ -50,7 +50,6 @@ class CTSTest:
         self._cm = cm
         self._env = EnvFactory().getInstance()
         self._rsh = RemoteFactory().getInstance()
-        self._logger = LogFactory()
         self._timers = {}
 
         self.benchmark = True  # which tests to benchmark
@@ -60,11 +59,11 @@ class CTSTest:
 
     def log(self, args):
         """Log a message."""
-        self._logger.log(args)
+        logging.log(args)
 
     def debug(self, args):
         """Log a debug message."""
-        self._logger.debug(args)
+        logging.debug(args)
 
     def get_timer(self, key="test"):
         """Get the start time of the given timer."""
@@ -76,7 +75,7 @@ class CTSTest:
     def set_timer(self, key="test"):
         """Set the start time of the given timer to now, and return that time."""
         if key not in self._timers:
-            self._timers[key] = Timer(self._logger, self.name, key)
+            self._timers[key] = Timer(self.name, key)
 
         self._timers[key].start()
         return self._timers[key].start_time
@@ -105,7 +104,7 @@ class CTSTest:
         """Increment the failure count, with an optional failure reason."""
         self.passed = False
         self.incr("failure")
-        self._logger.log(f"{f'Test {self.name}':<35} FAILED: {reason}")
+        logging.log(f"{f'Test {self.name}':<35} FAILED: {reason}")
 
         return False
 
@@ -129,7 +128,7 @@ class CTSTest:
 
         for audit in self.audits:
             if not audit():
-                self._logger.log(f"Internal {self.name} Audit {audit.name} FAILED.")
+                logging.log(f"Internal {self.name} Audit {audit.name} FAILED.")
                 self.incr("auditfail")
                 passed = False
 
@@ -202,12 +201,12 @@ class CTSTest:
                         add_err = False
 
                 if add_err:
-                    self._logger.log(f"{prefix} {match}")
+                    logging.log(f"{prefix} {match}")
                     errcount += 1
             else:
                 break
         else:
-            self._logger.log("Too many errors!")
+            logging.log("Too many errors!")
 
         watch.end()
         return errcount
