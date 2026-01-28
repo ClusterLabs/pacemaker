@@ -176,9 +176,14 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         data = pcmk_find_cib_element(data, section);
     }
 
-    rc = cib_perform_op(cib, op, call_options, op_function, read_only, section,
-                        request, data, true, &changed, &private->cib_xml,
-                        &result_cib, &cib_diff, output);
+    if (read_only) {
+        rc = cib__perform_query(op, call_options, op_function, section, request,
+                                data, &private->cib_xml, output);
+    } else {
+        rc = cib_perform_op(cib, op, call_options, op_function, section,
+                            request, data, true, &changed, &private->cib_xml,
+                            &result_cib, &cib_diff, output);
+    }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         /* The rest of the logic applies only to the transaction as a whole, not

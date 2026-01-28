@@ -24,7 +24,6 @@
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
-#include <crm/cib/internal.h>       // cib_read_config
 #include <crm/cluster.h>            // pcmk_cluster_*
 #include <crm/cluster/internal.h>   // pcmk__node_update, etc.
 #include <crm/common/ipc.h>         // crm_ipc_*
@@ -45,8 +44,6 @@ GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
 
 gboolean stand_alone = FALSE;
-
-GHashTable *config_hash = NULL;
 
 static void cib_init(void);
 
@@ -286,10 +283,6 @@ done:
     pcmk__free_arg_context(context);
 
     pcmk__cluster_destroy_node_caches();
-
-    if (config_hash != NULL) {
-        g_hash_table_destroy(config_hash);
-    }
     pcmk__client_cleanup();
     pcmk_cluster_free(crm_cluster);
     g_free(cib_root);
@@ -374,11 +367,7 @@ cib_init(void)
         crm_exit(CRM_EX_SOFTWARE);
     }
 
-    config_hash = pcmk__strkey_table(free, free);
-    cib_read_config(config_hash, the_cib);
-
     based_remote_init();
-
     crm_cluster = pcmk_cluster_new();
 
 #if SUPPORT_COROSYNC
