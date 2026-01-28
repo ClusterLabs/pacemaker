@@ -19,39 +19,61 @@
 #include <pwd.h>
 #include <sys/types.h>
 
+#define USER_NAME "ha_user"
+
+#define assert_lookup_user_one(errno_to_set, returned_ent, uid, gid,    \
+                               expected_rc)                             \
+    do {                                                                \
+        expect_string(__wrap_getpwnam, name, USER_NAME);                \
+        will_return(__wrap_getpwnam, errno_to_set);                     \
+        will_return(__wrap_getpwnam, returned_ent);                     \
+        assert_int_equal(pcmk__lookup_user(USER_NAME, uid, gid),        \
+                         expected_rc);                                  \
+    } while (0)
+
 /*!
  * \internal
- * \brief Perform one test of \c pcmk__lookup_user()
+ * \brief Perform one test of \c pcmk__lookup_user() with non-NULL name
  *
- * \param[in] name          \c name argument for \c pcmk__lookup_user()
- * \param[in] uid           \c uid argument for \c pcmk__lookup_user()
- *                          (unchanged upon return)
- * \param[in] gid           \c gid argument for \c pcmk__lookup_user()
- *                          (unchanged upon return)
+ * \param[in] errno_to_set  Value that \c getpwnam() should set \c errno to
+ *                          (\c int)
+ * \param[in] returned_ent  Passwd entry that \c getpwnam() should return
+ *                          (<tt>struct passwd *</tt>)
  * \param[in] expected_rc   Expected return code of \c pcmk__lookup_user()
+ *                          (\c int)
  * \param[in] expected_uid  Expected value at \p *uid after
- *                          \c pcmk__lookup_user() call
+ *                          \c pcmk__lookup_user() call (\c uid_t)
  * \param[in] expected_gid  Expected value at \p *gid after
- *                          \c pcmk__lookup_user() call
+ *                          \c pcmk__lookup_user() call (\c gid_t)
  */
-static void
-assert_lookup_user(const char *name, uid_t *uid, gid_t *gid, int expected_rc,
-                   uid_t expected_uid, gid_t expected_gid)
-{
-    uid_t uid_orig = ((uid != NULL)? *uid : 0);
-    gid_t gid_orig = ((gid != NULL)? *gid : 0);
-
-    assert_int_equal(pcmk__lookup_user(name, uid, gid), expected_rc);
-
-    if (uid != NULL) {
-        assert_int_equal(*uid, expected_uid);
-        *uid = uid_orig;
-    }
-    if (gid != NULL) {
-        assert_int_equal(*gid, expected_gid);
-        *gid = gid_orig;
-    }
-}
+#define assert_lookup_user(errno_to_set, returned_ent, expected_rc,         \
+                           expected_uid, expected_gid)                      \
+    do {                                                                    \
+        uid_t uid = 0;                                                      \
+        gid_t gid = 0;                                                      \
+                                                                            \
+        pcmk__mock_getpwnam = true;                                         \
+                                                                            \
+        assert_lookup_user_one(errno_to_set, returned_ent, NULL, NULL,      \
+                               expected_rc);                                \
+                                                                            \
+        assert_lookup_user_one(errno_to_set, returned_ent, &uid, NULL,      \
+                               expected_rc);                                \
+        assert_int_equal(uid, expected_uid);                                \
+        uid = 0;                                                            \
+                                                                            \
+        assert_lookup_user_one(errno_to_set, returned_ent, NULL, &gid,      \
+                               expected_rc);                                \
+        assert_int_equal(gid, expected_gid);                                \
+        gid = 0;                                                            \
+                                                                            \
+        assert_lookup_user_one(errno_to_set, returned_ent, &uid, &gid,      \
+                               expected_rc);                                \
+        assert_int_equal(uid, expected_uid);                                \
+        assert_int_equal(gid, expected_gid);                                \
+                                                                            \
+        pcmk__mock_getpwnam = false;                                        \
+    } while (0)
 
 static void
 null_name(void **state)
@@ -60,86 +82,44 @@ null_name(void **state)
     gid_t gid = 0;
 
     // These dump core via CRM_CHECK()
-    assert_lookup_user(NULL, NULL, NULL, EINVAL, 0, 0);
-    assert_lookup_user(NULL, NULL, &gid, EINVAL, 0, 0);
-    assert_lookup_user(NULL, &uid, NULL, EINVAL, 0, 0);
-    assert_lookup_user(NULL, &uid, &gid, EINVAL, 0, 0);
+    assert_int_equal(pcmk__lookup_user(NULL, NULL, NULL), EINVAL);
+
+    assert_int_equal(pcmk__lookup_user(NULL, &uid, 0), EINVAL);
+    assert_int_equal(uid, 0);
+
+    assert_int_equal(pcmk__lookup_user(NULL, NULL, &gid), EINVAL);
+    assert_int_equal(gid, 0);
+
+    assert_int_equal(pcmk__lookup_user(NULL, &uid, &gid), EINVAL);
+    assert_int_equal(uid, 0);
+    assert_int_equal(gid, 0);
 }
 
 static void
 getpwnam_fails(void **state)
 {
-    uid_t uid = 0;
-    gid_t gid = 0;
-
-    pcmk__mock_getpwnam = true;
-
-    expect_string(__wrap_getpwnam, name, "hauser");
-    will_return(__wrap_getpwnam, EIO);  // errno
-    will_return(__wrap_getpwnam, NULL); // return value
-    assert_lookup_user("hauser", &uid, &gid, EIO, 0, 0);
-
-    pcmk__mock_getpwnam = false;
+    assert_lookup_user(EIO, NULL, EIO, 0, 0);
 }
 
 static void
 no_matching_pwent(void **state)
 {
-    uid_t uid = 0;
-    gid_t gid = 0;
-
-    pcmk__mock_getpwnam = true;
-
     /* errno may or may not be set when no matching passwd entry is found.
      * However, if the return value is NULL and errno == 0, then we can be sure
      * no entry was found. In other words, it's sufficient but not necessary. So
      * this is our test case for "no matching entry," and we should return
      * ENOENT.
      */
-    expect_string(__wrap_getpwnam, name, "hauser");
-    will_return(__wrap_getpwnam, 0);    // errno
-    will_return(__wrap_getpwnam, NULL); // return value
-    assert_lookup_user("hauser", &uid, &gid, ENOENT, 0, 0);
-
-    pcmk__mock_getpwnam = false;
+    assert_lookup_user(0, NULL, ENOENT, 0, 0);
 }
 
 static void
 entry_found(void **state)
 {
-    uid_t uid = 0;
-    gid_t gid = 0;
-
     // We don't care about the other fields of the passwd entry
     struct passwd returned_ent = { .pw_uid = 1000, .pw_gid = 1000 };
 
-    pcmk__mock_getpwnam = true;
-
-    // NULL uid and NULL gid
-    expect_string(__wrap_getpwnam, name, "hauser");
-    will_return(__wrap_getpwnam, 0);
-    will_return(__wrap_getpwnam, &returned_ent);
-    assert_lookup_user("hauser", NULL, NULL, pcmk_rc_ok, 0, 0);
-
-    // Non-NULL uid and NULL gid
-    expect_string(__wrap_getpwnam, name, "hauser");
-    will_return(__wrap_getpwnam, 0);
-    will_return(__wrap_getpwnam, &returned_ent);
-    assert_lookup_user("hauser", &uid, NULL, pcmk_rc_ok, 1000, 0);
-
-    // NULL uid and non-NULL gid
-    expect_string(__wrap_getpwnam, name, "hauser");
-    will_return(__wrap_getpwnam, 0);
-    will_return(__wrap_getpwnam, &returned_ent);
-    assert_lookup_user("hauser", NULL, &gid, pcmk_rc_ok, 0, 1000);
-
-    // Non-NULL uid and non-NULL gid
-    expect_string(__wrap_getpwnam, name, "hauser");
-    will_return(__wrap_getpwnam, 0);
-    will_return(__wrap_getpwnam, &returned_ent);
-    assert_lookup_user("hauser", &uid, &gid, pcmk_rc_ok, 1000, 1000);
-
-    pcmk__mock_getpwnam = false;
+    assert_lookup_user(0, &returned_ent, pcmk_rc_ok, 1000, 1000);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

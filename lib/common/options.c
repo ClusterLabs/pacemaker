@@ -1180,7 +1180,7 @@ pcmk__env_option_enabled(const char *daemon, const char *option)
 
     subsystems = g_strsplit(value, ",", 0);
 
-    enabled = pcmk__g_strv_contains(subsystems, daemon);
+    enabled = pcmk__g_strv_contains((const gchar *const *) subsystems, daemon);
 
     g_strfreev(subsystems);
     return enabled;

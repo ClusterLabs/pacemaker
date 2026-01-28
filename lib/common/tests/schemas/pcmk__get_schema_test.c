@@ -29,20 +29,19 @@ teardown(void **state)
     return 0;
 }
 
-static void
-assert_schema(const char *name, int expected_index)
-{
-    GList *schema_entry = NULL;
-    pcmk__schema_t *schema = NULL;
-
-    schema_entry = pcmk__get_schema(name);
-    assert_non_null(schema_entry);
-
-    schema = schema_entry->data;
-    assert_non_null(schema);
-
-    assert_int_equal(schema->schema_index, expected_index);
-}
+#define assert_schema(name, expected_index)                     \
+    do {                                                        \
+        GList *schema_entry = NULL;                             \
+        pcmk__schema_t *schema = NULL;                          \
+                                                                \
+        schema_entry = pcmk__get_schema(name);                  \
+        assert_non_null(schema_entry);                          \
+                                                                \
+        schema = schema_entry->data;                            \
+        assert_non_null(schema);                                \
+                                                                \
+        assert_int_equal(schema->schema_index, expected_index); \
+    } while (0)
 
 static void
 unknown_schema(void **state)

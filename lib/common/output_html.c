@@ -413,43 +413,32 @@ html_progress(pcmk__output_t *out, bool end) {
     /* This function intentially left blank */
 }
 
-pcmk__output_t *
-pcmk__mk_html_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+void
+pcmk__output_setup_html(pcmk__output_t *out)
+{
+    out->fmt_name = "html";
 
-    if (retval == NULL) {
-        return NULL;
-    }
+    out->init = html_init;
+    out->free_priv = html_free_priv;
+    out->finish = html_finish;
+    out->reset = html_reset;
 
-    retval->fmt_name = "html";
-    retval->request = pcmk__quote_cmdline(argv);
+    out->subprocess_output = html_subprocess_output;
+    out->version = html_version;
+    out->info = html_info;
+    out->transient = html_info;
+    out->err = html_err;
+    out->output_xml = html_output_xml;
 
-    retval->init = html_init;
-    retval->free_priv = html_free_priv;
-    retval->finish = html_finish;
-    retval->reset = html_reset;
+    out->begin_list = html_begin_list;
+    out->list_item = html_list_item;
+    out->increment_list = html_increment_list;
+    out->end_list = html_end_list;
 
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    retval->subprocess_output = html_subprocess_output;
-    retval->version = html_version;
-    retval->info = html_info;
-    retval->transient = html_info;
-    retval->err = html_err;
-    retval->output_xml = html_output_xml;
-
-    retval->begin_list = html_begin_list;
-    retval->list_item = html_list_item;
-    retval->increment_list = html_increment_list;
-    retval->end_list = html_end_list;
-
-    retval->is_quiet = html_is_quiet;
-    retval->spacer = html_spacer;
-    retval->progress = html_progress;
-    retval->prompt = pcmk__text_prompt;
-
-    return retval;
+    out->is_quiet = html_is_quiet;
+    out->spacer = html_spacer;
+    out->progress = html_progress;
+    out->prompt = pcmk__text_prompt;
 }
 
 xmlNodePtr

@@ -25,63 +25,71 @@
  * preserved.
  *
  * \param[in,out] test_xml       XML whose attributes to sort
+ *                               (<tt>xmlNode *</tt>)
  * \param[in]     reference_xml  XML whose attribute order to compare against
  *                               (attributes must have the same values as in
- *                               \p test_xml)
+ *                               \p test_xml) (<tt>const xmlNode *</tt>)
  */
-static void
-assert_order(xmlNode *test_xml, const xmlNode *reference_xml)
-{
-    GHashTable *attr_flags = pcmk__strkey_table(free, NULL);
-    xmlAttr *test_attr = NULL;
-    xmlAttr *ref_attr = NULL;
-
-    // Save original flags
-    for (xmlAttr *attr = pcmk__xe_first_attr(test_xml); attr != NULL;
-         attr = attr->next) {
-
-        xml_node_private_t *nodepriv = attr->_private;
-        uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
-
-        g_hash_table_insert(attr_flags,
-                            pcmk__str_copy((const char *) attr->name),
-                            GUINT_TO_POINTER((guint) flags));
-    }
-
-    pcmk__xe_sort_attrs(test_xml);
-
-    test_attr = pcmk__xe_first_attr(test_xml);
-    ref_attr = pcmk__xe_first_attr(reference_xml);
-
-    for (; (test_attr != NULL) && (ref_attr != NULL);
-         test_attr = test_attr->next, ref_attr = ref_attr->next) {
-
-        const char *test_name = (const char *) test_attr->name;
-        xml_node_private_t *nodepriv = test_attr->_private;
-        uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
-
-        gpointer old_flags_ptr = g_hash_table_lookup(attr_flags, test_name);
-        uint32_t old_flags = pcmk__xf_none;
-
-        if (old_flags_ptr != NULL) {
-            old_flags = GPOINTER_TO_UINT(old_flags_ptr);
-        }
-
-        // Flags must not change
-        assert_true(flags == old_flags);
-
-        // Attributes must be in expected order with expected values
-        assert_string_equal(test_name, (const char *) ref_attr->name);
-        assert_string_equal(pcmk__xml_attr_value(test_attr),
-                            pcmk__xml_attr_value(ref_attr));
-    }
-
-    // Attribute lists must be the same length
-    assert_null(test_attr);
-    assert_null(ref_attr);
-
-    g_hash_table_destroy(attr_flags);
-}
+#define assert_order(test_xml, reference_xml)                               \
+    do {                                                                    \
+        GHashTable *attr_flags = pcmk__strkey_table(free, NULL);            \
+        xmlAttr *test_attr = NULL;                                          \
+        xmlAttr *ref_attr = NULL;                                           \
+                                                                            \
+        /* Save original flags */                                           \
+        for (xmlAttr *attr = pcmk__xe_first_attr(test_xml); attr != NULL;   \
+             attr = attr->next) {                                           \
+                                                                            \
+            xml_node_private_t *nodepriv = attr->_private;                  \
+            uint32_t flags = pcmk__xf_none;                                 \
+                                                                            \
+            if (nodepriv != NULL) {                                         \
+                flags = nodepriv->flags;                                    \
+            }                                                               \
+                                                                            \
+            g_hash_table_insert(attr_flags,                                 \
+                                pcmk__str_copy((const char *) attr->name),  \
+                                GUINT_TO_POINTER((guint) flags));           \
+        }                                                                   \
+                                                                            \
+        pcmk__xe_sort_attrs(test_xml);                                      \
+                                                                            \
+        test_attr = pcmk__xe_first_attr(test_xml);                          \
+        ref_attr = pcmk__xe_first_attr(reference_xml);                      \
+                                                                            \
+        for (; (test_attr != NULL) && (ref_attr != NULL);                   \
+             test_attr = test_attr->next, ref_attr = ref_attr->next) {      \
+                                                                            \
+            const char *test_name = (const char *) test_attr->name;         \
+            xml_node_private_t *nodepriv = test_attr->_private;             \
+            gpointer old_flags_ptr = NULL;                                  \
+            uint32_t flags = pcmk__xf_none;                                 \
+            uint32_t old_flags = pcmk__xf_none;                             \
+                                                                            \
+            if (nodepriv != NULL) {                                         \
+                flags = nodepriv->flags;                                    \
+            }                                                               \
+                                                                            \
+            old_flags_ptr = g_hash_table_lookup(attr_flags, test_name);     \
+            if (old_flags_ptr != NULL) {                                    \
+                old_flags = GPOINTER_TO_UINT(old_flags_ptr);                \
+            }                                                               \
+                                                                            \
+            /* Flags must not change */                                     \
+            assert_true(flags == old_flags);                                \
+                                                                            \
+            /* Attributes must be in expected order with expected values */ \
+            assert_string_equal(test_name, (const char *) ref_attr->name);  \
+            assert_string_equal(pcmk__xml_attr_value(test_attr),            \
+                                pcmk__xml_attr_value(ref_attr));            \
+        }                                                                   \
+                                                                            \
+        /* Attribute lists must be the same length */                       \
+        assert_null(test_attr);                                             \
+        assert_null(ref_attr);                                              \
+                                                                            \
+        g_hash_table_destroy(attr_flags);                                   \
+    } while (0)
 
 static void
 null_arg(void **state)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,22 +16,20 @@
 
 #include <crm/common/iso8601.h>
 
-static void
-assert_add_seconds(const char *orig_date_time, int seconds,
-                 const char *expected_date_time)
-{
-    crm_time_t *orig = crm_time_new(orig_date_time);
-    crm_time_t *expected = crm_time_new(expected_date_time);
-
-    assert_non_null(orig);
-    assert_non_null(expected);
-
-    crm_time_add_seconds(orig, seconds);
-    assert_int_equal(crm_time_compare(orig, expected), 0);
-
-    crm_time_free(orig);
-    crm_time_free(expected);
-}
+#define assert_add_seconds(orig_date_time, seconds, expected_date_time) \
+    do {                                                                \
+        crm_time_t *orig = crm_time_new(orig_date_time);                \
+        crm_time_t *expected = crm_time_new(expected_date_time);        \
+                                                                        \
+        assert_non_null(orig);                                          \
+        assert_non_null(expected);                                      \
+                                                                        \
+        crm_time_add_seconds(orig, seconds);                            \
+        assert_int_equal(crm_time_compare(orig, expected), 0);          \
+                                                                        \
+        crm_time_free(orig);                                            \
+        crm_time_free(expected);                                        \
+    } while (0)
 
 static void
 invalid_argument(void **state)

@@ -337,43 +337,32 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
     }
 }
 
-pcmk__output_t *
-crm_mon_mk_curses_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+void
+crm_mon_output_setup_curses(pcmk__output_t *out)
+{
+    out->fmt_name = "console";
 
-    if (retval == NULL) {
-        return NULL;
-    }
+    out->init = curses_init;
+    out->free_priv = curses_free_priv;
+    out->finish = curses_finish;
+    out->reset = curses_reset;
 
-    retval->fmt_name = "console";
-    retval->request = pcmk__quote_cmdline(argv);
+    out->subprocess_output = curses_subprocess_output;
+    out->version = curses_ver;
+    out->err = curses_error;
+    out->info = curses_info;
+    out->transient = curses_info;
+    out->output_xml = curses_output_xml;
 
-    retval->init = curses_init;
-    retval->free_priv = curses_free_priv;
-    retval->finish = curses_finish;
-    retval->reset = curses_reset;
+    out->begin_list = curses_begin_list;
+    out->list_item = curses_list_item;
+    out->increment_list = curses_increment_list;
+    out->end_list = curses_end_list;
 
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    retval->subprocess_output = curses_subprocess_output;
-    retval->version = curses_ver;
-    retval->err = curses_error;
-    retval->info = curses_info;
-    retval->transient = curses_info;
-    retval->output_xml = curses_output_xml;
-
-    retval->begin_list = curses_begin_list;
-    retval->list_item = curses_list_item;
-    retval->increment_list = curses_increment_list;
-    retval->end_list = curses_end_list;
-
-    retval->is_quiet = curses_is_quiet;
-    retval->spacer = curses_spacer;
-    retval->progress = curses_progress;
-    retval->prompt = curses_prompt;
-
-    return retval;
+    out->is_quiet = curses_is_quiet;
+    out->spacer = curses_spacer;
+    out->progress = curses_progress;
+    out->prompt = curses_prompt;
 }
 
 G_GNUC_PRINTF(2, 0)

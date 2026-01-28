@@ -41,7 +41,9 @@ add_possible_values_default(pcmk__output_t *out,
 
         gchar **values = g_strsplit(option->values, ", ", 0);
 
-        for (gchar **value = values; *value != NULL; value++) {
+        for (const char *const *value = (const char *const *) values;
+             *value != NULL; value++) {
+
             if (buf->len > 0) {
                 g_string_append(buf, ", ");
             }
@@ -297,7 +299,9 @@ add_possible_values_xml(pcmk__output_t *out,
 
     values = g_strsplit(option->values, ", ", 0);
 
-    for (gchar **value = values; *value != NULL; value++) {
+    for (const char *const *value = (const char *const *) values;
+         *value != NULL; value++) {
+
         pcmk__output_create_xml_node(out, PCMK_XE_OPTION,
                                      PCMK_XA_VALUE, *value,
                                      NULL);

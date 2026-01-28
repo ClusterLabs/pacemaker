@@ -439,43 +439,32 @@ xml_progress(pcmk__output_t *out, bool end) {
     /* This function intentionally left blank */
 }
 
-pcmk__output_t *
-pcmk__mk_xml_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+void
+pcmk__output_setup_xml(pcmk__output_t *out)
+{
+    out->fmt_name = "xml";
 
-    if (retval == NULL) {
-        return NULL;
-    }
+    out->init = xml_init;
+    out->free_priv = xml_free_priv;
+    out->finish = xml_finish;
+    out->reset = xml_reset;
 
-    retval->fmt_name = "xml";
-    retval->request = pcmk__quote_cmdline(argv);
+    out->subprocess_output = xml_subprocess_output;
+    out->version = xml_version;
+    out->info = xml_info;
+    out->transient = xml_info;
+    out->err = xml_err;
+    out->output_xml = xml_output_xml;
 
-    retval->init = xml_init;
-    retval->free_priv = xml_free_priv;
-    retval->finish = xml_finish;
-    retval->reset = xml_reset;
+    out->begin_list = xml_begin_list;
+    out->list_item = xml_list_item;
+    out->increment_list = xml_increment_list;
+    out->end_list = xml_end_list;
 
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    retval->subprocess_output = xml_subprocess_output;
-    retval->version = xml_version;
-    retval->info = xml_info;
-    retval->transient = xml_info;
-    retval->err = xml_err;
-    retval->output_xml = xml_output_xml;
-
-    retval->begin_list = xml_begin_list;
-    retval->list_item = xml_list_item;
-    retval->increment_list = xml_increment_list;
-    retval->end_list = xml_end_list;
-
-    retval->is_quiet = xml_is_quiet;
-    retval->spacer = xml_spacer;
-    retval->progress = xml_progress;
-    retval->prompt = pcmk__text_prompt;
-
-    return retval;
+    out->is_quiet = xml_is_quiet;
+    out->spacer = xml_spacer;
+    out->progress = xml_progress;
+    out->prompt = pcmk__text_prompt;
 }
 
 xmlNodePtr
