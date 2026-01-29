@@ -4,7 +4,7 @@ false
 * Passed: crm_ticket            - Default ticket granted state
 =#=#=#= Begin test: Set ticket granted state =#=#=#=
 =#=#=#= Current cib after: Set ticket granted state =#=#=#=
-<cib epoch="3" num_updates="1" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="1">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -70,7 +70,7 @@ false
 * Passed: crm_ticket            - Query ticket granted state (XML)
 =#=#=#= Begin test: Delete ticket granted state =#=#=#=
 =#=#=#= Current cib after: Delete ticket granted state =#=#=#=
-<cib epoch="3" num_updates="2" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -93,7 +93,7 @@ false
 * Passed: crm_ticket            - Delete ticket granted state
 =#=#=#= Begin test: Make a ticket standby =#=#=#=
 =#=#=#= Current cib after: Make a ticket standby =#=#=#=
-<cib epoch="3" num_updates="3" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="3">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -120,7 +120,7 @@ true
 * Passed: crm_ticket            - Query ticket standby state
 =#=#=#= Begin test: Activate a ticket =#=#=#=
 =#=#=#= Current cib after: Activate a ticket =#=#=#=
-<cib epoch="3" num_updates="4" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="4">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -157,7 +157,7 @@ ticketA	revoked	(standby=false)
 =#=#=#= Begin test: Add a second ticket =#=#=#=
 false
 =#=#=#= Current cib after: Add a second ticket =#=#=#=
-<cib epoch="3" num_updates="4" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="4">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -180,7 +180,7 @@ false
 * Passed: crm_ticket            - Add a second ticket
 =#=#=#= Begin test: Set second ticket granted state =#=#=#=
 =#=#=#= Current cib after: Set second ticket granted state =#=#=#=
-<cib epoch="3" num_updates="5" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="5">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -219,7 +219,7 @@ ticketB	revoked
 * Passed: crm_ticket            - List tickets (XML)
 =#=#=#= Begin test: Delete second ticket =#=#=#=
 =#=#=#= Current cib after: Delete second ticket =#=#=#=
-<cib epoch="3" num_updates="6" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="6">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -242,7 +242,7 @@ ticketB	revoked
 * Passed: cibadmin              - Delete second ticket
 =#=#=#= Begin test: Delete ticket standby state =#=#=#=
 =#=#=#= Current cib after: Delete ticket standby state =#=#=#=
-<cib epoch="3" num_updates="7" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="7">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -265,7 +265,7 @@ ticketB	revoked
 * Passed: crm_ticket            - Delete ticket standby state
 =#=#=#= Begin test: Add a constraint to a ticket =#=#=#=
 =#=#=#= Current cib after: Add a constraint to a ticket =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -312,7 +312,7 @@ Constraints XML:
 * Passed: crm_ticket            - Query ticket constraints (XML)
 =#=#=#= Begin test: Delete ticket constraint =#=#=#=
 =#=#=#= Current cib after: Delete ticket constraint =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

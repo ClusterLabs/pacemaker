@@ -193,9 +193,9 @@ def reset_shadow_cib_version():
     """Set various version numbers in a shadow CIB file back to 0."""
     with fileinput.input(files=[shadow_path()], inplace=True) as f:
         for line in f:
-            line = re.sub('epoch="[0-9]*"', 'epoch="1"', line)
-            line = re.sub('num_updates="[0-9]*"', 'num_updates="0"', line)
-            line = re.sub('admin_epoch="[0-9]*"', 'admin_epoch="0"', line)
+            line = re.sub(r'\badmin_epoch="[0-9]*"', 'admin_epoch="0"', line)
+            line = re.sub(r'\bepoch="[0-9]*"', 'epoch="1"', line)
+            line = re.sub(r'\bnum_updates="[0-9]*"', 'num_updates="0"', line)
             print(line, end='')
 
 
@@ -1417,7 +1417,7 @@ class CrmAttributeRegressionTest(RegressionTest):
                  "crm_attribute --query -n cpu -N node1 -z"),
             # This update will fail because it has version numbers
             Test("Replace operation should fail",
-                 """cibadmin -Q | sed -e 's/epoch="[^"]*"/epoch="1"/' | cibadmin -R -p""",
+                 """cibadmin -Q | sed -e 's/ epoch="[^"]*"/ epoch="1"/' | cibadmin -R -p""",
                  expected_rc=ExitStatus.OLD),
         ]
 
@@ -2346,7 +2346,7 @@ class CrmSimulateRegressionTest(RegressionTest):
 
         no_version_cib = good_cib.replace('validate-with="pacemaker-1.2" ', "")
 
-        no_version_bad_cib = bad_version_cib.replace('epoch="3"', 'epoch="30"').replace("start", "break")
+        no_version_bad_cib = re.sub(r'\bepoch="3"', 'epoch="30"', bad_version_cib).replace("start", "break")
 
         basic_tests = [
             Test("Show allocation scores with crm_simulate",

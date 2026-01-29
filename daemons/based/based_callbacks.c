@@ -371,9 +371,9 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             delegated = reply_to;
         }
         goto skip_is_reply;
+    }
 
-    } else if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC_TO_ALL,
-                            pcmk__str_none)) {
+    if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SYNC, pcmk__str_none)) {
         // Nothing to do
 
     } else if (is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_casei)) {
@@ -415,11 +415,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             // Ignore broadcast client requests when we're not primary
             return false;
         }
-
-    } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        pcmk__info("Detected legacy %s global update from %s", op, originator);
-        send_sync_request();
-        return false;
 
     } else if (is_reply
                && pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
@@ -615,23 +610,26 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     /* @COMPAT: Handle a valid write action (legacy)
      *
-     * @TODO: Re-evaluate whether this is all truly legacy. PCMK__XA_CIB_UPDATE
-     * may be set by a sync operation even in non-legacy mode, and
-     * manage_counters tells xml_create_patchset() whether to update
-     * version/epoch info.
+     * @TODO: Re-evaluate whether this is truly legacy. PCMK__XA_CIB_UPDATE may
+     * be set by a sync operation even in non-legacy mode, and manage_counters
+     * tells xml_create_patchset() whether to update version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         manage_counters = false;
-        CRM_LOG_ASSERT(pcmk__str_any_of(op, PCMK__CIB_REQUEST_APPLY_PATCH,
-                                        PCMK__CIB_REQUEST_REPLACE, NULL));
+        CRM_LOG_ASSERT(pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
+                                    pcmk__str_none));
     }
 
     ping_modified_since = true;
 
-    // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(NULL, op, call_options, op_function, section, request,
-                        input, manage_counters, &config_changed, &the_cib,
-                        &result_cib, &cib_diff, &output);
+    /* result_cib must not be modified after cib_perform_op() returns.
+     *
+     * It's not important whether the client variant is cib_native or
+     * cib_remote.
+     */
+    rc = cib_perform_op(cib_undefined, op, call_options, op_function, section,
+                        request, input, manage_counters, &config_changed,
+                        &the_cib, &result_cib, &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
@@ -695,8 +693,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                           client_name, originator, cib_diff);
     }
 
-    pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
-
   done:
     if (!pcmk__is_set(call_options, cib_discard_reply)) {
         *reply = create_cib_reply(op, call_id, client_id, call_options,
@@ -739,22 +735,6 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         level = LOG_TRACE;
-
-    } else if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        switch (rc) {
-            case pcmk_rc_ok:
-                level = LOG_INFO;
-                break;
-
-            case pcmk_rc_old_data:
-            case pcmk_rc_diff_resync:
-            case pcmk_rc_diff_failed:
-                level = LOG_TRACE;
-                break;
-
-            default:
-                level = LOG_ERR;
-        }
 
     } else if (rc != pcmk_rc_ok) {
         level = LOG_WARNING;

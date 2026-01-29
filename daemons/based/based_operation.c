@@ -18,7 +18,7 @@
 
 static const cib__op_fn_t op_functions[] = {
     [cib__op_abs_delete]       = based_process_abs_delete,
-    [cib__op_apply_patch]      = based_process_apply_patch,
+    [cib__op_apply_patch]      = cib__process_apply_patch,
     [cib__op_bump]             = cib__process_bump,
     [cib__op_commit_transact]  = based_process_commit_transact,
     [cib__op_create]           = cib__process_create,
@@ -30,12 +30,11 @@ static const cib__op_fn_t op_functions[] = {
     [cib__op_ping]             = based_process_ping,
     [cib__op_primary]          = based_process_primary,
     [cib__op_query]            = cib__process_query,
-    [cib__op_replace]          = based_process_replace,
+    [cib__op_replace]          = cib__process_replace,
     [cib__op_schemas]          = based_process_schemas,
     [cib__op_secondary]        = based_process_secondary,
     [cib__op_shutdown]         = based_process_shutdown,
-    [cib__op_sync_to_all]      = based_process_sync_to_all,
-    [cib__op_sync_to_one]      = based_process_sync_to_one,
+    [cib__op_sync]             = based_process_sync,
     [cib__op_upgrade]          = based_process_upgrade,
 };
 

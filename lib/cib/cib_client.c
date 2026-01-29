@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -290,8 +290,8 @@ cib_client_sync(cib_t * cib, const char *section, int call_options)
 static int
 cib_client_sync_from(cib_t * cib, const char *host, const char *section, int call_options)
 {
-    return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC_TO_ALL, host, section,
-                           NULL, NULL, call_options, cib->user);
+    return cib_internal_op(cib, PCMK__CIB_REQUEST_SYNC, host, section, NULL,
+                           NULL, call_options, cib->user);
 }
 
 static int

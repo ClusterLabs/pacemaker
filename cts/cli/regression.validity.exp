@@ -9,7 +9,7 @@ cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Begin test: Try to use rsc_order first-action value disallowed by schema =#=#=#=
 cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use rsc_order first-action value disallowed by schema =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -28,7 +28,7 @@ cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Begin test: Try to use configuration legal only with schema after configured one =#=#=#=
 cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use configuration legal only with schema after configured one =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -49,7 +49,7 @@ cibadmin: CIB API call failed: Update does not conform to the configured schema
 * Passed: cibadmin              - Disable schema validation
 =#=#=#= Begin test: Set invalid rsc_order first-action value (schema validation disabled) =#=#=#=
 =#=#=#= Current cib after: Set invalid rsc_order first-action value (schema validation disabled) =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>

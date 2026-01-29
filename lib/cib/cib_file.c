@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2025 the Pacemaker project contributors
+ * Later changes copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -138,7 +138,7 @@ get_client(const char *client_id)
 static int
 process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
@@ -180,7 +180,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         rc = cib__perform_query(op, call_options, op_function, section, request,
                                 data, &private->cib_xml, output);
     } else {
-        rc = cib_perform_op(cib, op, call_options, op_function, section,
+        rc = cib_perform_op(cib_file, op, call_options, op_function, section,
                             request, data, true, &changed, &private->cib_xml,
                             &result_cib, &cib_diff, output);
     }
@@ -197,8 +197,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__validate_xml(result_cib, NULL, NULL, NULL);
 
     } else if ((rc == pcmk_rc_ok) && !read_only) {
-        pcmk__log_xml_patchset(LOG_DEBUG, cib_diff);
-
         if (result_cib != private->cib_xml) {
             pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
@@ -211,7 +209,7 @@ done:
         pcmk__xml_free(result_cib);
     }
     pcmk__xml_free(cib_diff);
-    return pcmk_rc2legacy(rc);
+    return rc;
 }
 
 /*!
@@ -241,7 +239,6 @@ process_transaction_requests(cib_t *cib, xmlNode *transaction)
 
         int rc = process_request(cib, request, &output);
 
-        rc = pcmk_legacy2rc(rc);
         if (rc != pcmk_rc_ok) {
             pcmk__err("Aborting transaction for CIB file client (%s) on file "
                       "'%s' due to failed %s request: %s",
@@ -322,8 +319,8 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 
 static int
 process_commit_transact(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer)
+                        xmlNode *req, xmlNode *input, xmlNode **cib_xml,
+                        xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
     const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
@@ -334,7 +331,7 @@ process_commit_transact(const char *op, int options, const char *section,
     cib = get_client(client_id);
     CRM_CHECK(cib != NULL, return -EINVAL);
 
-    rc = commit_transaction(cib, input, result_cib);
+    rc = commit_transaction(cib, input, cib_xml);
     if (rc != pcmk_rc_ok) {
         file_opaque_t *private = cib->variant_opaque;
 
@@ -453,18 +450,22 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &request);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         return rc;
     }
+
     pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
     pcmk__xe_set(request, PCMK__XA_CIB_CLIENTID, private->id);
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
+        rc = pcmk_rc2legacy(rc);
         goto done;
     }
 
     rc = process_request(cib, request, &output);
+    rc = pcmk_rc2legacy(rc);
 
     if ((output_data != NULL) && (output != NULL)) {
         if (output->doc == private->cib_xml->doc) {

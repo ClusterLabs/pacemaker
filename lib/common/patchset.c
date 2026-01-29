@@ -180,8 +180,9 @@ is_config_change(xmlNode *xml)
     return FALSE;
 }
 
+// Guaranteed to return non-NULL
 static xmlNode *
-xml_create_patchset_v2(xmlNode *source, xmlNode *target)
+xml_create_patchset_v2(const xmlNode *source, xmlNode *target)
 {
     int lpc = 0;
     GList *gIter = NULL;
@@ -192,11 +193,6 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     xmlNode *patchset = NULL;
 
     pcmk__assert(target != NULL);
-
-    if (!pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
-        return NULL;
-    }
-
     pcmk__assert(target->doc != NULL);
     docpriv = target->doc->_private;
 
@@ -240,8 +236,9 @@ xml_create_patchset_v2(xmlNode *source, xmlNode *target)
     return patchset;
 }
 
+// *config_changed is unchanged if the return value is NULL
 xmlNode *
-xml_create_patchset(int format, xmlNode *source, xmlNode *target,
+xml_create_patchset(int format, const xmlNode *source, xmlNode *target,
                     bool *config_changed, bool manage_version)
 {
     bool local_config_changed = false;
@@ -467,7 +464,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
                         vfields[i], current[0], current[1], current[2],
                         source[0], source[1], source[2],
                         target[0], target[1], target[2]);
-            return pcmk_rc_diff_resync;
+            return pcmk_rc_diff_failed;
         }
         if (current[i] > source[i]) {
             pcmk__info("Current %s is too high "
