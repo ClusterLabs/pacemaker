@@ -252,12 +252,8 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     if (docpriv != NULL) {
         pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
-        pcmk__str_update(&(docpriv->acl_user), NULL);
-
-        if (docpriv->acls != NULL) {
-            pcmk__free_acls(docpriv->acls);
-            docpriv->acls = NULL;
-        }
+        g_clear_pointer(&docpriv->acl_user, free);
+        g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
         if(docpriv->deleted_objs) {
             g_list_free_full(docpriv->deleted_objs, free_deleted_object);
@@ -1811,7 +1807,7 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
             acl_source = xml;
         }
         pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
-        pcmk__unpack_acls(acl_source, xml, user);
+        pcmk__unpack_acls(acl_source->doc, xml->doc->_private, user);
         pcmk__apply_acls(xml->doc);
     }
 }
