@@ -508,7 +508,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             }
 
             if (client != NULL) {
-                crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, user);
+                crm_xml_add(scratch, PCMK_XA_UPDATE_CLIENT, client);
             } else {
                 pcmk__xe_remove_attr(scratch, PCMK_XA_UPDATE_CLIENT);
             }
