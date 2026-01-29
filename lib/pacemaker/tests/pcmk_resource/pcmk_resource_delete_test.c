@@ -95,8 +95,8 @@ incorrect_type(void **state)
     xmlNode *xml = NULL;
     xmlNode *result = NULL;
 
-    /* cib__process_delete() returns pcmk_ok even if given the wrong type, so we
-     * have to do an xpath query of the CIB to make sure it's still there.
+    /* cib__process_delete() returns pcmk_rc_ok even if given the wrong type, so
+     * we have to do an XPath query of the CIB to make sure it's still there
      */
     assert_int_equal(pcmk_resource_delete(&xml, "Fencing", "clone"), pcmk_rc_ok);
     pcmk__assert_validates(xml);
@@ -129,8 +129,8 @@ unknown_resource(void **state)
 {
     xmlNode *xml = NULL;
 
-    /* cib__process_delete() returns pcmk_ok even if asked to delete something
-     * that doesn't exist.
+    /* cib__process_delete() returns pcmk_rc_ok even if asked to delete
+     * something that doesn't exist
      */
     assert_int_equal(pcmk_resource_delete(&xml, "no_such_resource", "primitive"), pcmk_rc_ok);
     pcmk__assert_validates(xml);

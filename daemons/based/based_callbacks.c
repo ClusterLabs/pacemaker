@@ -21,7 +21,6 @@
 
 #include <glib.h>                   // gboolean, gpointer, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
-#include <libxml/xpath.h>           // xmlXPath*
 #include <qb/qbdefs.h>              // QB_FALSE
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
@@ -558,26 +557,6 @@ prepare_input(const xmlNode *request, enum cib__op_type type,
     return input;
 }
 
-static bool
-contains_config_change(xmlNode *diff)
-{
-    xmlXPathObject *xpath_obj = NULL;
-    bool changed = false;
-
-    if (diff == NULL) {
-        return false;
-    }
-
-    xpath_obj = pcmk__xpath_search(diff->doc,
-                                   "//" PCMK_XE_CHANGE
-                                   "[contains(@" PCMK_XA_PATH ", "
-                                              "'/" PCMK_XE_CRM_CONFIG "/')]");
-
-    changed = (pcmk__xpath_num_results(xpath_obj) > 0);
-    xmlXPathFreeObject(xpath_obj);
-    return changed;
-}
-
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply, bool privileged)
@@ -589,7 +568,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     uint32_t call_options = cib_none;
 
-    const char *op = NULL;
+    const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *section = NULL;
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
@@ -613,7 +592,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     *reply = NULL;
 
     /* Start processing the request... */
-    op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -622,46 +600,38 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
     if (!privileged
         && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
+
         rc = EACCES;
-        pcmk__trace("Failed due to lack of privileges: %s", pcmk_rc_str(rc));
         goto done;
     }
 
     input = prepare_input(request, operation->type, &section);
 
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib_perform_op(NULL, op, call_options, op_function, true, section,
-                            request, input, false, &config_changed, &the_cib,
-                            &result_cib, NULL, &output);
-
-        CRM_CHECK(result_cib == NULL, pcmk__xml_free(result_cib));
+        rc = cib__perform_query(op, call_options, op_function, section, request,
+                                input, &the_cib, &output);
         goto done;
     }
 
     /* @COMPAT: Handle a valid write action (legacy)
      *
-     * @TODO: Re-evaluate whether this is all truly legacy. The cib_force_diff
-     * portion is. However, PCMK__XA_CIB_UPDATE may be set by a sync operation
-     * even in non-legacy mode, and manage_counters tells xml_create_patchset()
-     * whether to update version/epoch info.
+     * @TODO: Re-evaluate whether this is all truly legacy. PCMK__XA_CIB_UPDATE
+     * may be set by a sync operation even in non-legacy mode, and
+     * manage_counters tells xml_create_patchset() whether to update
+     * version/epoch info.
      */
     if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
         manage_counters = false;
-        cib__set_call_options(call_options, "call", cib_force_diff);
-        pcmk__trace("Global update detected");
-
-        CRM_LOG_ASSERT(pcmk__str_any_of(op,
-                                        PCMK__CIB_REQUEST_APPLY_PATCH,
-                                        PCMK__CIB_REQUEST_REPLACE,
-                                        NULL));
+        CRM_LOG_ASSERT(pcmk__str_any_of(op, PCMK__CIB_REQUEST_APPLY_PATCH,
+                                        PCMK__CIB_REQUEST_REPLACE, NULL));
     }
 
     ping_modified_since = true;
 
     // result_cib must not be modified after cib_perform_op() returns
-    rc = cib_perform_op(NULL, op, call_options, op_function, false, section,
-                        request, input, manage_counters, &config_changed,
-                        &the_cib, &result_cib, &cib_diff, &output);
+    rc = cib_perform_op(NULL, op, call_options, op_function, section, request,
+                        input, manage_counters, &config_changed, &the_cib,
+                        &result_cib, &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
@@ -680,19 +650,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                 config_changed = true;
             }
 
-            pcmk__trace("Activating %s->%s%s",
-                        pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
-                        pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES),
-                        (config_changed? " changed" : ""));
-
             rc = based_activate_cib(result_cib, config_changed, op);
-            if (rc != pcmk_rc_ok) {
-                pcmk__err("Failed to activate new CIB: %s", pcmk_rc_str(rc));
-            }
-        }
-
-        if ((rc == pcmk_rc_ok) && contains_config_change(cib_diff)) {
-            cib_read_config(config_hash, result_cib);
         }
 
         /* @COMPAT Nodes older than feature set 3.19.0 don't support
@@ -725,14 +683,8 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
 
         output = result_cib;
 
-    } else {
-        pcmk__trace("Not activating %d %d %s", rc,
-                    pcmk__is_set(call_options, cib_dryrun),
-                    pcmk__xe_get(result_cib, PCMK_XA_NUM_UPDATES));
-
-        if (result_cib != the_cib) {
-            pcmk__xml_free(result_cib);
-        }
+    } else if (result_cib != the_cib) {
+        pcmk__xml_free(result_cib);
     }
 
     if (!pcmk__any_flags_set(call_options,
@@ -740,7 +692,7 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         pcmk__trace("Sending notifications %d",
                     pcmk__is_set(call_options, cib_dryrun));
         based_diff_notify(op, pcmk_rc2legacy(rc), call_id, client_id,
-                          client_name, originator, input, cib_diff);
+                          client_name, originator, cib_diff);
     }
 
     pcmk__log_xml_patchset(LOG_TRACE, cib_diff);
