@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -615,11 +615,11 @@ cib__process_modify(const char *op, int options, const char *section,
 
 static int
 process_query_xpath(const char *op, int options, const char *xpath,
-                    xmlNode *existing_cib, xmlNode **answer)
+                    xmlNode *cib, xmlNode **answer)
 {
     int num_results = 0;
     int rc = pcmk_rc_ok;
-    xmlXPathObject *xpath_obj = pcmk__xpath_search(existing_cib->doc, xpath);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(cib->doc, xpath);
 
     num_results = pcmk__xpath_num_results(xpath_obj);
     if (num_results == 0) {
@@ -706,7 +706,7 @@ done:
 }
 
 static int
-process_query_section(int options, const char *section, xmlNode *existing_cib,
+process_query_section(int options, const char *section, xmlNode *cib,
                       xmlNode **answer)
 {
     xmlNode *obj_root = NULL;
@@ -715,7 +715,7 @@ process_query_section(int options, const char *section, xmlNode *existing_cib,
         section = NULL;
     }
 
-    obj_root = pcmk_find_cib_element(existing_cib, section);
+    obj_root = pcmk_find_cib_element(cib, section);
     if (obj_root == NULL) {
         return ENXIO;
     }
@@ -741,10 +741,10 @@ cib__process_query(const char *op, int options, const char *section,
                    xmlNode **result_cib, xmlNode **answer)
 {
     if (pcmk__is_set(options, cib_xpath)) {
-        return process_query_xpath(op, options, section, existing_cib, answer);
+        return process_query_xpath(op, options, section, *result_cib, answer);
     }
 
-    return process_query_section(options, section, existing_cib, answer);
+    return process_query_section(options, section, *result_cib, answer);
 }
 
 static int
