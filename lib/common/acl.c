@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+#include <stdint.h>                     // uint32_t
 #include <stdio.h>
 #include <sys/types.h>
 #include <pwd.h>
@@ -25,26 +26,71 @@
 #include <crm/common/xml.h>
 #include "crmcommon_private.h"
 
-typedef struct xml_acl_s {
+typedef struct {
     enum pcmk__xml_flags mode;
     gchar *xpath;
 } xml_acl_t;
 
+/*!
+ * \internal
+ * \brief Free an \c xml_acl_t object
+ *
+ * \param[in,out] data  \c xml_acl_t object to free
+ *
+ * \note This is a \c GDestroyNotify function.
+ */
 static void
 free_acl(void *data)
 {
-    if (data) {
-        xml_acl_t *acl = data;
+    xml_acl_t *acl = data;
 
-        g_free(acl->xpath);
-        free(acl);
+    if (acl == NULL) {
+        return;
     }
+
+    g_free(acl->xpath);
+    free(acl);
 }
 
+/*!
+ * \internal
+ * \brief Free a list of \c xml_acl_t objects
+ *
+ * \param[in,out] acls  List of \c xml_acl_t objects
+ */
 void
 pcmk__free_acls(GList *acls)
 {
     g_list_free_full(acls, free_acl);
+}
+
+/*!
+ * \internal
+ * \brief Get readable description of an ACL mode
+ *
+ * \param[in] mode  ACL mode (one of \c pcmk__xf_acl_read,
+ *                  \c pcmk__xf_acl_write, \c pcmk__xf_acl_deny, or
+ *                  \c pcmk__xf_acl_create
+ *
+ * \return Static string describing \p mode, or \c "none" if \p mode is invalid
+ */
+static const char *
+acl_mode_text(enum pcmk__xml_flags mode)
+{
+    switch (mode) {
+        case pcmk__xf_acl_read:
+            return "read";
+
+        case pcmk__xf_acl_create:
+        case pcmk__xf_acl_write:
+            return "read/write";
+
+        case pcmk__xf_acl_deny:
+            return "deny";
+
+        default:
+            return "none";
+    }
 }
 
 /*!
@@ -73,58 +119,130 @@ parse_acl_mode(const char *text)
     return pcmk__xf_none;
 }
 
-static GList *
-create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
+/*!
+ * \internal
+ * \brief Set a config warning if ACL permission specifiers are mismatched
+ *
+ * The schema requires exactly one of \c PCMK_XA_XPATH, \c PCMK_XA_REFERENCE,
+ * or \c PCMK_XA_OBJECT_TYPE. Additionally, \c PCMK_XA_ATTRIBUTE may be used
+ * only with \c PCMK_XA_OBJECT_TYPE.
+ *
+ * We've handled these in a very permissive and inconsistent manner thus far. To
+ * avoid breaking backward compatibility, the best we can do for now is to set
+ * configuration warnings and log how we will behave if the specifiers are set
+ * incorrectly.
+ *
+ * The caller has already ensured that at least one of \c PCMK_XA_XPATH,
+ * \c PCMK_XA_REFERENCE, or \c PCMK_XA_OBJECT_TYPE is set.
+ */
+static void
+warn_on_specifier_mismatch(const xmlNode *xml, const char *xpath,
+                           const char *ref, const char *tag, const char *attr)
 {
-    xml_acl_t *acl = NULL;
+    // @COMPAT Let's be more strict at a compatibility break... please...
 
+    const char *id = pcmk__s(pcmk__xe_id(xml), "without ID");
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    if ((xpath != NULL) && (ref == NULL) && (tag == NULL) && (attr == NULL)) {
+        return;
+    }
+
+    if ((xpath == NULL) && (ref != NULL) && (tag == NULL) && (attr == NULL)) {
+        return;
+    }
+
+    if ((xpath == NULL) && (ref == NULL) && (tag != NULL)) {
+        return;
+    }
+
+    // Remaining cases are not possible with schema validation enabled
+
+    if (xpath != NULL) {
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s "
+                          "(in <%s> %s) has " PCMK_XA_XPATH " set along with "
+                          PCMK_XA_REFERENCE ", " PCMK_XA_OBJECT_TYPE ", or "
+                          PCMK_XA_ATTRIBUTE ". Using " PCMK_XA_XPATH " and "
+                          "ignoring the rest.", id, parent_type, parent_id);
+        return;
+    }
+
+    // Log both of the below if appropriate
+
+    if ((tag == NULL) && (attr != NULL)) {
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s "
+                          "(in <%s> %s) has " PCMK_XA_ATTRIBUTE " set without "
+                          PCMK_XA_OBJECT_TYPE ". Using '*' for "
+                          PCMK_XA_OBJECT_TYPE ".", id, parent_type, parent_id);
+    }
+
+    if (ref != NULL) {
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s "
+                          "(in <%s> %s) has " PCMK_XA_REFERENCE " set along "
+                          "with " PCMK_XA_OBJECT_TYPE " or "
+                          PCMK_XA_ATTRIBUTE ". Using all of these criteria "
+                          "together, but support may be removed in a future "
+                          "release.", id, parent_type, parent_id);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Create an ACL based on an ACL permission XML element
+ *
+ * The \c PCMK_XE_ACL_PERMISSION element should have already been validated for
+ * unrecoverable schema violations when this function is called. There may be
+ * recoverable violations, but the element should be well-formed enough to
+ * create an \c xml_acl_t.
+ *
+ * \param[in] xml   \c PCMK_XE_ACL_PERMISSION element
+ * \param[in] mode  One of \c pcmk__xf_acl_read, \c pcmk__xf_acl_write, or
+ *                  \c pcmk__xf_acl_deny
+ *
+ * \return Newly allocated ACL object (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c free_acl().
+ */
+static xml_acl_t *
+create_acl(const xmlNode *xml, enum pcmk__xml_flags mode)
+{
     const char *tag = pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE);
     const char *ref = pcmk__xe_get(xml, PCMK_XA_REFERENCE);
     const char *xpath = pcmk__xe_get(xml, PCMK_XA_XPATH);
     const char *attr = pcmk__xe_get(xml, PCMK_XA_ATTRIBUTE);
 
-    if ((tag == NULL) && (ref == NULL) && (xpath == NULL)) {
-        // Schema should prevent this, but to be safe ...
-        pcmk__trace("Ignoring ACL <%s> element without selection criteria",
-                    xml->name);
-        return NULL;
-    }
+    GString *buf = NULL;
+    xml_acl_t *acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
 
-    acl = pcmk__assert_alloc(1, sizeof (xml_acl_t));
+    warn_on_specifier_mismatch(xml, xpath, ref, tag, attr);
 
     acl->mode = mode;
-    if (xpath) {
+
+    if (xpath != NULL) {
         acl->xpath = g_strdup(xpath);
-        pcmk__trace("Unpacked ACL <%s> element using xpath: %s", xml->name,
-                    acl->xpath);
-
-    } else {
-        GString *buf = g_string_sized_new(128);
-
-        if ((ref != NULL) && (attr != NULL)) {
-            // NOTE: schema currently does not allow this
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" PCMK_XA_ID "='",
-                           ref, "' and @", attr, "]", NULL);
-
-        } else if (ref != NULL) {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@" PCMK_XA_ID "='",
-                           ref, "']", NULL);
-
-        } else if (attr != NULL) {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), "[@", attr, "]", NULL);
-
-        } else {
-            pcmk__g_strcat(buf, "//", pcmk__s(tag, "*"), NULL);
-        }
-
-        acl->xpath = buf->str;
-
-        g_string_free(buf, FALSE);
-        pcmk__trace("Unpacked ACL <%s> element as xpath: %s", xml->name,
-                    acl->xpath);
+        return acl;
     }
 
-    return g_list_append(acls, acl);
+    buf = g_string_sized_new(128);
+
+    g_string_append_printf(buf, "//%s", pcmk__s(tag, "*"));
+
+    if ((ref != NULL) && (attr != NULL)) {
+        // Not possible with schema validation enabled
+        g_string_append_printf(buf, "[@" PCMK_XA_ID "='%s' and @%s]", ref,
+                               attr);
+
+    } else if (ref != NULL) {
+        g_string_append_printf(buf, "[@" PCMK_XA_ID "='%s']", ref);
+
+    } else if (attr != NULL) {
+        g_string_append_printf(buf, "[@%s]", attr);
+    }
+
+    acl->xpath = g_string_free(buf, FALSE);
+    return acl;
 }
 
 /*!
@@ -133,31 +251,32 @@ create_acl(const xmlNode *xml, GList *acls, enum pcmk__xml_flags mode)
  *
  * Append the new \c xml_acl_t object to a list.
  *
- * \param[in]     xml   Permission element to unpack
- * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
+ * \param[in]     xml        Permission element to unpack
+ * \param[in,out] user_data  List of ACLs to append to (<tt>GList **</tt>)
  *
- * \return On success, \p acls with the new item appended, or a new list
- *         containing only the new item if \p acls is \c NULL. On failure,
- *         \p acls (unmodified).
+ * \return \c pcmk_rc_ok (to keep iterating)
  *
- * \note The caller is responsible for freeing the return value using
+ * \note The caller is responsible for freeing \p *user_data using
  *       \c pcmk__free_acls().
+ * \note This is used as a callback for \c pcmk__xe_foreach_child().
  */
-static GList *
-unpack_acl_permission(const xmlNode *xml, GList *acls)
+static int
+unpack_acl_permission(xmlNode *xml, void *user_data)
 {
+    GList **acls = user_data;
     const char *id = pcmk__xe_id(xml);
-    const char *type = (const char *) xml->name;
     const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
     const char *parent_type = (const char *) xml->parent->name;
 
     const char *kind_s = pcmk__xe_get(xml, PCMK_XA_KIND);
     enum pcmk__xml_flags kind = pcmk__xf_none;
+    xml_acl_t *acl = NULL;
 
     if (id == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_warn("<%s> element in <%s> %s has no " PCMK_XA_ID " "
-                          "attribute", type, parent_type, parent_id);
+        pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element in <%s> %s has "
+                          "no " PCMK_XA_ID " attribute", parent_type,
+                          parent_id);
 
         // Set a value to use for logging and continue unpacking
         id = "without ID";
@@ -165,120 +284,343 @@ unpack_acl_permission(const xmlNode *xml, GList *acls)
 
     if (kind_s == NULL) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with no "
-                         PCMK_XA_KIND " attribute", type, id, parent_type,
-                         parent_id);
-        return acls;
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
+                         "(in <%s> %s) with no " PCMK_XA_KIND " attribute", id,
+                         parent_type, parent_id);
+        return pcmk_rc_ok;
     }
 
     kind = parse_acl_mode(kind_s);
     if (kind == pcmk__xf_none) {
         // Not possible with schema validation enabled
-        pcmk__config_err("Ignoring <%s> element %s (in <%s> %s) with unknown "
-                         "ACL kind '%s'", type, id, parent_type, parent_id,
-                         kind_s);
-        return acls;
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
+                         "(in <%s> %s) with unknown ACL kind '%s'", id,
+                         parent_type, parent_id, kind_s);
+        return pcmk_rc_ok;
     }
 
-    pcmk__trace("Unpacking <%s> element %s (in <%s> %s) with "
-                PCMK_XA_KIND "='%s'", type, id, parent_type, parent_id, kind_s);
+    if ((pcmk__xe_get(xml, PCMK_XA_OBJECT_TYPE) == NULL)
+        && (pcmk__xe_get(xml, PCMK_XA_REFERENCE) == NULL)
+        && (pcmk__xe_get(xml, PCMK_XA_XPATH) == NULL)) {
 
-    return create_acl(xml, acls, kind);
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_PERMISSION "> element %s "
+                         "(in <%s> %s) without selection criteria. Exactly one "
+                         "of the following attributes is required: "
+                         PCMK_XA_OBJECT_TYPE ", " PCMK_XA_REFERENCE ", "
+                         PCMK_XA_XPATH ".", id, parent_type, parent_id);
+        return pcmk_rc_ok;
+    }
+
+    acl = create_acl(xml, kind);
+    *acls = g_list_append(*acls, acl);
+
+    pcmk__trace("Unpacked <" PCMK_XE_ACL_PERMISSION "> element %s "
+                "(in <%s> %s) with " PCMK_XA_KIND "='%s' as XPath '%s'", id,
+                parent_type, parent_id, kind_s, acl->xpath);
+
+    return pcmk_rc_ok;
 }
 
 /*!
  * \internal
- * \brief Unpack a user, group, or role subtree of the ACLs section
+ * \brief Get the ACL role whose ID matches a role reference
  *
- * \param[in]     acl_top    XML of entire ACLs section
- * \param[in]     acl_entry  XML of ACL element being unpacked
- * \param[in,out] acls       List of ACLs unpacked so far
+ * If there are multiple matches (not allowed by the schema), return the first
+ * one for backward compatibility and set a config warning.
  *
- * \return New head of (possibly modified) acls
+ * \param[in] xml  \c PCMK_XE_ROLE element (an ACL role reference)
  *
- * \note This function is recursive
+ * \return \c PCMK_XE_ACL_ROLE element whose \c PCMK_XA_ID attribute matches
+ *         that of \p xml, or \c NULL if none is found
  */
-static GList *
-parse_acl_entry(const xmlNode *acl_top, const xmlNode *acl_entry, GList *acls)
+static xmlNode *
+resolve_acl_role_ref(xmlNode *xml)
 {
-    for (const xmlNode *child = pcmk__xe_first_child(acl_entry, NULL, NULL,
-                                                     NULL);
-         child != NULL; child = pcmk__xe_next(child, NULL)) {
+    const char *id = pcmk__xe_id(xml);
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
 
-        if (pcmk__xe_is(child, PCMK_XE_ACL_PERMISSION)) {
-            acls = unpack_acl_permission(child, acls);
+    xmlNode *result = NULL;
+    char *xpath = pcmk__assert_asprintf("//" PCMK_XE_ACL_ROLE
+                                        "[@" PCMK_XA_ID "='%s']", id);
+    xmlXPathObject *xpath_obj = pcmk__xpath_search(xml->doc, xpath);
+    const int num_results = pcmk__xpath_num_results(xpath_obj);
 
-        } else if (pcmk__xe_is(child, PCMK_XE_ROLE)) {
-            const char *ref_role = pcmk__xe_get(child, PCMK_XA_ID);
+    switch (num_results) {
+        case 0:
+            // Caller calls pcmk__config_err()
+            break;
 
-            pcmk__trace("Unpacking <" PCMK_XE_ROLE "> element");
+        case 1:
+            // Success
+            result = pcmk__xpath_result(xpath_obj, 0);
+            break;
 
-            if (ref_role == NULL) {
-                continue;
-            }
-
-            for (const xmlNode *role = pcmk__xe_first_child(acl_top,
-                                                            PCMK_XE_ACL_ROLE,
-                                                            NULL, NULL);
-                 role != NULL; role = pcmk__xe_next(role, PCMK_XE_ACL_ROLE)) {
-
-                const char *role_id = pcmk__xe_id(role);
-
-                if (!pcmk__str_eq(ref_role, role_id, pcmk__str_none)) {
-                    continue;
-                }
-
-                pcmk__trace("Unpacking referenced role '%s' in <%s> element",
-                            role_id, acl_entry->name);
-                acls = parse_acl_entry(acl_top, role, acls);
-                break;
-            }
-        }
+        default:
+            /* Not possible with schema validation enabled.
+             *
+             * @COMPAT At a compatibility break, use pcmk__xpath_find_one(),
+             * treat this as an error, and return NULL. For now, return the
+             * first match.
+             */
+            result = pcmk__xpath_result(xpath_obj, 0);
+            pcmk__config_warn("Multiple <" PCMK_XE_ACL_ROLE "> elements have "
+                              PCMK_XA_ID "='%s'. Returning the first one for "
+                              "<" PCMK_XE_ROLE "> in <%s> %s.", id, parent_type,
+                              parent_id);
+            break;
     }
 
+    free(xpath);
+    xmlXPathFreeObject(xpath_obj);
+    return result;
+}
+
+/*!
+ * \internal
+ * \brief Unpack an ACL role reference to a list of \c xml_acl_t
+ *
+ * Unpack a \c PCMK_XE_ROLE element within a \c PCMK_XE_ACL_TARGET or
+ * \c PCMK_XE_ACL_GROUP element. This element is a role reference. Its
+ * \c PCMK_XA_ID attribute is an IDREF; it must match the ID of a
+ * \c PCMK_XE_ACL_ROLE child of the \c PCMK_XE_ACLS element.
+ *
+ * The referenced \c PCMK_XE_ACL_ROLE contains zero or more
+ * \c PCMK_XE_ACL_PERMISSION children. Unpack those children to \c xml_acl_t
+ * objects and append them to a list.
+ *
+ * \param[in]     xml   Role reference element to unpack
+ * \param[in,out] acls  List of ACLs to append to (\c NULL to start a new list)
+ *
+ * \return On success, \p acls with the new items appended, or a new list
+ *         containing only the new items if \p acls is \c NULL. On failure,
+ *         \p acls (unmodified).
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__free_acls().
+ */
+static GList *
+unpack_acl_role_ref(xmlNode *xml, GList *acls)
+{
+    const char *id = pcmk__xe_id(xml);
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
+
+    xmlNode *role = NULL;
+
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <" PCMK_XE_ROLE "> element in <%s> %s with "
+                         "no " PCMK_XA_ID " attribute", parent_type, parent_id);
+
+        // There is no reference role ID to match and unpack
+        return acls;
+    }
+
+    role = resolve_acl_role_ref(xml);
+    if (role == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <" PCMK_XE_ROLE "> element %s in <%s> %s: "
+                         "no <" PCMK_XE_ACL_ROLE "> with matching "
+                         PCMK_XA_ID " found", id, parent_type, parent_id);
+        return acls;
+    }
+
+    pcmk__trace("Unpacking role '%s' referenced in <%s> element %s", id,
+                parent_type, parent_id);
+
+    pcmk__xe_foreach_child(role, PCMK_XE_ACL_PERMISSION, unpack_acl_permission,
+                           &acls);
     return acls;
 }
 
-/*
-    <acls>
-      <acl_target id="l33t-haxor"><role id="auto-l33t-haxor"/></acl_target>
-      <acl_role id="auto-l33t-haxor">
-        <acl_permission id="crook-nothing" kind="deny" xpath="/cib"/>
-      </acl_role>
-      <acl_target id="niceguy">
-        <role id="observer"/>
-      </acl_target>
-      <acl_role id="observer">
-        <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-        <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
-        <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
-      </acl_role>
-      <acl_target id="badidea"><role id="auto-badidea"/></acl_target>
-      <acl_role id="auto-badidea">
-        <acl_permission id="badidea-resources" kind="read" xpath="//meta_attributes"/>
-        <acl_permission id="badidea-resources-2" kind="deny" reference="dummy-meta_attributes"/>
-      </acl_role>
-    </acls>
-*/
-
-static const char *
-acl_to_text(enum pcmk__xml_flags flags)
+/*!
+ * \internal
+ * \brief Unpack a child of an ACL target or group to a list of \c xml_acl_t
+ *
+ * \param[in]     xml        Child of a \c PCMK_XE_ACL_TARGET or
+ *                           \c PCMK_XE_ACL_GROUP
+ * \param[in,out] user_data  List of ACLs to append to (<tt>GList **</tt>)
+ *
+ * \return \c pcmk_rc_ok (to keep iterating)
+ *
+ * \note The caller is responsible for freeing \p *user_data using
+ *       \c pcmk__free_acls().
+ * \note This is used as a callback for \c pcmk__xe_foreach_child().
+ */
+static int
+unpack_acl_role_ref_or_perm(xmlNode *xml, void *user_data)
 {
-    if (pcmk__is_set(flags, pcmk__xf_acl_deny)) {
-        return "deny";
+    GList **acls = user_data;
+    const char *id = pcmk__s(pcmk__xe_id(xml), "without ID");
+    const char *parent_id = pcmk__s(pcmk__xe_id(xml->parent), "without ID");
+    const char *parent_type = (const char *) xml->parent->name;
 
-    } else if (pcmk__any_flags_set(flags,
-                                   pcmk__xf_acl_write|pcmk__xf_acl_create)) {
-        return "read/write";
-
-    } else if (pcmk__is_set(flags, pcmk__xf_acl_read)) {
-        return "read";
+    if (pcmk__xe_is(xml, PCMK_XE_ROLE)) {
+        *acls = unpack_acl_role_ref(xml, *acls);
+        return pcmk_rc_ok;
     }
-    return "none";
+
+    if (!pcmk__xe_is(xml, PCMK_XE_ACL_PERMISSION)) {
+        return pcmk_rc_ok;
+    }
+
+    /* Not possible with schema validation enabled.
+     *
+     * @COMPAT Drop this support at a compatibility break. A PCMK_XE_ACL_TARGET
+     * or PCMK_XE_ACL_GROUP element should contain only PCMK_XE_ROLE elements as
+     * children.
+     */
+    pcmk__config_warn("<" PCMK_XE_ACL_PERMISSION "> element %s is a child of "
+                      "<%s> %s. It should be a child of an "
+                      "<" PCMK_XE_ACL_ROLE ">, and the parent should reference "
+                      "that <" PCMK_XE_ACL_ROLE ">.", id, parent_type,
+                      parent_id);
+
+    unpack_acl_permission(xml, acls);
+    return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Unpack an ACL target (user) element to a list of \c xml_acl_t
+ *
+ * \param[in]     xml      \c PCMK_XE_ACL_TARGET element to unpack
+ * \param[in,out] docpriv  XML document private data whose \c acls field to
+ *                         append to
+ */
 static void
-apply_acl(xmlNode *match, void *user_data)
+unpack_acl_target(xmlNode *xml, xml_doc_private_t *docpriv)
+{
+    const char *id = pcmk__s(pcmk__xe_get(xml, PCMK_XA_NAME), pcmk__xe_id(xml));
+
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_TARGET "> element with no "
+                         PCMK_XA_NAME " or " PCMK_XA_ID " attribute");
+
+        // There is no user ID for the current ACL user to match
+        return;
+    }
+
+    if (!pcmk__str_eq(id, docpriv->acl_user, pcmk__str_none)) {
+        return;
+    }
+
+    pcmk__trace("Unpacking ACLs for user '%s'", id);
+    pcmk__xe_foreach_child(xml, NULL, unpack_acl_role_ref_or_perm,
+                           &docpriv->acls);
+}
+
+/*!
+ * \internal
+ * \brief Unpack an ACL group element to a list of \c xml_acl_t
+ *
+ * \param[in]     xml      \c PCMK_XE_ACL_TARGET element to unpack
+ * \param[in,out] docpriv  XML document private data whose \c acls field to
+ *                         append to
+ */
+static void
+unpack_acl_group(xmlNode *xml, xml_doc_private_t *docpriv)
+{
+    const char *id = pcmk__s(pcmk__xe_get(xml, PCMK_XA_NAME), pcmk__xe_id(xml));
+
+    if (id == NULL) {
+        // Not possible with schema validation enabled
+        pcmk__config_err("Ignoring <" PCMK_XE_ACL_GROUP "> element with no "
+                         PCMK_XA_NAME " or " PCMK_XA_ID " attribute");
+
+        // There is no group ID for the current ACL user to match
+        return;
+    }
+
+    if (!pcmk__is_user_in_group(docpriv->acl_user, id)) {
+        return;
+    }
+
+    pcmk__trace("Unpacking ACLs for group '%s' (user '%s')", id,
+                docpriv->acl_user);
+    pcmk__xe_foreach_child(xml, NULL, unpack_acl_role_ref_or_perm,
+                           &docpriv->acls);
+}
+
+/*!
+ * \internal
+ * \brief Unpack an ACL target (user) or group element to a list of \c xml_acl_t
+ *
+ * \param[in]     xml        Element to unpack (\c PCMK_XE_ACL_TARGET
+ *                           or \c PCMK_XE_ACL_GROUP)
+ * \param[in,out] user_data  XML document private data whose \c acls field to
+ *                           append to (<tt>xml_doc_private_t *</tt>)
+ *
+ * \return \c pcmk_rc_ok (to keep iterating)
+ *
+ * \note The caller is responsible for freeing \p user_data->acls using
+ *       \c pcmk__free_acls().
+ * \note This is used as a callback for \c pcmk__xe_foreach_child().
+ */
+static int
+unpack_acl_target_or_group(xmlNode *xml, void *user_data)
+{
+    if (pcmk__xe_is(xml, PCMK_XE_ACL_TARGET)) {
+        unpack_acl_target(xml, user_data);
+        return pcmk_rc_ok;
+    }
+
+    if (pcmk__xe_is(xml, PCMK_XE_ACL_GROUP)) {
+        unpack_acl_group(xml, user_data);
+        return pcmk_rc_ok;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Add a user's ACLs to a target XML document's private data
+ *
+ * Unpack the ACLs that apply to the user from the \c PCMK_XE_ACLS element in
+ * the source document to the \c acls list in the target document. If that list
+ * is already non-empty or if the user doesn't require ACLs, do nothing.
+ *
+ * Also set the target document's \c acl_user field to the given user.
+ *
+ * \param[in]     source  XML document whose ACL definitions to use
+ * \param[in,out] target  XML document private data whose \c acls field to set
+ * \param[in]     user    User whose ACLs to unpack
+ */
+void
+pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target, const char *user)
+{
+    xmlNode *acls = NULL;
+
+    pcmk__assert(target != NULL);
+
+    if ((target->acls != NULL) || !pcmk_acl_required(user)) {
+        return;
+    }
+
+    pcmk__str_update(&target->acl_user, user);
+
+    acls = pcmk__xpath_find_one(source, "//" PCMK_XE_ACLS, PCMK__LOG_NEVER);
+    pcmk__xe_foreach_child(acls, NULL, unpack_acl_target_or_group, target);
+}
+
+/*!
+ * \internal
+ * \brief Set an ACL's mode on a node that matches its XPath expression
+ *
+ * Given a node that matches an ACL's XPath expression, get the corresponding
+ * XML element. Then set the ACL's mode flag in the private data of that
+ * element. For details, see comment in the body below, as well as the doc
+ * comment for \c pcmk__xpath_match_element().
+ *
+ * \param[in,out] match      Node matched by the ACL's XPath expression
+ * \param[in]     user_data  ACL object (<tt>xml_acl_t *</tt>)
+ */
+static void
+apply_acl_to_match(xmlNode *match, void *user_data)
 {
     const xml_acl_t *acl = user_data;
     xml_node_private_t *nodepriv = NULL;
@@ -323,11 +665,41 @@ apply_acl(xmlNode *match, void *user_data)
     pcmk__set_xml_flags(nodepriv, acl->mode);
 
     path = pcmk__element_xpath(match);
-    pcmk__trace("Applied %s ACL to %s matched by %s", acl_to_text(acl->mode),
+    pcmk__trace("Applied %s ACL to %s matched by %s", acl_mode_text(acl->mode),
                 path->str, acl->xpath);
     g_string_free(path, TRUE);
 }
 
+/*!
+ * \internal
+ * \brief Apply an ACL to each matching node in an XML document
+ *
+ * See \c apply_acl_to_match() for details on applying the ACL.
+ *
+ * \param[in,out] data       ACL object to apply (<tt>xml_acl_t *</tt>)
+ * \param[in,out] user_data  XML document to match against (<tt>xmlDoc *</tt>)
+ */
+static void
+apply_acl_to_doc(gpointer data, gpointer user_data)
+{
+    xml_acl_t *acl = data;
+    xmlDoc *doc = user_data;
+
+    pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl_to_match, acl);
+}
+
+/*!
+ * \internal
+ * \brief Apply all of an XML document's ACLs
+ *
+ * For each ACL in the document's \c acls list, search the document for nodes
+ * that match the ACL's XPath expression. Then apply the ACL to each matching
+ * node.
+ *
+ * See \c apply_acl_to_doc() and \c apply_acl_to_match() for details.
+ *
+ * \param[in,out] doc  XML document
+ */
 void
 pcmk__apply_acls(xmlDoc *doc)
 {
@@ -340,115 +712,81 @@ pcmk__apply_acls(xmlDoc *doc)
         return;
     }
 
-    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
-        const xml_acl_t *acl = iter->data;
-
-        pcmk__xpath_foreach_result(doc, acl->xpath, apply_acl, (void *) acl);
-    }
+    g_list_foreach(docpriv->acls, apply_acl_to_doc, doc);
 }
 
 /*!
  * \internal
- * \brief Unpack ACLs for a given user into the
- * metadata of the target XML tree
+ * \brief Fetch a user's ACLs from a source document and apply them to a target
  *
- * Taking the description of ACLs from the source XML tree and
- * marking up the target XML tree with access information for the
- * given user by tacking it onto the relevant nodes
+ * Unpack the given user's ACLs from the \c PCMK_XE_ACLS element in the source
+ * document to the \c acls list in the target document. Then set the target
+ * document's \c pcmk__xf_acl_enabled flag and apply the unpacked ACLs.
  *
- * \param[in]     source  XML with ACL definitions
- * \param[in,out] target  XML that ACLs will be applied to
- * \param[in]     user    Username whose ACLs need to be unpacked
+ * \param[in]     source  XML document whose ACL definitions to use
+ * \param[in,out] target  XML document to apply ACLs to
+ * \param[in]     user    User whose ACLs to apply
  */
 void
-pcmk__unpack_acls(xmlNode *source, xmlNode *target, const char *user)
-{
-    xml_doc_private_t *docpriv = NULL;
-    xmlNode *acls = NULL;
-
-    pcmk__assert(target != NULL);
-
-    docpriv = target->doc->_private;
-    if (!pcmk_acl_required(user) || (docpriv->acls != NULL)) {
-        return;
-    }
-
-    pcmk__str_update(&docpriv->acl_user, user);
-
-    acls = pcmk__xpath_find_one(source->doc, "//" PCMK_XE_ACLS,
-                                PCMK__LOG_NEVER);
-
-    for (const xmlNode *child = pcmk__xe_first_child(acls, NULL, NULL, NULL);
-         child != NULL; child = pcmk__xe_next(child, NULL)) {
-
-        const bool is_target = pcmk__xe_is(child, PCMK_XE_ACL_TARGET);
-        const bool is_group = pcmk__xe_is(child, PCMK_XE_ACL_GROUP);
-        const char *id = NULL;
-
-        if (!is_target && !is_group) {
-            continue;
-        }
-
-        id = pcmk__s(pcmk__xe_get(child, PCMK_XA_NAME), pcmk__xe_id(child));
-        if (id == NULL) {
-            // Not possible with schema validation enabled
-            continue;
-        }
-
-        if (is_target) {
-            if (!pcmk__str_eq(id, user, pcmk__str_none)) {
-                continue;
-            }
-            pcmk__debug("Unpacking ACLs for user '%s'", id);
-
-        } else {
-            if (!pcmk__is_user_in_group(user, id)) {
-                continue;
-            }
-            pcmk__debug("Unpacking ACLs for group '%s' (user '%s')", id, user);
-        }
-
-        docpriv->acls = parse_acl_entry(acls, child, docpriv->acls);
-    }
-}
-
-/*!
- * \internal
- * \brief Copy source to target and set xf_acl_enabled flag in target
- *
- * \param[in]     acl_source    XML with ACL definitions
- * \param[in,out] target        XML that ACLs will be applied to
- * \param[in]     user          Username whose ACLs need to be set
- */
-void
-pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user)
+pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user)
 {
     if (target == NULL) {
         return;
     }
-    pcmk__unpack_acls(acl_source, target, user);
-    pcmk__xml_doc_set_flags(target->doc, pcmk__xf_acl_enabled);
-    pcmk__apply_acls(target->doc);
+    pcmk__unpack_acls(source, target->_private, user);
+    pcmk__xml_doc_set_flags(target, pcmk__xf_acl_enabled);
+    pcmk__apply_acls(target);
 }
 
-static inline bool
-test_acl_mode(enum pcmk__xml_flags allowed, enum pcmk__xml_flags requested)
+/*!
+ * \internal
+ * \brief Check whether a flag group allows the requested ACL access
+ *
+ * At most one ACL mode flag should be set in the flag group, but this function
+ * defines an order of precedence if multiple flags are set.
+ *
+ * \param[in] flags  Group of <tt>enum pcmk__xml_flags</tt>
+ * \param[in] mode   Requested access type (one of \c pcmk__xf_acl_read,
+ *                   \c pcmk__xf_acl_write, or \c pcmk__xf_acl_create)
+ *
+ * \return \c true if \p flags allows the access type in \p mode, or \c false
+ *         otherwise
+ *
+ * \note \c pcmk__xf_acl_deny is an allowed value for \p mode, but it would make
+ *       no sense. This function always returns \c false if \c pcmk__xf_acl_deny
+ *       is set in \p flags.
+ */
+static bool
+is_mode_allowed(uint32_t flags, enum pcmk__xml_flags mode)
 {
-    if (pcmk__is_set(allowed, pcmk__xf_acl_deny)) {
+    if (pcmk__is_set(flags, pcmk__xf_acl_deny)) {
+        // All access is denied
         return false;
+    }
 
-    } else if (pcmk__all_flags_set(allowed, requested)) {
-        return true;
-
-    } else if (pcmk__is_set(requested, pcmk__xf_acl_read)
-               && pcmk__is_set(allowed, pcmk__xf_acl_write)) {
-        return true;
-
-    } else if (pcmk__is_set(requested, pcmk__xf_acl_create)
-               && pcmk__any_flags_set(allowed,
-                                      pcmk__xf_acl_write|pcmk__xf_created)) {
+    if (pcmk__is_set(flags, mode)) {
+        // The access we requested is explicitly allowed
         return true;
     }
+
+    if ((mode == pcmk__xf_acl_read)
+        && pcmk__is_set(flags, pcmk__xf_acl_write)) {
+
+        // Write access provides read access
+        return true;
+    }
+
+    if ((mode == pcmk__xf_acl_create)
+        && pcmk__any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_created)) {
+
+        /* Write access provides create access.
+         *
+         * @TODO Why does the \c pcmk__xf_created flag provide create access?
+         * This was introduced by commit e2ed85fe.
+         */
+        return true;
+    }
+
     return false;
 }
 
@@ -488,7 +826,7 @@ purge_xml_attributes(xmlNode *xml)
     bool readable_children = false;
     xml_node_private_t *nodepriv = xml->_private;
 
-    if (test_acl_mode(nodepriv->flags, pcmk__xf_acl_read)) {
+    if (is_mode_allowed(nodepriv->flags, pcmk__xf_acl_read)) {
         pcmk__trace("%s[@" PCMK_XA_ID "=%s] is readable", xml->name,
                     pcmk__xe_id(xml));
         return true;
@@ -522,7 +860,9 @@ purge_xml_attributes(xmlNode *xml)
  * \param[in]  xml         XML to be copied
  * \param[out] result      Copy of XML portions readable via ACLs
  *
- * \return true if xml exists and ACLs are required for user, false otherwise
+ * \return \c true if \p acl_source and \p xml are non-<tt>NULL</tt> and ACLs
+ *         are required for \p user, or \c false otherwise
+ *
  * \note If this returns true, caller should use \p result rather than \p xml
  */
 bool
@@ -533,14 +873,16 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
     xml_doc_private_t *docpriv = NULL;
 
     *result = NULL;
-    if ((xml == NULL) || !pcmk_acl_required(user)) {
+    if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
+        || !pcmk_acl_required(user)) {
+
         return false;
     }
 
     target = pcmk__xml_copy(NULL, xml);
     docpriv = target->doc->_private;
 
-    pcmk__enable_acl(acl_source, target, user);
+    pcmk__enable_acls(acl_source->doc, target->doc, user);
 
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
 
@@ -767,12 +1109,13 @@ xml_acl_disable(xmlNode *xml)
                                             "access to %s",                 \
                                             LOG_TRACE, __LINE__, 0 ,        \
                                             prefix, user,                   \
-                                            acl_to_text(mode), xpath->str); \
+                                            acl_mode_text(mode),            \
+                                            xpath->str);                    \
                 g_string_free(xpath, TRUE);                                 \
             },                                                              \
             {}                                                              \
         );                                                                  \
-    } while (false);
+    } while (0)
 
 bool
 pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
@@ -811,7 +1154,7 @@ pcmk__check_acl(xmlNode *xml, const char *attr_name, enum pcmk__xml_flags mode)
 
         const xml_node_private_t *nodepriv = parent->_private;
 
-        if (test_acl_mode(nodepriv->flags, mode)) {
+        if (is_mode_allowed(nodepriv->flags, mode)) {
             return true;
         }
 
@@ -841,7 +1184,7 @@ pcmk_acl_required(const char *user)
         pcmk__trace("ACLs not required because no user set");
         return false;
 
-    } else if (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root")) {
+    } else if (pcmk__is_privileged(user)) {
         pcmk__trace("ACLs not required for privileged user %s", user);
         return false;
     }

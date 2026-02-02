@@ -320,7 +320,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
         pcmk__xml_commit_changes(scratch->doc);
         pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acl(*current_cib, scratch, user);
+            pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
         }
 
         pcmk__trace("Processing %s for section '%s', user '%s'", op,
@@ -343,7 +343,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
 
         pcmk__xml_doc_set_flags(scratch->doc, pcmk__xf_tracking);
         if (enable_acl) {
-            pcmk__enable_acl(*current_cib, scratch, user);
+            pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
         }
 
         pcmk__trace("Processing %s for section '%s', user '%s'", op,
@@ -361,7 +361,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
             pcmk__trace("Inferring changes after %s op", op);
             pcmk__xml_commit_changes(scratch->doc);
             if (enable_acl) {
-                pcmk__enable_acl(*current_cib, scratch, user);
+                pcmk__enable_acls((*current_cib)->doc, scratch->doc, user);
             }
             pcmk__xml_mark_changes(*current_cib, scratch);
         }
