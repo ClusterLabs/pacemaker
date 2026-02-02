@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdbool.h>
+#include <glib.h>
 
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -92,8 +93,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
     } else {
         (*out)->dest = fopen(filename, "w");
         if ((*out)->dest == NULL) {
-            pcmk__output_free(*out);
-            *out = NULL;
+            g_clear_pointer(out, pcmk__output_free);
             return errno;
         }
     }
@@ -102,7 +102,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
     (*out)->messages = pcmk__strkey_table(free, NULL);
 
     if ((*out)->init(*out) == false) {
-        pcmk__output_free(*out);
+        g_clear_pointer(out, pcmk__output_free);
         return ENOMEM;
     }
 
