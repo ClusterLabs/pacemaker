@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -292,7 +292,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
         if (rc == pcmk_ok) {
             pcmk__info("* Wrote %s[%s]=%s", a->id, peer,
                        pcmk__s(v->requested, "(unset)"));
-            pcmk__str_update(&(v->requested), NULL);
+            g_clear_pointer(&v->requested, free);
         } else {
             do_crm_log(level, "* Could not write %s[%s]=%s",
                        a->id, peer, pcmk__s(v->requested, "(unset)"));

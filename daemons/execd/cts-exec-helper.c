@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -81,8 +81,8 @@ param_key_val_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
     if (key != NULL && val != NULL) {
         options.params = lrmd_key_value_add(options.params, key, val);
-        pcmk__str_update(&key, NULL);
-        pcmk__str_update(&val, NULL);
+        g_clear_pointer(&key, free);
+        g_clear_pointer(&val, free);
     }
 
     return TRUE;
