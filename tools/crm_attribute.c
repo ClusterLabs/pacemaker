@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -90,7 +90,7 @@ list_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 static gboolean
 delete_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = attr_cmd_delete;
-    pcmk__str_update(&options.attr_value, NULL);
+    g_clear_pointer(&options.attr_value, free);
     return TRUE;
 }
 
@@ -149,7 +149,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 static gboolean
 value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     options.command = attr_cmd_query;
-    pcmk__str_update(&options.attr_value, NULL);
+    g_clear_pointer(&options.attr_value, free);
     return TRUE;
 }
 

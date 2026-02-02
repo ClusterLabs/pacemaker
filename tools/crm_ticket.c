@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,8 +78,8 @@ attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
     }
 
     pcmk__insert_dup(attr_set, options.attr_name, options.attr_value);
-    pcmk__str_update(&options.attr_name, NULL);
-    pcmk__str_update(&options.attr_value, NULL);
+    g_clear_pointer(&options.attr_name, free);
+    g_clear_pointer(&options.attr_value, free);
 
     modified = true;
 
@@ -147,8 +147,8 @@ set_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     }
 
     pcmk__insert_dup(attr_set, options.attr_name, options.attr_value);
-    pcmk__str_update(&options.attr_name, NULL);
-    pcmk__str_update(&options.attr_value, NULL);
+    g_clear_pointer(&options.attr_name, free);
+    g_clear_pointer(&options.attr_value, free);
 
     modified = true;
 
