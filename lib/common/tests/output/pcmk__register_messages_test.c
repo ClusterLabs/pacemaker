@@ -15,66 +15,17 @@
 
 #include "../../crmcommon_private.h"
 
-static int
-null_message_fn(pcmk__output_t *out, va_list args) {
-    return pcmk_rc_ok;
-}
-
-static int
-null_message_fn_2(pcmk__output_t *out, va_list args) {
-    return pcmk_rc_ok;
-}
-
-static bool
-fake_text_init(pcmk__output_t *out) {
-    return true;
-}
-
 static void
-fake_text_free_priv(pcmk__output_t *out) {
-    /* This function intentionally left blank */
-}
-
-static pcmk__output_t *
-mk_fake_text_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
-
-    if (retval == NULL) {
-        return NULL;
-    }
-
-    retval->fmt_name = "text";
-    retval->init = fake_text_init;
-    retval->free_priv = fake_text_free_priv;
-
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    return retval;
-}
-
-static int
-setup(void **state) {
-    pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
-    return 0;
-}
-
-static int
-teardown(void **state) {
-    pcmk__unregister_formats();
-    return 0;
-}
-
-static void
-invalid_entries(void **state) {
+invalid_entries(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
         /* We can't test a NULL message_id here because that's the marker for
          * the end of the table.
          */
-        { "", "", null_message_fn },
-        { "", NULL, null_message_fn },
+        { "", "", pcmk__output_message_dummy1 },
+        { "", NULL, pcmk__output_message_dummy1 },
         { "", "text", NULL },
         { NULL },
     };
@@ -88,12 +39,13 @@ invalid_entries(void **state) {
 }
 
 static void
-valid_entries(void **state) {
+valid_entries(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
-        { "msg1", "text", null_message_fn },
-        { "msg2", "text", null_message_fn_2 },
+        { "msg1", "text", pcmk__output_message_dummy1 },
+        { "msg2", "text", pcmk__output_message_dummy2 },
         { NULL },
     };
 
@@ -101,19 +53,22 @@ valid_entries(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 2);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     pcmk__output_message_dummy1);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"),
+                     pcmk__output_message_dummy2);
 
     pcmk__output_free(out);
 }
 
 static void
-duplicate_message_ids(void **state) {
+duplicate_message_ids(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
-        { "msg1", "text", null_message_fn },
-        { "msg1", "text", null_message_fn_2 },
+        { "msg1", "text", pcmk__output_message_dummy1 },
+        { "msg1", "text", pcmk__output_message_dummy2 },
         { NULL },
     };
 
@@ -121,18 +76,20 @@ duplicate_message_ids(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     pcmk__output_message_dummy2);
 
     pcmk__output_free(out);
 }
 
 static void
-duplicate_functions(void **state) {
+duplicate_functions(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
-        { "msg1", "text", null_message_fn },
-        { "msg2", "text", null_message_fn },
+        { "msg1", "text", pcmk__output_message_dummy1 },
+        { "msg2", "text", pcmk__output_message_dummy1 },
         { NULL },
     };
 
@@ -140,18 +97,21 @@ duplicate_functions(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 2);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"), null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     pcmk__output_message_dummy1);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg2"),
+                     pcmk__output_message_dummy1);
 
     pcmk__output_free(out);
 }
 
 static void
-default_handler(void **state) {
+default_handler(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
-        { "msg1", "default", null_message_fn },
+        { "msg1", "default", pcmk__output_message_dummy1 },
         { NULL },
     };
 
@@ -159,18 +119,20 @@ default_handler(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     pcmk__output_message_dummy1);
 
     pcmk__output_free(out);
 }
 
 static void
-override_default_handler(void **state) {
+override_default_handler(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
-        { "msg1", "default", null_message_fn },
-        { "msg1", "text", null_message_fn_2 },
+        { "msg1", "default", pcmk__output_message_dummy1 },
+        { "msg1", "text", pcmk__output_message_dummy2 },
         { NULL },
     };
 
@@ -178,15 +140,16 @@ override_default_handler(void **state) {
 
     pcmk__register_messages(out, entries);
     assert_int_equal(g_hash_table_size(out->messages), 1);
-    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"), null_message_fn_2);
+    assert_ptr_equal(g_hash_table_lookup(out->messages, "msg1"),
+                     pcmk__output_message_dummy2);
 
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test_setup_teardown(invalid_entries, setup, teardown),
-                cmocka_unit_test_setup_teardown(valid_entries, setup, teardown),
-                cmocka_unit_test_setup_teardown(duplicate_message_ids, setup, teardown),
-                cmocka_unit_test_setup_teardown(duplicate_functions, setup, teardown),
-                cmocka_unit_test_setup_teardown(default_handler, setup, teardown),
-                cmocka_unit_test_setup_teardown(override_default_handler, setup, teardown))
+PCMK__UNIT_TEST(pcmk__output_test_setup_group, pcmk__output_test_teardown_group,
+                cmocka_unit_test(invalid_entries),
+                cmocka_unit_test(valid_entries),
+                cmocka_unit_test(duplicate_message_ids),
+                cmocka_unit_test(duplicate_functions),
+                cmocka_unit_test(default_handler),
+                cmocka_unit_test(override_default_handler))

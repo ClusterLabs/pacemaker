@@ -997,6 +997,9 @@ pcmk__output_select_rc(int old_rc, int new_rc)
  * inspect the internal formatters hash table.
  */
 GHashTable *pcmk__output_formatters(void);
+
+// Add this one so that we can restore a saved table
+void pcmk__set_output_formatters(GHashTable *value);
 #endif
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \

@@ -18,6 +18,10 @@
 
 // LCOV_EXCL_START
 
+static bool fake_text_init_succeeds = true;
+static bool testing_output_free = false;
+static bool testing_output_and_clear_error = false;
+
 void
 pcmk__assert_validates(xmlNode *xml)
 {
@@ -170,6 +174,122 @@ pcmk__test_init_logging(const char *name, const char *filename)
         pcmk__add_logfile(filename);
         set_crm_log_level(LOG_DEBUG);
     }
+}
+
+
+// Output test utilities
+
+static bool
+fake_text_init(pcmk__output_t *out)
+{
+    return fake_text_init_succeeds;
+}
+
+static void
+fake_text_free_priv(pcmk__output_t *out)
+{
+    if (testing_output_free) {
+        function_called();
+    }
+}
+
+G_GNUC_PRINTF(2, 3)
+static void
+fake_text_err(pcmk__output_t *out, const char *format, ...)
+{
+    if (testing_output_and_clear_error) {
+        function_called();
+    }
+}
+
+pcmk__output_t *
+pcmk__mk_fake_text_output(char **argv)
+{
+    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+
+    if (retval == NULL) {
+        return NULL;
+    }
+
+    retval->fmt_name = "text";
+
+    retval->init = fake_text_init;
+    retval->free_priv = fake_text_free_priv;
+
+    retval->register_message = pcmk__register_message;
+    retval->message = pcmk__call_message;
+
+    retval->err = fake_text_err;
+
+    return retval;
+}
+
+int
+pcmk__output_test_setup_group(void **state)
+{
+    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
+    return 0;
+}
+
+int
+pcmk__output_test_teardown_group(void **state)
+{
+    pcmk__unregister_formats();
+    return 0;
+}
+
+void
+pcmk__set_fake_text_init_succeeds(bool value)
+{
+    fake_text_init_succeeds = value;
+}
+
+void
+pcmk__set_testing_output_free(bool value)
+{
+    testing_output_free = value;
+}
+
+void
+pcmk__set_testing_output_and_clear_error(bool value)
+{
+    testing_output_and_clear_error = value;
+}
+
+void
+pcmk__expect_fake_text_free_priv(void)
+{
+    expect_function_call(fake_text_free_priv);
+}
+
+void
+pcmk__expect_fake_text_err(void)
+{
+    expect_function_call(fake_text_err);
+}
+
+pcmk__output_t *
+pcmk__output_null_create1(char **argv)
+{
+    return NULL;
+}
+
+pcmk__output_t *
+pcmk__output_null_create2(char **argv)
+{
+    return NULL;
+}
+
+int
+pcmk__output_message_dummy1(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_ok;
+}
+
+int
+pcmk__output_message_dummy2(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP
