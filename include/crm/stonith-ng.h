@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_STONITH_NG__H
-#  define PCMK__CRM_STONITH_NG__H
+#define PCMK__CRM_STONITH_NG__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,11 +30,11 @@ extern "C" {
  * when possible.
  */
 
-#  include <dlfcn.h>
-#  include <errno.h>
-#  include <stdbool.h>  // bool
-#  include <stdint.h>   // UINT32_C, uint32_t
-#  include <time.h>     // time_t
+#include <dlfcn.h>
+#include <errno.h>
+#include <stdbool.h>    // bool
+#include <stdint.h>     // UINT32_C, uint32_t
+#include <time.h>       // time_t
 
 // @TODO Keep this definition but make it internal
 /*!
@@ -184,6 +184,7 @@ typedef struct stonith_history_s {
 } stonith_history_t;
 
 // @TODO Keep this typedef but rename it and make it internal
+//! \deprecated Do not use
 typedef struct stonith_s stonith_t;
 
 // @TODO Keep this definition but make it internal
