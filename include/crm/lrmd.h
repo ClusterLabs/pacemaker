@@ -167,6 +167,7 @@ typedef struct lrmd_rsc_info_s {
     char *provider;
 } lrmd_rsc_info_t;
 
+//! \deprecated Use \c lrmd_op_info_t instead of <tt>struct lrmd_op_info_s</tt>
 typedef struct lrmd_op_info_s {
     char *rsc_id;
     char *action;
