@@ -323,6 +323,7 @@ typedef struct cib_api_operations_s {
                          int call_options);
 } cib_api_operations_t;
 
+//! \deprecated Use \c cib_t instead of <tt>struct cib_s</tt>.
 struct cib_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     enum cib_state state;
