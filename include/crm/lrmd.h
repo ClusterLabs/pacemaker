@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,16 +8,17 @@
  */
 
 #ifndef PCMK__CRM_LRMD__H
-#  define PCMK__CRM_LRMD__H
+#define PCMK__CRM_LRMD__H
 
-#include <stdbool.h>      // bool
-#include <stdint.h>       // UINT32_C
-#include <glib.h>         // guint, GList
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // UINT32_C
+
+#include <glib.h>                   // guint, GList
+
 #include <crm_config.h>
+#include <crm/common/internal.h>    // pcmk__compare_versions()
 #include <crm/lrmd_events.h>
 #include <crm/services.h>
-
-#include <crm/common/internal.h>    // pcmk__compare_versions()
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,11 @@ extern "C" {
  */
 
 typedef struct lrmd_s lrmd_t;
+
+/*!
+ * \deprecated Use \c lrmd_key_value_t instead of
+ *             <tt>struct lrmd_key_value_s</tt>.
+ */
 typedef struct lrmd_key_value_s {
     char *key;
     char *value;
@@ -504,4 +510,4 @@ lrmd_event_type2str(enum lrmd_callback_event type)
 }
 #endif
 
-#endif
+#endif  // PCMK__CRM_LRMD__H
