@@ -190,8 +190,21 @@ For security reasons, this capability is disabled by default. If you wish to
 allow remote access, set the ``remote-tls-port`` (encrypted) or
 ``remote-clear-port`` (unencrypted) CIB properties (attributes of the ``cib``
 element). Encrypted communication can be performed keyless (which makes it
-subject to man-in-the-middle attacks), but a better option is to also use
-TLS certificates.
+subject to man-in-the-middle attacks), using pre-shared keys (PSK), or TLS
+certificates.
+
+To use PSK, you simply need to generate a key and then distribute it to the
+administrator's machine as well as any cluster nodes you wish to have access
+to.  Generating a key can be done with the ``dd`` command:
+
+.. code-block:: none
+
+   # dd if=/dev/random of=/etc/pacemaker/cib_authkey bs=4K count=1
+
+Make sure that the key is readable only by ``CIB_user`` on all systems and that
+it is kept secure.  Any user that can access this file will be able to attempt
+to access the cluster, though they will still need to know both the username
+and password to be able to authenticate and do anything.
 
 To enable TLS certificates, it is recommended to first set up your own
 Certificate Authority (CA) and generate a root CA certificate. Then create a
