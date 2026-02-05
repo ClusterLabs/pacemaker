@@ -192,6 +192,10 @@ typedef struct lrmd_list_s {
 void lrmd_list_freeall(lrmd_list_t * head);
 void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
+/*!
+ * \deprecated Use \c lrmd_api_operations_t instead of
+ *             <tt>struct lrmd_api_operations_s</tt>.
+ */
 typedef struct lrmd_api_operations_s {
     /*!
      * \brief Connect to an executor
