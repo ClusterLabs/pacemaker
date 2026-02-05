@@ -19,7 +19,7 @@
 #include <crm/common/ipc_pacemakerd.h>
 #include "crmcommon_private.h"
 
-typedef struct pacemakerd_api_private_s {
+typedef struct {
     enum pcmk_pacemakerd_state state;
     char *client_uuid;
 } pacemakerd_api_private_t;

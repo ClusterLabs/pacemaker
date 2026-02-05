@@ -45,7 +45,7 @@
  * information kept in a device_properties_t.
  */
 
-typedef struct device_properties_s {
+typedef struct {
     /* Whether access to this device has been verified */
     gboolean verified;
 

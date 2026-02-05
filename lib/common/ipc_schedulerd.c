@@ -20,7 +20,7 @@
 
 #include "crmcommon_private.h"
 
-typedef struct schedulerd_api_private_s {
+typedef struct {
     char *client_uuid;
 } schedulerd_api_private_t;
 

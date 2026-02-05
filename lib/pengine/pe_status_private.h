@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the Pacemaker project contributors
+ * Copyright 2018-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,7 +29,7 @@ extern "C" {
 #define G_GNUC_INTERNAL
 #endif
 
-typedef struct notify_data_s {
+typedef struct {
     GSList *keys;               // Environment variable name/value pairs
 
     const char *action;

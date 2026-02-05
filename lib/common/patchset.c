@@ -619,7 +619,7 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
     return target;
 }
 
-typedef struct xml_change_obj_s {
+typedef struct {
     const xmlNode *change;
     xmlNode *match;
 } xml_change_obj_t;

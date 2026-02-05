@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 
 #include "pe_status_private.h"
 
-typedef struct notify_entry_s {
+typedef struct {
     const pcmk_resource_t *rsc;
     const pcmk_node_t *node;
 } notify_entry_t;
