@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,16 +8,16 @@
  */
 
 #ifndef PCMK__CRM_CIB_CIB_TYPES__H
-#  define PCMK__CRM_CIB_CIB_TYPES__H
+#define PCMK__CRM_CIB_CIB_TYPES__H
 
-#  include <stdbool.h>
-#  include <stdint.h>           // UINT32_C
+#include <stdbool.h>
+#include <stdint.h>             // UINT32_C
 
-#  include <glib.h>             // gboolean, GList
-#  include <libxml/tree.h>      // xmlNode
+#include <glib.h>               // gboolean, GList
+#include <libxml/tree.h>        // xmlNode
 
-#  include <crm/common/ipc.h>
-#  include <crm/common/xml.h>
+#include <crm/common/ipc.h>
+#include <crm/common/xml.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -130,6 +130,10 @@ enum cib_call_options {
 
 typedef struct cib_s cib_t;
 
+/*!
+ * \deprecated Use \c cib_api_operations_t instead of
+ *             <tt>struct cib_api_operations_s</tt>.
+ */
 typedef struct cib_api_operations_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
     // @COMPAT At compatibility break, drop name (always use crm_system_name)
