@@ -123,9 +123,9 @@ pcmk__pcmkd_api_reply2str(enum pcmk_pacemakerd_api_reply reply)
 static int
 new_data(pcmk_ipc_api_t *api)
 {
-    struct pacemakerd_api_private_s *private = NULL;
+    pacemakerd_api_private_t *private = NULL;
 
-    api->api_data = calloc(1, sizeof(struct pacemakerd_api_private_s));
+    api->api_data = calloc(1, sizeof(pacemakerd_api_private_t));
 
     if (api->api_data == NULL) {
         return errno;
@@ -144,7 +144,7 @@ new_data(pcmk_ipc_api_t *api)
 static void
 free_data(void *data)
 {
-    free(((struct pacemakerd_api_private_s *) data)->client_uuid);
+    free(((pacemakerd_api_private_t *) data)->client_uuid);
     free(data);
 }
 
@@ -152,7 +152,7 @@ free_data(void *data)
 static int
 post_connect(pcmk_ipc_api_t *api)
 {
-    struct pacemakerd_api_private_s *private = NULL;
+    pacemakerd_api_private_t *private = NULL;
 
     if (api->api_data == NULL) {
         return EINVAL;
@@ -166,7 +166,7 @@ post_connect(pcmk_ipc_api_t *api)
 static void
 post_disconnect(pcmk_ipc_api_t *api)
 {
-    struct pacemakerd_api_private_s *private = NULL;
+    pacemakerd_api_private_t *private = NULL;
 
     if (api->api_data == NULL) {
         return;
