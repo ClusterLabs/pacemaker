@@ -725,7 +725,12 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 continue;
             }
 
-            // Remove all attributes
+            /* Remove all existing attributes and then set the ones from attrs.
+             * We remove all attributes, even the ones that will be reset or
+             * unchanged, because for some reason we care about whether their
+             * positions have changed. Removing all attributes first ensures
+             * that the resulting order matches the order in attrs.
+             */
             pcmk__xe_remove_matching_attrs(match, false, NULL, NULL);
 
             for (xmlAttrPtr pIter = pcmk__xe_first_attr(attrs); pIter != NULL;
