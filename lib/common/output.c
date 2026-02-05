@@ -286,7 +286,7 @@ pcmk__xml_output_finish(pcmk__output_t *out, crm_exit_t exit_status,
     }
 
     out->finish(out, exit_status, FALSE, (void **) xml);
-    pcmk__output_free(out);
+    g_clear_pointer(&out, pcmk__output_free);
 }
 
 /*!
