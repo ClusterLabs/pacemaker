@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2025 the Pacemaker project contributors
+ * Copyright 2005-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,10 +10,10 @@
 #ifndef PCMK__CRM_COMMON_ISO8601__H
 #define PCMK__CRM_COMMON_ISO8601__H
 
-#include <time.h>
 #include <ctype.h>
-#include <stdint.h>   // uint32_t
 #include <stdbool.h>  // bool
+#include <stdint.h>   // uint32_t
+#include <time.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +37,10 @@ extern "C" {
  */
 typedef struct crm_time_s crm_time_t;
 
+/*!
+ * \deprecated Use \c crm_time_period_t instead of
+ *             <tt>struct crm_time_period_s</tt>.
+ */
 typedef struct crm_time_period_s {
     crm_time_t *start;
     crm_time_t *end;
