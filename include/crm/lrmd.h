@@ -489,6 +489,7 @@ typedef struct lrmd_api_operations_s {
 
 } lrmd_api_operations_t;
 
+//! \deprecated Use \c lrmd_t instead of <tt>struct lrmd_s</tt>.
 struct lrmd_s {
     lrmd_api_operations_t *cmds;
     void *lrmd_private;
