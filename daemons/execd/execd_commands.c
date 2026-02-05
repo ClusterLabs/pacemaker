@@ -942,7 +942,7 @@ action_complete(svc_action_t * action)
             if (time_left >= 0) {
                 pcmk__notice("Giving up on %s %s (rc=%d): monitor pending "
                              "timeout (first pending notification=%s "
-                             "timeout=%ds)",
+                             "timeout=%dms)",
                              cmd->rsc_id, cmd->action, cmd->result.exit_status,
                              g_strchomp(ctime(&cmd->epoch_rcchange)),
                              cmd->timeout_orig);
