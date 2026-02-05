@@ -156,6 +156,10 @@ enum lrmd_call_options {
     lrmd_opt_notify_changes_only    = (UINT32_C(1) << 2),
 };
 
+/*!
+ * \deprecated Use \c lrmd_rsc_info_t instead of
+ *             <tt>struct lrmd_rsc_info_s</tt>.
+ */
 typedef struct lrmd_rsc_info_s {
     char *id;
     char *type;
