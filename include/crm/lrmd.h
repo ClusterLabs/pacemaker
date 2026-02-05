@@ -183,6 +183,7 @@ void lrmd_free_op_info(lrmd_op_info_t *op_info);
 
 typedef void (*lrmd_event_callback) (lrmd_event_data_t * event);
 
+//! \deprecated Use \c lrmd_list_t instead of <tt>struct lrmd_list_s</tt>
 typedef struct lrmd_list_s {
     const char *val;
     struct lrmd_list_s *next;
