@@ -34,6 +34,7 @@ extern "C" {
  *
  * \note Negative years are treated inconsistently and should not be relied
  *       upon.
+ * \deprecated Use \c crm_time_t instead of <tt>struct crm_time_s</tt>.
  */
 typedef struct crm_time_s crm_time_t;
 
