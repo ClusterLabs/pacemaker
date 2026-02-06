@@ -1,11 +1,12 @@
 """Create a split brain cluster and verify a resource is multiply managed."""
 
 __all__ = ["SplitBrainTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
 
+from pacemaker._cts import logging
 from pacemaker._cts.input import should_continue
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -53,7 +54,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log(f"Node {node} not in {self._env['nodes']!r} from {partition!r}")
+                logging.log(f"Node {node} not in {self._env['nodes']!r} from {partition!r}")
 
         if not other_nodes:
             return
@@ -63,7 +64,7 @@ class SplitBrainTest(CTSTest):
 
         for node in partition:
             if not self._cm.isolate_node(node, other_nodes):
-                self._logger.log(f"Could not isolate {node}")
+                logging.log(f"Could not isolate {node}")
                 return
 
     def _heal_partition(self, partition):
@@ -74,7 +75,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log(f"Node {node} not in {self._env['nodes']!r}")
+                logging.log(f"Node {node} not in {self._env['nodes']!r}")
 
         if len(other_nodes) == 0:
             return

@@ -1,13 +1,14 @@
 """Restart the cluster and verify resources remain running."""
 
 __all__ = ["Reattach"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 import time
 
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -143,7 +144,7 @@ class Reattach(CTSTest):
         self._set_unmanaged(node)
 
         if not managed.look_for_all():
-            self._logger.log(f"Patterns not found: {managed.unmatched!r}")
+            logging.log(f"Patterns not found: {managed.unmatched!r}")
             return self.failure("Resource management not disabled")
 
         pats = [

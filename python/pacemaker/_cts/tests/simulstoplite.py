@@ -1,9 +1,10 @@
 """Simultaneously stop running nodes."""
 
 __all__ = ["SimulStopLite"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -78,7 +79,7 @@ class SimulStopLite(CTSTest):
         if did_fail:
             return self.failure(f"Active nodes exist: {up_nodes}")
 
-        self._logger.log(f"Warn: All nodes stopped but CTS didn't detect: {watch.unmatched}")
+        logging.log(f"Warn: All nodes stopped but CTS didn't detect: {watch.unmatched}")
         return self.failure(f"Missing log message: {watch.unmatched}")
 
     def is_applicable(self):
