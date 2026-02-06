@@ -187,11 +187,12 @@ It is possible to run configuration commands from a machine that is not part of
 the cluster.
 
 For security reasons, this capability is disabled by default. If you wish to
-allow remote access, set the ``remote-tls-port`` (encrypted) or
-``remote-clear-port`` (unencrypted) CIB properties (attributes of the ``cib``
-element). Encrypted communication can be performed with TLS certificates, using
-pre-shared keys (PSK), or keyless (which makes it subject to man-in-the-middle
-attacks).
+allow remote access, set the ``remote-tls-port`` CIB property (attribute of
+the ``cib`` element). Communication can be performed with TLS certificates,
+using pre-shared keys (PSK), or keyless (which makes it subject to
+man-in-the-middle attacks).  If both TLS certificates and PSK are configured,
+only TLS certificates will be enabled.
+
 
 .. note::
 

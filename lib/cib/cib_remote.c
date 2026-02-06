@@ -449,6 +449,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             cib_tls_close(cib);
             return -1;
         }
+    } else {
+        pcmk__warn("Connecting to remote CIB without encryption. This is "
+                   "insecure and will be removed in a future release. Use "
+                   "the CIB_encrypted=true environment variable instead.");
     }
 
     /* Now that the handshake is done, see if any client TLS certificate is
