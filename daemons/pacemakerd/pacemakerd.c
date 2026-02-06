@@ -75,7 +75,9 @@ pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
                                    NULL);
     out->begin_list(out, NULL, NULL, PCMK_XE_FEATURES);
 
-    for (char **s = feature_list; *s != NULL; s++) {
+    for (const char *const *s = (const char *const *) feature_list; *s != NULL;
+         s++) {
+
         pcmk__output_create_xml_text_node(out, PCMK_XE_FEATURE, *s);
     }
 
@@ -363,7 +365,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
         exit_code = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",

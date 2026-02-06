@@ -161,7 +161,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
  */
 int
 pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
-                  const char **rule_ids)
+                  const char *const *rule_ids)
 {
     pcmk_scheduler_t *scheduler = NULL;
     int rc = pcmk_rc_ok;
@@ -178,7 +178,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
         return rc;
     }
 
-    for (const char **rule_id = rule_ids; *rule_id != NULL; rule_id++) {
+    for (const char *const *rule_id = rule_ids; *rule_id != NULL; rule_id++) {
         const char *error = NULL;
         int last_rc = eval_rule(scheduler, *rule_id, &error);
 
@@ -208,7 +208,7 @@ pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
 
     pcmk__register_lib_messages(out);
 
-    rc = pcmk__check_rules(out, input, date, rule_ids);
+    rc = pcmk__check_rules(out, input, date, (const char *const *) rule_ids);
     pcmk__xml_output_finish(out, pcmk_rc2exitc(rc), xml);
     return rc;
 }

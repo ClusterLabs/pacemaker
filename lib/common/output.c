@@ -53,6 +53,43 @@ pcmk__output_free(pcmk__output_t *out) {
 
 /*!
  * \internal
+ * \brief Call a formatting function for a previously registered message
+ *
+ * \param[in,out] out         Output object
+ * \param[in]     message_id  Message to handle
+ * \param[in]     ...         Arguments to be passed to the registered function
+ *
+ * \note This function is for implementing custom formatters. It should not
+ *       be called directly. Instead, call <tt>out->message</tt>.
+ *
+ * \return Return value of the formatting function, or \c EINVAL if no
+ *         formatting function is found
+ */
+static int
+call_message(pcmk__output_t *out, const char *message_id, ...)
+{
+    va_list args;
+    int rc = pcmk_rc_ok;
+    pcmk__message_fn_t fn;
+
+    pcmk__assert((out != NULL) && !pcmk__str_empty(message_id));
+
+    fn = g_hash_table_lookup(out->messages, message_id);
+    if (fn == NULL) {
+        pcmk__debug("Called unknown output message '%s' for format '%s'",
+                    message_id, out->fmt_name);
+        return EINVAL;
+    }
+
+    va_start(args, message_id);
+    rc = fn(out, args);
+    va_end(args);
+
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Create a new \p pcmk__output_t structure
  *
  * This function does not register any message functions with the newly created
@@ -70,9 +107,9 @@ pcmk__output_free(pcmk__output_t *out) {
  */
 int
 pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
-                      const char *filename, char **argv)
+                      const char *filename, const char *const *argv)
 {
-    pcmk__output_factory_t create = NULL;
+    pcmk__output_setup_fn_t setup_fn = NULL;
 
     pcmk__assert((formatters != NULL) && (out != NULL));
 
@@ -80,19 +117,24 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
      * what it supports so this also may not be valid.
      */
     if (fmt_name == NULL) {
-        create = g_hash_table_lookup(formatters, "text");
+        setup_fn = g_hash_table_lookup(formatters, "text");
     } else {
-        create = g_hash_table_lookup(formatters, fmt_name);
+        setup_fn = g_hash_table_lookup(formatters, fmt_name);
     }
 
-    if (create == NULL) {
+    if (setup_fn == NULL) {
         return pcmk_rc_unknown_format;
     }
 
-    *out = create(argv);
+    *out = calloc(1, sizeof(pcmk__output_t));
     if (*out == NULL) {
         return ENOMEM;
     }
+
+    setup_fn(*out);
+
+    (*out)->request = pcmk__quote_cmdline(argv);
+    (*out)->message = call_message;
 
     if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
         (*out)->dest = stdout;
@@ -119,7 +161,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
 
 int
 pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
-                 const char *filename, char **argv)
+                 const char *filename, const char *const *argv)
 {
     int rc = pcmk__bare_output_new(out, fmt_name, filename, argv);
 
@@ -133,12 +175,12 @@ pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
 
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
-                      pcmk__output_factory_t create,
+                      pcmk__output_setup_fn_t setup_fn,
                       const GOptionEntry *options)
 {
     char *name_copy = NULL;
 
-    pcmk__assert((create != NULL) && !pcmk__str_empty(name));
+    pcmk__assert((setup_fn != NULL) && !pcmk__str_empty(name));
 
     // cppcheck doesn't understand the above pcmk__assert line
     // cppcheck-suppress ctunullpointer
@@ -155,7 +197,7 @@ pcmk__register_format(GOptionGroup *group, const char *name,
         g_option_group_add_entries(group, options);
     }
 
-    g_hash_table_insert(formatters, name_copy, create);
+    g_hash_table_insert(formatters, name_copy, setup_fn);
     return pcmk_rc_ok;
 }
 
@@ -166,9 +208,12 @@ pcmk__register_formats(GOptionGroup *group,
     if (formats == NULL) {
         return;
     }
+
     for (const pcmk__supported_format_t *entry = formats; entry->name != NULL;
          entry++) {
-        pcmk__register_format(group, entry->name, entry->create, entry->options);
+
+        pcmk__register_format(group, entry->name, entry->setup_fn,
+                              entry->options);
     }
 }
 
@@ -180,28 +225,14 @@ pcmk__unregister_formats(void) {
     }
 }
 
-int
-pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
-    va_list args;
-    int rc = pcmk_rc_ok;
-    pcmk__message_fn_t fn;
-
-    pcmk__assert((out != NULL) && !pcmk__str_empty(message_id));
-
-    fn = g_hash_table_lookup(out->messages, message_id);
-    if (fn == NULL) {
-        pcmk__debug("Called unknown output message '%s' for format '%s'",
-                    message_id, out->fmt_name);
-        return EINVAL;
-    }
-
-    va_start(args, message_id);
-    rc = fn(out, args);
-    va_end(args);
-
-    return rc;
-}
-
+/*!
+ * \internal
+ * \brief Register a function to handle a custom message
+ *
+ * \param[in,out] out         Output object
+ * \param[in]     message_id  Message to handle
+ * \param[in]     fn          Format function to call for \p message_id
+ */
 void
 pcmk__register_message(pcmk__output_t *out, const char *message_id,
                        pcmk__message_fn_t fn)
@@ -301,14 +332,14 @@ int
 pcmk__log_output_new(pcmk__output_t **out)
 {
     int rc = pcmk_rc_ok;
-    const char* argv[] = { "", NULL };
+    const char *argv[] = { "", NULL };
     pcmk__supported_format_t formats[] = {
         PCMK__SUPPORTED_FORMAT_LOG,
         { NULL, NULL, NULL }
     };
 
     pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(out, "log", NULL, (char **) argv);
+    rc = pcmk__output_new(out, "log", NULL, argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
         pcmk__err("Can't log certain messages due to internal error: %s",
                   pcmk_rc_str(rc));
@@ -330,14 +361,14 @@ int
 pcmk__text_output_new(pcmk__output_t **out, const char *filename)
 {
     int rc = pcmk_rc_ok;
-    const char* argv[] = { "", NULL };
+    const char *argv[] = { "", NULL };
     pcmk__supported_format_t formats[] = {
         PCMK__SUPPORTED_FORMAT_TEXT,
         { NULL, NULL, NULL }
     };
 
     pcmk__register_formats(NULL, formats);
-    rc = pcmk__output_new(out, "text", filename, (char **) argv);
+    rc = pcmk__output_new(out, "text", filename, argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
         pcmk__err("Can't create text output object to internal error: %s",
                   pcmk_rc_str(rc));

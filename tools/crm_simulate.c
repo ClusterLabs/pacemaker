@@ -482,7 +482,8 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_simulate", args->verbosity);
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if (rc != pcmk_rc_ok) {
         fprintf(stderr, "Error creating output format %s: %s\n",
                 args->output_ty, pcmk_rc_str(rc));

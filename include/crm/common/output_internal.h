@@ -42,15 +42,15 @@ typedef struct pcmk__output_s pcmk__output_t;
 
 /*!
  * \internal
- * \brief The type of a function that creates a ::pcmk__output_t.
+ * \brief Function for format-specific setup of a \c pcmk__output_t
  *
- * Instances of this type are passed to pcmk__register_format(), stored in an
- * internal data structure, and later accessed by pcmk__output_new().  For 
- * examples, see pcmk__mk_xml_output() and pcmk__mk_text_output().
+ * Instances of this type are passed to \c pcmk__register_format(), stored in an
+ * internal data structure, and later accessed by \c pcmk__output_new(). For
+ * examples, see \c pcmk__output_setup_text() and \c pcmk__output_setup_xml().
  *
- * \param[in] argv The list of command line arguments.
+ * \param[in] out  Output object to set up
  */
-typedef pcmk__output_t * (*pcmk__output_factory_t)(char **argv);
+typedef void (*pcmk__output_setup_fn_t)(pcmk__output_t *out);
 
 /*!
  * \internal
@@ -131,9 +131,10 @@ typedef struct pcmk__supported_format_s {
     const char *name;
 
     /*!
-     * \brief A function that creates a ::pcmk__output_t.
+     * \internal
+     * \brief Function that does format-specific setup for a \c pcmk__output_t
      */
-    pcmk__output_factory_t create;
+    pcmk__output_setup_fn_t setup_fn;
 
     /*!
      * \brief Format-specific command line options.  This can be NULL if
@@ -148,17 +149,19 @@ typedef struct pcmk__supported_format_s {
 
 extern GOptionEntry pcmk__html_output_entries[];
 
-pcmk__output_t *pcmk__mk_html_output(char **argv);
-pcmk__output_t *pcmk__mk_log_output(char **argv);
-pcmk__output_t *pcmk__mk_none_output(char **argv);
-pcmk__output_t *pcmk__mk_text_output(char **argv);
-pcmk__output_t *pcmk__mk_xml_output(char **argv);
+void pcmk__output_setup_html(pcmk__output_t *out);
+void pcmk__output_setup_log(pcmk__output_t *out);
+void pcmk__output_setup_none(pcmk__output_t *out);
+void pcmk__output_setup_text(pcmk__output_t *out);
+void pcmk__output_setup_xml(pcmk__output_t *out);
 
-#define PCMK__SUPPORTED_FORMAT_HTML { "html", pcmk__mk_html_output, pcmk__html_output_entries }
-#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__mk_log_output, NULL }
-#define PCMK__SUPPORTED_FORMAT_NONE { PCMK_VALUE_NONE, pcmk__mk_none_output, NULL }
-#define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__mk_text_output, NULL }
-#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__mk_xml_output, NULL }
+#define PCMK__SUPPORTED_FORMAT_HTML \
+    { "html", pcmk__output_setup_html, pcmk__html_output_entries }
+#define PCMK__SUPPORTED_FORMAT_LOG  { "log", pcmk__output_setup_log, NULL }
+#define PCMK__SUPPORTED_FORMAT_NONE \
+    { PCMK_VALUE_NONE, pcmk__output_setup_none, NULL }
+#define PCMK__SUPPORTED_FORMAT_TEXT { "text", pcmk__output_setup_text, NULL }
+#define PCMK__SUPPORTED_FORMAT_XML  { "xml", pcmk__output_setup_xml, NULL }
 
 /*!
  * \brief This structure contains everything that makes up a single output
@@ -300,26 +303,12 @@ struct pcmk__output_s {
 
     /*!
      * \internal
-     * \brief Register a custom message.
-     *
-     * \param[in,out] out        The output functions structure.
-     * \param[in]     message_id The name of the message to register.  This name
-     *                           will be used as the message_id parameter to the
-     *                           message function in order to call the custom
-     *                           format function.
-     * \param[in]     fn         The custom format function to call for message_id.
-     */
-    void (*register_message) (pcmk__output_t *out, const char *message_id,
-                              pcmk__message_fn_t fn);
-
-    /*!
-     * \internal
      * \brief Call a previously registered custom message.
      *
      * \param[in,out] out        The output functions structure.
      * \param[in]     message_id The name of the message to call.  This name must
      *                           be the same as the message_id parameter of some
-     *                           previous call to register_message.
+     *                           previous call to \c pcmk__register_message().
      * \param[in] ...            Arguments to be passed to the registered function.
      *
      * \return A standard Pacemaker return code.  Generally: 0 if a function was
@@ -534,21 +523,6 @@ struct pcmk__output_s {
 
 /*!
  * \internal
- * \brief Call a formatting function for a previously registered message.
- *
- * \note This function is for implementing custom formatters.  It should not
- *       be called directly.  Instead, call out->message.
- *
- * \param[in,out] out        The output functions structure.
- * \param[in]     message_id The message to be handled.  Unknown messages
- *                           will be ignored.
- * \param[in]     ...        Arguments to be passed to the registered function.
- */
-int
-pcmk__call_message(pcmk__output_t *out, const char *message_id, ...);
-
-/*!
- * \internal
  * \brief Free a ::pcmk__output_t structure that was previously created by
  *        pcmk__output_new().
  *
@@ -578,27 +552,28 @@ void pcmk__output_free(pcmk__output_t *out);
  * \return Standard Pacemaker return code
  */
 int pcmk__output_new(pcmk__output_t **out, const char *fmt_name,
-                     const char *filename, char **argv);
+                     const char *filename, const char *const *argv);
 
 /*!
  * \internal
  * \brief Register a new output formatter, making it available for use
  *        the same as a base formatter.
  *
- * \param[in,out] group   A ::GOptionGroup that formatted output related command
- *                        line arguments should be added to.  This can be NULL
- *                        for use outside of command line programs.
- * \param[in]     name    The name of the format.  This will be used to select a
- *                        format from command line options and for displaying help.
- * \param[in]     create  A function that creates a ::pcmk__output_t.
- * \param[in]     options Format-specific command line options.  These will be
- *                        added to the context.  This argument can also be NULL.
+ * \param[in,out] group     Option group that formatted output-related command
+ *                          line arguments should be added to. This can be
+ *                          \c NULL for use outside of command line programs.
+ * \param[in]     name      Format name. This will be used to select a format
+ *                          from command line options and for displaying help.
+ * \param[in]     setup_fn  Function that initializes a \c pcmk__output_t
+ * \param[in]     options   Format-specific command line options. These will be
+ *                          added to the context. This argument can also be
+ *                          \c NULL.
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__register_format(GOptionGroup *group, const char *name,
-                      pcmk__output_factory_t create,
+                      pcmk__output_setup_fn_t setup,
                       const GOptionEntry *options);
 
 /*!
@@ -623,21 +598,6 @@ pcmk__register_formats(GOptionGroup *group,
  */
 void
 pcmk__unregister_formats(void);
-
-/*!
- * \internal
- * \brief Register a function to handle a custom message.
- *
- * \note This function is for implementing custom formatters.  It should not
- *       be called directly.  Instead, call out->register_message.
- *
- * \param[in,out] out        The output functions structure.
- * \param[in]     message_id The message to be handled.
- * \param[in]     fn         The custom format function to call for message_id.
- */
-void
-pcmk__register_message(pcmk__output_t *out, const char *message_id,
-                       pcmk__message_fn_t fn);
 
 /*!
  * \internal

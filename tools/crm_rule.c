@@ -120,7 +120,8 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging("crm_rule", args->verbosity);
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
@@ -200,7 +201,7 @@ main(int argc, char **argv)
     switch(options.mode) {
         case crm_rule_mode_check:
             rc = pcmk__check_rules(out, input, rule_date,
-                                   (const char **) options.rules);
+                                   (const char *const *) options.rules);
             exit_code = pcmk_rc2exitc(rc);
             break;
 

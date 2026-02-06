@@ -110,41 +110,30 @@ none_prompt(const char *prompt, bool echo, char **dest) {
     /* This function intentionally left blank */
 }
 
-pcmk__output_t *
-pcmk__mk_none_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+void
+pcmk__output_setup_none(pcmk__output_t *out)
+{
+    out->fmt_name = PCMK_VALUE_NONE;
 
-    if (retval == NULL) {
-        return NULL;
-    }
+    out->init = none_init;
+    out->free_priv = none_free_priv;
+    out->finish = none_finish;
+    out->reset = none_reset;
 
-    retval->fmt_name = PCMK_VALUE_NONE;
-    retval->request = pcmk__quote_cmdline(argv);
+    out->subprocess_output = none_subprocess_output;
+    out->version = none_version;
+    out->info = none_info;
+    out->transient = none_info;
+    out->err = none_err;
+    out->output_xml = none_output_xml;
 
-    retval->init = none_init;
-    retval->free_priv = none_free_priv;
-    retval->finish = none_finish;
-    retval->reset = none_reset;
+    out->begin_list = none_begin_list;
+    out->list_item = none_list_item;
+    out->increment_list = none_increment_list;
+    out->end_list = none_end_list;
 
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    retval->subprocess_output = none_subprocess_output;
-    retval->version = none_version;
-    retval->info = none_info;
-    retval->transient = none_info;
-    retval->err = none_err;
-    retval->output_xml = none_output_xml;
-
-    retval->begin_list = none_begin_list;
-    retval->list_item = none_list_item;
-    retval->increment_list = none_increment_list;
-    retval->end_list = none_end_list;
-
-    retval->is_quiet = none_is_quiet;
-    retval->spacer = none_spacer;
-    retval->progress = none_progress;
-    retval->prompt = none_prompt;
-
-    return retval;
+    out->is_quiet = none_is_quiet;
+    out->spacer = none_spacer;
+    out->progress = none_progress;
+    out->prompt = none_prompt;
 }

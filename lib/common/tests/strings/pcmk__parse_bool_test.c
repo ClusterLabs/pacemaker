@@ -15,103 +15,131 @@
 
 /*!
  * \internal
- * \brief Check a call with given input against expected return value and result
+ * \brief Check \c pcmk__parse_bool() succeeds and parses the input to true
  *
- * \param[in] input            Input string
- * \param[in] expected_rc      Expected return code
- * \param[in] expected_result  Expected parsed value (ignored unless
- *                             \p expected_rc is \c pcmk_rc_ok)
+ * \param[in] input  Input string (<tt>const char *</tt>)
  */
-static void
-assert_parse_bool(const char *input, int expected_rc, bool expected_result)
-{
-    bool result = false;
+#define assert_parse_bool_true(input)                                       \
+    do {                                                                    \
+        bool result = false;                                                \
+                                                                            \
+        /* Test with NULL result argument (for validation only) */          \
+        assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);        \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_true(result);                                                \
+                                                                            \
+        /* Repeat with result initially set to true */                      \
+        result = true;                                                      \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_true(result);                                                \
+    } while (0)
 
-    // Ensure we still validate the string with a NULL result argument
-    assert_int_equal(pcmk__parse_bool(input, NULL), expected_rc);
+/*!
+ * \internal
+ * \brief Check \c pcmk__parse_bool() succeeds and parses the input to false
+ *
+ * \param[in] input  Input string (<tt>const char *</tt>)
+ */
+#define assert_parse_bool_false(input)                                      \
+    do {                                                                    \
+        bool result = false;                                                \
+                                                                            \
+        /* Test with NULL result argument (for validation only) */          \
+        assert_int_equal(pcmk__parse_bool(input, NULL), pcmk_rc_ok);        \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_false(result);                                               \
+                                                                            \
+        /* Repeat with result initially set to true */                      \
+        result = true;                                                      \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), pcmk_rc_ok);     \
+        assert_false(result);                                               \
+    } while (0)
 
-    if (expected_rc != pcmk_rc_ok) {
-        // Make sure the value of result does not change on failure
-        expected_result = result;
-    }
-
-    assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);
-    if (expected_result) {
-        assert_true(result);
-    } else {
-        assert_false(result);
-    }
-
-    // Repeat with result initially set to true
-    result = true;
-    if (expected_rc != pcmk_rc_ok) {
-        expected_result = result;
-    }
-
-    assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);
-    if (expected_result) {
-        assert_true(result);
-    } else {
-        assert_false(result);
-    }
-}
+/*!
+ * \internal
+ * \brief Check that \c pcmk__parse_bool() fails and returns the expected value
+ *
+ * \param[in] input        Input string (<tt>const char *</tt>)
+ * \param[in] expected_rc  Expected return code (\c int)
+ */
+#define assert_parse_bool_failure(input, expected_rc)                       \
+    do {                                                                    \
+        bool result = false;                                                \
+                                                                            \
+        /* Test with NULL result argument (for validation only) */          \
+        assert_int_equal(pcmk__parse_bool(input, NULL), expected_rc);       \
+                                                                            \
+        /* Make sure the value of result does not change on failure */      \
+        assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);    \
+        assert_false(result);                                               \
+                                                                            \
+        /* Repeat with result initially set to true */                      \
+        result = true;                                                      \
+                                                                            \
+        assert_int_equal(pcmk__parse_bool(input, &result), expected_rc);    \
+        assert_true(result);                                                \
+    } while (0)
 
 static void
 bad_input(void **state)
 {
     // Dumps core via CRM_CHECK()
-    assert_parse_bool(NULL, EINVAL, false);
+    assert_parse_bool_failure(NULL, EINVAL);
 
-    assert_parse_bool("", pcmk_rc_bad_input, false);
-    assert_parse_bool("blahblah", pcmk_rc_bad_input, false);
+    assert_parse_bool_failure("", pcmk_rc_bad_input);
+    assert_parse_bool_failure("blahblah", pcmk_rc_bad_input);
 }
 
 static void
 is_true(void **state)
 {
-    assert_parse_bool("true", pcmk_rc_ok, true);
-    assert_parse_bool("TrUe", pcmk_rc_ok, true);
-    assert_parse_bool("on", pcmk_rc_ok, true);
-    assert_parse_bool("ON", pcmk_rc_ok, true);
-    assert_parse_bool("yes", pcmk_rc_ok, true);
-    assert_parse_bool("yES", pcmk_rc_ok, true);
-    assert_parse_bool("y", pcmk_rc_ok, true);
-    assert_parse_bool("Y", pcmk_rc_ok, true);
-    assert_parse_bool("1", pcmk_rc_ok, true);
+    assert_parse_bool_true("true");
+    assert_parse_bool_true("TrUe");
+    assert_parse_bool_true("on");
+    assert_parse_bool_true("ON");
+    assert_parse_bool_true("yes");
+    assert_parse_bool_true("yES");
+    assert_parse_bool_true("y");
+    assert_parse_bool_true("Y");
+    assert_parse_bool_true("1");
 }
 
 static void
 is_not_true(void **state)
 {
-    assert_parse_bool("truedat", pcmk_rc_bad_input, false);
-    assert_parse_bool("onnn", pcmk_rc_bad_input, false);
-    assert_parse_bool("yep", pcmk_rc_bad_input, false);
-    assert_parse_bool("Y!", pcmk_rc_bad_input, false);
-    assert_parse_bool("100", pcmk_rc_bad_input, false);
+    assert_parse_bool_failure("truedat", pcmk_rc_bad_input);
+    assert_parse_bool_failure("onnn", pcmk_rc_bad_input);
+    assert_parse_bool_failure("yep", pcmk_rc_bad_input);
+    assert_parse_bool_failure("Y!", pcmk_rc_bad_input);
+    assert_parse_bool_failure("100", pcmk_rc_bad_input);
 }
 
 static void
 is_false(void **state)
 {
-    assert_parse_bool("false", pcmk_rc_ok, false);
-    assert_parse_bool("fAlSe", pcmk_rc_ok, false);
-    assert_parse_bool("off", pcmk_rc_ok, false);
-    assert_parse_bool("OFF", pcmk_rc_ok, false);
-    assert_parse_bool("no", pcmk_rc_ok, false);
-    assert_parse_bool("No", pcmk_rc_ok, false);
-    assert_parse_bool("n", pcmk_rc_ok, false);
-    assert_parse_bool("N", pcmk_rc_ok, false);
-    assert_parse_bool("0", pcmk_rc_ok, false);
+    assert_parse_bool_false("false");
+    assert_parse_bool_false("fAlSe");
+    assert_parse_bool_false("off");
+    assert_parse_bool_false("OFF");
+    assert_parse_bool_false("no");
+    assert_parse_bool_false("No");
+    assert_parse_bool_false("n");
+    assert_parse_bool_false("N");
+    assert_parse_bool_false("0");
 }
 
 static void
 is_not_false(void **state)
 {
-    assert_parse_bool("falseee", pcmk_rc_bad_input, false);
-    assert_parse_bool("of", pcmk_rc_bad_input, false);
-    assert_parse_bool("nope", pcmk_rc_bad_input, false);
-    assert_parse_bool("N!", pcmk_rc_bad_input, false);
-    assert_parse_bool("000", pcmk_rc_bad_input, false);
+    assert_parse_bool_failure("falseee", pcmk_rc_bad_input);
+    assert_parse_bool_failure("of", pcmk_rc_bad_input);
+    assert_parse_bool_failure("nope", pcmk_rc_bad_input);
+    assert_parse_bool_failure("N!", pcmk_rc_bad_input);
+    assert_parse_bool_failure("000", pcmk_rc_bad_input);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

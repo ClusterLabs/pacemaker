@@ -143,8 +143,24 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
     // group is now owned by context, we don't free it here
 }
 
+/*!
+ * \internal
+ * \brief Prepare a command line to add to a \c pcmk__output_t as the request
+ *
+ * This performs various transformations on the command line arguments, such
+ * as surrounding arguments containing spaces with quotes and escaping any
+ * single quotes in the string.
+ *
+ * \param[in] argv  Command line (typically from \c pcmk__cmdline_preproc())
+ *
+ * \return Newly allocated command line suitable for use as the
+ *         \c PCMK_XA_REQUEST attribute value in XML output
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c g_free().
+ */
 gchar *
-pcmk__quote_cmdline(gchar **argv)
+pcmk__quote_cmdline(const char *const *argv)
 {
     GString *cmdline = NULL;
 

@@ -90,7 +90,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if (rc != pcmk_rc_ok) {
         exit_code = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,

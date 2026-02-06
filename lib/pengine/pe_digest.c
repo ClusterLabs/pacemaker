@@ -51,7 +51,7 @@ attr_in_strv(xmlAttrPtr a, void *user_data)
     const char *name = (const char *) a->name;
     gchar **strv = user_data;
 
-    return pcmk__g_strv_contains(strv, name);
+    return pcmk__g_strv_contains((const gchar *const *) strv, name);
 }
 
 // Return true if XML attribute name is not an element of a given gchar ** array

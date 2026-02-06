@@ -277,8 +277,8 @@ get_value_for_target(const char *target, const char *values)
 
     mappings = g_strsplit_set(values, "; \t", 0);
 
-    for (gchar **mapping = mappings; (*mapping != NULL) && (value == NULL);
-         mapping++) {
+    for (const char *const *mapping = (const char *const *) mappings;
+         (*mapping != NULL) && (value == NULL); mapping++) {
 
         value = get_value_if_matching(target, *mapping);
     }
@@ -961,7 +961,9 @@ build_port_aliases(const char *hostmap, GList **targets)
     stripped = g_strstrip(g_strdup(hostmap));
     mappings = g_strsplit_set(stripped, "; \t", 0);
 
-    for (gchar **mapping = mappings; *mapping != NULL; mapping++) {
+    for (const char *const *mapping = (const char *const *) mappings;
+         *mapping != NULL; mapping++) {
+
         gchar **nvpair = NULL;
 
         if (pcmk__str_empty(*mapping)) {
@@ -1881,7 +1883,9 @@ fenced_register_level(xmlNode *msg, pcmk__action_result_t *result)
          */
         gchar **devices = g_strsplit(value, ",", 0);
 
-        for (char **dev = devices; (dev != NULL) && (*dev != NULL); dev++) {
+        for (const char *const *dev = (const char *const *) devices;
+             (dev != NULL) && (*dev != NULL); dev++) {
+
             pcmk__trace("Adding device '%s' for %s[%d]", *dev, tp->target, id);
             tp->levels[id] = g_list_append(tp->levels[id],
                                            pcmk__str_copy(*dev));
@@ -2143,11 +2147,14 @@ localhost_is_eligible(const fenced_device_t *device, const char *action,
 {
     bool localhost_is_target = pcmk__str_eq(target, fenced_get_local_node(),
                                             pcmk__str_casei);
+    const gchar *const *on_target_actions = NULL;
 
-    CRM_CHECK(action != NULL, return true);
+    CRM_CHECK((device != NULL) && (action != NULL), return true);
 
-    if ((device != NULL) && (device->on_target_actions != NULL)
-        && pcmk__g_strv_contains(device->on_target_actions, action)) {
+    on_target_actions = (const gchar *const *) device->on_target_actions;
+
+    if ((on_target_actions != NULL)
+        && pcmk__g_strv_contains(on_target_actions, action)) {
 
         if (!localhost_is_target) {
             pcmk__trace("Operation '%s' using %s can only be executed for "

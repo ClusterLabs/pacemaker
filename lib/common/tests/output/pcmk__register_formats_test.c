@@ -25,7 +25,7 @@ invalid_entries(void **state)
      * the marker for the end of the format table.
      */
     pcmk__supported_format_t formats[] = {
-        { "", pcmk__output_null_create1, NULL },
+        { "", pcmk__output_setup_dummy1, NULL },
         { NULL },
     };
 
@@ -38,8 +38,8 @@ valid_entries(void **state)
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
-        { "fmt1", pcmk__output_null_create1, NULL },
-        { "fmt2", pcmk__output_null_create2, NULL },
+        { "fmt1", pcmk__output_setup_dummy1, NULL },
+        { "fmt2", pcmk__output_setup_dummy2, NULL },
         { NULL },
     };
 
@@ -48,9 +48,9 @@ valid_entries(void **state)
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 2);
     assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"),
-                     pcmk__output_null_create1);
+                     pcmk__output_setup_dummy1);
     assert_ptr_equal(g_hash_table_lookup(formatters, "fmt2"),
-                     pcmk__output_null_create2);
+                     pcmk__output_setup_dummy2);
 
     pcmk__unregister_formats();
 }
@@ -61,8 +61,8 @@ duplicate_keys(void **state)
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
-        { "fmt1", pcmk__output_null_create1, NULL },
-        { "fmt1", pcmk__output_null_create2, NULL },
+        { "fmt1", pcmk__output_setup_dummy1, NULL },
+        { "fmt1", pcmk__output_setup_dummy2, NULL },
         { NULL },
     };
 
@@ -71,7 +71,7 @@ duplicate_keys(void **state)
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 1);
     assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"),
-                     pcmk__output_null_create2);
+                     pcmk__output_setup_dummy2);
 
     pcmk__unregister_formats();
 }
@@ -82,8 +82,8 @@ duplicate_values(void **state)
     GHashTable *formatters = NULL;
 
     pcmk__supported_format_t formats[] = {
-        { "fmt1", pcmk__output_null_create1, NULL },
-        { "fmt2", pcmk__output_null_create1, NULL },
+        { "fmt1", pcmk__output_setup_dummy1, NULL },
+        { "fmt2", pcmk__output_setup_dummy1, NULL },
         { NULL },
     };
 
@@ -92,9 +92,9 @@ duplicate_values(void **state)
     formatters = pcmk__output_formatters();
     assert_int_equal(g_hash_table_size(formatters), 2);
     assert_ptr_equal(g_hash_table_lookup(formatters, "fmt1"),
-                     pcmk__output_null_create1);
+                     pcmk__output_setup_dummy1);
     assert_ptr_equal(g_hash_table_lookup(formatters, "fmt2"),
-                     pcmk__output_null_create1);
+                     pcmk__output_setup_dummy1);
 
     pcmk__unregister_formats();
 }

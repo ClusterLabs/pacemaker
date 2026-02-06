@@ -112,7 +112,8 @@ main(int argc, char **argv)
         goto done;
     }
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
         attrd_exit_status = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,

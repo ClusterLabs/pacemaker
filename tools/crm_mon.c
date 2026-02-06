@@ -302,11 +302,12 @@ find_section_bit(const char *name) {
 
 static gboolean
 apply_exclude(const gchar *excludes, GError **error) {
-    char **parts = NULL;
+    gchar **parts = NULL;
     gboolean result = TRUE;
 
     parts = g_strsplit(excludes, ",", 0);
-    for (char **s = parts; *s != NULL; s++) {
+
+    for (const char *const *s = (const char *const *) parts; *s != NULL; s++) {
         uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
@@ -332,11 +333,12 @@ apply_exclude(const gchar *excludes, GError **error) {
 
 static gboolean
 apply_include(const gchar *includes, GError **error) {
-    char **parts = NULL;
+    gchar **parts = NULL;
     gboolean result = TRUE;
 
     parts = g_strsplit(includes, ",", 0);
-    for (char **s = parts; *s != NULL; s++) {
+
+    for (const char *const *s = (const char *const *) parts; *s != NULL; s++) {
         uint32_t bit = find_section_bit(*s);
 
         if (pcmk__str_eq(*s, "all", pcmk__str_none)) {
@@ -1447,7 +1449,8 @@ main(int argc, char **argv)
     reconcile_output_format(args);
     set_default_exec_mode(args);
 
-    rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
+    rc = pcmk__output_new(&out, args->output_ty, args->output_dest,
+                          (const char *const *) argv);
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_ERROR,
                     "Error creating output format %s: %s",
