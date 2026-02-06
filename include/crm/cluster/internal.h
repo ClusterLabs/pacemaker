@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -111,7 +111,7 @@ struct pcmk__cluster_private {
 };
 
 //! Node status data (may be a cluster node or a Pacemaker Remote node)
-typedef struct pcmk__node_status {
+typedef struct {
     //! Node name as known to cluster layer, or Pacemaker Remote node name
     char *name;
 

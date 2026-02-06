@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 #include <sys/types.h>          // time_t
 
 #include <glib.h>               // guint
+
 #include <crm/common/results.h> // enum ocf_exitcode
 
 #ifdef __cplusplus
@@ -35,6 +36,10 @@ enum lrmd_callback_event {
     lrmd_event_new_client,
 };
 
+/*!
+ * \deprecated Use \c lrmd_event_data_t instead of
+ *             <tt>struct lrmd_event_data_s</tt>.
+ */
 typedef struct lrmd_event_data_s {
     /*! Type of event, register, unregister, call_completed... */
     enum lrmd_callback_event type;

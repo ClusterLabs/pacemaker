@@ -18,7 +18,7 @@
 
 #include <crm_config.h>                 // PCMK_SCHEDULER_INPUT_DIR
 #include <crm/common/mainloop.h>        // mainloop_add_signal
-#include <crm/common/results.h>         // crm_exit_e, pcmk_rc_*
+#include <crm/common/results.h>         // crm_exit_t, CRM_EX_*, pcmk_rc_*
 #include <crm/pengine/internal.h>       // pe__register_messages
 #include <pacemaker-internal.h>         // pcmk__register_lib_messages
 

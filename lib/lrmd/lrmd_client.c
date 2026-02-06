@@ -64,7 +64,7 @@ static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
 static gnutls_datum_t remote_key = { NULL, 0 };
 
-typedef struct lrmd_private_s {
+typedef struct {
     uint64_t type;
     char *token;
     mainloop_io_t *source;

@@ -28,7 +28,7 @@
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_api_shutdown
 #include <crm/common/mainloop.h>        // mainloop_*
 #include <crm/common/options.h>         // PCMK_VALUE_*
-#include <crm/common/results.h>         // crm_exit_e, crm_exit_e, pcmk_rc_*
+#include <crm/common/results.h>         // crm_exit_t, CRM_EX_*, pcmk_rc_*
 #include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*
 #include <crm/crm.h>                    // CRM_FEATURE_SET, crm_system_name
 

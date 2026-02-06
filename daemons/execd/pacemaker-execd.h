@@ -24,7 +24,7 @@
 extern GHashTable *rsc_list;
 extern time_t start_time;
 
-typedef struct lrmd_rsc_s {
+typedef struct {
     char *rsc_id;
     char *class;
     char *provider;

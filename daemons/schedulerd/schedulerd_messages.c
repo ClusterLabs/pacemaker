@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,7 +22,7 @@
 #include <crm/crm.h>                    // CRM_OP_HELLO, CRM_OP_PECALC
 #include <crm/common/ipc.h>             // crm_ipc_flags
 #include <crm/common/options.h>         // PCMK_OPT_CLUSTER_DELAY
-#include <crm/common/results.h>         // crm_exit_e, pcmk_exec_status_str, pcmk_rc_*
+#include <crm/common/results.h>         // CRM_EX_*, pcmk_rc_ok, etc.
 #include <crm/common/scheduler.h>       // pcmk__scheduler, pcmk_free_scheduler
 #include <crm/common/scheduler_types.h> // pcmk_scheduler_t
 #include <crm/common/xml_names.h>       // PCMK_XA_EXECUTION_DATE

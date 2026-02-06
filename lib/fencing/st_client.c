@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -33,7 +33,7 @@
 CRM_TRACE_INIT_DATA(stonith);
 
 // Used as stonith_t:st_private
-typedef struct stonith_private_s {
+typedef struct {
     char *token;
     crm_ipc_t *ipc;
     mainloop_io_t *source;
@@ -51,7 +51,7 @@ struct event_private {
     pcmk__action_result_t result;
 };
 
-typedef struct stonith_notify_client_s {
+typedef struct {
     const char *event;
     const char *obj_id;         /* implement one day */
     const char *obj_type;       /* implement one day */
@@ -60,7 +60,7 @@ typedef struct stonith_notify_client_s {
 
 } stonith_notify_client_t;
 
-typedef struct stonith_callback_client_s {
+typedef struct {
     void (*callback) (stonith_t * st, stonith_callback_data_t * data);
     const char *id;
     void *user_data;

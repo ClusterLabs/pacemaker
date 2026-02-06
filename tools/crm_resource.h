@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@
 
 #define ATTR_SET_ELEMENT "attr_set_element"
 
-typedef struct node_info_s {
+typedef struct {
     const char *node_name;
     bool promoted;
 } node_info_t;
@@ -47,7 +47,7 @@ enum resource_check_flags {
     rsc_node_health     = (UINT32_C(1) << 4),
 };
 
-typedef struct resource_checks_s {
+typedef struct {
     pcmk_resource_t *rsc;   // Resource being checked
     uint32_t flags;         // Group of enum resource_check_flags
     const char *lock_node;  // Node that resource is shutdown-locked to, if any

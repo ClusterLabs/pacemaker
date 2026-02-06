@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,9 +17,10 @@
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_schedulerd.h>
+
 #include "crmcommon_private.h"
 
-typedef struct schedulerd_api_private_s {
+typedef struct {
     char *client_uuid;
 } schedulerd_api_private_t;
 
@@ -27,9 +28,9 @@ typedef struct schedulerd_api_private_s {
 static int
 new_data(pcmk_ipc_api_t *api)
 {
-    struct schedulerd_api_private_s *private = NULL;
+    schedulerd_api_private_t *private = NULL;
 
-    api->api_data = calloc(1, sizeof(struct schedulerd_api_private_s));
+    api->api_data = calloc(1, sizeof(schedulerd_api_private_t));
 
     if (api->api_data == NULL) {
         return errno;
@@ -45,7 +46,7 @@ new_data(pcmk_ipc_api_t *api)
 static void
 free_data(void *data)
 {
-    free(((struct schedulerd_api_private_s *) data)->client_uuid);
+    free(((schedulerd_api_private_t *) data)->client_uuid);
     free(data);
 }
 

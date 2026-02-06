@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,6 +28,7 @@ extern "C" {
  * \ingroup core
  */
 
+//! \deprecated Use \c pcmk_nvpair_t instead of <tt>struct pcmk_nvpair_s</tt>
 typedef struct pcmk_nvpair_s {
     char *name;
     char *value;

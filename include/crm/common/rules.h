@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,9 +10,11 @@
 #ifndef PCMK__CRM_COMMON_RULES__H
 #define PCMK__CRM_COMMON_RULES__H
 
-#include <glib.h>                   // guint, GHashTable
 #include <regex.h>                  // regmatch_t
+
+#include <glib.h>                   // guint, GHashTable
 #include <libxml/tree.h>            // xmlNode
+
 #include <crm/common/iso8601.h>     // crm_time_t
 
 #ifdef __cplusplus
@@ -53,7 +55,12 @@ enum expression_type {
 };
 //!@}
 
-//! Data used to evaluate a rule (any NULL items are ignored)
+/*!
+ * \brief Data used to evaluate a rule (any \c NULL items are ignored)
+ *
+ * \deprecated Use \c pcmk_rule_input_t instead of
+ *             <tt>struct pcmk_rule_input</tt>.
+ */
 typedef struct pcmk_rule_input {
     // Used to evaluate date expressions
     const crm_time_t *now; //!< Current time for rule evaluation purposes

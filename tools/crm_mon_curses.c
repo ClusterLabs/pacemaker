@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,13 +26,13 @@
 
 #if PCMK__ENABLE_CURSES
 
-typedef struct curses_list_data_s {
+typedef struct {
     unsigned int len;
     char *singular_noun;
     char *plural_noun;
 } curses_list_data_t;
 
-typedef struct private_data_s {
+typedef struct {
     GQueue *parent_q;
 } private_data_t;
 

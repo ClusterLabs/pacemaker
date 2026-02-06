@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,19 +8,18 @@
  */
 
 #ifndef PCMK__CRM_SERVICES__H
-#  define PCMK__CRM_SERVICES__H
+#define PCMK__CRM_SERVICES__H
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <sys/types.h>
 
-#  include <glib.h>
-#  include <stdio.h>
-#  include <stdint.h>
-#  include <string.h>
-#  include <stdbool.h>
-#  include <sys/types.h>
+#include <glib.h>
 
-#  include <crm_config.h>       // OCF_ROOT_DIR
-#  include <crm/common/agents.h>
-#  include <crm/common/results.h>
+#include <crm/common/agents.h>
+#include <crm/common/results.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,9 +34,9 @@ extern "C" {
  */
 
 /* TODO: Autodetect these two ?*/
-#  ifndef SYSTEMCTL
-#    define SYSTEMCTL "/bin/systemctl"
-#  endif
+#ifndef SYSTEMCTL
+#define SYSTEMCTL "/bin/systemctl"
+#endif
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX environment variable.
  * The stderr output that occurs after this prefix is encountered is considered
@@ -91,6 +90,8 @@ typedef struct svc_action_private_s svc_action_private_t;
  *       resource agents, services_alert_create() for alert agents, or
  *       services_action_create_generic() for generic executables). Similarly,
  *       do not use sizeof() on this struct.
+ *
+ * \deprecated Use \c svc_action_t instead of <tt>struct svc_action_s</tt>.
  */
 /*
  * NOTE: Internally, services__create_resource_action() is preferable to

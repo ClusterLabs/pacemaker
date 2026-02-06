@@ -88,7 +88,7 @@ enum pcmk__opt_flags {
     pcmk__opt_primitive  = (UINT32_C(1) << 7),
 };
 
-typedef struct pcmk__cluster_option_s {
+typedef struct {
     const char *name;
     const char *alt_name;
     const char *type;

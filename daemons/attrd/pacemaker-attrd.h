@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -131,7 +131,7 @@ enum attrd_attr_flags {
     attrd_attr_force_write  = (UINT32_C(1) << 3),
 };
 
-typedef struct attribute_s {
+typedef struct {
     char *id;       // Attribute name
     char *set_type; // PCMK_XE_INSTANCE_ATTRIBUTES or PCMK_XE_UTILIZATION
     char *set_id;   // Set's XML ID to use when writing
@@ -165,7 +165,7 @@ enum attrd_value_flags {
     attrd_value_from_peer   = (UINT32_C(1) << 1),
 };
 
-typedef struct attribute_value_s {
+typedef struct {
     char *nodename;     // Node that this value is for
     char *current;      // Attribute value
     char *requested;    // Value specified in pending CIB write, if any

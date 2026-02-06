@@ -59,7 +59,7 @@ const char *lrmd__node_start_state(lrmd_t *lrmd);
 
 /* Shared functions for IPC proxy back end */
 
-typedef struct remote_proxy_s {
+typedef struct {
     char *node_name;
     char *session_id;
 

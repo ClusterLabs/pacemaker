@@ -608,21 +608,38 @@ Memory Management
 Structures
 ##########
 
-Changes to structures defined in public API headers (adding or removing
-members, or changing member types) are generally not possible without breaking
-API compatibility. However, there are exceptions:
+* Use an anonymous structure in a ``typedef`` unless the structure name is
+  needed elsewhere. For example:
 
-* Public API structures can be designed such that they can be allocated only
-  via API functions, not declared directly or allocated with standard memory
-  functions using ``sizeof``.
+  .. code-block:: c
 
-  * This can be enforced simply by documentating the limitation, in which case
-    new ``struct`` members can be added to the end of the structure without
-    breaking compatibility.
+     // Do this
+     typedef struct {
+         char *name;
+         char *value;
+     } object_t;
 
-  * Alternatively, the structure definition can be kept in an internal header,
-    with only a pointer type definition kept in a public header, in which case
-    the structure definition can be changed however needed.
+     // Not this
+     typedef struct object_s {
+         char *name;
+         char *value;
+     } object_t;
+
+* Changes to structures defined in public API headers (adding or removing
+  members, or changing member types) are generally not possible without
+  breaking API compatibility. However, there are exceptions:
+
+  * Public API structures can be designed such that they can be allocated only
+    via API functions, not declared directly or allocated with standard memory
+    functions using ``sizeof``.
+
+    * This can be enforced simply by documentating the limitation, in which case
+      new ``struct`` members can be added to the end of the structure without
+      breaking compatibility.
+
+    * Alternatively, the structure definition can be kept in an internal header,
+      with only a pointer type definition kept in a public header, in which case
+      the structure definition can be changed however needed.
 
 
 .. index::

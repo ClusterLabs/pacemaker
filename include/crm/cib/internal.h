@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -98,13 +98,13 @@ enum cib__op_type {
 typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
                             xmlNode *, xmlNode *, xmlNode **, xmlNode **);
 
-typedef struct cib__operation_s {
+typedef struct {
     const char *name;
     enum cib__op_type type;
     uint32_t flags; //!< Group of <tt>enum cib__op_attr</tt> flags
 } cib__operation_t;
 
-typedef struct cib_notify_client_s {
+typedef struct {
     const char *event;
     const char *obj_id;         /* implement one day */
     const char *obj_type;       /* implement one day */
@@ -112,7 +112,7 @@ typedef struct cib_notify_client_s {
 
 } cib_notify_client_t;
 
-typedef struct cib_callback_client_s {
+typedef struct {
     void (*callback) (xmlNode *, int, int, xmlNode *, void *);
     const char *id;
     void *user_data;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ void controld_invoke_execd(fsa_data_t *msg_data);
 void lrm_op_callback(lrmd_event_data_t * op);
 lrmd_t *crmd_local_lrmd_conn(void);
 
-typedef struct resource_history_s {
+typedef struct {
     char *id;
     uint32_t last_callid;
     lrmd_rsc_info_t rsc;
@@ -48,7 +48,7 @@ enum active_op_e {
 };
 
 // In-flight action (recurring or pending)
-typedef struct active_op_s {
+typedef struct {
     guint interval_ms;
     int call_id;
     uint32_t flags; // bitmask of active_op_e
@@ -73,7 +73,7 @@ typedef struct active_op_s {
             (active_op)->flags, (flags_to_clear), #flags_to_clear);         \
     } while (0)
 
-typedef struct lrm_state_s {
+typedef struct {
     const char *node_name;
     lrmd_t *conn;                       // Reserved for controld_execd_state.c
     remote_ra_data_t *remote_ra_data;   // Reserved for controld_remote_ra.c

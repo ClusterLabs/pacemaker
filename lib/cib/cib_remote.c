@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,7 +35,7 @@ static pcmk__tls_t *tls = NULL;
 
 #include <arpa/inet.h>
 
-typedef struct cib_remote_opaque_s {
+typedef struct {
     int port;
     char *server;
     char *user;

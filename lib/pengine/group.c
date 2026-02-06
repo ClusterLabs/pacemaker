@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/common/output.h>
 #include <pe_status_private.h>
 
-typedef struct group_variant_data_s {
+typedef struct {
     pcmk_resource_t *last_child;    // Last group member
     uint32_t flags;                 // Group of enum pcmk__group_flags
 } group_variant_data_t;

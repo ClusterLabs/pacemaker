@@ -152,7 +152,7 @@ typedef struct {
 } pcmk__action_relation_t;
 
 // Action sequenced relative to another action
-typedef struct pcmk__related_action {
+typedef struct {
     pcmk_action_t *action;      // Action to be sequenced
     uint32_t flags;             // Group of enum pcmk__action_relation_flags
     bool graphed;               // Whether action has been added to graph yet

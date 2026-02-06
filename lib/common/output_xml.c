@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@
 #include <crm/common/output.h>
 #include <crm/common/xml.h>
 
-typedef struct subst_s {
+typedef struct {
     const char *from;
     const char *to;
 } subst_t;
@@ -79,7 +79,7 @@ static const subst_t substitutions[] = {
  * assume an XML private_data_s.  Keeping them laid out the same means this
  * still works.
  */
-typedef struct private_data_s {
+typedef struct {
     /* Begin members that must match the HTML version */
     xmlNode *root;
     GQueue *parent_q;
