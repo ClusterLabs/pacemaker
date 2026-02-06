@@ -130,10 +130,12 @@ int pcmk__tls_get_client_sock(const pcmk__remote_t *remote);
  * to add a key before the TLS session is established (that is, before
  * calling \c pcmk__new_tls_session()).
  *
- * \param[in,out] tls The TLS environment
- * \param[in]     key The client's PSK key
+ * \param[in,out] tls      The TLS environment
+ * \param[in]     username The username \p key is valid for
+ * \param[in]     key      The client's PSK key
  */
-void pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key);
+void pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                                  gnutls_datum_t *key);
 
 /*!
  * \internal

@@ -26,7 +26,6 @@
 #include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
-#include <crm/lrmd.h>               // DEFAULT_REMOTE_USERNAME
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
@@ -409,10 +408,10 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
 }
 
 void
-pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key)
+pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                             gnutls_datum_t *key)
 {
-    gnutls_psk_set_client_credentials(tls->credentials.psk_c,
-                                      DEFAULT_REMOTE_USERNAME, key,
+    gnutls_psk_set_client_credentials(tls->credentials.psk_c, username, key,
                                       GNUTLS_PSK_KEY_RAW);
 }
 
