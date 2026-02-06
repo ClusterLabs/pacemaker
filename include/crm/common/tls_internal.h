@@ -139,19 +139,6 @@ void pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
 
 /*!
  * \internal
- * \brief Register the server's PSK credential fetching callback
- *
- * This function must be called for all TLS servers that are using PSK for
- * authentication.
- *
- * \param[in,out] tls The TLS environment
- * \param[in]     cb  The server's PSK credential fetching callback
- */
-void pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                                gnutls_psk_server_credentials_function *cb);
-
-/*!
- * \internal
  * \brief Process handshake data from TLS client
  *
  * Read as much TLS handshake data as is available.
