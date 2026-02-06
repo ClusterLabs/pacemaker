@@ -184,6 +184,10 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     (*tls)->server = server;
 
     if ((*tls)->cred_type == GNUTLS_CRD_ANON) {
+        pcmk__warn("Using anonymous authentication.  This is insecure and will "
+                   "be removed in a future release.  Use X509 certificates or PSK "
+                   "instead.");
+
         if (server) {
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
