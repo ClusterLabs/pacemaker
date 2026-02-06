@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1025,6 +1025,40 @@ pcmk__xe_get(const xmlNode *xml, const char *attr_name)
 
 /*!
  * \internal
+ * \brief Check whether a new attribute value would be a change
+ *
+ * \param[in] xml    XML element whose attributes to check
+ * \param[in] name   Attribute name
+ * \param[in] value  New value (must not be \c NULL)
+ *
+ * \return \c true if setting attribute \p name to \p value would change
+ *         or newly set its value in \p xml, or \c false otherwise
+ */
+static bool
+attr_changes(const xmlNode *xml, const char *name, const char *value)
+{
+    xmlAttr *attr = xmlHasProp(xml, (const xmlChar *) name);
+    xml_node_private_t *nodepriv = NULL;
+
+    if (attr == NULL) {
+        // Attribute was previously unset
+        return true;
+    }
+
+    nodepriv = (xml_node_private_t *) attr->_private;
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+        // Treat the attribute as unset if marked as deleted
+        return true;
+    }
+
+    // Attribute is set, so check whether its value would change
+    return (attr->children == NULL)
+           || !pcmk__str_eq((const char *) attr->children->content, value,
+                            pcmk__str_none);
+}
+
+/*!
+ * \internal
  * \brief Set an XML attribute value
  *
  * This also performs change tracking if enabled and checks ACLs if enabled.
@@ -1054,13 +1088,8 @@ pcmk__xe_set(xmlNode *xml, const char *attr_name, const char *value)
      * "cleanly" resetting the value? If so, try to preserve existing behavior
      * for public API functions that depend on this.
      */
-    if (pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)) {
-        const char *old_value = pcmk__xe_get(xml, attr_name);
-
-        if (!pcmk__str_eq(old_value, value, pcmk__str_none)) {
-            dirty = true;
-        }
-    }
+    dirty = pcmk__xml_doc_all_flags_set(xml->doc, pcmk__xf_tracking)
+            && attr_changes(xml, attr_name, value);
 
     if (dirty && !pcmk__check_acl(xml, attr_name, pcmk__xf_acl_create)) {
         pcmk__trace("Cannot add %s=%s to %s", attr_name, value, xml->name);
@@ -1081,6 +1110,7 @@ pcmk__xe_set(xmlNode *xml, const char *attr_name, const char *value)
     pcmk__xml_new_private_data((xmlNode *) attr);
 
     if (dirty) {
+        // This also clears the pcmk__xf_deleted flag
         pcmk__mark_xml_attr_dirty(attr);
     }
 
