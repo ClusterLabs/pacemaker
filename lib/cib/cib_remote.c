@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 
 #include <glib.h>
+#include <gnutls/gnutls.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -31,7 +32,11 @@
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
+// Default on-disk location of the PSK credentials
+#define DEFAULT_REMOTE_CIB_KEY_LOCATION PACEMAKER_CONFIG_DIR "/cib_authkey"
+
 static pcmk__tls_t *tls = NULL;
+static gnutls_datum_t remote_key = { NULL, 0 };
 
 #include <arpa/inet.h>
 
@@ -376,12 +381,29 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     if (private->encrypted) {
         int tls_rc = GNUTLS_E_SUCCESS;
+        bool have_psk = false;
+        gnutls_datum_t psk_key = { NULL, 0 };
 
-        // @TODO Implement pre-shared key authentication (see T961)
-        rc = pcmk__init_tls(&tls, false, false);
+        /* This is a little convoluted because for backwards compatibility
+         * purposes, we need to be able to fall back to anonymous authentication
+         * if PSK is not enabled on this node.  When that support is removed,
+         * this code can be greatly simplified.
+         */
+        if (cib__init_remote_key(&psk_key) == pcmk_rc_ok) {
+            have_psk = true;
+        }
+
+        rc = pcmk__init_tls(&tls, false, have_psk);
         if (rc != pcmk_rc_ok) {
+            gnutls_free(psk_key.data);
             return -1;
         }
+
+        if (have_psk && !pcmk__x509_enabled()) {
+            pcmk__tls_client_add_psk_key(tls, CRM_DAEMON_USER, &psk_key);
+        }
+
+        gnutls_free(psk_key.data);
 
         /* bind the socket to GnuTls lib */
         connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
@@ -657,4 +679,64 @@ cib__set_output(cib_t *cib, pcmk__output_t *out)
 
     private = cib->variant_opaque;
     private->out = out;
+}
+
+/*!
+ * \internal
+ * \brief Initialize the remote CIB authentication key
+ *
+ * Try loading the remote CIB authentication key from cache if available,
+ * otherwise from these locations, in order of preference:
+ *
+ * - The value of the PCMK_cib_authkey_location environment variable, if set
+ * - The Pacemaker default key file location
+ *
+ * \param[out] key  Where to store key
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+cib__init_remote_key(gnutls_datum_t *key)
+{
+    static const char *env_location = NULL;
+    static bool need_env = true;
+
+    int rc = pcmk_rc_ok;
+
+    if (need_env) {
+        env_location = pcmk__env_option(PCMK__ENV_CIB_AUTHKEY_LOCATION);
+        need_env = false;
+    }
+
+    if (remote_key.data != NULL) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
+    // Try location in environment variable, if set
+    if (env_location != NULL) {
+        rc = pcmk__load_key(env_location, &remote_key);
+
+        if (rc == pcmk_rc_ok) {
+            pcmk__copy_key(key, &remote_key);
+            return pcmk_rc_ok;
+        }
+
+        pcmk__warn("Could not read remote CIB key from %s: %s", env_location,
+                   pcmk_rc_str(rc));
+        return ENOKEY;
+    }
+
+    // Try default location, if environment wasn't explicitly set to it
+    rc = pcmk__load_key(DEFAULT_REMOTE_CIB_KEY_LOCATION, &remote_key);
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
+    pcmk__warn("Could not read remote CIB key from default location "
+               DEFAULT_REMOTE_CIB_KEY_LOCATION ": %s",
+               pcmk_rc_str(rc));
+    return ENOKEY;
 }

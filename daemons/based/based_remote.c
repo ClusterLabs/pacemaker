@@ -27,6 +27,7 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm_config.h>             // CRM_DAEMON_GROUP
+#include <crm/cib/internal.h>       // cib__init_remote_key
 #include <crm/common/internal.h>    // pcmk__client_t, etc.
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/mainloop.h>    // mainloop_*
@@ -661,6 +662,28 @@ init_remote_listener(int port)
     return *ssock;
 }
 
+// \return 0 on success, -1 on error (gnutls_psk_server_credentials_function)
+static int
+based_tls_server_key_cb(gnutls_session_t session, const char *username,
+                        gnutls_datum_t *key)
+{
+    /* First, check that the client's username is valid.  For remote CIB
+     * connections, all clients will have the same username so we don't need
+     * to look it up anywhere.
+     */
+    if (!pcmk__str_eq(CRM_DAEMON_USER, username, pcmk__str_none)) {
+        pcmk__err("Expected remote username %s, but got %s",
+                  CRM_DAEMON_USER, username);
+        return -1;
+    }
+
+    /* All remote CIB connections use the same key, too, so we don't need to
+     * do any lookups here either.  Just attempt to load the key from disk
+     * (or cache) and put it in the key variable.
+     */
+    return (cib__init_remote_key(key) == pcmk_rc_ok)? 0 : -1;
+}
+
 /*!
  * \internal
  * \brief Initialize remote listeners using ports configured in the CIB
@@ -674,20 +697,64 @@ based_remote_init(void)
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        // @TODO Implement pre-shared key authentication (see T961)
-        int rc = pcmk__init_tls(&tls, true, false);
+        int rc = pcmk_rc_ok;
+        bool have_psk = false;
+        gnutls_datum_t psk_key = { NULL, 0 };
 
+        /* This is a little convoluted because for backwards compatibility
+         * purposes, we need to be able to fall back to anonymous authentication
+         * if PSK is not enabled on this node.  When that support is removed,
+         * this code can be greatly simplified.
+         *
+         * Note one difference between this code and similar looking code in
+         * remoted_tls.c.  In that code, if the key isn't available at init
+         * time, it's okay because the key will be loaded when a client makes
+         * a connection.  We only check there to log a warning.  Here, if the
+         * key isn't available at init time, we will fall back to anonymous
+         * authentication instead and it doesn't matter if the key shows up
+         * later.
+         */
+
+        /* Attempt to load the key up front in order to determine whether
+         * or not PSK is enabled on this node.  The comments in
+         * lrmd_init_remote_tls_server on key loading apply here as well.
+         */
+        if (cib__init_remote_key(&psk_key) == pcmk_rc_ok) {
+            have_psk = true;
+        } else {
+            pcmk__warn("Falling back to anonymous authentication for remote "
+                       "CIB connections");
+        }
+
+        gnutls_free(psk_key.data);
+
+        /* Now that we know whether to fall back to anonymous authentication
+         * or not, we can actually initialize TLS support.
+         */
+        rc = pcmk__init_tls(&tls, true, have_psk);
         if (rc != pcmk_rc_ok) {
             pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
                       "on port %d", pcmk_rc_str(rc), port);
-            remote_tls_fd = -1;
 
-        } else {
-            pcmk__notice("Starting TLS listener on port %d", port);
-            remote_tls_fd = init_remote_listener(port);
+            remote_tls_fd = -1;
+            goto try_clear_port;
         }
+
+        if (have_psk && !pcmk__x509_enabled()) {
+            /* Register the callback function that will be used to load the key
+             * when a client connects.
+             */
+            pcmk__tls_server_add_psk_callback(tls, based_tls_server_key_cb);
+        }
+
+        pcmk__notice("Starting TLS listener on port %d", port);
+        remote_tls_fd = init_remote_listener(port);
     }
 
+try_clear_port:
+    /* Regardless of whether or not we successfully enabled remote-tls port,
+     * we also want to try to enable remote-clear-port as well.
+     */
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
