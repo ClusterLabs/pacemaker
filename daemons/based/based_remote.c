@@ -758,8 +758,9 @@ try_clear_port:
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
-                   PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
+        pcmk__warn("Starting clear-text listener on port %d. This is insecure "
+                   "and will be removed in a future release. Use "
+                   PCMK_XA_REMOTE_TLS_PORT " instead.", port);
         remote_fd = init_remote_listener(port);
     }
 }

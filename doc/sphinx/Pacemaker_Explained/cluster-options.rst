@@ -247,7 +247,7 @@ holds. So the decision was made to place them in an easy-to-find location.
      - If set to a TCP port number, the CIB manager will listen for remote
        connections on this port, to allow for CIB administration from hosts not
        in the cluster. No encryption is used, so this should be used only on a
-       protected network.
+       protected network. *(deprecated since 3.0.2)*
    * - .. _cib_last_written:
 
        .. index::
