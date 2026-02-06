@@ -265,8 +265,23 @@ tls_server_dropped(gpointer user_data)
 
 // \return 0 on success, -1 on error (gnutls_psk_server_credentials_function)
 static int
-lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_datum_t * key)
+lrmd_tls_server_key_cb(gnutls_session_t session, const char *username,
+                       gnutls_datum_t *key)
 {
+    /* First, check that the client's username is valid.  For Pacemaker
+     * Remote node connections, all clients will have the same username so
+     * we don't need to look it up anywhere.
+     */
+    if (!pcmk__str_eq(DEFAULT_REMOTE_USERNAME, username, pcmk__str_none)) {
+        pcmk__err("Expected remote username %s, but got %s",
+                  DEFAULT_REMOTE_USERNAME, username);
+        return -1;
+    }
+
+    /* All Pacemaker Remote connections use the same key, too, so we don't
+     * need to do any lookups here either.  Just attempt to load the key from
+     * disk (or cache) and put it in the key variable.
+     */
     return (lrmd__init_remote_key(key) == pcmk_rc_ok)? 0 : -1;
 }
 
@@ -379,12 +394,21 @@ lrmd_init_remote_tls_server(void)
     if (!pcmk__x509_enabled()) {
         gnutls_datum_t psk_key = { NULL, 0 };
 
-        pcmk__tls_add_psk_callback(tls, lrmd_tls_server_key_cb);
+        /* Register the callback function that will be used to load the key
+         * when a client connects.
+         */
+        pcmk__tls_server_add_psk_callback(tls, lrmd_tls_server_key_cb);
 
-        /* The key callback won't get called until the first client connection
-         * attempt. Do it once here, so we can warn the user at start-up if we can't
-         * read the key. We don't error out, though, because it's fine if the key is
-         * going to be added later.
+        /* gnutls doesn't need us to load the remote key up front.  It will use
+         * the callback we just registered to load the key for each client when
+         * it attempts to connect.  We do so here (1) to warn the user at start-up
+         * if we can't read the key, and (2) to cache the key so it's faster to
+         * authenticate each client.
+         *
+         * This also has the side effect of allowing the administrator to start
+         * the cluster without the Pacemaker Remote node key, then add it later,
+         * and have clients succeed in connecting.  I don't know why this would
+         * be useful.
          */
         if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
             pcmk__warn("A cluster connection will not be possible until the "
