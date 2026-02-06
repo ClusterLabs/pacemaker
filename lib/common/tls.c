@@ -416,13 +416,6 @@ pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
 }
 
 void
-pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                           gnutls_psk_server_credentials_function *cb)
-{
-    gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
-}
-
-void
 pcmk__tls_check_cert_expiration(gnutls_session_t session)
 {
     gnutls_x509_crt_t cert;
