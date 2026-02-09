@@ -440,10 +440,12 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     /* login to server */
     login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
-    pcmk__xe_set(login, PCMK_XA_OP, "authenticate");
-    pcmk__xe_set(login, PCMK_XA_USER, private->user);
-    pcmk__xe_set(login, PCMK__XA_PASSWORD, private->passwd);
-    pcmk__xe_set(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
+    pcmk__xe_set_props(login,
+                       PCMK_XA_OP, "authenticate",
+                       PCMK_XA_USER, private->user,
+                       PCMK__XA_PASSWORD, private->passwd,
+                       PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD,
+                       NULL);
 
     pcmk__remote_send_xml(connection, login);
     pcmk__xml_free(login);
