@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,16 +8,17 @@
  */
 
 #ifndef PCMK__CRM_LRMD__H
-#  define PCMK__CRM_LRMD__H
+#define PCMK__CRM_LRMD__H
 
-#include <stdbool.h>      // bool
-#include <stdint.h>       // UINT32_C
-#include <glib.h>         // guint, GList
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // UINT32_C
+
+#include <glib.h>                   // guint, GList
+
 #include <crm_config.h>
+#include <crm/common/internal.h>    // pcmk__compare_versions()
 #include <crm/lrmd_events.h>
 #include <crm/services.h>
-
-#include <crm/common/internal.h>    // pcmk__compare_versions()
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +31,11 @@ extern "C" {
  */
 
 typedef struct lrmd_s lrmd_t;
+
+/*!
+ * \deprecated Use \c lrmd_key_value_t instead of
+ *             <tt>struct lrmd_key_value_s</tt>.
+ */
 typedef struct lrmd_key_value_s {
     char *key;
     char *value;
@@ -150,6 +156,10 @@ enum lrmd_call_options {
     lrmd_opt_notify_changes_only    = (UINT32_C(1) << 2),
 };
 
+/*!
+ * \deprecated Use \c lrmd_rsc_info_t instead of
+ *             <tt>struct lrmd_rsc_info_s</tt>.
+ */
 typedef struct lrmd_rsc_info_s {
     char *id;
     char *type;
@@ -157,6 +167,7 @@ typedef struct lrmd_rsc_info_s {
     char *provider;
 } lrmd_rsc_info_t;
 
+//! \deprecated Use \c lrmd_op_info_t instead of <tt>struct lrmd_op_info_s</tt>
 typedef struct lrmd_op_info_s {
     char *rsc_id;
     char *action;
@@ -172,6 +183,7 @@ void lrmd_free_op_info(lrmd_op_info_t *op_info);
 
 typedef void (*lrmd_event_callback) (lrmd_event_data_t * event);
 
+//! \deprecated Use \c lrmd_list_t instead of <tt>struct lrmd_list_s</tt>
 typedef struct lrmd_list_s {
     const char *val;
     struct lrmd_list_s *next;
@@ -180,6 +192,10 @@ typedef struct lrmd_list_s {
 void lrmd_list_freeall(lrmd_list_t * head);
 void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
+/*!
+ * \deprecated Use \c lrmd_api_operations_t instead of
+ *             <tt>struct lrmd_api_operations_s</tt>.
+ */
 typedef struct lrmd_api_operations_s {
     /*!
      * \brief Connect to an executor
@@ -473,6 +489,7 @@ typedef struct lrmd_api_operations_s {
 
 } lrmd_api_operations_t;
 
+//! \deprecated Use \c lrmd_t instead of <tt>struct lrmd_s</tt>.
 struct lrmd_s {
     lrmd_api_operations_t *cmds;
     void *lrmd_private;
@@ -504,4 +521,4 @@ lrmd_event_type2str(enum lrmd_callback_event type)
 }
 #endif
 
-#endif
+#endif  // PCMK__CRM_LRMD__H

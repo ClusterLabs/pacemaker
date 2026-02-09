@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 the Pacemaker project contributors
+ * Copyright 2018-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -57,7 +57,7 @@ extern "C" {
  * * If \c force is \c false, we mark the attribute as deleted but leave it in
  *   place until we commit changes.
  */
-typedef struct pcmk__deleted_xml_s {
+typedef struct {
     gchar *path;        //!< XPath expression identifying the deleted node
     int position;       //!< Position of the deleted node among its siblings
 } pcmk__deleted_xml_t;
@@ -66,7 +66,7 @@ typedef struct pcmk__deleted_xml_s {
  * \internal
  * \brief Private data for an XML node
  */
-typedef struct xml_node_private_s {
+typedef struct {
     uint32_t check;         //!< Magic number for checking integrity
     uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
     xmlNode *match;         //!< Pointer to matching node (defined by caller)
@@ -76,7 +76,7 @@ typedef struct xml_node_private_s {
  * \internal
  * \brief Private data for an XML document
  */
-typedef struct xml_doc_private_s {
+typedef struct {
     uint32_t check;         //!< Magic number for checking integrity
     uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
     char *acl_user;         //!< User affected by \c acls (for logging)
@@ -224,7 +224,7 @@ void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
 #define PCMK__CONTROLD_API_MINOR "0"
 
 // IPC behavior that varies by daemon
-typedef struct pcmk__ipc_methods_s {
+typedef struct {
     /*!
      * \internal
      * \brief Allocate any private data needed by daemon IPC
@@ -303,7 +303,7 @@ struct pcmk_ipc_api_s {
     pcmk__ipc_methods_t *cmds;      // Behavior that varies by daemon
 };
 
-typedef struct pcmk__ipc_header_s {
+typedef struct {
     struct qb_ipc_response_header qb;
     uint32_t size;
     uint32_t flags;

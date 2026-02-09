@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@
 #include <crm/crm.h>                    // CRM_OP_PING, CRM_OP_QUIT
 #include <crm/common/ipc.h>             // crm_ipc_flags
 #include <crm/common/mainloop.h>        // mainloop_set_trigger
-#include <crm/common/results.h>         // crm_exit_e, pcmk_exec_status_str
+#include <crm/common/results.h>         // CRM_EX_*, pcmk_exec_status_str
 #include <crm/common/xml.h>             // PCMK_XA_*
 
 #include "pacemakerd.h"                 // pacemakerd_*

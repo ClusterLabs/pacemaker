@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@
 #include <pacemaker-controld.h>
 
 //! FSA mainloop timer type
-typedef struct fsa_timer_s {
+typedef struct {
     guint source_id;                        //!< Timer source ID
     guint period_ms;                        //!< Timer period
     enum crmd_fsa_input fsa_input;          //!< Input to register if timer pops

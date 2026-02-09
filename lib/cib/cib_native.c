@@ -1,6 +1,6 @@
 /*
  * Copyright 2004 International Business Machines
- * Later changes copyright 2004-2025 the Pacemaker project contributors
+ * Later changes copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
-typedef struct cib_native_opaque_s {
+typedef struct {
     char *token;
     crm_ipc_t *ipc;
     void (*dnotify_fn) (gpointer user_data);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
 
-typedef struct clone_variant_data_s {
+typedef struct {
     int clone_max;
     int clone_node_max;
 

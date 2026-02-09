@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -212,7 +212,7 @@ mainloop_destroy_trigger(crm_trigger_t * source)
 // Define a custom glib source for signal handling
 
 // Data structure for custom glib source
-typedef struct signal_s {
+typedef struct {
     crm_trigger_t trigger;      // trigger that invoked source (must be first)
     void (*handler) (int sig);  // signal handler
     int signal;                 // signal that was received

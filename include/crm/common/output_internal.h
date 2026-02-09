@@ -92,7 +92,7 @@ typedef int (*pcmk__message_fn_t)(pcmk__output_t *out, va_list args);
  * override previous ones.  Thus, any default entry must come before any
  * format-specific entries for the same message_id.
  */
-typedef struct pcmk__message_entry_s {
+typedef struct {
     /*!
      * \brief The message to be handled.
      *
@@ -123,7 +123,7 @@ typedef struct pcmk__message_entry_s {
  * \brief This structure contains everything needed to add support for a
  *        single output formatter to a command line program.
  */
-typedef struct pcmk__supported_format_s {
+typedef struct {
     /*!
      * \brief The name of this output formatter, which should match the
      *        fmt_name parameter in some ::pcmk__output_t structure.

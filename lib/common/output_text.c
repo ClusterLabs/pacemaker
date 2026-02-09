@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,13 +17,13 @@
 
 #include "crmcommon_private.h"
 
-typedef struct text_list_data_s {
+typedef struct {
     unsigned int len;
     char *singular_noun;
     char *plural_noun;
 } text_list_data_t;
 
-typedef struct private_data_s {
+typedef struct {
     GQueue *parent_q;
     bool fancy;
 } private_data_t;

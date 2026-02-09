@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -161,7 +161,7 @@ enum st_remap_phase {
     st_phase_max = 3
 };
 
-typedef struct remote_fencing_op_s {
+typedef struct {
     /* @TODO Abstract the overlap with async_command_t (some members have
      * different names for the same thing), which should allow reducing
      * duplication in some functions
@@ -281,7 +281,7 @@ enum fenced_target_by {
  * This structure is used for the topology table entries.
  * Topology levels start from 1, so levels[0] is unused and always NULL.
  */
-typedef struct stonith_topology_s {
+typedef struct {
     enum fenced_target_by kind; // How target was specified
 
     /*! Node name regex or attribute name=value for which topology applies */

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct private_data_s {
+typedef struct {
     /* gathered in log_begin_list */
     GQueue/*<char*>*/ *prefixes;
     uint8_t log_level;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,7 +48,7 @@ enum pe__container_agent {
 #define PE__CONTAINER_AGENT_DOCKER_S  "docker"
 #define PE__CONTAINER_AGENT_PODMAN_S  "podman"
 
-typedef struct pe__bundle_variant_data_s {
+typedef struct {
         int promoted_max;
         int nreplicas;
         int nreplicas_per_host;

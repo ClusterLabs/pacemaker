@@ -19,7 +19,7 @@
 #include <qb/qbipcs.h>                  // qb_ipcs_connection_t
 
 #include <crm/crm.h>                    // CRM_SYSTEM_PENGINE
-#include <crm/common/results.h>         // crm_exit_e, pcmk_rc_*
+#include <crm/common/results.h>         // CRM_EX_*, pcmk_rc_*
 
 #include "pacemaker-schedulerd.h"       // schedulerd_handle_request
 

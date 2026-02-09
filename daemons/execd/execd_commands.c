@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -37,7 +37,7 @@
 
 GHashTable *rsc_list = NULL;
 
-typedef struct lrmd_cmd_s {
+typedef struct {
     int timeout;
     guint interval_ms;
     int start_delay;
