@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,7 +74,6 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
                  gpointer user_data)
 {
     int log_level = LOG_WARNING;
-    GLogLevelFlags msg_level = (flags & G_LOG_LEVEL_MASK);
     static struct qb_log_callsite *glib_cs = NULL;
 
     if (glib_cs == NULL) {
@@ -82,7 +81,7 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
                                       LOG_DEBUG, __LINE__, crm_trace_nonlog);
     }
 
-    switch (msg_level) {
+    switch (flags & G_LOG_LEVEL_MASK) {
         case G_LOG_LEVEL_CRITICAL:
             log_level = LOG_CRIT;
 
@@ -104,12 +103,12 @@ crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * m
         case G_LOG_LEVEL_DEBUG:
             log_level = LOG_DEBUG;
             break;
-
         case G_LOG_LEVEL_WARNING:
-        case G_LOG_FLAG_RECURSION:
-        case G_LOG_FLAG_FATAL:
-        case G_LOG_LEVEL_MASK:
             log_level = LOG_WARNING;
+            break;
+        default:
+            /* Default to NOTICE for any new or custom glib log levels */
+            log_level = LOG_NOTICE;
             break;
     }
 
