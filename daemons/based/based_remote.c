@@ -95,14 +95,36 @@ remote_auth_timeout_cb(gpointer data)
 static bool
 is_daemon_group_member(const char *user)
 {
-    const struct group *group = getgrnam(CRM_DAEMON_GROUP);
+    int rc = pcmk_rc_ok;
+    gid_t gid = 0;
+    const struct group *group = NULL;
 
+    /* group->gr_mem only contains those users that are listed in /etc/group.
+     * It won't list the user if the group is their primary (that is, it's in
+     * the GID field in /etc/passwd (or passwd->pw_gid as returned by getpwent).
+     * So, we first need to perform a primary group check.
+     */
+    rc = pcmk__lookup_user(user, NULL, &gid);
+    if (rc != pcmk_rc_ok) {
+        pcmk__notice("Rejecting remote client: could not find user '%s': %s",
+                     user, pcmk_rc_str(rc));
+        return false;
+    }
+
+    group = getgrnam(CRM_DAEMON_GROUP);
     if (group == NULL) {
         pcmk__err("Rejecting remote client: " CRM_DAEMON_GROUP " is not a "
                   "valid group");
         return false;
     }
 
+    if (group->gr_gid == gid) {
+        return true;
+    }
+
+    /* If that didn't work, check if CRM_DAEMON_GROUP is a secondary group for
+     * the user.
+     */
     for (const char *const *member = (const char *const *) group->gr_mem;
          *member != NULL; member++) {
 
