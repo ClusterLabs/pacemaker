@@ -229,7 +229,7 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
         }
     }
 
-    return (*handler)(request);
+    return handler(request);
 }
 
 /*!

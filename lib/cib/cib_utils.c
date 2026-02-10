@@ -324,7 +324,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                     pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
         pcmk__log_xml_trace(req, "request");
 
-        rc = (*fn) (op, call_options, section, req, input, current_cib, output);
+        rc = fn(op, call_options, section, req, input, current_cib, output);
 
         /* Set scratch to *current_cib after fn(), in case *current_cib points
          * somewhere else now (for example, erase or full-CIB replace op).
@@ -349,7 +349,7 @@ cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
                     pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
         pcmk__log_xml_trace(req, "request");
 
-        rc = (*fn) (op, call_options, section, req, input, &scratch, output);
+        rc = fn(op, call_options, section, req, input, &scratch, output);
 
         /* @TODO This appears to be a hack to determine whether scratch points
          * to a new object now, without saving the old pointer (which may be

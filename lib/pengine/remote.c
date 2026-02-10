@@ -103,7 +103,7 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
             pcmk_node_t *guest_node = pcmk_find_node(scheduler, rsc->id);
 
             if (guest_node) {
-                (*helper)(guest_node, user_data);
+                helper(guest_node, user_data);
             }
         }
     }
