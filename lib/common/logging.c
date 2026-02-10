@@ -72,6 +72,42 @@ static gboolean crm_tracing_enabled(void);
 
 /*!
  * \internal
+ * \brief Convert a GLib log level to a syslog log level
+ *
+ * \param[in] log_level  GLib log level
+ *
+ * \return The syslog level corresponding to \p log_level
+ */
+static uint8_t
+log_level_from_glib(GLogLevelFlags log_level)
+{
+    switch (log_level & G_LOG_LEVEL_MASK) {
+        case G_LOG_LEVEL_CRITICAL:
+            return LOG_CRIT;
+
+        case G_LOG_LEVEL_ERROR:
+            return LOG_ERR;
+
+        case G_LOG_LEVEL_MESSAGE:
+            return LOG_NOTICE;
+
+        case G_LOG_LEVEL_INFO:
+            return LOG_INFO;
+
+        case G_LOG_LEVEL_DEBUG:
+            return LOG_DEBUG;
+
+        case G_LOG_LEVEL_WARNING:
+            return LOG_WARNING;
+
+        default:
+            // Default to LOG_NOTICE for any new or custom GLib log levels
+            return LOG_NOTICE;
+    }
+}
+
+/*!
+ * \internal
  * \brief Handle a log message from GLib
  *
  * \param[in] log_domain  Log domain of the message
@@ -85,43 +121,21 @@ handle_glib_message(const gchar *log_domain, GLogLevelFlags log_level,
                     const gchar *message, gpointer user_data)
 
 {
-    int syslog_level = LOG_WARNING;
-    static struct qb_log_callsite *glib_cs = NULL;
+    uint8_t syslog_level = log_level_from_glib(log_level);
 
-    if (glib_cs == NULL) {
-        glib_cs = qb_log_callsite_get(__func__, __FILE__, "glib-handler",
-                                      LOG_DEBUG, __LINE__, crm_trace_nonlog);
-    }
+    if (syslog_level == LOG_CRIT) {
+        static struct qb_log_callsite *glib_cs = NULL;
 
-    switch (log_level & G_LOG_LEVEL_MASK) {
-        case G_LOG_LEVEL_CRITICAL:
-            syslog_level = LOG_CRIT;
+        if (glib_cs == NULL) {
+            glib_cs = qb_log_callsite_get(__func__, __FILE__, "glib-handler",
+                                          LOG_DEBUG, __LINE__,
+                                          crm_trace_nonlog);
+        }
 
-            if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
-                /* log and record how we got here */
-                crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
-            }
-            break;
-
-        case G_LOG_LEVEL_ERROR:
-            syslog_level = LOG_ERR;
-            break;
-        case G_LOG_LEVEL_MESSAGE:
-            syslog_level = LOG_NOTICE;
-            break;
-        case G_LOG_LEVEL_INFO:
-            syslog_level = LOG_INFO;
-            break;
-        case G_LOG_LEVEL_DEBUG:
-            syslog_level = LOG_DEBUG;
-            break;
-        case G_LOG_LEVEL_WARNING:
-            syslog_level = LOG_WARNING;
-            break;
-        default:
-            /* Default to NOTICE for any new or custom glib log levels */
-            syslog_level = LOG_NOTICE;
-            break;
+        if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
+            // Dump core
+            crm_abort(__FILE__, __func__, __LINE__, message, true, true);
+        }
     }
 
     do_crm_log(syslog_level, "%s: %s", log_domain, message);
