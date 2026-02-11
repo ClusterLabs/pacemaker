@@ -23,8 +23,7 @@ extern "C" {
 // Request types for CIB manager IPC/CPG
 #define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
 #define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
-#define PCMK__CIB_REQUEST_SYNC_TO_ALL   "cib_sync"
-#define PCMK__CIB_REQUEST_SYNC_TO_ONE   "cib_sync_one"
+#define PCMK__CIB_REQUEST_SYNC          "cib_sync"
 #define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
 #define PCMK__CIB_REQUEST_BUMP          "cib_bump"
 #define PCMK__CIB_REQUEST_QUERY         "cib_query"
@@ -90,13 +89,12 @@ enum cib__op_type {
     cib__op_schemas,
     cib__op_secondary,
     cib__op_shutdown,
-    cib__op_sync_to_all,
-    cib__op_sync_to_one,
+    cib__op_sync,
     cib__op_upgrade,
 };
 
 typedef int (*cib__op_fn_t)(const char *, int, const char *, xmlNode *,
-                            xmlNode *, xmlNode *, xmlNode **, xmlNode **);
+                            xmlNode *, xmlNode **, xmlNode **);
 
 typedef struct {
     const char *name;
@@ -184,11 +182,11 @@ int cib__perform_query(const char *op, uint32_t call_options, cib__op_fn_t fn,
                        const char *section, xmlNode *req, xmlNode *input,
                        xmlNode **current_cib, xmlNode **output);
 
-int cib_perform_op(cib_t *cib, const char *op, uint32_t call_options,
-                   cib__op_fn_t fn, const char *section, xmlNode *req,
-                   xmlNode *input, bool manage_counters, bool *config_changed,
-                   xmlNode **current_cib, xmlNode **result_cib, xmlNode **diff,
-                   xmlNode **output);
+int cib_perform_op(enum cib_variant variant, const char *op,
+                   uint32_t call_options, cib__op_fn_t fn, const char *section,
+                   xmlNode *req, xmlNode *input, bool manage_counters,
+                   bool *config_changed, xmlNode **current_cib,
+                   xmlNode **result_cib, xmlNode **diff, xmlNode **output);
 
 int cib__create_op(cib_t *cib, const char *op, const char *host,
                    const char *section, xmlNode *data, int call_options,
@@ -203,40 +201,40 @@ void cib_native_notify(gpointer data, gpointer user_data);
 int cib__get_operation(const char *op, const cib__operation_t **operation);
 
 int cib__process_apply_patch(const char *op, int options, const char *section,
-                             xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                             xmlNode **result_cib, xmlNode **answer);
+                             xmlNode *req, xmlNode *input, xmlNode **cib,
+                             xmlNode **answer);
 
 int cib__process_bump(const char *op, int options, const char *section,
-                      xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                      xmlNode **result_cib, xmlNode **answer);
+                      xmlNode *req, xmlNode *input, xmlNode **cib,
+                      xmlNode **answer);
 
 int cib__process_create(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer);
+                        xmlNode *req, xmlNode *input, xmlNode **cib,
+                        xmlNode **answer);
 
 int cib__process_delete(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer);
+                        xmlNode *req, xmlNode *input, xmlNode **cib,
+                        xmlNode **answer);
 
 int cib__process_erase(const char *op, int options, const char *section,
-                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                       xmlNode **result_cib, xmlNode **answer);
+                       xmlNode *req, xmlNode *input, xmlNode **cib,
+                       xmlNode **answer);
 
 int cib__process_modify(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                        xmlNode **result_cib, xmlNode **answer);
+                        xmlNode *req, xmlNode *input, xmlNode **cib,
+                        xmlNode **answer);
 
 int cib__process_query(const char *op, int options, const char *section,
-                       xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                       xmlNode **result_cib, xmlNode **answer);
+                       xmlNode *req, xmlNode *input, xmlNode **cib,
+                       xmlNode **answer);
 
 int cib__process_replace(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                         xmlNode **result_cib, xmlNode **answer);
+                         xmlNode *req, xmlNode *input, xmlNode **cib,
+                         xmlNode **answer);
 
 int cib__process_upgrade(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode *existing_cib,
-                         xmlNode **result_cib, xmlNode **answer);
+                         xmlNode *req, xmlNode *input, xmlNode **cib,
+                         xmlNode **answer);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,

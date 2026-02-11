@@ -78,6 +78,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &op_msg);
+    rc = pcmk_rc2legacy(rc);
     if (rc != pcmk_ok) {
         return rc;
     }
@@ -85,7 +86,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, op_msg);
         pcmk__xml_free(op_msg);
-        return rc;
+        return pcmk_rc2legacy(rc);
     }
 
     pcmk__trace("Sending %s message to the CIB manager", op);
@@ -160,11 +161,6 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     /* Start processing the reply... */
     if (pcmk__xe_get_int(op_reply, PCMK__XA_CIB_RC, &rc) != pcmk_rc_ok) {
         rc = -EPROTO;
-    }
-
-    if (rc == -pcmk_err_diff_resync) {
-        /* This is an internal value that clients do not and should not care about */
-        rc = pcmk_ok;
     }
 
     if (rc == pcmk_ok || rc == -EPERM) {

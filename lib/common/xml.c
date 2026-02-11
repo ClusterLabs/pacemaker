@@ -858,6 +858,51 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 
 /*!
  * \internal
+ * \brief Replace one XML node with a copy of another XML node
+ *
+ * This function handles change tracking and applies ACLs.
+ *
+ * \param[in,out] old  XML node to replace
+ * \param[in]     new  XML node to copy as replacement for \p old
+ *
+ * \return Copy of \p new that replaced \p old
+ *
+ * \note This frees \p old.
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free() (but note that it may be part of a larger XML
+ *       tree).
+ */
+xmlNode *
+pcmk__xml_replace_with_copy(xmlNode *old, xmlNode *new)
+{
+    xmlNode *new_copy = NULL;
+
+    pcmk__assert((old != NULL) && (new != NULL));
+
+    /* Pass old to pcmk__xml_copy() so that new_copy gets created within the
+     * same doc. But old won't remain its parent.
+     */
+    new_copy = pcmk__xml_copy(old, new);
+    old = xmlReplaceNode(old, new_copy);
+
+    // old == NULL means memory allocation error
+    pcmk__assert(old != NULL);
+
+    // May be unnecessary but avoids slight changes to some test outputs
+    pcmk__xml_tree_foreach(new_copy, pcmk__xml_reset_node_flags, NULL);
+
+    if (pcmk__xml_doc_all_flags_set(new_copy->doc, pcmk__xf_tracking)) {
+        // Replaced sections may have included relevant ACLs
+        pcmk__apply_acls(new_copy->doc);
+    }
+    pcmk__xml_mark_changes(old, new_copy);
+    pcmk__xml_free_node(old);
+
+    return new_copy;
+}
+
+/*!
+ * \internal
  * \brief Remove XML text nodes from specified XML and all its children
  *
  * \param[in,out] xml  XML to strip text from

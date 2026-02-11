@@ -182,7 +182,7 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
         xmlNode *result = pcmk__xpath_result(xpath_obj, i);
 
         if (result != NULL) {
-            (*fn)(result, user_data);
+            fn(result, user_data);
         }
     }
     xmlXPathFreeObject(xpath_obj);
@@ -519,7 +519,7 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
             CRM_LOG_ASSERT(result != NULL);
 
             if (result != NULL) {
-                (*helper)(result, user_data);
+                helper(result, user_data);
             }
         }
     }
