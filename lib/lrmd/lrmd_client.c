@@ -313,7 +313,6 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         event.exec_time = QB_MAX(0, exec_time);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
-        CRM_LOG_ASSERT(queue_time >= 0);
         event.queue_time = QB_MAX(0, queue_time);
 
         event.op_type = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_ACTION);
