@@ -238,7 +238,7 @@ class Corosync2Patterns(BasePatterns):
         ]
 
         self._components["corosync-ignore"] = components_common_ignore + [
-            r"Could not connect to Corosync CFG: CS_ERR_LIBRARY",
+            r"Could not connect to Corosync CFG: Internal corosync error",
             r"error:.*Connection to the CPG API failed: Library error",
             r"\[[0-9]+\] exited with status [0-9]+ \(",
             r"\[[0-9]+\] terminated with signal 15",
