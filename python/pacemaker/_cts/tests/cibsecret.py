@@ -1,7 +1,7 @@
 """Test managing secrets with cibsecret."""
 
 __all__ = ["CibsecretTest"]
-__copyright__ = "Copyright 2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2025-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
@@ -57,7 +57,7 @@ class CibsecretTest(CTSTest):
 
         self._cm.add_dummy_rsc(node, self._rid)
 
-        with Timer(self._logger, self.name, "addDummy"):
+        with Timer(self.name, "addDummy"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -76,7 +76,7 @@ class CibsecretTest(CTSTest):
         watch.set_watch()
         self._cm.remove_dummy_rsc(node, self._rid)
 
-        with Timer(self._logger, self.name, "removeDummy"):
+        with Timer(self.name, "removeDummy"):
             watch.look_for_all()
 
         if watch.unmatched:

@@ -1,9 +1,10 @@
 """Stop the cluster manager on a given node."""
 
 __all__ = ["StopTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -79,7 +80,7 @@ class StopTest(CTSTest):
                 self.debug(line)
 
             for regex in watch.unmatched:
-                self._logger.log(f"ERROR: Shutdown pattern not found: {regex}")
+                logging.log(f"ERROR: Shutdown pattern not found: {regex}")
                 unmatched_str += f"{regex}||"
                 failreason = "Missing shutdown pattern"
 

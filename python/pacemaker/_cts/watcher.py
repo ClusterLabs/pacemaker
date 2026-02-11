@@ -1,7 +1,7 @@
 """Log searching classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["LogKind", "LogWatcher"]
-__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from enum import Enum, auto, unique
@@ -11,7 +11,7 @@ import threading
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.errors import OutputNotFoundError
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.remote import RemoteFactory
 
 
@@ -49,7 +49,6 @@ class SearchObj:
         """
         self.filename = filename
         self.limit = None
-        self.logger = LogFactory()
         self.name = name
         self.offset = "EOF"
         self.rsh = RemoteFactory().getInstance()
@@ -74,12 +73,12 @@ class SearchObj:
     def log(self, args):
         """Log a message."""
         message = f"lw: {self}: {args}"
-        self.logger.log(message)
+        logging.log(message)
 
     def debug(self, args):
         """Log a debug message."""
         message = f"lw: {self}: {args}"
-        self.logger.debug(message)
+        logging.debug(message)
 
     def harvest_async(self, delegate=None):
         """
@@ -375,7 +374,6 @@ class LogWatcher:
         self._cache_lock = threading.Lock()
         self._file_list = []
         self._line_cache = []
-        self._logger = LogFactory()
         self._timeout = int(timeout)
 
         #  Validate our arguments.  Better sooner than later ;-)
@@ -395,7 +393,7 @@ class LogWatcher:
     def _debug(self, args):
         """Log a debug message."""
         message = f"lw: {self.name}: {args}"
-        self._logger.debug(message)
+        logging.debug(message)
 
     def set_watch(self):
         """Mark the place to start watching the log from."""
@@ -428,7 +426,7 @@ class LogWatcher:
         # pylint: disable=unused-argument
 
         # TODO: Probably need a lock for updating self._line_cache
-        self._logger.debug(f"{self.name}: Got {len(out)} lines from {pid} (total {len(self._line_cache)})")
+        logging.debug(f"{self.name}: Got {len(out)} lines from {pid} (total {len(self._line_cache)})")
 
         if out:
             with self._cache_lock:
@@ -455,7 +453,7 @@ class LogWatcher:
         for t in pending:
             t.join(60.0)
             if t.is_alive():
-                self._logger.log(f"{self.name}: Aborting after 20s waiting for {t!r} logging commands")
+                logging.log(f"{self.name}: Aborting after 20s waiting for {t!r} logging commands")
                 return
 
     def end(self):

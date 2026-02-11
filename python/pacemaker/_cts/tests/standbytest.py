@@ -1,9 +1,10 @@
 """Put a node into standby mode and check that resources migrate."""
 
 __all__ = ["StandbyTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
@@ -72,7 +73,7 @@ class StandbyTest(CTSTest):
 
         ret = watch.look_for_all()
         if not ret:
-            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
+            logging.log(f"Patterns not found: {watch.unmatched!r}")
             self._cm.set_standby_mode(node, False)
             return self.failure(f"cluster didn't react to standby change on {node}")
 

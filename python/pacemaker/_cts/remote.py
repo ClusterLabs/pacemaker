@@ -1,7 +1,7 @@
 """Remote command runner for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["RemoteExec", "RemoteFactory"]
-__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -10,7 +10,7 @@ import os
 from subprocess import Popen, PIPE
 from threading import Thread
 
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 
 
 def convert2string(lines):
@@ -54,7 +54,6 @@ class AsyncCmd(Thread):
         """
         self._command = command
         self._delegate = delegate
-        self._logger = LogFactory()
         self._node = node
         self._proc = proc
 
@@ -69,20 +68,20 @@ class AsyncCmd(Thread):
             # pylint: disable=consider-using-with
             self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
-        self._logger.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
+        logging.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
         self._proc.wait()
 
         if self._delegate:
-            self._logger.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode} to {self._delegate!r}")
+            logging.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode} to {self._delegate!r}")
         else:
-            self._logger.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode}")
+            logging.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode}")
 
         if self._proc.stderr:
             err = self._proc.stderr.readlines()
             self._proc.stderr.close()
 
             for line in err:
-                self._logger.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
+                logging.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
 
             err = convert2string(err)
 
@@ -113,7 +112,6 @@ class RemoteExec:
         """
         self.command = command
         self.cp_command = cp_command
-        self._logger = LogFactory()
         self._silent = silent
         self._our_node = os.uname()[1].lower()
 
@@ -136,12 +134,12 @@ class RemoteExec:
     def _log(self, args):
         """Log a message."""
         if not self._silent:
-            self._logger.log(args)
+            logging.log(args)
 
     def _debug(self, args):
         """Log a message at the debug level."""
         if not self._silent:
-            self._logger.debug(args)
+            logging.debug(args)
 
     def call_async(self, node, command, delegate=None):
         """

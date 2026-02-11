@@ -6,7 +6,7 @@
 # that should have all caps names, and that cm and n are too short.
 # pylint: disable=invalid-name
 
-__copyright__ = "Copyright 2001-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2001-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import signal
@@ -15,18 +15,18 @@ import sys
 from pacemaker._cts.CTS import CtsLab
 from pacemaker._cts.cmcorosync import Corosync2
 from pacemaker._cts.audits import audit_list
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
 from pacemaker._cts.tests import test_list
 
 # These are globals so they can be used by the signal handler.
 scenario = None
-LogFactory().add_stderr()
+logging.add_stderr()
 
 
 def sig_handler(signum, _frame):
     """Handle the given signal number."""
-    LogFactory().log(f"Interrupted by signal {signum}")
+    logging.log(f"Interrupted by signal {signum}")
 
     if scenario:
         scenario.summarize()
@@ -61,9 +61,9 @@ if __name__ == '__main__':
 
     if environment["TruncateLog"]:
         if environment["OutputFile"] is None:
-            LogFactory().log("Ignoring truncate request because no output file specified")
+            logging.log("Ignoring truncate request because no output file specified")
         else:
-            LogFactory().log(f"Truncating {environment['OutputFile']}")
+            logging.log(f"Truncating {environment['OutputFile']}")
 
             with open(environment["OutputFile"], "w", encoding="utf-8") as outputfile:
                 outputfile.truncate(0)
@@ -72,10 +72,10 @@ if __name__ == '__main__':
 
     if environment["ListTests"]:
         tests = test_list(cm, audits)
-        LogFactory().log(f"Total {len(tests)} tests")
+        logging.log(f"Total {len(tests)} tests")
 
         for test in tests:
-            LogFactory().log(test.name)
+            logging.log(test.name)
 
         sys.exit(0)
 
@@ -92,7 +92,7 @@ if __name__ == '__main__':
                     match = test
 
             if not match:
-                LogFactory().log("--choose: No applicable/valid tests chosen")
+                logging.log("--choose: No applicable/valid tests chosen")
                 sys.exit(1)
             else:
                 tests.append(match)
@@ -108,19 +108,19 @@ if __name__ == '__main__':
     else:
         scenario = RandomTests(cm, [BootCluster(cm, environment)], audits, tests)
 
-    LogFactory().log(f">>>>>>>>>>>>>>>> BEGINNING {iters!r} TEST{plural_s(iters)}")
-    LogFactory().log(f"Schema:                 {environment['Schema']}")
-    LogFactory().log(f"Scenario:               {scenario.__doc__}")
-    LogFactory().log(f"CTS Exerciser:          {environment['cts-exerciser']}")
-    LogFactory().log(f"CTS Logfile:            {environment['OutputFile']}")
+    logging.log(f">>>>>>>>>>>>>>>> BEGINNING {iters!r} TEST{plural_s(iters)}")
+    logging.log(f"Schema:                 {environment['Schema']}")
+    logging.log(f"Scenario:               {scenario.__doc__}")
+    logging.log(f"CTS Exerciser:          {environment['cts-exerciser']}")
+    logging.log(f"CTS Logfile:            {environment['OutputFile']}")
     if "syslogd" in environment:
-        LogFactory().log(f"Syslog variant:         {environment['syslogd']}")
-    LogFactory().log(f"System log files:       {environment['LogFileName']}")
+        logging.log(f"Syslog variant:         {environment['syslogd']}")
+    logging.log(f"System log files:       {environment['LogFileName']}")
 
     if "IPBase" in environment:
-        LogFactory().log(f"Base IP for resources:  {environment['IPBase']}")
+        logging.log(f"Base IP for resources:  {environment['IPBase']}")
 
-    LogFactory().log(f"Cluster starts at boot: {environment['at-boot']}")
+    logging.log(f"Cluster starts at boot: {environment['at-boot']}")
 
     environment.dump()
     rc = environment.run(scenario, iters)

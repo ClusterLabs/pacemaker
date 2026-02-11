@@ -1,7 +1,7 @@
 """Main classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["CtsLab", "NodeStatus", "Process"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
@@ -11,7 +11,7 @@ import traceback
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.input import should_continue
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.remote import RemoteFactory
 
 
@@ -46,7 +46,6 @@ class CtsLab:
         args -- A list of command line parameters, minus the program name.
         """
         self._env = EnvFactory().getInstance(args)
-        self._logger = LogFactory()
 
     def dump(self):
         """Print the current environment."""
@@ -79,13 +78,13 @@ class CtsLab:
         Returns ExitStatus.OK on success, or ExitStatus.ERROR on error.
         """
         if not scenario:
-            self._logger.log("No scenario was defined")
+            logging.log("No scenario was defined")
             return ExitStatus.ERROR
 
-        self._logger.log("Cluster nodes: ")
+        logging.log("Cluster nodes: ")
         # pylint: disable=unsubscriptable-object
         for node in self._env["nodes"]:
-            self._logger.log(f"    * {node}")
+            logging.log(f"    * {node}")
 
         if not scenario.setup():
             return ExitStatus.ERROR
@@ -96,8 +95,8 @@ class CtsLab:
         try:
             scenario.run(iterations)
         except:  # noqa: E722
-            self._logger.log(f"Exception by {sys.exc_info()[0]}")
-            self._logger.traceback(traceback)
+            logging.log(f"Exception by {sys.exc_info()[0]}")
+            logging.traceback(traceback)
 
             scenario.summarize()
             scenario.teardown()
@@ -110,7 +109,7 @@ class CtsLab:
             return ExitStatus.ERROR
 
         if scenario.stats["success"] != iterations:
-            self._logger.log("No failure count but success != requested iterations")
+            logging.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 
         return ExitStatus.OK
@@ -162,18 +161,18 @@ class NodeStatus:
                 if anytimeouts:
                     # Fudge to wait for the system to finish coming up
                     time.sleep(30)
-                    LogFactory().debug(f"Node {node} now up")
+                    logging.debug(f"Node {node} now up")
 
                 return True
 
             time.sleep(30)
             if not anytimeouts:
-                LogFactory().debug(f"Waiting for node {node} to come up")
+                logging.debug(f"Waiting for node {node} to come up")
 
             anytimeouts = True
             timeout -= 1
 
-        LogFactory().log(f"{node} did not come up within {initial_timeout} tries")
+        logging.log(f"{node} did not come up within {initial_timeout} tries")
         if not should_continue(self._env["continue"]):
             raise ValueError(f"{node} did not come up within {initial_timeout} tries")
 

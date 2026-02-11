@@ -1,7 +1,7 @@
 """Test environment classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["EnvFactory", "set_cts_path"]
-__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -14,7 +14,7 @@ import socket
 import sys
 
 from pacemaker.buildoptions import BuildOptions
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.remote import RemoteFactory
 from pacemaker._cts.watcher import LogKind
 
@@ -67,7 +67,6 @@ class Environment:
 
         self.random_gen = random.Random()
 
-        self._logger = LogFactory()
         self._rsh = RemoteFactory().getInstance()
 
         self._parse_args(args)
@@ -79,7 +78,7 @@ class Environment:
     def dump(self):
         """Print the current environment."""
         for key in sorted(self.data.keys()):
-            self._logger.debug(f"{f'Environment[{key}]':35}: {str(self[key])}")
+            logging.debug(f"{f'Environment[{key}]':35}: {str(self[key])}")
 
     def __contains__(self, key):
         """Return True if the given key exists in the environment."""
@@ -105,7 +104,7 @@ class Environment:
                     socket.gethostbyname_ex(node)
                     self.data["nodes"].append(node)
                 except socket.herror:
-                    self._logger.log(f"{node} not found in DNS... aborting")
+                    logging.log(f"{node} not found in DNS... aborting")
                     raise
 
         else:
@@ -194,15 +193,15 @@ class Environment:
 
             if not self["IPBase"]:
                 self["IPBase"] = " fe80::1234:56:7890:1000"
-                self._logger.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
-                self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
+                logging.log("Could not determine an offset for IPaddr resources.  Perhaps nmap is not installed on the nodes.")
+                logging.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
                 return
 
             last_part = self["IPBase"].split('.')[3]
             if int(last_part) >= 240:
-                self._logger.log(f"Could not determine an offset for IPaddr resources. Upper bound is too high: {self['IPBase']} {last_part}")
+                logging.log(f"Could not determine an offset for IPaddr resources. Upper bound is too high: {self['IPBase']} {last_part}")
                 self["IPBase"] = " fe80::1234:56:7890:1000"
-                self._logger.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
+                logging.log(f"""Defaulting to '{self["IPBase"]}', use --test-ip-base to override""")
 
     def _validate(self):
         """Check that we were given all required command line parameters."""
@@ -385,7 +384,7 @@ class Environment:
 
         if args.outputfile:
             self["OutputFile"] = args.outputfile
-            LogFactory().add_file(self["OutputFile"])
+            logging.add_file(self["OutputFile"])
 
         self.random_gen.seed(args.seed)
 

@@ -1,9 +1,10 @@
 """Start a node and then tell it to stop before it is fully running."""
 
 __all__ = ["PartialStart"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
@@ -53,7 +54,7 @@ class PartialStart(CTSTest):
         self._cm.start_cm_async(node)
         ret = watch.look_for_all()
         if not ret:
-            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
+            logging.log(f"Patterns not found: {watch.unmatched!r}")
             return self.failure(f"Setup of {node} failed")
 
         ret = self._stop(node)
