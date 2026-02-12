@@ -7,7 +7,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import re
 import os
 
-from subprocess import Popen, PIPE
+import subprocess
 from threading import Thread
 
 from pacemaker._cts import logging
@@ -66,7 +66,9 @@ class AsyncCmd(Thread):
 
         if not self._proc:
             # pylint: disable=consider-using-with
-            self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
+            self._proc = subprocess.Popen(self._command, stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE, close_fds=True,
+                                          shell=True)
 
         logging.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
         self._proc.wait()
@@ -165,8 +167,8 @@ class RemoteExec:
         rc = 0
         result = None
         # pylint: disable=consider-using-with
-        proc = Popen(self._cmd([node, command]),
-                     stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
+        proc = subprocess.Popen(self._cmd([node, command]), stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, close_fds=True, shell=True)
 
         if not synchronous and proc.pid > 0:
             aproc = AsyncCmd(node, command, proc=proc)
