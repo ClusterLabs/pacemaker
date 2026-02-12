@@ -129,14 +129,6 @@ class RemoteExec:
 
         return ret
 
-    def _log(self, args):
-        """Log a message."""
-        logging.log(args)
-
-    def _debug(self, args):
-        """Log a message at the debug level."""
-        logging.debug(args)
-
     def call_async(self, node, command, delegate=None):
         """
         Run the given command on the given remote system and do not wait for it to complete.
@@ -185,12 +177,12 @@ class RemoteExec:
             result = proc.stdout.readlines()
             proc.stdout.close()
         else:
-            self._log("No stdout stream")
+            logging.log("No stdout stream")
 
         rc = proc.wait()
 
         if verbose > 0:
-            self._debug(f"cmd: target={node}, rc={rc}: {command}")
+            logging.debug(f"cmd: target={node}, rc={rc}: {command}")
 
         result = convert2string(result)
 
@@ -199,11 +191,11 @@ class RemoteExec:
             proc.stderr.close()
 
             for err in errors:
-                self._debug(f"cmd: stderr: {err}")
+                logging.debug(f"cmd: stderr: {err}")
 
         if verbose == 2:
             for line in result:
-                self._debug(f"cmd: stdout: {line}")
+                logging.debug(f"cmd: stdout: {line}")
 
         return (rc, result)
 
@@ -222,7 +214,7 @@ class RemoteExec:
         rc = os.system(cmd)
 
         if not silent:
-            self._debug(f"cmd: rc={rc}: {cmd}")
+            logging.debug(f"cmd: rc={rc}: {cmd}")
 
         return rc
 
