@@ -8,7 +8,7 @@ import re
 
 from pacemaker._cts import logging
 from pacemaker._cts.environment import EnvFactory
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 from pacemaker._cts.timer import Timer
 from pacemaker._cts.watcher import LogWatcher
 
@@ -49,7 +49,7 @@ class CTSTest:
 
         self._cm = cm
         self._env = EnvFactory().getInstance()
-        self._rsh = RemoteFactory().getInstance()
+        self._rsh = RemoteExec()
         self._timers = {}
 
         self.benchmark = True  # which tests to benchmark

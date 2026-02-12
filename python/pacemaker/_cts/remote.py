@@ -1,6 +1,6 @@
 """Remote command runner for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["RemoteExec", "RemoteFactory"]
+__all__ = ["RemoteExec"]
 __copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -200,22 +200,3 @@ class RemoteExec:
                 return False
 
         return True
-
-
-class RemoteFactory:
-    """A class for constructing a singleton instance of a RemoteExec object."""
-
-    # Class variables
-
-    instance = None
-
-    # pylint: disable=invalid-name
-    def getInstance(self):
-        """
-        Return the previously created instance of RemoteExec.
-
-        If no instance exists, create one and then return that.
-        """
-        if not RemoteFactory.instance:
-            RemoteFactory.instance = RemoteExec()
-        return RemoteFactory.instance

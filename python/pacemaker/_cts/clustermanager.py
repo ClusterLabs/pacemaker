@@ -21,17 +21,8 @@ from pacemaker._cts.cib import ConfigFactory
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts import logging
 from pacemaker._cts.patterns import PatternSelector
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 from pacemaker._cts.watcher import LogWatcher
-
-# pylint doesn't understand that self._rsh is callable (it stores the
-# singleton instance of RemoteExec, as returned by the getInstance method
-# of RemoteFactory).
-# @TODO See if type annotations fix this.
-
-# I think we could also fix this by getting rid of the getInstance methods,
-# but that's a project for another day.  For now, just disable the warning.
-# pylint: disable=not-callable
 
 # ClusterManager has a lot of methods.
 # pylint: disable=too-many-public-methods
@@ -64,7 +55,7 @@ class ClusterManager(UserDict):
         self.ns = NodeStatus(self.env)
         self.our_node = os.uname()[1].lower()
         self.partitions_expected = 1
-        self.rsh = RemoteFactory().getInstance()
+        self.rsh = RemoteExec()
         self.templates = PatternSelector(self.name)
 
         self._cib_factory = ConfigFactory(self)

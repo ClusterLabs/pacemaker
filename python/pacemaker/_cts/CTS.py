@@ -12,7 +12,7 @@ from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.input import should_continue
 from pacemaker._cts import logging
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 
 
 class CtsLab:
@@ -133,14 +133,12 @@ class NodeStatus:
 
     def _node_booted(self, node):
         """Return True if the given node is booted (responds to pings)."""
-        # pylint: disable=not-callable
-        (rc, _) = RemoteFactory().getInstance()("localhost", f"ping -nq -c1 -w1 {node}", verbose=0)
+        (rc, _) = RemoteExec()("localhost", f"ping -nq -c1 -w1 {node}", verbose=0)
         return rc == 0
 
     def _sshd_up(self, node):
         """Return true if sshd responds on the given node."""
-        # pylint: disable=not-callable
-        (rc, _) = RemoteFactory().getInstance()(node, "true", verbose=0)
+        (rc, _) = RemoteExec()(node, "true", verbose=0)
         return rc == 0
 
     def wait_for_node(self, node, timeout=300):
