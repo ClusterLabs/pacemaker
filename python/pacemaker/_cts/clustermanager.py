@@ -323,7 +323,7 @@ class ClusterManager(UserDict):
         log_fn(f"Starting {self.name} on node {node}")
 
         self._install_config(node)
-        self.rsh(node, self.templates["StartCmd"], synchronous=False)
+        self.rsh.call_async(node, self.templates["StartCmd"])
         self.expected_status[node] = "up"
 
     def stop_cm(self, node, verbose=False, force=False):
@@ -348,7 +348,7 @@ class ClusterManager(UserDict):
         """Stop the cluster manager on a given node without blocking."""
         self.debug(f"Stopping {self.name} on node {node}")
 
-        self.rsh(node, self.templates["StopCmd"], synchronous=False)
+        self.rsh.call_async(node, self.templates["StopCmd"])
         self.expected_status[node] = "down"
 
     def startall(self, nodelist=None, verbose=False, quick=False):
@@ -457,8 +457,8 @@ class ClusterManager(UserDict):
 
             # Limit the amount of time we have asynchronous connectivity for
             # Restore both sides as simultaneously as possible
-            self.rsh(target, self.templates["FixCommCmd"] % node, synchronous=False)
-            self.rsh(node, self.templates["FixCommCmd"] % target, synchronous=False)
+            self.rsh.call_async(target, self.templates["FixCommCmd"] % node)
+            self.rsh.call_async(node, self.templates["FixCommCmd"] % target)
             self.debug(f"Communication restored between {target} and {node}")
 
     def prepare(self):

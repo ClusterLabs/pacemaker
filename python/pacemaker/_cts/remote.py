@@ -124,7 +124,7 @@ class RemoteExec:
         aproc.start()
         return aproc
 
-    def __call__(self, node, command, synchronous=True, verbose=2):
+    def __call__(self, node, command, verbose=2):
         """
         Run the given command on the given remote system.
 
@@ -134,7 +134,6 @@ class RemoteExec:
         Arguments:
         node        -- The remote machine to run on
         command     -- The command to run, as a string
-        synchronous -- Should we wait for the command to complete?
         verbose     -- If 0, do not log anything.  If 1, log the command and its
                        return code but not its output.  If 2, additionally log
                        command output.
@@ -147,11 +146,6 @@ class RemoteExec:
         proc = subprocess.Popen(self._cmd([node, command]), stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, close_fds=True, shell=True,
                                 universal_newlines=True)
-
-        if not synchronous and proc.pid > 0:
-            aproc = AsyncCmd(node, command, proc=proc)
-            aproc.start()
-            return (rc, result)
 
         if proc.stdout:
             result = proc.stdout.readlines()
