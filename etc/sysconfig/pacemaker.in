@@ -277,9 +277,18 @@
 # permissions to either the @CRM_DAEMON_USER@ user or the @CRM_DAEMON_GROUP@
 # group), and its contents must be identical on all nodes.
 #
-# This is an alternative to using X509 certificates.
-#
 # Default: PCMK_authkey_location="@PACEMAKER_CONFIG_DIR@/authkey"
+
+# PCMK_cib_authkey_location
+#
+# As an alternative to using X509 authentication for remote CIB operations,
+# use the contents of this file as the authorization key. This file must be
+# readable by Pacemaker daemons (that is, it must allow read permissions
+# to either the @CRM_DAEMON_USER@ user or the @CRM_DAEMON_GROUP@ group), and
+# its contents must be identical on both the cluster nodes and the remote
+# administration system.
+#
+# Default: PCMK_cib_authkey_location="@PACEMAKER_CONFIG_DIR@/cib_authkey"
 
 # PCMK_remote_pid1 (Advanced Use Only)
 #

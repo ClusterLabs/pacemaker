@@ -13,6 +13,8 @@
 #include <stdbool.h>
 #include <stdint.h>                      // UINT32_C
 
+#include <gnutls/gnutls.h>               // gnutls_datum_t
+
 #include <crm/cib.h>
 #include <crm/common/internal.h>
 
@@ -292,6 +294,8 @@ int cib__delete_node_attr(pcmk__output_t *out, cib_t *cib, int options,
                           const char *section, const char *node_uuid, const char *set_type,
                           const char *set_name, const char *attr_id, const char *attr_name,
                           const char *attr_value, const char *user_name);
+
+int cib__init_remote_key(gnutls_datum_t *key);
 
 #ifdef __cplusplus
 }

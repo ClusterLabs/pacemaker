@@ -1,7 +1,7 @@
 """ Sphinx configuration for Pacemaker documentation
 """
 
-__copyright__ = "Copyright 2020-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2020-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 # This file is execfile()d with the current directory set to its containing dir.
@@ -37,6 +37,7 @@ rst_prolog="""
 .. |PCMK_SCHEMA_DIR| replace:: %PCMK_SCHEMA_DIR%
 .. |PCMK_CONFIG_DIR| replace:: ``%PACEMAKER_CONFIG_DIR%``
 .. |PCMK_AUTHKEY_FILE| replace:: %PACEMAKER_CONFIG_DIR%/authkey
+.. |PCMK_CIB_AUTHKEY_FILE| replace:: %PACEMAKER_CONFIG_DIR%/cib_authkey
 .. |PCMK_CONFIG_FILE| replace:: ``%CONFIGDIR%/pacemaker``
 .. |PCMK__GNUTLS_PRIORITIES| replace:: %PCMK__GNUTLS_PRIORITIES%
 .. |PCMK_INIT_ENV_FILE| replace:: ``%PACEMAKER_CONFIG_DIR%/pcmk-init.env``

@@ -148,6 +148,7 @@ bool pcmk__valid_fencing_watchdog_timeout(const char *value);
 #define PCMK__ENV_CA_FILE                   "ca_file"
 #define PCMK__ENV_CALLGRIND_ENABLED         "callgrind_enabled"
 #define PCMK__ENV_CERT_FILE                 "cert_file"
+#define PCMK__ENV_CIB_AUTHKEY_LOCATION      "cib_authkey_location"
 #define PCMK__ENV_CLUSTER_TYPE              "cluster_type"
 #define PCMK__ENV_CRL_FILE                  "crl_file"
 #define PCMK__ENV_DEBUG                     "debug"
