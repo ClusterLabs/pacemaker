@@ -77,14 +77,20 @@ class RemoteExec:
     It runs a command on another machine using ssh and scp.
     """
 
-    def __init__(self, command):
-        """
-        Create a new RemoteExec instance.
+    # @TODO This should be an argument list that gets used with subprocess,
+    # but making that change will require changing everywhere that __call__
+    # or call_async passes a command string.
+    #
+    # -n: no stdin, -x: no X11,
+    # -o ServerAliveInterval=5: disconnect after 3*5s if the server
+    # stops responding
+    _command = "ssh -l root -n -x -o ServerAliveInterval=5 " \
+               "-o ConnectTimeout=10 -o TCPKeepAlive=yes " \
+               "-o ServerAliveCountMax=3"
 
-        Arguments:
-        command    -- The ssh command string to use for remote execution
-        """
-        self.command = command
+    def __init__(self):
+        """Create a new RemoteExec instance."""
+
         self._our_node = os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
@@ -99,7 +105,7 @@ class RemoteExec:
         if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
-            ret = f"{self.command} {sysname} '{self._fixcmd(command)}'"
+            ret = f"{self._command} {sysname} '{self._fixcmd(command)}'"
 
         return ret
 
@@ -207,13 +213,6 @@ class RemoteFactory:
 
     # Class variables
 
-    # -n: no stdin, -x: no X11,
-    # -o ServerAliveInterval=5: disconnect after 3*5s if the server
-    # stops responding
-    command = ("ssh -l root -n -x -o ServerAliveInterval=5 "
-               "-o ConnectTimeout=10 -o TCPKeepAlive=yes "
-               "-o ServerAliveCountMax=3 ")
-
     instance = None
 
     # pylint: disable=invalid-name
@@ -224,5 +223,5 @@ class RemoteFactory:
         If no instance exists, create one and then return that.
         """
         if not RemoteFactory.instance:
-            RemoteFactory.instance = RemoteExec(RemoteFactory.command)
+            RemoteFactory.instance = RemoteExec()
         return RemoteFactory.instance
