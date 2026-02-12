@@ -103,16 +103,14 @@ class RemoteExec:
     It runs a command on another machine using ssh and scp.
     """
 
-    def __init__(self, command, cp_command):
+    def __init__(self, command):
         """
         Create a new RemoteExec instance.
 
         Arguments:
         command    -- The ssh command string to use for remote execution
-        cp_command -- The scp command string to use for copying files
         """
         self.command = command
-        self.cp_command = cp_command
         self._our_node = os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
@@ -205,18 +203,13 @@ class RemoteExec:
         """
         Perform a copy of the source file to the remote target.
 
-        This function uses the cp_command provided when the RemoteExec object
-        was created.
-
-        Returns the return code of the cp_command.
+        Returns the return code of the copy process.
         """
-        # @TODO Use subprocess module with argument array instead
-        # (self.cp_command should be an array too)
-        cmd = f"{self.cp_command} '{source}' '{target}'"
-        rc = os.system(cmd)
-
-        logging.debug(f"cmd: rc={rc}: {cmd}")
-        return rc
+        # -B: batch mode, -q: no stats (quiet)
+        p = subprocess.run(["scp", "-B", "-q", f"'{source}'", f"'{target}'"],
+                           check=False)
+        logging.debug(f"cmd: rc={p.returncode}: {p.args}")
+        return p.returncode
 
     def exists_on_all(self, filename, hosts):
         """Return True if specified file exists on all specified hosts."""
@@ -249,9 +242,6 @@ class RemoteFactory:
                "-o ConnectTimeout=10 -o TCPKeepAlive=yes "
                "-o ServerAliveCountMax=3 ")
 
-    # -B: batch mode, -q: no stats (quiet)
-    cp_command = "scp -B -q"
-
     instance = None
 
     # pylint: disable=invalid-name
@@ -262,6 +252,5 @@ class RemoteFactory:
         If no instance exists, create one and then return that.
         """
         if not RemoteFactory.instance:
-            RemoteFactory.instance = RemoteExec(RemoteFactory.command,
-                                                RemoteFactory.cp_command)
+            RemoteFactory.instance = RemoteExec(RemoteFactory.command)
         return RemoteFactory.instance
