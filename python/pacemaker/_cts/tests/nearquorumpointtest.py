@@ -107,7 +107,7 @@ class NearQuorumPointTest(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in stopset:
-                self._rsh(node, self._cm.templates["StopCmd"])
+                self._rsh.call(node, self._cm.templates["StopCmd"])
 
             return self.success()
 

@@ -80,7 +80,7 @@ class ComponentFail(CTSTest):
             self._okerrpatterns = [
                 self._cm.templates["Pat:Resource_active"],
             ]
-            (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+            (_, lines) = self._rsh.call(node, "crm_resource -c", verbose=1)
 
             for line in lines:
                 if re.search("^Resource", line):

@@ -49,7 +49,7 @@ class CIB:
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._factory.rsh(self._factory.target, f"HOME=/root CIB_file={self._factory.tmpfile} cibadmin -Q", verbose=1)
+        (_, result) = self._factory.rsh.call(self._factory.target, f"HOME=/root CIB_file={self._factory.tmpfile} cibadmin -Q", verbose=1)
 
         for line in result:
             output += line
@@ -105,7 +105,7 @@ class CIB:
               r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s""" \
               % (node_name, BuildOptions.COROSYNC_CONFIG_FILE)
 
-        (rc, output) = self._factory.rsh(self._factory.target, awk, verbose=1)
+        (rc, output) = self._factory.rsh.call(self._factory.target, awk, verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -124,7 +124,7 @@ class CIB:
 
         self._factory.tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
         self.contents(target)
-        self._factory.rsh(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._factory.tmpfile}")
+        self._factory.rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._factory.tmpfile}")
 
         self._factory.tmpfile = old
 
@@ -138,7 +138,7 @@ class CIB:
         if target:
             self._factory.target = target
 
-        self._factory.rsh(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._factory.tmpfile}")
+        self._factory.rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._factory.tmpfile}")
         self._num_nodes = len(self._cm.env["nodes"])
 
         no_quorum = "stop"
@@ -300,7 +300,7 @@ class CIB:
         self._cib = self._show()
 
         if self._factory.tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
-            self._factory.rsh(self._factory.target, f"rm -f {self._factory.tmpfile}")
+            self._factory.rsh.call(self._factory.target, f"rm -f {self._factory.tmpfile}")
 
         return self._cib
 

@@ -101,7 +101,7 @@ class ClusterManager(UserDict):
         This includes various init scripts and data, daemons, fencing agents, etc.
         """
         for node in self.env["nodes"]:
-            self.rsh(node, f"{BuildOptions.DAEMON_DIR}/cts-support {command}")
+            self.rsh.call(node, f"{BuildOptions.DAEMON_DIR}/cts-support {command}")
 
     def prepare_fencing_watcher(self):
         """Return a LogWatcher object that watches for fencing log messages."""
@@ -227,7 +227,7 @@ class ClusterManager(UserDict):
             return
 
         self._cib_sync[node] = True
-        self.rsh(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
+        self.rsh.call(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
 
         # Only install the CIB on the first node, all the other ones will pick it up from there
         if self._cib_installed:
@@ -246,7 +246,7 @@ class ClusterManager(UserDict):
             self.log(f"Installing Generated CIB on node {node}")
             self._cib.install(node)
 
-        self.rsh(node, f"chown {BuildOptions.DAEMON_USER} {BuildOptions.CIB_DIR}/cib.xml")
+        self.rsh.call(node, f"chown {BuildOptions.DAEMON_USER} {BuildOptions.CIB_DIR}/cib.xml")
 
     def start_cm(self, node, verbose=False):
         """Start up the cluster manager on a given node."""
@@ -284,7 +284,7 @@ class ClusterManager(UserDict):
         stonith = self.prepare_fencing_watcher()
         watch.set_watch()
 
-        (rc, _) = self.rsh(node, self.templates["StartCmd"])
+        (rc, _) = self.rsh.call(node, self.templates["StartCmd"])
         if rc != 0:
             logging.log(f"Warn: Start command failed on node {node}")
             self.fencing_cleanup(node, stonith)
@@ -325,7 +325,7 @@ class ClusterManager(UserDict):
         if self.expected_status[node] != "up" and not force:
             return True
 
-        (rc, _) = self.rsh(node, self.templates["StopCmd"])
+        (rc, _) = self.rsh.call(node, self.templates["StopCmd"])
         if rc == 0:
             # Make sure we can continue even if corosync leaks
             self.expected_status[node] = "down"
@@ -428,7 +428,7 @@ class ClusterManager(UserDict):
             if node == target:
                 continue
 
-            (rc, _) = self.rsh(target, self.templates["BreakCommCmd"] % node)
+            (rc, _) = self.rsh.call(target, self.templates["BreakCommCmd"] % node)
             if rc != 0:
                 logging.log(f"Could not break the communication between {target} and {node}: {rc}")
                 return False
@@ -494,7 +494,7 @@ class ClusterManager(UserDict):
                                 self.env["log_kind"], "ClusterIdle")
         idle_watch.set_watch()
 
-        (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
+        (_, out) = self.rsh.call(node, self.templates["StatusCmd"] % node, verbose=1)
 
         if not out:
             out = ""
@@ -568,7 +568,7 @@ class ClusterManager(UserDict):
 
         for node in nodes.split():
             # have each node dump its current state
-            self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
+            self.rsh.call(node, self.templates["StatusCmd"] % node, verbose=1)
 
         ret = idle_watch.look()
 
@@ -612,7 +612,7 @@ class ClusterManager(UserDict):
         Check the given status_line, or query the cluster if None.
         """
         if not status_line:
-            (_, out) = self.rsh(node, self.templates["StatusCmd"] % node, verbose=1)
+            (_, out) = self.rsh.call(node, self.templates["StatusCmd"] % node, verbose=1)
 
             if out:
                 status_line = out[0].strip()
@@ -639,7 +639,7 @@ class ClusterManager(UserDict):
 
     def active_resources(self, node):
         """Return a list of primitive resources active on the given node."""
-        (_, output) = self.rsh(node, "crm_resource -c", verbose=1)
+        (_, output) = self.rsh.call(node, "crm_resource -c", verbose=1)
         resources = []
         for line in output:
             if not re.search("^Resource", line):
@@ -659,7 +659,7 @@ class ClusterManager(UserDict):
                 continue
 
             cmd = self.templates["RscRunning"] % rid
-            (rc, lines) = self.rsh(node, cmd)
+            (rc, lines) = self.rsh.call(node, cmd)
 
             if rc == 127:
                 self.log(f"Command '{cmd}' failed. Binary or pacemaker-cts package not installed?")
@@ -685,7 +685,7 @@ class ClusterManager(UserDict):
                 self.debug(f"Node {node} is down... skipping")
                 continue
 
-            (_, out) = self.rsh(node, self.templates["PartitionCmd"], verbose=1)
+            (_, out) = self.rsh.call(node, self.templates["PartitionCmd"], verbose=1)
 
             if not out:
                 self.log(f"no partition details for {node}")
@@ -728,7 +728,7 @@ class ClusterManager(UserDict):
             if self.expected_status[node] != "up":
                 continue
 
-            (rc, quorum) = self.rsh(node, self.templates["QuorumCmd"], verbose=1)
+            (rc, quorum) = self.rsh.call(node, self.templates["QuorumCmd"], verbose=1)
             if rc != ExitStatus.OK:
                 self.debug(f"WARN: Quorum check on {node} returned error ({rc})")
                 continue
@@ -753,7 +753,7 @@ class ClusterManager(UserDict):
 
     def in_standby_mode(self, node):
         """Return whether or not the node is in Standby."""
-        (_, out) = self.rsh(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
+        (_, out) = self.rsh.call(node, self.templates["StandbyQueryCmd"] % node, verbose=1)
 
         if not out:
             return False
@@ -778,7 +778,7 @@ class ClusterManager(UserDict):
         else:
             cmd = self.templates["StandbyCmd"] % (node, "off")
 
-        (rc, _) = self.rsh(node, cmd)
+        (rc, _) = self.rsh.call(node, cmd)
         return rc == 0
 
     def add_dummy_rsc(self, node, rid):
@@ -795,13 +795,13 @@ class ClusterManager(UserDict):
                 <rsc_location id=\"location-{rid}-{node}\" node=\"{node}\" rsc=\"{rid}\" score=\"INFINITY\"/>
             </constraints>'"""
 
-        self.rsh(node, self.templates['CibAddXml'] % rsc_xml)
-        self.rsh(node, self.templates['CibAddXml'] % constraint_xml)
+        self.rsh.call(node, self.templates['CibAddXml'] % rsc_xml)
+        self.rsh.call(node, self.templates['CibAddXml'] % constraint_xml)
 
     def remove_dummy_rsc(self, node, rid):
         """Remove the previously added dummy resource given by rid on the given node."""
         constraint = f"\"//rsc_location[@rsc='{rid}']\""
         rsc = f"\"//primitive[@id='{rid}']\""
 
-        self.rsh(node, self.templates['CibDelXpath'] % constraint)
-        self.rsh(node, self.templates['CibDelXpath'] % rsc)
+        self.rsh.call(node, self.templates['CibDelXpath'] % constraint)
+        self.rsh.call(node, self.templates['CibDelXpath'] % rsc)

@@ -63,7 +63,7 @@ class SimulStopLite(CTSTest):
         if watch.look_for_all():
             # Make sure they're completely down with no residule
             for node in self._env["nodes"]:
-                self._rsh(node, self._cm.templates["StopCmd"])
+                self._rsh.call(node, self._cm.templates["StopCmd"])
 
             return self.success()
 

@@ -69,11 +69,11 @@ class StopTest(CTSTest):
         unmatched_str = "||"
 
         if watch.unmatched:
-            (_, output) = self._rsh(node, "/bin/ps axf", verbose=1)
+            (_, output) = self._rsh.call(node, "/bin/ps axf", verbose=1)
             for line in output:
                 self.debug(line)
 
-            (_, output) = self._rsh(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
+            (_, output) = self._rsh.call(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
             for line in output:
                 self.debug(line)
 

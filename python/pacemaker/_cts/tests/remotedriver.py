@@ -92,7 +92,7 @@ class RemoteDriver(CTSTest):
         delete command.
         """
         othernode = self._get_other_node(node)
-        (rc, _) = self._rsh(othernode, f"crm_resource -D -r {rsc} -t primitive")
+        (rc, _) = self._rsh.call(othernode, f"crm_resource -D -r {rsc} -t primitive")
         if rc != 0:
             self.fail(f"Removal of resource '{rsc}' failed")
 
@@ -104,7 +104,7 @@ class RemoteDriver(CTSTest):
         add command.
         """
         othernode = self._get_other_node(node)
-        (rc, _) = self._rsh(othernode, f"cibadmin -C -o resources -X '{rsc_xml}'")
+        (rc, _) = self._rsh.call(othernode, f"cibadmin -C -o resources -X '{rsc_xml}'")
         if rc != 0:
             self.fail("resource creation failed")
 
@@ -180,7 +180,7 @@ class RemoteDriver(CTSTest):
     def _stop_pcmk_remote(self, node):
         """Stop the Pacemaker Remote service on the given node."""
         for _ in range(10):
-            (rc, _) = self._rsh(node, "service pacemaker_remote stop")
+            (rc, _) = self._rsh.call(node, "service pacemaker_remote stop")
             if rc != 0:
                 time.sleep(6)
             else:
@@ -189,7 +189,7 @@ class RemoteDriver(CTSTest):
     def _start_pcmk_remote(self, node):
         """Start the Pacemaker Remote service on the given node."""
         for _ in range(10):
-            (rc, _) = self._rsh(node, "service pacemaker_remote start")
+            (rc, _) = self._rsh.call(node, "service pacemaker_remote start")
             if rc != 0:
                 time.sleep(6)
             else:
@@ -221,8 +221,8 @@ class RemoteDriver(CTSTest):
         self._disable_services(node)
 
         # make sure the resource doesn't already exist for some reason
-        self._rsh(node, f"crm_resource -D -r {self._remote_rsc} -t primitive")
-        self._rsh(node, f"crm_resource -D -r {self._remote_node} -t primitive")
+        self._rsh.call(node, f"crm_resource -D -r {self._remote_rsc} -t primitive")
+        self._rsh.call(node, f"crm_resource -D -r {self._remote_node} -t primitive")
 
         if not self._stop(node):
             self.fail(f"Failed to shutdown cluster node {node}")
@@ -266,7 +266,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 120)
         watch.set_watch()
 
-        (rc, _) = self._rsh(node, f"crm_resource -M -r {self._remote_node}", verbose=1)
+        (rc, _) = self._rsh.call(node, f"crm_resource -M -r {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail("failed to move remote node connection resource")
             return
@@ -297,7 +297,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("causing dummy rsc to fail.")
 
-        self._rsh(node, "rm -f /var/run/resource-agents/Dummy*")
+        self._rsh.call(node, "rm -f /var/run/resource-agents/Dummy*")
 
         with Timer(self.name, "remoteRscFail"):
             watch.look_for_all()
@@ -382,7 +382,7 @@ class RemoteDriver(CTSTest):
         self._add_primitive_rsc(node)
 
         # force that rsc to prefer the remote node.
-        (rc, _) = self._cm.rsh(node, f"crm_resource -M -r {self._remote_rsc} -N {self._remote_node} -f", verbose=1)
+        (rc, _) = self._cm.rsh.call(node, f"crm_resource -M -r {self._remote_rsc} -N {self._remote_node} -f", verbose=1)
         if rc != 0:
             self.fail("Failed to place remote resource on remote node.")
             return
@@ -400,17 +400,17 @@ class RemoteDriver(CTSTest):
 
         # This verifies permanent attributes can be set on a remote-node. It also
         # verifies the remote-node can edit its own cib node section remotely.
-        (rc, line) = self._cm.rsh(node, f"crm_attribute -l forever -n testattr -v testval -N {self._remote_node}", verbose=1)
+        (rc, line) = self._cm.rsh.call(node, f"crm_attribute -l forever -n testattr -v testval -N {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail(f"Failed to set remote-node attribute. rc:{rc} output:{line}")
             return
 
-        (rc, _) = self._cm.rsh(node, f"crm_attribute -l forever -n testattr -q -N {self._remote_node}", verbose=1)
+        (rc, _) = self._cm.rsh.call(node, f"crm_attribute -l forever -n testattr -q -N {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail("Failed to get remote-node attribute")
             return
 
-        (rc, _) = self._cm.rsh(node, f"crm_attribute -l forever -n testattr -D -N {self._remote_node}", verbose=1)
+        (rc, _) = self._cm.rsh.call(node, f"crm_attribute -l forever -n testattr -D -N {self._remote_node}", verbose=1)
         if rc != 0:
             self.fail("Failed to delete remote-node attribute")
 
@@ -443,13 +443,13 @@ class RemoteDriver(CTSTest):
             if self._remote_rsc_added:
                 # Remove dummy resource added for remote node tests
                 self.debug("Cleaning up dummy rsc put on remote node")
-                self._rsh(self._get_other_node(node), f"crm_resource -U -r {self._remote_rsc}")
+                self._rsh.call(self._get_other_node(node), f"crm_resource -U -r {self._remote_rsc}")
                 self._del_rsc(node, self._remote_rsc)
 
             if self._remote_node_added:
                 # Remove remote node's connection resource
                 self.debug("Cleaning up remote node connection resource")
-                self._rsh(self._get_other_node(node), f"crm_resource -U -r {self._remote_node}")
+                self._rsh.call(self._get_other_node(node), f"crm_resource -U -r {self._remote_node}")
                 self._del_rsc(node, self._remote_node)
 
             watch.look_for_all()
@@ -465,7 +465,7 @@ class RemoteDriver(CTSTest):
         if self._remote_node_added:
             # Remove remote node itself
             self.debug("Cleaning up node entry for remote node")
-            self._rsh(self._get_other_node(node), f"crm_node --force --remove {self._remote_node}")
+            self._rsh.call(self._get_other_node(node), f"crm_node --force --remove {self._remote_node}")
 
     def _setup_env(self, node):
         """
@@ -489,10 +489,10 @@ class RemoteDriver(CTSTest):
 
         # sync key throughout the cluster
         for n in self._env["nodes"]:
-            self._rsh(n, "mkdir -p --mode=0750 /etc/pacemaker")
+            self._rsh.call(n, "mkdir -p --mode=0750 /etc/pacemaker")
             self._rsh.copy(keyfile, f"root@{n}:/etc/pacemaker/authkey")
-            self._rsh(n, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
-            self._rsh(n, "chmod 0640 /etc/pacemaker/authkey")
+            self._rsh.call(n, "chgrp haclient /etc/pacemaker /etc/pacemaker/authkey")
+            self._rsh.call(n, "chmod 0640 /etc/pacemaker/authkey")
 
         os.unlink(keyfile)
 
@@ -502,7 +502,7 @@ class RemoteDriver(CTSTest):
             return False
 
         for node in self._env["nodes"]:
-            (rc, _) = self._rsh(node, "which pacemaker-remoted >/dev/null 2>&1")
+            (rc, _) = self._rsh.call(node, "which pacemaker-remoted >/dev/null 2>&1")
             if rc != 0:
                 return False
 
