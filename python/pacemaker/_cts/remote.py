@@ -13,29 +13,6 @@ from threading import Thread
 from pacemaker._cts import logging
 
 
-def convert2string(lines):
-    """
-    Convert byte strings to UTF-8 strings.
-
-    Lists of byte strings are converted to a list of UTF-8 strings.  All other
-    text formats are passed through.
-    """
-    if isinstance(lines, bytes):
-        return lines.decode("utf-8")
-
-    if isinstance(lines, list):
-        lst = []
-        for line in lines:
-            if isinstance(line, bytes):
-                line = line.decode("utf-8")
-
-            lst.append(line)
-
-        return lst
-
-    return lines
-
-
 class AsyncCmd(Thread):
     """A class for doing the hard work of running a command on another machine."""
 
@@ -68,7 +45,7 @@ class AsyncCmd(Thread):
             # pylint: disable=consider-using-with
             self._proc = subprocess.Popen(self._command, stdout=subprocess.PIPE,
                                           stderr=subprocess.PIPE, close_fds=True,
-                                          shell=True)
+                                          shell=True, universal_newlines=True)
 
         logging.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
         self._proc.wait()
@@ -85,12 +62,9 @@ class AsyncCmd(Thread):
             for line in err:
                 logging.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
 
-            err = convert2string(err)
-
         if self._proc.stdout:
             out = self._proc.stdout.readlines()
             self._proc.stdout.close()
-            out = convert2string(out)
 
         if self._delegate:
             self._delegate.async_complete(self._proc.pid, self._proc.returncode, out, err)
@@ -166,7 +140,8 @@ class RemoteExec:
         result = None
         # pylint: disable=consider-using-with
         proc = subprocess.Popen(self._cmd([node, command]), stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE, close_fds=True, shell=True)
+                                stderr=subprocess.PIPE, close_fds=True, shell=True,
+                                universal_newlines=True)
 
         if not synchronous and proc.pid > 0:
             aproc = AsyncCmd(node, command, proc=proc)
@@ -183,8 +158,6 @@ class RemoteExec:
 
         if verbose > 0:
             logging.debug(f"cmd: target={node}, rc={rc}: {command}")
-
-        result = convert2string(result)
 
         if proc.stderr:
             errors = proc.stderr.readlines()
