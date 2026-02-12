@@ -78,8 +78,8 @@ class RemoteExec:
     """
 
     # @TODO This should be an argument list that gets used with subprocess,
-    # but making that change will require changing everywhere that __call__
-    # or call_async passes a command string.
+    # but making that change will require changing everywhere that call()
+    # or call_async() passes a command string.
     #
     # -n: no stdin, -x: no X11,
     # -o ServerAliveInterval=5: disconnect after 3*5s if the server
@@ -125,7 +125,7 @@ class RemoteExec:
         aproc.start()
         return aproc
 
-    def __call__(self, node, command, verbose=2):
+    def call(self, node, command, verbose=2):
         """
         Run the given command on the given remote system.
 
@@ -186,7 +186,7 @@ class RemoteExec:
     def exists_on_all(self, filename, hosts):
         """Return True if specified file exists on all specified hosts."""
         for host in hosts:
-            (rc, _) = self(host, f"test -r {filename}")
+            (rc, _) = self.call(host, f"test -r {filename}")
             if rc != 0:
                 return False
 
@@ -195,7 +195,7 @@ class RemoteExec:
     def exists_on_none(self, filename, hosts):
         """Return True if specified file does not exist on any specified host."""
         for host in hosts:
-            (rc, _) = self(host, f"test -r {filename}")
+            (rc, _) = self.call(host, f"test -r {filename}")
             if rc == 0:
                 return False
 

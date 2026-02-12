@@ -84,7 +84,7 @@ class ResourceRecover(CTSTest):
         """Choose a random resource to target."""
         self._rid = self._env.random_gen.choice(resourcelist)
         self._rid_alt = self._rid
-        (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+        (_, lines) = self._rsh.call(node, "crm_resource -c", verbose=1)
 
         for line in lines:
             if line.startswith("Resource: "):
@@ -100,8 +100,8 @@ class ResourceRecover(CTSTest):
     def _get_failcount(self, node):
         """Check the fail count of targeted resource on given node."""
         cmd = "crm_failcount --quiet --query --resource %s --operation %s --interval %d --node %s"
-        (rc, lines) = self._rsh(node, cmd % (self._rid, self._action, self._interval, node),
-                                verbose=1)
+        (rc, lines) = self._rsh.call(node, cmd % (self._rid, self._action, self._interval, node),
+                                     verbose=1)
 
         if rc != 0 or len(lines) != 1:
             lines = [line.strip() for line in lines]
@@ -125,7 +125,7 @@ class ResourceRecover(CTSTest):
         watch = self.create_watch(pats, 60)
         watch.set_watch()
 
-        self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
+        self._rsh.call(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
         with Timer(self.name, "recover"):
             watch.look_for_all()

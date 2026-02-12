@@ -188,7 +188,7 @@ class FileObj(SearchObj):
 
         cmd = f"{CTS_SUPPORT_BIN} watch -p CTSwatcher: -l 2 -f {self.filename} -o EOF"
 
-        (_, lines) = self.rsh(self.host, cmd, verbose=0)
+        (_, lines) = self.rsh.call(self.host, cmd, verbose=0)
 
         for line in lines:
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
@@ -322,7 +322,7 @@ class JournalObj(SearchObj):
             return
 
         # Seconds and nanoseconds since epoch
-        (rc, lines) = self.rsh(self.host, "date +%s.%N", verbose=0)
+        (rc, lines) = self.rsh.call(self.host, "date +%s.%N", verbose=0)
 
         if rc == 0 and len(lines) == 1:
             self.limit = float(lines[0].strip())

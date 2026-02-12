@@ -116,7 +116,7 @@ class SplitBrainTest(CTSTest):
             self.debug(f"Partition[{key}]:\t{val!r}")
 
         # Disabling STONITH to reduce test complexity for now
-        self._rsh(node, "crm_attribute -V -n fencing-enabled -v false")
+        self._rsh.call(node, "crm_attribute -V -n fencing-enabled -v false")
 
         for val in partitions.values():
             self._isolate_partition(val)
@@ -183,7 +183,7 @@ class SplitBrainTest(CTSTest):
 
         # Turn fencing back on
         if self._env["fencing_enabled"]:
-            self._rsh(node, "crm_attribute -V -D -n fencing-enabled")
+            self._rsh.call(node, "crm_attribute -V -D -n fencing-enabled")
 
         self._cm.cluster_stable()
 

@@ -35,19 +35,19 @@ class Reattach(CTSTest):
 
     def _is_managed(self, node):
         """Return whether resources are managed by the cluster."""
-        (_, is_managed) = self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", verbose=1)
+        (_, is_managed) = self._rsh.call(node, "crm_attribute -t rsc_defaults -n is-managed -q -G -d true", verbose=1)
         is_managed = is_managed[0].strip()
         return is_managed == "true"
 
     def _set_unmanaged(self, node):
         """Disable resource management."""
         self.debug("Disable resource management")
-        self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
+        self._rsh.call(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
 
     def _set_managed(self, node):
         """Enable resource management."""
         self.debug("Re-enable resource management")
-        self._rsh(node, "crm_attribute -t rsc_defaults -n is-managed -D")
+        self._rsh.call(node, "crm_attribute -t rsc_defaults -n is-managed -D")
 
     def _disable_incompatible_rscs(self, node):
         """
@@ -67,13 +67,13 @@ class Reattach(CTSTest):
                       <rsc_expression id="cts-lab-Reattach-stonith" class="stonith"/>
                     </rule>
                   </meta_attributes>' --scope rsc_defaults"""
-        return self._rsh(node, self._cm.templates['CibAddXml'] % xml)
+        return self._rsh.call(node, self._cm.templates['CibAddXml'] % xml)
 
     def _enable_incompatible_rscs(self, node):
         """Re-enable resources that were incompatible with this test."""
         self.debug("Re-enable incompatible resources")
         xml = """<meta_attributes id="cts-lab-Reattach-meta"/>"""
-        return self._rsh(node, f"""cibadmin --delete --xml-text '{xml}'""")
+        return self._rsh.call(node, f"""cibadmin --delete --xml-text '{xml}'""")
 
     def _reprobe(self, node):
         """
@@ -84,7 +84,7 @@ class Reattach(CTSTest):
         rules. An earlier test may have erased the relevant node attribute, so
         do a reprobe, which should add the attribute back.
         """
-        return self._rsh(node, """crm_resource --refresh""")
+        return self._rsh.call(node, """crm_resource --refresh""")
 
     def setup(self, node):
         """Set up this test."""
@@ -178,7 +178,7 @@ class Reattach(CTSTest):
 
         # Ignore actions for STONITH resources
         ignore = []
-        (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+        (_, lines) = self._rsh.call(node, "crm_resource -c", verbose=1)
         for line in lines:
             if re.search("^Resource", line):
                 r = AuditResource(self._cm, line)

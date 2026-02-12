@@ -38,7 +38,7 @@ class ResyncCIB(CTSTest):
             return self.failure("Could not stop all nodes")
 
         # Test config recovery when the other nodes come up
-        self._rsh(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
+        self._rsh.call(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
 
         # Start the selected node
         if not self._restart1(node):

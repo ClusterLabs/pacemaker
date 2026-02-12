@@ -66,7 +66,7 @@ class StonithdTest(CTSTest):
 
         origin = self._env.random_gen.choice(self._env["nodes"])
 
-        (rc, _) = self._rsh(origin, f"stonith_admin --reboot {node} -VVVVVV")
+        (rc, _) = self._rsh.call(origin, f"stonith_admin --reboot {node} -VVVVVV")
 
         if rc == ExitStatus.TIMEOUT:
             # Look for the patterns, usually this means the required
