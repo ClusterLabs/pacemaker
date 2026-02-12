@@ -101,18 +101,16 @@ class RemoteExec:
     It runs a command on another machine using ssh and scp.
     """
 
-    def __init__(self, command, cp_command, silent=False):
+    def __init__(self, command, cp_command):
         """
         Create a new RemoteExec instance.
 
         Arguments:
         command    -- The ssh command string to use for remote execution
         cp_command -- The scp command string to use for copying files
-        silent     -- Should we log command status?
         """
         self.command = command
         self.cp_command = cp_command
-        self._silent = silent
         self._our_node = os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
@@ -133,13 +131,11 @@ class RemoteExec:
 
     def _log(self, args):
         """Log a message."""
-        if not self._silent:
-            logging.log(args)
+        logging.log(args)
 
     def _debug(self, args):
         """Log a message at the debug level."""
-        if not self._silent:
-            logging.debug(args)
+        logging.debug(args)
 
     def call_async(self, node, command, delegate=None):
         """
@@ -180,7 +176,7 @@ class RemoteExec:
         proc = Popen(self._cmd([node, command]),
                      stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
-        if not synchronous and proc.pid > 0 and not self._silent:
+        if not synchronous and proc.pid > 0:
             aproc = AsyncCmd(node, command, proc=proc)
             aproc.start()
             return (rc, result)
@@ -275,6 +271,5 @@ class RemoteFactory:
         """
         if not RemoteFactory.instance:
             RemoteFactory.instance = RemoteExec(RemoteFactory.command,
-                                                RemoteFactory.cp_command,
-                                                False)
+                                                RemoteFactory.cp_command)
         return RemoteFactory.instance
