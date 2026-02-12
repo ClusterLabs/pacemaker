@@ -313,32 +313,54 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (rc == pcmk_ok) {
         xmlNode *reply = NULL;
+        const char *msg_type = NULL;
 
         if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
-                         &reply) > 0) {
-            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
+                         &reply) <= 0) {
+            rc = -ECOMM;
+            goto done;
+        }
 
-            pcmk__log_xml_trace(reply, "reg-reply");
+        pcmk__log_xml_trace(reply, "reg-reply");
 
-            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-                pcmk__info("Reply to CIB registration message has unknown type "
-                           "'%s'",
-                           msg_type);
-                rc = -EPROTO;
+        /* If we received an ACK with an error status in response, based
+         * thinks we originally sent an invalid message.
+         *
+         * NOTE: At the moment, all ACK messages sent in the signon process
+         * will have an error status.  However, this may change in the future so
+         * we'll let those fall through to the rest of the message handling below
+         * so we get some log messages should we change that in the future.
+         */
+        if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
+            int status = 0;
 
-            } else {
-                native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
-                if (native->token == NULL) {
-                    rc = -EPROTO;
-                }
+            rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+
+            if ((rc == pcmk_rc_ok) && (status != 0)) {
+                pcmk__err("Received error response from CIB manager: %s",
+                          crm_exit_str(status));
+                return -EPROTO;
             }
-            pcmk__xml_free(reply);
+        }
+
+        msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
+
+        if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+            pcmk__info("Reply to CIB registration message has unknown type "
+                       "'%s'",
+                       msg_type);
+            rc = -EPROTO;
 
         } else {
-            rc = -ECOMM;
+            native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
+            if (native->token == NULL) {
+                rc = -EPROTO;
+            }
         }
-        pcmk__xml_free(hello);
     }
+
+done:
+    pcmk__xml_free(hello);
 
     if (rc == pcmk_ok) {
         pcmk__info("Successfully connected to CIB manager for %s", name);

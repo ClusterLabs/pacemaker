@@ -353,6 +353,8 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     xmlNode *answer = NULL;
     xmlNode *login = NULL;
+    const char *msg_type = NULL;
+    const char *tmp_ticket = NULL;
 
     static struct mainloop_fd_callbacks cib_fd_callbacks = { 0, };
 
@@ -425,28 +427,50 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     answer = pcmk__remote_message_xml(connection);
 
-    pcmk__log_xml_trace(answer, "Reply");
     if (answer == NULL) {
+        rc = -EPROTO;
+        goto done;
+    }
+
+    pcmk__log_xml_trace(answer, "reg-reply");
+
+    /* If we received an ACK with an error status in response, based
+     * thinks we originally sent an invalid message.
+     *
+     * NOTE: At the moment, all ACK messages sent in the signon process
+     * will have an error status.  However, this may change in the future so
+     * we'll let those fall through to the rest of the message handling below
+     * so we get some log messages should we change that in the future.
+     */
+    if (pcmk__xe_is(answer, PCMK__XE_ACK)) {
+        int status = 0;
+
+        rc = pcmk__xe_get_int(answer, PCMK_XA_STATUS, &status);
+
+        if ((rc == pcmk_rc_ok) && (status != 0)) {
+            pcmk__err("Received error response from CIB manager: %s",
+                      crm_exit_str(status));
+            return -EPROTO;
+        }
+    }
+
+    /* grab the token */
+    msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
+    tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
+
+    if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+        pcmk__err("Invalid registration message: %s", msg_type);
+        rc = -EPROTO;
+
+    } else if (tmp_ticket == NULL) {
         rc = -EPROTO;
 
     } else {
-        /* grab the token */
-        const char *msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
-        const char *tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
-
-        if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-            pcmk__err("Invalid registration message: %s", msg_type);
-            rc = -EPROTO;
-
-        } else if (tmp_ticket == NULL) {
-            rc = -EPROTO;
-
-        } else {
-            connection->token = strdup(tmp_ticket);
-        }
+        connection->token = strdup(tmp_ticket);
     }
-    pcmk__xml_free(answer);
-    answer = NULL;
+
+done:
+    g_clear_pointer(&answer, pcmk__xml_free);
 
     if (rc != 0) {
         cib_tls_close(cib);

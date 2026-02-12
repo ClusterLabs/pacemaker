@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -404,12 +404,10 @@ dispatch_controller_ipc(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
     if (msg == NULL) {
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
-                           CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
-    pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
-                       CRM_EX_INDETERMINATE);
+    pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_INDETERMINATE);
 
     pcmk__assert(client->user != NULL);
     pcmk__update_acl_user(msg, PCMK__XA_CRM_USER, client->user);

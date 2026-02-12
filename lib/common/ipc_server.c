@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -957,7 +957,6 @@ done:
  * \param[in] function  Calling function
  * \param[in] line      Source file line within calling function
  * \param[in] flags     IPC flags to use when sending
- * \param[in] tag       Element name to use for acknowledgement
  * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Exit status code to add to ack
  *
@@ -968,17 +967,19 @@ done:
  */
 xmlNode *
 pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
-                        const char *tag, const char *ver, crm_exit_t status)
+                        const char *ver, crm_exit_t status)
 {
     xmlNode *ack = NULL;
 
-    if (pcmk__is_set(flags, crm_ipc_client_response)) {
-        ack = pcmk__xe_create(NULL, tag);
-        pcmk__xe_set(ack, PCMK_XA_FUNCTION, function);
-        pcmk__xe_set_int(ack, PCMK__XA_LINE, line);
-        pcmk__xe_set_int(ack, PCMK_XA_STATUS, (int) status);
-        pcmk__xe_set(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
+    if (!pcmk__is_set(flags, crm_ipc_client_response)) {
+        return ack;
     }
+
+    ack = pcmk__xe_create(NULL, PCMK__XE_ACK);
+    pcmk__xe_set(ack, PCMK_XA_FUNCTION, function);
+    pcmk__xe_set_int(ack, PCMK__XA_LINE, line);
+    pcmk__xe_set_int(ack, PCMK_XA_STATUS, (int) status);
+    pcmk__xe_set(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
     return ack;
 }
 
@@ -991,7 +992,6 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  * \param[in] c         Client to send ack to
  * \param[in] request   Request ID being replied to
  * \param[in] flags     IPC flags to use when sending
- * \param[in] tag       Element name to use for acknowledgement
  * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Status code to send with acknowledgement
  *
@@ -999,20 +999,23 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  */
 int
 pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                      uint32_t request, uint32_t flags, const char *tag,
-                      const char *ver, crm_exit_t status)
+                      uint32_t request, uint32_t flags, const char *ver,
+                      crm_exit_t status)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, tag, ver, status);
+    xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, ver, status);
 
-    if (ack != NULL) {
-        pcmk__trace("Ack'ing IPC message from client %s as <%s status=%d>",
-                    pcmk__client_name(c), tag, status);
-        pcmk__log_xml_trace(ack, "sent-ack");
-        c->request_id = 0;
-        rc = pcmk__ipc_send_xml(c, request, ack, flags);
-        pcmk__xml_free(ack);
+    if (ack == NULL) {
+        return rc;
     }
+
+    pcmk__trace("Ack'ing IPC message from client %s as <" PCMK__XE_ACK
+                " status=%d>",
+                pcmk__client_name(c), status);
+    pcmk__log_xml_trace(ack, "sent-ack");
+    c->request_id = 0;
+    rc = pcmk__ipc_send_xml(c, request, ack, flags);
+    pcmk__xml_free(ack);
     return rc;
 }
 
