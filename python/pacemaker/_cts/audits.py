@@ -1,7 +1,7 @@
 """Auditing classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["AuditConstraint", "AuditResource", "ClusterAudit", "audit_list"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -859,7 +859,7 @@ class CIBAudit(ClusterAudit):
         for line in lines:
             self._cm.rsh("localhost", f"echo \'{line[:-1]}\' >> {filename}", verbose=0)
 
-        if self._cm.rsh.copy(filename, f"root@{target}:{filename}", silent=True) != 0:
+        if self._cm.rsh.copy(filename, f"root@{target}:{filename}") != 0:
             self._cm.log("Could not store configuration")
             return None
 
