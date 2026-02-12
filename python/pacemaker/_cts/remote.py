@@ -199,7 +199,7 @@ class RemoteExec:
 
         return (rc, result)
 
-    def copy(self, source, target, silent=False):
+    def copy(self, source, target):
         """
         Perform a copy of the source file to the remote target.
 
@@ -213,9 +213,7 @@ class RemoteExec:
         cmd = f"{self.cp_command} '{source}' '{target}'"
         rc = os.system(cmd)
 
-        if not silent:
-            logging.debug(f"cmd: rc={rc}: {cmd}")
-
+        logging.debug(f"cmd: rc={rc}: {cmd}")
         return rc
 
     def exists_on_all(self, filename, hosts):
