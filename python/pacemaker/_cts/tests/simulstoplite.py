@@ -12,8 +12,6 @@ from pacemaker._cts.tests.ctstest import CTSTest
 # possibility that we'll miss some other cause of the same warning, but we'll
 # just have to be careful.
 
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
 # pylint doesn't understand that self._env is subscriptable.
 # pylint: disable=unsubscriptable-object
 

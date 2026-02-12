@@ -15,7 +15,7 @@ import sys
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts import logging
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 from pacemaker._cts.watcher import LogKind
 
 
@@ -25,15 +25,6 @@ class Environment:
 
     This consists largely of processing and storing command line parameters.
     """
-
-    # pylint doesn't understand that self._rsh is callable (it stores the
-    # singleton instance of RemoteExec, as returned by the getInstance method
-    # of RemoteFactory).
-    # @TODO See if type annotations fix this.
-
-    # I think we could also fix this by getting rid of the getInstance methods,
-    # but that's a project for another day.  For now, just disable the warning.
-    # pylint: disable=not-callable
 
     def __init__(self, args):
         """
@@ -67,7 +58,7 @@ class Environment:
 
         self.random_gen = random.Random()
 
-        self._rsh = RemoteFactory().getInstance()
+        self._rsh = RemoteExec()
 
         self._parse_args(args)
 

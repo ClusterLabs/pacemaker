@@ -16,8 +16,6 @@ from pacemaker._cts.timer import Timer
 
 # pylint doesn't understand that self._env is subscriptable.
 # pylint: disable=unsubscriptable-object
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
 
 
 # This comes from include/config.h as private API, assuming pacemaker is built

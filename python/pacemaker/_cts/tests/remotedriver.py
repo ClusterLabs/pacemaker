@@ -17,14 +17,6 @@ from pacemaker._cts.tests.starttest import StartTest
 from pacemaker._cts.tests.stoptest import StopTest
 from pacemaker._cts.timer import Timer
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
-
 
 class RemoteDriver(CTSTest):
     """
