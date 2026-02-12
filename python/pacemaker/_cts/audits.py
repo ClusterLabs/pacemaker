@@ -136,10 +136,7 @@ class LogAudit(ClusterAudit):
 
         for node in self._cm.env["nodes"]:
             cmd = f"logger -p {self._cm.env['syslog_facility']}.info {prefix} {node} {suffix}"
-
-            (rc, _) = self._cm.rsh(node, cmd, synchronous=False, verbose=0)
-            if rc != 0:
-                self._cm.log(f"ERROR: Cannot execute remote command [{cmd}] on {node}")
+            self._cm.rsh.call_async(node, cmd)
 
         for k, w in watch.items():
             if watch_pref is None:
