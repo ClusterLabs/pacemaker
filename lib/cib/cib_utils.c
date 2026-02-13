@@ -538,6 +538,9 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__log_xml_trace(req, "request");
 
         rc = fn(op, call_options, section, req, input, &working_cib, output);
+
+        pcmk__assert(pcmk__xml_doc_all_flags_set(working_cib->doc,
+                                                 pcmk__xf_tracking));
     }
 
     // Allow ourselves to make any additional necessary changes
