@@ -130,20 +130,12 @@ based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
     int rc = pcmk_rc_ok;
     char *source = NULL;
 
-    pcmk__assert(result_cib != NULL);
+    // *result_cib should be a copy of the_cib (created by cib_perform_op())
+    pcmk__assert((result_cib != NULL) && (*result_cib != NULL)
+                 && (*result_cib != the_cib));
 
     CRM_CHECK(pcmk__xe_is(transaction, PCMK__XE_CIB_TRANSACTION),
               return pcmk_rc_no_transaction);
-
-    /* *result_cib should be a copy of the_cib (created by cib_perform_op()). If
-     * not, make a copy now. Change tracking isn't strictly required here
-     * because:
-     * * Each request in the transaction will have changes tracked and ACLs
-     *   checked if appropriate.
-     * * cib_perform_op() will infer changes for the commit request at the end.
-     */
-    CRM_CHECK((*result_cib != NULL) && (*result_cib != the_cib),
-              *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
     pcmk__trace("Committing transaction for %s to working CIB", source);
