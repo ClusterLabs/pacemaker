@@ -73,7 +73,7 @@ class Reattach(CTSTest):
         """Re-enable resources that were incompatible with this test."""
         self.debug("Re-enable incompatible resources")
         xml = """<meta_attributes id="cts-lab-Reattach-meta"/>"""
-        return self._rsh.call(node, f"""cibadmin --delete --xml-text '{xml}'""")
+        return self._rsh.call(node, f"cibadmin --delete --xml-text '{xml}'")
 
     def _reprobe(self, node):
         """
@@ -84,7 +84,7 @@ class Reattach(CTSTest):
         rules. An earlier test may have erased the relevant node attribute, so
         do a reprobe, which should add the attribute back.
         """
-        return self._rsh.call(node, """crm_resource --refresh""")
+        return self._rsh.call(node, "crm_resource --refresh")
 
     def setup(self, node):
         """Set up this test."""

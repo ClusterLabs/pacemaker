@@ -530,7 +530,7 @@ class RemoteDriver(CTSTest):
     def errors_to_ignore(self):
         """Return list of errors which should be ignored."""
         return [
-            r"""is running on remote.*which isn't allowed""",
-            r"""Connection terminated""",
-            r"""Could not send remote"""
+            r"is running on remote.*which isn't allowed",
+            r"Connection terminated",
+            r"Could not send remote"
         ]
