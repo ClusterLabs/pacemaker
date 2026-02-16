@@ -85,8 +85,7 @@ class RemoteExec:
     # -o ServerAliveInterval=5: disconnect after 3*5s if the server
     # stops responding
     _command = "ssh -l root -n -x -o ServerAliveInterval=5 " \
-               "-o ConnectTimeout=10 -o TCPKeepAlive=yes " \
-               "-o ServerAliveCountMax=3 -o StrictHostKeyChecking=off"
+               "-o ConnectTimeout=10 -o StrictHostKeyChecking=off"
 
     def __init__(self):
         """Create a new RemoteExec instance."""
