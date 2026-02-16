@@ -86,7 +86,7 @@ class RemoteExec:
     # stops responding
     _command = "ssh -l root -n -x -o ServerAliveInterval=5 " \
                "-o ConnectTimeout=10 -o TCPKeepAlive=yes " \
-               "-o ServerAliveCountMax=3"
+               "-o ServerAliveCountMax=3 -o StrictHostKeyChecking=off"
 
     def __init__(self):
         """Create a new RemoteExec instance."""
@@ -179,7 +179,8 @@ class RemoteExec:
         Returns the return code of the copy process.
         """
         # -B: batch mode, -q: no stats (quiet)
-        p = subprocess.run(["scp", "-B", "-q", source, target], check=False)
+        p = subprocess.run(["scp", "-B", "-q", "-o", "StrictHostKeyChecking=off",
+                            source, target], check=False)
         logging.debug(f"cmd: rc={p.returncode}: {p.args}")
         return p.returncode
 
