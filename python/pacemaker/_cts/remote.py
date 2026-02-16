@@ -89,7 +89,7 @@ class RemoteExec:
         # stops responding
         self._command = "ssh -l root -n -x -o ServerAliveInterval=5 " \
                         "-o ConnectTimeout=10 -o TCPKeepAlive=yes " \
-                        "-o ServerAliveCountMax=3"
+                        "-o ServerAliveCountMax=3 -o StrictHostKeyChecking=off"
         self._our_node = os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
@@ -178,8 +178,8 @@ class RemoteExec:
         Returns the return code of the copy process.
         """
         # -B: batch mode, -q: no stats (quiet)
-        p = subprocess.run(["scp", "-B", "-q", f"'{source}'", f"'{target}'"],
-                           check=False)
+        p = subprocess.run(["scp", "-B", "-q", "-o", "StrictHostKeyChecking=off",
+                            f"'{source}'", f"'{target}'"], check=False)
         logging.debug(f"cmd: rc={p.returncode}: {p.args}")
         return p.returncode
 
