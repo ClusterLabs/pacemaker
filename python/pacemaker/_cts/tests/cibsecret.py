@@ -261,8 +261,7 @@ class CibsecretTest(CTSTest):
         other = self._cm.env["nodes"][1:]
 
         for o in other:
-            (rc, _) = self._cm.rsh.call(node, f"{self._cm.rsh.command} {o} exit",
-                                        verbose=0)
+            (rc, _) = self._cm.rsh.call(node, f"ssh root@{o} exit", verbose=0)
             if rc != ExitStatus.OK:
                 return False
 
