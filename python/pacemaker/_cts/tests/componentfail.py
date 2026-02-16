@@ -16,8 +16,6 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 # possibility that we'll miss some other cause of the same warning, but we'll
 # just have to be careful.
 
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
 # pylint doesn't understand that self._env is subscriptable.
 # pylint: disable=unsubscriptable-object
 
@@ -82,7 +80,7 @@ class ComponentFail(CTSTest):
             self._okerrpatterns = [
                 self._cm.templates["Pat:Resource_active"],
             ]
-            (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
+            (_, lines) = self._rsh.call(node, "crm_resource -c", verbose=1)
 
             for line in lines:
                 if re.search("^Resource", line):

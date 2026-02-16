@@ -12,8 +12,6 @@ from pacemaker._cts.tests.ctstest import CTSTest
 # possibility that we'll miss some other cause of the same warning, but we'll
 # just have to be careful.
 
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
 # pylint doesn't understand that self._env is subscriptable.
 # pylint: disable=unsubscriptable-object
 
@@ -71,11 +69,11 @@ class StopTest(CTSTest):
         unmatched_str = "||"
 
         if watch.unmatched:
-            (_, output) = self._rsh(node, "/bin/ps axf", verbose=1)
+            (_, output) = self._rsh.call(node, "/bin/ps axf", verbose=1)
             for line in output:
                 self.debug(line)
 
-            (_, output) = self._rsh(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
+            (_, output) = self._rsh.call(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
             for line in output:
                 self.debug(line)
 

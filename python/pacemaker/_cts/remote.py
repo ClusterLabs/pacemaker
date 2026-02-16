@@ -1,39 +1,16 @@
 """Remote command runner for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["RemoteExec", "RemoteFactory"]
+__all__ = ["RemoteExec"]
 __copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 import os
 
-from subprocess import Popen, PIPE
+import subprocess
 from threading import Thread
 
 from pacemaker._cts import logging
-
-
-def convert2string(lines):
-    """
-    Convert byte strings to UTF-8 strings.
-
-    Lists of byte strings are converted to a list of UTF-8 strings.  All other
-    text formats are passed through.
-    """
-    if isinstance(lines, bytes):
-        return lines.decode("utf-8")
-
-    if isinstance(lines, list):
-        lst = []
-        for line in lines:
-            if isinstance(line, bytes):
-                line = line.decode("utf-8")
-
-            lst.append(line)
-
-        return lst
-
-    return lines
 
 
 class AsyncCmd(Thread):
@@ -66,7 +43,9 @@ class AsyncCmd(Thread):
 
         if not self._proc:
             # pylint: disable=consider-using-with
-            self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
+            self._proc = subprocess.Popen(self._command, stdout=subprocess.PIPE,
+                                          stderr=subprocess.PIPE, close_fds=True,
+                                          shell=True, universal_newlines=True)
 
         logging.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
         self._proc.wait()
@@ -83,12 +62,9 @@ class AsyncCmd(Thread):
             for line in err:
                 logging.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
 
-            err = convert2string(err)
-
         if self._proc.stdout:
             out = self._proc.stdout.readlines()
             self._proc.stdout.close()
-            out = convert2string(out)
 
         if self._delegate:
             self._delegate.async_complete(self._proc.pid, self._proc.returncode, out, err)
@@ -101,18 +77,18 @@ class RemoteExec:
     It runs a command on another machine using ssh and scp.
     """
 
-    def __init__(self, command, cp_command, silent=False):
-        """
-        Create a new RemoteExec instance.
+    def __init__(self):
+        """Create a new RemoteExec instance."""
 
-        Arguments:
-        command    -- The ssh command string to use for remote execution
-        cp_command -- The scp command string to use for copying files
-        silent     -- Should we log command status?
-        """
-        self.command = command
-        self.cp_command = cp_command
-        self._silent = silent
+        # @TODO This should be an argument list that gets used with subprocess,
+        # but making that change will require changing everywhere that __call__
+        # or call_async pass a command string.
+        #
+        # -n: no stdin, -x: no X11,
+        # -o ServerAliveInterval=5: disconnect after 3*5s if the server
+        # stops responding
+        self._command = "ssh -l root -n -x -o ServerAliveInterval=5 " \
+                        "-o ConnectTimeout=10 -o StrictHostKeyChecking=off"
         self._our_node = os.uname()[1].lower()
 
     def _fixcmd(self, cmd):
@@ -127,19 +103,9 @@ class RemoteExec:
         if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
-            ret = f"{self.command} {sysname} '{self._fixcmd(command)}'"
+            ret = f"{self._command} {sysname} '{self._fixcmd(command)}'"
 
         return ret
-
-    def _log(self, args):
-        """Log a message."""
-        if not self._silent:
-            logging.log(args)
-
-    def _debug(self, args):
-        """Log a message at the debug level."""
-        if not self._silent:
-            logging.debug(args)
 
     def call_async(self, node, command, delegate=None):
         """
@@ -157,7 +123,7 @@ class RemoteExec:
         aproc.start()
         return aproc
 
-    def __call__(self, node, command, synchronous=True, verbose=2):
+    def call(self, node, command, verbose=2):
         """
         Run the given command on the given remote system.
 
@@ -167,7 +133,6 @@ class RemoteExec:
         Arguments:
         node        -- The remote machine to run on
         command     -- The command to run, as a string
-        synchronous -- Should we wait for the command to complete?
         verbose     -- If 0, do not log anything.  If 1, log the command and its
                        return code but not its output.  If 2, additionally log
                        command output.
@@ -177,63 +142,50 @@ class RemoteExec:
         rc = 0
         result = None
         # pylint: disable=consider-using-with
-        proc = Popen(self._cmd([node, command]),
-                     stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
-
-        if not synchronous and proc.pid > 0 and not self._silent:
-            aproc = AsyncCmd(node, command, proc=proc)
-            aproc.start()
-            return (rc, result)
+        proc = subprocess.Popen(self._cmd([node, command]), stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, close_fds=True, shell=True,
+                                universal_newlines=True)
 
         if proc.stdout:
             result = proc.stdout.readlines()
             proc.stdout.close()
         else:
-            self._log("No stdout stream")
+            logging.log("No stdout stream")
 
         rc = proc.wait()
 
         if verbose > 0:
-            self._debug(f"cmd: target={node}, rc={rc}: {command}")
-
-        result = convert2string(result)
+            logging.debug(f"cmd: target={node}, rc={rc}: {command}")
 
         if proc.stderr:
             errors = proc.stderr.readlines()
             proc.stderr.close()
 
             for err in errors:
-                self._debug(f"cmd: stderr: {err}")
+                logging.debug(f"cmd: stderr: {err}")
 
         if verbose == 2:
             for line in result:
-                self._debug(f"cmd: stdout: {line}")
+                logging.debug(f"cmd: stdout: {line}")
 
         return (rc, result)
 
-    def copy(self, source, target, silent=False):
+    def copy(self, source, target):
         """
         Perform a copy of the source file to the remote target.
 
-        This function uses the cp_command provided when the RemoteExec object
-        was created.
-
-        Returns the return code of the cp_command.
+        Returns the return code of the copy process.
         """
-        # @TODO Use subprocess module with argument array instead
-        # (self.cp_command should be an array too)
-        cmd = f"{self.cp_command} '{source}' '{target}'"
-        rc = os.system(cmd)
-
-        if not silent:
-            self._debug(f"cmd: rc={rc}: {cmd}")
-
-        return rc
+        # -B: batch mode, -q: no stats (quiet)
+        p = subprocess.run(["scp", "-B", "-q", "-o", "StrictHostKeyChecking=off",
+                            f"'{source}'", f"'{target}'"], check=False)
+        logging.debug(f"cmd: rc={p.returncode}: {p.args}")
+        return p.returncode
 
     def exists_on_all(self, filename, hosts):
         """Return True if specified file exists on all specified hosts."""
         for host in hosts:
-            (rc, _) = self(host, f"test -r {filename}")
+            (rc, _) = self.call(host, f"test -r {filename}")
             if rc != 0:
                 return False
 
@@ -242,39 +194,8 @@ class RemoteExec:
     def exists_on_none(self, filename, hosts):
         """Return True if specified file does not exist on any specified host."""
         for host in hosts:
-            (rc, _) = self(host, f"test -r {filename}")
+            (rc, _) = self.call(host, f"test -r {filename}")
             if rc == 0:
                 return False
 
         return True
-
-
-class RemoteFactory:
-    """A class for constructing a singleton instance of a RemoteExec object."""
-
-    # Class variables
-
-    # -n: no stdin, -x: no X11,
-    # -o ServerAliveInterval=5: disconnect after 3*5s if the server
-    # stops responding
-    command = ("ssh -l root -n -x -o ServerAliveInterval=5 "
-               "-o ConnectTimeout=10 -o TCPKeepAlive=yes "
-               "-o ServerAliveCountMax=3 ")
-
-    # -B: batch mode, -q: no stats (quiet)
-    cp_command = "scp -B -q"
-
-    instance = None
-
-    # pylint: disable=invalid-name
-    def getInstance(self):
-        """
-        Return the previously created instance of RemoteExec.
-
-        If no instance exists, create one and then return that.
-        """
-        if not RemoteFactory.instance:
-            RemoteFactory.instance = RemoteExec(RemoteFactory.command,
-                                                RemoteFactory.cp_command,
-                                                False)
-        return RemoteFactory.instance
