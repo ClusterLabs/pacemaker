@@ -1398,8 +1398,7 @@ pcmk__free_logging_data(void)
 {
     if (logger_out != NULL) {
         logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-        pcmk__output_free(logger_out);
-        logger_out = NULL;
+        g_clear_pointer(&logger_out, pcmk__output_free);
     }
 
     cleanup_tracing();
