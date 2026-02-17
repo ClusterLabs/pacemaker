@@ -57,6 +57,7 @@ static gchar **trace_blackbox = NULL;
 static gchar **trace_files = NULL;
 static gchar **trace_formats = NULL;
 static gchar **trace_functions = NULL;
+static bool tracing_enabled = false;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
 static pcmk__output_t *logger_out = NULL;
@@ -65,8 +66,6 @@ pcmk__config_error_func pcmk__config_error_handler = NULL;
 pcmk__config_warning_func pcmk__config_warning_handler = NULL;
 void *pcmk__config_error_context = NULL;
 void *pcmk__config_warning_context = NULL;
-
-static gboolean crm_tracing_enabled(void);
 
 /*!
  * \internal
@@ -245,10 +244,12 @@ set_format_string(int target, pid_t pid, const char *node_name)
 
     // Add function name (in parentheses)
     g_string_append(fmt, "(%n");
-    if (crm_tracing_enabled()) {
+
+    if (tracing_enabled) {
         // When tracing, add file and line number
         g_string_append(fmt, "@%f:%l");
     }
+
     g_string_append_c(fmt, ')');
 
     // Add tag (if any), priority, and actual message
@@ -764,14 +765,17 @@ init_tracing(void)
 
     if (files != NULL) {
         trace_files = g_strsplit(files, ",", 0);
+        tracing_enabled = true;
     }
 
     if (formats != NULL) {
         trace_formats = g_strsplit(formats, ",", 0);
+        tracing_enabled = true;
     }
 
     if (functions != NULL) {
         trace_functions = g_strsplit(functions, ",", 0);
+        tracing_enabled = true;
     }
 
     if (tags != NULL) {
@@ -784,6 +788,7 @@ init_tracing(void)
 
             pcmk__info("Created GQuark %lld from token '%s' in '%s'",
                        (long long) g_quark_from_string(*tag), *tag, tags);
+            tracing_enabled = true;
         }
 
         // We have the GQuarks, so we don't need the array anymore
@@ -794,6 +799,8 @@ init_tracing(void)
 /*!
  * \internal
  * \brief Free arrays of parsed trace objects
+ *
+ * \note GQuarks for trace tags can't be removed.
  */
 static void
 cleanup_tracing(void)
@@ -802,6 +809,7 @@ cleanup_tracing(void)
     g_clear_pointer(&trace_files, g_strfreev);
     g_clear_pointer(&trace_formats, g_strfreev);
     g_clear_pointer(&trace_functions, g_strfreev);
+    tracing_enabled = false;
 }
 
 gboolean
@@ -851,15 +859,6 @@ crm_update_callsites(void)
                     pcmk__s(pcmk__env_option(PCMK__ENV_TRACE_TAGS), "<null>"));
     }
     qb_log_filter_fn_set(crm_log_filter);
-}
-
-static gboolean
-crm_tracing_enabled(void)
-{
-    return (pcmk__env_option(PCMK__ENV_TRACE_FILES) != NULL)
-           || (pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS) != NULL)
-           || (pcmk__env_option(PCMK__ENV_TRACE_FORMATS) != NULL)
-           || (pcmk__env_option(PCMK__ENV_TRACE_TAGS) != NULL);
 }
 
 static int
