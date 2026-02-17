@@ -629,8 +629,7 @@ main(int argc, char **argv)
     }
     attr_delete = NULL;
 
-    pcmk_free_scheduler(scheduler);
-    scheduler = NULL;
+    g_clear_pointer(&scheduler, pcmk_free_scheduler);
 
     cib__clean_up_connection(&cib_conn);
 

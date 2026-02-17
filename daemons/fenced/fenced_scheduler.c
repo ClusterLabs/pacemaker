@@ -99,8 +99,7 @@ fenced_scheduler_cleanup(void)
         g_clear_pointer(&scheduler->priv->out, pcmk__output_free);
     }
 
-    pcmk_free_scheduler(scheduler);
-    scheduler = NULL;
+    g_clear_pointer(&scheduler, pcmk_free_scheduler);
 }
 
 /*!
