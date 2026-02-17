@@ -337,6 +337,12 @@ set_logfile_permissions(const char *filename, FILE *logfile)
     }
 
     fd = fileno(logfile);
+    if (fd < 0) {
+        rc = errno;
+        pcmk__warn("Couldn't get file descriptor for logging to '%s': %s",
+                   filename, strerror(rc));
+        return rc;
+    }
 
     rc = chown_logfile(filename, fd);
     if (rc != pcmk_rc_ok) {
