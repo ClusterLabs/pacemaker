@@ -230,7 +230,6 @@ crm_trigger_blackbox(int nsig)
  * \param[in] daemon        The daemon ID included in error messages
  * \param[in] use_pid       Cached result of getpid() call, for efficiency
  * \param[in] use_nodename  Cached result of uname() call, for efficiency
- *
  */
 
 /* XXX __attribute__((nonnull)) for use_nodename parameter */
@@ -512,15 +511,13 @@ blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
 static void
 crm_control_blackbox(int nsig, bool enable)
 {
-    int lpc = 0;
-
     if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
 
         /* Enable synchronous logging */
-        for (lpc = QB_LOG_BLACKBOX; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
+        for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
+            qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
         }
 
         pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
@@ -546,8 +543,8 @@ crm_control_blackbox(int nsig, bool enable)
         qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
 
         /* Disable synchronous logging again when the blackbox is disabled */
-        for (lpc = QB_LOG_BLACKBOX; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
+        for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
+            qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
         }
     }
 }
@@ -874,11 +871,10 @@ crm_priority2int(const char *name)
         {"debug", LOG_DEBUG},
         {NULL, -1}
     };
-    int lpc;
 
-    for (lpc = 0; name != NULL && p_names[lpc].name != NULL; lpc++) {
-        if (pcmk__str_eq(p_names[lpc].name, name, pcmk__str_none)) {
-            return p_names[lpc].priority;
+    for (int i = 0; (name != NULL) && (p_names[i].name != NULL); i++) {
+        if (pcmk__str_eq(p_names[i].name, name, pcmk__str_none)) {
+            return p_names[i].priority;
         }
     }
     return crm_log_priority;
@@ -935,7 +931,6 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     /* Configure libqb logging with nothing turned on */
 
     struct utsname res;
-    int lpc = 0;
     int32_t qb_facility = 0;
     pid_t pid = getpid();
     const char *nodename = "localhost";
@@ -993,13 +988,13 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
      * Pacemaker and threads do not mix well (due to the amount of forking)
      */
     qb_log_tags_stringify_fn_set(crm_quark_to_string);
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+    for (int i = QB_LOG_SYSLOG; i < QB_LOG_TARGET_MAX; i++) {
+        qb_log_ctl(i, QB_LOG_CONF_THREADED, QB_FALSE);
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_ELLIPSIS
         // End truncated lines with '...'
-        qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
+        qb_log_ctl(i, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
 #endif
-        set_format_string(lpc, crm_system_name, pid, nodename);
+        set_format_string(i, crm_system_name, pid, nodename);
     }
 
 #ifdef ENABLE_NLS
