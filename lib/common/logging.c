@@ -209,15 +209,13 @@ remove_glib_log_handlers(void)
  * \brief Set the log format string based on the passed-in method
  *
  * \param[in] method        The detail level of the log output
- * \param[in] daemon        The daemon ID included in error messages
  * \param[in] use_pid       Cached result of getpid() call, for efficiency
  * \param[in] use_nodename  Cached result of uname() call, for efficiency
  */
 
 /* XXX __attribute__((nonnull)) for use_nodename parameter */
 static void
-set_format_string(int method, const char *daemon, pid_t use_pid,
-                  const char *use_nodename)
+set_format_string(int method, pid_t use_pid, const char *use_nodename)
 {
     GString *fmt = NULL;
 
@@ -234,7 +232,8 @@ set_format_string(int method, const char *daemon, pid_t use_pid,
     if (method > QB_LOG_STDERR) {
         // If logging to file, prefix with timestamp, node name, daemon ID
         g_string_append_printf(fmt, TIMESTAMP_FORMAT_SPEC " %s %-20s[%lld] ",
-                               use_nodename, daemon, (long long) use_pid);
+                               use_nodename, crm_system_name,
+                               (long long) use_pid);
     }
 
     // Add function name (in parentheses)
@@ -996,7 +995,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
         // End truncated lines with '...'
         qb_log_ctl(i, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
 #endif
-        set_format_string(i, crm_system_name, pid, nodename);
+        set_format_string(i, pid, nodename);
     }
 
 #ifdef ENABLE_NLS
