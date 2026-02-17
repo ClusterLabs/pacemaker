@@ -856,11 +856,10 @@ crm_update_callsites(void)
 static gboolean
 crm_tracing_enabled(void)
 {
-    return (crm_log_level == LOG_TRACE)
-            || (pcmk__env_option(PCMK__ENV_TRACE_FILES) != NULL)
-            || (pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS) != NULL)
-            || (pcmk__env_option(PCMK__ENV_TRACE_FORMATS) != NULL)
-            || (pcmk__env_option(PCMK__ENV_TRACE_TAGS) != NULL);
+    return (pcmk__env_option(PCMK__ENV_TRACE_FILES) != NULL)
+           || (pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS) != NULL)
+           || (pcmk__env_option(PCMK__ENV_TRACE_FORMATS) != NULL)
+           || (pcmk__env_option(PCMK__ENV_TRACE_TAGS) != NULL);
 }
 
 static int
