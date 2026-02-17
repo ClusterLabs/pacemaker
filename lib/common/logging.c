@@ -141,10 +141,6 @@ handle_glib_message(const gchar *log_domain, GLogLevelFlags log_level,
     do_crm_log(syslog_level, "%s: %s", log_domain, message);
 }
 
-#ifndef NAME_MAX
-#  define NAME_MAX 256
-#endif
-
 /*!
  * \internal
  * \brief Write out a blackbox (enabling blackboxes if needed)
