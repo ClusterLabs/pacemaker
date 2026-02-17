@@ -1167,10 +1167,22 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Free the logging library's internal data structures
+ */
 void
 crm_log_deinit(void)
 {
     remove_glib_log_handlers();
+    cleanup_tracing();
+
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        g_clear_pointer(&logger_out, pcmk__output_free);
+    }
+
+    g_clear_pointer(&crm_system_name, free);
 }
 
 /* returns the old value */
@@ -1387,21 +1399,6 @@ pcmk__log_xml_patchset_as(const char *file, const char *function, uint32_t line,
     pcmk__output_set_log_filter(logger_out, file, function, line, tags);
     logger_out->message(logger_out, "xml-patchset", patchset);
     pcmk__output_set_log_filter(logger_out, NULL, NULL, 0U, 0U);
-}
-
-/*!
- * \internal
- * \brief Free the logging library's internal data structures
- */
-void
-pcmk__free_logging_data(void)
-{
-    if (logger_out != NULL) {
-        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-        g_clear_pointer(&logger_out, pcmk__output_free);
-    }
-
-    cleanup_tracing();
 }
 
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)
