@@ -219,12 +219,6 @@ crm_trigger_blackbox(int nsig)
     crm_write_blackbox(nsig, NULL);
 }
 
-void
-crm_log_deinit(void)
-{
-    remove_glib_log_handlers();
-}
-
 /*!
  * \internal
  * \brief Set the log format string based on the passed-in method
@@ -1178,6 +1172,12 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     return TRUE;
+}
+
+void
+crm_log_deinit(void)
+{
+    remove_glib_log_handlers();
 }
 
 /* returns the old value */
