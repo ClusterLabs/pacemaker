@@ -89,17 +89,21 @@ fenced_get_local_node(void)
 void
 fenced_scheduler_cleanup(void)
 {
-    if (scheduler != NULL) {
-        pcmk__output_t *logger = scheduler->priv->out;
+    pcmk__output_t *logger = NULL;
 
-        if (logger != NULL) {
-            logger->finish(logger, CRM_EX_OK, true, NULL);
-            pcmk__output_free(logger);
-            scheduler->priv->out = NULL;
-        }
-        pcmk_free_scheduler(scheduler);
-        scheduler = NULL;
+    if (scheduler == NULL) {
+        return;
     }
+
+    logger = scheduler->priv->out;
+    if (logger != NULL) {
+        logger->finish(logger, CRM_EX_OK, true, NULL);
+        pcmk__output_free(logger);
+        scheduler->priv->out = NULL;
+    }
+
+    pcmk_free_scheduler(scheduler);
+    scheduler = NULL;
 }
 
 /*!
