@@ -329,15 +329,21 @@ chmod_logfile(const char *filename, int logfd)
 static int
 set_logfile_permissions(const char *filename, FILE *logfile)
 {
-    if (geteuid() == 0) {
-        int logfd = fileno(logfile);
-        int rc = chown_logfile(filename, logfd);
+    int fd = 0;
+    int rc = pcmk_rc_ok;
 
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-        chmod_logfile(filename, logfd);
+    if (geteuid() != 0) {
+        return pcmk_rc_ok;
     }
+
+    fd = fileno(logfile);
+
+    rc = chown_logfile(filename, fd);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    chmod_logfile(filename, fd);
     return pcmk_rc_ok;
 }
 
