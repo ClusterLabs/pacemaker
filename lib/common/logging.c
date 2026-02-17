@@ -799,17 +799,10 @@ init_tracing(void)
 static void
 cleanup_tracing(void)
 {
-    g_strfreev(trace_blackbox);
-    trace_blackbox = NULL;
-
-    g_strfreev(trace_files);
-    trace_files = NULL;
-
-    g_strfreev(trace_formats);
-    trace_formats = NULL;
-
-    g_strfreev(trace_functions);
-    trace_functions = NULL;
+    g_clear_pointer(&trace_blackbox, g_strfreev);
+    g_clear_pointer(&trace_files, g_strfreev);
+    g_clear_pointer(&trace_formats, g_strfreev);
+    g_clear_pointer(&trace_functions, g_strfreev);
 }
 
 gboolean
