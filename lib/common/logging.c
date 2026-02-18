@@ -412,9 +412,6 @@ static void
 enable_logfile(int fd)
 {
     qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
-#if 0
-    qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1); // Turn on synchronous writes
-#endif
 
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
     // Longer than default, for logging long XML lines
