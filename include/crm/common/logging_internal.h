@@ -405,10 +405,7 @@ void pcmk__log_xml_patchset_as(const char *file, const char *function,
  */
 void pcmk__cli_init_logging(const char *name, unsigned int verbosity);
 
-int pcmk__add_logfile(const char *filename);
 void pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out);
-
-void pcmk__free_logging_data(void);
 
 #ifdef __cplusplus
 }

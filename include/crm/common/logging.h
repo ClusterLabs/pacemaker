@@ -13,7 +13,7 @@
 #include <stdio.h>
 #include <stdint.h>             // uint8_t, uint32_t
 #include <glib.h>
-#include <qb/qblog.h>           // LOG_TRACE, qb_*, QB_*
+#include <qb/qblog.h>           // LOG_TRACE, qb_*
 #include <libxml/tree.h>
 
 #include <crm/common/results.h>     // crm_abort
@@ -95,13 +95,6 @@ unsigned int get_crm_log_level(void);
 void pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
                      uint32_t tags, uint8_t level, const char *text,
                      const xmlNode *xml);
-
-#if defined(__clang__)
-#define CRM_TRACE_INIT_DATA(name)
-#else
-#include <assert.h> // required by QB_LOG_INIT_DATA() macro
-#define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
-#endif
 
 /*!
  * \internal

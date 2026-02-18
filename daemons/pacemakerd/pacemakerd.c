@@ -404,8 +404,7 @@ main(int argc, char **argv)
     /* Don't allow any accidental output after this point. */
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
-        pcmk__output_free(out);
-        out = NULL;
+        g_clear_pointer(&out, pcmk__output_free);
     }
 
 #if SUPPORT_COROSYNC

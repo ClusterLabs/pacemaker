@@ -289,8 +289,8 @@ unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
                 attr_name = pcmk__xe_get(attr, PCMK_XA_NAME);
                 if (attr_name) {
                     if (nattrs == 0) {
-                        g_strfreev(entry->select_attribute_name);
-                        entry->select_attribute_name = NULL;
+                        g_clear_pointer(&entry->select_attribute_name,
+                                        g_strfreev);
                     }
                     ++nattrs;
                     entry->select_attribute_name = pcmk__realloc(entry->select_attribute_name,

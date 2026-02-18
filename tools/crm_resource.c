@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -980,8 +980,7 @@ initialize_scheduler_data(pcmk_scheduler_t **scheduler, cib_t *cib_conn,
 
     rc = update_scheduler_input(out, *scheduler, cib_conn, cib_xml_orig);
     if (rc != pcmk_rc_ok) {
-        pcmk_free_scheduler(*scheduler);
-        *scheduler = NULL;
+        g_clear_pointer(scheduler, pcmk_free_scheduler);
         return rc;
     }
 

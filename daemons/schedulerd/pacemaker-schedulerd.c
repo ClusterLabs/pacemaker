@@ -180,14 +180,12 @@ pengine_shutdown(int nsig)
 
     if (logger_out != NULL) {
         logger_out->finish(logger_out, exit_code, true, NULL);
-        pcmk__output_free(logger_out);
-        logger_out = NULL;
+        g_clear_pointer(&logger_out, pcmk__output_free);
     }
 
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
-        pcmk__output_free(out);
-        out = NULL;
+        g_clear_pointer(&out, pcmk__output_free);
     }
 
     pcmk__unregister_formats();

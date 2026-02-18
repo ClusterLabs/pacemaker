@@ -370,16 +370,7 @@ main(int argc, char **argv)
     }
 
     // Open additional log files
-    if (options.log_files != NULL) {
-        for (gchar **fname = options.log_files; *fname != NULL; fname++) {
-            rc = pcmk__add_logfile(*fname);
-
-            if (rc != pcmk_rc_ok) {
-                out->err(out, "Logging to %s is disabled: %s",
-                         *fname, pcmk_rc_str(rc));
-            }
-        }
-    }
+    pcmk__add_logfiles(options.log_files, out);
 
     pcmk__cli_init_logging(EXECD_NAME, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);

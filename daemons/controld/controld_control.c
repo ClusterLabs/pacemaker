@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -141,8 +141,7 @@ crmd_fast_exit(crm_exit_t exit_code)
     if (controld_globals.logger_out != NULL) {
         controld_globals.logger_out->finish(controld_globals.logger_out,
                                             exit_code, true, NULL);
-        pcmk__output_free(controld_globals.logger_out);
-        controld_globals.logger_out = NULL;
+        g_clear_pointer(&controld_globals.logger_out, pcmk__output_free);
     }
 
     crm_exit(exit_code);
