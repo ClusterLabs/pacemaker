@@ -9,35 +9,36 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/utsname.h>
-
-#include <inttypes.h>               // PRIu32
+#include <errno.h>                  // errno
+#include <fcntl.h>                  // open, O_RDWR
+#include <libgen.h>                 // basename
+#include <signal.h>                 // raise, SIG*
 #include <stdbool.h>
-#include <stdint.h>                 // int32_t, uint32_t
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <grp.h>
-#include <time.h>
-#include <libgen.h>
-#include <signal.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // int32_t, uint8_t, uint32_t
+#include <stdlib.h>                 // free, getenv, strtol
+#include <string.h>                 // strdup, strerror, strstr
+#include <syslog.h>                 // LOG_*, syslog
+#include <sys/stat.h>               // S_*, stat
+#include <sys/types.h>              // gid_t, mode_t, pid_t, uid_t
+#include <sys/utsname.h>            // uname, utsname
+#include <time.h>                   // time, time_t, timespec
+#include <unistd.h>                 // chdir, close, fchown, geteuid, getpid
 
-#include <bzlib.h>
 #include <glib.h>                   // g_*, G_*, gboolean, gchar, etc.
-#include <qb/qbdefs.h>
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qbdefs.h>              // qb_bit_set, QB_FALSE, QB_TRUE
+#include <qb/qblog.h>               // LOG_TRACE, qb_log_*
 
-#include <crm/crm.h>
-#include <crm/common/mainloop.h>
+#include <crm_config.h>             // CRM_DAEMON_USER, CRM_*_DIR
+#include <crm/common/internal.h>    // pcmk__env_*, pcmk__output_*, etc.
+#include <crm/common/logging.h>     // do_crm_log, CRM_CHECK, etc.
+#include <crm/common/mainloop.h>    // crm_signal_handler, mainloop_add_signal
+#include <crm/common/options.h>     // PCMK_VALUE_NONE
+#include <crm/common/results.h>     // crm_abort, pcmk_rc_*
+#include <crm/crm.h>                // crm_system_name
 
-#include "crmcommon_private.h"      // pcmk__add_logfile()
+#include "crmcommon_private.h"      // pcmk__add_logfile
 
 // Use high-resolution (millisecond) timestamps if libqb supports them
 #ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
