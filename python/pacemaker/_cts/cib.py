@@ -44,8 +44,6 @@ class CIB:
             f.close()
             self._tmpfile = f.name
 
-        self._factory.tmpfile = self._tmpfile
-
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
@@ -123,12 +121,10 @@ class CIB:
         self._cib = None
 
         self._tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
-        self._factory.tmpfile = self._tmpfile
         self.contents(target)
         self._factory.rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
 
         self._tmpfile = old
-        self._factory.tmpfile = self._tmpfile
 
     def contents(self, target):
         """Generate a complete CIB file."""
@@ -183,7 +179,7 @@ class CIB:
 
                 st[name] = value
 
-            st.commit()
+            st.commit(self._tmpfile)
 
             # Test advanced fencing logic
             stf_nodes = []
@@ -254,7 +250,7 @@ class CIB:
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
                 stt["random_sleep_range"] = "30"
                 stt["mode"] = "pass"
-                stt.commit()
+                stt.commit(self._tmpfile)
 
             # Create a Dummy agent that always fails for levels-or
             if stf_nodes:
@@ -263,10 +259,10 @@ class CIB:
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
                 stf["random_sleep_range"] = "30"
                 stf["mode"] = "fail"
-                stf.commit()
+                stf.commit(self._tmpfile)
 
             # Now commit the levels themselves
-            stl.commit()
+            stl.commit(self._tmpfile)
 
         o = Option(self._factory)
         o["fencing-enabled"] = self._env["fencing_enabled"]
@@ -277,22 +273,22 @@ class CIB:
         o["dc-deadtime"] = "5s"
         o["no-quorum-policy"] = no_quorum
 
-        o.commit()
+        o.commit(self._tmpfile)
 
         o = OpDefaults(self._factory)
         o["timeout"] = "90s"
-        o.commit()
+        o.commit(self._tmpfile)
 
         # Commit the nodes section if we defined one
         if stn is not None:
-            stn.commit()
+            stn.commit(self._tmpfile)
 
         # Add an alerts section if possible
         if self._factory.rsh.exists_on_all(self._env["notification-agent"], self._env["nodes"]):
             alerts = Alerts(self._factory)
             alerts.add_alert(self._env["notification-agent"],
                              self._env["notification-recipient"])
-            alerts.commit()
+            alerts.commit(self._tmpfile)
 
         # Add resources?
         if self._env["create_resources"]:
@@ -313,7 +309,7 @@ class CIB:
             name = f"rsc_{node}"
             r = self.new_ip(name)
             r.prefer(node, "100")
-            r.commit()
+            r.commit(self._tmpfile)
 
         # Migrator
         # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach
@@ -322,7 +318,7 @@ class CIB:
         m.add_meta("resource-stickiness", "1")
         m.add_meta("allow-migrate", "1")
         m.add_op("monitor", "P10S")
-        m.commit()
+        m.commit(self._tmpfile)
 
         # Ping the test exerciser
         p = Resource(self._factory, "ping-1", "ping", "ocf", "pacemaker")
@@ -333,7 +329,7 @@ class CIB:
 
         c = Clone(self._factory, "Connectivity", p)
         c["globally-unique"] = "false"
-        c.commit()
+        c.commit(self._tmpfile)
 
         # promotable clone resource
         s = Resource(self._factory, "stateful-1", "Stateful", "ocf", "pacemaker")
@@ -352,7 +348,7 @@ class CIB:
         r.add_child(Expression(self._factory, "m1-connected-2", "connected", "not_defined", None))
         ms.prefer("connected", rule=r)
 
-        ms.commit()
+        ms.commit(self._tmpfile)
 
         # Group Resource
         g = Group(self._factory, "group-1")
@@ -371,7 +367,7 @@ class CIB:
         g.after("promotable-1", first="promote", then="start")
         g.colocate("promotable-1", "INFINITY", withrole="Promoted")
 
-        g.commit()
+        g.commit(self._tmpfile)
 
         # LSB resource dependent on group-1
         if BuildOptions.INIT_DIR is not None:
@@ -379,7 +375,7 @@ class CIB:
             lsb.add_op("monitor", "5s")
             lsb.after("group-1")
             lsb.colocate("group-1")
-            lsb.commit()
+            lsb.commit(self._tmpfile)
 
 
 class ConfigFactory:
@@ -397,7 +393,6 @@ class ConfigFactory:
         self.rsh = self._cm.rsh
         if not self._cm.env["ListTests"]:
             self.target = self._cm.env["nodes"][0]
-        self.tmpfile = None
 
     def log(self, args):
         """Log a message."""

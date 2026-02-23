@@ -12,7 +12,7 @@ __all__ = [
     "Resource",
     "Rule",
 ]
-__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 
@@ -127,7 +127,7 @@ class XmlBase:
         text += f"</{self._tag}>"
         return text
 
-    def _run(self, operation, xml, section, options=""):
+    def _run(self, operation, xml, section, cibfile, options=""):
         """
         Update the CIB on the cluster to include this XML section.
 
@@ -137,6 +137,7 @@ class XmlBase:
                      of calling show
         section   -- Which section of the CIB this update applies to (see
                      the --scope argument to cibadmin for allowed values)
+        cibfile   -- The CIB file path
         options   -- Extra options to pass to cibadmin
         """
         if self.name:
@@ -146,7 +147,7 @@ class XmlBase:
 
         self._factory.debug(f"Writing out {label}")
 
-        fixed = f"HOME=/root CIB_file={self._factory.tmpfile}"
+        fixed = f"HOME=/root CIB_file={cibfile}"
         fixed += f" cibadmin --{operation} --scope {section} {options} --xml-text '{xml}'"
 
         (rc, _) = self._factory.rsh.call(self._factory.target, fixed)
@@ -216,9 +217,9 @@ class Nodes(XmlBase):
         """
         self.add_child(Node(self._factory, node_name, node_id, node_attrs))
 
-    def commit(self):
+    def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
-        self._run("modify", self.show(), "configuration", "--allow-create")
+        self._run("modify", self.show(), "configuration", cibfile, "--allow-create")
 
 
 class FencingTopology(XmlBase):
@@ -259,9 +260,9 @@ class FencingTopology(XmlBase):
             child["target-value"] = target_value
             self.add_child(child)
 
-    def commit(self):
+    def commit(self, cibfile):
         """Create this XML section in the CIB."""
-        self._run("create", self.show(), "configuration", "--allow-create")
+        self._run("create", self.show(), "configuration", cibfile, "--allow-create")
 
 
 class Option(XmlBase):
@@ -281,9 +282,9 @@ class Option(XmlBase):
         """Add a child nvpair element containing the given key/value pair."""
         self.add_child(XmlBase(self._factory, "nvpair", f"cts-{key}", name=key, value=value))
 
-    def commit(self):
+    def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
-        self._run("modify", self.show(), "crm_config", "--allow-create")
+        self._run("modify", self.show(), "crm_config", cibfile, "--allow-create")
 
 
 class OpDefaults(XmlBase):
@@ -304,9 +305,9 @@ class OpDefaults(XmlBase):
         """Add a child nvpair meta_attribute element containing the given key/value pair."""
         self.meta.add_child(XmlBase(self._factory, "nvpair", f"cts-op_defaults-{key}", name=key, value=value))
 
-    def commit(self):
+    def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
-        self._run("modify", self.show(), "configuration", "--allow-create")
+        self._run("modify", self.show(), "configuration", cibfile, "--allow-create")
 
 
 class Alerts(XmlBase):
@@ -340,9 +341,9 @@ class Alerts(XmlBase):
         alert.add_child(recipient1)
         self.add_child(alert)
 
-    def commit(self):
+    def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
-        self._run("modify", self.show(), "configuration", "--allow-create")
+        self._run("modify", self.show(), "configuration", cibfile, "--allow-create")
 
 
 class Expression(XmlBase):
@@ -587,10 +588,10 @@ class Resource(XmlBase):
         text += '''</primitive>'''
         return text
 
-    def commit(self):
+    def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
-        self._run("create", self.show(), "resources")
-        self._run("modify", self._constraints(), "constraints")
+        self._run("create", self.show(), "resources", cibfile)
+        self._run("modify", self._constraints(), "constraints", cibfile)
 
 
 class Group(Resource):
