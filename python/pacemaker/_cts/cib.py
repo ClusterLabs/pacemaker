@@ -16,19 +16,18 @@ from pacemaker._cts.network import next_ip
 class CIB:
     """A class for generating, representing, and installing a CIB file onto cluster nodes."""
 
-    def __init__(self, cm, version, factory):
+    def __init__(self, env, version, factory):
         """
         Create a new CIB instance.
 
         Arguments:
-        cm      -- A ClusterManager instance
+        env     -- An EnvFactory instance
         version -- The schema syntax version
         factory -- A ConfigFactory instance
         """
-        # pylint: disable=invalid-name
         self._cib = None
-        self._cm = cm
         self._counter = 1
+        self._env = env
         self._factory = factory
         self._num_nodes = 0
 
@@ -59,7 +58,7 @@ class CIB:
 
     def new_ip(self, name=None):
         """Generate an IP resource for the next available IP address, optionally specifying the resource's name."""
-        ip = next_ip(self._cm.env["IPBase"])
+        ip = next_ip(self._env["IPBase"])
         if not name:
             if ":" in ip:
                 (_, _, suffix) = ip.rpartition(":")
@@ -70,13 +69,13 @@ class CIB:
         r = Resource(self._factory, name, "IPaddr2", "ocf")
         r["ip"] = ip
 
-        if self._cm.env["nic"] is not None:
-            r["nic"] = self._cm.env["nic"]
+        if self._env["nic"] is not None:
+            r["nic"] = self._env["nic"]
 
         if ":" in ip:
             r["cidr_netmask"] = "64"
 
-            if self._cm.env["nic"] is None and ip.lstrip().startswith("fe80::"):
+            if self._env["nic"] is None and ip.lstrip().startswith("fe80::"):
                 # "nic" parameter is mandatory for an IPv6 link local address
                 r["nic"] = "eth0"
 
@@ -139,7 +138,7 @@ class CIB:
             self._factory.target = target
 
         self._factory.rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._factory.tmpfile}")
-        self._num_nodes = len(self._cm.env["nodes"])
+        self._num_nodes = len(self._env["nodes"])
 
         no_quorum = "stop"
         if self._num_nodes < 3:
@@ -151,10 +150,10 @@ class CIB:
 
         # Fencing resource
         # Define first so that the shell doesn't reject every update
-        if self._cm.env["fencing_enabled"]:
+        if self._env["fencing_enabled"]:
 
             # Define the "real" fencing device
-            st = Resource(self._factory, "Fencing", self._cm.env["fencing_agent"], "stonith")
+            st = Resource(self._factory, "Fencing", self._env["fencing_agent"], "stonith")
 
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
@@ -165,10 +164,10 @@ class CIB:
             # For remote node tests, a cluster node is stopped and brought back up
             # as a remote node with the name "remote-OLDNAME". To allow fencing
             # devices to fence these nodes, create a list of all possible node names.
-            all_node_names = [prefix + n for n in self._cm.env["nodes"] for prefix in ('', 'remote-')]
+            all_node_names = [prefix + n for n in self._env["nodes"] for prefix in ('', 'remote-')]
 
             # Add all parameters specified by user
-            for param in self._cm.env["fencing_params"]:
+            for param in self._env["fencing_params"]:
                 try:
                     (name, value) = param.split('=', 1)
                 except ValueError:
@@ -190,7 +189,7 @@ class CIB:
 
             # Create the levels
             stl = FencingTopology(self._factory)
-            for node in self._cm.env["nodes"]:
+            for node in self._env["nodes"]:
                 # Remote node tests will rename the node
                 remote_node = f"remote-{node}"
 
@@ -198,7 +197,7 @@ class CIB:
                 # @TODO What does "broadcast" do, if anything?
                 types = ["levels-and", "levels-or", "broadcast"]
                 width = max(len(t) for t in types)
-                ftype = self._cm.env.random_gen.choice(types)
+                ftype = self._env.random_gen.choice(types)
 
                 # For levels-and, randomly choose targeting by node name or attribute
                 by = ""
@@ -206,7 +205,7 @@ class CIB:
                 if ftype == "levels-and":
                     node_id = self.get_node_id(node)
 
-                    if node_id == 0 or self._cm.env.random_gen.choice([True, False]):
+                    if node_id == 0 or self._env.random_gen.choice([True, False]):
                         by = " (by name)"
                     else:
                         attr_nodes[node] = node_id
@@ -267,7 +266,7 @@ class CIB:
             stl.commit()
 
         o = Option(self._factory)
-        o["fencing-enabled"] = self._cm.env["fencing_enabled"]
+        o["fencing-enabled"] = self._env["fencing_enabled"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
         o["shutdown-escalation"] = "5min"
@@ -286,14 +285,14 @@ class CIB:
             stn.commit()
 
         # Add an alerts section if possible
-        if self._factory.rsh.exists_on_all(self._cm.env["notification-agent"], self._cm.env["nodes"]):
+        if self._factory.rsh.exists_on_all(self._env["notification-agent"], self._env["nodes"]):
             alerts = Alerts(self._factory)
-            alerts.add_alert(self._cm.env["notification-agent"],
-                             self._cm.env["notification-recipient"])
+            alerts.add_alert(self._env["notification-agent"],
+                             self._env["notification-recipient"])
             alerts.commit()
 
         # Add resources?
-        if self._cm.env["create_resources"]:
+        if self._env["create_resources"]:
             self.add_resources()
 
         # generate cib
@@ -307,7 +306,7 @@ class CIB:
     def add_resources(self):
         """Add various resources and their constraints to the CIB."""
         # Per-node resources
-        for node in self._cm.env["nodes"]:
+        for node in self._env["nodes"]:
             name = f"rsc_{node}"
             r = self.new_ip(name)
             r.prefer(node, "100")
@@ -325,7 +324,7 @@ class CIB:
         # Ping the test exerciser
         p = Resource(self._factory, "ping-1", "ping", "ocf", "pacemaker")
         p.add_op("monitor", "60s")
-        p["host_list"] = self._cm.env["cts-exerciser"]
+        p["host_list"] = self._env["cts-exerciser"]
         p["name"] = "connected"
         p["debug"] = "true"
 
@@ -356,7 +355,7 @@ class CIB:
         g = Group(self._factory, "group-1")
         g.add_child(self.new_ip())
 
-        if self._cm.env["have_systemd"]:
+        if self._env["have_systemd"]:
             sysd = Resource(self._factory, "petulant", "pacemaker-cts-dummyd@10", "service")
             sysd.add_op("monitor", "P10S")
             g.add_child(sysd)
@@ -407,4 +406,4 @@ class ConfigFactory:
 
     def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""
-        return CIB(self._cm, name, self)
+        return CIB(self._cm.env, name, self)
