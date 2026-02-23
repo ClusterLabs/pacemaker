@@ -30,6 +30,7 @@ class CIB:
         self._env = env
         self._factory = factory
         self._num_nodes = 0
+        self._tmpfile = None
 
         self.version = version
 
@@ -41,14 +42,14 @@ class CIB:
             # pylint: disable=consider-using-with
             f = tempfile.NamedTemporaryFile(delete=True)
             f.close()
-            tmpfile = f.name
+            self._tmpfile = f.name
 
-        self._factory.tmpfile = tmpfile
+        self._factory.tmpfile = self._tmpfile
 
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._factory.rsh.call(self._factory.target, f"HOME=/root CIB_file={self._factory.tmpfile} cibadmin -Q", verbose=1)
+        (_, result) = self._factory.rsh.call(self._factory.target, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
 
         for line in result:
             output += line
@@ -116,16 +117,18 @@ class CIB:
 
     def install(self, target):
         """Generate a CIB file and install it to the given cluster node."""
-        old = self._factory.tmpfile
+        old = self._tmpfile
 
         # Force a rebuild
         self._cib = None
 
-        self._factory.tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
+        self._tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
+        self._factory.tmpfile = self._tmpfile
         self.contents(target)
-        self._factory.rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._factory.tmpfile}")
+        self._factory.rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
 
-        self._factory.tmpfile = old
+        self._tmpfile = old
+        self._factory.tmpfile = self._tmpfile
 
     def contents(self, target):
         """Generate a complete CIB file."""
@@ -137,7 +140,7 @@ class CIB:
         if target:
             self._factory.target = target
 
-        self._factory.rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._factory.tmpfile}")
+        self._factory.rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
         self._num_nodes = len(self._env["nodes"])
 
         no_quorum = "stop"
@@ -298,8 +301,8 @@ class CIB:
         # generate cib
         self._cib = self._show()
 
-        if self._factory.tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
-            self._factory.rsh.call(self._factory.target, f"rm -f {self._factory.tmpfile}")
+        if self._tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
+            self._factory.rsh.call(self._factory.target, f"rm -f {self._tmpfile}")
 
         return self._cib
 
