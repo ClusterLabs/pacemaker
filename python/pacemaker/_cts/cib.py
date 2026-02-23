@@ -16,7 +16,7 @@ from pacemaker._cts.network import next_ip
 class CIB:
     """A class for generating, representing, and installing a CIB file onto cluster nodes."""
 
-    def __init__(self, cm, version, factory, tmpfile=None):
+    def __init__(self, cm, version, factory):
         """
         Create a new CIB instance.
 
@@ -24,7 +24,6 @@ class CIB:
         cm      -- A ClusterManager instance
         version -- The schema syntax version
         factory -- A ConfigFactory instance
-        tmpfile -- Where to store the CIB, or None to use a new tempfile
         """
         # pylint: disable=invalid-name
         self._cib = None
@@ -35,15 +34,15 @@ class CIB:
 
         self.version = version
 
-        if not tmpfile:
-            warnings.filterwarnings("ignore")
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
 
+            # FIXME: When we support python >= 3.12, we can use a context
+            # manager here and pass delete_on_close=False
             # pylint: disable=consider-using-with
             f = tempfile.NamedTemporaryFile(delete=True)
             f.close()
             tmpfile = f.name
-
-            warnings.resetwarnings()
 
         self._factory.tmpfile = tmpfile
 
