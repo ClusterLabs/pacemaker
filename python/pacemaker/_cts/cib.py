@@ -51,7 +51,7 @@ class CIB:
 
         for line in result:
             output += line
-            self._factory.debug(f"Generated Config: {line}")
+            logging.debug(f"cib: Generated Config: {line}")
 
         return output
 
@@ -142,7 +142,7 @@ class CIB:
         no_quorum = "stop"
         if self._num_nodes < 3:
             no_quorum = "ignore"
-            self._factory.log(f"Cluster only has {self._num_nodes} nodes, configuring: no-quorum-policy=ignore")
+            logging.log(f"cib: Cluster only has {self._num_nodes} nodes, configuring: no-quorum-policy=ignore")
 
         # We don't need a nodes section unless we add attributes
         stn = None
@@ -393,14 +393,6 @@ class ConfigFactory:
         self.rsh = self._cm.rsh
         if not self._cm.env["ListTests"]:
             self.target = self._cm.env["nodes"][0]
-
-    def log(self, args):
-        """Log a message."""
-        logging.log(f"cib: {args}")
-
-    def debug(self, args):
-        """Log a debug message."""
-        logging.debug(f"cib: {args}")
 
     def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""

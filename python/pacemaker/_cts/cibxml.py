@@ -15,6 +15,7 @@ __all__ = [
 __copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 
 def key_val_string(**kwargs):
     """
@@ -145,7 +146,7 @@ class XmlBase:
         else:
             label = f"<{self._tag}>"
 
-        self._factory.debug(f"Writing out {label}")
+        logging.debug(f"cib: Writing out {label}")
 
         fixed = f"HOME=/root CIB_file={cibfile}"
         fixed += f" cibadmin --{operation} --scope {section} {options} --xml-text '{xml}'"
@@ -671,4 +672,4 @@ class Clone(Group):
         if not self._children:
             self._children.append(child)
         else:
-            self._factory.log(f"Clones can only have a single child. Ignoring {child.name}")
+            logging.log(f"cib: Clones can only have a single child. Ignoring {child.name}")
