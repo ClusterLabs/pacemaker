@@ -269,6 +269,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: priority; resource option
           single: resource; option, priority
+          single: resource; meta-attribute, priority
+          single: resource meta-attribute; priority
 
        priority
      - :ref:`score <score>`
@@ -281,6 +283,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: critical; resource option
           single: resource; option, critical
+          single: resource; meta-attribute, critical
+          single: resource meta-attribute; critical
 
        critical
      - :ref:`boolean <boolean>`
@@ -296,6 +300,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: target-role; resource option
           single: resource; option, target-role
+          single: resource; meta-attribute, target-role
+          single: resource meta-attribute; target-role
 
        target-role
      - :ref:`enumeration <enumeration>`
@@ -318,6 +324,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: is-managed; resource option
           single: resource; option, is-managed
+          single: resource; meta-attribute, is-managed
+          single: resource meta-attribute; is-managed
 
        is-managed
      - :ref:`boolean <boolean>`
@@ -332,6 +340,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: maintenance; resource option
           single: resource; option, maintenance
+          single: resource; meta-attribute, maintenance
+          single: resource meta-attribute; maintenance
 
        maintenance
      - :ref:`boolean <boolean>`
@@ -348,6 +358,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: resource-stickiness; resource option
           single: resource; option, resource-stickiness
+          single: resource; meta-attribute, resource-stickiness
+          single: resource meta-attribute; resource-stickiness
 
        resource-stickiness
      - :ref:`score <score>`
@@ -363,6 +375,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: requires; resource option
           single: resource; option, requires
+          single: resource; meta-attribute, requires
+          single: resource meta-attribute; requires
 
        requires
      - :ref:`enumeration <enumeration>`
@@ -387,6 +401,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: migration-threshold; resource option
           single: resource; option, migration-threshold
+          single: resource; meta-attribute, migration-threshold
+          single: resource meta-attribute; migration-threshold
 
        migration-threshold
      - :ref:`score <score>`
@@ -405,6 +421,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: failure-timeout; resource option
           single: resource; option, failure-timeout
+          single: resource; meta-attribute, failure-timeout
+          single: resource meta-attribute; failure-timeout
 
        failure-timeout
      - :ref:`duration <duration>`
@@ -426,6 +444,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: multiple-active; resource option
           single: resource; option, multiple-active
+          single: resource; meta-attribute, multiple-active
+          single: resource meta-attribute; multiple-active
 
        multiple-active
      - :ref:`enumeration <enumeration>`
@@ -449,6 +469,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: allow-migrate; resource option
           single: resource; option, allow-migrate
+          single: resource; meta-attribute, allow-migrate
+          single: resource meta-attribute; allow-migrate
 
        allow-migrate
      - :ref:`boolean <boolean>`
@@ -461,6 +483,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: allow-unhealthy-nodes; resource option
           single: resource; option, allow-unhealthy-nodes
+          single: resource; meta-attribute, allow-unhealthy-nodes
+          single: resource meta-attribute; allow-unhealthy-nodes
 
        allow-unhealthy-nodes
      - :ref:`boolean <boolean>`
@@ -474,6 +498,8 @@ behave and can be easily set using the ``--meta`` option of the
        .. index::
           single: container-attribute-target; resource option
           single: resource; option, container-attribute-target
+          single: resource; meta-attribute, container-attribute-target
+          single: resource meta-attribute; container-attribute-target
 
        container-attribute-target
      - :ref:`enumeration <enumeration>`
@@ -753,6 +779,8 @@ node.
        .. index::
           single: remote-node; resource option
           single: resource; option, remote-node
+          single: resource; meta-attribute, remote-node
+          single: resource meta-attribute; remote-node
 
        remote-node
      - :ref:`text <text>`
@@ -766,6 +794,8 @@ node.
        .. index::
           single: remote-addr; resource option
           single: resource; option, remote-addr
+          single: resource; meta-attribute, remote-addr
+          single: resource meta-attribute; remote-addr
 
        remote-addr
      - :ref:`text <text>`
@@ -779,6 +809,8 @@ node.
        .. index::
           single: remote-port; resource option
           single: resource; option, remote-port
+          single: resource; meta-attribute, remote-port
+          single: resource meta-attribute; remote-port
 
        remote-port
      - :ref:`port <port>`
@@ -792,6 +824,8 @@ node.
        .. index::
           single: remote-connect-timeout; resource option
           single: resource; option, remote-connect-timeout
+          single: resource; meta-attribute, remote-connect-timeout
+          single: resource meta-attribute; remote-connect-timeout
 
        remote-connect-timeout
      - :ref:`timeout <timeout>`
@@ -804,6 +838,8 @@ node.
        .. index::
           single: remote-allow-migrate; resource option
           single: resource; option, remote-allow-migrate
+          single: resource; meta-attribute, remote-allow-migrate
+          single: resource meta-attribute; remote-allow-migrate
 
        remote-allow-migrate
      - :ref:`boolean <boolean>`
