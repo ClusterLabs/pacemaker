@@ -1,7 +1,7 @@
 """CIB generator for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["ConfigFactory"]
-__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import warnings
@@ -9,6 +9,7 @@ import tempfile
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.cibxml import Alerts, Clone, Expression, FencingTopology, Group, Nodes, OpDefaults, Option, Resource, Rule
+from pacemaker._cts import logging
 from pacemaker._cts.network import next_ip
 
 
@@ -212,7 +213,7 @@ class CIB:
                         attr_nodes[node] = node_id
                         by = " (by attribute)"
 
-                self._cm.log(f" - Using {ftype:{width}} fencing for node: {node}{by}")
+                logging.log(f" - Using {ftype:{width}} fencing for node: {node}{by}")
 
                 if ftype == "levels-and":
                     # If targeting by name, add a topology level for this node
@@ -399,11 +400,11 @@ class ConfigFactory:
 
     def log(self, args):
         """Log a message."""
-        self._cm.log(f"cib: {args}")
+        logging.log(f"cib: {args}")
 
     def debug(self, args):
         """Log a debug message."""
-        self._cm.debug(f"cib: {args}")
+        logging.debug(f"cib: {args}")
 
     def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""

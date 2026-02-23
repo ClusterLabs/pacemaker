@@ -76,14 +76,6 @@ class ClusterManager(UserDict):
         """Return a list of known error messages that should be ignored."""
         return self.templates.get_patterns("BadNewsIgnore")
 
-    def log(self, args):
-        """Log a message."""
-        logging.log(args)
-
-    def debug(self, args):
-        """Log a debug message."""
-        logging.debug(args)
-
     def upcount(self):
         """Return how many nodes are up."""
         count = 0
@@ -108,7 +100,7 @@ class ClusterManager(UserDict):
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
         if self.has_quorum(None):
-            self.debug("Have quorum")
+            logging.debug("Have quorum")
             return None
 
         if not self.templates["Pat:Fencing_start"]:
@@ -140,28 +132,28 @@ class ClusterManager(UserDict):
         peer_list = []
         peer_state = {}
 
-        self.debug(f"Looking for nodes that were fenced as a result of {node} starting")
+        logging.debug(f"Looking for nodes that were fenced as a result of {node} starting")
 
         # If we just started a node, we may now have quorum (and permission to fence)
         if not stonith:
-            self.debug("Nothing to do")
+            logging.debug("Nothing to do")
             return peer_list
 
         q = self.has_quorum(None)
         if not q and len(self.env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
-            self.debug(f"Quorum: {q} Len: {len(self.env['nodes'])}")
+            logging.debug(f"Quorum: {q} Len: {len(self.env['nodes'])}")
             return peer_list
 
         for n in self.env["nodes"]:
             peer_state[n] = "unknown"
 
         # Now see if any states need to be updated
-        self.debug(f"looking for: {stonith.regexes!r}")
+        logging.debug(f"looking for: {stonith.regexes!r}")
         shot = stonith.look(0)
 
         while shot:
-            self.debug(f"Found: {shot!r}")
+            logging.debug(f"Found: {shot!r}")
             del stonith.regexes[stonith.whichmatch]
 
             # Extract node name
@@ -181,14 +173,14 @@ class ClusterManager(UserDict):
                 logging.log(f"ERROR: Unknown stonith match: {shot!r}")
 
             elif peer not in peer_list:
-                self.debug(f"Found peer: {peer}")
+                logging.debug(f"Found peer: {peer}")
                 peer_list.append(peer)
 
             # Get the next one
             shot = stonith.look(60)
 
         for peer in peer_list:
-            self.debug(f"   Peer {peer} was fenced as a result of {node} starting: {peer_state[peer]}")
+            logging.debug(f"   Peer {peer} was fenced as a result of {node} starting: {peer_state[peer]}")
             if self.env["at-boot"]:
                 self.expected_status[peer] = "up"
             else:
@@ -199,7 +191,7 @@ class ClusterManager(UserDict):
                 shot = stonith.look(60)
 
                 while stonith.regexes and shot:
-                    self.debug(f"Found: {shot!r}")
+                    logging.debug(f"Found: {shot!r}")
                     del stonith.regexes[stonith.whichmatch]
                     shot = stonith.look(60)
 
@@ -220,7 +212,7 @@ class ClusterManager(UserDict):
     def _install_config(self, node):
         """Remove and re-install the CIB on the first node in the cluster."""
         if not self.ns.wait_for_node(node):
-            self.log(f"Node {node} is not up.")
+            logging.log(f"Node {node} is not up.")
             return
 
         if node in self._cib_sync or not self.env["overwrite_cib"]:
@@ -235,7 +227,7 @@ class ClusterManager(UserDict):
 
         self._cib_installed = True
         if self.env["CIBfilename"]:
-            self.log(f"Installing CIB ({self.env['CIBfilename']}) on node {node}")
+            logging.log(f"Installing CIB ({self.env['CIBfilename']}) on node {node}")
 
             rc = self.rsh.copy(self.env["CIBfilename"], "root@" + (self.templates["CIBfile"] % node))
 
@@ -243,14 +235,14 @@ class ClusterManager(UserDict):
                 raise ValueError(f"Can not scp file to {node} {rc}")
 
         else:
-            self.log(f"Installing Generated CIB on node {node}")
+            logging.log(f"Installing Generated CIB on node {node}")
             self._cib.install(node)
 
         self.rsh.call(node, f"chown {BuildOptions.DAEMON_USER} {BuildOptions.CIB_DIR}/cib.xml")
 
     def start_cm(self, node, verbose=False):
         """Start up the cluster manager on a given node."""
-        log_fn = logging.log if verbose else self.debug
+        log_fn = logging.log if verbose else logging.debug
         log_fn(f"Starting {self.name} on node {node}")
 
         if node not in self.expected_status:
@@ -310,7 +302,7 @@ class ClusterManager(UserDict):
 
     def start_cm_async(self, node, verbose=False):
         """Start up the cluster manager on a given node without blocking."""
-        log_fn = logging.log if verbose else self.debug
+        log_fn = logging.log if verbose else logging.debug
         log_fn(f"Starting {self.name} on node {node}")
 
         self._install_config(node)
@@ -319,7 +311,7 @@ class ClusterManager(UserDict):
 
     def stop_cm(self, node, verbose=False, force=False):
         """Stop the cluster manager on a given node."""
-        log_fn = logging.log if verbose else self.debug
+        log_fn = logging.log if verbose else logging.debug
         log_fn(f"Stopping {self.name} on node {node}")
 
         if self.expected_status[node] != "up" and not force:
@@ -337,7 +329,7 @@ class ClusterManager(UserDict):
 
     def stop_cm_async(self, node):
         """Stop the cluster manager on a given node without blocking."""
-        self.debug(f"Stopping {self.name} on node {node}")
+        logging.debug(f"Stopping {self.name} on node {node}")
 
         self.rsh.call_async(node, self.templates["StopCmd"])
         self.expected_status[node] = "down"
@@ -433,7 +425,7 @@ class ClusterManager(UserDict):
                 logging.log(f"Could not break the communication between {target} and {node}: {rc}")
                 return False
 
-            self.debug(f"Communication cut between {target} and {node}")
+            logging.debug(f"Communication cut between {target} and {node}")
 
         return True
 
@@ -450,7 +442,7 @@ class ClusterManager(UserDict):
             # Restore both sides as simultaneously as possible
             self.rsh.call_async(target, self.templates["FixCommCmd"] % node)
             self.rsh.call_async(node, self.templates["FixCommCmd"] % target)
-            self.debug(f"Communication restored between {target} and {node}")
+            logging.debug(f"Communication restored between {target} and {node}")
 
     def prepare(self):
         """
@@ -501,17 +493,17 @@ class ClusterManager(UserDict):
         else:
             out = out[0].strip()
 
-        self.debug(f"Node {node} status: '{out}'")
+        logging.debug(f"Node {node} status: '{out}'")
 
         if out.find('ok') < 0:
             if self.expected_status[node] == "up":
-                self.log(f"Node status for {node} is down but we think it should be {self.expected_status[node]}")
+                logging.log(f"Node status for {node} is down but we think it should be {self.expected_status[node]}")
 
             self.expected_status[node] = "down"
             return 0
 
         if self.expected_status[node] == "down":
-            self.log(f"Node status for {node} is up but we think it should be {self.expected_status[node]}: {out}")
+            logging.log(f"Node status for {node} is up but we think it should be {self.expected_status[node]}: {out}")
 
         self.expected_status[node] = "up"
 
@@ -527,7 +519,7 @@ class ClusterManager(UserDict):
         # fall back to syslog-ng and wait
         if not idle_watch.look():
             # just up
-            self.debug(f"Warn: Node {node} is unstable: {out}")
+            logging.debug(f"Warn: Node {node} is unstable: {out}")
             return 1
 
         # Up and stable
@@ -543,7 +535,7 @@ class ClusterManager(UserDict):
         if self.test_node_cm(node) == 2:
             return True
 
-        self.log(f"Warn: Node {node} not stable")
+        logging.log(f"Warn: Node {node} not stable")
         return False
 
     def _partition_stable(self, nodes, timeout=None):
@@ -553,13 +545,13 @@ class ClusterManager(UserDict):
             self.templates["Pat:DC_IDLE"],
         ]
 
-        self.debug("Waiting for cluster stability...")
+        logging.debug("Waiting for cluster stability...")
 
         if timeout is None:
             timeout = self.env["dead_time"]
 
         if len(nodes) < 3:
-            self.debug("Cluster is inactive")
+            logging.debug("Cluster is inactive")
             return True
 
         idle_watch = LogWatcher(self.env["LogFileName"], watchpats, nodes.split(),
@@ -573,7 +565,7 @@ class ClusterManager(UserDict):
         ret = idle_watch.look()
 
         while ret:
-            self.debug(ret)
+            logging.debug(ret)
 
             for node in nodes.split():
                 if re.search(node, ret):
@@ -581,7 +573,7 @@ class ClusterManager(UserDict):
 
             ret = idle_watch.look()
 
-        self.debug(f"Warn: Partition {nodes!r} not IDLE after {timeout}s")
+        logging.debug(f"Warn: Partition {nodes!r} not IDLE after {timeout}s")
         return False
 
     def cluster_stable(self, timeout=None, double_check=False):
@@ -662,9 +654,9 @@ class ClusterManager(UserDict):
             (rc, lines) = self.rsh.call(node, cmd)
 
             if rc == 127:
-                self.log(f"Command '{cmd}' failed. Binary or pacemaker-cts package not installed?")
+                logging.log(f"Command '{cmd}' failed. Binary or pacemaker-cts package not installed?")
                 for line in lines:
-                    self.log(f"Output: {line} ")
+                    logging.log(f"Output: {line} ")
 
             elif rc == 0:
                 resource_nodes.append(node)
@@ -682,19 +674,19 @@ class ClusterManager(UserDict):
 
         for node in self.env["nodes"]:
             if self.expected_status[node] != "up":
-                self.debug(f"Node {node} is down... skipping")
+                logging.debug(f"Node {node} is down... skipping")
                 continue
 
             (_, out) = self.rsh.call(node, self.templates["PartitionCmd"], verbose=1)
 
             if not out:
-                self.log(f"no partition details for {node}")
+                logging.log(f"no partition details for {node}")
                 continue
 
             partition = out[0].strip()
 
             if len(partition) <= 2:
-                self.log(f"bad partition details for {node}")
+                logging.log(f"bad partition details for {node}")
                 continue
 
             nodes = partition.split()
@@ -707,12 +699,12 @@ class ClusterManager(UserDict):
                     found = 1
 
             if found == 0:
-                self.debug(f"Adding partition from {node}: {partition}")
+                logging.debug(f"Adding partition from {node}: {partition}")
                 ccm_partitions.append(partition)
             else:
-                self.debug(f"Partition '{partition}' from {node} is consistent with existing entries")
+                logging.debug(f"Partition '{partition}' from {node} is consistent with existing entries")
 
-        self.debug(f"Found partitions: {ccm_partitions!r}")
+        logging.debug(f"Found partitions: {ccm_partitions!r}")
         return ccm_partitions
 
     def has_quorum(self, node_list):
@@ -730,7 +722,7 @@ class ClusterManager(UserDict):
 
             (rc, quorum) = self.rsh.call(node, self.templates["QuorumCmd"], verbose=1)
             if rc != ExitStatus.OK:
-                self.debug(f"WARN: Quorum check on {node} returned error ({rc})")
+                logging.debug(f"WARN: Quorum check on {node} returned error ({rc})")
                 continue
 
             quorum = quorum[0].strip()
@@ -738,7 +730,7 @@ class ClusterManager(UserDict):
                 return True
             if quorum.find("0") != -1:
                 return False
-            self.debug(f"WARN: Unexpected quorum test result from {node}:{quorum}")
+            logging.debug(f"WARN: Unexpected quorum test result from {node}:{quorum}")
 
         return False
 
@@ -759,7 +751,7 @@ class ClusterManager(UserDict):
             return False
 
         out = out[0].strip()
-        self.debug(f"Standby result: {out}")
+        logging.debug(f"Standby result: {out}")
         return out == "on"
 
     def set_standby_mode(self, node, status):

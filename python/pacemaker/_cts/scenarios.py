@@ -16,6 +16,7 @@ import time
 
 from pacemaker._cts.audits import ClusterAudit
 from pacemaker._cts.input import should_continue
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.watcher import LogWatcher
 
@@ -146,7 +147,7 @@ class Scenario:
             if not self._components[j].setup():
                 # OOPS!  We failed.  Tear partial setups down.
                 self.audit()
-                self._cm.log("Tearing down partial setup")
+                logging.log("Tearing down partial setup")
                 self.teardown(j)
                 return False
 
@@ -197,19 +198,19 @@ class Scenario:
         did_run = False
 
         self._cm.clear_instance_errors_to_ignore()
-        self._cm.log(f"Running test {test.name:<22} {f'({nodechoice})':<15} [{testcount:>3}]")
+        logging.log(f"Running test {test.name:<22} {f'({nodechoice})':<15} [{testcount:>3}]")
 
         starttime = test.set_timer()
 
         if not test.setup(nodechoice):
-            self._cm.log("Setup failed")
+            logging.log("Setup failed")
             ret = False
         else:
             did_run = True
             ret = test(nodechoice)
 
         if not test.teardown(nodechoice):
-            self._cm.log("Teardown failed")
+            logging.log("Teardown failed")
 
             if not should_continue(self._cm.env):
                 raise ValueError(f"Teardown of {test.name} on {nodechoice} failed")
@@ -247,14 +248,14 @@ class Scenario:
 
     def summarize(self):
         """Output scenario results."""
-        self._cm.log("****************")
-        self._cm.log("Overall Results:%r" % self.stats)
-        self._cm.log("****************")
+        logging.log("****************")
+        logging.log("Overall Results:%r" % self.stats)
+        logging.log("****************")
 
         stat_summary = {}
         summary_keys = ["calls", "failure", "skipped", "auditfail"]
 
-        self._cm.log("Test Summary")
+        logging.log("Test Summary")
         for test in self.tests:
             if test.name not in stat_summary:
                 stat_summary[test.name] = {key: 0 for key in summary_keys}
@@ -263,13 +264,13 @@ class Scenario:
                 stat_summary[test.name][key] += test.stats[key]
 
         for (name, summary) in stat_summary.items():
-            self._cm.log(f"{f'Test {name}':<25} {summary!r}")
+            logging.log(f"{f'Test {name}':<25} {summary!r}")
 
-        self._cm.debug("Detailed Results")
+        logging.debug("Detailed Results")
         for test in self.tests:
-            self._cm.debug(f"{f'Test {test.name}: ':<25} {test.stats!r}")
+            logging.debug(f"{f'Test {test.name}: ':<25} {test.stats!r}")
 
-        self._cm.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
+        logging.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 
     def audit(self, local_ignore=None):
         """
@@ -292,10 +293,10 @@ class Scenario:
         failed = 0
         for audit in self._audits:
             if not audit():
-                self._cm.log(f"Audit {audit.name} FAILED.")
+                logging.log(f"Audit {audit.name} FAILED.")
                 failed += 1
             else:
-                self._cm.debug(f"Audit {audit.name} passed.")
+                logging.debug(f"Audit {audit.name} passed.")
 
         while errcount < 1000:
             match = None
@@ -313,13 +314,13 @@ class Scenario:
                     break
 
             if add_err:
-                self._cm.log(f"BadNews: {match}")
+                logging.log(f"BadNews: {match}")
                 self.incr("BadNews")
                 errcount += 1
         else:
             print("Big problems")
             if not should_continue(self._cm.env):
-                self._cm.log("Shutting down.")
+                logging.log("Shutting down.")
                 self.summarize()
                 self.teardown()
                 raise ValueError("Looks like we hit a BadNews jackpot!")
@@ -393,12 +394,12 @@ class BootCluster(ScenarioComponent):
         self._cm.stopall(verbose=True, force=True)
 
         # Now start the Cluster Manager on all the nodes.
-        self._cm.log("Starting Cluster Manager on all nodes.")
+        logging.log("Starting Cluster Manager on all nodes.")
         return self._cm.startall(verbose=True, quick=True)
 
     def teardown(self):
         """Tear down the component."""
-        self._cm.log("Stopping Cluster Manager on all nodes")
+        logging.log("Stopping Cluster Manager on all nodes")
         self._cm.stopall(verbose=True, force=False)
 
 
@@ -407,4 +408,4 @@ class LeaveBooted(BootCluster):
 
     def teardown(self):
         """Tear down the component."""
-        self._cm.log("Leaving Cluster running on all nodes")
+        logging.log("Leaving Cluster running on all nodes")

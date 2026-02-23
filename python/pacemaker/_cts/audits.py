@@ -10,6 +10,7 @@ import uuid
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.input import should_continue
+from pacemaker._cts import logging
 from pacemaker._cts.watcher import LogKind, LogWatcher
 
 
@@ -48,11 +49,11 @@ class ClusterAudit:
 
     def log(self, args):
         """Log a message."""
-        self._cm.log(f"audit: {args}")
+        logging.log(f"audit: {args}")
 
     def debug(self, args):
         """Log a debug message."""
-        self._cm.debug(f"audit: {args}")
+        logging.debug(f"audit: {args}")
 
 
 class LogAudit(ClusterAudit):
@@ -78,22 +79,22 @@ class LogAudit(ClusterAudit):
         if not nodes:
             nodes = self._cm.env["nodes"]
 
-        self._cm.debug(f"Restarting logging on: {nodes!r}")
+        logging.debug(f"Restarting logging on: {nodes!r}")
 
         for node in nodes:
             if self._cm.env["have_systemd"]:
                 (rc, _) = self._cm.rsh.call(node, "systemctl stop systemd-journald.socket")
                 if rc != 0:
-                    self._cm.log(f"ERROR: Cannot stop 'systemd-journald' on {node}")
+                    logging.log(f"ERROR: Cannot stop 'systemd-journald' on {node}")
 
                 (rc, _) = self._cm.rsh.call(node, "systemctl start systemd-journald.service")
                 if rc != 0:
-                    self._cm.log(f"ERROR: Cannot start 'systemd-journald' on {node}")
+                    logging.log(f"ERROR: Cannot start 'systemd-journald' on {node}")
 
             if "syslogd" in self._cm.env:
                 (rc, _) = self._cm.rsh.call(node, f"service {self._cm.env['syslogd']} restart")
                 if rc != 0:
-                    self._cm.log(f"""ERROR: Cannot restart '{self._cm.env["syslogd"]}' on {node}""")
+                    logging.log(f"""ERROR: Cannot restart '{self._cm.env["syslogd"]}' on {node}""")
 
     def _create_watcher(self, patterns, kind):
         """Create a new LogWatcher instance for the given patterns."""
@@ -130,7 +131,7 @@ class LogAudit(ClusterAudit):
 
             for k in kinds:
                 watch[k] = self._create_watcher(patterns, k)
-            self._cm.log(f"Logging test message with identifier {suffix}")
+            logging.log(f"Logging test message with identifier {suffix}")
         else:
             watch[watch_pref] = self._create_watcher(patterns, watch_pref)
 
@@ -140,17 +141,17 @@ class LogAudit(ClusterAudit):
 
         for k, w in watch.items():
             if watch_pref is None:
-                self._cm.log(f"Checking for test message in {k} logs")
+                logging.log(f"Checking for test message in {k} logs")
 
             w.look_for_all(silent=True)
             if not w.unmatched:
                 if watch_pref is None:
-                    self._cm.log(f"Found test message in {k} logs")
+                    logging.log(f"Found test message in {k} logs")
                     self._cm.env["log_kind"] = k
                 return True
 
             for regex in w.unmatched:
-                self._cm.log(f"Test message [{regex}] not found in {w.kind} logs")
+                logging.log(f"Test message [{regex}] not found in {w.kind} logs")
 
         return False
 
@@ -167,7 +168,7 @@ class LogAudit(ClusterAudit):
             time.sleep(60 * attempt)
 
         if attempt > max_attempts:
-            self._cm.log("ERROR: Cluster logging unrecoverable.")
+            logging.log("ERROR: Cluster logging unrecoverable.")
             passed = False
 
         return passed
@@ -212,7 +213,7 @@ class DiskAudit(ClusterAudit):
         for node in self._cm.env["nodes"]:
             (_, dfout) = self._cm.rsh.call(node, dfcmd, verbose=1)
             if not dfout:
-                self._cm.log(f"ERROR: Cannot execute remote df command [{dfcmd}] on {node}")
+                logging.log(f"ERROR: Cannot execute remote df command [{dfcmd}] on {node}")
                 continue
 
             dfout = dfout[0].strip()
@@ -222,17 +223,17 @@ class DiskAudit(ClusterAudit):
                 used_percent = int(used)
                 remaining_mb = int(remain)
             except (ValueError, TypeError):
-                self._cm.log(f"Warning: df output '{dfout}' from {node} was invalid [{used}, {remain}]")
+                logging.log(f"Warning: df output '{dfout}' from {node} was invalid [{used}, {remain}]")
             else:
                 if remaining_mb < 10 or used_percent > 95:
-                    self._cm.log(f"CRIT: Out of log disk space on {node} ({used_percent}% / {remaining_mb}MB)")
+                    logging.log(f"CRIT: Out of log disk space on {node} ({used_percent}% / {remaining_mb}MB)")
                     passed = False
 
                     if not should_continue(self._cm.env):
                         raise ValueError(f"Disk full on {node}")
 
                 elif remaining_mb < 100 or used_percent > 90:
-                    self._cm.log(f"WARN: Low on log disk space ({remaining_mb}MB) on {node}")
+                    logging.log(f"WARN: Low on log disk space ({remaining_mb}MB) on {node}")
 
         return passed
 
@@ -273,7 +274,7 @@ class FileAudit(ClusterAudit):
 
             found = True
             self.known.append(line)
-            self._cm.log(f"Warning: core file on {node}: {line}")
+            logging.log(f"Warning: core file on {node}: {line}")
 
         return found
 
@@ -322,18 +323,18 @@ class FileAudit(ClusterAudit):
                 for line in lsout:
                     passed = False
                     clean = True
-                    self._cm.log(f"Warning: Stale IPC file on {node}: {line}")
+                    logging.log(f"Warning: Stale IPC file on {node}: {line}")
 
                 if clean:
                     (_, lsout) = self._cm.rsh.call(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
 
                     for line in lsout:
-                        self._cm.debug(f"ps[{node}]: {line}")
+                        logging.debug(f"ps[{node}]: {line}")
 
                     self._cm.rsh.call(node, "rm -rf /dev/shm/qb-*")
 
             else:
-                self._cm.debug(f"Skipping {node}")
+                logging.debug(f"Skipping {node}")
 
         return passed
 
@@ -456,11 +457,11 @@ class PrimitiveAudit(ClusterAudit):
                 self.debug(f"Resource {resource.id} active on {active!r}")
 
             elif resource.needs_quorum == 1:
-                self._cm.log(f"Resource {resource.id} active without quorum: {active!r}")
+                logging.log(f"Resource {resource.id} active without quorum: {active!r}")
                 rc = False
 
         elif not resource.managed:
-            self._cm.log(f"Resource {resource.id} not managed. Active on {active!r}")
+            logging.log(f"Resource {resource.id} not managed. Active on {active!r}")
 
         elif not resource.unique:
             # TODO: Figure out a clever way to actually audit these resource types
@@ -470,14 +471,14 @@ class PrimitiveAudit(ClusterAudit):
                 self.debug(f"Non-unique resource {resource.id} is not active")
 
         elif len(active) > 1:
-            self._cm.log(f"Resource {resource.id} is active multiple times: {active!r}")
+            logging.log(f"Resource {resource.id} is active multiple times: {active!r}")
             rc = False
 
         elif resource.orphan:
             self.debug(f"Resource {resource.id} is an inactive orphan")
 
         elif not self._inactive_nodes:
-            self._cm.log(f"WARN: Resource {resource.id} not served anywhere")
+            logging.log(f"WARN: Resource {resource.id} not served anywhere")
             rc = False
 
         elif quorum or not resource.needs_quorum:
@@ -517,7 +518,7 @@ class PrimitiveAudit(ClusterAudit):
             elif re.search("^Constraint", line):
                 self._constraints.append(AuditConstraint(self._cm, line))
             else:
-                self._cm.log(f"Unknown entry: {line}")
+                logging.log(f"Unknown entry: {line}")
 
         return True
 
@@ -589,7 +590,7 @@ class GroupAudit(PrimitiveAudit):
 
                 if len(nodes) > 1:
                     passed = False
-                    self._cm.log(f"Child {child.id} of {group.id} is active more than once: {nodes!r}")
+                    logging.log(f"Child {child.id} of {group.id} is active more than once: {nodes!r}")
 
                 elif not nodes:
                     # Groups are allowed to be partially active
@@ -599,8 +600,8 @@ class GroupAudit(PrimitiveAudit):
 
                 elif nodes[0] != group_location:
                     passed = False
-                    self._cm.log(f"Child {child.id} of {group.id} is active on the wrong "
-                                 f"node ({nodes[0]}) expected {group_location}")
+                    logging.log(f"Child {child.id} of {group.id} is active on the wrong "
+                                f"node ({nodes[0]}) expected {group_location}")
                 else:
                     self.debug(f"Child {child.id} of {group.id} is active on {nodes[0]}")
 
@@ -698,8 +699,8 @@ class ColocationAudit(PrimitiveAudit):
                 for node in source:
                     if node not in target:
                         passed = False
-                        self._cm.log(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
-                                     f"on {node} (not in {target!r})")
+                        logging.log(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
+                                    f"on {node} (not in {target!r})")
                     else:
                         self.debug(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
                                    f"on {node} (in {target!r})")
@@ -742,18 +743,18 @@ class ControllerStateAudit(ClusterAudit):
 
         if len(unstable_list) > 0:
             passed = False
-            self._cm.log(f"Cluster is not stable: {len(unstable_list)} (of "
-                         f"{self._cm.upcount()}): {unstable_list!r}")
+            logging.log(f"Cluster is not stable: {len(unstable_list)} (of "
+                        f"{self._cm.upcount()}): {unstable_list!r}")
 
         if up_are_down > 0:
             passed = False
-            self._cm.log(f"{up_are_down} (of {len(self._cm.env['nodes'])}) nodes "
-                         "expected to be up were down.")
+            logging.log(f"{up_are_down} (of {len(self._cm.env['nodes'])}) nodes "
+                        "expected to be up were down.")
 
         if down_are_up > 0:
             passed = False
-            self._cm.log(f"{down_are_up} (of {len(self._cm.env['nodes'])}) nodes "
-                         "expected to be down were up.")
+            logging.log(f"{down_are_up} (of {len(self._cm.env['nodes'])}) nodes "
+                        "expected to be down were up.")
 
         return passed
 
@@ -808,7 +809,7 @@ class CIBAudit(ClusterAudit):
             node_xml = self._store_remote_cib(node, node0)
 
             if node_xml is None:
-                self._cm.log(f"Could not perform audit: No configuration from {node}")
+                logging.log(f"Could not perform audit: No configuration from {node}")
                 passed = False
 
             elif node0 is None:
@@ -816,7 +817,7 @@ class CIBAudit(ClusterAudit):
                 node0_xml = node_xml
 
             elif node0_xml is None:
-                self._cm.log(f"Could not perform audit: No configuration from {node0}")
+                logging.log(f"Could not perform audit: No configuration from {node0}")
                 passed = False
 
             else:
@@ -824,7 +825,7 @@ class CIBAudit(ClusterAudit):
                     node0, f"crm_diff -VV -cf --new {node_xml} --original {node0_xml}", verbose=1)
 
                 if rc != 0:
-                    self._cm.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
+                    logging.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
                     passed = False
 
                 for line in result:
@@ -849,7 +850,7 @@ class CIBAudit(ClusterAudit):
 
         (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
         if rc != 0:
-            self._cm.log("Could not retrieve configuration")
+            logging.log("Could not retrieve configuration")
             return None
 
         self._cm.rsh.call("localhost", f"rm -f {filename}")
@@ -857,7 +858,7 @@ class CIBAudit(ClusterAudit):
             self._cm.rsh.call("localhost", f"echo \'{line[:-1]}\' >> {filename}", verbose=0)
 
         if self._cm.rsh.copy(filename, f"root@{target}:{filename}") != 0:
-            self._cm.log("Could not store configuration")
+            logging.log("Could not store configuration")
             return None
 
         return filename
@@ -911,11 +912,11 @@ class PartitionAudit(ClusterAudit):
         self._cm.cluster_stable(double_check=True)
 
         if len(ccm_partitions) != self._cm.partitions_expected:
-            self._cm.log(f"ERROR: {len(ccm_partitions)} cluster partitions detected:")
+            logging.log(f"ERROR: {len(ccm_partitions)} cluster partitions detected:")
             passed = False
 
             for partition in ccm_partitions:
-                self._cm.log(f"\t {partition}")
+                logging.log(f"\t {partition}")
 
         for partition in ccm_partitions:
             if self._audit_partition(partition) == 0:
@@ -952,7 +953,7 @@ class PartitionAudit(ClusterAudit):
         self.debug(f"Auditing partition: {partition}")
         for node in node_list:
             if self._cm.expected_status[node] != "up":
-                self._cm.log(f"Warn: Node {node} appeared out of nowhere")
+                logging.log(f"Warn: Node {node} appeared out of nowhere")
                 self._cm.expected_status[node] = "up"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
@@ -972,7 +973,7 @@ class PartitionAudit(ClusterAudit):
             self._node_quorum[node] = self._trim_string(self._node_quorum[node])
 
             if not self._node_epoch[node]:
-                self._cm.log(f"Warn: Node {node} disappeared: can't determine epoch")
+                logging.log(f"Warn: Node {node} disappeared: can't determine epoch")
                 self._cm.expected_status[node] = "down"
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
@@ -980,7 +981,7 @@ class PartitionAudit(ClusterAudit):
                 lowest_epoch = self._node_epoch[node]
 
         if not lowest_epoch:
-            self._cm.log(f"Lowest epoch not determined in {partition}")
+            logging.log(f"Lowest epoch not determined in {partition}")
             passed = False
 
         for node in node_list:
@@ -996,22 +997,22 @@ class PartitionAudit(ClusterAudit):
                 elif not lowest_epoch:
                     self.debug(f"Check on {node} ignored: no lowest epoch")
                 else:
-                    self._cm.log(f"DC {node} is not the oldest node "
-                                 f"({self._node_epoch[node]} vs. {lowest_epoch})")
+                    logging.log(f"DC {node} is not the oldest node "
+                                f"({self._node_epoch[node]} vs. {lowest_epoch})")
                     passed = False
 
         if not dc_found:
-            self._cm.log(f"DC not found on any of the {len(dc_allowed_list)} allowed "
-                         f"nodes: {dc_allowed_list} (of {node_list})")
+            logging.log(f"DC not found on any of the {len(dc_allowed_list)} allowed "
+                        f"nodes: {dc_allowed_list} (of {node_list})")
 
         elif len(dc_found) > 1:
-            self._cm.log(f"{len(dc_found)} DCs ({dc_found}) found in cluster partition: {node_list}")
+            logging.log(f"{len(dc_found)} DCs ({dc_found}) found in cluster partition: {node_list}")
             passed = False
 
         if not passed:
             for node in node_list:
                 if self._cm.expected_status[node] == "up":
-                    self._cm.log(f"epoch {self._node_epoch[node]} : {self._node_state[node]}")
+                    logging.log(f"epoch {self._node_epoch[node]} : {self._node_state[node]}")
 
         return passed
 
