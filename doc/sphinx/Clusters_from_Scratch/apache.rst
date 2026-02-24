@@ -65,7 +65,7 @@ it fails. On both nodes, configure this URL as follows:
     # cat <<-END >/etc/httpd/conf.d/status.conf
      <Location /server-status>
         SetHandler server-status
-        Require local
+        Require all granted
      </Location>
     END
 
@@ -105,7 +105,6 @@ tutorial, we will adjust the global operation timeout default to 240 seconds.
 .. code-block:: console
 
     [root@pcmk-1 ~]# pcs resource op defaults
-    No defaults set
     [root@pcmk-1 ~]# pcs resource op defaults update timeout=240s
     Warning: Defaults do not apply to resources which override them with their own defined values
     [root@pcmk-1 ~]# pcs resource op defaults
@@ -135,10 +134,10 @@ After a short delay, we should see the cluster start Apache.
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:47:44 2022
-      * Last change:  Wed Jul 27 00:47:23 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 16:34:07 2026 on pcmk-1
+      * Last change:  Tue Feb 24 16:33:50 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 3 resource instances configured
 
@@ -148,7 +147,7 @@ After a short delay, we should see the cluster start Apache.
     Full List of Resources:
       * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
       * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-2
+      * WebSite	(ocf:heartbeat:apache):	     Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
@@ -211,20 +210,18 @@ is not active anywhere, ``WebSite`` will not be permitted to run.
 
 .. code-block:: console
 
-    [root@pcmk-1 ~]# pcs constraint colocation add WebSite with ClusterIP INFINITY
+    [root@pcmk-1 ~]# pcs constraint colocation add WebSite with ClusterIP score=INFINITY
     [root@pcmk-1 ~]# pcs constraint
-    Location Constraints:
-    Ordering Constraints:
     Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-    Ticket Constraints:
+      resource 'WebSite' with resource 'ClusterIP'
+        score=INFINITY
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:49:33 2022
-      * Last change:  Wed Jul 27 00:49:16 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 16:37:25 2026 on pcmk-1
+      * Last change:  Tue Feb 24 16:36:36 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 3 resource instances configured
 
@@ -234,7 +231,7 @@ is not active anywhere, ``WebSite`` will not be permitted to run.
     Full List of Resources:
       * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
       * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	     Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -275,12 +272,11 @@ also implies that the recovery of ``ClusterIP`` will trigger the recovery of
     [root@pcmk-1 ~]# pcs constraint order ClusterIP then WebSite
     Adding ClusterIP WebSite (kind: Mandatory) (Options: first-action=start then-action=start)
     [root@pcmk-1 ~]# pcs constraint
-    Location Constraints:
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
     Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-    Ticket Constraints:
+      resource 'WebSite' with resource 'ClusterIP'
+        score=INFINITY
+    Order Constraints:
+      start resource 'ClusterIP' then start 'WebSite'
 
 .. NOTE::
 
@@ -324,21 +320,19 @@ how strongly we'd like the resource to run at this location.
     [root@pcmk-1 ~]# pcs constraint location WebSite prefers pcmk-2=50
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
-      Resource: WebSite
-        Enabled on:
-          Node: pcmk-2 (score:50)
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
+      resource 'WebSite' prefers node 'pcmk-2' with score 50
     Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-    Ticket Constraints:
+      resource 'WebSite' with resource 'ClusterIP'
+        score=INFINITY
+    Order Constraints:
+      start resource 'ClusterIP' then start 'WebSite'
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:51:13 2022
-      * Last change:  Wed Jul 27 00:51:07 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 16:44:43 2026 on pcmk-1
+      * Last change:  Tue Feb 24 16:43:35 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 3 resource instances configured
 
@@ -348,7 +342,7 @@ how strongly we'd like the resource to run at this location.
     Full List of Resources:
       * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
       * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
-      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
+      * WebSite	(ocf:heartbeat:apache):	     Started pcmk-1
 
     Daemon Status:
       corosync: active/disabled
@@ -367,18 +361,22 @@ To see the current placement scores, you can use a tool called
 .. code-block:: console
 
     [root@pcmk-1 ~]# crm_simulate -sL
-    [ pcmk-1 pcmk-2 ]
+    Current cluster status:
+      * Node List:
+        * Online: [ pcmk-1 pcmk-2 ]
 
-    fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
-    ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
-    WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
+      * Full List of Resources:
+        * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-1
+        * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
+        * WebSite	(ocf:heartbeat:apache):	 Started pcmk-1
 
-    pcmk__native_allocate: fence_dev allocation score on pcmk-1: 100
-    pcmk__native_allocate: fence_dev allocation score on pcmk-2: 0
-    pcmk__native_allocate: ClusterIP allocation score on pcmk-1: 200
-    pcmk__native_allocate: ClusterIP allocation score on pcmk-2: 50
-    pcmk__native_allocate: WebSite allocation score on pcmk-1: 100
-    pcmk__native_allocate: WebSite allocation score on pcmk-2: -INFINITY
+    Assignment Scores:
+      * pcmk__native_allocate: ClusterIP allocation score on pcmk-1: 200
+      * pcmk__native_allocate: ClusterIP allocation score on pcmk-2: 50
+      * pcmk__native_allocate: fence_dev allocation score on pcmk-1: 100
+      * pcmk__native_allocate: fence_dev allocation score on pcmk-2: -INFINITY
+      * pcmk__native_allocate: WebSite allocation score on pcmk-1: 100
+      * pcmk__native_allocate: WebSite allocation score on pcmk-2: -INFINITY
 
 .. index::
    single: resource; moving manually
@@ -407,21 +405,19 @@ as before.
     resource 'WebSite' is running on node 'pcmk-2'
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
-      Resource: WebSite
-        Enabled on:
-          Node: pcmk-2 (score:50)
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
+      resource 'WebSite' prefers node 'pcmk-2' with score 50
     Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-    Ticket Constraints:
+      resource 'WebSite' with resource 'ClusterIP'
+        score=INFINITY
+    Order Constraints:
+      start resource 'ClusterIP' then start 'WebSite'
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:54:23 2022
-      * Last change:  Wed Jul 27 00:53:48 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 16:56:37 2026 on pcmk-1
+      * Last change:  Tue Feb 24 16:54:28 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 3 resource instances configured
 
@@ -431,7 +427,7 @@ as before.
     Full List of Resources:
       * fence_dev	(stonith:some_fence_agent):	 Started pcmk-1
       * ClusterIP	(ocf:heartbeat:IPaddr2):	 Started pcmk-2
-      * WebSite	(ocf:heartbeat:apache):	 Started pcmk-2
+      * WebSite	(ocf:heartbeat:apache):	     Started pcmk-2
 
     Daemon Status:
       corosync: active/disabled
