@@ -72,19 +72,19 @@ class XmlBase:
     alone for now.
     """
 
-    def __init__(self, factory, tag, _id, **kwargs):
+    def __init__(self, node, tag, _id, **kwargs):
         """
         Create a new XmlBase instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         tag     -- The XML element's start and end tag
         _id     -- A unique name for the element
         kwargs  -- Any additional key/value pairs that should be added to
                    this element as attributes
         """
         self._children = []
-        self._factory = factory
+        self._node = node
         self._kwargs = kwargs
         self._rsh = RemoteExec()
         self._tag = tag
@@ -154,7 +154,7 @@ class XmlBase:
         fixed = f"HOME=/root CIB_file={cibfile}"
         fixed += f" cibadmin --{operation} --scope {section} {options} --xml-text '{xml}'"
 
-        (rc, _) = self._rsh.call(self._factory.node, fixed)
+        (rc, _) = self._rsh.call(self._node, fixed)
         if rc != 0:
             raise RuntimeError(f"Configure call failed: {fixed}")
 
@@ -162,52 +162,52 @@ class XmlBase:
 class InstanceAttributes(XmlBase):
     """Create an <instance_attributes> XML section with key/value pairs."""
 
-    def __init__(self, factory, _id, attrs):
+    def __init__(self, node, _id, attrs):
         """
         Create a new InstanceAttributes instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         _id     -- A unique name for the element
         attrs   -- Key/value pairs to add as nvpair child elements
         """
-        XmlBase.__init__(self, factory, "instance_attributes", _id)
+        XmlBase.__init__(self, node, "instance_attributes", _id)
 
         # Create an <nvpair> for each attribute
         for (attr, value) in attrs.items():
-            self.add_child(XmlBase(factory, "nvpair", f"{_id}-{attr}",
+            self.add_child(XmlBase(node, "nvpair", f"{_id}-{attr}",
                                    name=attr, value=value))
 
 
 class Node(XmlBase):
     """Create a <node> XML section for a single node, complete with node attributes."""
 
-    def __init__(self, factory, node_name, node_id, node_attrs):
+    def __init__(self, node, node_name, node_id, node_attrs):
         """
         Create a new Node instance.
 
         Arguments:
-        factory    -- A ConfigFactory instance
+        node       -- The node to install this CIB to
         node_name  -- The value of the uname attribute for this node
         node_id    -- A unique name for the element
         node_attrs -- Additional key/value pairs to set as instance
                       attributes for this node
         """
-        XmlBase.__init__(self, factory, "node", node_id, uname=node_name)
-        self.add_child(InstanceAttributes(factory, f"{node_name}-1", node_attrs))
+        XmlBase.__init__(self, node, "node", node_id, uname=node_name)
+        self.add_child(InstanceAttributes(node, f"{node_name}-1", node_attrs))
 
 
 class Nodes(XmlBase):
     """Create a <nodes> XML section containing multiple Node instances as children."""
 
-    def __init__(self, factory):
+    def __init__(self, node):
         """
         Create a new Nodes instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         """
-        XmlBase.__init__(self, factory, "nodes", None)
+        XmlBase.__init__(self, node, "nodes", None)
 
     def add_node(self, node_name, node_id, node_attrs):
         """
@@ -219,7 +219,7 @@ class Nodes(XmlBase):
         node_attrs -- Additional key/value pairs to set as instance
                       attributes for this node
         """
-        self.add_child(Node(self._factory, node_name, node_id, node_attrs))
+        self.add_child(Node(self._node, node_name, node_id, node_attrs))
 
     def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
@@ -229,14 +229,14 @@ class Nodes(XmlBase):
 class FencingTopology(XmlBase):
     """Create a <fencing-topology> XML section describing how fencing is configured in the cluster."""
 
-    def __init__(self, factory):
+    def __init__(self, node):
         """
         Create a new FencingTopology instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         """
-        XmlBase.__init__(self, factory, "fencing-topology", None)
+        XmlBase.__init__(self, node, "fencing-topology", None)
 
     def level(self, index, target, devices, target_attr=None, target_value=None):
         """
@@ -255,11 +255,11 @@ class FencingTopology(XmlBase):
         """
         if target:
             xml_id = f"cts-{target}.{index}"
-            self.add_child(XmlBase(self._factory, "fencing-level", xml_id, target=target, index=index, devices=devices))
+            self.add_child(XmlBase(self._node, "fencing-level", xml_id, target=target, index=index, devices=devices))
 
         else:
             xml_id = f"{target_attr}-{target_value}.{index}"
-            child = XmlBase(self._factory, "fencing-level", xml_id, index=index, devices=devices)
+            child = XmlBase(self._node, "fencing-level", xml_id, index=index, devices=devices)
             child["target-attribute"] = target_attr
             child["target-value"] = target_value
             self.add_child(child)
@@ -272,19 +272,19 @@ class FencingTopology(XmlBase):
 class Option(XmlBase):
     """Create a <cluster_property_set> XML section of key/value pairs for cluster-wide configuration settings."""
 
-    def __init__(self, factory, _id="cib-bootstrap-options"):
+    def __init__(self, node, _id="cib-bootstrap-options"):
         """
         Create a new Option instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         _id     -- A unique name for the element
         """
-        XmlBase.__init__(self, factory, "cluster_property_set", _id)
+        XmlBase.__init__(self, node, "cluster_property_set", _id)
 
     def __setitem__(self, key, value):
         """Add a child nvpair element containing the given key/value pair."""
-        self.add_child(XmlBase(self._factory, "nvpair", f"cts-{key}", name=key, value=value))
+        self.add_child(XmlBase(self._node, "nvpair", f"cts-{key}", name=key, value=value))
 
     def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
@@ -294,20 +294,20 @@ class Option(XmlBase):
 class OpDefaults(XmlBase):
     """Create a <cts-op_defaults-meta> XML section of key/value pairs for operation default settings."""
 
-    def __init__(self, factory):
+    def __init__(self, node):
         """
         Create a new OpDefaults instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         """
-        XmlBase.__init__(self, factory, "op_defaults", None)
-        self.meta = XmlBase(self._factory, "meta_attributes", "cts-op_defaults-meta")
+        XmlBase.__init__(self, node, "op_defaults", None)
+        self.meta = XmlBase(self._node, "meta_attributes", "cts-op_defaults-meta")
         self.add_child(self.meta)
 
     def __setitem__(self, key, value):
         """Add a child nvpair meta_attribute element containing the given key/value pair."""
-        self.meta.add_child(XmlBase(self._factory, "nvpair", f"cts-op_defaults-{key}", name=key, value=value))
+        self.meta.add_child(XmlBase(self._node, "nvpair", f"cts-op_defaults-{key}", name=key, value=value))
 
     def commit(self, cibfile):
         """Modify the CIB on the cluster to include this XML section."""
@@ -317,14 +317,14 @@ class OpDefaults(XmlBase):
 class Alerts(XmlBase):
     """Create an <alerts> XML section."""
 
-    def __init__(self, factory):
+    def __init__(self, node):
         """
         Create a new Alerts instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         """
-        XmlBase.__init__(self, factory, "alerts", None)
+        XmlBase.__init__(self, node, "alerts", None)
         self._alert_count = 0
 
     def add_alert(self, path, recipient):
@@ -337,9 +337,9 @@ class Alerts(XmlBase):
         recipient -- An environment variable to be passed to the script
         """
         self._alert_count += 1
-        alert = XmlBase(self._factory, "alert", f"alert-{self._alert_count}",
+        alert = XmlBase(self._node, "alert", f"alert-{self._alert_count}",
                         path=path)
-        recipient1 = XmlBase(self._factory, "recipient",
+        recipient1 = XmlBase(self._node, "recipient",
                              f"alert-{self._alert_count}-recipient-1",
                              value=recipient)
         alert.add_child(recipient1)
@@ -353,19 +353,19 @@ class Alerts(XmlBase):
 class Expression(XmlBase):
     """Create an <expression> XML element as part of some constraint rule."""
 
-    def __init__(self, factory, _id, attr, op, value=None):
+    def __init__(self, node, _id, attr, op, value=None):
         """
         Create a new Expression instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         _id     -- A unique name for the element
         attr    -- The attribute to be tested
         op      -- The comparison to perform ("lt", "eq", "defined", etc.)
         value   -- Value for comparison (can be None for "defined" and
                    "not_defined" operations)
         """
-        XmlBase.__init__(self, factory, "expression", _id, attribute=attr, operation=op)
+        XmlBase.__init__(self, node, "expression", _id, attribute=attr, operation=op)
         if value:
             self["value"] = value
 
@@ -373,12 +373,12 @@ class Expression(XmlBase):
 class Rule(XmlBase):
     """Create a <rule> XML section consisting of one or more expressions, as part of some constraint."""
 
-    def __init__(self, factory, _id, score, op="and", expr=None):
+    def __init__(self, node, _id, score, op="and", expr=None):
         """
         Create a new Rule instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         _id     -- A unique name for the element
         score   -- If this rule is used in a location constraint and
                    evaluates to true, apply this score to the constraint
@@ -387,7 +387,7 @@ class Rule(XmlBase):
         expr    -- An Expression instance that can be added to this Rule
                    when it is created
         """
-        XmlBase.__init__(self, factory, "rule", _id)
+        XmlBase.__init__(self, node, "rule", _id)
 
         self["boolean-op"] = op
         self["score"] = score
@@ -404,19 +404,19 @@ class Resource(XmlBase):
     primitive resources, but subclasses can create other types.
     """
 
-    def __init__(self, factory, _id, rtype, standard, provider=None):
+    def __init__(self, node, _id, rtype, standard, provider=None):
         """
         Create a new Resource instance.
 
         Arguments:
-        factory  -- A ConfigFactory instance
+        node     -- The node to install this CIB to
         _id      -- A unique name for the element
         rtype    -- The name of the resource agent
         standard -- The standard the resource agent follows ("ocf",
                     "systemd", etc.)
         provider -- The vendor providing the resource agent
         """
-        XmlBase.__init__(self, factory, "native", _id)
+        XmlBase.__init__(self, node, "native", _id)
 
         self._provider = provider
         self._rtype = rtype
@@ -450,7 +450,7 @@ class Resource(XmlBase):
         kwargs   -- Any additional key/value pairs that should be added to
                     this element as attributes
         """
-        self._op.append(XmlBase(self._factory, "op", f"{_id}-{interval}",
+        self._op.append(XmlBase(self._node, "op", f"{_id}-{interval}",
                                 name=_id, interval=interval, **kwargs))
 
     def _add_param(self, name, value):
@@ -472,8 +472,8 @@ class Resource(XmlBase):
                  of creating a new rule
         """
         if not rule:
-            rule = Rule(self._factory, f"prefer-{node}-r", score,
-                        expr=Expression(self._factory, f"prefer-{node}-e", "#uname", "eq", node))
+            rule = Rule(self._node, f"prefer-{node}-r", score,
+                        expr=Expression(self._node, f"prefer-{node}-e", "#uname", "eq", node))
 
         self._scores[node] = rule
 
@@ -606,15 +606,15 @@ class Group(Resource):
     primitive resources.
     """
 
-    def __init__(self, factory, _id):
+    def __init__(self, node, _id):
         """
         Create a new Group instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         _id     -- A unique name for the element
         """
-        Resource.__init__(self, factory, _id, None, None)
+        Resource.__init__(self, node, _id, None, None)
         self.tag = "group"
 
     def __setitem__(self, key, value):
@@ -649,18 +649,18 @@ class Clone(Group):
     single primitive resource.
     """
 
-    def __init__(self, factory, _id, child=None):
+    def __init__(self, node, _id, child=None):
         """
         Create a new Clone instance.
 
         Arguments:
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         _id     -- A unique name for the element
         child   -- A Resource instance that can be added to this Clone
                    when it is created.  Alternately, use add_child later.
                    Note that a Clone may only have one child.
         """
-        Group.__init__(self, factory, _id)
+        Group.__init__(self, node, _id)
         self.tag = "clone"
 
         if child:

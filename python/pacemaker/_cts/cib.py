@@ -17,19 +17,19 @@ from pacemaker._cts.remote import RemoteExec
 class CIB:
     """A class for generating, representing, and installing a CIB file onto cluster nodes."""
 
-    def __init__(self, env, version, factory):
+    def __init__(self, env, version, node):
         """
         Create a new CIB instance.
 
         Arguments:
         env     -- An EnvFactory instance
         version -- The schema syntax version
-        factory -- A ConfigFactory instance
+        node    -- The node to install this CIB to
         """
         self._cib = None
         self._counter = 1
         self._env = env
-        self._factory = factory
+        self._node = node
         self._num_nodes = 0
         self._rsh = RemoteExec()
         self._tmpfile = None
@@ -49,7 +49,7 @@ class CIB:
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._rsh.call(self._factory.node, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
+        (_, result) = self._rsh.call(self._node, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
 
         for line in result:
             output += line
@@ -67,7 +67,7 @@ class CIB:
             else:
                 name = f"r{ip}"
 
-        r = Resource(self._factory, name, "IPaddr2", "ocf")
+        r = Resource(self._node, name, "IPaddr2", "ocf")
         r["ip"] = ip
 
         if self._env["nic"] is not None:
@@ -105,7 +105,7 @@ class CIB:
               r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s""" \
               % (node_name, BuildOptions.COROSYNC_CONFIG_FILE)
 
-        (rc, output) = self._rsh.call(self._factory.node, awk, verbose=1)
+        (rc, output) = self._rsh.call(self._node, awk, verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -124,7 +124,7 @@ class CIB:
 
         self._tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
         self.contents(node)
-        self._rsh.call(self._factory.node, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
+        self._rsh.call(self._node, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
 
         self._tmpfile = old
 
@@ -134,9 +134,9 @@ class CIB:
             return self._cib
 
         if node:
-            self._factory.node = node
+            self._node = node
 
-        self._rsh.call(self._factory.node, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
+        self._rsh.call(self._node, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
         self._num_nodes = len(self._env["nodes"])
 
         no_quorum = "stop"
@@ -152,7 +152,7 @@ class CIB:
         if self._env["fencing_enabled"]:
 
             # Define the "real" fencing device
-            st = Resource(self._factory, "Fencing", self._env["fencing_agent"], "stonith")
+            st = Resource(self._node, "Fencing", self._env["fencing_agent"], "stonith")
 
             # Set a threshold for unreliable stonith devices such as the vmware one
             st.add_meta("migration-threshold", "5")
@@ -187,7 +187,7 @@ class CIB:
             attr_nodes = {}
 
             # Create the levels
-            stl = FencingTopology(self._factory)
+            stl = FencingTopology(self._node)
             for n in self._env["nodes"]:
                 # Remote node tests will rename the node
                 remote_node = f"remote-{n}"
@@ -236,7 +236,7 @@ class CIB:
             # If any levels-and nodes were targeted by attribute,
             # create the attributes and a level for the attribute.
             if attr_nodes:
-                stn = Nodes(self._factory)
+                stn = Nodes(self._node)
 
                 for (node_name, node_id) in attr_nodes.items():
                     stn.add_node(node_name, node_id, {"cts-fencing": "levels-and"})
@@ -245,7 +245,7 @@ class CIB:
 
             # Create a Dummy agent that always passes for levels-and
             if stt_nodes:
-                stt = Resource(self._factory, "FencingPass", "fence_dummy", "stonith")
+                stt = Resource(self._node, "FencingPass", "fence_dummy", "stonith")
                 stt["pcmk_host_list"] = " ".join(stt_nodes)
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
                 stt["random_sleep_range"] = "30"
@@ -254,7 +254,7 @@ class CIB:
 
             # Create a Dummy agent that always fails for levels-or
             if stf_nodes:
-                stf = Resource(self._factory, "FencingFail", "fence_dummy", "stonith")
+                stf = Resource(self._node, "FencingFail", "fence_dummy", "stonith")
                 stf["pcmk_host_list"] = " ".join(stf_nodes)
                 # Wait this many seconds before doing anything, handy for letting disks get flushed too
                 stf["random_sleep_range"] = "30"
@@ -264,7 +264,7 @@ class CIB:
             # Now commit the levels themselves
             stl.commit(self._tmpfile)
 
-        o = Option(self._factory)
+        o = Option(self._node)
         o["fencing-enabled"] = self._env["fencing_enabled"]
         o["start-failure-is-fatal"] = "false"
         o["pe-input-series-max"] = "5000"
@@ -275,7 +275,7 @@ class CIB:
 
         o.commit(self._tmpfile)
 
-        o = OpDefaults(self._factory)
+        o = OpDefaults(self._node)
         o["timeout"] = "90s"
         o.commit(self._tmpfile)
 
@@ -285,7 +285,7 @@ class CIB:
 
         # Add an alerts section if possible
         if self._rsh.exists_on_all(self._env["notification-agent"], self._env["nodes"]):
-            alerts = Alerts(self._factory)
+            alerts = Alerts(self._node)
             alerts.add_alert(self._env["notification-agent"],
                              self._env["notification-recipient"])
             alerts.commit(self._tmpfile)
@@ -298,7 +298,7 @@ class CIB:
         self._cib = self._show()
 
         if self._tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
-            self._rsh.call(self._factory.node, f"rm -f {self._tmpfile}")
+            self._rsh.call(self._node, f"rm -f {self._tmpfile}")
 
         return self._cib
 
@@ -313,7 +313,7 @@ class CIB:
 
         # Migrator
         # Make this slightly sticky (since we have no other location constraints) to avoid relocation during Reattach
-        m = Resource(self._factory, "migrator", "Dummy", "ocf", "pacemaker")
+        m = Resource(self._node, "migrator", "Dummy", "ocf", "pacemaker")
         m["passwd"] = "whatever"
         m.add_meta("resource-stickiness", "1")
         m.add_meta("allow-migrate", "1")
@@ -321,21 +321,21 @@ class CIB:
         m.commit(self._tmpfile)
 
         # Ping the test exerciser
-        p = Resource(self._factory, "ping-1", "ping", "ocf", "pacemaker")
+        p = Resource(self._node, "ping-1", "ping", "ocf", "pacemaker")
         p.add_op("monitor", "60s")
         p["host_list"] = self._env["cts-exerciser"]
         p["name"] = "connected"
         p["debug"] = "true"
 
-        c = Clone(self._factory, "Connectivity", p)
+        c = Clone(self._node, "Connectivity", p)
         c["globally-unique"] = "false"
         c.commit(self._tmpfile)
 
         # promotable clone resource
-        s = Resource(self._factory, "stateful-1", "Stateful", "ocf", "pacemaker")
+        s = Resource(self._node, "stateful-1", "Stateful", "ocf", "pacemaker")
         s.add_op("monitor", "15s", timeout="60s")
         s.add_op("monitor", "16s", timeout="60s", role="Promoted")
-        ms = Clone(self._factory, "promotable-1", s)
+        ms = Clone(self._node, "promotable-1", s)
         ms["promotable"] = "true"
         ms["clone-max"] = self._num_nodes
         ms["clone-node-max"] = 1
@@ -343,19 +343,19 @@ class CIB:
         ms["promoted-node-max"] = 1
 
         # Require connectivity to run the promotable clone
-        r = Rule(self._factory, "connected", "-INFINITY", op="or")
-        r.add_child(Expression(self._factory, "m1-connected-1", "connected", "lt", "1"))
-        r.add_child(Expression(self._factory, "m1-connected-2", "connected", "not_defined", None))
+        r = Rule(self._node, "connected", "-INFINITY", op="or")
+        r.add_child(Expression(self._node, "m1-connected-1", "connected", "lt", "1"))
+        r.add_child(Expression(self._node, "m1-connected-2", "connected", "not_defined", None))
         ms.prefer("connected", rule=r)
 
         ms.commit(self._tmpfile)
 
         # Group Resource
-        g = Group(self._factory, "group-1")
+        g = Group(self._node, "group-1")
         g.add_child(self.new_ip())
 
         if self._env["have_systemd"]:
-            sysd = Resource(self._factory, "petulant", "pacemaker-cts-dummyd@10", "service")
+            sysd = Resource(self._node, "petulant", "pacemaker-cts-dummyd@10", "service")
             sysd.add_op("monitor", "P10S")
             g.add_child(sysd)
         else:
@@ -371,7 +371,7 @@ class CIB:
 
         # LSB resource dependent on group-1
         if BuildOptions.INIT_DIR is not None:
-            lsb = Resource(self._factory, "lsb-dummy", "LSBDummy", "lsb")
+            lsb = Resource(self._node, "lsb-dummy", "LSBDummy", "lsb")
             lsb.add_op("monitor", "5s")
             lsb.after("group-1")
             lsb.colocate("group-1")
@@ -394,4 +394,4 @@ class ConfigFactory:
 
     def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""
-        return CIB(self._env, name, self)
+        return CIB(self._env, name, self.node)
