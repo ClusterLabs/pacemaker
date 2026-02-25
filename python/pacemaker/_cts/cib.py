@@ -11,6 +11,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.cibxml import Alerts, Clone, Expression, FencingTopology, Group, Nodes, OpDefaults, Option, Resource, Rule
 from pacemaker._cts import logging
 from pacemaker._cts.network import next_ip
+from pacemaker._cts.remote import RemoteExec
 
 
 class CIB:
@@ -30,6 +31,7 @@ class CIB:
         self._env = env
         self._factory = factory
         self._num_nodes = 0
+        self._rsh = RemoteExec()
         self._tmpfile = None
 
         self.version = version
@@ -47,7 +49,7 @@ class CIB:
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._factory.rsh.call(self._factory.target, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
+        (_, result) = self._rsh.call(self._factory.target, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
 
         for line in result:
             output += line
@@ -103,7 +105,7 @@ class CIB:
               r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s""" \
               % (node_name, BuildOptions.COROSYNC_CONFIG_FILE)
 
-        (rc, output) = self._factory.rsh.call(self._factory.target, awk, verbose=1)
+        (rc, output) = self._rsh.call(self._factory.target, awk, verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -122,7 +124,7 @@ class CIB:
 
         self._tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
         self.contents(target)
-        self._factory.rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
+        self._rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
 
         self._tmpfile = old
 
@@ -136,7 +138,7 @@ class CIB:
         if target:
             self._factory.target = target
 
-        self._factory.rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
+        self._rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
         self._num_nodes = len(self._env["nodes"])
 
         no_quorum = "stop"
@@ -284,7 +286,7 @@ class CIB:
             stn.commit(self._tmpfile)
 
         # Add an alerts section if possible
-        if self._factory.rsh.exists_on_all(self._env["notification-agent"], self._env["nodes"]):
+        if self._rsh.exists_on_all(self._env["notification-agent"], self._env["nodes"]):
             alerts = Alerts(self._factory)
             alerts.add_alert(self._env["notification-agent"],
                              self._env["notification-recipient"])
@@ -298,7 +300,7 @@ class CIB:
         self._cib = self._show()
 
         if self._tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
-            self._factory.rsh.call(self._factory.target, f"rm -f {self._tmpfile}")
+            self._rsh.call(self._factory.target, f"rm -f {self._tmpfile}")
 
         return self._cib
 
@@ -390,7 +392,6 @@ class ConfigFactory:
         """
         # pylint: disable=invalid-name
         self._cm = cm
-        self.rsh = self._cm.rsh
         if not self._cm.env["ListTests"]:
             self.target = self._cm.env["nodes"][0]
 

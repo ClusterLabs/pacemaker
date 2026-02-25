@@ -16,6 +16,8 @@ __copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts import logging
+from pacemaker._cts.remote import RemoteExec
+
 
 def key_val_string(**kwargs):
     """
@@ -84,6 +86,7 @@ class XmlBase:
         self._children = []
         self._factory = factory
         self._kwargs = kwargs
+        self._rsh = RemoteExec()
         self._tag = tag
 
         self.name = _id
@@ -151,7 +154,7 @@ class XmlBase:
         fixed = f"HOME=/root CIB_file={cibfile}"
         fixed += f" cibadmin --{operation} --scope {section} {options} --xml-text '{xml}'"
 
-        (rc, _) = self._factory.rsh.call(self._factory.target, fixed)
+        (rc, _) = self._rsh.call(self._factory.target, fixed)
         if rc != 0:
             raise RuntimeError(f"Configure call failed: {fixed}")
 
