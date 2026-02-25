@@ -1,6 +1,6 @@
 """CIB generator for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["ConfigFactory", "create_config"]
+__all__ = ["create_config"]
 __copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -386,22 +386,3 @@ def create_config(env):
         node = env["nodes"][0]
 
     return CIB(env, env["Schema"], node)
-
-
-class ConfigFactory:
-    """Singleton to generate a CIB file for the environment's schema version."""
-
-    def __init__(self, env):
-        """
-        Create a new ConfigFactory instance.
-
-        Arguments:
-        env     -- An Environment instance
-        """
-        self._env = env
-        if not self._env["ListTests"]:
-            self.node = self._env["nodes"][0]
-
-    def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
-        """Return a CIB object for the given schema version."""
-        return CIB(self._env, name, self.node)

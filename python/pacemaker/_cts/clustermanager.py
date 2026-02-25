@@ -17,7 +17,7 @@ from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
-from pacemaker._cts.cib import ConfigFactory
+from pacemaker._cts.cib import create_config
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts import logging
 from pacemaker._cts.patterns import PatternSelector
@@ -58,8 +58,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteExec()
         self.templates = PatternSelector(self.name)
 
-        self._cib_factory = ConfigFactory(self.env)
-        self._cib = self._cib_factory.create_config(self.env["Schema"])
+        self._cib = create_config(self.env)
         self._cib_sync = {}
 
     def clear_instance_errors_to_ignore(self):
