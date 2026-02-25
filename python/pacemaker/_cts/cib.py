@@ -383,18 +383,17 @@ class CIB:
 class ConfigFactory:
     """Singleton to generate a CIB file for the environment's schema version."""
 
-    def __init__(self, cm):
+    def __init__(self, env):
         """
         Create a new ConfigFactory instance.
 
         Arguments:
-        cm      -- A ClusterManager instance
+        env     -- An Environment instance
         """
-        # pylint: disable=invalid-name
-        self._cm = cm
-        if not self._cm.env["ListTests"]:
-            self.target = self._cm.env["nodes"][0]
+        self._env = env
+        if not self._env["ListTests"]:
+            self.target = self._env["nodes"][0]
 
     def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""
-        return CIB(self._cm.env, name, self)
+        return CIB(self._env, name, self)

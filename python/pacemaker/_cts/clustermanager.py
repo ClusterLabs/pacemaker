@@ -58,7 +58,7 @@ class ClusterManager(UserDict):
         self.rsh = RemoteExec()
         self.templates = PatternSelector(self.name)
 
-        self._cib_factory = ConfigFactory(self)
+        self._cib_factory = ConfigFactory(self.env)
         self._cib = self._cib_factory.create_config(self.env["Schema"])
         self._cib_sync = {}
 
