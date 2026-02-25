@@ -154,7 +154,7 @@ class XmlBase:
         fixed = f"HOME=/root CIB_file={cibfile}"
         fixed += f" cibadmin --{operation} --scope {section} {options} --xml-text '{xml}'"
 
-        (rc, _) = self._rsh.call(self._factory.target, fixed)
+        (rc, _) = self._rsh.call(self._factory.node, fixed)
         if rc != 0:
             raise RuntimeError(f"Configure call failed: {fixed}")
 

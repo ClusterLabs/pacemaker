@@ -49,7 +49,7 @@ class CIB:
     def _show(self):
         """Query a cluster node for its generated CIB; log and return the result."""
         output = ""
-        (_, result) = self._rsh.call(self._factory.target, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
+        (_, result) = self._rsh.call(self._factory.node, f"HOME=/root CIB_file={self._tmpfile} cibadmin -Q", verbose=1)
 
         for line in result:
             output += line
@@ -105,7 +105,7 @@ class CIB:
               r"""{gsub(/.*nodeid:\s*/,"");gsub(/\s+.*$/,"");print}' %s""" \
               % (node_name, BuildOptions.COROSYNC_CONFIG_FILE)
 
-        (rc, output) = self._rsh.call(self._factory.target, awk, verbose=1)
+        (rc, output) = self._rsh.call(self._factory.node, awk, verbose=1)
 
         if rc == 0 and len(output) == 1:
             try:
@@ -115,7 +115,7 @@ class CIB:
 
         return node_id
 
-    def install(self, target):
+    def install(self, node):
         """Generate a CIB file and install it to the given cluster node."""
         old = self._tmpfile
 
@@ -123,22 +123,20 @@ class CIB:
         self._cib = None
 
         self._tmpfile = f"{BuildOptions.CIB_DIR}/cib.xml"
-        self.contents(target)
-        self._rsh.call(self._factory.target, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
+        self.contents(node)
+        self._rsh.call(self._factory.node, f"chown {BuildOptions.DAEMON_USER} {self._tmpfile}")
 
         self._tmpfile = old
 
-    def contents(self, target):
+    def contents(self, node):
         """Generate a complete CIB file."""
-        # pylint: disable=too-many-locals
-        # fencing resource
         if self._cib:
             return self._cib
 
-        if target:
-            self._factory.target = target
+        if node:
+            self._factory.node = node
 
-        self._rsh.call(self._factory.target, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
+        self._rsh.call(self._factory.node, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
         self._num_nodes = len(self._env["nodes"])
 
         no_quorum = "stop"
@@ -190,9 +188,9 @@ class CIB:
 
             # Create the levels
             stl = FencingTopology(self._factory)
-            for node in self._env["nodes"]:
+            for n in self._env["nodes"]:
                 # Remote node tests will rename the node
-                remote_node = f"remote-{node}"
+                remote_node = f"remote-{n}"
 
                 # Randomly assign node to a fencing method
                 # @TODO What does "broadcast" do, if anything?
@@ -204,20 +202,20 @@ class CIB:
                 by = ""
 
                 if ftype == "levels-and":
-                    node_id = self.get_node_id(node)
+                    node_id = self.get_node_id(n)
 
                     if node_id == 0 or self._env.random_gen.choice([True, False]):
                         by = " (by name)"
                     else:
-                        attr_nodes[node] = node_id
+                        attr_nodes[n] = node_id
                         by = " (by attribute)"
 
-                logging.log(f" - Using {ftype:{width}} fencing for node: {node}{by}")
+                logging.log(f" - Using {ftype:{width}} fencing for node: {n}{by}")
 
                 if ftype == "levels-and":
                     # If targeting by name, add a topology level for this node
-                    if node not in attr_nodes:
-                        stl.level(1, node, "FencingPass,Fencing")
+                    if n not in attr_nodes:
+                        stl.level(1, n, "FencingPass,Fencing")
 
                     # Always target remote nodes by name, otherwise we would need to add
                     # an attribute to the remote node only during remote tests (we don't
@@ -226,14 +224,14 @@ class CIB:
                     stl.level(1, remote_node, "FencingPass,Fencing")
 
                     # Add the node (and its remote equivalent) to the list of levels-and nodes.
-                    stt_nodes.extend([node, remote_node])
+                    stt_nodes.extend([n, remote_node])
 
                 elif ftype == "levels-or":
-                    for n in [node, remote_node]:
-                        stl.level(1, n, "FencingFail")
-                        stl.level(2, n, "Fencing")
-
-                    stf_nodes.extend([node, remote_node])
+                    stl.level(1, n, "FencingFail")
+                    stl.level(2, n, "Fencing")
+                    stl.level(1, remote_node, "FencingFail")
+                    stl.level(2, remote_node, "Fencing")
+                    stf_nodes.extend([n, remote_node])
 
             # If any levels-and nodes were targeted by attribute,
             # create the attributes and a level for the attribute.
@@ -300,7 +298,7 @@ class CIB:
         self._cib = self._show()
 
         if self._tmpfile != f"{BuildOptions.CIB_DIR}/cib.xml":
-            self._rsh.call(self._factory.target, f"rm -f {self._tmpfile}")
+            self._rsh.call(self._factory.node, f"rm -f {self._tmpfile}")
 
         return self._cib
 
@@ -392,7 +390,7 @@ class ConfigFactory:
         """
         self._env = env
         if not self._env["ListTests"]:
-            self.target = self._env["nodes"][0]
+            self.node = self._env["nodes"][0]
 
     def create_config(self, name=f"pacemaker-{BuildOptions.CIB_SCHEMA_VERSION}"):
         """Return a CIB object for the given schema version."""
