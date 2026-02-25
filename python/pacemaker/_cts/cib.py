@@ -17,13 +17,12 @@ from pacemaker._cts.remote import RemoteExec
 class CIB:
     """A class for generating, representing, and installing a CIB file onto cluster nodes."""
 
-    def __init__(self, env, version, node):
+    def __init__(self, env, node):
         """
         Create a new CIB instance.
 
         Arguments:
         env     -- An EnvFactory instance
-        version -- The schema syntax version
         node    -- The node to install this CIB to
         """
         self._cib = None
@@ -33,8 +32,6 @@ class CIB:
         self._num_nodes = 0
         self._rsh = RemoteExec()
         self._tmpfile = None
-
-        self.version = version
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -136,7 +133,7 @@ class CIB:
         if node:
             self._node = node
 
-        self._rsh.call(self._node, f"HOME=/root cibadmin --empty {self.version} > {self._tmpfile}")
+        self._rsh.call(self._node, f"HOME=/root cibadmin --empty {self._env['Schema']} > {self._tmpfile}")
         self._num_nodes = len(self._env["nodes"])
 
         no_quorum = "stop"
@@ -385,4 +382,4 @@ def create_config(env):
     if not env["ListTests"]:
         node = env["nodes"][0]
 
-    return CIB(env, env["Schema"], node)
+    return CIB(env, node)
