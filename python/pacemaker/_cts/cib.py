@@ -1,6 +1,6 @@
 """CIB generator for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["ConfigFactory"]
+__all__ = ["ConfigFactory", "create_config"]
 __copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -376,6 +376,16 @@ class CIB:
             lsb.after("group-1")
             lsb.colocate("group-1")
             lsb.commit(self._tmpfile)
+
+
+def create_config(env):
+    """Return a CIB object for the environment's schema version."""
+    node = None
+
+    if not env["ListTests"]:
+        node = env["nodes"][0]
+
+    return CIB(env, env["Schema"], node)
 
 
 class ConfigFactory:
