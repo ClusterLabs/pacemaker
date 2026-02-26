@@ -39,8 +39,6 @@
 
 #include "crmcommon_private.h"
 
-CRM_TRACE_INIT_DATA(common);
-
 bool pcmk__config_has_error = false;
 bool pcmk__config_has_warning = false;
 char *crm_system_name = NULL;
@@ -58,10 +56,7 @@ pcmk_common_cleanup(void)
     // @TODO This isn't really everything, move all cleanup here
     mainloop_cleanup();
     pcmk__schema_cleanup();
-    pcmk__free_logging_data();
-
-    free(crm_system_name);
-    crm_system_name = NULL;
+    crm_log_deinit();
 
     // Clean up external library global state
     qb_log_fini(); // Don't log anything after this point

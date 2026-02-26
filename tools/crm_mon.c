@@ -2167,8 +2167,7 @@ clean_up(crm_exit_t exit_code)
         && (out != NULL)) {
 
         out->finish(out, exit_code, false, NULL);
-        pcmk__output_free(out);
-        out = NULL;
+        g_clear_pointer(&out, pcmk__output_free);
     }
 
     /* (3) If this is a command line usage related failure, print the usage

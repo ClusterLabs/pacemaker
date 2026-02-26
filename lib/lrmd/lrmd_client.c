@@ -44,8 +44,6 @@
 
 #define MAX_TLS_RECV_WAIT 10000
 
-CRM_TRACE_INIT_DATA(lrmd);
-
 static int lrmd_api_disconnect(lrmd_t * lrmd);
 static int lrmd_api_is_connected(lrmd_t * lrmd);
 

@@ -9,32 +9,36 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <sys/types.h>
-#include <sys/wait.h>
-#include <sys/stat.h>
-#include <sys/utsname.h>
-
-#include <inttypes.h>               // PRIu32
+#include <errno.h>                  // errno
+#include <fcntl.h>                  // open, O_RDWR
+#include <libgen.h>                 // basename
+#include <signal.h>                 // raise, SIG*
 #include <stdbool.h>
-#include <stdint.h>                 // uint32_t
-#include <stdio.h>
-#include <unistd.h>
-#include <string.h>
-#include <stdlib.h>
-#include <limits.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <grp.h>
-#include <time.h>
-#include <libgen.h>
-#include <signal.h>
-#include <bzlib.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // int32_t, uint8_t, uint32_t
+#include <stdlib.h>                 // free, getenv, strtol
+#include <string.h>                 // strdup, strerror, strstr
+#include <syslog.h>                 // LOG_*, syslog
+#include <sys/stat.h>               // S_*, stat
+#include <sys/types.h>              // gid_t, mode_t, pid_t, uid_t
+#include <sys/utsname.h>            // uname, utsname
+#include <time.h>                   // time, time_t, timespec
+#include <unistd.h>                 // chdir, close, fchown, geteuid, getpid
 
-#include <qb/qbdefs.h>
+#include <glib.h>                   // g_*, G_*, gboolean, gchar, etc.
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qbdefs.h>              // qb_bit_set, QB_FALSE, QB_TRUE
+#include <qb/qblog.h>               // LOG_TRACE, qb_log_*
 
-#include <crm/crm.h>
-#include <crm/common/mainloop.h>
+#include <crm_config.h>             // CRM_DAEMON_USER, CRM_*_DIR
+#include <crm/common/internal.h>    // pcmk__env_*, pcmk__output_*, etc.
+#include <crm/common/logging.h>     // do_crm_log, CRM_CHECK, etc.
+#include <crm/common/mainloop.h>    // crm_signal_handler, mainloop_add_signal
+#include <crm/common/options.h>     // PCMK_VALUE_NONE
+#include <crm/common/results.h>     // crm_abort, pcmk_rc_*
+#include <crm/crm.h>                // crm_system_name
+
+#include "crmcommon_private.h"      // pcmk__add_logfile
 
 // Use high-resolution (millisecond) timestamps if libqb supports them
 #ifdef QB_FEATURE_LOG_HIRES_TIMESTAMPS
@@ -49,17 +53,16 @@ unsigned int crm_log_level = LOG_INFO;
 unsigned int crm_trace_nonlog = 0;
 bool pcmk__is_daemon = false;
 
+static int blackbox_trigger = 0;
+static char *blackbox_file_prefix = NULL;
+
 static gchar **trace_blackbox = NULL;
 static gchar **trace_files = NULL;
 static gchar **trace_formats = NULL;
 static gchar **trace_functions = NULL;
+static bool tracing_enabled = false;
 
 static unsigned int crm_log_priority = LOG_NOTICE;
-static guint pcmk__log_id = 0;
-static guint pcmk__glib_log_id = 0;
-static guint pcmk__gio_log_id = 0;
-static guint pcmk__gmodule_log_id = 0;
-static guint pcmk__gthread_log_id = 0;
 static pcmk__output_t *logger_out = NULL;
 
 pcmk__config_error_func pcmk__config_error_handler = NULL;
@@ -67,161 +70,219 @@ pcmk__config_warning_func pcmk__config_warning_handler = NULL;
 void *pcmk__config_error_context = NULL;
 void *pcmk__config_warning_context = NULL;
 
-static gboolean crm_tracing_enabled(void);
+/*!
+ * \internal
+ * \brief Mapping of a GLib log domain string to its log handler ID
+ */
+struct log_handler_id {
+    //! Log domain
+    const char *log_domain;
 
-static void
-crm_glib_handler(const gchar * log_domain, GLogLevelFlags flags, const gchar * message,
-                 gpointer user_data)
-{
-    int log_level = LOG_WARNING;
-    static struct qb_log_callsite *glib_cs = NULL;
+    /*!
+     * Log handler function ID. GLib does not specify the meaning of 0, but
+     * based on the implementation, a valid ID is always positive unless we set
+     * UINT_MAX handlers.
+     */
+    guint handler_id;
+};
 
-    if (glib_cs == NULL) {
-        glib_cs = qb_log_callsite_get(__func__, __FILE__, "glib-handler",
-                                      LOG_DEBUG, __LINE__, crm_trace_nonlog);
-    }
-
-    switch (flags & G_LOG_LEVEL_MASK) {
-        case G_LOG_LEVEL_CRITICAL:
-            log_level = LOG_CRIT;
-
-            if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
-                /* log and record how we got here */
-                crm_abort(__FILE__, __func__, __LINE__, message, TRUE, TRUE);
-            }
-            break;
-
-        case G_LOG_LEVEL_ERROR:
-            log_level = LOG_ERR;
-            break;
-        case G_LOG_LEVEL_MESSAGE:
-            log_level = LOG_NOTICE;
-            break;
-        case G_LOG_LEVEL_INFO:
-            log_level = LOG_INFO;
-            break;
-        case G_LOG_LEVEL_DEBUG:
-            log_level = LOG_DEBUG;
-            break;
-        case G_LOG_LEVEL_WARNING:
-            log_level = LOG_WARNING;
-            break;
-        default:
-            /* Default to NOTICE for any new or custom glib log levels */
-            log_level = LOG_NOTICE;
-            break;
-    }
-
-    do_crm_log(log_level, "%s: %s", log_domain, message);
-}
-
-#ifndef NAME_MAX
-#  define NAME_MAX 256
-#endif
+// Log domains that we care about, and their handler function IDs once set
+static struct log_handler_id log_handler_ids[] = {
+    { G_LOG_DOMAIN, 0 },
+    { "GLib", 0 },
+    { "GLib-GIO", 0 },
+    { "GModule", 0 },
+    { "GThread", 0 },
+};
 
 /*!
  * \internal
- * \brief Write out a blackbox (enabling blackboxes if needed)
+ * \brief Convert a GLib log level to a syslog log level
  *
- * \param[in] nsig  Signal number that was received
+ * \param[in] log_level  GLib log level
  *
- * \note This is a true signal handler, and so must be async-safe.
+ * \return The syslog level corresponding to \p log_level
  */
-static void
-crm_trigger_blackbox(int nsig)
+static uint8_t
+log_level_from_glib(GLogLevelFlags log_level)
 {
-    if(nsig == SIGTRAP) {
-        /* Turn it on if it wasn't already */
-        crm_enable_blackbox(nsig);
+    switch (log_level & G_LOG_LEVEL_MASK) {
+        case G_LOG_LEVEL_CRITICAL:
+            return LOG_CRIT;
+
+        case G_LOG_LEVEL_ERROR:
+            return LOG_ERR;
+
+        case G_LOG_LEVEL_MESSAGE:
+            return LOG_NOTICE;
+
+        case G_LOG_LEVEL_INFO:
+            return LOG_INFO;
+
+        case G_LOG_LEVEL_DEBUG:
+            return LOG_DEBUG;
+
+        case G_LOG_LEVEL_WARNING:
+            return LOG_WARNING;
+
+        default:
+            // Default to LOG_NOTICE for any new or custom GLib log levels
+            return LOG_NOTICE;
     }
-    crm_write_blackbox(nsig, NULL);
 }
 
-void
-crm_log_deinit(void)
+/*!
+ * \internal
+ * \brief Handle a log message from GLib
+ *
+ * \param[in] log_domain  Log domain of the message
+ * \param[in] log_level   Log level of the message (including fatal and
+ *                        recursion flags)
+ * \param[in] message     Message to process
+ * \param[in] user_data   Ignored
+ */
+static void
+handle_glib_message(const gchar *log_domain, GLogLevelFlags log_level,
+                    const gchar *message, gpointer user_data)
+
 {
-    if (pcmk__log_id == 0) {
+    uint8_t syslog_level = log_level_from_glib(log_level);
+
+    if (syslog_level == LOG_CRIT) {
+        static struct qb_log_callsite *glib_cs = NULL;
+
+        if (glib_cs == NULL) {
+            glib_cs = qb_log_callsite_get(__func__, __FILE__, "glib-handler",
+                                          LOG_DEBUG, __LINE__,
+                                          crm_trace_nonlog);
+        }
+
+        if (!crm_is_callsite_active(glib_cs, LOG_DEBUG, crm_trace_nonlog)) {
+            // Dump core
+            crm_abort(__FILE__, __func__, __LINE__, message, true, true);
+        }
+    }
+
+    do_crm_log(syslog_level, "%s: %s", log_domain, message);
+}
+
+/*!
+ * \internal
+ * \brief Set \c handle_glib_message() as the handler for each GLib log domain
+ *
+ * The handler will be set for all log levels, including fatal and recursive
+ * messages, for each GLib log domain that we care about.
+ */
+static void
+set_glib_log_handlers(void)
+{
+    for (int i = 0; i < PCMK__NELEM(log_handler_ids); i++) {
+        struct log_handler_id *entry = &log_handler_ids[i];
+
+        entry->handler_id = g_log_set_handler(entry->log_domain,
+                                              G_LOG_LEVEL_MASK
+                                              |G_LOG_FLAG_FATAL
+                                              |G_LOG_FLAG_RECURSION,
+                                              handle_glib_message, NULL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Remove the handler for each GLib log domain that we care about
+ */
+static void
+remove_glib_log_handlers(void)
+{
+    for (int i = 0; i < PCMK__NELEM(log_handler_ids); i++) {
+        struct log_handler_id *entry = &log_handler_ids[i];
+
+        if (entry->handler_id == 0) {
+            continue;
+        }
+
+        g_log_remove_handler(entry->log_domain, entry->handler_id);
+        entry->handler_id = 0;
+    }
+}
+
+/*!
+ * \internal
+ * \brief Set the log format string based on the given target
+ *
+ * \param[in] target     Log target (detail level)
+ * \param[in] pid        PID of current process
+ * \param[in] node_name  Local node's name (for use in log output)
+ */
+static void
+set_format_string(int target, pid_t pid, const char *node_name)
+{
+    /* Format specifiers used here:
+     * - %b: message
+     * - %f: file name
+     * - %g: tag, or "" if none
+     * - %l: line number
+     * - %n: function name
+     * - %p: priority (for example, "error" or "debug")
+     * - %t: timestamp at seconds resolution
+     * - %T: timestamp at milliseconds resolution
+     */
+    GString *fmt = NULL;
+
+    if (target == QB_LOG_SYSLOG) {
+        // The system log gets a simplified, user-friendly format
+        qb_log_ctl(target, QB_LOG_CONF_EXTENDED, QB_FALSE);
+        qb_log_format_set(target, "%g %p: %b");
         return;
     }
 
-    g_log_remove_handler(G_LOG_DOMAIN, pcmk__log_id);
-    pcmk__log_id = 0;
-    g_log_remove_handler("GLib", pcmk__glib_log_id);
-    pcmk__glib_log_id = 0;
-    g_log_remove_handler("GLib-GIO", pcmk__gio_log_id);
-    pcmk__gio_log_id = 0;
-    g_log_remove_handler("GModule", pcmk__gmodule_log_id);
-    pcmk__gmodule_log_id = 0;
-    g_log_remove_handler("GThread", pcmk__gthread_log_id);
-    pcmk__gthread_log_id = 0;
-}
+    // Everything else gets more detail, for advanced troubleshooting
+    fmt = g_string_sized_new(256);
 
-/*!
- * \internal
- * \brief Set the log format string based on the passed-in method
- *
- * \param[in] method        The detail level of the log output
- * \param[in] daemon        The daemon ID included in error messages
- * \param[in] use_pid       Cached result of getpid() call, for efficiency
- * \param[in] use_nodename  Cached result of uname() call, for efficiency
- *
- */
-
-/* XXX __attribute__((nonnull)) for use_nodename parameter */
-static void
-set_format_string(int method, const char *daemon, pid_t use_pid,
-                  const char *use_nodename)
-{
-    if (method == QB_LOG_SYSLOG) {
-        // The system log gets a simplified, user-friendly format
-        qb_log_ctl(method, QB_LOG_CONF_EXTENDED, QB_FALSE);
-        qb_log_format_set(method, "%g %p: %b");
-
-    } else {
-        // Everything else gets more detail, for advanced troubleshooting
-        GString *fmt = g_string_sized_new(256);
-
-        if (method > QB_LOG_STDERR) {
-            // If logging to file, prefix with timestamp, node name, daemon ID
-            g_string_append_printf(fmt,
-                                   TIMESTAMP_FORMAT_SPEC " %s %-20s[%lld] ",
-                                   use_nodename, daemon, (long long) use_pid);
-        }
-
-        // Add function name (in parentheses)
-        g_string_append(fmt, "(%n");
-        if (crm_tracing_enabled()) {
-            // When tracing, add file and line number
-            g_string_append(fmt, "@%f:%l");
-        }
-        g_string_append_c(fmt, ')');
-
-        // Add tag (if any), severity, and actual message
-        g_string_append(fmt, " %g\t%p: %b");
-
-        CRM_LOG_ASSERT(fmt->len > 0);
-        qb_log_format_set(method, fmt->str);
-        g_string_free(fmt, TRUE);
+    if (target > QB_LOG_STDERR) {
+        // If logging to a file, prefix with timestamp, node, system, and PID
+        g_string_append_printf(fmt, TIMESTAMP_FORMAT_SPEC " %s %-20s[%lld] ",
+                               node_name, crm_system_name, (long long) pid);
     }
+
+    // Add function name (in parentheses)
+    g_string_append(fmt, "(%n");
+
+    if (tracing_enabled) {
+        // When tracing, add file and line number
+        g_string_append(fmt, "@%f:%l");
+    }
+
+    g_string_append_c(fmt, ')');
+
+    // Add tag (if any), priority, and actual message
+    g_string_append(fmt, " %g\t%p: %b");
+
+    qb_log_format_set(target, fmt->str);
+    g_string_free(fmt, TRUE);
 }
 
 #define DEFAULT_LOG_FILE CRM_LOG_DIR "/pacemaker.log"
 
-static bool
-logfile_disabled(const char *filename)
-{
-    return pcmk__str_eq(filename, PCMK_VALUE_NONE, pcmk__str_casei)
-           || pcmk__str_eq(filename, "/dev/null", pcmk__str_none);
-}
-
 /*!
  * \internal
- * \brief Fix log file ownership if group is wrong or doesn't have access
+ * \brief Ensure the daemon group owns the log file or has read/write access
+ *
+ * If the daemon group (\c haclient by default) doesn't own the log file or
+ * can't read and write it, change the log file's ownership to the daemon user
+ * and group.
  *
  * \param[in] filename  Log file name (for logging only)
  * \param[in] logfd     Log file descriptor
  *
  * \return Standard Pacemaker return code
+ *
+ * \todo Should we be less aggressive in changing ownership? The daemon group
+ *       may have read/write permissions via file ACLs, or the daemon user may
+ *       have permissions via user ownership, secondary group membership, or
+ *       file ACLs. Also, even after changing group ownership, the daemon group
+ *       may not have read/write permissions. Even if it does, we may unset them
+ *       when applying PCMK__ENV_LOGFILE_MODE in \c chmod_logfile().
  */
 static int
 chown_logfile(const char *filename, int logfd)
@@ -233,7 +294,10 @@ chown_logfile(const char *filename, int logfd)
 
     // Get the log file's current ownership and permissions
     if (fstat(logfd, &st) < 0) {
-        return errno;
+        rc = errno;
+        pcmk__warn("Logging to '%s' is disabled because fstat() failed: %s",
+                   filename, strerror(rc));
+        return rc;
     }
 
     // Any other errors don't prevent file from being used as log
@@ -245,74 +309,136 @@ chown_logfile(const char *filename, int logfd)
                    filename, pcmk_rc_str(rc));
         return pcmk_rc_ok;
     }
+
     if ((st.st_gid == pcmk_gid)
         && ((st.st_mode & S_IRWXG) == (S_IRGRP|S_IWGRP))) {
+
+        // Daemon group already owns the log file and has read/write permissions
         return pcmk_rc_ok;
     }
+
     if (fchown(logfd, pcmk_uid, pcmk_gid) < 0) {
         pcmk__warn("Couldn't change '%s' ownership to user %s gid %d: %s",
                    filename, CRM_DAEMON_USER, pcmk_gid, strerror(errno));
     }
+
     return pcmk_rc_ok;
 }
 
-// Reset log file permissions (using environment variable if set)
+/*!
+ * \internal
+ * \brief Set log file permissions using environment variable or default value
+ *
+ * If the \c PCMK__ENV_LOGFILE_MODE environment variable is set to a valid
+ * value, this function sets the log file mode to that value. Otherwise, it sets
+ * the log file mode to 0660.
+ *
+ * An error causes a warning to be logged but is otherwise ignored.
+ *
+ * \param[in] filename  Log file name (for logging only)
+ * \param[in] logfd     Log file descriptor
+ */
 static void
 chmod_logfile(const char *filename, int logfd)
 {
     const char *modestr = pcmk__env_option(PCMK__ENV_LOGFILE_MODE);
     mode_t filemode = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP;
 
+    errno = 0;
     if (modestr != NULL) {
-        long filemode_l = strtol(modestr, NULL, 8);
+        char *end = NULL;
+        const long filemode_l = strtol(modestr, &end, 8);
+        const mode_t mask = S_ISUID|S_ISGID|S_ISVTX|S_IRWXU|S_IRWXG|S_IRWXO;
 
-        if ((filemode_l != LONG_MIN) && (filemode_l != LONG_MAX)) {
+        if ((errno != 0) || (end == modestr) || !pcmk__str_empty(end)
+            || (((mode_t) filemode_l & ~mask) != 0)) {
+
+            pcmk__warn("Setting '%s' mode to %04o because "
+                       "PCMK_" PCMK__ENV_LOGFILE_MODE " '%s' is invalid",
+                       filename, filemode, modestr);
+
+        } else {
             filemode = (mode_t) filemode_l;
         }
     }
-    if ((filemode != 0) && (fchmod(logfd, filemode) < 0)) {
+
+    if (fchmod(logfd, filemode) < 0) {
         pcmk__warn("Couldn't change '%s' mode to %04o: %s", filename, filemode,
                    strerror(errno));
     }
 }
 
-// If we're root, correct a log file's permissions if needed
+/*!
+ * \internal
+ * \brief If we're root, ensure a log file has correct permissions and ownership
+ *
+ * \param[in] filename  Log file name
+ *
+ * \return Standard Pacemaker return code
+ */
 static int
-set_logfile_permissions(const char *filename, FILE *logfile)
+set_logfile_permissions(const char *filename)
 {
-    if (geteuid() == 0) {
-        int logfd = fileno(logfile);
-        int rc = chown_logfile(filename, logfd);
+    int fd = 0;
+    int rc = pcmk_rc_ok;
 
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-        chmod_logfile(filename, logfd);
+    if (geteuid() != 0) {
+        goto done;
     }
-    return pcmk_rc_ok;
+
+    fd = open(filename, O_RDWR);
+    if (fd < 0) {
+        rc = errno;
+        pcmk__warn("Logging to '%s' is disabled because open() failed as root: "
+                   "%s", filename, strerror(rc));
+        goto done;
+    }
+
+    rc = chown_logfile(filename, fd);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    chmod_logfile(filename, fd);
+
+done:
+    if (fd >= 0) {
+        close(fd);
+    }
+    return rc;
 }
 
-// Enable libqb logging to a new log file
+/*!
+ * \internal
+ * \brief Enable a libqb log target, extend max line length, and apply filter
+ *
+ * \param[in] target  Log target (either an <tt>enum qb_log_target_slot</tt> or
+ *                    the return value of a \c qb_log_file_open() call)
+ */
 static void
-enable_logfile(int fd)
+enable_logfile(int32_t target)
 {
-    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_TRUE);
-#if 0
-    qb_log_ctl(fd, QB_LOG_CONF_FILE_SYNC, 1); // Turn on synchronous writes
-#endif
+    qb_log_ctl(target, QB_LOG_CONF_ENABLED, QB_TRUE);
 
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_MAX_LINE_LEN
     // Longer than default, for logging long XML lines
-    qb_log_ctl(fd, QB_LOG_CONF_MAX_LINE_LEN, 800);
+    qb_log_ctl(target, QB_LOG_CONF_MAX_LINE_LEN, 800);
 #endif
 
     crm_update_callsites();
 }
 
+/*!
+ * \internal
+ * \brief Disable a libqb log target
+ *
+ * \param[in] target  Log target (either an <tt>enum qb_log_target_slot</tt> or
+ *                    the return value of a \c qb_log_file_open() call)
+ */
 static inline void
-disable_logfile(int fd)
+disable_logfile(int32_t target)
 {
-    qb_log_ctl(fd, QB_LOG_CONF_ENABLED, QB_FALSE);
+    qb_log_ctl(target, QB_LOG_CONF_ENABLED, QB_FALSE);
 }
 
 static void
@@ -325,27 +451,33 @@ setenv_logfile(const char *filename)
 }
 
 /*!
+ * \internal
  * \brief Add a file to be used as a Pacemaker detail log
  *
- * \param[in] filename  Name of log file to use
+ * \param[in] filename  Name of log file to use. \c NULL adds the default log
+ *                      file if no log file is enabled yet. \c PCMK_VALUE_NONE
+ *                      or \c "/dev/null" causes this function to do nothing.
  *
  * \return Standard Pacemaker return code
+ *
+ * \note Messages from this function won't be logged to the new log file.
  */
 int
 pcmk__add_logfile(const char *filename)
 {
-    /* No log messages from this function will be logged to the new log!
-     * If another target such as syslog has already been added, the messages
-     * should show up there.
-     */
+    static int32_t default_target = -1;
+    static bool have_logfile = false;
 
-    int fd = 0;
+    int32_t target = 0;
     int rc = pcmk_rc_ok;
-    FILE *logfile = NULL;
     bool is_default = false;
 
-    static int default_fd = -1;
-    static bool have_logfile = false;
+    // No logging to do if the file is "/dev/null" or special value "none"
+    if (pcmk__str_eq(filename, "/dev/null", pcmk__str_none)
+        || pcmk__str_eq(filename, PCMK_VALUE_NONE, pcmk__str_casei)) {
+
+        return pcmk_rc_ok;
+    }
 
     // Use default if caller didn't specify (and we don't already have one)
     if (filename == NULL) {
@@ -355,54 +487,45 @@ pcmk__add_logfile(const char *filename)
         filename = DEFAULT_LOG_FILE;
     }
 
-    // If the user doesn't want logging, we're done
-    if (logfile_disabled(filename)) {
-        return pcmk_rc_ok;
-    }
-
     // If the caller wants the default and we already have it, we're done
     is_default = pcmk__str_eq(filename, DEFAULT_LOG_FILE, pcmk__str_none);
-    if (is_default && (default_fd >= 0)) {
+    if (is_default && (default_target >= 0)) {
         return pcmk_rc_ok;
     }
 
-    // Check whether we have write access to the file
-    logfile = fopen(filename, "a");
-    if (logfile == NULL) {
-        rc = errno;
-        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " uid=%u gid=%u",
-                   filename, strerror(rc), geteuid(), getegid());
-        return rc;
-    }
-
-    rc = set_logfile_permissions(filename, logfile);
+    // If we're root, ensure ownership and permissions are correct
+    rc = set_logfile_permissions(filename);
     if (rc != pcmk_rc_ok) {
-        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " permissions",
-                   filename, strerror(rc));
-        fclose(logfile);
+        // Warning has already been logged
         return rc;
     }
 
-    // Close and reopen as libqb logging target
-    fclose(logfile);
-    fd = qb_log_file_open(filename);
-    if (fd < 0) {
-        pcmk__warn("Logging to '%s' is disabled: %s " QB_XS " qb_log_file_open",
-                   filename, strerror(-fd));
-        return -fd; // == +errno
+    // Open as a libqb log file
+    target = qb_log_file_open(filename);
+    if (target < 0) {
+        rc = -target;   // target == -errno
+        pcmk__warn("Logging to '%s' is disabled because qb_log_file_open() "
+                   "failed: %s " QB_XS " uid=%lld gid=%lld",
+                   filename, strerror(rc), (long long) geteuid(),
+                   (long long) getegid());
+        return rc;
     }
 
     if (is_default) {
-        default_fd = fd;
+        default_target = target;
         setenv_logfile(filename);
 
-    } else if (default_fd >= 0) {
+    } else if (default_target >= 0) {
+        /* @TODO Why do we disable logging to the default log file when adding
+         * another log file? This seems wrong, especially if the default file is
+         * configured explicitly.
+         */
         pcmk__notice("Switching logging to %s", filename);
-        disable_logfile(default_fd);
+        disable_logfile(default_target);
     }
 
     pcmk__notice("Additional logging available in %s", filename);
-    enable_logfile(fd);
+    enable_logfile(target);
     have_logfile = true;
     return pcmk_rc_ok;
 }
@@ -432,8 +555,23 @@ pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out)
     }
 }
 
-static int blackbox_trigger = 0;
-static volatile char *blackbox_file_prefix = NULL;
+/*!
+ * \internal
+ * \brief Write out a blackbox (enabling blackboxes if the signal is \c SIGTRAP)
+ *
+ * \param[in] nsig  Signal number that was received
+ *
+ * \note This is a true signal handler, and so must be async-safe.
+ */
+static void
+enable_and_write_blackbox(int nsig)
+{
+    if (nsig == SIGTRAP) {
+        crm_enable_blackbox(nsig);
+    }
+
+    crm_write_blackbox(nsig, NULL);
+}
 
 static void
 blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
@@ -446,67 +584,61 @@ blackbox_logger(int32_t t, struct qb_log_callsite *cs, log_time_t timestamp,
     }
 }
 
-static void
-crm_control_blackbox(int nsig, bool enable)
-{
-    int lpc = 0;
-
-    if (blackbox_file_prefix == NULL) {
-        pid_t pid = getpid();
-
-        blackbox_file_prefix = pcmk__assert_asprintf(CRM_BLACKBOX_DIR "/%s-%lu",
-                                                     crm_system_name,
-                                                     (unsigned long) pid);
-    }
-
-    if (enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) != QB_LOG_STATE_ENABLED) {
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024); /* Any size change drops existing entries */
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);      /* Setting the size seems to disable it */
-
-        /* Enable synchronous logging */
-        for (lpc = QB_LOG_BLACKBOX; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
-        }
-
-        pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
-
-        /* Save to disk on abnormal termination */
-        crm_signal_handler(SIGSEGV, crm_trigger_blackbox);
-        crm_signal_handler(SIGABRT, crm_trigger_blackbox);
-        crm_signal_handler(SIGILL,  crm_trigger_blackbox);
-        crm_signal_handler(SIGBUS,  crm_trigger_blackbox);
-        crm_signal_handler(SIGFPE,  crm_trigger_blackbox);
-
-        crm_update_callsites();
-
-        blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
-        qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
-        pcmk__trace("Trigger: %d is %d %d", blackbox_trigger,
-                    qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0),
-                    QB_LOG_STATE_ENABLED);
-
-        crm_update_callsites();
-
-    } else if (!enable && qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET, 0) == QB_LOG_STATE_ENABLED) {
-        qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
-
-        /* Disable synchronous logging again when the blackbox is disabled */
-        for (lpc = QB_LOG_BLACKBOX; lpc < QB_LOG_TARGET_MAX; lpc++) {
-            qb_log_ctl(lpc, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
-        }
-    }
-}
-
 void
 crm_enable_blackbox(int nsig)
 {
-    crm_control_blackbox(nsig, TRUE);
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET,
+                   0) == QB_LOG_STATE_ENABLED) {
+        return;
+    }
+
+    // Any size change drops existing entries
+    qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_SIZE, 5 * 1024 * 1024);
+
+    // Setting the size seems to disable the log target
+    qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);
+
+    /* Enable synchronous logging for each target except QB_LOG_SYSLOG and
+     * QB_LOG_STDERR
+     */
+    for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
+        qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_TRUE);
+    }
+
+    pcmk__notice("Initiated blackbox recorder: %s", blackbox_file_prefix);
+
+    // Save to disk on abnormal termination
+    crm_signal_handler(SIGSEGV, enable_and_write_blackbox);
+    crm_signal_handler(SIGABRT, enable_and_write_blackbox);
+    crm_signal_handler(SIGILL, enable_and_write_blackbox);
+    crm_signal_handler(SIGBUS, enable_and_write_blackbox);
+    crm_signal_handler(SIGFPE, enable_and_write_blackbox);
+
+    crm_update_callsites();
+
+    blackbox_trigger = qb_log_custom_open(blackbox_logger, NULL, NULL, NULL);
+    qb_log_ctl(blackbox_trigger, QB_LOG_CONF_ENABLED, QB_TRUE);
+    pcmk__trace("Trigger: %d is %d %d", blackbox_trigger,
+                qb_log_ctl(blackbox_trigger, QB_LOG_CONF_STATE_GET, 0),
+                QB_LOG_STATE_ENABLED);
+
+    crm_update_callsites();
 }
 
 void
 crm_disable_blackbox(int nsig)
 {
-    crm_control_blackbox(nsig, FALSE);
+    if (qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_STATE_GET,
+                   0) != QB_LOG_STATE_ENABLED) {
+        return;
+    }
+
+    qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_FALSE);
+
+    // Disable synchronous logging again when the blackbox is disabled
+    for (int i = QB_LOG_BLACKBOX; i < QB_LOG_TARGET_MAX; i++) {
+        qb_log_ctl(i, QB_LOG_CONF_FILE_SYNC, QB_FALSE);
+    }
 }
 
 /*!
@@ -702,14 +834,17 @@ init_tracing(void)
 
     if (files != NULL) {
         trace_files = g_strsplit(files, ",", 0);
+        tracing_enabled = true;
     }
 
     if (formats != NULL) {
         trace_formats = g_strsplit(formats, ",", 0);
+        tracing_enabled = true;
     }
 
     if (functions != NULL) {
         trace_functions = g_strsplit(functions, ",", 0);
+        tracing_enabled = true;
     }
 
     if (tags != NULL) {
@@ -722,6 +857,7 @@ init_tracing(void)
 
             pcmk__info("Created GQuark %lld from token '%s' in '%s'",
                        (long long) g_quark_from_string(*tag), *tag, tags);
+            tracing_enabled = true;
         }
 
         // We have the GQuarks, so we don't need the array anymore
@@ -732,21 +868,17 @@ init_tracing(void)
 /*!
  * \internal
  * \brief Free arrays of parsed trace objects
+ *
+ * \note GQuarks for trace tags can't be removed.
  */
 static void
 cleanup_tracing(void)
 {
-    g_strfreev(trace_blackbox);
-    trace_blackbox = NULL;
-
-    g_strfreev(trace_files);
-    trace_files = NULL;
-
-    g_strfreev(trace_formats);
-    trace_formats = NULL;
-
-    g_strfreev(trace_functions);
-    trace_functions = NULL;
+    g_clear_pointer(&trace_blackbox, g_strfreev);
+    g_clear_pointer(&trace_files, g_strfreev);
+    g_clear_pointer(&trace_formats, g_strfreev);
+    g_clear_pointer(&trace_functions, g_strfreev);
+    tracing_enabled = false;
 }
 
 gboolean
@@ -798,16 +930,6 @@ crm_update_callsites(void)
     qb_log_filter_fn_set(crm_log_filter);
 }
 
-static gboolean
-crm_tracing_enabled(void)
-{
-    return (crm_log_level == LOG_TRACE)
-            || (pcmk__env_option(PCMK__ENV_TRACE_FILES) != NULL)
-            || (pcmk__env_option(PCMK__ENV_TRACE_FUNCTIONS) != NULL)
-            || (pcmk__env_option(PCMK__ENV_TRACE_FORMATS) != NULL)
-            || (pcmk__env_option(PCMK__ENV_TRACE_TAGS) != NULL);
-}
-
 static int
 crm_priority2int(const char *name)
 {
@@ -826,11 +948,10 @@ crm_priority2int(const char *name)
         {"debug", LOG_DEBUG},
         {NULL, -1}
     };
-    int lpc;
 
-    for (lpc = 0; name != NULL && p_names[lpc].name != NULL; lpc++) {
-        if (pcmk__str_eq(p_names[lpc].name, name, pcmk__str_none)) {
-            return p_names[lpc].priority;
+    for (int i = 0; (name != NULL) && (p_names[i].name != NULL); i++) {
+        if (pcmk__str_eq(p_names[i].name, name, pcmk__str_none)) {
+            return p_names[i].priority;
         }
     }
     return crm_log_priority;
@@ -885,14 +1006,10 @@ void
 crm_log_preinit(const char *entity, int argc, char *const *argv)
 {
     /* Configure libqb logging with nothing turned on */
-
-    struct utsname res;
-    int lpc = 0;
-    int32_t qb_facility = 0;
-    pid_t pid = getpid();
-    const char *nodename = "localhost";
     static bool have_logging = false;
-    GLogLevelFlags log_levels;
+    struct utsname res = { 0, };
+    const pid_t pid = getpid();
+    const char *nodename = "localhost";
 
     if (have_logging) {
         return;
@@ -914,14 +1031,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
 
     umask(S_IWGRP | S_IWOTH | S_IROTH);
 
-    /* Add a log handler for messages from our log domain at any log level. */
-    log_levels = G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL | G_LOG_FLAG_RECURSION;
-    pcmk__log_id = g_log_set_handler(G_LOG_DOMAIN, log_levels, crm_glib_handler, NULL);
-    /* Add a log handler for messages from the GLib domains at any log level. */
-    pcmk__glib_log_id = g_log_set_handler("GLib", log_levels, crm_glib_handler, NULL);
-    pcmk__gio_log_id = g_log_set_handler("GLib-GIO", log_levels, crm_glib_handler, NULL);
-    pcmk__gmodule_log_id = g_log_set_handler("GModule", log_levels, crm_glib_handler, NULL);
-    pcmk__gthread_log_id = g_log_set_handler("GThread", log_levels, crm_glib_handler, NULL);
+    set_glib_log_handlers();
 
     /* glib should not abort for any messages from the Pacemaker domain, but
      * other domains are still free to specify their own behavior.  However,
@@ -935,8 +1045,7 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
      */
     set_identity(entity, argc, argv);
 
-    qb_facility = qb_log_facility2int("local0");
-    qb_log_init(crm_system_name, qb_facility, LOG_ERR);
+    qb_log_init(crm_system_name, qb_log_facility2int("local0"), LOG_ERR);
     crm_log_level = LOG_CRIT;
 
     /* Nuke any syslog activity until it's asked for */
@@ -945,7 +1054,8 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
     // Shorter than default, generous for what we *should* send to syslog
     qb_log_ctl(QB_LOG_SYSLOG, QB_LOG_CONF_MAX_LINE_LEN, 256);
 #endif
-    if (uname(memset(&res, 0, sizeof(res))) == 0 && *res.nodename != '\0') {
+
+    if ((uname(&res) == 0) && !pcmk__str_empty(res.nodename)) {
         nodename = res.nodename;
     }
 
@@ -953,13 +1063,13 @@ crm_log_preinit(const char *entity, int argc, char *const *argv)
      * Pacemaker and threads do not mix well (due to the amount of forking)
      */
     qb_log_tags_stringify_fn_set(crm_quark_to_string);
-    for (lpc = QB_LOG_SYSLOG; lpc < QB_LOG_TARGET_MAX; lpc++) {
-        qb_log_ctl(lpc, QB_LOG_CONF_THREADED, QB_FALSE);
+    for (int i = QB_LOG_SYSLOG; i < QB_LOG_TARGET_MAX; i++) {
+        qb_log_ctl(i, QB_LOG_CONF_THREADED, QB_FALSE);
 #ifdef HAVE_qb_log_conf_QB_LOG_CONF_ELLIPSIS
         // End truncated lines with '...'
-        qb_log_ctl(lpc, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
+        qb_log_ctl(i, QB_LOG_CONF_ELLIPSIS, QB_TRUE);
 #endif
-        set_format_string(lpc, crm_system_name, pid, nodename);
+        set_format_string(i, pid, nodename);
     }
 
 #ifdef ENABLE_NLS
@@ -1048,8 +1158,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     {
         const char *logfile = pcmk__env_option(PCMK__ENV_LOGFILE);
 
-        if (!pcmk__str_eq(PCMK_VALUE_NONE, logfile, pcmk__str_casei)
-            && (pcmk__is_daemon || (logfile != NULL))) {
+        if (pcmk__is_daemon || (logfile != NULL)) {
             // Daemons always get a log file, unless explicitly set to "none"
             pcmk__add_logfile(logfile);
         }
@@ -1097,6 +1206,10 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
             pcmk__info("Changed active directory to " CRM_CORE_DIR);
         }
 
+        blackbox_file_prefix = pcmk__assert_asprintf(CRM_BLACKBOX_DIR
+                                                     "/%s-%lld",
+                                                     crm_system_name,
+                                                     (long long) getpid());
         /* Original meanings from signal(7)
          *
          * Signal       Value     Action   Comment
@@ -1108,7 +1221,7 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
          */
         mainloop_add_signal(SIGUSR1, crm_enable_blackbox);
         mainloop_add_signal(SIGUSR2, crm_disable_blackbox);
-        mainloop_add_signal(SIGTRAP, crm_trigger_blackbox);
+        mainloop_add_signal(SIGTRAP, enable_and_write_blackbox);
 
         free(user);
 
@@ -1117,6 +1230,25 @@ crm_log_init(const char *entity, uint8_t level, gboolean daemon, gboolean to_std
     }
 
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Free the logging library's internal data structures
+ */
+void
+crm_log_deinit(void)
+{
+    remove_glib_log_handlers();
+    cleanup_tracing();
+
+    if (logger_out != NULL) {
+        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
+        g_clear_pointer(&logger_out, pcmk__output_free);
+    }
+
+    g_clear_pointer(&blackbox_file_prefix, free);
+    g_clear_pointer(&crm_system_name, free);
 }
 
 /* returns the old value */
@@ -1333,22 +1465,6 @@ pcmk__log_xml_patchset_as(const char *file, const char *function, uint32_t line,
     pcmk__output_set_log_filter(logger_out, file, function, line, tags);
     logger_out->message(logger_out, "xml-patchset", patchset);
     pcmk__output_set_log_filter(logger_out, NULL, NULL, 0U, 0U);
-}
-
-/*!
- * \internal
- * \brief Free the logging library's internal data structures
- */
-void
-pcmk__free_logging_data(void)
-{
-    if (logger_out != NULL) {
-        logger_out->finish(logger_out, CRM_EX_OK, true, NULL);
-        pcmk__output_free(logger_out);
-        logger_out = NULL;
-    }
-
-    cleanup_tracing();
 }
 
 void pcmk__set_config_error_handler(pcmk__config_error_func error_handler, void *error_context)

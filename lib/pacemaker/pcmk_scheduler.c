@@ -22,8 +22,6 @@
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
 
-CRM_TRACE_INIT_DATA(pacemaker);
-
 /*!
  * \internal
  * \brief Do deferred action checks after assignment

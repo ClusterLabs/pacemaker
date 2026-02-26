@@ -351,6 +351,9 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
 //! XML has been moved
 #define PCMK__XML_PREFIX_MOVED "+~"
 
+G_GNUC_INTERNAL
+int pcmk__add_logfile(const char *filename);
+
 /*
  * Output
  */
