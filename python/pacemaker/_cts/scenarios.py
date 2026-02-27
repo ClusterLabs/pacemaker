@@ -8,7 +8,7 @@ __all__ = [
     "RandomTests",
     "Sequence",
 ]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -251,19 +251,19 @@ class Scenario:
         self._cm.log("Overall Results:%r" % self.stats)
         self._cm.log("****************")
 
-        stat_filter = {
-            "calls": 0,
-            "failure": 0,
-            "skipped": 0,
-            "auditfail": 0,
-        }
+        stat_summary = {}
+        summary_keys = ["calls", "failure", "skipped", "auditfail"]
 
         self._cm.log("Test Summary")
         for test in self.tests:
-            for key in stat_filter:
-                stat_filter[key] = test.stats[key]
+            if test.name not in stat_summary:
+                stat_summary[test.name] = {key: 0 for key in summary_keys}
 
-            self._cm.log(f"{f'Test {test.name}':<25} {stat_filter!r}")
+            for key in summary_keys:
+                stat_summary[test.name][key] += test.stats[key]
+
+        for (name, summary) in stat_summary.items():
+            self._cm.log(f"{f'Test {name}':<25} {summary!r}")
 
         self._cm.debug("Detailed Results")
         for test in self.tests:
