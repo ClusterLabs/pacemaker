@@ -25,6 +25,13 @@ man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
 
 HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource manager"
 
+# @TODO The following scripts or programs don't use GOption and thus don't
+# support --help-all:
+# * crm_failcount
+# * crm_master
+# * crm_report
+# * crm_standby
+# * fence_watchdog
 %.8:	%
 	$(AM_V_at)chmod a+x $(abs_builddir)/$<
 	$(AM_V_MAN)if [ -f $(abs_srcdir)/$@.inc ]; then			\
