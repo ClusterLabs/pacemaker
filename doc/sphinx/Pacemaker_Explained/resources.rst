@@ -268,7 +268,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: priority; resource option
-          single: resource; option, priority
           single: resource; meta-attribute, priority
 
        priority
@@ -281,7 +280,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: critical; resource option
-          single: resource; option, critical
           single: resource; meta-attribute, critical
 
        critical
@@ -297,7 +295,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: target-role; resource option
-          single: resource; option, target-role
           single: resource; meta-attribute, target-role
 
        target-role
@@ -320,7 +317,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: is-managed; resource option
-          single: resource; option, is-managed
           single: resource; meta-attribute, is-managed
 
        is-managed
@@ -335,7 +331,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: maintenance; resource option
-          single: resource; option, maintenance
           single: resource; meta-attribute, maintenance
 
        maintenance
@@ -352,7 +347,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: resource-stickiness; resource option
-          single: resource; option, resource-stickiness
           single: resource; meta-attribute, resource-stickiness
 
        resource-stickiness
@@ -368,7 +362,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: requires; resource option
-          single: resource; option, requires
           single: resource; meta-attribute, requires
 
        requires
@@ -393,7 +386,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: migration-threshold; resource option
-          single: resource; option, migration-threshold
           single: resource; meta-attribute, migration-threshold
 
        migration-threshold
@@ -412,7 +404,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: failure-timeout; resource option
-          single: resource; option, failure-timeout
           single: resource; meta-attribute, failure-timeout
 
        failure-timeout
@@ -434,7 +425,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: multiple-active; resource option
-          single: resource; option, multiple-active
           single: resource; meta-attribute, multiple-active
 
        multiple-active
@@ -458,7 +448,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: allow-migrate; resource option
-          single: resource; option, allow-migrate
           single: resource; meta-attribute, allow-migrate
 
        allow-migrate
@@ -471,7 +460,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: allow-unhealthy-nodes; resource option
-          single: resource; option, allow-unhealthy-nodes
           single: resource; meta-attribute, allow-unhealthy-nodes
 
        allow-unhealthy-nodes
@@ -485,7 +473,6 @@ behave and can be easily set using the ``--meta`` option of the
 
        .. index::
           single: container-attribute-target; resource option
-          single: resource; option, container-attribute-target
           single: resource; meta-attribute, container-attribute-target
 
        container-attribute-target
@@ -765,7 +752,6 @@ node.
 
        .. index::
           single: remote-node; resource option
-          single: resource; option, remote-node
           single: resource; meta-attribute, remote-node
 
        remote-node
@@ -779,7 +765,6 @@ node.
 
        .. index::
           single: remote-addr; resource option
-          single: resource; option, remote-addr
           single: resource; meta-attribute, remote-addr
 
        remote-addr
@@ -793,7 +778,6 @@ node.
 
        .. index::
           single: remote-port; resource option
-          single: resource; option, remote-port
           single: resource; meta-attribute, remote-port
 
        remote-port
@@ -807,7 +791,6 @@ node.
 
        .. index::
           single: remote-connect-timeout; resource option
-          single: resource; option, remote-connect-timeout
           single: resource; meta-attribute, remote-connect-timeout
 
        remote-connect-timeout
@@ -820,7 +803,6 @@ node.
 
        .. index::
           single: remote-allow-migrate; resource option
-          single: resource; option, remote-allow-migrate
           single: resource; meta-attribute, remote-allow-migrate
 
        remote-allow-migrate
