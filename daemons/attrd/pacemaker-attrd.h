@@ -53,9 +53,9 @@
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
 
-#define attrd_send_ack(client, id, flags)                       \
-    pcmk__ipc_send_ack((client), (id), (flags), PCMK__XE_ACK,   \
-                       ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
+#define attrd_send_ack(client, id, flags)                               \
+    pcmk__ipc_send_ack((client), (id), (flags), ATTRD_PROTOCOL_VERSION, \
+                       CRM_EX_INDETERMINATE)
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);

@@ -170,7 +170,7 @@ execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     if ((msg == NULL) || execd_invalid_msg(msg)) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
     } else {
         pcmk__request_t request = {
             .ipc_client     = client,

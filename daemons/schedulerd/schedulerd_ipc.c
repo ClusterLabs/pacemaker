@@ -104,8 +104,7 @@ schedulerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     if (msg == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
-                           CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
@@ -113,13 +112,11 @@ schedulerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     if (pcmk__str_eq(pcmk__xe_get(msg, PCMK__XA_SUBT), PCMK__VALUE_RESPONSE,
                      pcmk__str_none)) {
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
-                           CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_INDETERMINATE);
         pcmk__info("Ignoring IPC reply from %s", pcmk__client_name(client));
 
     } else if (!pcmk__str_eq(sys_to, CRM_SYSTEM_PENGINE, pcmk__str_none)) {
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_ACK, NULL,
-                           CRM_EX_INDETERMINATE);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_INDETERMINATE);
         pcmk__info("Ignoring invalid IPC message: to '%s' not "
                    CRM_SYSTEM_PENGINE, pcmk__s(sys_to, ""));
 

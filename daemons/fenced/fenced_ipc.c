@@ -137,7 +137,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 
     if (msg == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 

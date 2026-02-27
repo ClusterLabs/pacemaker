@@ -395,7 +395,7 @@ static xmlNode *
 handle_unknown_request(pcmk__request_t *request)
 {
     pcmk__ipc_send_ack(request->ipc_client, request->ipc_id, request->ipc_flags,
-                       PCMK__XE_NACK, NULL, CRM_EX_PROTOCOL);
+                       NULL, CRM_EX_PROTOCOL);
 
     pcmk__format_result(&request->result, CRM_EX_PROTOCOL, PCMK_EXEC_INVALID,
                         "Unknown request type '%s' (bug?)",

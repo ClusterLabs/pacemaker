@@ -127,16 +127,9 @@ lrmd_remote_client_msg(gpointer data)
 
     msg = pcmk__remote_message_xml(client->remote);
 
-    if (msg == NULL) {
-        pcmk__debug("Unrecognizable IPC data from PID %d", client->pid);
-    } else if (execd_invalid_msg(msg)) {
-        int id = 0;
-
+    if ((msg == NULL) || execd_invalid_msg(msg)) {
         pcmk__debug("Unrecognizable IPC data from PID %d", client->pid);
 
-        pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-        pcmk__ipc_send_ack(client, id, crm_ipc_client_response, PCMK__XE_NACK,
-                           NULL, CRM_EX_PROTOCOL);
     } else {
         pcmk__request_t request = {
             .ipc_client     = client,

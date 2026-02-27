@@ -1126,6 +1126,10 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
     stonith_private_t *native = NULL;
     const char *display_name = name? name : "client";
 
+    xmlNode *reply = NULL;
+    xmlNode *hello = NULL;
+    const char *msg_type = NULL;
+
     struct ipc_client_callbacks st_callbacks = {
         .dispatch = stonith_dispatch_internal,
         .destroy = stonith_connection_destroy
@@ -1168,52 +1172,75 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 
     if (native->ipc == NULL) {
         rc = -ENOTCONN;
-    } else {
-        xmlNode *reply = NULL;
-        xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
-
-        pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        pcmk__xe_set(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
-        pcmk__xe_set(hello, PCMK__XA_ST_CLIENTNAME, name);
-        rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
-
-        if (rc < 0) {
-            pcmk__debug("Couldn't register with the fencer: %s " QB_XS " rc=%d",
-                        pcmk_strerror(rc), rc);
-            rc = -ECOMM;
-
-        } else if (reply == NULL) {
-            pcmk__debug("Couldn't register with the fencer: no reply");
-            rc = -EPROTO;
-
-        } else {
-            const char *msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
-
-            native->token = pcmk__xe_get_copy(reply, PCMK__XA_ST_CLIENTID);
-            if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
-                pcmk__debug("Couldn't register with the fencer: invalid reply "
-                            "type '%s'",
-                            pcmk__s(msg_type, "(missing)"));
-                pcmk__log_xml_debug(reply, "Invalid fencer reply");
-                rc = -EPROTO;
-
-            } else if (native->token == NULL) {
-                pcmk__debug("Couldn't register with the fencer: no token in "
-                            "reply");
-                pcmk__log_xml_debug(reply, "Invalid fencer reply");
-                rc = -EPROTO;
-
-            } else {
-                pcmk__debug("Connection to fencer by %s succeeded "
-                            "(registration token: %s)",
-                            display_name, native->token);
-                rc = pcmk_ok;
-            }
-        }
-
-        pcmk__xml_free(reply);
-        pcmk__xml_free(hello);
+        goto done;
     }
+
+    hello = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
+
+    pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+    pcmk__xe_set(hello, PCMK__XA_ST_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(hello, PCMK__XA_ST_CLIENTNAME, name);
+    rc = crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1, &reply);
+
+    if (rc < 0) {
+        pcmk__debug("Couldn't register with the fencer: %s " QB_XS " rc=%d",
+                    pcmk_strerror(rc), rc);
+        rc = -ECOMM;
+        goto done;
+    }
+
+    if (reply == NULL) {
+        pcmk__debug("Couldn't register with the fencer: no reply");
+        rc = -EPROTO;
+        goto done;
+    }
+
+    /* If we received an ACK with an error status in response, fenced
+     * thinks we originally sent an invalid message.
+     *
+     * NOTE: At the moment, all ACK messages sent in the signon process
+     * will have an error status.  However, this may change in the future so
+     * we'll let those fall through to the rest of the message handling below
+     * so we get some log messages should we change that in the future.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
+        int status = 0;
+
+        rc = pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+
+        if ((rc == pcmk_rc_ok) && (status != 0)) {
+            pcmk__err("Received error response from CIB manager: %s",
+                      crm_exit_str(status));
+            return -EPROTO;
+        }
+    }
+
+    msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
+
+    native->token = pcmk__xe_get_copy(reply, PCMK__XA_ST_CLIENTID);
+    if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
+        pcmk__debug("Couldn't register with the fencer: invalid reply "
+                    "type '%s'",
+                    pcmk__s(msg_type, "(missing)"));
+        pcmk__log_xml_debug(reply, "Invalid fencer reply");
+        rc = -EPROTO;
+
+    } else if (native->token == NULL) {
+        pcmk__debug("Couldn't register with the fencer: no token in "
+                    "reply");
+        pcmk__log_xml_debug(reply, "Invalid fencer reply");
+        rc = -EPROTO;
+
+    } else {
+        pcmk__debug("Connection to fencer by %s succeeded "
+                    "(registration token: %s)",
+                    display_name, native->token);
+        rc = pcmk_ok;
+    }
+
+done:
+    pcmk__xml_free(reply);
+    pcmk__xml_free(hello);
 
     if (rc != pcmk_ok) {
         pcmk__debug("Connection attempt to fencer by %s failed: %s "
