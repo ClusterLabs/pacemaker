@@ -764,30 +764,28 @@ is_mode_allowed(uint32_t flags, enum pcmk__xml_flags mode)
         return false;
     }
 
-    if (pcmk__is_set(flags, mode)) {
-        // The access we requested is explicitly allowed
-        return true;
+    switch (mode) {
+        case pcmk__xf_acl_read:
+            // Write access provides read access
+            return pcmk__any_flags_set(flags,
+                                       pcmk__xf_acl_read|pcmk__xf_acl_write);
+
+        case pcmk__xf_acl_write:
+            return pcmk__is_set(flags, pcmk__xf_acl_write);
+
+        case pcmk__xf_acl_create:
+            /* Write access provides create access.
+             *
+             * @TODO Why does the \c pcmk__xf_created flag provide create
+             * access? This was introduced by commit e2ed85fe.
+             */
+            return pcmk__any_flags_set(flags,
+                                       pcmk__xf_acl_write|pcmk__xf_created);
+
+        default:
+            // Invalid mode
+            return false;
     }
-
-    if ((mode == pcmk__xf_acl_read)
-        && pcmk__is_set(flags, pcmk__xf_acl_write)) {
-
-        // Write access provides read access
-        return true;
-    }
-
-    if ((mode == pcmk__xf_acl_create)
-        && pcmk__any_flags_set(flags, pcmk__xf_acl_write|pcmk__xf_created)) {
-
-        /* Write access provides create access.
-         *
-         * @TODO Why does the \c pcmk__xf_created flag provide create access?
-         * This was introduced by commit e2ed85fe.
-         */
-        return true;
-    }
-
-    return false;
 }
 
 /*!
@@ -951,28 +949,29 @@ xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
  *
  * \param[in] xml  XML element to check
  *
- * \return true if XML element is implicitly allowed, false otherwise
+ * \return \c true if XML element is implicitly allowed, or \c false otherwise
  */
 static bool
-implicitly_allowed(const xmlNode *xml)
+implicitly_allowed(xmlNode *xml)
 {
-    GString *path = NULL;
+    for (xmlAttr *attr = pcmk__xe_first_attr(xml); attr != NULL;
+         attr = attr->next) {
 
-    for (xmlAttr *prop = xml->properties; prop != NULL; prop = prop->next) {
-        if (strcmp((const char *) prop->name, PCMK_XA_ID) != 0) {
+        if (attr_is_not_id(attr, NULL)) {
             return false;
         }
     }
 
-    path = pcmk__element_xpath(xml);
-    pcmk__assert(path != NULL);
-
-    if (strstr((const char *) path->str, "/" PCMK_XE_ACLS "/") != NULL) {
-        g_string_free(path, TRUE);
-        return false;
+    /* Creation is not implicitly allowed for a descendant of PCMK_XE_ACLS, but
+     * it may be for PCMK_XE_ACLS itself. Start checking at xml->parent and walk
+     * up the tree.
+     */
+    for (xml = xml->parent; xml != NULL; xml = xml->parent) {
+        if (pcmk__xe_is(xml, PCMK_XE_ACLS)) {
+            return false;
+        }
     }
 
-    g_string_free(path, TRUE);
     return true;
 }
 
