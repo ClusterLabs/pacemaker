@@ -1,7 +1,7 @@
 """ Sphinx configuration for Pacemaker documentation
 """
 
-__copyright__ = "Copyright 2020-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2020-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 # This file is execfile()d with the current directory set to its containing dir.
@@ -29,7 +29,7 @@ doc_license += " version 4.0 or later (CC-BY-SA v4.0+)"
 # where occurrences of |<abbr>| in the rST will be substituted with <Full text>
 rst_prolog="""
 .. |CFS_DISTRO| replace:: AlmaLinux
-.. |CFS_DISTRO_VER| replace:: 9
+.. |CFS_DISTRO_VER| replace:: 10
 .. |CRM_BLACKBOX_DIR| replace:: ``%CRM_BLACKBOX_DIR%``
 .. |CRM_CONFIG_DIR| replace:: ``%CRM_CONFIG_DIR%``
 .. |CRM_DAEMON_GROUP| replace:: ``%CRM_DAEMON_GROUP%``
@@ -44,7 +44,7 @@ rst_prolog="""
 .. |PCMK_CONTAINER_LOG_FILE| replace:: ``/var/log/pcmk-init.log``
 .. |PCMK__REMOTE_SCHEMA_DIR| replace:: %PCMK__REMOTE_SCHEMA_DIR%
 .. |REMOTE_DISTRO| replace:: AlmaLinux
-.. |REMOTE_DISTRO_VER| replace:: 9
+.. |REMOTE_DISTRO_VER| replace:: 10
 """
 
 # If extensions (or modules to document with autodoc) are in another directory,

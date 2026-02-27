@@ -119,12 +119,17 @@ If that looks OK, check the ``pcs status`` output:
 
     WARNINGS:
     No stonith devices and stonith-enabled is not false
+    error: Resource start-up disabled since no STONITH resources have been defined
+    error: Either configure some or disable STONITH with the stonith-enabled option
+    error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+    error: CIB did not pass schema validation
+    Configuration invalid (with errors)
 
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-2 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:09:55 2022
-      * Last change:  Wed Jul 27 00:07:08 2022 by hacluster via crmd on pcmk-2
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 14:55:38 2026 on pcmk-1
+      * Last change:  Tue Feb 24 14:54:39 2026 by hacluster via hacluster on pcmk-1
       * 2 nodes configured
       * 0 resource instances configured
 
@@ -168,12 +173,12 @@ configuration and status by using the ``pcs cluster cib`` command.
 
     .. code-block:: xml
 
-        <cib crm_feature_set="3.13.0" validate-with="pacemaker-3.8" epoch="5" num_updates="4" admin_epoch="0" cib-last-written="Wed Jul 27 00:07:08 2022" update-origin="pcmk-2" update-client="crmd" update-user="hacluster" have-quorum="1" dc-uuid="2">
+        <cib crm_feature_set="3.20.1" validate-with="pacemaker-4.0" epoch="5" num_updates="10" admin_epoch="0" cib-last-written="Tue Feb 24 14:54:39 2026" update-origin="pcmk-1" update-client="hacluster" update-user="hacluster" have-quorum="1" dc-uuid="2">
           <configuration>
             <crm_config>
               <cluster_property_set id="cib-bootstrap-options">
                 <nvpair id="cib-bootstrap-options-have-watchdog" name="have-watchdog" value="false"/>
-                <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.1.2-4.el9-ada5c3b36e2"/>
+                <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="3.0.1-3.el10-6a90427"/>
                 <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
                 <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="mycluster"/>
               </cluster_property_set>
@@ -191,15 +196,25 @@ configuration and status by using the ``pcs cluster cib`` command.
             </rsc_defaults>
           </configuration>
           <status>
-            <node_state id="2" uname="pcmk-2" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+            <node_state id="2" uname="pcmk-2" in_ccm="1771962858" crmd="1771962858" crm-debug-origin="do_state_transition" join="member" expected="member">
+              <transient_attributes id="2">
+                <instance_attributes id="status-2">
+                  <nvpair id="status-2-.feature-set" name="#feature-set" value="3.20.1"/>
+                </instance_attributes>
+              </transient_attributes>
               <lrm id="2">
                 <lrm_resources/>
               </lrm>
             </node_state>
-            <node_state id="1" uname="pcmk-1" in_ccm="true" crmd="online" crm-debug-origin="do_state_transition" join="member" expected="member">
+            <node_state id="1" uname="pcmk-1" in_ccm="1771962857" crmd="1771962857" crm-debug-origin="do_state_transition" join="member" expected="member">
               <lrm id="1">
                 <lrm_resources/>
               </lrm>
+              <transient_attributes id="1">
+                <instance_attributes id="status-1">
+                  <nvpair id="status-1-.feature-set" name="#feature-set" value="3.20.1"/>
+                </instance_attributes>
+              </transient_attributes>
             </node_state>
           </status>
         </cib>
@@ -211,10 +226,11 @@ the configuration.
 
     [root@pcmk-1 ~]# pcs cluster verify --full
     Error: invalid cib:
-    (unpack_resources) 	error: Resource start-up disabled since no STONITH resources have been defined
-    (unpack_resources) 	error: Either configure some or disable STONITH with the fencing-enabled option
-    (unpack_resources) 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
-    crm_verify: Errors found during check: config not valid
+    error: Resource start-up disabled since no STONITH resources have been defined
+    error: Either configure some or disable STONITH with the fencing-enabled option
+    error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+    error: CIB did not pass schema validation
+    Configuration invalid (with errors)
 
     Error: Errors have occurred, therefore pcs is unable to continue
 
