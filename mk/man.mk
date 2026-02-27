@@ -1,5 +1,5 @@
 #
-# Copyright 2014-2021 the Pacemaker project contributors
+# Copyright 2014-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,13 +25,7 @@ man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
 
 HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource manager"
 
-# Some of our tools' help are just shell script invocations of another tool's
-# help. Putting the real tool in MAN8DEPS helps detect when the wrapped help
-# needs updating.
-#
-# @TODO Drop MAN8DEPS once we've moved all tool functionality to libpacemaker,
-#       and all wrappers are converted from shell scripts to C code.
-%.8:	% $(MAN8DEPS)
+%.8:	%
 	$(AM_V_at)chmod a+x $(abs_builddir)/$<
 	PATH=$(abs_builddir):$$PATH $(abs_builddir)/$< --version >/dev/null
 	if [ -f $(abs_srcdir)/$@.inc ]; then \
