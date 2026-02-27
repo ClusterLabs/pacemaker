@@ -37,9 +37,6 @@ xmlNode *the_cib = NULL;
  * \internal
  * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
  *
- * \param[in] op       Ignored
- * \param[in] options  Ignored
- * \param[in] section  Ignored
  * \param[in] req      Ignored
  * \param[in] input    Ignored
  * \param[in] cib      Ignored
@@ -50,8 +47,7 @@ xmlNode *the_cib = NULL;
  * \note This is unimplemented and simply returns an error.
  */
 int
-based_process_abs_delete(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_abs_delete(xmlNode *req, xmlNode *input, xmlNode **cib,
                          xmlNode **answer)
 {
     /* @COMPAT Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed. Note that
@@ -61,8 +57,7 @@ based_process_abs_delete(const char *op, int options, const char *section,
 }
 
 int
-based_process_commit_transact(const char *op, int options, const char *section,
-                              xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_commit_transact(xmlNode *req, xmlNode *input, xmlNode **cib,
                               xmlNode **answer)
 {
     /* On success, our caller will activate *cib locally, trigger a replace
@@ -87,8 +82,7 @@ based_process_commit_transact(const char *op, int options, const char *section,
 }
 
 int
-based_process_is_primary(const char *op, int options, const char *section,
-                         xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_is_primary(xmlNode *req, xmlNode *input, xmlNode **cib,
                          xmlNode **answer)
 {
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
@@ -97,8 +91,7 @@ based_process_is_primary(const char *op, int options, const char *section,
 
 // @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
 int
-based_process_noop(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_noop(xmlNode *req, xmlNode *input, xmlNode **cib,
                    xmlNode **answer)
 {
     *answer = NULL;
@@ -106,8 +99,7 @@ based_process_noop(const char *op, int options, const char *section,
 }
 
 int
-based_process_ping(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_ping(xmlNode *req, xmlNode *input, xmlNode **cib,
                    xmlNode **answer)
 {
     /* existing_cib and *cib should be identical. In the absence of ACL
@@ -133,21 +125,10 @@ based_process_ping(const char *op, int options, const char *section,
 
     if (*cib != NULL) {
         // Use *cib so that ACL filtering is applied to the answer
-        pcmk__if_tracing(
-            {
-                /* Append additional detail so the receiver can log the
-                 * differences
-                 */
-                pcmk__xml_copy(wrapper, *cib);
-            },
-            {
-                // Always include at least the version details
-                const char *name = (const char *) (*cib)->name;
-                xmlNode *shallow = pcmk__xe_create(wrapper, name);
+        xmlNode *shallow = pcmk__xe_create(wrapper,
+                                           (const char *) (*cib)->name);
 
-                pcmk__xe_copy_attrs(shallow, *cib, pcmk__xaf_none);
-            }
-        );
+        pcmk__xe_copy_attrs(shallow, *cib, pcmk__xaf_none);
     }
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
@@ -162,8 +143,7 @@ based_process_ping(const char *op, int options, const char *section,
 }
 
 int
-based_process_primary(const char *op, int options, const char *section,
-                      xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_primary(xmlNode *req, xmlNode *input, xmlNode **cib,
                       xmlNode **answer)
 {
     if (!based_is_primary) {
@@ -178,8 +158,7 @@ based_process_primary(const char *op, int options, const char *section,
 }
 
 int
-based_process_schemas(const char *op, int options, const char *section,
-                      xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_schemas(xmlNode *req, xmlNode *input, xmlNode **cib,
                       xmlNode **answer)
 {
     xmlNode *wrapper = NULL;
@@ -224,8 +203,7 @@ based_process_schemas(const char *op, int options, const char *section,
 }
 
 int
-based_process_secondary(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_secondary(xmlNode *req, xmlNode *input, xmlNode **cib,
                         xmlNode **answer)
 {
     if (based_is_primary) {
@@ -240,8 +218,7 @@ based_process_secondary(const char *op, int options, const char *section,
 }
 
 int
-based_process_shutdown(const char *op, int options, const char *section,
-                       xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_shutdown(xmlNode *req, xmlNode *input, xmlNode **cib,
                        xmlNode **answer)
 {
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
@@ -264,16 +241,14 @@ based_process_shutdown(const char *op, int options, const char *section,
 }
 
 int
-based_process_sync(const char *op, int options, const char *section,
-                   xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_sync(xmlNode *req, xmlNode *input, xmlNode **cib,
                    xmlNode **answer)
 {
     return sync_our_cib(req, true);
 }
 
 int
-based_process_upgrade(const char *op, int options, const char *section,
-                      xmlNode *req, xmlNode *input, xmlNode **cib,
+based_process_upgrade(xmlNode *req, xmlNode *input, xmlNode **cib,
                       xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
@@ -286,8 +261,7 @@ based_process_upgrade(const char *op, int options, const char *section,
          * re-broadcasts the request with PCMK__XA_CIB_SCHEMA_MAX, and each node
          * performs the upgrade (and notifies its local clients) here.
          */
-        return cib__process_upgrade(op, options, section, req, input, cib,
-                                    answer);
+        return cib__process_upgrade(req, input, cib, answer);
 
     } else {
         xmlNode *scratch = pcmk__xml_copy(NULL, *cib);

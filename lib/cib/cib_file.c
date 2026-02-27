@@ -142,13 +142,8 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     const cib__operation_t *operation = NULL;
     cib__op_fn_t op_function = NULL;
 
-    int call_id = 0;
     uint32_t call_options = cib_none;
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
-                                            NULL, NULL);
-    xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
     bool changed = false;
     bool read_only = false;
@@ -161,7 +156,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     cib__get_operation(op, &operation);
     op_function = get_op_function(operation);
 
-    pcmk__xe_get_int(request, PCMK__XA_CIB_CALLID, &call_id);
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
     if (rc != pcmk_rc_ok) {
@@ -170,18 +164,12 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
-    // Mirror the logic in prepare_input() in the CIB manager
-    if ((section != NULL) && pcmk__xe_is(data, PCMK_XE_CIB)) {
-
-        data = pcmk_find_cib_element(data, section);
-    }
-
     if (read_only) {
-        rc = cib__perform_query(op, call_options, op_function, section, request,
-                                data, &private->cib_xml, output);
+        rc = cib__perform_query(op_function, request, &private->cib_xml,
+                                output);
     } else {
-        rc = cib_perform_op(cib_file, op, call_options, op_function, section,
-                            request, data, true, &changed, &private->cib_xml,
+        result_cib = private->cib_xml;
+        rc = cib_perform_op(cib_file, op_function, request, &changed,
                             &result_cib, &cib_diff, output);
     }
 
@@ -194,7 +182,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     if (rc == pcmk_rc_schema_validation) {
         // Show validation errors to stderr
-        pcmk__validate_xml(result_cib, NULL, NULL, NULL);
+        pcmk__validate_xml(result_cib, NULL, NULL);
 
     } else if ((rc == pcmk_rc_ok) && !read_only) {
         if (result_cib != private->cib_xml) {
@@ -282,10 +270,8 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 
     /* *result_cib should be a copy of private->cib_xml (created by
      * cib_perform_op()). If not, make a copy now. Change tracking isn't
-     * strictly required here because:
-     * * Each request in the transaction will have changes tracked and ACLs
-     *   checked if appropriate.
-     * * cib_perform_op() will infer changes for the commit request at the end.
+     * strictly required here because each request in the transaction will have
+     * changes tracked and ACLs checked if appropriate.
      */
     CRM_CHECK((*result_cib != NULL) && (*result_cib != private->cib_xml),
               *result_cib = pcmk__xml_copy(NULL, private->cib_xml));
@@ -318,8 +304,7 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 }
 
 static int
-process_commit_transact(const char *op, int options, const char *section,
-                        xmlNode *req, xmlNode *input, xmlNode **cib_xml,
+process_commit_transact(xmlNode *req, xmlNode *input, xmlNode **cib_xml,
                         xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
