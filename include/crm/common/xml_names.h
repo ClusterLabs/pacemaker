@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -376,7 +376,6 @@ extern "C" {
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_RELOADABLE                  "reloadable"
 #define PCMK_XA_REMAIN_STOPPED              "remain_stopped"
-#define PCMK_XA_REMOTE_CLEAR_PORT           "remote-clear-port"
 #define PCMK_XA_REMOTE_NODE                 "remote_node"
 #define PCMK_XA_REMOTE_TLS_PORT             "remote-tls-port"
 #define PCMK_XA_REMOVED                     "removed"
@@ -457,6 +456,9 @@ extern "C" {
 #define PCMK_XA_XPATH                       "xpath"
 #define PCMK_XA_YEARDAYS                    "yeardays"
 #define PCMK_XA_YEARS                       "years"
+
+//! \deprecated Deprecated since 3.0.2; use \c PCMK_XA_REMOTE_TLS_PORT instead
+#define PCMK_XA_REMOTE_CLEAR_PORT           "remote-clear-port"
 
 //! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
 #define PCMK_XA_ORPHAN                      "orphan"

@@ -26,7 +26,6 @@
 #include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
-#include <crm/lrmd.h>               // DEFAULT_REMOTE_USERNAME
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
@@ -183,6 +182,10 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     (*tls)->server = server;
 
     if ((*tls)->cred_type == GNUTLS_CRD_ANON) {
+        pcmk__warn("Using anonymous authentication.  This is insecure and will "
+                   "be removed in a future release.  Use PSK or X509 certificates "
+                   "instead.");
+
         if (server) {
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
@@ -409,16 +412,16 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
 }
 
 void
-pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key)
+pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                             gnutls_datum_t *key)
 {
-    gnutls_psk_set_client_credentials(tls->credentials.psk_c,
-                                      DEFAULT_REMOTE_USERNAME, key,
+    gnutls_psk_set_client_credentials(tls->credentials.psk_c, username, key,
                                       GNUTLS_PSK_KEY_RAW);
 }
 
 void
-pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                           gnutls_psk_server_credentials_function *cb)
+pcmk__tls_server_add_psk_callback(pcmk__tls_t *tls,
+                                  gnutls_psk_server_credentials_function *cb)
 {
     gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
 }

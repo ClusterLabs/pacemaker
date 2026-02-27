@@ -1410,7 +1410,8 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
             return;
         }
 
-        pcmk__tls_add_psk_key(native->tls, &psk_key);
+        pcmk__tls_client_add_psk_key(native->tls, DEFAULT_REMOTE_USERNAME,
+                                     &psk_key);
         gnutls_free(psk_key.data);
     }
 
@@ -1504,7 +1505,8 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
             return rc;
         }
 
-        pcmk__tls_add_psk_key(native->tls, &psk_key);
+        pcmk__tls_client_add_psk_key(native->tls, DEFAULT_REMOTE_USERNAME,
+                                     &psk_key);
         gnutls_free(psk_key.data);
     }
 
