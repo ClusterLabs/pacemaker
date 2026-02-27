@@ -53,11 +53,6 @@ endif
 
 ## SOURCES
 
-# A few tools are just thin wrappers around crm_attribute.
-# This makes their help get updated when crm_attribute changes
-# (see mk/common.mk).
-MAN8DEPS		= crm_attribute
-
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 crmadmin_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
