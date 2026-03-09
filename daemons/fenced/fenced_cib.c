@@ -146,6 +146,14 @@ fencing_topology_init(void)
                                "[@" PCMK_XA_NAME "='"   \
                                     PCMK_OPT_FENCING_WATCHDOG_TIMEOUT "']"
 
+/* @COMPAT The "stonith-watchdog-timeout" option has been a deprecated alias
+ * for "fencing-watchdog-timeout" since 3.0.2. Make sure it still works as a
+ * fallback until it's dropped in a future release.
+ */
+#define XPATH_STONITH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
+                                       "[@" PCMK_XA_NAME "='"   \
+                                            PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
+
 static void
 update_fencing_watchdog_timeout_ms(xmlNode *cib)
 {
@@ -157,6 +165,17 @@ update_fencing_watchdog_timeout_ms(xmlNode *cib)
     stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
                                                 XPATH_WATCHDOG_TIMEOUT,
                                                 PCMK__LOG_NEVER);
+
+    /* @COMPAT The "stonith-watchdog-timeout" option has been a deprecated alias
+     * for "fencing-watchdog-timeout" since 3.0.2. Make sure it still works as a
+     * fallback until it's dropped in a future release.
+     */
+    if (stonith_watchdog_xml == NULL) {
+        stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
+                                                    XPATH_STONITH_WATCHDOG_TIMEOUT,
+                                                    PCMK__LOG_NEVER);
+    }
+
     if (stonith_watchdog_xml == NULL) {
         return;
     }
