@@ -154,12 +154,13 @@ fencing_topology_init(void)
                                        "[@" PCMK_XA_NAME "='"   \
                                             PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
 
-static void
-update_fencing_watchdog_timeout_ms(xmlNode *cib)
+static long long
+get_fencing_watchdog_timeout(xmlNode *cib)
 {
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
     int rc = pcmk_rc_ok;
+    long long timeout_ms = 0;
 
     // @TODO An XPath search can't handle multiple instances or rules
     stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
@@ -177,19 +178,20 @@ update_fencing_watchdog_timeout_ms(xmlNode *cib)
     }
 
     if (stonith_watchdog_xml == NULL) {
-        return;
+        return 0;
     }
 
     value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
     if (value == NULL) {
-        return;
+        return 0;
     }
 
-    rc = pcmk__parse_ms(value, &fencing_watchdog_timeout_ms);
-
-    if ((rc != pcmk_rc_ok) || (fencing_watchdog_timeout_ms < 0)) {
-        fencing_watchdog_timeout_ms = pcmk__auto_fencing_watchdog_timeout();
+    rc = pcmk__parse_ms(value, &timeout_ms);
+    if ((rc == pcmk_rc_ok) && (timeout_ms >= 0)) {
+        return timeout_ms;
     }
+
+    return pcmk__auto_fencing_watchdog_timeout();
 }
 
 /*!
@@ -557,7 +559,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
-    update_fencing_watchdog_timeout_ms(local_cib);
+    fencing_watchdog_timeout_ms = get_fencing_watchdog_timeout(local_cib);
 
     if (timeout_ms_saved != fencing_watchdog_timeout_ms) {
         need_full_refresh = true;
@@ -583,7 +585,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     local_cib = pcmk__xml_copy(NULL, output);
 
     pcmk__refresh_node_caches_from_cib(local_cib);
-    update_fencing_watchdog_timeout_ms(local_cib);
+    fencing_watchdog_timeout_ms = get_fencing_watchdog_timeout(local_cib);
 
     fencing_topology_init();
     cib_devices_update();
