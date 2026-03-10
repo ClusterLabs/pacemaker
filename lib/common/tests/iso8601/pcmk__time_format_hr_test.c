@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -94,8 +94,20 @@ without_nano(void **state)
     assert_hr_format("The time is %H:%M right now",
                      "The time is 03:04 right now", NULL);
     assert_hr_format("%3S seconds", "005 seconds",
-                     // *BSD strftime() doesn't support field widths
+#if defined(HAVE_STRFTIME_WIDTH)
+                     NULL);
+#elif defined(__FreeBSD__)
+                     /* FreeBSD doesn't support field width in strftime().  It
+                      * strips the leading % and copies the rest of the specifier
+                      * into the string.
+                      */
                      "3S seconds");
+#else
+                     /* musl (and maybe other c libraries) ignores the field width
+                      * and handle the rest of the specifier normally.
+                      */
+                     "05 seconds");
+#endif
 
     // strftime() treats %% as a literal %
     assert_hr_format("%%H %%N", "%H %N", NULL);
