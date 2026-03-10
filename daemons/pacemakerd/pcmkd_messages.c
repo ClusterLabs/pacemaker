@@ -75,8 +75,10 @@ handle_ping_request(pcmk__request_t *request)
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     }
 
-    /* just proceed state on sbd pinging us */
-    if ((from != NULL) && g_str_has_prefix(from, "sbd")) {
+    /* Just proceed state on sbd pinging us.
+     * The "from" string is in the format "<pid>_sbd:pcmk".
+     */
+    if ((from != NULL) && (strstr(from, "sbd") != NULL)) {
         if (pcmk__str_eq(pacemakerd_state, PCMK__VALUE_SHUTDOWN_COMPLETE,
                          pcmk__str_none)) {
             if (pcmk__get_sbd_sync_resource_startup()) {
