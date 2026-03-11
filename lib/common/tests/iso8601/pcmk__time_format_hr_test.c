@@ -66,24 +66,43 @@ no_specifiers(void **state)
 {
     assert_hr_format("no specifiers", "no specifiers", NULL);
     assert_hr_format("this has a literal % in it",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL);
+#else
                      "this has a literal % in it",
                      // *BSD strftime() strips single %
                      "this has a literal  in it");
+#endif
+
     assert_hr_format("this has a literal %01 in it",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL);
+#else
                      "this has a literal %01 in it",
                      // *BSD strftime() strips %0
                      "this has a literal 1 in it");
+#endif
+
     assert_hr_format("%2 this starts and ends with %",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL);
+#else
                      "%2 this starts and ends with %",
                      // *BSD strftime() strips % in front of nonzero number
                      "2 this starts and ends with %");
+#endif
 
     /* strftime() treats % with a number (and no specifier) as a literal string
      * to be formatted with a field width (undocumented and probably a bug ...)
      */
-    assert_hr_format("this ends with %10", "this ends with        %10",
+    assert_hr_format("this ends with %10",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL);
+#else
+                     "this ends with        %10",
                      // *BSD strftime() strips % in front of nonzero number
                      "this ends with 10");
+#endif
 }
 
 static void
