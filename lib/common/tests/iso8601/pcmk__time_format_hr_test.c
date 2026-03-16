@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -85,24 +85,43 @@ no_specifiers(void **state)
      * as "%%".
      */
     assert_hr_format("this has a literal % in it",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL, 0);
+#else
                      "this has a literal % in it",
                      // *BSD strftime() strips single %
                      "this has a literal  in it", 0);
+#endif
+
     assert_hr_format("this has a literal %01 in it",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL, 0);
+#else
                      "this has a literal %01 in it",
                      // *BSD strftime() strips %0
                      "this has a literal 1 in it", 0);
+#endif
+
     assert_hr_format("%2 this starts and ends with %",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL, 0);
+#else
                      "%2 this starts and ends with %",
                      // *BSD strftime() strips % in front of nonzero number
                      "2 this starts and ends with %", 0);
+#endif
 
     /* strftime() treats % with a number (and no specifier) as a literal string
      * to be formatted with a field width (undocumented and probably a bug ...)
      */
-    assert_hr_format("this ends with %10", "this ends with        %10",
+    assert_hr_format("this ends with %10",
+#ifdef HAVE_STRFTIME_EMPTY_SPEC_FAILS
+                     NULL, NULL, 0);
+#else
+                     "this ends with        %10",
                      // *BSD strftime() strips % in front of nonzero number
                      "this ends with 10", 0);
+#endif
 }
 
 static void
@@ -120,8 +139,20 @@ without_frac(void **state)
      * g_date_time_format() doesn't support field widths.
      */
     assert_hr_format("%3S seconds", "0" SECOND_S " seconds",
-                     // *BSD strftime() doesn't support field widths
+#if defined(HAVE_STRFTIME_WIDTH)
+                     NULL, 0);
+#elif defined(__FreeBSD__)
+                     /* FreeBSD doesn't support field width in strftime().  It
+                      * strips the leading % and copies the rest of the specifier
+                      * into the string.
+                      */
                      "3S seconds", 0);
+#else
+                     /* musl (and maybe other c libraries) ignores the field width
+                      * and handle the rest of the specifier normally.
+                      */
+                     SECOND_S " seconds", 0);
+#endif
 
     // strftime() treats %% as a literal %
     assert_hr_format("%%H %%N", "%H %N", NULL, 0);

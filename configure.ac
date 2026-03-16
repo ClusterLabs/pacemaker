@@ -1,7 +1,7 @@
 dnl
 dnl autoconf for Pacemaker
 dnl
-dnl Copyright 2009-2025 the Pacemaker project contributors
+dnl Copyright 2009-2026 the Pacemaker project contributors
 dnl
 dnl The version control history for this file may have further details.
 dnl
@@ -1233,6 +1233,42 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
 AS_IF([test x"$have_sscanf_m" = x"yes"],
       [AC_DEFINE([HAVE_SSCANF_M], [1],
                  [Define to 1 if sscanf %m modifier is available])])
+
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[
+    char s[200];
+    time_t t;
+    struct tm *tmp;
+    size_t rc;
+
+    t = time(NULL);
+    tmp = localtime(&t);
+    rc = strftime(s, sizeof(s), "%3S", tmp);
+    return rc != 3;
+                               ]])],
+              [have_strftime_width="yes"],
+              [have_strftime_width="no"],
+              [have_strftime_width="no"])
+AS_IF([test x"$have_strftime_width" = x"yes"],
+      [AC_DEFINE([HAVE_STRFTIME_WIDTH], [1],
+                 [Define to 1 if strftime supports field width])])
+
+AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[
+    char s[200];
+    time_t t;
+    struct tm *tmp;
+    size_t rc;
+
+    t = time(NULL);
+    tmp = localtime(&t);
+    rc = strftime(s, sizeof(s), "% abcd", tmp);
+    return rc != 0;
+                               ]])],
+              [have_strftime_empty_spec_fails="yes"],
+              [have_strftime_empty_spec_fails="no"],
+              [have_strftime_empty_spec_fails="no"])
+AS_IF([test x"$have_strftime_empty_spec_fails" = x"yes"],
+      [AC_DEFINE([HAVE_STRFTIME_EMPTY_SPEC_FAILS], [1],
+                 [Define to 1 if a percent with no specifier fails])])
 
 dnl ========================================================================
 dnl   bzip2
