@@ -68,6 +68,8 @@ extern     "C" {
 #define PCMK_OPT_SYMMETRIC_CLUSTER              "symmetric-cluster"
 #define PCMK_OPT_TRANSITION_DELAY               "transition-delay"
 
+//! \deprecated Do not use
+#define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT       "stonith-watchdog-timeout"
 
 /*
  * Meta-attributes
