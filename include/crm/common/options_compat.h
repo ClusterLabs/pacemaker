@@ -48,9 +48,6 @@ extern "C" {
 #define PCMK_OPT_STONITH_TIMEOUT "stonith-timeout"
 
 //! \deprecated Do not use
-#define PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "stonith-watchdog-timeout"
-
-//! \deprecated Do not use
 #define PCMK_OPT_FENCE_REACTION "fence-reaction"
 
 //! \deprecated Do not use

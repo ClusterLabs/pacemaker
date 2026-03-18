@@ -273,7 +273,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_FENCING_WATCHDOG_TIMEOUT, "stonith-watchdog-timeout",
+        PCMK_OPT_FENCING_WATCHDOG_TIMEOUT, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT,
             PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
