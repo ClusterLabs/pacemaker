@@ -2087,6 +2087,23 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
                              "/" PCMK__XE_LRM_RSC_OP                    \
                              "[@" PCMK__XA_RC_CODE "='%d']"
 
+static bool
+pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+{
+    xmlXPathObject *search = NULL;
+    bool pending = false;
+    char *xpath = NULL;
+
+    xpath = pcmk__assert_asprintf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    search = pcmk__xpath_search(scheduler->input->doc, xpath);
+    pending = (pcmk__xpath_num_results(search) > 0);
+
+    xmlXPathFreeObject(search);
+    free(xpath);
+
+    return pending;
+}
+
 /*!
  * \internal
  * \brief Wait until all pending cluster actions are complete
@@ -2108,13 +2125,10 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
     // @FIXME This should bail out when run with CIB_file
     pcmk_scheduler_t *scheduler = NULL;
-    xmlXPathObject *search = NULL;
     int rc = pcmk_rc_ok;
-    bool pending_unknown_state_resources;
     time_t expire_time = time(NULL);
     time_t time_diff;
     bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
-    char *xpath = NULL;
 
     if (timeout_ms == 0) {
         expire_time += WAIT_DEFAULT_TIMEOUT_S;
@@ -2127,7 +2141,6 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         return ENOMEM;
     }
 
-    xpath = pcmk__assert_asprintf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
     do {
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
@@ -2173,14 +2186,10 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             }
         }
 
-        search = pcmk__xpath_search(scheduler->input->doc, xpath);
-        pending_unknown_state_resources = (pcmk__xpath_num_results(search) > 0);
-        xmlXPathFreeObject(search);
     } while (actions_are_pending(scheduler->priv->actions)
-             || pending_unknown_state_resources);
+             || pending_actions_in_cib(scheduler));
 
     pcmk_free_scheduler(scheduler);
-    free(xpath);
     return rc;
 }
 
