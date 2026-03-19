@@ -2087,21 +2087,101 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
                              "/" PCMK__XE_LRM_RSC_OP                    \
                              "[@" PCMK__XA_RC_CODE "='%d']"
 
+#define XPATH_LAST_FAILURE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS       \
+                           "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM \
+                           "/" PCMK__XE_LRM_RESOURCES               \
+                           "/" PCMK__XE_LRM_RESOURCE                \
+                           "/" PCMK__XE_LRM_RSC_OP                  \
+                           "[@" PCMK__XA_OPERATION_KEY "='%s']"
+/*!
+ * \internal
+ * \brief Check if there's a lrm_rsc_op last_failure entry for a given key
+ *
+ * \param[in] scheduler The scheduler object
+ * \param[in] key       The operation_key attribute of some lrm_rsc_op entry
+ *
+ * \return \c true if there is an lrm_rsc_op history entry with \p key as its
+ *         operation_key and with an id attribute ending in "_last_failure_0",
+ *         \c false otherwise
+ */
 static bool
-pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+action_has_matching_last_failure(pcmk_scheduler_t *scheduler, const char *key)
 {
     xmlXPathObject *search = NULL;
-    bool pending = false;
+    bool retval = false;
     char *xpath = NULL;
 
-    xpath = pcmk__assert_asprintf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    xpath = pcmk__assert_asprintf(XPATH_LAST_FAILURE, key);
     search = pcmk__xpath_search(scheduler->input->doc, xpath);
-    pending = (pcmk__xpath_num_results(search) > 0);
+
+    for (int i = 0; i < pcmk__xpath_num_results(search); i++) {
+        const xmlNode *lrm_op_xml = pcmk__xpath_result(search, i);
+
+        if (g_str_has_suffix(pcmk__xe_get(lrm_op_xml, PCMK_XA_ID),
+                             "_last_failure_0")) {
+            retval = true;
+            break;
+        }
+    }
 
     xmlXPathFreeObject(search);
     free(xpath);
 
-    return pending;
+    return retval;
+}
+
+/*!
+ * \internal
+ * \brief Determine if there are certain pending actions in the CIB
+ *
+ * \param[in] scheduler The scheduler object
+ *
+ * \return \c true if there are any pending actions in the CIB, after
+ *         filtering out pending recurring monitor actions with a last_failure
+ *         history entry; \c false otherwise
+ *
+ * \note We filter out certain recurring monitor actions because they might
+ *       always be present.  The scheduler can't replace the history entry
+ *       with a failure entry (see bbadfe553), but it's still not a pending
+ *       action and we don't want to wait for it.
+ */
+static bool
+pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+{
+    xmlXPathObject *search = NULL;
+    char *xpath = NULL;
+    bool any_pending = false;
+
+    xpath = pcmk__assert_asprintf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    search = pcmk__xpath_search(scheduler->input->doc, xpath);
+
+    for (int i = 0; i < pcmk__xpath_num_results(search); i++) {
+        const char *op_key = NULL;
+        const xmlNode *lrm_op_xml = pcmk__xpath_result(search, i);
+
+        if (!pcmk__str_eq(PCMK_ACTION_MONITOR,
+                          pcmk__xe_get(lrm_op_xml, PCMK_XA_OPERATION),
+                          pcmk__str_none)) {
+            any_pending = true;
+            break;
+        }
+
+        if (pcmk_xe_is_probe(lrm_op_xml)) {
+            any_pending = true;
+            break;
+        }
+
+        op_key = pcmk__xe_get(lrm_op_xml, PCMK__XA_OPERATION_KEY);
+        if ((op_key == NULL) || !action_has_matching_last_failure(scheduler, op_key)) {
+            any_pending = true;
+            break;
+        }
+    }
+
+    xmlXPathFreeObject(search);
+    free(xpath);
+
+    return any_pending;
 }
 
 /*!
