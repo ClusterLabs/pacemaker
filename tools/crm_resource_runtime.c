@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -2080,6 +2080,13 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 /* For --wait, how long to sleep between cluster state checks */
 #define WAIT_SLEEP_S (2)
 
+#define XPATH_PENDING_ACTION "/" PCMK_XE_CIB "/" PCMK_XE_STATUS         \
+                             "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM   \
+                             "/" PCMK__XE_LRM_RESOURCES                 \
+                             "/" PCMK__XE_LRM_RESOURCE                  \
+                             "/" PCMK__XE_LRM_RSC_OP                    \
+                             "[@" PCMK__XA_RC_CODE "='%d']"
+
 /*!
  * \internal
  * \brief Wait until all pending cluster actions are complete
@@ -2120,13 +2127,7 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         return ENOMEM;
     }
 
-    xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
-                                  "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
-                                  "/" PCMK__XE_LRM_RESOURCES
-                                  "/" PCMK__XE_LRM_RESOURCE
-                                  "/" PCMK__XE_LRM_RSC_OP
-                                  "[@" PCMK__XA_RC_CODE "='%d']",
-                                  PCMK_OCF_UNKNOWN);
+    xpath = pcmk__assert_asprintf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
     do {
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
