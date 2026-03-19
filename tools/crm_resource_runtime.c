@@ -1953,21 +1953,94 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
                              "/" PCMK__XE_LRM_RSC_OP                    \
                              "[@" PCMK__XA_RC_CODE "='%d']"
 
+#define XPATH_LAST_FAILURE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS       \
+                           "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM \
+                           "/" PCMK__XE_LRM_RESOURCES               \
+                           "/" PCMK__XE_LRM_RESOURCE                \
+                           "/" PCMK__XE_LRM_RSC_OP                  \
+                           "[@" PCMK__XA_OPERATION_KEY "='%s']"
+
+/*!
+ * \internal
+ * \brief Check if there's a lrm_rsc_op last_failure entry for a given key
+ *
+ * Given the ID for some lrm_rsc_op history entry (such as "dummy1_monitor_10000"),
+ * check to see if there's a lrm_rsc_op history entry with that as its operation
+ * key and an ID ending in "_last_failure_0".  This indicates the presence of a
+ * failed recurring monitor operation.
+ */
 static bool
-pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+action_has_matching_last_failure(pcmk_scheduler_t *scheduler, const char *id)
 {
     xmlXPathObject *search = NULL;
-    bool pending = false;
+    bool retval = false;
     char *xpath = NULL;
 
-    xpath = crm_strdup_printf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    xpath = crm_strdup_printf(XPATH_LAST_FAILURE, id);
     search = xpath_search(scheduler->input, xpath);
-    pending = (numXpathResults(search) > 0);
+
+    for (int i = 0; i < numXpathResults(search); i++) {
+        xmlNode *lrm_op_xml = getXpathResult(search, i);
+
+        if (strstr(crm_element_value(lrm_op_xml, PCMK_XA_ID),
+                   "_last_failure_0") != NULL) {
+            retval = true;
+            break;
+        }
+    }
 
     freeXpathObject(search);
     free(xpath);
 
-    return pending;
+    return retval;
+}
+
+static bool
+pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+{
+    xmlXPathObject *search = NULL;
+    char *xpath = NULL;
+    int n_actions = 0;
+
+    xpath = crm_strdup_printf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    search = xpath_search(scheduler->input, xpath);
+
+    for (int i = 0; i < numXpathResults(search); i++) {
+        const char *op_key = NULL;
+        xmlNode *lrm_op_xml = getXpathResult(search, i);
+        int interval = 0;
+
+        if (!pcmk__str_eq(PCMK_ACTION_MONITOR,
+                          crm_element_value(lrm_op_xml, PCMK_XA_OPERATION),
+                          pcmk__str_none)) {
+            n_actions++;
+            continue;
+        }
+
+        if ((crm_element_value_int(lrm_op_xml, PCMK_XA_INTERVAL, &interval) != 0)
+            || (interval == 0)) {
+            n_actions++;
+            continue;
+        }
+
+        op_key = crm_element_value(lrm_op_xml, PCMK__XA_OPERATION_KEY);
+        if (!action_has_matching_last_failure(scheduler, op_key)) {
+            n_actions++;
+            continue;
+        }
+
+        /* If we've made it to this point, this is a pending recurring monitor
+         * action with a last_failure history entry.  The scheduler can't
+         * replace the history entry with a failure entry (see bbadfe553), but
+         * it's still not a pending action and we don't want to wait on it.
+         * Do not increment the n_actions counter.
+         */
+    }
+
+    freeXpathObject(search);
+    free(xpath);
+
+    return n_actions != 0;
 }
 
 /*!
