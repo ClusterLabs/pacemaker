@@ -1953,6 +1953,23 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
                              "/" PCMK__XE_LRM_RSC_OP                    \
                              "[@" PCMK__XA_RC_CODE "='%d']"
 
+static bool
+pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+{
+    xmlXPathObject *search = NULL;
+    bool pending = false;
+    char *xpath = NULL;
+
+    xpath = crm_strdup_printf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    search = xpath_search(scheduler->input, xpath);
+    pending = (numXpathResults(search) > 0);
+
+    freeXpathObject(search);
+    free(xpath);
+
+    return pending;
+}
+
 /*!
  * \internal
  * \brief Wait until all pending cluster actions are complete
@@ -1973,13 +1990,10 @@ int
 wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
     pcmk_scheduler_t *scheduler = NULL;
-    xmlXPathObjectPtr search;
     int rc = pcmk_rc_ok;
-    bool pending_unknown_state_resources;
     time_t expire_time = time(NULL);
     time_t time_diff;
     bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
-    char *xpath = NULL;
 
     if (timeout_ms == 0) {
         expire_time += WAIT_DEFAULT_TIMEOUT_S;
@@ -1992,7 +2006,6 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         return ENOMEM;
     }
 
-    xpath = crm_strdup_printf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
     do {
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
@@ -2037,14 +2050,9 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
                 printed_version_warning = true;
             }
         }
-
-        search = xpath_search(scheduler->input, xpath);
-        pending_unknown_state_resources = (numXpathResults(search) > 0);
-        freeXpathObject(search);
-    } while (actions_are_pending(scheduler->actions) || pending_unknown_state_resources);
+    } while (actions_are_pending(scheduler->actions) || pending_actions_in_cib(scheduler));
 
     pe_free_working_set(scheduler);
-    free(xpath);
     return rc;
 }
 
