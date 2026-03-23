@@ -9,16 +9,44 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                        // bool, true, false
-#include <stdio.h>
-#include <limits.h>
+#include <errno.h>                          // ENXIO, ENOTCONN, ENOTUNIQ
+#include <limits.h>                         // UINT_MAX, INT_MAX
+#include <stdbool.h>                        // bool, false, true
+#include <stdlib.h>                         // NULL, free, setenv
+#include <string.h>                         // strdup, strcmp, strerror
+#include <syslog.h>                         // LOG_ERR
+#include <time.h>                           // time, time_t
+#include <unistd.h>                         // sleep, unlink
 
-#include <glib.h>
+#include <glib.h>                           // GList, g_list_free
 #include <libxml/tree.h>                    // xmlNode
-#include <libxml/xpath.h>                   // xmlXPathObject, etc.
+#include <libxml/xpath.h>                   // xmlXPathObject, xmlXPathFreeObject
+#include <qb/qbdefs.h>                      // QB_MIN
 
-#include <crm/common/ipc_controld.h>
-#include <crm/services_internal.h>
+#include <crm/cib.h>                        // cib_t, cib_delete, cib_shadow_new
+#include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
+#include <crm/common/agents.h>              // pcmk_get_ra_caps, pcmk_ra_cap_*
+#include <crm/common/cib.h>                 // pcmk_cib_xpath_for
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>                 // pcmk_ipc_api_t
+#include <crm/common/ipc_controld.h>        // pcmk_controld_api_*
+#include <crm/common/iso8601.h>             // crm_time_new
+#include <crm/common/nvpair.h>              // crm_create_nvpair_xml
+#include <crm/common/options.h>             // PCMK_META_TARGET_ROLE
+#include <crm/common/resources.h>           // pcmk__resource, pe_find
+#include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
+#include <crm/common/roles.h>               // rsc_role_e, PCMK_ROLE_*
+#include <crm/common/scheduler.h>           // pcmk__scheduler, pcmk_free_scheduler
+#include <crm/common/strings.h>             // pcmk_parse_interval_spec
+#include <crm/common/xml.h>                 // PCMK_XA_ID, PCMK_XE_*
+#include <crm/crm.h>                        // CRM_FEATURE_SET, crm_system_name
+#include <crm/pengine/complex.h>            // get_meta_attributes, uber_parent
+#include <crm/pengine/internal.h>           // clone_strip, pe__const_top_resource
+#include <crm/pengine/status.h>             // cluster_status, pe_find_resource
+#include <crm/services.h>                   // resources_find_service_class
+#include <crm/services_internal.h>          // services__create_resource_action
+#include <crm_config.h>                     // BUILD_VERSION, PACEMAKER_VERSION
+#include <pacemaker-internal.h>             // pcmk__schedule_actions
 
 #include <crm_resource.h>
 
