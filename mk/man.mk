@@ -21,7 +21,8 @@
 #
 
 if BUILD_HELP
-man8_MANS		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
+manpages 		= $(sbin_PROGRAMS:%=%.8) $(sbin_SCRIPTS:%=%.8)
+man8_MANS 		= $(filter-out attrd_updater.8,$(manpages))
 
 HELP2MAN_ARGS = -N --section 8 --name "Part of the Pacemaker cluster resource manager"
 
