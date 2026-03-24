@@ -2032,6 +2032,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 doc/Makefile                                        \
                 doc/man/Makefile                                    \
                 doc/man/attrd_updater.8                             \
+                doc/man/cibadmin.8                                  \
                 doc/sphinx/Makefile                                 \
                 etc/Makefile                                        \
                 etc/init.d/pacemaker                                \
