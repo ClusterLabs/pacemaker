@@ -610,6 +610,8 @@ api_schemas="$(schemas_for_make "xml/api")"
 CONFIG_STATUS_DEPENDENCIES="$cib_schemas $api_schemas"
 AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
 
+AC_SUBST(BUILD_DATE, [$(date +"%Y-%m-%d")])
+
 
 dnl ==============================================
 dnl Process simple options
