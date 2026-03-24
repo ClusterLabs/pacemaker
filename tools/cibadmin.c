@@ -948,56 +948,10 @@ static const pcmk__message_entry_t fmt_functions[] = {
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    const char *desc = NULL;
     GOptionContext *context = NULL;
-
-    desc = "Examples:\n\n"
-           "Query the configuration:\n\n"
-           "\t# cibadmin --query\n\n"
-           "or just:\n\n"
-           "\t# cibadmin\n\n"
-           "Query just the cluster options configuration:\n\n"
-           "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
-           "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
-           "\t# cibadmin --query --xpath "
-               "\"//" PCMK_XE_NVPAIR
-               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\"\n\n"
-           "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
-           "\t# cibadmin --delete-all --xpath "
-               "\"//" PCMK_XE_NVPAIR
-               "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
-           "Remove the resource named 'old':\n\n"
-           "\t# cibadmin --delete --xml-text "
-               "'<" PCMK_XE_PRIMITIVE " " PCMK_XA_ID "=\"old\"/>'\n\n"
-           "Remove all resources from the configuration:\n\n"
-           "\t# cibadmin --replace --scope " PCMK_XE_RESOURCES
-               " --xml-text '<" PCMK_XE_RESOURCES "/>'\n\n"
-           "Replace complete configuration with contents of "
-               "$HOME/pacemaker.xml:\n\n"
-           "\t# cibadmin --replace --xml-file $HOME/pacemaker.xml\n\n"
-           "Replace " PCMK_XE_CONSTRAINTS " section of configuration with "
-               "contents of $HOME/constraints.xml:\n\n"
-           "\t# cibadmin --replace --scope " PCMK_XE_CONSTRAINTS
-               " --xml-file $HOME/constraints.xml\n\n"
-           "Increase configuration version to prevent old configurations from "
-               "being loaded accidentally:\n\n"
-           "\t# cibadmin --modify --score --xml-text "
-               "'<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH
-                   "=\"" PCMK_XA_ADMIN_EPOCH "++\"/>'\n\n"
-           "Edit the configuration with your favorite $EDITOR:\n\n"
-           "\t# cibadmin --query > $HOME/local.xml\n\n"
-           "\t# $EDITOR $HOME/local.xml\n\n"
-           "\t# cibadmin --replace --xml-file $HOME/local.xml\n\n"
-           "Assuming terminal, render configuration in color (green for "
-               "writable, blue for readable, red for\n"
-               "denied) to visualize permissions for user tony:\n\n"
-           "\t# cibadmin --show-access=color --query --user tony | less -r\n\n"
-           "SEE ALSO:\n"
-           " crm(8), pcs(8), crm_shadow(8), crm_diff(8)\n";
 
     context = pcmk__build_arg_context(args, "text (default), xml", group,
                                       "[<command>]");
-    g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
                         command_entries);
