@@ -10,12 +10,15 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <pwd.h>                    // getpwuid
 #include <signal.h>                 // signal, SIGPIPE, SIG_IGN
 #include <stdbool.h>                // bool
 #include <stdlib.h>                 // NULL, getenv, free
 #include <string.h>                 // memcpy, strdup
+#include <sys/stat.h>               // S_ISREG, stat
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
+#include <unistd.h>                 // geteuid
 
 #include <glib.h>                   // g_clear_pointer, g_file_get_contents
 #include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_E_SUCCESS
@@ -564,4 +567,45 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
 
     g_free(contents);
     return pcmk_rc_ok;
+}
+
+bool
+pcmk__cred_file_useable(const char *location, bool *file_exists)
+{
+    int rc = pcmk_rc_ok;
+    struct stat sb;
+    uid_t euid;
+
+    pcmk__assert((location != NULL) && (file_exists != NULL));
+
+    rc = stat(location, &sb);
+    if ((rc != 0) || !S_ISREG(sb.st_mode)) {
+        *file_exists = false;
+        return false;
+    }
+
+    *file_exists = true;
+
+    euid = geteuid();
+    if (sb.st_uid != euid) {
+        struct passwd *pwent = getpwuid(euid);
+
+        if (pwent == NULL) {
+            pcmk__err("Refusing to use PSK credentials file %s because it is "
+                      "not owned by UID %lld", (long long) euid);
+        } else {
+            pcmk__err("Refusing to use PSK credentials file %s because it is "
+                      "not owned by %s", location, pwent->pw_name);
+        }
+
+        return false;
+    }
+
+    if ((sb.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+        pcmk__err("Refusing to use PSK credentials file %s because it has "
+                  "group and/or other permissions set", location);
+        return false;
+    }
+
+    return true;
 }

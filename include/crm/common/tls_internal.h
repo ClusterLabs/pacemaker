@@ -216,6 +216,23 @@ void pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source);
  */
 int pcmk__load_key(const char *location, gnutls_datum_t *key);
 
+/*!
+ * \internal
+ * \brief Check whether a PSK credentials file is useable
+ *
+ * This function checks that a PSK credentials file exists and has the
+ * correct ownership and permissions
+ *
+ * \param[in]  location    The file path to check
+ * \param[out] file_exists \c true if \p location exists and is a regular
+ *                         file
+ *
+ * \return \c true if the credentials file exists, is owned by the current
+ *         effective user, and is not accessible by the group or world;
+ *         \c false otherwise
+ */
+bool pcmk__cred_file_useable(const char *location, bool *file_exists);
+
 #ifdef __cplusplus
 }
 #endif
