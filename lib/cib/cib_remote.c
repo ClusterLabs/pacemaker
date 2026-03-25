@@ -20,6 +20,7 @@
 #include <sys/socket.h>
 
 #include <glib.h>
+#include <gnutls/gnutls.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -372,22 +373,71 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     if (private->encrypted) {
         int tls_rc = GNUTLS_E_SUCCESS;
+        bool have_psk = false;
+        const char *key_location = getenv("CIB_key_file");
 
-        // @TODO Implement pre-shared key authentication (see T961)
-        rc = pcmk__init_tls(&tls, false, false);
+        /* X509 certificates take precedence over PSK in pcmk__init_tls,
+         * so don't perform any of the following (potentially noisy) checks
+         * if we don't care about their results.
+         */
+        if (!pcmk__x509_enabled()) {
+            bool file_exists = false;
+
+            if (key_location != NULL) {
+                have_psk = pcmk__cred_file_useable(key_location, &file_exists);
+            }
+
+            if (!have_psk && file_exists) {
+                /* The credential file exists but doesn't have the right owner
+                 * or permissions.  Don't fall back to anonymous on config
+                 * errors.
+                 */
+                pcmk__err("Remote CIB session creation for %s:%d failed",
+                          private->server, private->port);
+                return -EACCES;
+            }
+
+            if (!have_psk) {
+                /* The credential file does not exist at all, so fall back
+                 * to anonymous auth.
+                 *
+                 * @COMPAT Remove fallback to anonymous authentication
+                 */
+                pcmk__warn("Falling back to anonymous authentication for remote "
+                           "CIB connections");
+            }
+        }
+
+        rc = pcmk__init_tls(&tls, false, have_psk);
         if (rc != pcmk_rc_ok) {
             return -1;
         }
 
-        /* bind the socket to GnuTls lib */
-        connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
-        if (connection->tls_session == NULL) {
-            cib_tls_close(cib);
-            return -1;
+        if (tls->cred_type == GNUTLS_CRD_PSK) {
+            gnutls_datum_t psk_key = { NULL, 0 };
+
+            rc = pcmk__load_key(key_location, &psk_key, false);
+
+            if (rc != pcmk_rc_ok) {
+                pcmk__warn("Could not read remote CIB key from %s: %s",
+                           key_location, pcmk_rc_str(rc));
+            } else {
+                pcmk__tls_client_add_psk_key(tls, private->user, &psk_key, false);
+                gnutls_free(psk_key.data);
+            }
         }
 
-        rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
-                                        &tls_rc);
+        if (rc == pcmk_rc_ok) {
+            connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
+            if (connection->tls_session == NULL) {
+                cib_tls_close(cib);
+                return -ENOTCONN;
+            }
+
+            rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
+                                            &tls_rc);
+        }
+
         if (rc != pcmk_rc_ok) {
             const bool proto_err = (rc == EPROTO);
 
