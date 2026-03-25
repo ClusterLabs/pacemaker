@@ -10,10 +10,12 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <pwd.h>                    // getpwuid
 #include <signal.h>                 // signal, SIGPIPE, SIG_IGN
 #include <stdbool.h>                // bool
 #include <stdlib.h>                 // NULL, getenv, free
 #include <string.h>                 // memcpy, strdup
+#include <sys/stat.h>               // S_ISREG, stat
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
 
@@ -564,4 +566,50 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
 
     g_free(contents);
     return pcmk_rc_ok;
+}
+
+bool
+pcmk__cred_file_useable(const char *location, const char *user,
+                        bool *allow_fallback)
+{
+    int rc = pcmk_rc_ok;
+    struct stat sb;
+    struct passwd *pwent = NULL;
+
+    if ((location == NULL) || (user == NULL)) {
+        *allow_fallback = true;
+        return false;
+    }
+
+    rc = stat(location, &sb);
+    if ((rc != 0) || !S_ISREG(sb.st_mode)) {
+        /* The credentials file doesn't exist, or isn't a plain file. */
+        *allow_fallback = true;
+        return false;
+    }
+
+    /* The credentials file is present, so assume that the admin wants
+     * to enable PSK support.  In that case, if the file's ownership or
+     * permissions are incorrect, we want to refuse to use it, disable
+     * PSK support, and not fall back to anonymous authentication.
+     */
+    pwent = getpwuid(sb.st_uid);
+
+    if ((pwent == NULL)
+        || !pcmk__str_eq(pwent->pw_name, user, pcmk__str_none)) {
+        pcmk__err("Refusing to use PSK credentials file %s because it is "
+                  "not owned by %s", location, user);
+        *allow_fallback = false;
+        return false;
+    }
+
+    if ((sb.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+        pcmk__err("Refusing to use PSK credentials file %s because its "
+                  "permissions are too open", location);
+        *allow_fallback = false;
+        return false;
+    }
+
+    *allow_fallback = true;
+    return true;
 }
