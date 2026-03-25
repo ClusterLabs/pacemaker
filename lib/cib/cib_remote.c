@@ -18,8 +18,10 @@
 #include <netdb.h>
 #include <termios.h>
 #include <sys/socket.h>
+#include <pwd.h>
 
 #include <glib.h>
+#include <gnutls/gnutls.h>
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -372,22 +374,86 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     if (private->encrypted) {
         int tls_rc = GNUTLS_E_SUCCESS;
+        bool have_psk = false;
+        gnutls_datum_t psk_key = { NULL, 0 };
+        const char *key_location = getenv("CIB_key_file");
 
-        // @TODO Implement pre-shared key authentication (see T961)
-        rc = pcmk__init_tls(&tls, false, false);
+        /* X509 certificates take precedence over PSK in pcmk__init_tls,
+         * so don't perform any of the following (potentially noisy) checks
+         * if we don't care about their results.
+         */
+        if (!pcmk__x509_enabled()) {
+            bool anon_fallback = false;
+            struct passwd *pwent = NULL;
+            char *user = NULL;
+
+            /* Get the current username and make sure that the credentials file
+             * is owned by that user instead of private->user.  private->user is
+             * used for authentication on the remote system, but the permissions
+             * check on the key file is done on the local system.  Usernames may
+             * not be the same.
+             */
+            errno = 0;
+            pwent = getpwuid(geteuid());
+
+            if (pwent != NULL) {
+                /* user will be overwritten by the call to getpwuid() in
+                 * pcmk__cred_file_useable, so we have to duplicate it here.
+                 */
+                user = strdup(pwent->pw_name);
+            } else {
+                user = strdup(getenv("USER"));
+                pcmk__warn("Could not get password database entry for effective "
+                           "user ID %lld: %s. Assuming user is %s.",
+                           (long long) geteuid(),
+                           ((rc != 0)? strerror(rc) : "No matching entry found"),
+                           pcmk__s(user, "unprivileged user"));
+            }
+
+            have_psk = pcmk__cred_file_useable(key_location, user, &anon_fallback);
+            free(user);
+
+            if (!anon_fallback) {
+                pcmk__err("Remote CIB session creation for %s:%d failed",
+                          private->server, private->port);
+                return -1;
+            }
+
+            /* @COMPAT Remove fallback to anonymous authentication */
+            if (!have_psk) {
+                pcmk__warn("Falling back to anonymous authentication for remote "
+                           "CIB connections");
+            }
+        }
+
+        rc = pcmk__init_tls(&tls, false, have_psk);
         if (rc != pcmk_rc_ok) {
             return -1;
         }
 
-        /* bind the socket to GnuTls lib */
-        connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
-        if (connection->tls_session == NULL) {
-            cib_tls_close(cib);
-            return -1;
+        if (tls->cred_type == GNUTLS_CRD_PSK) {
+            rc = pcmk__load_key(key_location, &psk_key, false);
+
+            if (rc != pcmk_rc_ok) {
+                pcmk__warn("Could not read remote CIB key from %s: %s",
+                           key_location, pcmk_rc_str(rc));
+            } else {
+                pcmk__tls_client_add_psk_key(tls, private->user, &psk_key, false);
+                gnutls_free(psk_key.data);
+            }
         }
 
-        rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
-                                        &tls_rc);
+        if (rc == pcmk_rc_ok) {
+            connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
+            if (connection->tls_session == NULL) {
+                cib_tls_close(cib);
+                return -1;
+            }
+
+            rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
+                                            &tls_rc);
+        }
+
         if (rc != pcmk_rc_ok) {
             const bool proto_err = (rc == EPROTO);
 
