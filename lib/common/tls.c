@@ -411,10 +411,10 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
 
 void
 pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
-                             gnutls_datum_t *key)
+                             gnutls_datum_t *key, bool raw)
 {
     gnutls_psk_set_client_credentials(tls->credentials.psk_c, username, key,
-                                      GNUTLS_PSK_KEY_RAW);
+                                      raw ? GNUTLS_PSK_KEY_RAW : GNUTLS_PSK_KEY_HEX);
 }
 
 void
