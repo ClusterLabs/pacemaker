@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // errno
-#include <fcntl.h>                  // open, O_RDWR
+#include <fcntl.h>                  // open, O_CREAT, O_RDWR, S_*
 #include <libgen.h>                 // basename
 #include <signal.h>                 // raise, SIG*
 #include <stdbool.h>
@@ -386,7 +386,7 @@ set_logfile_permissions(const char *filename)
         goto done;
     }
 
-    fd = open(filename, O_RDWR);
+    fd = open(filename, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR);
     if (fd < 0) {
         rc = errno;
         pcmk__warn("Logging to '%s' is disabled because open() failed as root: "
