@@ -133,9 +133,11 @@ int pcmk__tls_get_client_sock(const pcmk__remote_t *remote);
  * \param[in,out] tls      The TLS environment
  * \param[in]     username The username \p key is valid for
  * \param[in]     key      The client's PSK key
+ * \param[in]     raw      \p key is raw (or binary) data if \c true, and
+ *                         a plain text hex string if \c false
  */
 void pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
-                                  gnutls_datum_t *key);
+                                  gnutls_datum_t *key, bool raw);
 
 /*!
  * \internal
