@@ -548,7 +548,7 @@ pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
 }
 
 int
-pcmk__load_key(const char *location, gnutls_datum_t *key)
+pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw)
 {
     gchar *contents = NULL;
     gsize len = 0;
@@ -557,6 +557,15 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
 
     if (!g_file_get_contents(location, &contents, &len, NULL)) {
         return ENOKEY;
+    }
+
+    if (!raw) {
+        /* This is a plain text key.  gnutls expects only hex characters, so
+         * remove any trailing newline (or other spaces) from the end.  No
+         * other effort is made to sanitize the string.
+         */
+        g_strchomp(contents);
+        len = strlen(contents);
     }
 
     key->size = len;
