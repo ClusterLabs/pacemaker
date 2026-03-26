@@ -213,10 +213,12 @@ void pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source);
  *
  * \param[in]  location  The file path to read from
  * \param[out] dest      Where to store the authentication key
+ * \param[in]  raw       \p key is raw (or binary) data if \c true, and
+ *                       a plain text hex string if \c false
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__load_key(const char *location, gnutls_datum_t *key);
+int pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw);
 
 /*!
  * \internal

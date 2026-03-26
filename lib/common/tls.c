@@ -9,12 +9,13 @@
 
 #include <crm_internal.h>
 
+#include <ctype.h>                  // isxdigit
 #include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
 #include <pwd.h>                    // getpwuid
 #include <signal.h>                 // signal, SIGPIPE, SIG_IGN
 #include <stdbool.h>                // bool
 #include <stdlib.h>                 // NULL, getenv, free
-#include <string.h>                 // memcpy, strdup
+#include <string.h>                 // memcpy, strdup, strlen
 #include <sys/stat.h>               // S_ISREG, stat
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
@@ -549,10 +550,11 @@ pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
 }
 
 int
-pcmk__load_key(const char *location, gnutls_datum_t *key)
+pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw)
 {
     gchar *contents = NULL;
     gsize len = 0;
+    int rc = pcmk_rc_ok;
 
     pcmk__assert((location != NULL) && (key != NULL));
 
@@ -560,13 +562,32 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
         return ENOKEY;
     }
 
+    if (!raw) {
+        /* This is a plain text key.  gnutls expects only hex characters, so
+         * remove any whitespace and check that the characters are valid.
+         */
+        contents = g_strstrip(contents);
+
+        for (const char *c = contents; *c != '\0'; c++) {
+            if (!isxdigit(*c)) {
+                pcmk__err("Key file %s contains characters besides hex digits",
+                          location);
+                rc = ENOKEY;
+                goto done;
+            }
+        }
+
+        len = strlen(contents);
+    }
+
     key->size = len;
     key->data = gnutls_malloc(key->size);
     pcmk__mem_assert(key->data);
     memcpy(key->data, contents, key->size);
 
+done:
     g_free(contents);
-    return pcmk_rc_ok;
+    return rc;
 }
 
 bool

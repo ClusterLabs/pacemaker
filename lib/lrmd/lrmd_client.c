@@ -1178,7 +1178,7 @@ lrmd__init_remote_key(gnutls_datum_t *key)
 
     // Try location in environment variable, if set
     if (env_location != NULL) {
-        rc = pcmk__load_key(env_location, &remote_key);
+        rc = pcmk__load_key(env_location, &remote_key, true);
 
         if (rc == pcmk_rc_ok) {
             pcmk__copy_key(key, &remote_key);
@@ -1191,7 +1191,7 @@ lrmd__init_remote_key(gnutls_datum_t *key)
     }
 
     // Try default location, if environment wasn't explicitly set to it
-    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key);
+    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key, true);
 
     if (rc == pcmk_rc_ok) {
         pcmk__copy_key(key, &remote_key);
