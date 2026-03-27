@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,16 +9,44 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                        // bool, true, false
-#include <stdio.h>
-#include <limits.h>
+#include <errno.h>                          // ENXIO, ENOTCONN, ENOTUNIQ
+#include <limits.h>                         // UINT_MAX, INT_MAX
+#include <stdbool.h>                        // bool, false, true
+#include <stdlib.h>                         // NULL, free, setenv
+#include <string.h>                         // strdup, strcmp, strerror
+#include <syslog.h>                         // LOG_ERR
+#include <time.h>                           // time, time_t
+#include <unistd.h>                         // sleep, unlink
 
-#include <glib.h>
+#include <glib.h>                           // GList, g_list_free
 #include <libxml/tree.h>                    // xmlNode
-#include <libxml/xpath.h>                   // xmlXPathObject, etc.
+#include <libxml/xpath.h>                   // xmlXPathObject, xmlXPathFreeObject
+#include <qb/qbdefs.h>                      // QB_MIN
 
-#include <crm/common/ipc_controld.h>
-#include <crm/services_internal.h>
+#include <crm/cib.h>                        // cib_t, cib_delete, cib_shadow_new
+#include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
+#include <crm/common/agents.h>              // pcmk_get_ra_caps, pcmk_ra_cap_*
+#include <crm/common/cib.h>                 // pcmk_cib_xpath_for
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>                 // pcmk_ipc_api_t
+#include <crm/common/ipc_controld.h>        // pcmk_controld_api_*
+#include <crm/common/iso8601.h>             // crm_time_new
+#include <crm/common/nvpair.h>              // crm_create_nvpair_xml
+#include <crm/common/options.h>             // PCMK_META_TARGET_ROLE
+#include <crm/common/resources.h>           // pcmk__resource, pe_find
+#include <crm/common/results.h>             // pcmk_rc_e, pcmk_rc_str
+#include <crm/common/roles.h>               // rsc_role_e, PCMK_ROLE_*
+#include <crm/common/scheduler.h>           // pcmk__scheduler, pcmk_free_scheduler
+#include <crm/common/strings.h>             // pcmk_parse_interval_spec
+#include <crm/common/xml.h>                 // PCMK_XA_ID, PCMK_XE_*
+#include <crm/crm.h>                        // CRM_FEATURE_SET, crm_system_name
+#include <crm/pengine/complex.h>            // get_meta_attributes, uber_parent
+#include <crm/pengine/internal.h>           // clone_strip, pe__const_top_resource
+#include <crm/pengine/status.h>             // cluster_status, pe_find_resource
+#include <crm/services.h>                   // resources_find_service_class
+#include <crm/services_internal.h>          // services__create_resource_action
+#include <crm_config.h>                     // BUILD_VERSION, PACEMAKER_VERSION
+#include <pacemaker-internal.h>             // pcmk__schedule_actions
 
 #include <crm_resource.h>
 
@@ -2080,6 +2108,110 @@ print_pending_actions(pcmk__output_t *out, GList *actions)
 /* For --wait, how long to sleep between cluster state checks */
 #define WAIT_SLEEP_S (2)
 
+#define XPATH_PENDING_ACTION "/" PCMK_XE_CIB "/" PCMK_XE_STATUS         \
+                             "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM   \
+                             "/" PCMK__XE_LRM_RESOURCES                 \
+                             "/" PCMK__XE_LRM_RESOURCE                  \
+                             "/" PCMK__XE_LRM_RSC_OP                    \
+                             "[@" PCMK__XA_RC_CODE "='%d']"
+
+#define XPATH_LAST_FAILURE "/" PCMK_XE_CIB "/" PCMK_XE_STATUS       \
+                           "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM \
+                           "/" PCMK__XE_LRM_RESOURCES               \
+                           "/" PCMK__XE_LRM_RESOURCE                \
+                           "/" PCMK__XE_LRM_RSC_OP                  \
+                           "[@" PCMK__XA_OPERATION_KEY "='%s']"
+/*!
+ * \internal
+ * \brief Check if there's a lrm_rsc_op last_failure entry for a given key
+ *
+ * \param[in] scheduler The scheduler object
+ * \param[in] key       The operation_key attribute of some lrm_rsc_op entry
+ *
+ * \return \c true if there is an lrm_rsc_op history entry with \p key as its
+ *         operation_key and with an id attribute ending in "_last_failure_0",
+ *         \c false otherwise
+ */
+static bool
+action_has_matching_last_failure(pcmk_scheduler_t *scheduler, const char *key)
+{
+    xmlXPathObject *search = NULL;
+    bool retval = false;
+    char *xpath = NULL;
+
+    xpath = pcmk__assert_asprintf(XPATH_LAST_FAILURE, key);
+    search = pcmk__xpath_search(scheduler->input->doc, xpath);
+
+    for (int i = 0; i < pcmk__xpath_num_results(search); i++) {
+        const xmlNode *lrm_op_xml = pcmk__xpath_result(search, i);
+
+        if (g_str_has_suffix(pcmk__xe_get(lrm_op_xml, PCMK_XA_ID),
+                             "_last_failure_0")) {
+            retval = true;
+            break;
+        }
+    }
+
+    xmlXPathFreeObject(search);
+    free(xpath);
+
+    return retval;
+}
+
+/*!
+ * \internal
+ * \brief Determine if there are certain pending actions in the CIB
+ *
+ * \param[in] scheduler The scheduler object
+ *
+ * \return \c true if there are any pending actions in the CIB, after
+ *         filtering out pending recurring monitor actions with a last_failure
+ *         history entry; \c false otherwise
+ *
+ * \note We filter out certain recurring monitor actions because they might
+ *       always be present.  The scheduler can't replace the history entry
+ *       with a failure entry (see bbadfe553), but it's still not a pending
+ *       action and we don't want to wait for it.
+ */
+static bool
+pending_actions_in_cib(pcmk_scheduler_t *scheduler)
+{
+    xmlXPathObject *search = NULL;
+    char *xpath = NULL;
+    bool any_pending = false;
+
+    xpath = pcmk__assert_asprintf(XPATH_PENDING_ACTION, PCMK_OCF_UNKNOWN);
+    search = pcmk__xpath_search(scheduler->input->doc, xpath);
+
+    for (int i = 0; i < pcmk__xpath_num_results(search); i++) {
+        const char *op_key = NULL;
+        const xmlNode *lrm_op_xml = pcmk__xpath_result(search, i);
+
+        if (!pcmk__str_eq(PCMK_ACTION_MONITOR,
+                          pcmk__xe_get(lrm_op_xml, PCMK_XA_OPERATION),
+                          pcmk__str_none)) {
+            any_pending = true;
+            break;
+        }
+
+        if (pcmk_xe_is_probe(lrm_op_xml)) {
+            any_pending = true;
+            break;
+        }
+
+        op_key = pcmk__xe_get(lrm_op_xml, PCMK__XA_OPERATION_KEY);
+        if ((op_key == NULL) || !action_has_matching_last_failure(scheduler, op_key)) {
+            any_pending = true;
+            break;
+        }
+    }
+
+    xmlXPathFreeObject(search);
+    free(xpath);
+
+    return any_pending;
+}
+
 /*!
  * \internal
  * \brief Wait until all pending cluster actions are complete
@@ -2101,13 +2233,10 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
 {
     // @FIXME This should bail out when run with CIB_file
     pcmk_scheduler_t *scheduler = NULL;
-    xmlXPathObject *search = NULL;
     int rc = pcmk_rc_ok;
-    bool pending_unknown_state_resources;
     time_t expire_time = time(NULL);
     time_t time_diff;
     bool printed_version_warning = out->is_quiet(out); // i.e. don't print if quiet
-    char *xpath = NULL;
 
     if (timeout_ms == 0) {
         expire_time += WAIT_DEFAULT_TIMEOUT_S;
@@ -2120,13 +2249,6 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
         return ENOMEM;
     }
 
-    xpath = pcmk__assert_asprintf("/" PCMK_XE_CIB "/" PCMK_XE_STATUS
-                                  "/" PCMK__XE_NODE_STATE "/" PCMK__XE_LRM
-                                  "/" PCMK__XE_LRM_RESOURCES
-                                  "/" PCMK__XE_LRM_RESOURCE
-                                  "/" PCMK__XE_LRM_RSC_OP
-                                  "[@" PCMK__XA_RC_CODE "='%d']",
-                                  PCMK_OCF_UNKNOWN);
     do {
         /* Abort if timeout is reached */
         time_diff = expire_time - time(NULL);
@@ -2172,14 +2294,10 @@ wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
             }
         }
 
-        search = pcmk__xpath_search(scheduler->input->doc, xpath);
-        pending_unknown_state_resources = (pcmk__xpath_num_results(search) > 0);
-        xmlXPathFreeObject(search);
     } while (actions_are_pending(scheduler->priv->actions)
-             || pending_unknown_state_resources);
+             || pending_actions_in_cib(scheduler));
 
     pcmk_free_scheduler(scheduler);
-    free(xpath);
     return rc;
 }
 
