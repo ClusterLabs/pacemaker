@@ -218,8 +218,8 @@ parse_hms(const char *time_str, int *result)
         rc = sscanf(time_str, "%2" SCNu32 "%2" SCNu32 "%2" SCNu32,
                     &hour, &minute, &second);
     }
-    if (rc == 0) {
-        pcmk__err("%s is not a valid ISO 8601 time specification", time_str);
+    if (rc < 1) {
+        pcmk__err("'%s' is not a valid ISO 8601 time specification", time_str);
         return false;
     }
 
