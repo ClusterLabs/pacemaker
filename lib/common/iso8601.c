@@ -218,8 +218,8 @@ parse_hms(const char *time_str, int *result)
         rc = sscanf(time_str, "%2" SCNu32 "%2" SCNu32 "%2" SCNu32,
                     &hour, &minute, &second);
     }
-    if (rc == 0) {
-        pcmk__err("%s is not a valid ISO 8601 time specification", time_str);
+    if (rc < 1) {
+        pcmk__err("'%s' is not a valid ISO 8601 time specification", time_str);
         return false;
     }
 
@@ -334,24 +334,22 @@ parse_time(const char *time_str, crm_time_t *a_time)
 
     tzset();
 
-    if (time_str != NULL) {
-        if (!parse_hms(time_str, &(a_time->seconds))) {
-            return false;
-        }
+    if (!parse_hms(time_str, &(a_time->seconds))) {
+        return false;
+    }
 
-        offset_s = strchr(time_str, 'Z');
+    offset_s = strchr(time_str, 'Z');
 
-        /* @COMPAT: Spaces between the time and the offset are not supported
-         * by the standard according to section 3.4.1 and 4.2.5.2.
-         */
-        if (offset_s == NULL) {
-            offset_s = strpbrk(time_str, " +-");
-        }
+    /* @COMPAT: Spaces between the time and the offset are not supported by the
+     * standard according to section 3.4.1 and 4.2.5.2.
+     */
+    if (offset_s == NULL) {
+        offset_s = strpbrk(time_str, " +-");
+    }
 
-        if (offset_s != NULL) {
-            while (isspace(*offset_s)) {
-                offset_s++;
-            }
+    if (offset_s != NULL) {
+        while (isspace(*offset_s)) {
+            offset_s++;
         }
     }
 
