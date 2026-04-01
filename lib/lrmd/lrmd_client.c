@@ -867,7 +867,7 @@ lrmd_api_is_connected(lrmd_t * lrmd)
 }
 
 static void
-handle_nack(const xmlNode *reply)
+handle_ack(const xmlNode *reply)
 {
     int status = 0;
 
@@ -940,11 +940,12 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         goto done;
     }
 
-    /* The only reason we can receive a NACK here is because we sent a request
-     * that execd didn't recognize and it responded via handle_unknown_request.
+    /* The only reason we can receive an ACK here is because we sent a request
+     * that execd didn't recognize and it responded via handle_unknown_request,
+     * and the status code will always indicate some sort of error.
      */
-    if (pcmk__xe_is(op_reply, PCMK__XE_NACK)) {
-        handle_nack(op_reply);
+    if (pcmk__xe_is(op_reply, PCMK__XE_ACK)) {
+        handle_ack(op_reply);
         rc = -EPROTO;
         goto done;
     }
@@ -1038,11 +1039,12 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
 
-    /* The only reason we can receive a NACK here is because execd didn't
-     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake.
+    /* The only reason we can receive an ACK here is because execd didn't
+     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake, and
+     * the status code will always indicate some sort of error.
      */
-    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
-        handle_nack(reply);
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
+        handle_ack(reply);
         return EPROTO;
     }
 
