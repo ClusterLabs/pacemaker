@@ -460,7 +460,7 @@ To prep a test host:
 
    * ``dnf remove runc``
 
-1. Install and start Docker. Example for RHEL-like OSes:
+2. Install and start Docker. Example for RHEL-like OSes:
 
    * ``dnf config-manager --add-repo
      https://download.docker.com/linux/rhel/docker-ce.repo``
@@ -468,13 +468,13 @@ To prep a test host:
      docker-compose-plugin``
    * ``usermod -a -G docker $USER``
 
-2. Clone the OSS-Fuzz repository:
+3. Clone the OSS-Fuzz repository:
 
    * ``cd`` to wherever you want to put it
    * ``git clone https://github.com/google/oss-fuzz.git``
    * ``cd oss-fuzz``
 
-3. Specify the Pacemaker source you want to test:
+4. Specify the Pacemaker source you want to test:
 
    * Edit ``projects/pacemaker/Dockerfile`` and replace the last ``git clone``
      with the source that you want to test. For example, if you have a branch
