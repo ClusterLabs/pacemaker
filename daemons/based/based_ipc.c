@@ -176,19 +176,19 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
     op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
     if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        xmlNode *ack = NULL;
+        xmlNode *reply = NULL;
 
         if (!pcmk__is_set(flags, crm_ipc_client_response)) {
             return 0;
         }
 
-        ack = pcmk__xe_create(NULL, __func__);
-        pcmk__xe_set(ack, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
-        pcmk__xe_set(ack, PCMK__XA_CIB_CLIENTID, client->id);
-        pcmk__ipc_send_xml(client, id, ack, flags);
+        reply = pcmk__xe_create(NULL, __func__);
+        pcmk__xe_set(reply, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
+        pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client->id);
+        pcmk__ipc_send_xml(client, id, reply, flags);
 
         client->request_id = 0;
-        pcmk__xml_free(ack);
+        pcmk__xml_free(reply);
         return 0;
     }
 
