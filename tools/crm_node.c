@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -690,6 +690,9 @@ purge_node_from_fencer(const char *node_name, long node_id)
     }
     pcmk__xe_set(cmd, PCMK_XA_UNAME, node_name);
 
+    /* We don't care about the reply here, so there's no need to check if we
+     * got an ACK in response.
+     */
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {
         rc = pcmk_rc_ok;

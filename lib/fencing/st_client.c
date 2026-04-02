@@ -1119,13 +1119,18 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     return 1;
 }
 
-static void
-handle_nack(const xmlNode *reply)
+static bool
+ack_is_failure(const xmlNode *reply)
 {
     int status = 0;
 
     pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
-    pcmk__err("Received error response from fenced: %s", crm_exit_str(status));
+    if (status != CRM_EX_OK) {
+        pcmk__err("Received error response from fenced: %s", crm_exit_str(status));
+        return true;
+    }
+
+    return false;
 }
 
 static int
@@ -1204,13 +1209,12 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         goto done;
     }
 
-    /* The only reason we can receive a NACK here is if fenced_ipc_dispatch ->
+    /* The only reason we can receive an ACK here is if fenced_ipc_dispatch ->
      * pcmk__client_data2xml processed something that's not valid XML.
      * fenced_ipc_disaptch does not return ACK from handle_unknown_request,
      * unlike other daemons.
      */
-    if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
-        handle_nack(reply);
+    if (pcmk__xe_is(reply, PCMK__XE_ACK) && ack_is_failure(reply)) {
         rc = -EPROTO;
         goto done;
     }
@@ -1268,7 +1272,7 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
         }
 
         /* We don't care about the reply here, so there's no need to check
-         * if we got a NACK in response.
+         * if we got an ACK in response.
          */
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if (rc < 0) {
@@ -1654,8 +1658,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         goto done;
     }
 
-    if (pcmk__xe_is(op_reply, PCMK__XE_NACK)) {
-        handle_nack(op_reply);
+    if (pcmk__xe_is(op_reply, PCMK__XE_ACK) && ack_is_failure(op_reply)) {
         rc = -EPROTO;
         goto done;
     }
