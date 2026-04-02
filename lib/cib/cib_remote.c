@@ -48,13 +48,18 @@ typedef struct {
     int timeout_sec;
 } cib_remote_opaque_t;
 
-static void
-handle_nack(const xmlNode *reply)
+static bool
+ack_is_failure(const xmlNode *reply)
 {
     int status = 0;
 
     pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
-    pcmk__err("Received error response from based: %s", crm_exit_str(status));
+    if (status != CRM_EX_OK) {
+        pcmk__err("Received error response from based: %s", crm_exit_str(status));
+        return true;
+    }
+
+    return false;
 }
 
 static int
@@ -167,8 +172,11 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return -ENOMSG;
     }
 
-    if (pcmk__xe_is(op_reply, PCMK__XE_NACK)) {
-        handle_nack(op_reply);
+    /* The only reason we can receive an ACK here is if dispatch_common ->
+     * pcmk__client_data2xml processed something that's not valid XML.
+     * dispatch_common does not return ACK, unlike other daemons.
+     */
+    if (pcmk__xe_is(op_reply, PCMK__XE_ACK) && ack_is_failure(op_reply)) {
         pcmk__xml_free(op_reply);
         return -EPROTO;
     }
@@ -449,8 +457,11 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         goto done;
     }
 
-    if (pcmk__xe_is(answer, PCMK__XE_NACK)) {
-        handle_nack(answer);
+    /* The only reason we can receive an ACK here is if dispatch_common ->
+     * pcmk__client_data2xml processed something that's not valid XML.
+     * dispatch_common does not return ACK, unlike other daemons.
+     */
+    if (pcmk__xe_is(answer, PCMK__XE_ACK) && ack_is_failure(answer)) {
         rc = -EPROTO;
         goto done;
     }
