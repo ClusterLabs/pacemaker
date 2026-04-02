@@ -67,6 +67,9 @@ init_tls_dh(gnutls_dh_params_t *dh_params)
 
     pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MAX_BITS), &dh_max_bits, 0);
     if ((dh_max_bits > 0) && (dh_bits > dh_max_bits)) {
+        pcmk__warn("Support for the " PCMK__ENV_DH_MAX_BITS " "
+                   "environment variable is deprecated and will be removed "
+                   "in a future release");
         dh_bits = dh_max_bits;
     }
 

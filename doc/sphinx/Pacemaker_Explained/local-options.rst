@@ -663,6 +663,8 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
 
        Clients do not use ``PCMK_dh_max_bits``.
 
+       *(Deprecated since 3.0.2)*
+
    * - .. _pcmk_ipc_type:
 
        .. index::
