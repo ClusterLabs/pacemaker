@@ -48,6 +48,15 @@ typedef struct {
     int timeout_sec;
 } cib_remote_opaque_t;
 
+static void
+handle_nack(const xmlNode *reply)
+{
+    int status = 0;
+
+    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+    pcmk__err("Received error response from based: %s", crm_exit_str(status));
+}
+
 static int
 cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
                       const char *section, xmlNode *data,
@@ -151,9 +160,17 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     if (rc == ENOTCONN) {
         pcmk__err("Disconnected while waiting for reply");
         return -ENOTCONN;
-    } else if (op_reply == NULL) {
+    }
+
+    if (op_reply == NULL) {
         pcmk__err("No reply message - empty");
         return -ENOMSG;
+    }
+
+    if (pcmk__xe_is(op_reply, PCMK__XE_NACK)) {
+        handle_nack(op_reply);
+        pcmk__xml_free(op_reply);
+        return -EPROTO;
     }
 
     pcmk__trace("Synchronous reply received");
@@ -428,6 +445,12 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     answer = pcmk__remote_message_xml(connection);
 
     if (answer == NULL) {
+        rc = -EPROTO;
+        goto done;
+    }
+
+    if (pcmk__xe_is(answer, PCMK__XE_NACK)) {
+        handle_nack(answer);
         rc = -EPROTO;
         goto done;
     }

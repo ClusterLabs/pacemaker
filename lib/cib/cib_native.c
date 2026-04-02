@@ -34,6 +34,15 @@ typedef struct {
     mainloop_io_t *source;
 } cib_native_opaque_t;
 
+static void
+handle_nack(const xmlNode *reply)
+{
+    int status = 0;
+
+    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+    pcmk__err("Received error response from based: %s", crm_exit_str(status));
+}
+
 static int
 cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
                                const char *section, xmlNode *data,
@@ -87,6 +96,12 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         pcmk__err("Couldn't perform %s operation (timeout=%ds): %s (%d)", op,
                   cib->call_timeout, pcmk_strerror(rc), rc);
         rc = -ECOMM;
+        goto done;
+    }
+
+    if (pcmk__xe_is(op_reply, PCMK__XE_NACK)) {
+        handle_nack(op_reply);
+        rc = -EPROTO;
         goto done;
     }
 
@@ -321,6 +336,12 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
             goto done;
         }
 
+        if (pcmk__xe_is(reply, PCMK__XE_NACK)) {
+            handle_nack(reply);
+            rc = -EPROTO;
+            goto done;
+        }
+
         msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
 
         pcmk__log_xml_trace(reply, "reg-reply");
@@ -386,6 +407,10 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
         pcmk__xe_set(notify_msg, PCMK__XA_CIB_OP, PCMK__VALUE_CIB_NOTIFY);
         pcmk__xe_set(notify_msg, PCMK__XA_CIB_NOTIFY_TYPE, callback);
         pcmk__xe_set_int(notify_msg, PCMK__XA_CIB_NOTIFY_ACTIVATE, enabled);
+
+        /* We don't care about the reply here, so there's no need to check
+         * if we got a NACK in response.
+         */
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response,
                           1000 * cib->call_timeout, NULL);
         if (rc <= 0) {
