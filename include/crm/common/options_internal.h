@@ -151,7 +151,6 @@ bool pcmk__valid_fencing_watchdog_timeout(const char *value);
 #define PCMK__ENV_CLUSTER_TYPE              "cluster_type"
 #define PCMK__ENV_CRL_FILE                  "crl_file"
 #define PCMK__ENV_DEBUG                     "debug"
-#define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
 #define PCMK__ENV_FAIL_FAST                 "fail_fast"
 #define PCMK__ENV_IPC_TYPE                  "ipc_type"
 #define PCMK__ENV_KEY_FILE                  "key_file"
@@ -177,6 +176,9 @@ bool pcmk__valid_fencing_watchdog_timeout(const char *value);
 #define PCMK__ENV_TRACE_FUNCTIONS           "trace_functions"
 #define PCMK__ENV_TRACE_TAGS                "trace_tags"
 #define PCMK__ENV_VALGRIND_ENABLED          "valgrind_enabled"
+
+// @COMPAT Deprecated since 3.0.2
+#define PCMK__ENV_DH_MAX_BITS               "dh_max_bits"
 
 // Constants for meta-attribute names
 #define PCMK__META_CLONE                    "clone"
