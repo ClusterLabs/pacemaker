@@ -31,8 +31,23 @@
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
 
-int
-pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
+/*!
+ * \internal
+ * \brief Initialize Diffie-Hellman parameters for a TLS server
+ *
+ * \param[out] dh_params  Parameter object to initialize
+ *
+ * \return Standard Pacemaker return code
+ * \todo The current best practice is to allow the client and server to
+ *       negotiate the Diffie-Hellman parameters via a TLS extension (RFC 7919).
+ *       However, we have to support both older versions of GnuTLS (<3.6) that
+ *       don't support the extension on our side, and older Pacemaker versions
+ *       that don't support the extension on the other side. The next best
+ *       practice would be to use a known good prime (see RFC 5114 section 2.2),
+ *       possibly stored in a file distributed with Pacemaker.
+ */
+static int
+init_tls_dh(gnutls_dh_params_t *dh_params)
 {
     int rc = GNUTLS_E_SUCCESS;
     unsigned int dh_bits = 0;
@@ -206,7 +221,7 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     gnutls_global_set_log_function(_gnutls_log_func);
 
     if (server) {
-        rc = pcmk__init_tls_dh(&(*tls)->dh_params);
+        rc = init_tls_dh(&(*tls)->dh_params);
         if (rc != pcmk_rc_ok) {
             g_clear_pointer(tls, pcmk__free_tls);
             return rc;
