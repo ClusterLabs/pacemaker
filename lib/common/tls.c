@@ -31,6 +31,46 @@
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
 
+int
+pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
+{
+    int rc = GNUTLS_E_SUCCESS;
+    unsigned int dh_bits = 0;
+    int dh_max_bits = 0;
+
+    rc = gnutls_dh_params_init(dh_params);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+    dh_bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
+                                          GNUTLS_SEC_PARAM_NORMAL);
+    if (dh_bits == 0) {
+        rc = GNUTLS_E_DH_PRIME_UNACCEPTABLE;
+        goto error;
+    }
+
+    pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MAX_BITS), &dh_max_bits, 0);
+    if ((dh_max_bits > 0) && (dh_bits > dh_max_bits)) {
+        dh_bits = dh_max_bits;
+    }
+
+    pcmk__info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
+               dh_bits);
+    rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
+    if (rc != GNUTLS_E_SUCCESS) {
+        goto error;
+    }
+
+    return pcmk_rc_ok;
+
+error:
+    pcmk__err("Could not initialize Diffie-Hellman parameters for TLS: %s "
+              QB_XS " rc=%d",
+              gnutls_strerror(rc), rc);
+    return EPROTO;
+}
+
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
 {
@@ -246,46 +286,6 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     }
 
     return rc;
-}
-
-int
-pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
-{
-    int rc = GNUTLS_E_SUCCESS;
-    unsigned int dh_bits = 0;
-    int dh_max_bits = 0;
-
-    rc = gnutls_dh_params_init(dh_params);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-
-    dh_bits = gnutls_sec_param_to_pk_bits(GNUTLS_PK_DH,
-                                          GNUTLS_SEC_PARAM_NORMAL);
-    if (dh_bits == 0) {
-        rc = GNUTLS_E_DH_PRIME_UNACCEPTABLE;
-        goto error;
-    }
-
-    pcmk__scan_min_int(pcmk__env_option(PCMK__ENV_DH_MAX_BITS), &dh_max_bits, 0);
-    if ((dh_max_bits > 0) && (dh_bits > dh_max_bits)) {
-        dh_bits = dh_max_bits;
-    }
-
-    pcmk__info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
-               dh_bits);
-    rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
-    if (rc != GNUTLS_E_SUCCESS) {
-        goto error;
-    }
-
-    return pcmk_rc_ok;
-
-error:
-    pcmk__err("Could not initialize Diffie-Hellman parameters for TLS: %s "
-              QB_XS " rc=%d",
-              gnutls_strerror(rc), rc);
-    return EPROTO;
 }
 
 gnutls_session_t
