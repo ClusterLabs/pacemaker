@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -808,11 +808,6 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
             if (qb_rc < 0) {
                 rc = (int) -qb_rc;
             }
-
-            pcmk__notice("Response %" PRId32 "%sto pid %u failed: %s "
-                         QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
-                         header->qb.id, part_text, c->pid, pcmk_rc_str(rc),
-                         header->qb.size, qb_rc, c->ipcs);
 
         } else {
             pcmk__trace("Response %" PRId32 "%ssent, %zd bytes to %p[%u]",
