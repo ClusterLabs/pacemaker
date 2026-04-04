@@ -866,6 +866,17 @@ lrmd_api_is_connected(lrmd_t * lrmd)
     }
 }
 
+static void
+handle_ack(const xmlNode *reply)
+{
+    int status = 0;
+
+    pcmk__log_xml_err(reply, "Bad reply");
+
+    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+    pcmk__err("Received error response from executor: %s", crm_exit_str(status));
+}
+
 /*!
  * \internal
  * \brief Send a prepared API command to the executor
@@ -929,14 +940,24 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
         goto done;
     }
 
-    rc = pcmk_ok;
+    /* The only reason we can receive an ACK here is because we sent a request
+     * that execd didn't recognize and it responded via handle_unknown_request,
+     * and the status code will always indicate some sort of error.
+     */
+    if (pcmk__xe_is(op_reply, PCMK__XE_ACK)) {
+        handle_ack(op_reply);
+        rc = -EPROTO;
+        goto done;
+    }
+
     pcmk__trace("%s op reply received", op);
+    pcmk__log_xml_trace(op_reply, "Reply");
+
+    rc = pcmk_ok;
     if (pcmk__xe_get_int(op_reply, PCMK__XA_LRMD_RC, &rc) != pcmk_rc_ok) {
         rc = -ENOMSG;
         goto done;
     }
-
-    pcmk__log_xml_trace(op_reply, "Reply");
 
     if (output_data) {
         *output_data = op_reply;
@@ -1017,6 +1038,15 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
     const char *msg_type = pcmk__xe_get(reply, PCMK__XA_LRMD_OP);
     const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
     const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
+
+    /* The only reason we can receive an ACK here is because execd didn't
+     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake, and
+     * the status code will always indicate some sort of error.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
+        handle_ack(reply);
+        return EPROTO;
+    }
 
     pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
     rc = pcmk_legacy2rc(rc);
