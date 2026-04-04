@@ -50,26 +50,30 @@ pcmk__xa_remove(xmlAttr *attr, bool force)
         return pcmk_rc_ok;
     }
 
+    if (force) {
+        goto remove;
+    }
+
     element = attr->parent;
 
-    if (!force && !pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
+    if (!pcmk__check_acl(element, NULL, pcmk__xf_acl_write)) {
         // ACLs apply to element, not to particular attributes
         pcmk__trace("ACLs prevent removal of attributes from %s element",
                     element->name);
         return EPERM;
     }
 
-    if (!force && (element != NULL)
-        && pcmk__xml_doc_all_flags_set(element->doc, pcmk__xf_tracking)) {
-
+    if (pcmk__xml_doc_all_flags_set(element->doc, pcmk__xf_tracking)) {
         // Leave in place (marked for removal) until after diff is calculated
         pcmk__xml_set_parent_flags(element, pcmk__xf_dirty);
         pcmk__set_xml_flags((xml_node_private_t *) attr->_private,
                             pcmk__xf_deleted);
-    } else {
-        pcmk__xml_free_private_data((xmlNode *) attr);
-        xmlRemoveProp(attr);
+        return pcmk_rc_ok;
     }
+
+remove:
+    pcmk__xml_free_private_data((xmlNode *) attr);
+    xmlRemoveProp(attr);
     return pcmk_rc_ok;
 }
 
