@@ -594,8 +594,6 @@ whose location varies by OS (most commonly ``/etc/sysconfig/pacemaker`` or
        or the |CRM_DAEMON_GROUP| group), and its contents must be identical on
        all nodes.
 
-       This is an alternative to using X509 certificates.
-
    * - .. _pcmk_remote_pid1:
 
        .. index::

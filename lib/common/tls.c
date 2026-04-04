@@ -10,10 +10,12 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <pwd.h>                    // getpwuid
 #include <signal.h>                 // signal, SIGPIPE, SIG_IGN
 #include <stdbool.h>                // bool
 #include <stdlib.h>                 // NULL, getenv, free
 #include <string.h>                 // memcpy, strdup
+#include <sys/stat.h>               // S_ISREG, stat
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
 
@@ -26,7 +28,6 @@
 #include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
-#include <crm/lrmd.h>               // DEFAULT_REMOTE_USERNAME
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
@@ -183,6 +184,10 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     (*tls)->server = server;
 
     if ((*tls)->cred_type == GNUTLS_CRD_ANON) {
+        pcmk__warn("Using anonymous authentication.  This is insecure and will "
+                   "be removed in a future release.  Use X509 certificates or PSK "
+                   "instead.");
+
         if (server) {
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
@@ -409,18 +414,11 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
 }
 
 void
-pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key)
+pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                             gnutls_datum_t *key, bool raw)
 {
-    gnutls_psk_set_client_credentials(tls->credentials.psk_c,
-                                      DEFAULT_REMOTE_USERNAME, key,
-                                      GNUTLS_PSK_KEY_RAW);
-}
-
-void
-pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                           gnutls_psk_server_credentials_function *cb)
-{
-    gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
+    gnutls_psk_set_client_credentials(tls->credentials.psk_c, username, key,
+                                      raw ? GNUTLS_PSK_KEY_RAW : GNUTLS_PSK_KEY_HEX);
 }
 
 void
@@ -554,7 +552,7 @@ pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
 }
 
 int
-pcmk__load_key(const char *location, gnutls_datum_t *key)
+pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw)
 {
     gchar *contents = NULL;
     gsize len = 0;
@@ -565,6 +563,15 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
         return ENOKEY;
     }
 
+    if (!raw) {
+        /* This is a plain text key.  gnutls expects only hex characters, so
+         * remove any trailing newline (or other spaces) from the end.  No
+         * other effort is made to sanitize the string.
+         */
+        g_strchomp(contents);
+        len = strlen(contents);
+    }
+
     key->size = len;
     key->data = gnutls_malloc(key->size);
     pcmk__mem_assert(key->data);
@@ -572,4 +579,50 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
 
     g_free(contents);
     return pcmk_rc_ok;
+}
+
+bool
+pcmk__cred_file_useable(const char *location, const char *user,
+                        bool *allow_fallback)
+{
+    int rc = pcmk_rc_ok;
+    struct stat sb;
+    struct passwd *pwent = NULL;
+
+    if ((location == NULL) || (user == NULL)) {
+        *allow_fallback = true;
+        return false;
+    }
+
+    rc = stat(location, &sb);
+    if ((rc != 0) || !S_ISREG(sb.st_mode)) {
+        /* The credentials file doesn't exist, or isn't a plain file. */
+        *allow_fallback = true;
+        return false;
+    }
+
+    /* The credentials file is present, so assume that the admin wants
+     * to enable PSK support.  In that case, if the file's ownership or
+     * permissions are incorrect, we want to refuse to use it, disable
+     * PSK support, and not fall back to anonymous authentication.
+     */
+    pwent = getpwuid(sb.st_uid);
+
+    if ((pwent == NULL)
+        || !pcmk__str_eq(pwent->pw_name, user, pcmk__str_none)) {
+        pcmk__err("Refusing to use PSK credentials file %s because it is "
+                  "not owned by %s", location, user);
+        *allow_fallback = false;
+        return false;
+    }
+
+    if ((sb.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+        pcmk__err("Refusing to use PSK credentials file %s because its "
+                  "permissions are too open", location);
+        *allow_fallback = false;
+        return false;
+    }
+
+    *allow_fallback = true;
+    return true;
 }

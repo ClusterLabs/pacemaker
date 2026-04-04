@@ -9,24 +9,27 @@
 
 #include <crm_internal.h>
 
-#include <unistd.h>
-#include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <netdb.h>
-#include <termios.h>
-#include <sys/socket.h>
+#include <errno.h>                  // ENOTCONN, EPROTO, EAGAIN
+#include <pwd.h>                    // getpwuid
+#include <stdbool.h>                // false, bool, true
+#include <stdlib.h>                 // NULL, free, calloc
+#include <string.h>                 // strdup
+#include <sys/socket.h>             // shutdown, SHUT_RDWR
+#include <time.h>                   // time, time_t
+#include <unistd.h>                 // close, geteuid
 
-#include <glib.h>
+#include <glib.h>                   // gpointer, gboolean, g_list_foreach
+#include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-
-#include <gnutls/gnutls.h>
+#include <crm/cib.h>                // cib_t, cib_remote_new
+#include <crm/cib/internal.h>       // cib__create_op, cib__extend_transaction
+#include <crm/common/internal.h>
+#include <crm/common/mainloop.h>    // mainloop_fd_callbacks
+#include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*
+#include <crm/common/xml.h>         // PCMK_XA_*,
+#include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
@@ -374,22 +377,86 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     if (private->encrypted) {
         int tls_rc = GNUTLS_E_SUCCESS;
+        bool have_psk = false;
+        gnutls_datum_t psk_key = { NULL, 0 };
+        const char *key_location = getenv("CIB_key_file");
 
-        // @TODO Implement pre-shared key authentication (see T961)
-        rc = pcmk__init_tls(&tls, false, false);
+        /* X509 certificates take precedence over PSK in pcmk__init_tls,
+         * so don't perform any of the following (potentially noisy) checks
+         * if we don't care about their results.
+         */
+        if (!pcmk__x509_enabled()) {
+            bool anon_fallback = false;
+            struct passwd *pwent = NULL;
+            char *user = NULL;
+
+            /* Get the current username and make sure that the credentials file
+             * is owned by that user instead of private->user.  private->user is
+             * used for authentication on the remote system, but the permissions
+             * check on the key file is done on the local system.  Usernames may
+             * not be the same.
+             */
+            errno = 0;
+            pwent = getpwuid(geteuid());
+
+            if (pwent != NULL) {
+                /* user will be overwritten by the call to getpwuid() in
+                 * pcmk__cred_file_useable, so we have to duplicate it here.
+                 */
+                user = strdup(pwent->pw_name);
+            } else {
+                user = strdup(getenv("USER"));
+                pcmk__warn("Could not get password database entry for effective "
+                           "user ID %lld: %s. Assuming user is %s.",
+                           (long long) geteuid(),
+                           ((rc != 0)? strerror(rc) : "No matching entry found"),
+                           pcmk__s(user, "unprivileged user"));
+            }
+
+            have_psk = pcmk__cred_file_useable(key_location, user, &anon_fallback);
+            free(user);
+
+            if (!anon_fallback) {
+                pcmk__err("Remote CIB session creation for %s:%d failed",
+                          private->server, private->port);
+                return -1;
+            }
+
+            /* @COMPAT Remove fallback to anonymous authentication */
+            if (!have_psk) {
+                pcmk__warn("Falling back to anonymous authentication for remote "
+                           "CIB connections");
+            }
+        }
+
+        rc = pcmk__init_tls(&tls, false, have_psk);
         if (rc != pcmk_rc_ok) {
             return -1;
         }
 
-        /* bind the socket to GnuTls lib */
-        connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
-        if (connection->tls_session == NULL) {
-            cib_tls_close(cib);
-            return -1;
+        if (tls->cred_type == GNUTLS_CRD_PSK) {
+            rc = pcmk__load_key(key_location, &psk_key, false);
+
+            if (rc != pcmk_rc_ok) {
+                pcmk__warn("Could not read remote CIB key from %s: %s",
+                           key_location, pcmk_rc_str(rc));
+            } else {
+                pcmk__tls_client_add_psk_key(tls, private->user, &psk_key, false);
+                gnutls_free(psk_key.data);
+            }
         }
 
-        rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
-                                        &tls_rc);
+        if (rc == pcmk_rc_ok) {
+            connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
+            if (connection->tls_session == NULL) {
+                cib_tls_close(cib);
+                return -1;
+            }
+
+            rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
+                                            &tls_rc);
+        }
+
         if (rc != pcmk_rc_ok) {
             const bool proto_err = (rc == EPROTO);
 
@@ -401,6 +468,10 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
             cib_tls_close(cib);
             return -1;
         }
+    } else {
+        pcmk__warn("Connecting to remote CIB without encryption. This is "
+                   "insecure and will be removed in a future release. Use "
+                   "the CIB_encrypted=true environment variable instead.");
     }
 
     /* Now that the handshake is done, see if any client TLS certificate is
@@ -412,10 +483,12 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
     /* login to server */
     login = pcmk__xe_create(NULL, PCMK__XE_CIB_COMMAND);
-    pcmk__xe_set(login, PCMK_XA_OP, "authenticate");
-    pcmk__xe_set(login, PCMK_XA_USER, private->user);
-    pcmk__xe_set(login, PCMK__XA_PASSWORD, private->passwd);
-    pcmk__xe_set(login, PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD);
+    pcmk__xe_set_props(login,
+                       PCMK_XA_OP, "authenticate",
+                       PCMK_XA_USER, private->user,
+                       PCMK__XA_PASSWORD, private->passwd,
+                       PCMK__XA_HIDDEN, PCMK__VALUE_PASSWORD,
+                       NULL);
 
     pcmk__remote_send_xml(connection, login);
     pcmk__xml_free(login);

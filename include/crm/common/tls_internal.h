@@ -124,28 +124,20 @@ int pcmk__tls_get_client_sock(const pcmk__remote_t *remote);
 
 /*!
  * \internal
- * \brief Add the client PSK key to the TLS environment
+ * \brief Add a PSK key to the initialized TLS environment
  *
- * This function must be called for all TLS clients that are using PSK for
- * authentication.
+ * TLS clients that are using PSK for authentication must call this function
+ * to add a key before the TLS session is established (that is, before
+ * calling \c pcmk__new_tls_session()).
  *
- * \param[in,out] tls The TLS environment
- * \param[in]     key The client's PSK key
+ * \param[in,out] tls      The TLS environment
+ * \param[in]     username The username \p key is valid for
+ * \param[in]     key      The client's PSK key
+ * \param[in]     raw      \p key is in a raw (or binary) format if \c true,
+ *                         and in plain text if \c false
  */
-void pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key);
-
-/*!
- * \internal
- * \brief Register the server's PSK credential fetching callback
- *
- * This function must be called for all TLS servers that are using PSK for
- * authentication.
- *
- * \param[in,out] tls The TLS environment
- * \param[in]     cb  The server's PSK credential fetching callback
- */
-void pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                                gnutls_psk_server_credentials_function *cb);
+void pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                                  gnutls_datum_t *key, bool raw);
 
 /*!
  * \internal
@@ -221,10 +213,28 @@ void pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source);
  *
  * \param[in]  location  The file path to read from
  * \param[out] dest      Where to store the authentication key
+ * \param[in]  raw       \p key is in a raw (or binary) format if \c true,
+ *                       and in plain text if \c false
  *
  * \return Standard Pacemaker return code
  */
-int pcmk__load_key(const char *location, gnutls_datum_t *key);
+int pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw);
+
+/*!
+ * \internal
+ * \brief Check whether a PSK credentials file is useable
+ *
+ * This function checks that a PSK credentials file exists and has the
+ * correct ownership and permissions
+ *
+ * \param[in] location        The file path to check
+ * \param[in] user            The user the file should be owned by
+ * \param[out] allow_fallback \c true if the credentials file exists, is
+ *                            owned by \p user, and is not accessible by
+ *                            the group or world; false otherwise
+ */
+bool pcmk__cred_file_useable(const char *location, const char *user,
+                             bool *allow_fallback);
 
 #ifdef __cplusplus
 }

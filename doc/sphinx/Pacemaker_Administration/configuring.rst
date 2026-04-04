@@ -187,11 +187,22 @@ It is possible to run configuration commands from a machine that is not part of
 the cluster.
 
 For security reasons, this capability is disabled by default. If you wish to
-allow remote access, set the ``remote-tls-port`` (encrypted) or
-``remote-clear-port`` (unencrypted) CIB properties (attributes of the ``cib``
-element). Encrypted communication can be performed keyless (which makes it
-subject to man-in-the-middle attacks), but a better option is to also use
-TLS certificates.
+allow remote access, set the ``remote-tls-port`` CIB property (attribute of
+the ``cib`` element). Communication can be performed with TLS certificates,
+or using pre-shared keys (PSK). If both TLS certificates and PSK are configured,
+only TLS certificates will be enabled.
+
+
+.. note::
+
+   Pacemaker must have been built with PAM support for remote access to work.
+   You can check by running ``pacemakerd --features``. If the output contains
+   **pam**, remote access is supported. *(since 3.0.0; before 3.0.0, in a build
+   without PAM support, all remote connections are accepted without any
+   authentication)*
+
+Configuring TLS Certificates
+____________________________
 
 To enable TLS certificates, it is recommended to first set up your own
 Certificate Authority (CA) and generate a root CA certificate. Then create a
@@ -249,13 +260,63 @@ the daemon user's password:
 Optionally, :ref:`CIB_crl_file <CIB_crl_file>` may be set to the location of a
 Certificate Revocation List in PEM format.
 
+Configuring Pre-Shared Keys (PSK)
+_________________________________
+
+To enable pre-shared keys, the first thing you need is a key file on any cluster
+nodes that require access.  The key file must be named ``cib-credentials`` and
+be placed in the |PCMK_CONFIG_DIR| directory.  It must be readable only by the
+Pacemaker daemon user.  Each line in this file is a username:key pair.  The
+``psktool`` program shipped with gnutls can be used to manage this file.
+
+For instance, to create a new key for an ``admin`` user, do the following:
+
+.. code-block:: none
+
+   # psktool -u admin -p /etc/pacemaker/cib-credentials
+   Generating a random key for user 'admin'
+   Key stored to cib-credentials
+   # cat /etc/pacemaker/cib-credentials
+   admin:c496618a37acb82672d968de46fb6865eca340409ae5b2620e7d2320c6059a7f
+   # chown hacluster:haclient /etc/pacemaker/cib-credentials
+   # chmod 600 /etc/pacemaker/cib-credentials
+
+On the client side, set the following environment variables to connect to
+the cluster:
+
+* :ref:`CIB_port <CIB_port>` (required)
+* :ref:`CIB_server <CIB_server>`
+* :ref:`CIB_user <CIB_user>`
+* :ref:`CIB_passwd <CIB_passwd>`
+* :ref:`CIB_encrypted <CIB_encrypted>`
+* :ref:`CIB_key_file <CIB_key_file>`
+
+``CIB_key_file`` should point to a local file whose contents are the key that
+was previously generated on the server.  It should only be readable by the local
+user.  For instance, from the above example, it would look like:
+
+.. code-block:: none
+
+   # cat ~/cib-credentials
+   c496618a37acb82672d968de46fb6865eca340409ae5b2620e7d2320c6059a7f
+
+As an example, if **node1** is a cluster node, and the CIB is configured with
+``remote-tls-port`` set to 1234, the administrator could read the current
+cluster configuration using the following commands, and would be prompted for
+the daemon user's password:
+
+.. code-block:: none
+
+   # export CIB_server=node1; export CIB_port=1234; export CIB_encrypted=true
+   # export CIB_key_file=~/cib-credentials
+   # cibadmin -Q
+
 .. note::
 
-   Pacemaker must have been built with PAM support for remote access to work.
-   You can check by running ``pacemakerd --features``. If the output contains
-   **pam**, remote access is supported. *(since 3.0.0; before 3.0.0, in a build
-   without PAM support, all remote connections are accepted without any
-   authentication)*
+   As of Pacemaker 3.0.2, even with the use of PSK authentication, a username
+   and password is additionally required to login to the CIB itself.  Due to
+   the use of the ``CIB_user`` environment variable, the username in the PSK
+   credentials file and the CIB username must match.
 
 .. rubric:: Footnotes
 

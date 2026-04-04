@@ -14,6 +14,7 @@
       <attribute name="remote-tls-port"><data type="nonNegativeInteger"/></attribute>
     </optional>
     <optional>
+      <!-- @COMPAT remote-clear-port is deprecated since 3.0.2 -->
       <attribute name="remote-clear-port"><data type="nonNegativeInteger"/></attribute>
     </optional>
     <optional>
