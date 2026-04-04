@@ -1,7 +1,7 @@
 """Pattern-holding classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["PatternSelector"]
-__copyright__ = "Copyright 2008-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2008-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 from pacemaker.buildoptions import BuildOptions
@@ -343,7 +343,7 @@ class Corosync2Patterns(BasePatterns):
         ]
 
 
-patternVariants = {
+pattern_variants = {
     "crm-base": BasePatterns,
     "crm-corosync": Corosync2Patterns
 }
@@ -363,11 +363,11 @@ class PatternSelector:
         self._name = name
 
         # If no name was given, use the default.  Otherwise, look up the appropriate
-        # class in patternVariants, instantiate it, and use that.
+        # class in pattern_variants, instantiate it, and use that.
         if not name:
             self._base = Corosync2Patterns()
         else:
-            self._base = patternVariants[name]()
+            self._base = pattern_variants[name]()
 
     def __getitem__(self, key):
         """

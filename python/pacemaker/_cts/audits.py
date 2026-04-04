@@ -1,7 +1,7 @@
 """Auditing classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["AuditConstraint", "AuditResource", "ClusterAudit", "audit_list"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -82,16 +82,16 @@ class LogAudit(ClusterAudit):
 
         for node in nodes:
             if self._cm.env["have_systemd"]:
-                (rc, _) = self._cm.rsh(node, "systemctl stop systemd-journald.socket")
+                (rc, _) = self._cm.rsh.call(node, "systemctl stop systemd-journald.socket")
                 if rc != 0:
                     self._cm.log(f"ERROR: Cannot stop 'systemd-journald' on {node}")
 
-                (rc, _) = self._cm.rsh(node, "systemctl start systemd-journald.service")
+                (rc, _) = self._cm.rsh.call(node, "systemctl start systemd-journald.service")
                 if rc != 0:
                     self._cm.log(f"ERROR: Cannot start 'systemd-journald' on {node}")
 
             if "syslogd" in self._cm.env:
-                (rc, _) = self._cm.rsh(node, f"service {self._cm.env['syslogd']} restart")
+                (rc, _) = self._cm.rsh.call(node, f"service {self._cm.env['syslogd']} restart")
                 if rc != 0:
                     self._cm.log(f"""ERROR: Cannot restart '{self._cm.env["syslogd"]}' on {node}""")
 
@@ -136,10 +136,7 @@ class LogAudit(ClusterAudit):
 
         for node in self._cm.env["nodes"]:
             cmd = f"logger -p {self._cm.env['syslog_facility']}.info {prefix} {node} {suffix}"
-
-            (rc, _) = self._cm.rsh(node, cmd, synchronous=False, verbose=0)
-            if rc != 0:
-                self._cm.log(f"ERROR: Cannot execute remote command [{cmd}] on {node}")
+            self._cm.rsh.call_async(node, cmd)
 
         for k, w in watch.items():
             if watch_pref is None:
@@ -213,7 +210,7 @@ class DiskAudit(ClusterAudit):
 
         self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
         for node in self._cm.env["nodes"]:
-            (_, dfout) = self._cm.rsh(node, dfcmd, verbose=1)
+            (_, dfout) = self._cm.rsh.call(node, dfcmd, verbose=1)
             if not dfout:
                 self._cm.log(f"ERROR: Cannot execute remote df command [{dfcmd}] on {node}")
                 continue
@@ -282,13 +279,13 @@ class FileAudit(ClusterAudit):
 
     def _find_core_with_coredumpctl(self, node):
         """Use coredumpctl to find core dumps on the given node."""
-        (_, lsout) = self._cm.rsh(node, "coredumpctl --no-legend --no-pager")
+        (_, lsout) = self._cm.rsh.call(node, "coredumpctl --no-legend --no-pager")
         return self._output_has_core(lsout, node)
 
     def _find_core_on_fs(self, node, paths):
         """Check for core dumps on the given node, under any of the given paths."""
-        (_, lsout) = self._cm.rsh(node, f"ls -al {' '.join(paths)} | grep core.[0-9]",
-                                  verbose=1)
+        (_, lsout) = self._cm.rsh.call(node, f"ls -al {' '.join(paths)} | grep core.[0-9]",
+                                       verbose=1)
         return self._output_has_core(lsout, node)
 
     def __call__(self):
@@ -320,7 +317,7 @@ class FileAudit(ClusterAudit):
 
             if self._cm.expected_status.get(node) == "down":
                 clean = False
-                (_, lsout) = self._cm.rsh(node, "ls -al /dev/shm | grep qb-", verbose=1)
+                (_, lsout) = self._cm.rsh.call(node, "ls -al /dev/shm | grep qb-", verbose=1)
 
                 for line in lsout:
                     passed = False
@@ -328,12 +325,12 @@ class FileAudit(ClusterAudit):
                     self._cm.log(f"Warning: Stale IPC file on {node}: {line}")
 
                 if clean:
-                    (_, lsout) = self._cm.rsh(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
+                    (_, lsout) = self._cm.rsh.call(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
 
                     for line in lsout:
                         self._cm.debug(f"ps[{node}]: {line}")
 
-                    self._cm.rsh(node, "rm -rf /dev/shm/qb-*")
+                    self._cm.rsh.call(node, "rm -rf /dev/shm/qb-*")
 
             else:
                 self._cm.debug(f"Skipping {node}")
@@ -511,8 +508,8 @@ class PrimitiveAudit(ClusterAudit):
             self.debug(f"No nodes active - skipping {self.name}")
             return False
 
-        (_, lines) = self._cm.rsh(self._target, "crm_resource --list-cts",
-                                  verbose=1)
+        (_, lines) = self._cm.rsh.call(self._target, "crm_resource --list-cts",
+                                       verbose=1)
 
         for line in lines:
             if re.search("^Resource", line):
@@ -670,9 +667,9 @@ class ColocationAudit(PrimitiveAudit):
 
     def _crm_location(self, resource):
         """Return a list of cluster nodes where a given resource is running."""
-        (rc, lines) = self._cm.rsh(self._target,
-                                   f"crm_resource --locate -r {resource} -Q",
-                                   verbose=1)
+        (rc, lines) = self._cm.rsh.call(self._target,
+                                        f"crm_resource --locate -r {resource} -Q",
+                                        verbose=1)
         hosts = []
 
         if rc == 0:
@@ -823,7 +820,7 @@ class CIBAudit(ClusterAudit):
                 passed = False
 
             else:
-                (rc, result) = self._cm.rsh(
+                (rc, result) = self._cm.rsh.call(
                     node0, f"crm_diff -VV -cf --new {node_xml} --original {node0_xml}", verbose=1)
 
                 if rc != 0:
@@ -850,16 +847,16 @@ class CIBAudit(ClusterAudit):
         if not target:
             target = node
 
-        (rc, lines) = self._cm.rsh(node, self._cm.templates["CibQuery"], verbose=1)
+        (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
         if rc != 0:
             self._cm.log("Could not retrieve configuration")
             return None
 
-        self._cm.rsh("localhost", f"rm -f {filename}")
+        self._cm.rsh.call("localhost", f"rm -f {filename}")
         for line in lines:
-            self._cm.rsh("localhost", f"echo \'{line[:-1]}\' >> {filename}", verbose=0)
+            self._cm.rsh.call("localhost", f"echo \'{line[:-1]}\' >> {filename}", verbose=0)
 
-        if self._cm.rsh.copy(filename, f"root@{target}:{filename}", silent=True) != 0:
+        if self._cm.rsh.copy(filename, f"root@{target}:{filename}") != 0:
             self._cm.log("Could not store configuration")
             return None
 
@@ -960,13 +957,13 @@ class PartitionAudit(ClusterAudit):
                 # not in itself a reason to fail the audit (not what we're
                 #  checking for in this audit)
 
-            (_, out) = self._cm.rsh(node, self._cm.templates["StatusCmd"] % node, verbose=1)
+            (_, out) = self._cm.rsh.call(node, self._cm.templates["StatusCmd"] % node, verbose=1)
             self._node_state[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh(node, self._cm.templates["EpochCmd"], verbose=1)
+            (_, out) = self._cm.rsh.call(node, self._cm.templates["EpochCmd"], verbose=1)
             self._node_epoch[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh(node, self._cm.templates["QuorumCmd"], verbose=1)
+            (_, out) = self._cm.rsh.call(node, self._cm.templates["QuorumCmd"], verbose=1)
             self._node_quorum[node] = out[0].strip()
 
             self.debug(f"Node {node}: {self._node_state[node]} - {self._node_epoch[node]} - {self._node_quorum[node]}.")
