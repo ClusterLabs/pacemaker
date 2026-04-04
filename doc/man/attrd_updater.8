@@ -1,0 +1,227 @@
+.TH ATTRD_UPDATER "8" "2026-02-27" "Pacemaker 3.0.1" "Pacemaker Manual"
+.SH "NAME"
+attrd_updater \- query and update Pacemaker node attributes
+.
+.SH "SYNOPSIS"
+.SY attrd_updater
+.B { \-n \fIattribute\fB \|| \-P \fIpattern\fB } <command>
+.RI [ option\~ ...]
+.YS
+.
+.SH "DESCRIPTION"
+.B attrd_updater
+manages transient and private node attributes.  Transient node attributes are
+recorded in the CIB, but will be erased when the cluster is restarted.  Private
+node attributes are never recorded in the CIB.  They exist only in memory in the
+Pacemaker attribute daemon (\fBpacemaker\-attrd\fR) and will therefore also be
+erased when the cluster is restarted.
+.P
+.B attrd_updater
+can also be used to create attributes for cluster nodes that do not yet exist,
+and can manage how often attribute changes are flushed to the CIB (called
+"damping") to minimize disk writes for frequent changes.  It is also used by
+resource agents, particularly node health agents, for setting and querying
+node status.
+.
+.SH "OPTIONS"
+.SS "Required arguments"
+One of the following arguments must be provided.  These arguments are mutually
+exclusive.
+.TP
+.BR \-n ", " \-\-name =\fINAME\fR
+The attribute's name.
+.TP
+.BR \-P ", " \-\-pattern =\fIPATTERN\fR
+Operate on all attributes matching this pattern (with \fB\-B\fR, \fB\-D\fR,
+\fB\-U\fR, or \fB\-Y\fR).  Patterns are regular expressions as understood by
+.MR regex 7 .
+.
+.SS "Commands"
+One of the following commands must be provided.  These options are mutually
+exclusive.
+.TP
+.BR \-B ", " \-\-update\-both =\fIVALUE\fR
+Set the value of the given attribute (creating it if it does not already exist),
+or all attributes matched by the given pattern, to \fIVALUE\fR.  Additionally,
+set the attribute's time to wait (dampening) in the attribute manager to the
+value given by \fB\-d\fR or \fB\-\-delay\fR.  If this changes the value or
+dampening, the attribute will also be written to the cluster configuration, so
+be aware that repeatedly changing the dampening reduces its effectiveness.
+.TP
+.BR \-D ", " \-\-delete
+Unset the value of the given attribute, or all attributes matched by the given
+pattern, in the attribute manager.  At the moment, there is no way to remove
+an attribute.  This option will instead set its value to the empty string.
+.TP
+.BR \-Q ", " \-\-query
+Query the attribute's value from the attribute manager.  By default, this will
+query the value of the attribute on the local node.  Use \fB\-N\fR or \fB\-\-node\fR
+for the value on a given node, or \fB\-A\fR or \fB\-\-all\fR for the value on
+all nodes.
+.TP
+.BR \-R ", " \-\-refresh
+(Advanced) Force the attribute manager to resend all current values to the CIB.
+.TP
+.BR \-U ", " \-\-update =\fIVALUE\fR
+Set the value of the given attribute (creating it if it does not already exist),
+or all attributes matched by the given pattern, to \fIVALUE\fR.  If \fB\-d\fR or
+\fB\-\-delay\fR is specified, the delay will be used if the attribute needs to
+be created and ignored otherwise.
+.TP
+.BR \-Y ", " \-\-update-delay
+Set the dampening in the attribute manager for the given attribute, or all
+attributes matched by the given pattern, to the value given by \fB\-d\fR or
+\fB\-\-delay\fR.  If this changes the dampening, the attribute will also be
+written to the cluster configuration, so be aware that repeatedly changing the
+dampening reduces its effectiveness.
+.
+.SS "Additional options"
+.TP
+.BR \-A ", " \-\-all
+Show values of the given attribute on all nodes (query only).
+.TP
+.BR \-d ", " \-\-delay =\fISECONDS\fR
+The time to wait (dampening) in seconds for further changes before sending
+to the CIB.
+.TP
+.BR \-l ", " \-\-lifetime =\fITIMESPEC\fR
+Use the ISO-8601 \fITIMESPEC\fR as the lifetime of the attribute.  \fITIMESPEC\fR
+is given according to
+.UR https://\:en\:.wikipedia\:.org/\:wiki/\:ISO_8601#Durations
+.UE .
+This option is not yet implemented and will be silently ignored by the cluster.
+.TP
+.BR \-n ", " \-\-node =\fINODE\fR
+Use \fINODE\fR as the node for setting and querying the attribute instead of
+the local one.
+.TP
+.BR \-p ", " \-\-private
+If a new attribute is created, do not write it to the CIB.
+.TP
+.BR \-s ", " \-\-set =\fISET\fR
+(Advanced) The attribute set in which to place the value.
+.TP
+.BR \-w ", " \-\-wait= \fIUNTIL\fR
+Wait for some event to occur before returning to the shell.  Values are:
+.RS
+.IP \fIno\fR (default)
+Wait only for the attribute manager to acknowledge the request.
+.IP \fIlocal\fR
+Wait until the change has propagated to where a local query will return the
+request value, or the value set by a later request.
+.IP \fIcluster\fR
+Wait until the change has propagated to where a query anywhere on the cluster
+will return the requested value, or the value set by a later request.
+.RE
+.TP
+.BR \-z ", " \-\-utilization
+When creating a new attribute, create it as a node utilization attribute
+instead of an instance attribute.  If the attribute already exists, its
+existing type will be used regardless (with \fB\-B\fR, \fB\-U\fR, or \fB\-Y\fR).
+.
+.SS "Output options"
+.TP
+.BI \-\-output\-as= FORMAT
+Specify output format as one of: text (default), xml.
+.TP
+.BI \-\-output\-to= DEST
+Specify file name for output (or "\-" for stdout).
+.
+.SS "Help options"
+.TP
+.BR \-h ", " \-\-help
+Show basic help options.
+.TP
+.B \-\-help\-additional
+Show additional options.
+.TP
+.B \-\-help\-all
+Show all help options.
+.TP
+.B \-\-help\-command
+Show program commands.
+.TP
+.B \-\-help\-output
+Show output-related help options.
+.TP
+.B \-\-help\-required
+Show required arguments.
+.
+.SS "Application options"
+.TP
+.BR \-$ ", " \-\-version
+Display software version and exit.
+.TP
+.BR \-V ", " \-\-verbose
+Increase debug output (may be specified multiple times).
+.
+.SH "EXIT STATUS"
+This is not an exhaustive list of exit statuses for \fBattrd_updater\fR.  See
+.MR crm_error 8
+for more information on converting between error codes and their names.
+.TP
+.B CRM_EX_CONFIG
+The given attribute does not exist.
+.TP
+.B ENOTCONN, ECONNREFUSED
+\fBattrd_updater\fR had problems connecting to or communicating with
+\fBpacemaker-attrd\fR.
+.
+.SH "EXAMPLES"
+.EX
+# \fBattrd_updater \-n "#health\-cpu" \-Q
+.EE
+.RS
+Query the value of the \fB#health\-cpu\fR attribute on the current node
+.RE
+.P
+.EX
+# \fBattrd_updater \-n "#health\-cpu" \-Q \-A
+.EE
+.RS
+Query the value of the \fB#health\-cpu\fR attribute on all cluster nodes
+.RE
+.P
+.EX
+# \fBattrd_updater \-n ABC \-U 111
+.EE
+.RS
+Set the value of the \fBABC\fR attribute to \fB111\fR on the current node
+.RE
+.P
+.EX
+# \fBattrd_updater \-n ABD \-U 222 \-w cluster
+.EE
+.RS
+Set the value of the \fBABD\fR attribute to \fB222\fR on the current node, and
+do not return until this change has propagated to all cluster nodes
+.RE
+.P
+.EX
+# \fBattrd_updater \-n ABE \-U 333 \-Y \-d 15
+.EE
+.RS
+Set the value of the \fBABE\fR attribute to \fB333\fR on the current node, and
+wait 15 seconds before sending any changes to this attribute to the CIB
+.RE
+.P
+.EX
+# \fBattrd_updater \-P "AB.*" -D
+.EE
+.RS
+Unset the value of all attributes matching the regular expression \fBAB.*\fR
+.RE
+.
+.SH "REPORTING BUGS"
+Report bugs to https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker
+.
+.SH "COPYRIGHT"
+Copyright © 2004-2026 the Pacemaker project contributors.
+.P
+This program is licensed under the GNU General Public License version 2 or
+later (GPLv2+) WITHOUT ANY WARRANTY.
+.
+.SH "SEE ALSO"
+.BR crm_attribute (8),
+.BR crm_error (8),
+.BR regex (7)

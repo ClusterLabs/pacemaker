@@ -198,7 +198,9 @@ configure
 *.7
 *.7.xml
 *.7.html
-*.8
+/agents/*/*.8
+/daemons/*/*.8
+/tools/*.8
 *.8.xml
 *.8.html
 GPATH
