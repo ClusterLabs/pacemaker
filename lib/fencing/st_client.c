@@ -1119,6 +1119,20 @@ stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
     return 1;
 }
 
+static bool
+ack_is_failure(const xmlNode *reply)
+{
+    int status = 0;
+
+    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+    if (status != CRM_EX_OK) {
+        pcmk__err("Received error response from fenced: %s", crm_exit_str(status));
+        return true;
+    }
+
+    return false;
+}
+
 static int
 stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
 {
@@ -1195,6 +1209,16 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
         goto done;
     }
 
+    /* The only reason we can receive an ACK here is if fenced_ipc_dispatch ->
+     * pcmk__client_data2xml processed something that's not valid XML.
+     * fenced_ipc_disaptch does not return ACK from handle_unknown_request,
+     * unlike other daemons.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_ACK) && ack_is_failure(reply)) {
+        rc = -EPROTO;
+        goto done;
+    }
+
     msg_type = pcmk__xe_get(reply, PCMK__XA_ST_OP);
 
     native->token = pcmk__xe_get_copy(reply, PCMK__XA_ST_CLIENTID);
@@ -1247,6 +1271,9 @@ stonith_set_notification(stonith_t * stonith, const char *callback, int enabled)
             pcmk__xe_set(notify_msg, PCMK__XA_ST_NOTIFY_DEACTIVATE, callback);
         }
 
+        /* We don't care about the reply here, so there's no need to check
+         * if we got an ACK in response.
+         */
         rc = crm_ipc_send(native->ipc, notify_msg, crm_ipc_client_response, -1, NULL);
         if (rc < 0) {
             pcmk__debug("Couldn't register for fencing notifications: %s",
@@ -1628,6 +1655,11 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         pcmk__err("Couldn't perform %s operation (timeout=%ds): %s", op,
                   timeout, pcmk_strerror(rc));
         rc = -ECOMM;
+        goto done;
+    }
+
+    if (pcmk__xe_is(op_reply, PCMK__XE_ACK) && ack_is_failure(op_reply)) {
+        rc = -EPROTO;
         goto done;
     }
 
