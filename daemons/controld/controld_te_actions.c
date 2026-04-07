@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -703,7 +703,7 @@ controld_register_graph_functions(void)
 void
 notify_crmd(pcmk__graph_t *graph)
 {
-    const char *type = "unknown";
+    const char *type = NULL;
     enum crmd_fsa_input event = I_NULL;
 
     pcmk__debug("Processing transition completion in state %s",
