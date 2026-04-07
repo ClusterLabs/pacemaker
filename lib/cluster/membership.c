@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1085,17 +1085,16 @@ update_peer_uname(pcmk__node_status_t *node, const char *uname)
 static inline const char *
 proc2text(enum crm_proc_flag proc)
 {
-    const char *text = "unknown";
-
     switch (proc) {
         case crm_proc_none:
-            text = "none";
-            break;
+            return "none";
+
         case crm_proc_cpg:
-            text = "corosync-cpg";
-            break;
+            return "corosync-cpg";
+
+        default:
+            return "unknown";
     }
-    return text;
 }
 
 /*!
