@@ -196,10 +196,18 @@ load_env_vars(void)
         return;
     }
 
-    while (getline(&line, &buf_size, fp) != -1) {
-        load_env_var_line(line);
+    do {
+        ssize_t rc = 0;
+
         errno = 0;
-    }
+        rc = getline(&line, &buf_size, fp);
+
+        if (rc == -1) {
+            break;
+        }
+
+        load_env_var_line(line);
+    } while (true);
 
     // getline() returns -1 on EOF (expected) or error
     if (errno != 0) {
