@@ -27,6 +27,7 @@ clang:
 	OUT=$$(cd $(top_builddir)					\
 		&& scan-build $(CLANG_checkers:%=-enable-checker %)	\
 		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
+		-j $(shell nproc --ignore=1) 				\
 		clean all 2>&1);					\
 	REPORT=$$(echo "$$OUT"						\
 		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
