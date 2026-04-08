@@ -1067,6 +1067,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
     }
 
     // Final result document from upgrade pipeline needs private data
+    pcmk__assert(new_xml != NULL);
     pcmk__xml_new_private_data((xmlNode *) new_xml->doc);
 
     // Ensure result validates with its new schema

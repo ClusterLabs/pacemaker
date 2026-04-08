@@ -773,6 +773,8 @@ free_xml_with_position(xmlNode *node, int position)
         return pcmk_rc_ok;
     }
 
+    pcmk__assert(doc != NULL);
+
     docpriv = doc->_private;
     xpath = pcmk__element_xpath(node);
 
