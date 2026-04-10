@@ -411,7 +411,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 
         rc = pcmk__init_tls(&tls, false, have_psk);
         if (rc != pcmk_rc_ok) {
-            return -1;
+            return -rc;
         }
 
         if (tls->cred_type == GNUTLS_CRD_PSK) {
@@ -440,15 +440,15 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         }
 
         if (rc != pcmk_rc_ok) {
-            const bool proto_err = (rc == EPROTO);
+            const bool gnutls_err = (rc == EPROTO);
 
             pcmk__err("Remote CIB session creation for %s:%d failed: %s",
                       private->server, private->port,
-                      (proto_err? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
+                      (gnutls_err? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
             gnutls_deinit(connection->tls_session);
             connection->tls_session = NULL;
             cib_tls_close(cib);
-            return -1;
+            return -rc;
         }
     } else {
         pcmk__warn("Connecting to remote CIB without encryption. This is "
