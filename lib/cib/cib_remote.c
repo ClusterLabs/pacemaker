@@ -348,6 +348,93 @@ cib_remote_connection_destroy(gpointer user_data)
 }
 
 static int
+cib_setup_tls(pcmk__remote_t *connection, const char *server, int port,
+              const char *user)
+{
+    int rc = pcmk_rc_ok;
+    int tls_rc = GNUTLS_E_SUCCESS;
+    bool have_psk = false;
+    const char *key_location = getenv("CIB_key_file");
+
+    /* X509 certificates take precedence over PSK in pcmk__init_tls,
+     * so don't perform any of the following (potentially noisy) checks
+     * if we don't care about their results.
+     */
+    if (!pcmk__x509_enabled()) {
+        bool file_exists = false;
+
+        if (key_location != NULL) {
+            have_psk = pcmk__cred_file_useable(key_location, &file_exists);
+        }
+
+        if (!have_psk && file_exists) {
+            /* The credential file exists but doesn't have the right owner
+             * or permissions.  Don't fall back to anonymous on config
+             * errors.
+             */
+            pcmk__err("Remote CIB session creation for %s:%d failed",
+                      server, port);
+            rc = EACCES;
+            goto done;
+        }
+
+        if (!have_psk) {
+            /* The credential file does not exist at all, so fall back
+             * to anonymous auth.
+             *
+             * @COMPAT Remove fallback to anonymous authentication
+             */
+            pcmk__warn("Falling back to anonymous authentication for remote "
+                       "CIB connections");
+        }
+    }
+
+    rc = pcmk__init_tls(&tls, false, have_psk);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (tls->cred_type == GNUTLS_CRD_PSK) {
+        gnutls_datum_t psk_key = { NULL, 0 };
+
+        rc = pcmk__load_key(key_location, &psk_key, false);
+
+        if (rc != pcmk_rc_ok) {
+            pcmk__warn("Could not read remote CIB key from %s: %s",
+                       key_location, pcmk_rc_str(rc));
+            goto done;
+        }
+
+        pcmk__tls_client_add_psk_key(tls, user, &psk_key, false);
+        gnutls_free(psk_key.data);
+    }
+
+    connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
+    if (connection->tls_session == NULL) {
+        rc = ENOTCONN;
+        goto done;
+    }
+
+    rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT, &tls_rc);
+    if (rc != pcmk_rc_ok) {
+        const char *msg = NULL;
+
+        if (rc == EPROTO) {
+            msg = gnutls_strerror(tls_rc);
+        } else {
+            msg = pcmk_rc_str(rc);
+        }
+
+        pcmk__err("Remote CIB session creation for %s:%d failed: %s",
+                  server, port, msg);
+        g_clear_pointer(&connection->tls_session, gnutls_deinit);
+    }
+
+done:
+    return rc;
+}
+
+static int
 cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
 {
     cib_remote_opaque_t *private = cib->variant_opaque;
@@ -373,83 +460,17 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     }
 
     if (private->encrypted) {
-        int tls_rc = GNUTLS_E_SUCCESS;
-        bool have_psk = false;
-        const char *key_location = getenv("CIB_key_file");
+        rc = cib_setup_tls(connection, private->server, private->port,
+                           private->user);
 
-        /* X509 certificates take precedence over PSK in pcmk__init_tls,
-         * so don't perform any of the following (potentially noisy) checks
-         * if we don't care about their results.
-         */
-        if (!pcmk__x509_enabled()) {
-            bool file_exists = false;
-
-            if (key_location != NULL) {
-                have_psk = pcmk__cred_file_useable(key_location, &file_exists);
-            }
-
-            if (!have_psk && file_exists) {
-                /* The credential file exists but doesn't have the right owner
-                 * or permissions.  Don't fall back to anonymous on config
-                 * errors.
-                 */
-                pcmk__err("Remote CIB session creation for %s:%d failed",
-                          private->server, private->port);
-                return -EACCES;
-            }
-
-            if (!have_psk) {
-                /* The credential file does not exist at all, so fall back
-                 * to anonymous auth.
-                 *
-                 * @COMPAT Remove fallback to anonymous authentication
-                 */
-                pcmk__warn("Falling back to anonymous authentication for remote "
-                           "CIB connections");
-            }
-        }
-
-        rc = pcmk__init_tls(&tls, false, have_psk);
         if (rc != pcmk_rc_ok) {
-            return -rc;
-        }
-
-        if (tls->cred_type == GNUTLS_CRD_PSK) {
-            gnutls_datum_t psk_key = { NULL, 0 };
-
-            rc = pcmk__load_key(key_location, &psk_key, false);
-
-            if (rc != pcmk_rc_ok) {
-                pcmk__warn("Could not read remote CIB key from %s: %s",
-                           key_location, pcmk_rc_str(rc));
-            } else {
-                pcmk__tls_client_add_psk_key(tls, private->user, &psk_key, false);
-                gnutls_free(psk_key.data);
-            }
-        }
-
-        if (rc == pcmk_rc_ok) {
-            connection->tls_session = pcmk__new_tls_session(tls, connection->tcp_socket);
             if (connection->tls_session == NULL) {
                 cib_tls_close(cib);
-                return -ENOTCONN;
             }
 
-            rc = pcmk__tls_client_handshake(connection, TLS_HANDSHAKE_TIMEOUT,
-                                            &tls_rc);
-        }
-
-        if (rc != pcmk_rc_ok) {
-            const bool gnutls_err = (rc == EPROTO);
-
-            pcmk__err("Remote CIB session creation for %s:%d failed: %s",
-                      private->server, private->port,
-                      (gnutls_err? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
-            gnutls_deinit(connection->tls_session);
-            connection->tls_session = NULL;
-            cib_tls_close(cib);
             return -rc;
         }
+
     } else {
         pcmk__warn("Connecting to remote CIB without encryption. This is "
                    "insecure and will be removed in a future release. Use "
