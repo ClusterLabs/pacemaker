@@ -92,12 +92,8 @@ is_leap_year(int year)
            && (((year % 100) != 0) || (year % 400 == 0));
 }
 
-// Jan-Dec plus Feb of leap years
-static int month_days[13] = {
-    31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31, 29
-};
-
 /*!
+ * \internal
  * \brief Return number of days in given month of given year
  *
  * \param[in] month  Ordinal month (1-12)
@@ -108,12 +104,18 @@ static int month_days[13] = {
 static int
 days_in_month_year(int month, int year)
 {
+    static const int month_days[12] = {
+        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+    };
+
     if ((month < 1) || (month > 12) || (year < 1)) {
         return 0;
     }
+
     if ((month == 2) && is_leap_year(year)) {
-        month = 13;
+        return month_days[1] + 1;
     }
+
     return month_days[month - 1];
 }
 
