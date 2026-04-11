@@ -1615,55 +1615,43 @@ pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
     return pcmk_rc_ok;
 }
 
-crm_time_t *
-crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
+static crm_time_t *
+subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
 {
+    crm_time_t *result = NULL;
     crm_time_t *utc = NULL;
-    crm_time_t *answer = NULL;
 
-    if ((dt == NULL) || (value == NULL)) {
+    if ((dt1 == NULL) || (dt2 == NULL)) {
         errno = EINVAL;
         return NULL;
     }
 
-    utc = copy_time_to_utc(value);
-    answer = copy_time_to_utc(dt);
-    answer->duration = TRUE;
+    result = (as_duration? copy_time_to_utc(dt1) : pcmk_copy_time(dt1));
+    result->duration = as_duration;
 
-    crm_time_add_years(answer, -utc->years);
+    utc = copy_time_to_utc(dt2);
+
+    crm_time_add_years(result, -utc->years);
     if(utc->months != 0) {
-        crm_time_add_months(answer, -utc->months);
+        crm_time_add_months(result, -utc->months);
     }
-    crm_time_add_days(answer, -utc->days);
-    crm_time_add_seconds(answer, -utc->seconds);
+    crm_time_add_days(result, -utc->days);
+    crm_time_add_seconds(result, -utc->seconds);
 
     crm_time_free(utc);
-    return answer;
+    return result;
+}
+
+crm_time_t *
+crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
+{
+    return subtract_time(dt, value, true);
 }
 
 crm_time_t *
 crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
-    crm_time_t *utc = NULL;
-    crm_time_t *answer = NULL;
-
-    if ((dt == NULL) || (value == NULL)) {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    utc = copy_time_to_utc(value);
-    answer = pcmk_copy_time(dt);
-
-    crm_time_add_years(answer, -utc->years);
-    if(utc->months != 0) {
-        crm_time_add_months(answer, -utc->months);
-    }
-    crm_time_add_days(answer, -utc->days);
-    crm_time_add_seconds(answer, -utc->seconds);
-    crm_time_free(utc);
-
-    return answer;
+    return subtract_time(dt, value, false);
 }
 
 #define do_cmp_field(l, r, field)					\
