@@ -1631,9 +1631,30 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
 
     utc = copy_time_to_utc(dt2);
 
+    // Avoid overflow when negating INT_MIN in calculations below
+
+    if (utc->years == INT_MIN) {
+        crm_time_add_years(result, -1);
+        utc->years++;
+    }
     crm_time_add_years(result, -utc->years);
+
+    if (utc->months == INT_MIN) {
+        crm_time_add_months(result, -1);
+        utc->months++;
+    }
     crm_time_add_months(result, -utc->months);
+
+    if (utc->days == INT_MIN) {
+        crm_time_add_days(result, -1);
+        utc->days++;
+    }
     crm_time_add_days(result, -utc->days);
+
+    if (utc->seconds == INT_MIN) {
+        crm_time_add_seconds(result, -1);
+        utc->seconds++;
+    }
     crm_time_add_seconds(result, -utc->seconds);
 
     crm_time_free(utc);
