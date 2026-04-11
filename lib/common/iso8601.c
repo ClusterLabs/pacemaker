@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2025 the Pacemaker project contributors
+ * Copyright 2005-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1797,7 +1797,7 @@ crm_time_add_months(crm_time_t * a_time, int extra)
             }
         }
     } else {
-        for (lpc = -extra; lpc > 0; lpc--) {
+        for (lpc = extra; lpc < 0; lpc++) {
             m--;
             if (m == 0) {
                 m = 12;
