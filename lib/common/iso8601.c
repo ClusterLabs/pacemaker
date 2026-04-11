@@ -1632,9 +1632,7 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     utc = copy_time_to_utc(dt2);
 
     crm_time_add_years(result, -utc->years);
-    if(utc->months != 0) {
-        crm_time_add_months(result, -utc->months);
-    }
+    crm_time_add_months(result, -utc->months);
     crm_time_add_days(result, -utc->days);
     crm_time_add_seconds(result, -utc->seconds);
 
