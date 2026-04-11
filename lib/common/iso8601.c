@@ -135,26 +135,27 @@ days_in_month_year(int month, int year)
  * \internal
  * \brief Get ordinal day number of year corresponding to given date
  *
- * \param[in] y   Year
- * \param[in] m   Month (1-12)
- * \param[in] d   Day of month (1-31)
+ * \param[in] year   Year
+ * \param[in] month  Month (1-12)
+ * \param[in] day    Day of month (1-31)
  *
- * \return Day number of year \p y corresponding to month \p m and day \p d,
- *         or 0 for invalid arguments
+ * \return Day number of year \p year corresponding to month \p month and day
+ *         \p day, or 0 for invalid arguments
  */
 static int
-get_ordinal_days(uint32_t y, uint32_t m, uint32_t d)
+get_ordinal_days(uint32_t year, uint32_t month, uint32_t day)
 {
-    int result = 0;
+    int prev_month_days = 0;
 
-    CRM_CHECK((y > 0) && (y <= INT_MAX) && (m >= 1) && (m <= 12)
-              && (d >= 1) && (d <= 31), return 0);
+    CRM_CHECK((year >= 1) && (year <= INT_MAX)
+              && (month >= 1) && (month <= 12)
+              && (day >= 1) && (day <= 31), return 0);
 
-    result = d;
-    for (int lpc = 1; lpc < m; lpc++) {
-        result += days_in_month_year(lpc, y);
+    for (int i = 1; i < month; i++) {
+        prev_month_days += days_in_month_year(i, year);
     }
-    return result;
+
+    return prev_month_days + day;
 }
 
 static int
