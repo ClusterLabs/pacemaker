@@ -336,21 +336,36 @@ parse_offset(const char *offset_str, int *offset)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Convert seconds to hours, minutes, and seconds
+ *
+ * The resulting minutes and seconds are in the range [0, 59]. Accordingly, the
+ * number of hours is \p seconds_i divided by \c SECONDS_IN_HOUR.
+ *
+ * \param[in]  seconds_i  Seconds to convert
+ * \param[out] hours      Where to store hours
+ * \param[out] minutes    Where to store minutes
+ * \param[out] seconds    If not \c NULL, where to store seconds
+ */
 static void
-seconds_to_hms(int seconds, uint32_t *h, uint32_t *m, uint32_t *s)
+seconds_to_hms(int seconds_i, uint32_t *hours, uint32_t *minutes,
+               uint32_t *seconds)
 {
-    int hours = 0;
-    int minutes = 0;
+    int hours_i = 0;
+    int minutes_i = 0;
 
-    hours = seconds / SECONDS_IN_HOUR;
-    seconds %= SECONDS_IN_HOUR;
+    hours_i = seconds_i / SECONDS_IN_HOUR;
+    seconds_i %= SECONDS_IN_HOUR;
 
-    minutes = seconds / SECONDS_IN_MINUTE;
-    seconds %= SECONDS_IN_MINUTE;
+    minutes_i = seconds_i / SECONDS_IN_MINUTE;
+    seconds_i %= SECONDS_IN_MINUTE;
 
-    *h = (uint32_t) QB_ABS(hours);
-    *m = (uint32_t) QB_ABS(minutes);
-    *s = (uint32_t) QB_ABS(seconds);
+    *hours = (uint32_t) QB_ABS(hours_i);
+    *minutes = (uint32_t) QB_ABS(minutes_i);
+    if (seconds != NULL) {
+        *seconds = (uint32_t) QB_ABS(seconds_i);
+    }
 }
 
 /*!
@@ -366,7 +381,8 @@ seconds_to_hms(int seconds, uint32_t *h, uint32_t *m, uint32_t *s)
 static bool
 parse_time(const char *time_str, crm_time_t *a_time)
 {
-    uint32_t h, m, s;
+    uint32_t h = 0;
+    uint32_t m = 0;
     const char *offset_s = NULL;
 
     tzset();
@@ -394,7 +410,7 @@ parse_time(const char *time_str, crm_time_t *a_time)
         return false;
     }
 
-    seconds_to_hms(a_time->offset, &h, &m, &s);
+    seconds_to_hms(a_time->offset, &h, &m, NULL);
     pcmk__trace("Got tz: %c%2." PRIu32 ":%.2" PRIu32,
                 (a_time->offset < 0)? '-' : '+', h, m);
 
@@ -1078,7 +1094,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
         if (pcmk__is_set(flags, crm_time_log_with_timezone)
             && (dt->offset != 0)) {
 
-            seconds_to_hms(dt->offset, &h, &m, &s);
+            seconds_to_hms(dt->offset, &h, &m, NULL);
             g_string_append_printf(buf, " %c%.2" PRIu32 ":%.2" PRIu32,
                                    ((dt->offset < 0)? '-' : '+'), h, m);
 
@@ -1950,12 +1966,11 @@ offset_text(int offset)
 {
     uint32_t hours = 0;
     uint32_t minutes = 0;
-    uint32_t seconds = 0;
 
     // If offset is out of range, default to NULL
     CRM_CHECK(QB_ABS(offset) <= SECONDS_IN_DAY, return NULL);
 
-    seconds_to_hms(offset, &hours, &minutes, &seconds);
+    seconds_to_hms(offset, &hours, &minutes, NULL);
 
     return pcmk__assert_asprintf("%c%02" PRIu32 ":%02" PRIu32,
                                  ((offset >= 0)? '+' : '-'), hours, minutes);
@@ -2324,9 +2339,7 @@ crm_time_days_in_month(int month, int year)
 int
 crm_time_get_timezone(const crm_time_t *dt, uint32_t *h, uint32_t *m)
 {
-    uint32_t s;
-
-    seconds_to_hms(dt->seconds, h, m, &s);
+    seconds_to_hms(dt->seconds, h, m, NULL);
     return TRUE;
 }
 
