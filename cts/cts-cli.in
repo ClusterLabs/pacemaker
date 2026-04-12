@@ -9,7 +9,7 @@
 # We know this is a very long file.
 # pylint: disable=too-many-lines
 
-__copyright__ = "Copyright 2024-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2024-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -261,6 +261,7 @@ def sanitize_output(s):
         (r'last_update time=".*"', r'last_update time=""'),
         (r' last-rc-change=[\'"][-+A-Za-z0-9: ]*[\'"],?', r''),
         (r'\(parse_date@.*\.c:[0-9]+\)', r'parse_date'),
+        (r'\(parse_duration_element@.*\.c:[0-9]+\)', r'parse_duration_element'),
         (r'\((pcmk__.*)@.*\.c:[0-9]+\)', r'\1'),
         (r'.*Relax-NG validity error : ', r''),
         (r'request=".*cibadmin', r'request="cibadmin'),
