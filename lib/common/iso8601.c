@@ -1128,6 +1128,128 @@ parse_int(const char *str, int *result)
 }
 
 /*!
+ * \internal
+ * \brief Parse an element of an ISO 8601 duration string
+ *
+ * \param[in,out] element     Element to parse (within \p duration_s)
+ * \param[in]     duration_s  Full duration string (for logging only)
+ * \param[in,out] duration    Where to add result of parsing \p element
+ * \param[in]     as_time     If \c true, \c 'M' indicates minutes; otherwise,
+ *                            it indicates months
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note On successful return, \p element points to the unit designator of the
+ *       element just parsed. This is a bit confusing but will suffice for now.
+ * \note \p as_time is set to \c true if the caller has encountered a \c 'T'
+ *       already while parsing \p duration_s.
+ */
+static int
+parse_duration_element(const char **element, const char *duration_s,
+                       crm_time_t *duration, bool as_time)
+{
+    int value = 0;
+    int consumed = 0;
+    long long result = 0;
+    const char *start = *element;
+
+    // Component must begin with an integer
+    consumed = parse_int(*element, &value);
+    if (consumed == 0) {
+        pcmk__err("'%s' is not a valid ISO 8601 duration because no valid "
+                  "integer at '%s'", duration_s, *element);
+        return pcmk_rc_bad_input;
+    }
+
+    *element += consumed;
+
+    // A unit designator must be next (we're not strict about the order)
+    switch (**element) {
+        case 'Y':
+            duration->years = value;
+            break;
+
+        case 'M':
+            if (!as_time) { // Months
+                duration->months = value;
+
+            } else { // Minutes
+                result = duration->seconds + (value * 60LL);
+                if ((result < INT_MIN) || (result > INT_MAX)) {
+                    pcmk__err("'%s' is not a valid ISO 8601 time duration "
+                              "because integer at '%s' is too %s", duration_s,
+                              start, ((result > 0)? "large" : "small"));
+                    return pcmk_rc_bad_input;
+                }
+
+                duration->seconds = (int) result;
+            }
+
+            break;
+
+        case 'W':
+            result = duration->days + (value * 7LL);
+            if ((result < INT_MIN) || (result > INT_MAX)) {
+                pcmk__err("'%s' is not a valid ISO 8601 time duration because "
+                          "integer at '%s' is too %s", duration_s, start,
+                          ((result > 0)? "large" : "small"));
+                return pcmk_rc_bad_input;
+            }
+
+            duration->days = (int) result;
+            break;
+
+        case 'D':
+            result = duration->days + (long long) value;
+            if ((result < INT_MIN) || (result > INT_MAX)) {
+                pcmk__err("'%s' is not a valid ISO 8601 time duration because "
+                          "integer at '%s' is too %s", duration_s, start,
+                          ((result > 0)? "large" : "small"));
+                return pcmk_rc_bad_input;
+            }
+
+            duration->days = (int) result;
+            break;
+
+        case 'H':
+            result = duration->seconds + ((long long) value * SECONDS_IN_HOUR);
+            if ((result < INT_MIN) || (result > INT_MAX)) {
+                pcmk__err("'%s' is not a valid ISO 8601 time duration because "
+                          "integer at '%s' is too %s", duration_s, start,
+                          ((result > 0)? "large" : "small"));
+                return pcmk_rc_bad_input;
+            }
+
+            duration->seconds = (int) result;
+            break;
+
+        case 'S':
+            result = duration->seconds + (long long) value;
+            if ((result < INT_MIN) || (result > INT_MAX)) {
+                pcmk__err("'%s' is not a valid ISO 8601 time duration because "
+                          "integer at '%s' is too %s", duration_s, start,
+                          ((result > 0)? "large" : "small"));
+                return pcmk_rc_bad_input;
+            }
+
+            duration->seconds = (int) result;
+            break;
+
+        case '\0':
+            pcmk__err("'%s' is not a valid ISO 8601 time duration because "
+                      "no units after %d", duration_s, value);
+            return pcmk_rc_bad_input;
+
+        default:
+            pcmk__err("'%s' is not a valid ISO 8601 time duration because "
+                      "'%c' is not a valid time unit", duration_s, **element);
+            return pcmk_rc_bad_input;
+    }
+
+    return pcmk_rc_ok;
+}
+
+/*!
  * \brief Parse a time duration from an ISO 8601 duration specification
  *
  * \param[in] period_s  ISO 8601 duration specification (optionally followed by
@@ -1167,9 +1289,6 @@ crm_time_parse_duration(const char *period_s)
          current[0] && (current[0] != '/') && !isspace(current[0]);
          ++current) {
 
-        int an_int = 0, rc;
-        long long result = 0LL;
-
         if (current[0] == 'T') {
             /* A 'T' separates year/month/day from hour/minute/seconds. We don't
              * require it strictly, but just use it to differentiate month from
@@ -1179,103 +1298,10 @@ crm_time_parse_duration(const char *period_s)
             continue;
         }
 
-        // An integer must be next
-        rc = parse_int(current, &an_int);
-        if (rc == 0) {
-            pcmk__err("'%s' is not a valid ISO 8601 time duration because no "
-                      "valid integer at '%s'",
-                      period_s, current);
+        // current points to last character of current element on success
+        if (parse_duration_element(&current, period_s, diff,
+                                   is_time) != pcmk_rc_ok) {
             goto invalid;
-        }
-        current += rc;
-
-        // A time unit must be next (we're not strict about the order)
-        switch (current[0]) {
-            case 'Y':
-                diff->years = an_int;
-                break;
-
-            case 'M':
-                if (!is_time) { // Months
-                    diff->months = an_int;
-                } else { // Minutes
-                    result = diff->seconds + an_int * 60LL;
-                    if ((result < INT_MIN) || (result > INT_MAX)) {
-                        pcmk__err("'%s' is not a valid ISO 8601 time duration "
-                                  "because integer at '%s' is too %s",
-                                  period_s, (current - rc),
-                                  ((result > 0)? "large" : "small"));
-                        goto invalid;
-                    } else {
-                        diff->seconds = (int) result;
-                    }
-                }
-
-                break;
-
-            case 'W':
-                result = diff->days + an_int * 7LL;
-                if ((result < INT_MIN) || (result > INT_MAX)) {
-                    pcmk__err("'%s' is not a valid ISO 8601 time duration "
-                              "because integer at '%s' is too %s",
-                              period_s, (current - rc),
-                              ((result > 0)? "large" : "small"));
-                    goto invalid;
-                } else {
-                    diff->days = (int) result;
-                }
-                break;
-
-            case 'D':
-                result = diff->days + (long long) an_int;
-                if ((result < INT_MIN) || (result > INT_MAX)) {
-                    pcmk__err("'%s' is not a valid ISO 8601 time duration "
-                              "because integer at '%s' is too %s",
-                              period_s, (current - rc),
-                              ((result > 0)? "large" : "small"));
-                    goto invalid;
-                } else {
-                    diff->days = (int) result;
-                }
-                break;
-
-            case 'H':
-                result = diff->seconds + ((long long) an_int * SECONDS_IN_HOUR);
-                if ((result < INT_MIN) || (result > INT_MAX)) {
-                    pcmk__err("'%s' is not a valid ISO 8601 time duration "
-                              "because integer at '%s' is too %s",
-                              period_s, (current - rc),
-                              ((result > 0)? "large" : "small"));
-                    goto invalid;
-                } else {
-                    diff->seconds = (int) result;
-                }
-                break;
-
-            case 'S':
-                result = diff->seconds + (long long) an_int;
-                if ((result < INT_MIN) || (result > INT_MAX)) {
-                    pcmk__err("'%s' is not a valid ISO 8601 time duration "
-                              "because integer at '%s' is too %s",
-                              period_s, (current - rc),
-                              ((result > 0)? "large" : "small"));
-                    goto invalid;
-                } else {
-                    diff->seconds = (int) result;
-                }
-                break;
-
-            case '\0':
-                pcmk__err("'%s' is not a valid ISO 8601 time duration because "
-                          "no units after %d",
-                          period_s, an_int);
-                goto invalid;
-
-            default:
-                pcmk__err("'%s' is not a valid ISO 8601 time duration because "
-                          "'%c' is not a valid time unit",
-                          period_s, current[0]);
-                goto invalid;
         }
     }
 
