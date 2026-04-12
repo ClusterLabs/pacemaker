@@ -1806,8 +1806,6 @@ crm_time_add_months(crm_time_t * a_time, int extra)
     uint32_t y, m, d, dmax;
 
     crm_time_get_gregorian(a_time, &y, &m, &d);
-    pcmk__trace("Adding %d months to %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
-                extra, y, m, d);
 
     if (extra > 0) {
         for (lpc = extra; lpc > 0; lpc--) {
@@ -1833,13 +1831,8 @@ crm_time_add_months(crm_time_t * a_time, int extra)
         d = dmax;
     }
 
-    pcmk__trace("Calculated %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32, y, m, d);
-
     a_time->years = y;
     a_time->days = get_ordinal_days(y, m, d);
-
-    crm_time_get_gregorian(a_time, &y, &m, &d);
-    pcmk__trace("Got %.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32, y, m, d);
 }
 
 void
