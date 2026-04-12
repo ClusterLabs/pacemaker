@@ -1986,16 +1986,7 @@ get_g_date_time(const struct tm *tm, int offset)
         CRM_LOG_ASSERT(QB_ABS(offset) <= SECONDS_IN_DAY);
     }
 
-    /* @FIXME @COMPAT As of glib 2.68, g_time_zone_new() is deprecated in favor
-     * of g_time_zone_new_identifier(). However, calling
-     * g_time_zone_new_identifier() results in compiler warnings, even on a
-     * system with glib 2.84 installed. It is unclear why.
-     *
-     * The *_new_identifier() function was added (and the *_new() function
-     * deprecated) in version 2.68. They have the same signature. Ideally, we
-     * would choose which function to call here and below based the installed
-     * glib version using a CPP guard.
-     */
+    // @COMPAT Starting in GLib 2.58, we can use g_time_zone_new_offset()
     tz = g_time_zone_new(offset_s);
     dt = g_date_time_new(tz, tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
                          tm->tm_hour, tm->tm_min, tm->tm_sec);
