@@ -688,7 +688,8 @@ long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
     crm_time_t *utc = NULL;
-    long long in_seconds = 0;
+    long long days = 0;
+    long long seconds = 0;
 
     if (dt == NULL) {
         return 0;
@@ -699,29 +700,31 @@ crm_time_get_seconds(const crm_time_t *dt)
         dt = utc;
     }
 
-    // @TODO We should probably use <= if dt is a duration
-    for (int i = 1; i < dt->years; i++) {
-        long long dmax = year_days(i);
+    if (dt->duration) {
+        /* Assume 365-day years and 30-day months. The correct number of days in
+         * years and months varies depending on the start date to which the
+         * duration will be applied, which is unknown.
+         */
+        days = (365 * (long long) dt->years)
+               + (30 * (long long) dt->months)
+               + dt->days;
 
-        in_seconds += SECONDS_IN_DAY * dmax;
+    } else {
+        // The months field can be set only for durations, so ignore it here
+        for (int i = 1; i < dt->years; i++) {
+            days += year_days(i);
+        }
+
+        // This is probably always true
+        if (dt->days > 0) {
+            days += dt->days - 1;
+        }
     }
 
-    /* utc->months can be set only for durations. By definition, the value
-     * varies depending on the (unknown) start date to which the duration will
-     * be applied. Assume 30-day months so that something vaguely sane happens
-     * in this case.
-     */
-    if (dt->months > 0) {
-        in_seconds += SECONDS_IN_DAY * 30 * (long long) (dt->months);
-    }
-
-    if (dt->days > 0) {
-        in_seconds += SECONDS_IN_DAY * (long long) (dt->days - 1);
-    }
-    in_seconds += dt->seconds;
+    seconds = dt->seconds + (SECONDS_IN_DAY * days);
 
     crm_time_free(utc);
-    return in_seconds;
+    return seconds;
 }
 
 #define EPOCH_SECONDS 62135596800ULL    /* Calculated using crm_time_get_seconds() */
