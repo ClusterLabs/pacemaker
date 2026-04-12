@@ -85,11 +85,33 @@ crm_time_new_undefined(void)
     return pcmk__assert_alloc(1, sizeof(crm_time_t));
 }
 
+/*!
+ * \internal
+ * \brief Check whether a year is positive and representable by four digits
+ *
+ * \param[in] year  Year
+ *
+ * \return \c true if \p year is between 1 and 9999 (inclusive), or \c false
+ *         otherwise
+ */
+bool
+pcmk__time_valid_year(int year)
+{
+    return (year >= 1) && (year <= 9999);
+}
+
 static bool
 is_leap_year(int year)
 {
-    return ((year % 4) == 0)
-           && (((year % 100) != 0) || (year % 400 == 0));
+    /* @COMPAT Remove this fallback when we can ensure that the year argument is
+     * always in the range 1 to 9999.
+     */
+    if (!pcmk__time_valid_year(year)) {
+        return ((year % 4) == 0)
+                && (((year % 100) != 0) || (year % 400 == 0));
+    }
+
+    return g_date_is_leap_year(year);
 }
 
 /*!

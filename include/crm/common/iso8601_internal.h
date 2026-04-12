@@ -27,6 +27,7 @@
 extern "C" {
 #endif
 
+bool pcmk__time_valid_year(int year);
 void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
                         uint32_t *d);
 char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
