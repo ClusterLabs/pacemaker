@@ -1732,83 +1732,81 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 /*!
  * \brief Add a given number of seconds to a date/time or duration
  *
- * \param[in,out] a_time  Date/time or duration to add seconds to
- * \param[in]     extra   Number of seconds to add
+ * \param[in,out] dt     Date/time or duration to add seconds to
+ * \param[in]     value  Number of seconds to add
  */
 void
-crm_time_add_seconds(crm_time_t *a_time, int extra)
+crm_time_add_seconds(crm_time_t *dt, int value)
 {
-    int days = extra / SECONDS_IN_DAY;
+    int days = value / SECONDS_IN_DAY;
 
-    pcmk__assert(a_time != NULL);
+    pcmk__assert(dt != NULL);
 
-    pcmk__trace("Adding %d seconds (including %d whole day%s) to %d", extra,
-                days, pcmk__plural_s(days), a_time->seconds);
+    pcmk__trace("Adding %d seconds (including %d whole day%s) to %d", value,
+                days, pcmk__plural_s(days), dt->seconds);
 
-    a_time->seconds += extra % SECONDS_IN_DAY;
+    dt->seconds += value % SECONDS_IN_DAY;
 
     // Check whether the addition crossed a day boundary
-    if (a_time->seconds > SECONDS_IN_DAY) {
+    if (dt->seconds > SECONDS_IN_DAY) {
         ++days;
-        a_time->seconds -= SECONDS_IN_DAY;
+        dt->seconds -= SECONDS_IN_DAY;
 
-    } else if (a_time->seconds < 0) {
+    } else if (dt->seconds < 0) {
         --days;
-        a_time->seconds += SECONDS_IN_DAY;
+        dt->seconds += SECONDS_IN_DAY;
     }
 
-    crm_time_add_days(a_time, days);
+    crm_time_add_days(dt, days);
 }
 
 /*!
  * \brief Add days to a date/time
  *
- * \param[in,out] a_time  Time to modify
- * \param[in]     extra   Number of days to add (may be negative to subtract)
+ * \param[in,out] dt     Time to modify
+ * \param[in]     value  Number of days to add (may be negative to subtract)
  */
 void
-crm_time_add_days(crm_time_t *a_time, int extra)
+crm_time_add_days(crm_time_t *dt, int value)
 {
-    pcmk__assert(a_time != NULL);
+    pcmk__assert(dt != NULL);
 
-    pcmk__trace("Adding %d days to %.4d-%.3d", extra, a_time->years,
-                a_time->days);
+    pcmk__trace("Adding %d days to %.4d-%.3d", value, dt->years, dt->days);
 
-    if (extra > 0) {
-        while ((a_time->days + (long long) extra) > year_days(a_time->years)) {
-            if (a_time->years == INT_MAX) {
+    if (value > 0) {
+        while ((dt->days + (long long) value) > year_days(dt->years)) {
+            if (dt->years == INT_MAX) {
                 // Clip to latest we can handle
-                a_time->days = year_days(a_time->years);
+                dt->days = year_days(dt->years);
                 return;
             }
-            extra -= year_days(a_time->years);
-            a_time->years++;
+            value -= year_days(dt->years);
+            dt->years++;
         }
-    } else if (extra < 0) {
-        const int min_days = a_time->duration? 0 : 1;
+    } else if (value < 0) {
+        const int min_days = dt->duration? 0 : 1;
 
-        while ((a_time->days + (long long) extra) < min_days) {
-            if (a_time->years <= 1) {
-                a_time->days = 1; // Clip to earliest we can handle (no BCE)
+        while ((dt->days + (long long) value) < min_days) {
+            if (dt->years <= 1) {
+                dt->days = 1; // Clip to earliest we can handle (no BCE)
                 return;
             }
-            a_time->years--;
-            extra += year_days(a_time->years);
+            dt->years--;
+            value += year_days(dt->years);
         }
     }
-    a_time->days += extra;
+    dt->days += value;
 }
 
 void
-crm_time_add_months(crm_time_t * a_time, int extra)
+crm_time_add_months(crm_time_t *dt, int value)
 {
-    int lpc;
     uint32_t y, m, d, dmax;
 
-    crm_time_get_gregorian(a_time, &y, &m, &d);
+    crm_time_get_gregorian(dt, &y, &m, &d);
 
-    if (extra > 0) {
-        for (lpc = extra; lpc > 0; lpc--) {
+    if (value > 0) {
+        for (int i = value; i > 0; i--) {
             m++;
             if (m == 13) {
                 m = 1;
@@ -1816,7 +1814,7 @@ crm_time_add_months(crm_time_t * a_time, int extra)
             }
         }
     } else {
-        for (lpc = extra; lpc < 0; lpc++) {
+        for (int i = value; i < 0; i++) {
             m--;
             if (m == 0) {
                 m = 12;
@@ -1831,39 +1829,41 @@ crm_time_add_months(crm_time_t * a_time, int extra)
         d = dmax;
     }
 
-    a_time->years = y;
-    a_time->days = get_ordinal_days(y, m, d);
+    dt->years = y;
+    dt->days = get_ordinal_days(y, m, d);
 }
 
 void
-crm_time_add_minutes(crm_time_t * a_time, int extra)
+crm_time_add_minutes(crm_time_t *dt, int value)
 {
-    crm_time_add_seconds(a_time, extra * SECONDS_IN_MINUTE);
+    crm_time_add_seconds(dt, value * SECONDS_IN_MINUTE);
 }
 
 void
-crm_time_add_hours(crm_time_t * a_time, int extra)
+crm_time_add_hours(crm_time_t *dt, int value)
 {
-    crm_time_add_seconds(a_time, extra * SECONDS_IN_HOUR);
+    crm_time_add_seconds(dt, value * SECONDS_IN_HOUR);
 }
 
 void
-crm_time_add_weeks(crm_time_t * a_time, int extra)
+crm_time_add_weeks(crm_time_t *dt, int value)
 {
-    crm_time_add_days(a_time, extra * 7);
+    crm_time_add_days(dt, value * 7);
 }
 
 void
-crm_time_add_years(crm_time_t * a_time, int extra)
+crm_time_add_years(crm_time_t *dt, int value)
 {
-    pcmk__assert(a_time != NULL);
+    pcmk__assert(dt != NULL);
 
-    if ((extra > 0) && ((a_time->years + (long long) extra) > INT_MAX)) {
-        a_time->years = INT_MAX;
-    } else if ((extra < 0) && ((a_time->years + (long long) extra) < 1)) {
-        a_time->years = 1; // Clip to earliest we can handle (no BCE)
+    if ((value > 0) && ((dt->years + (long long) value) > INT_MAX)) {
+        dt->years = INT_MAX;
+
+    } else if ((value < 0) && ((dt->years + (long long) value) < 1)) {
+        dt->years = 1; // Clip to earliest we can handle (no BCE)
+
     } else {
-        a_time->years += extra;
+        dt->years += value;
     }
 }
 
