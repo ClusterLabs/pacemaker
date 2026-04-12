@@ -1088,25 +1088,25 @@ static int
 parse_int(const char *str, int *result)
 {
     unsigned int lpc;
-    int offset = (str[0] == 'T')? 1 : 0;
+    int offset = 0;
     bool negate = false;
 
     *result = 0;
 
     // @TODO This cannot handle combinations of these characters
-    switch (str[offset]) {
+    switch (str[0]) {
         case '.':
         case ',':
             return 0; // Fractions are not supported
 
         case '-':
             negate = true;
-            offset++;
+            offset = 1;
             break;
 
         case '+':
         case ':':
-            offset++;
+            offset = 1;
             break;
 
         default:
@@ -1122,7 +1122,7 @@ parse_int(const char *str, int *result)
         *result = *result * 10 + digit;
     }
     if (negate) {
-        *result = 0 - *result;
+        *result = -*result;
     }
     return (lpc > 0)? offset : 0;
 }
