@@ -1945,6 +1945,22 @@ ha_get_tm_time(struct tm *target, const crm_time_t *source)
     mktime(target);
 }
 
+static char *
+offset_text(int offset)
+{
+    uint32_t hours = 0;
+    uint32_t minutes = 0;
+    uint32_t seconds = 0;
+
+    // If offset is out of range, default to NULL
+    CRM_CHECK(QB_ABS(offset) <= SECONDS_IN_DAY, return NULL);
+
+    seconds_to_hms(offset, &hours, &minutes, &seconds);
+
+    return pcmk__assert_asprintf("%c%02" PRIu32 ":%02" PRIu32,
+                                 ((offset >= 0)? '+' : '-'), hours, minutes);
+}
+
 /*!
  * \internal
  * \brief Convert a <tt>struct tm</tt> to a \c GDateTime
@@ -1962,35 +1978,25 @@ static GDateTime *
 get_g_date_time(const struct tm *tm, int offset)
 {
     // Accept an offset argument in case tm lacks a tm_gmtoff member
-    char buf[sizeof("+hh:mm")] = { '\0', };
-    const char *offset_s = NULL;
-
+    char *offset_s = offset_text(offset);
     GTimeZone *tz = NULL;
     GDateTime *dt = NULL;
 
-    if (QB_ABS(offset) <= SECONDS_IN_DAY) {
-        uint32_t hours = 0;
-        uint32_t minutes = 0;
-        uint32_t seconds = 0;
-        int rc = 0;
-
-        seconds_to_hms(offset, &hours, &minutes, &seconds);
-
-        rc = snprintf(buf, sizeof(buf), "%c%02" PRIu32 ":%02" PRIu32,
-                      ((offset >= 0)? '+' : '-'), hours, minutes);
-        pcmk__assert(rc == (sizeof(buf) - 1));
-        offset_s = buf;
-
-    } else {
-        // offset out of range; use NULL as offset_s
-        CRM_LOG_ASSERT(QB_ABS(offset) <= SECONDS_IN_DAY);
-    }
-
     // @COMPAT Starting in GLib 2.58, we can use g_time_zone_new_offset()
     tz = g_time_zone_new(offset_s);
+    if (tz == NULL) {
+        goto done;
+    }
+
     dt = g_date_time_new(tz, tm->tm_year + 1900, tm->tm_mon + 1, tm->tm_mday,
                          tm->tm_hour, tm->tm_min, tm->tm_sec);
-    g_time_zone_unref(tz);
+
+done:
+    free(offset_s);
+
+    if (tz != NULL) {
+        g_time_zone_unref(tz);
+    }
 
     return dt;
 }
