@@ -677,6 +677,8 @@ int
 crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                        uint32_t *s)
 {
+    pcmk__assert((dt != NULL) && (h != NULL) && (m != NULL) && (s != NULL));
+
     seconds_to_hms(dt->seconds, h, m, s);
     return TRUE;
 }
@@ -735,6 +737,8 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
     int months = 0;
     int days = dt->days;
 
+    pcmk__assert((dt != NULL) && (y != NULL) && (m != NULL) && (d != NULL));
+
     if(dt->years != 0) {
         for (months = 1; months <= 12 && days > 0; months++) {
             int mdays = days_in_month_year(months, dt->years);
@@ -765,6 +769,8 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
 int
 crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
 {
+    pcmk__assert((dt != NULL) && (y != NULL) && (d != NULL));
+
     *y = dt->years;
     *d = dt->days;
     return TRUE;
@@ -775,12 +781,16 @@ pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d)
 {
     // Based on ISO week date: https://en.wikipedia.org/wiki/ISO_week_date
     int year_num = 0;
-    int jan1 = jan1_day_of_week(dt->years);
+    int jan1 = 0;
     int h = -1;
+
+    pcmk__assert((dt != NULL) && (y != NULL) && (w != NULL) && (d != NULL));
 
     if (dt->days <= 0) {
         return;
     }
+
+    jan1 = jan1_day_of_week(dt->years);
 
 /* 6. Find the Weekday for Y M D */
     h = dt->days + jan1 - 1;
@@ -2340,6 +2350,8 @@ int
 crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
                      uint32_t *d)
 {
+    pcmk__assert((dt != NULL) && (y != NULL) && (w != NULL) && (d != NULL));
+
     CRM_CHECK(dt->days > 0, return FALSE);
     pcmk__time_get_ywd(dt, y, w, d);
     return TRUE;
