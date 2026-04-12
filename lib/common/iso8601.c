@@ -1801,36 +1801,40 @@ crm_time_add_days(crm_time_t *dt, int value)
 void
 crm_time_add_months(crm_time_t *dt, int value)
 {
-    uint32_t y, m, d, dmax;
+    uint32_t year = 0;
+    uint32_t month = 0;
+    uint32_t day = 0;
+    int days_in_month = 0;
 
-    crm_time_get_gregorian(dt, &y, &m, &d);
+    crm_time_get_gregorian(dt, &year, &month, &day);
 
     if (value > 0) {
         for (int i = value; i > 0; i--) {
-            m++;
-            if (m == 13) {
-                m = 1;
-                y++;
+            month++;
+            if (month == 13) {
+                month = 1;
+                year++;
             }
         }
     } else {
         for (int i = value; i < 0; i++) {
-            m--;
-            if (m == 0) {
-                m = 12;
-                y--;
+            month--;
+            if (month == 0) {
+                month = 12;
+                year--;
             }
         }
     }
 
-    dmax = days_in_month_year(m, y);
-    if (dmax < d) {
-        /* Preserve day-of-month unless the month doesn't have enough days */
-        d = dmax;
+    days_in_month = days_in_month_year(month, year);
+
+    if (days_in_month < day) {
+        // Preserve day-of-month unless the month doesn't have enough days
+        day = days_in_month;
     }
 
-    dt->years = y;
-    dt->days = get_ordinal_days(y, m, d);
+    dt->years = year;
+    dt->days = get_ordinal_days(year, month, day);
 }
 
 void
