@@ -104,19 +104,31 @@ is_leap_year(int year)
 static int
 days_in_month_year(int month, int year)
 {
-    static const int month_days[12] = {
-        31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
-    };
-
-    if ((month < 1) || (month > 12) || (year < 1)) {
+    if (!g_date_valid_month(month)) {
         return 0;
     }
 
-    if ((month == 2) && is_leap_year(year)) {
-        return month_days[1] + 1;
+    if (year < 1) {
+        return 0;
     }
 
-    return month_days[month - 1];
+    /* @COMPAT Remove this fallback when we can ensure that the year argument is
+     * always in the range 1 to 9999. g_date_get_days_in_month() takes a
+     * GDateYear, which is defined as guint16.
+     */
+    if (year > UINT16_MAX) {
+        static const int month_days[12] = {
+            31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31
+        };
+
+        if ((month == 2) && is_leap_year(year)) {
+            return month_days[1] + 1;
+        }
+
+        return month_days[month - 1];
+    }
+
+    return g_date_get_days_in_month(month, year);
 }
 
 /*!
