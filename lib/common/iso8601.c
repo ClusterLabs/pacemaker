@@ -1236,8 +1236,8 @@ parse_duration_element(const char **element, const char *duration_s,
             return pcmk_rc_ok;
 
         case '\0':
-            pcmk__err("'%s' is not a valid ISO 8601 time duration because "
-                      "no units after %d", duration_s, value);
+            pcmk__err("'%s' is not a valid ISO 8601 duration because no units "
+                      "after %s", duration_s, start);
             return pcmk_rc_bad_input;
 
         default:
