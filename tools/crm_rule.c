@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -158,17 +158,9 @@ main(int argc, char **argv)
     /* Set up some defaults. */
     rule_date = crm_time_new(options.date);
     if (rule_date == NULL) {
-        if (options.date != NULL) {
-            exit_code = CRM_EX_DATAERR;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "Invalid date specified: '%s'", options.date);
-
-        } else {
-            // Should never happen
-            exit_code = CRM_EX_OSERR;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        "No --date given and can't determine current date");
-        }
+        exit_code = CRM_EX_DATAERR;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Invalid date specified: '%s'", options.date);
         goto done;
     }
 
