@@ -203,7 +203,11 @@ services__get_lsb_metadata(const char *type, char **output)
             long_desc = pcmk__xml_escape(desc->str, pcmk__xml_escape_text);
             g_string_free(desc, TRUE);
 
-            if (processed_line) {
+            if (ferror(fp) || feof(fp)) {
+                // We hit a problem or EOF in the fgets loop on the long
+                // description
+                break;
+            } else if (processed_line) {
                 // We grabbed the line into the long description
                 continue;
             }
