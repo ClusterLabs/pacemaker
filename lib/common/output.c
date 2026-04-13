@@ -94,7 +94,15 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
         return ENOMEM;
     }
 
-    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
+    /* Static analysis can't figure out that passing pcmk__str_null_matches
+     * to pcmk__str_eq means filename can't be NULL in the else block, so
+     * we'll just take care of that here.
+     */
+    if (filename == NULL) {
+        filename = "-";
+    }
+
+    if (pcmk__str_eq(filename, "-", pcmk__str_none)) {
         (*out)->dest = stdout;
     } else {
         (*out)->dest = fopen(filename, "w");
