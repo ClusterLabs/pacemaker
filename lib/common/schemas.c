@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -407,7 +407,10 @@ load_transforms_from_dir(const char *dir)
                 g_hash_table_insert(transforms, version_s, list);
 
             } else {
-                list = g_list_append(list, namelist[i]);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+                g_list_append(list, namelist[i]);
+#pragma GCC diagnostic pop
                 free(version_s);
             }
 
