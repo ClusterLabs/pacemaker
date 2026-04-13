@@ -157,7 +157,7 @@ main(int argc, char **argv)
 
     /* Set up some defaults. */
     rule_date = crm_time_new(options.date);
-    if (rule_date == NULL) {
+    if ((rule_date == NULL) || !pcmk__time_valid_year(rule_date->years)) {
         exit_code = CRM_EX_DATAERR;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Invalid date specified: '%s'", options.date);
