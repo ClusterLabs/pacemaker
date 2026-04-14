@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,6 @@
 
 #ifndef PCMK__CRM_COMMON_STRINGS__H
 #define PCMK__CRM_COMMON_STRINGS__H
-
-#include <glib.h>                    // gboolean, guint, G_GNUC_PRINTF
 
 #ifdef __cplusplus
 extern "C" {
@@ -22,7 +20,7 @@ extern "C" {
  * \ingroup core
  */
 
-int pcmk_parse_interval_spec(const char *input, guint *result_ms);
+int pcmk_parse_interval_spec(const char *input, unsigned int *result_ms);
 
 #ifdef __cplusplus
 }

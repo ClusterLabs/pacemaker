@@ -470,7 +470,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
 {
     pcmk__node_status_t search = { 0, };
     char *criterion = NULL; // For logging
-    guint matches = 0;
+    unsigned int matches = 0;
 
     if (pcmk__peer_cache == NULL) {
         pcmk__trace("Membership cache not initialized, ignoring removal "
@@ -872,7 +872,7 @@ pcmk__purge_node_from_cache(const char *node_name, uint32_t node_id)
 }
 
 #if SUPPORT_COROSYNC
-static guint
+static unsigned int
 remove_conflicting_peer(pcmk__node_status_t *node)
 {
     int matches = 0;

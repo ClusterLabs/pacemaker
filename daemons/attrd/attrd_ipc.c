@@ -114,7 +114,7 @@ attrd_client_clear_failure(pcmk__request_t *request)
             pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
 
         } else {
-            guint interval_ms = 0U;
+            unsigned int interval_ms = 0;
 
             pcmk_parse_interval_spec(interval_spec, &interval_ms);
             pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_OP, rsc, op,

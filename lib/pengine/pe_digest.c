@@ -93,7 +93,7 @@ attr_not_in_strv(xmlAttrPtr a, void *user_data)
 static void
 calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *params,
-                      const char *task, guint *interval_ms,
+                      const char *task, unsigned int *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pcmk_scheduler_t *scheduler)
 {
@@ -117,7 +117,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 
             if ((pcmk__scan_ll(interval_s, &value_ll, 0LL) == pcmk_rc_ok)
                 && (value_ll >= 0) && (value_ll <= UINT_MAX)) {
-                *interval_ms = (guint) value_ll;
+                *interval_ms = (unsigned int) value_ll;
             }
         }
 
@@ -307,7 +307,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
  */
 pcmk__op_digest_t *
 pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
-                      guint *interval_ms, const pcmk_node_t *node,
+                      unsigned int *interval_ms, const pcmk_node_t *node,
                       const xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pcmk_scheduler_t *scheduler)
 {
@@ -364,9 +364,10 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
  * \return Pointer to node's digest cache entry
  */
 static pcmk__op_digest_t *
-rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
-                  pcmk_node_t *node, const xmlNode *xml_op,
-                  bool calc_secure, pcmk_scheduler_t *scheduler)
+rsc_action_digest(pcmk_resource_t *rsc, const char *task,
+                  unsigned int interval_ms, pcmk_node_t *node,
+                  const xmlNode *xml_op, bool calc_secure,
+                  pcmk_scheduler_t *scheduler)
 {
     pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -398,7 +399,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                       pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pcmk__op_digest_t *data = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     const char *op_version;
     const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <signal.h>     // sighandler_t
 #include <sys/types.h>  // pid_t, ssize_t
 
-#include <glib.h>       // gpointer, gboolean, guint, GSourceFunc, GMainLoop
+#include <glib.h>       // gpointer, gboolean, GSourceFunc, GMainLoop
 #include <qb/qbipcs.h>  // qb_ipcs_service_t, etc.
 
 #include <crm/common/ipc.h>
@@ -80,10 +80,13 @@ void mainloop_timer_start(mainloop_timer_t *t);
 // NOTE: sbd (as of at least 1.5.2) uses this
 void mainloop_timer_stop(mainloop_timer_t *t);
 
-guint mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms);
+unsigned int mainloop_timer_set_period(mainloop_timer_t *t,
+                                       unsigned int period_ms);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-mainloop_timer_t *mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata);
+mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int period_ms,
+                                     bool repeat, GSourceFunc cb,
+                                     void *userdata);
 
 void mainloop_timer_del(mainloop_timer_t *t);
 
@@ -188,8 +191,8 @@ void mainloop_clear_child_userdata(mainloop_child_t * child);
 gboolean mainloop_child_kill(pid_t pid);
 
 void pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n);
-void pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms,
-                          bool (*check)(guint));
+void pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
+                          bool (*check)(unsigned int));
 
 #define G_PRIORITY_MEDIUM (G_PRIORITY_HIGH/2)
 

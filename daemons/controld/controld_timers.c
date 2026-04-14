@@ -20,8 +20,8 @@
 
 //! FSA mainloop timer type
 typedef struct {
-    guint source_id;                        //!< Timer source ID
-    guint period_ms;                        //!< Timer period
+    unsigned int source_id;                 //!< Timer source ID
+    unsigned int period_ms;                 //!< Timer period
     enum crmd_fsa_input fsa_input;          //!< Input to register if timer pops
     gboolean (*callback) (gpointer data);   //!< What do if timer pops
     bool log_error;                         //!< Timer popping indicates error
@@ -50,7 +50,7 @@ static fsa_timer_t *finalization_timer = NULL;
 fsa_timer_t *shutdown_escalation_timer = NULL;
 
 //! Cluster recheck interval (from configuration)
-static guint recheck_interval_ms = 0;
+static unsigned int recheck_interval_ms = 0;
 
 static const char *
 get_timer_desc(fsa_timer_t * timer)
@@ -399,7 +399,7 @@ void
 controld_start_recheck_timer(void)
 {
     // Default to recheck interval configured in CIB (if any)
-    guint period_ms = recheck_interval_ms;
+    unsigned int period_ms = recheck_interval_ms;
 
     // If scheduler supplied a "recheck by" time, check whether that's sooner
     if (controld_globals.transition_graph->recheck_by > 0) {
@@ -410,7 +410,7 @@ controld_start_recheck_timer(void)
             // We're already past the desired time
             period_ms = 500;
         } else {
-            period_ms = (guint) QB_MIN(UINT_MAX, diff_seconds * 1000LL);
+            period_ms = (unsigned int) QB_MIN(UINT_MAX, diff_seconds * 1000LL);
         }
 
         // Use "recheck by" only if it's sooner than interval from CIB
@@ -451,7 +451,7 @@ controld_stop_recheck_timer(void)
  * \brief Get the transition timer's configured period
  * \return The transition_timer's period
  */
-guint
+unsigned int
 controld_get_period_transition_timer(void)
 {
     return transition_timer->period_ms;
@@ -497,7 +497,7 @@ controld_start_transition_timer(void)
  *                               timer's period is 0
  */
 void
-controld_shutdown_start_countdown(guint default_period_ms)
+controld_shutdown_start_countdown(unsigned int default_period_ms)
 {
     if (shutdown_escalation_timer->period_ms == 0) {
         shutdown_escalation_timer->period_ms = default_period_ms;

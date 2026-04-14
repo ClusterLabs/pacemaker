@@ -1181,7 +1181,7 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
     const char *id = NULL;
     const char *name = NULL;
     const char *interval_s = NULL;
-    guint interval_ms = 0U;
+    unsigned int interval_ms = 0;
 
     if ((op_expression == NULL) || (rule_input == NULL)) {
         return EINVAL;

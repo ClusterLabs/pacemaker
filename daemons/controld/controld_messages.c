@@ -603,7 +603,7 @@ handle_failcount_op(xmlNode * stored_msg)
     const char *uname = NULL;
     const char *op = NULL;
     char *interval_spec = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     gboolean is_remote_node = FALSE;
 
     xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML, NULL,

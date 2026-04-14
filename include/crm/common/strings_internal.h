@@ -17,7 +17,7 @@
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint32_t, etc.
 
-#include <glib.h>               // guint, GList, GHashTable
+#include <glib.h>               // GList, GHashTable
 
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
 #include <crm/common/results.h> // pcmk_rc_ok
@@ -43,8 +43,8 @@ enum pcmk__str_flags {
 
 int pcmk__scan_double(const char *text, double *result,
                       const char *default_text, char **end_text);
-int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
-                          guint *result);
+int pcmk__guint_from_hash(GHashTable *table, const char *key,
+                          unsigned int default_val, unsigned int *result);
 void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,

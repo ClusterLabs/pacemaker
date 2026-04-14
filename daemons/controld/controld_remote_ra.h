@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -15,7 +15,7 @@
 #include <stdint.h>                 // uint32_t
 #include <time.h>                   // time_t
 
-#include <glib.h>                   // GList, guint
+#include <glib.h>                   // GList
 
 #include <crm/lrmd.h>               // lrmd_key_value_t
 #include <crm/common/mainloop.h>    // crm_trigger_t
@@ -36,7 +36,7 @@ typedef struct {
     /*! timeout in ms for cmd */
     int timeout;
     /*! recurring interval in ms */
-    guint interval_ms;
+    unsigned int interval_ms;
     /*! interval timer id */
     int interval_id;
     int monitor_timeout_id;

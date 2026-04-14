@@ -131,7 +131,7 @@ typedef struct {
 struct timer_rec_s {
     int call_id;
     int timeout;
-    guint ref;
+    unsigned int ref;
     cib_t *cib;
 };
 

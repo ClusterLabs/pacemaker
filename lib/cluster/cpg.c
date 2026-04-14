@@ -204,7 +204,7 @@ static void
 crm_cs_flush(gpointer data)
 {
     unsigned int sent = 0;
-    guint queue_len = 0;
+    unsigned int queue_len = 0;
     cs_error_t rc = 0;
     cpg_handle_t *handle = (cpg_handle_t *) data;
 

@@ -28,13 +28,13 @@ struct trigger_s {
     gboolean running;
     gboolean trigger;
     void *user_data;
-    guint id;
+    unsigned int id;
 
 };
 
 struct mainloop_timer_s {
-        guint id;
-        guint period_ms;
+        unsigned int id;
+        unsigned int period_ms;
         bool repeat;
         char *name;
         GSourceFunc cb;
@@ -415,7 +415,7 @@ mainloop_cleanup(void)
  */
 struct gio_to_qb_poll {
     int32_t is_used;
-    guint source;
+    unsigned int source;
     int32_t events;
     void *data;
     qb_ipcs_dispatch_fn_t fn;
@@ -675,7 +675,7 @@ struct mainloop_io_s {
     void *userdata;
 
     int fd;
-    guint source;
+    unsigned int source;
     crm_ipc_t *ipc;
     GIOChannel *channel;
 
@@ -897,7 +897,7 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
  *
  * \return Period in ms
  */
-guint
+unsigned int
 pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer)
 {
     if (timer) {
@@ -1349,10 +1349,10 @@ mainloop_timer_stop(mainloop_timer_t *t)
     }
 }
 
-guint
-mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
+unsigned int
+mainloop_timer_set_period(mainloop_timer_t *t, unsigned int period_ms)
 {
-    guint last = 0;
+    unsigned int last = 0;
 
     if(t) {
         last = t->period_ms;
@@ -1366,7 +1366,8 @@ mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
 }
 
 mainloop_timer_t *
-mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata)
+mainloop_timer_add(const char *name, unsigned int period_ms, bool repeat,
+                   GSourceFunc cb, void *userdata)
 {
     mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
@@ -1444,10 +1445,11 @@ pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n)
  *       passed the remaining timeout in milliseconds.
  */
 void
-pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
+pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
+                     bool (*check)(unsigned int))
 {
     bool timeout_popped = FALSE;
-    guint timer = 0;
+    unsigned int timer = 0;
     GMainContext *ctx = NULL;
 
     CRM_CHECK(mloop && check, return);

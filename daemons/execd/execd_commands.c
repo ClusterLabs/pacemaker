@@ -39,7 +39,7 @@ GHashTable *rsc_list = NULL;
 
 typedef struct {
     int timeout;
-    guint interval_ms;
+    unsigned int interval_ms;
     int start_delay;
     int timeout_orig;
 
@@ -196,7 +196,8 @@ cmd_original_times(lrmd_cmd_t * cmd)
 #endif
 
 static inline bool
-action_matches(const lrmd_cmd_t *cmd, const char *action, guint interval_ms)
+action_matches(const lrmd_cmd_t *cmd, const char *action,
+               unsigned int interval_ms)
 {
     return (cmd->interval_ms == interval_ms)
            && pcmk__str_eq(cmd->action, action, pcmk__str_casei);
@@ -1700,7 +1701,7 @@ execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
 }
 
 static int
-cancel_op(const char *rsc_id, const char *action, guint interval_ms)
+cancel_op(const char *rsc_id, const char *action, unsigned int interval_ms)
 {
     GList *gIter = NULL;
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, rsc_id);
@@ -1804,7 +1805,7 @@ execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request)
                                             LOG_ERR);
     const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     const char *action = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 

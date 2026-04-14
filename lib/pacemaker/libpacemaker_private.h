@@ -17,7 +17,7 @@
 #include <stdio.h>                  // NULL
 #include <stdint.h>                 // uint32_t
 #include <stdbool.h>                // bool, false
-#include <glib.h>                   // guint, gpointer, GList, GHashTable
+#include <glib.h>                   // gpointer, GList, GHashTable
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/internal.h>    // pcmk__location_t, etc.
@@ -377,7 +377,7 @@ void pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
 
 G_GNUC_INTERNAL
 pcmk_action_t *pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *name,
-                                       guint interval_ms,
+                                       unsigned int interval_ms,
                                        const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
@@ -407,12 +407,12 @@ void pcmk__create_recurring_actions(pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
-                           const char *task, guint interval_ms,
+                           const char *task, unsigned int interval_ms,
                            const pcmk_node_t *node, const char *reason);
 
 G_GNUC_INTERNAL
 void pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
-                                guint interval_ms, pcmk_node_t *node);
+                                unsigned int interval_ms, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_is_recurring(const pcmk_action_t *action);
@@ -984,7 +984,7 @@ xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
 G_GNUC_INTERNAL
 void pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn,
                             xmlNode *cib_node, const char *resource,
-                            const char *task, guint interval_ms, int rc,
+                            const char *task, unsigned int interval_ms, int rc,
                             bool infinity);
 
 G_GNUC_INTERNAL

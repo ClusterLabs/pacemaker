@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ assert_order(xmlNode *test_xml, const xmlNode *reference_xml)
 
         g_hash_table_insert(attr_flags,
                             pcmk__str_copy((const char *) attr->name),
-                            GUINT_TO_POINTER((guint) flags));
+                            GUINT_TO_POINTER((unsigned int) flags));
     }
 
     pcmk__xe_sort_attrs(test_xml);

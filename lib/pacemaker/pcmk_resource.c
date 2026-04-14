@@ -15,7 +15,7 @@
 #include <stdint.h>                     // uint32_t
 #include <stdlib.h>                     // free
 
-#include <glib.h>                       // g_str_has_suffix, GHashTable, guint
+#include <glib.h>                       // g_str_has_suffix, GHashTable
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/cib.h>                    // cib_new, cib_t, etc.
@@ -45,7 +45,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     xmlNode *history = NULL;
     xmlNode *best = NULL;
     bool best_effective_op = false;
-    guint best_interval = 0;
+    unsigned int best_interval = 0;
     bool best_failure = false;
     const char *best_digest = NULL;
 
@@ -64,7 +64,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
         const char *digest = pcmk__xe_get(lrm_rsc_op,
                                           PCMK__XA_OP_RESTART_DIGEST);
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         const char *task = pcmk__xe_get(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;
         const char *id = pcmk__xe_id(lrm_rsc_op);
@@ -210,7 +210,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     const char *task = NULL;
     xmlNode *xml_op = NULL;
     pcmk__op_digest_t *digests = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     int rc = pcmk_rc_ok;
 
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {

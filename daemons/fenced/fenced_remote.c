@@ -1835,7 +1835,7 @@ static gboolean
 check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 {
     if (node_does_watchdog_fencing(op->target)) {
-        guint timeout_ms = QB_MIN(fencing_watchdog_timeout_ms, UINT_MAX);
+        unsigned int timeout_ms = QB_MIN(fencing_watchdog_timeout_ms, UINT_MAX);
 
         pcmk__notice("Waiting %s for %s to self-fence (%s) for client %s "
                      QB_XS " id=%.8s",

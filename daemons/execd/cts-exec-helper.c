@@ -35,7 +35,7 @@ static char *val = NULL;
 static struct {
     int verbose;
     int quiet;
-    guint interval_ms;
+    unsigned int interval_ms;
     int timeout;
     int start_delay;
     int cancel_call_id;

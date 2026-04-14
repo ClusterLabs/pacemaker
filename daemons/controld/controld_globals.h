@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <crm_internal.h>       // pcmk__output_t, etc.
 
 #include <stdint.h>             // uint32_t, uint64_t
-#include <glib.h>               // GMainLoop, GQueue, guint, etc.
+#include <glib.h>               // GMainLoop, GQueue, etc.
 #include <crm/cib.h>            // cib_t
 #include <pacemaker-internal.h> // pcmk__graph_t
 #include <controld_fsa.h>       // enum crmd_fsa_state
@@ -97,10 +97,10 @@ typedef struct {
     char *our_uuid;
 
     // Max lifetime (in seconds) of a resource's shutdown lock to a node
-    guint shutdown_lock_limit;
+    unsigned int shutdown_lock_limit;
 
     // Node pending timeout
-    guint node_pending_timeout;
+    unsigned int node_pending_timeout;
 
     // Main event loop
     GMainLoop *mainloop;
@@ -114,7 +114,7 @@ extern controld_globals_t controld_globals;
  *
  * \return Length of the queue, or 0 if the queue is \c NULL
  */
-static inline guint
+static inline unsigned int
 controld_fsa_message_queue_length(void)
 {
     if (controld_globals.fsa_message_queue == NULL) {

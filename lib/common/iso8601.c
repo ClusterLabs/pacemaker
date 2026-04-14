@@ -2197,7 +2197,7 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
  *       by later calls to this function.
  */
 const char *
-pcmk__readable_interval(guint interval_ms)
+pcmk__readable_interval(unsigned int interval_ms)
 {
 #define MS_IN_S (1000)
 #define MS_IN_M (MS_IN_S * SECONDS_IN_MINUTE)

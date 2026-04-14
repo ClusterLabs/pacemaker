@@ -89,7 +89,7 @@ int attrd_expand_value(const char *value, const char *old_value);
 #define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s#%s_%u$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                        guint interval_ms);
+                        unsigned int interval_ms);
 
 extern cib_t *the_cib;
 extern crm_exit_t attrd_exit_status;

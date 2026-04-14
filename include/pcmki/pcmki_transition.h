@@ -17,7 +17,7 @@
 #include <stdint.h>                     // uint32_t
 #include <sys/types.h>                  // time_t
 
-#include <glib.h>                       // guint, GList, GHashTable
+#include <glib.h>                       // GList, GHashTable
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/scheduler_types.h> // pcmk_scheduler_t
@@ -83,7 +83,7 @@ typedef struct {
     int id;
     int timeout;
     int timer;
-    guint interval_ms;
+    unsigned int interval_ms;
     GHashTable *params;
     enum pcmk__graph_action_type type;
     pcmk__graph_synapse_t *synapse;
@@ -130,8 +130,8 @@ typedef struct {
     int num_synapses;
 
     int batch_limit;
-    guint network_delay;
-    guint fencing_timeout;
+    unsigned int network_delay;
+    unsigned int fencing_timeout;
 
     int fired;
     int pending;

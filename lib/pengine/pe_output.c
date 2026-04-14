@@ -1453,7 +1453,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
 {
     char *rsc_id = NULL;
     char *task = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     time_t last_change_epoch = 0;
     GString *str = NULL;
 
@@ -1666,7 +1666,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         const char *queue_time = pcmk__xe_get(xml_op, PCMK_XA_QUEUE_TIME);
         const char *exec = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
         const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
                                           crm_time_log_date

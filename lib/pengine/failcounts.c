@@ -40,8 +40,8 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     const char *conf_op_name = NULL;
     const char *lrm_op_task = NULL;
     const char *conf_op_interval_spec = NULL;
-    guint conf_op_interval_ms = 0;
-    guint lrm_op_interval_ms = 0;
+    unsigned int conf_op_interval_ms = 0;
+    unsigned int lrm_op_interval_ms = 0;
     const char *lrm_op_id = NULL;
     char *last_failure_key = NULL;
 
@@ -133,7 +133,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
             } else {
                 const char *conf_op_name = NULL;
                 const char *conf_op_interval_spec = NULL;
-                guint conf_op_interval_ms = 0;
+                unsigned int conf_op_interval_ms = 0;
                 pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
@@ -419,7 +419,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         && (rsc->priv->failure_expiration_ms > 0)) {
 
         time_t now = pcmk__scheduler_epoch_time(rsc->priv->scheduler);
-        const guint expiration = pcmk__timeout_ms2s(rsc->priv->failure_expiration_ms);
+        const unsigned int expiration =
+            pcmk__timeout_ms2s(rsc->priv->failure_expiration_ms);
 
         if (now > (fc_data.last_failure + expiration)) {
             pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %s",

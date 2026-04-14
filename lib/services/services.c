@@ -257,8 +257,9 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
 svc_action_t *
 services__create_resource_action(const char *name, const char *standard,
                         const char *provider, const char *agent,
-                        const char *action, guint interval_ms, int timeout,
-                        GHashTable *params, enum svc_action_flags flags)
+                        const char *action, unsigned int interval_ms,
+                        int timeout, GHashTable *params,
+                        enum svc_action_flags flags)
 {
     svc_action_t *op = NULL;
     uint32_t ra_caps = pcmk_get_ra_caps(standard);
@@ -329,8 +330,9 @@ services__create_resource_action(const char *name, const char *standard,
 svc_action_t *
 resources_action_create(const char *name, const char *standard,
                         const char *provider, const char *agent,
-                        const char *action, guint interval_ms, int timeout,
-                        GHashTable *params, enum svc_action_flags flags)
+                        const char *action, unsigned int interval_ms,
+                        int timeout, GHashTable *params,
+                        enum svc_action_flags flags)
 {
     svc_action_t *op = services__create_resource_action(name, standard,
                             provider, agent, action, interval_ms, timeout,
@@ -651,7 +653,8 @@ cancel_recurring_action(svc_action_t * op)
  * \return TRUE if action was successfully cancelled, FALSE otherwise
  */
 gboolean
-services_action_cancel(const char *name, const char *action, guint interval_ms)
+services_action_cancel(const char *name, const char *action,
+                       unsigned int interval_ms)
 {
     gboolean cancelled = FALSE;
     char *id = pcmk__op_key(name, action, interval_ms);
@@ -720,7 +723,8 @@ done:
 }
 
 gboolean
-services_action_kick(const char *name, const char *action, guint interval_ms)
+services_action_kick(const char *name, const char *action,
+                     unsigned int interval_ms)
 {
     svc_action_t * op = NULL;
     char *id = pcmk__op_key(name, action, interval_ms);

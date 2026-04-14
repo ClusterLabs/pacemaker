@@ -506,7 +506,7 @@ static void
 check_join_counts(fsa_data_t *msg_data)
 {
     int count;
-    guint npeers;
+    unsigned int npeers = 0;
 
     count = crmd_join_phase_count(controld_join_finalized);
     if (count > 0) {

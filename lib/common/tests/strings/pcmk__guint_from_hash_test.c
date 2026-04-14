@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@ static void
 null_args(void **state)
 {
     GHashTable *tbl = pcmk__strkey_table(free, free);
-    guint result;
+    unsigned int result = 0;
 
     assert_int_equal(pcmk__guint_from_hash(NULL, "abc", 123, &result), EINVAL);
     assert_int_equal(pcmk__guint_from_hash(tbl, NULL, 123, &result), EINVAL);
@@ -29,7 +29,7 @@ static void
 missing_key(void **state)
 {
     GHashTable *tbl = pcmk__strkey_table(free, free);
-    guint result;
+    unsigned int result = 0;
 
     assert_int_equal(pcmk__guint_from_hash(tbl, "abc", 123, &result), pcmk_rc_ok);
     assert_int_equal(result, 123);
@@ -41,7 +41,7 @@ static void
 standard_usage(void **state)
 {
     GHashTable *tbl = pcmk__strkey_table(free, free);
-    guint result;
+    unsigned int result = 0;
 
     g_hash_table_insert(tbl, strdup("abc"), strdup("123"));
 
@@ -55,7 +55,7 @@ static void
 conversion_errors(void **state)
 {
     GHashTable *tbl = pcmk__strkey_table(free, free);
-    guint result;
+    unsigned int result = 0;
 
     g_hash_table_insert(tbl, strdup("negative"), strdup("-3"));
     g_hash_table_insert(tbl, strdup("toobig"), strdup("20000000000000000"));

@@ -83,7 +83,7 @@ struct log_handler_id {
      * based on the implementation, a valid ID is always positive unless we set
      * UINT_MAX handlers.
      */
-    guint handler_id;
+    unsigned int handler_id;
 };
 
 // Log domains that we care about, and their handler function IDs once set

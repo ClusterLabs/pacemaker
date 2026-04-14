@@ -1001,14 +1001,14 @@ crmadmin_node_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("digests", "const pcmk_resource_t *", "const pcmk_node_t *",
-                  "const char *", "guint", "const pcmk__op_digest_t *")
+                  "const char *", "unsigned int", "const pcmk__op_digest_t *")
 static int
 digests_text(pcmk__output_t *out, va_list args)
 {
     const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
-    guint interval_ms = va_arg(args, guint);
+    unsigned int interval_ms = va_arg(args, unsigned int);
     const pcmk__op_digest_t *digests = va_arg(args, const pcmk__op_digest_t *);
 
     char *action_desc = NULL;
@@ -1070,14 +1070,14 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
 }
 
 PCMK__OUTPUT_ARGS("digests", "const pcmk_resource_t *", "const pcmk_node_t *",
-                  "const char *", "guint", "const pcmk__op_digest_t *")
+                  "const char *", "unsigned int", "const pcmk__op_digest_t *")
 static int
 digests_xml(pcmk__output_t *out, va_list args)
 {
     const pcmk_resource_t *rsc = va_arg(args, const pcmk_resource_t *);
     const pcmk_node_t *node = va_arg(args, const pcmk_node_t *);
     const char *task = va_arg(args, const char *);
-    guint interval_ms = va_arg(args, guint);
+    unsigned int interval_ms = va_arg(args, unsigned int);
     const pcmk__op_digest_t *digests = va_arg(args, const pcmk__op_digest_t *);
 
     char *interval_s = pcmk__assert_asprintf("%ums", interval_ms);
@@ -1768,14 +1768,14 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *",
-                  "const char *", "guint")
+                  "const char *", "unsigned int")
 static int
 inject_rsc_action(pcmk__output_t *out, va_list args)
 {
     const char *rsc = va_arg(args, const char *);
     const char *operation = va_arg(args, const char *);
     const char *node = va_arg(args, const char *);
-    guint interval_ms = va_arg(args, guint);
+    unsigned int interval_ms = va_arg(args, unsigned int);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1793,14 +1793,14 @@ inject_rsc_action(pcmk__output_t *out, va_list args)
 }
 
 PCMK__OUTPUT_ARGS("inject-rsc-action", "const char *", "const char *",
-                  "const char *", "guint")
+                  "const char *", "unsigned int")
 static int
 inject_rsc_action_xml(pcmk__output_t *out, va_list args)
 {
     const char *rsc = va_arg(args, const char *);
     const char *operation = va_arg(args, const char *);
     const char *node = va_arg(args, const char *);
-    guint interval_ms = va_arg(args, guint);
+    unsigned int interval_ms = va_arg(args, unsigned int);
 
     xmlNode *xml_node = NULL;
 

@@ -15,7 +15,7 @@
 
 #include <sys/types.h>          // pid_t, uid_t, gid_t
 
-#include <glib.h>               // GSourceFunc, gpointer, guint
+#include <glib.h>               // GSourceFunc, gpointer
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,8 +31,9 @@ int pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
-guint pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data);
-guint pcmk__timeout_ms2s(guint timeout_ms);
+unsigned int pcmk__create_timer(unsigned int interval_ms, GSourceFunc fn,
+                                gpointer data);
+unsigned int pcmk__timeout_ms2s(unsigned int timeout_ms);
 
 #ifdef __cplusplus
 }

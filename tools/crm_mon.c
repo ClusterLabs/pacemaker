@@ -66,7 +66,7 @@ static mon_output_format_t output_format = mon_output_unset;
 /* other globals */
 static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
-static guint reconnect_timer = 0;
+static unsigned int reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 
 static enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
@@ -205,7 +205,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 #define RECONNECT_MSECS 5000
 
 struct {
-    guint reconnect_ms;
+    unsigned int reconnect_ms;
     enum mon_exec_mode exec_mode;
     gboolean fence_connect;
     gboolean print_pending;
@@ -519,9 +519,9 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
     }
 
     /* @FIXME Why do we call this instead of just clipping the pcmk__parse_ms()
-     * result to guint range? This was added by e4aff648 so that we could accept
-     * more formats. However, if pcmk__parse_ms() would reject optarg, then
-     * we've already returned by now.
+     * result to unsigned int range? This was added by e4aff648 so that we could
+     * accept more formats. However, if pcmk__parse_ms() would reject optarg,
+     * then we've already returned by now.
      */
     pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
 

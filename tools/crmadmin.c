@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ static enum {
 
 struct {
     gboolean health;
-    guint timeout;
+    unsigned int timeout;
     char *optarg;
     char *ipc_name;
     gboolean bash_export;

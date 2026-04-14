@@ -98,7 +98,7 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
 void
 pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                        const char *resource, const char *task,
-                       guint interval_ms, int exit_status, bool infinity)
+                       unsigned int interval_ms, int exit_status, bool infinity)
 {
     char *name = NULL;
     char *value = NULL;
@@ -192,8 +192,8 @@ create_node_entry(cib_t *cib_conn, const char *node)
  *       lrmd_free_event().
  */
 static lrmd_event_data_t *
-create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
-          int outcome)
+create_op(const xmlNode *cib_resource, const char *task,
+          unsigned int interval_ms, int outcome)
 {
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
@@ -568,7 +568,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
 {
     int rc;
     int outcome = PCMK_OCF_OK;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     char *key = NULL;
     char *node = NULL;

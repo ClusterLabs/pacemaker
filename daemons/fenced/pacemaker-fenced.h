@@ -180,19 +180,19 @@ typedef struct {
     /*! Marks if the final notifications have been sent to local stonith clients. */
     gboolean notify_sent;
     /*! The number of query replies received */
-    guint replies;
+    unsigned int replies;
     /*! The number of query replies expected */
-    guint replies_expected;
+    unsigned int replies_expected;
     /*! Does this node own control of this operation */
     gboolean owner;
     /*! After query is complete, This the high level timer that expires the entire operation */
-    guint op_timer_total;
+    unsigned int op_timer_total;
     /*! This timer expires the current fencing request. Many fencing
      * requests may exist in a single operation */
-    guint op_timer_one;
+    unsigned int op_timer_one;
     /*! This timer expires the query request sent out to determine
      * what nodes are contain what devices, and who those devices can fence */
-    guint query_timer;
+    unsigned int query_timer;
     /*! This is the default timeout to use for each fencing device if no
      * custom timeout is received in the query. */
     int base_timeout;
@@ -235,7 +235,7 @@ typedef struct {
     xmlNode *request;
 
     /*! The current topology level being executed */
-    guint level;
+    unsigned int level;
     /*! The current operation phase being executed */
     enum st_remap_phase phase;
 

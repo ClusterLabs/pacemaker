@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -86,7 +86,8 @@ void controld_update_resource_history(const char *node_name,
 void controld_delete_action_history(const lrmd_event_data_t *op);
 
 void controld_cib_delete_last_failure(const char *rsc_id, const char *node,
-                                      const char *action, guint interval_ms);
+                                      const char *action,
+                                      unsigned int interval_ms);
 
 void controld_delete_action_history_by_key(const char *rsc_id, const char *node,
                                            const char *key, int call_id);

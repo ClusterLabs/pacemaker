@@ -325,7 +325,7 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
 {
     char *key = NULL;
     char *timeout = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     if (param_set == NULL) {
         return;

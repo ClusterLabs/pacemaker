@@ -212,7 +212,7 @@ static dbus_bool_t
 add_dbus_timer(DBusTimeout *timeout, void *data)
 {
     int interval_ms = dbus_timeout_get_interval(timeout);
-    guint id = pcmk__create_timer(interval_ms, timer_popped, timeout);
+    unsigned int id = pcmk__create_timer(interval_ms, timer_popped, timeout);
 
     if (id) {
         dbus_timeout_set_data(timeout, GUINT_TO_POINTER(id), NULL);
@@ -225,7 +225,7 @@ static void
 remove_dbus_timer(DBusTimeout *timeout, void *data)
 {
     void *vid = dbus_timeout_get_data(timeout);
-    guint id = GPOINTER_TO_UINT(vid);
+    unsigned int id = GPOINTER_TO_UINT(vid);
 
     pcmk__trace("Removing %dms DBus timer", dbus_timeout_get_interval(timeout));
     if (id) {

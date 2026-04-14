@@ -237,7 +237,7 @@ lrm_state_get_list(void)
 void
 lrm_state_disconnect_only(lrm_state_t * lrm_state)
 {
-    guint removed = 0;
+    unsigned int removed = 0;
 
     if (!lrm_state->conn) {
         return;
@@ -368,7 +368,7 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
 
 int
 lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
-                 guint interval_ms)
+                 unsigned int interval_ms)
 {
     if (!lrm_state->conn) {
         return -ENOTCONN;
@@ -432,7 +432,7 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
 int
 controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                 const char *action, const char *userdata,
-                                guint interval_ms, int timeout_ms,
+                                unsigned int interval_ms, int timeout_ms,
                                 int start_delay_ms, GHashTable *parameters,
                                 int *call_id)
 {

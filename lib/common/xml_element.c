@@ -1138,9 +1138,10 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
 
 /*!
  * \internal
- * \brief Retrieve a \c guint value from an XML attribute
+ * \brief Retrieve an <tt>unsigned int</tt> value from an XML attribute
  *
- * This is like \c pcmk__xe_get() but returns the value as a \c guint.
+ * This is like \c pcmk__xe_get() but returns the value as an
+ * <tt>unsigned int</tt>.
  *
  * \param[in]  xml   XML element whose attribute to get
  * \param[in]  attr  Attribute name
@@ -1149,7 +1150,7 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
+pcmk__xe_get_guint(const xmlNode *xml, const char *attr, unsigned int *dest)
 {
     long long value_ll = 0;
     int rc = pcmk_rc_ok;
@@ -1164,22 +1165,22 @@ pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
     if ((value_ll < 0) || (value_ll > UINT_MAX)) {
         return ERANGE;
     }
-    *dest = (guint) value_ll;
+    *dest = (unsigned int) value_ll;
     return pcmk_rc_ok;
 }
 
 /*!
  * \internal
- * \brief Set an XML attribute using a \c guint value
+ * \brief Set an XML attribute using an <tt>unsigned int</tt> value
  *
- * This is like \c pcmk__xe_set() but takes a \c guint.
+ * This is like \c pcmk__xe_set() but takes an <tt>unsigned int</tt>.
  *
  * \param[in,out] xml    XML node to modify
  * \param[in]     attr   Attribute name
  * \param[in]     value  Attribute value to set
  */
 void
-pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value)
+pcmk__xe_set_guint(xmlNode *xml, const char *attr, unsigned int value)
 {
     char *value_s = NULL;
 
@@ -1742,7 +1743,7 @@ crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest)
 }
 
 int
-crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
+crm_element_value_ms(const xmlNode *data, const char *name, unsigned int *dest)
 {
     const char *value = NULL;
     long long value_ll;
@@ -1763,7 +1764,7 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
                    value);
         return -1;
     }
-    *dest = (guint) value_ll;
+    *dest = (unsigned int) value_ll;
     return pcmk_ok;
 }
 
@@ -1828,7 +1829,7 @@ crm_xml_add_timeval(xmlNode *xml, const char *name_sec, const char *name_usec,
 }
 
 const char *
-crm_xml_add_ms(xmlNode *node, const char *name, guint ms)
+crm_xml_add_ms(xmlNode *node, const char *name, unsigned int ms)
 {
     char *number = pcmk__assert_asprintf("%u", ms);
     const char *added = crm_xml_add(node, name, number);

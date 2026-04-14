@@ -142,7 +142,8 @@ pcmk__add_alert_key_int(GHashTable *table, enum pcmk__alert_keys_e name,
  * \return Standard Pacemaker return code
  */
 static int
-unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
+unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry,
+                     unsigned int *max_timeout)
 {
     GHashTable *config_hash = pcmk__strkey_table(free, free);
     crm_time_t *now = crm_time_new(NULL);
@@ -334,7 +335,7 @@ unpack_alert_filter(xmlNode *xml, pcmk__alert_t *entry)
  * \return Standard Pacemaker return code
  */
 static int
-unpack_alert(xmlNode *alert, pcmk__alert_t *entry, guint *max_timeout)
+unpack_alert(xmlNode *alert, pcmk__alert_t *entry, unsigned int *max_timeout)
 {
     int rc = pcmk_rc_ok;
 
@@ -359,7 +360,7 @@ pcmk__unpack_alerts(const xmlNode *alerts)
 {
     xmlNode *alert;
     pcmk__alert_t *entry;
-    guint max_timeout = 0U;
+    unsigned int max_timeout = 0;
     GList *alert_list = NULL;
 
     for (alert = pcmk__xe_first_child(alerts, PCMK_XE_ALERT, NULL, NULL);
@@ -406,7 +407,7 @@ pcmk__unpack_alerts(const xmlNode *alerts)
              recipient = pcmk__xe_next(recipient, PCMK_XE_RECIPIENT)) {
 
             pcmk__alert_t *recipient_entry = pcmk__dup_alert(entry);
-            guint n_envvars = 0;
+            unsigned int n_envvars = 0;
 
             recipients++;
             recipient_entry->recipient = pcmk__xe_get_copy(recipient,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <stdint.h>                     // UINT32_C
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode
-#include <glib.h>                       // gboolean, guint, GList, GHashTable
+#include <glib.h>                       // gboolean, GList, GHashTable
 
 #include <crm/common/roles.h>           // enum rsc_role_e
 #include <crm/common/scheduler_types.h> // pcmk_resource_t, etc.

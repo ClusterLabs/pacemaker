@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,7 +47,7 @@ alert_key2param_int(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
 
 static lrmd_key_value_t *
 alert_key2param_ms(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
-                   guint value)
+                   unsigned int value)
 {
     char *value_s = pcmk__assert_asprintf("%u", value);
 

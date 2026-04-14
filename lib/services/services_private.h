@@ -1,6 +1,6 @@
 /*
  * Copyright 2010-2011 Red Hat, Inc.
- * Later changes copyright 2012-2025 the Pacemaker project contributors
+ * Later changes copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 #include <stdbool.h>                // bool
 #include <unistd.h>                 // uid_t, gid_t
 
-#include <glib.h>                   // G_GNUC_INTERNAL, gboolean, guint, etc.
+#include <glib.h>                   // G_GNUC_INTERNAL, gboolean, etc.
 #if HAVE_DBUS
 #include <dbus/dbus.h>              // DBusPendingCall
 #endif
@@ -35,7 +35,7 @@ struct svc_action_private_s {
     uid_t uid;
     gid_t gid;
 
-    guint repeat_timer;
+    unsigned int repeat_timer;
     void (*callback) (svc_action_t * op);
     void (*fork_callback) (svc_action_t * op);
 

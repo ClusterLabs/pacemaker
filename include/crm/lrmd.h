@@ -13,7 +13,7 @@
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // UINT32_C
 
-#include <glib.h>                   // guint, GList
+#include <glib.h>                   // GList
 
 #include <crm_config.h>
 #include <crm/common/internal.h>    // pcmk__compare_versions()
@@ -349,7 +349,7 @@ typedef struct lrmd_api_operations_s {
      *       any specific order.
      */
     int (*exec) (lrmd_t *lrmd, const char *rsc_id, const char *action,
-                 const char *userdata, guint interval_ms, int timeout,
+                 const char *userdata, unsigned int interval_ms, int timeout,
                  int start_delay, enum lrmd_call_options options,
                  lrmd_key_value_t *params);
 
@@ -372,7 +372,7 @@ typedef struct lrmd_api_operations_s {
      *       any specific order.
      */
     int (*cancel) (lrmd_t *lrmd, const char *rsc_id, const char *action,
-                   guint interval_ms);
+                   unsigned int interval_ms);
 
     /*!
      * \brief Retrieve resource agent metadata synchronously

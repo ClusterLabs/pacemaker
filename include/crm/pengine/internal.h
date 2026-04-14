@@ -160,13 +160,15 @@ void pe__show_node_scores_as(const char *file, const char *function,
 
 GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
                                      const pcmk_node_t *node,
-                                     const char *action_name, guint interval_ms,
+                                     const char *action_name,
+                                     unsigned int interval_ms,
                                      const xmlNode *action_config);
 GHashTable *pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
                                            GHashTable *node_attrs,
                                            pcmk_scheduler_t *data_set);
 xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc,
-                                  const char *action_name, guint interval_ms,
+                                  const char *action_name,
+                                  unsigned int interval_ms,
                                   bool include_disabled);
 
 enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
@@ -174,7 +176,8 @@ enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
 
 enum pcmk__on_fail pcmk__parse_on_fail(const pcmk_resource_t *rsc,
                                        const char *action_name,
-                                       guint interval_ms, const char *value);
+                                       unsigned int interval_ms,
+                                       const char *value);
 
 enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
                                          const char *action_name,
@@ -259,7 +262,7 @@ int pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
 
 pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
-                                         guint *interval_ms,
+                                         unsigned int *interval_ms,
                                          const pcmk_node_t *node,
                                          const xmlNode *xml_op,
                                          GHashTable *overrides,

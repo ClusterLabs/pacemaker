@@ -1047,7 +1047,7 @@ fail_all_monitor_cmds(GList * list)
 }
 
 static GList *
-remove_cmd(GList * list, const char *action, guint interval_ms)
+remove_cmd(GList * list, const char *action, unsigned int interval_ms)
 {
     remote_ra_cmd_t *cmd = NULL;
     GList *gIter = NULL;
@@ -1069,7 +1069,7 @@ remove_cmd(GList * list, const char *action, guint interval_ms)
 
 int
 remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                 const char *action, guint interval_ms)
+                 const char *action, unsigned int interval_ms)
 {
     lrm_state_t *connection_rsc = NULL;
     remote_ra_data_t *ra_data = NULL;
@@ -1096,7 +1096,7 @@ remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
 }
 
 static remote_ra_cmd_t *
-handle_dup_monitor(remote_ra_data_t *ra_data, guint interval_ms,
+handle_dup_monitor(remote_ra_data_t *ra_data, unsigned int interval_ms,
                    const char *userdata)
 {
     GList *gIter = NULL;
@@ -1193,7 +1193,7 @@ handle_dup:
 int
 controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
                               const char *action, const char *userdata,
-                              guint interval_ms, int timeout_ms,
+                              unsigned int interval_ms, int timeout_ms,
                               int start_delay_ms, lrmd_key_value_t *params,
                               int *call_id)
 {

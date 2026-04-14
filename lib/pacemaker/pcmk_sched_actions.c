@@ -95,7 +95,7 @@ static char *
 action_uuid_for_ordering(const char *first_uuid,
                          const pcmk_resource_t *first_rsc)
 {
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     char *uuid = NULL;
     char *rid = NULL;
     char *first_task_str = NULL;
@@ -1488,7 +1488,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
  * \return Action name whose digest should be compared
  */
 static const char *
-task_for_digest(const char *task, guint interval_ms)
+task_for_digest(const char *task, unsigned int interval_ms)
 {
     /* Certain actions need to be compared against the parameters used to start
      * the resource.
@@ -1547,7 +1547,7 @@ only_sanitized_changed(const xmlNode *xml_op,
  * \param[in,out] node         Node where resource should be restarted
  */
 static void
-force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
+force_restart(pcmk_resource_t *rsc, const char *task, unsigned int interval_ms,
               pcmk_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -1639,7 +1639,7 @@ bool
 pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                           const xmlNode *xml_op)
 {
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     const char *task = NULL;
     const pcmk__op_digest_t *digest_data = NULL;
 
@@ -1831,7 +1831,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
         xmlNode *rsc_op = (xmlNode *) iter->data;
         const char *task = NULL;
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
 
         if (++offset < start_index) {
             // Skip actions that happened before a start

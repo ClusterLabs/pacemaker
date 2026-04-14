@@ -177,7 +177,7 @@ static gboolean
 update_failcount(const xmlNode *event, const char *event_node_uuid, int rc,
                  int target_rc, gboolean do_update, gboolean ignore_failures)
 {
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     char *task = NULL;
     char *rsc_id = NULL;
@@ -492,7 +492,7 @@ process_graph_event(xmlNode *event, const char *event_node)
 
         // Action is not from currently active transition
 
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
 
         if (parse_op_key(id, NULL, NULL, &interval_ms)
             && (interval_ms != 0)) {

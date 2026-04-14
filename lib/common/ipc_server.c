@@ -32,7 +32,7 @@ static GHashTable *client_connections = NULL;
  *
  * \return Number of active IPC client connections
  */
-guint
+unsigned int
 pcmk__ipc_client_count(void)
 {
     return client_connections? g_hash_table_size(client_connections) : 0;
@@ -455,7 +455,7 @@ static inline void
 delay_next_flush(pcmk__client_t *c, unsigned int queue_len)
 {
     /* Delay a maximum of 1.5 seconds */
-    guint delay = (queue_len < 5)? (1000 + 100 * queue_len) : 1500;
+    unsigned int delay = (queue_len < 5)? (1000 + 100 * queue_len) : 1500;
 
     c->event_timer = pcmk__create_timer(delay, crm_ipcs_flush_events_cb, c);
 }

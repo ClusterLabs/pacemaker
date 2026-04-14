@@ -220,14 +220,14 @@ pcmk__free_action(gpointer user_data)
  *       The caller is responsible for freeing the result with free().
  */
 char *
-pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms)
+pcmk__op_key(const char *rsc_id, const char *op_type, unsigned int interval_ms)
 {
     pcmk__assert((rsc_id != NULL) && (op_type != NULL));
     return pcmk__assert_asprintf(PCMK__OP_FMT, rsc_id, op_type, interval_ms);
 }
 
 static inline gboolean
-convert_interval(const char *s, guint *interval_ms)
+convert_interval(const char *s, unsigned int *interval_ms)
 {
     unsigned long l;
 
@@ -238,7 +238,7 @@ convert_interval(const char *s, guint *interval_ms)
         return FALSE;
     }
 
-    *interval_ms = (guint) l;
+    *interval_ms = (unsigned int) l;
     return TRUE;
 }
 
@@ -273,9 +273,10 @@ match_before(const char *key, size_t position, const char **matches)
 }
 
 gboolean
-parse_op_key(const char *key, char **rsc_id, char **op_type, guint *interval_ms)
+parse_op_key(const char *key, char **rsc_id, char **op_type,
+             unsigned int *interval_ms)
 {
-    guint local_interval_ms = 0;
+    unsigned int local_interval_ms = 0;
     const size_t key_len = (key == NULL)? 0 : strlen(key);
 
     // Operation keys must be formatted as RSC_ACTION_INTERVAL

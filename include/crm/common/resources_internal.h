@@ -17,7 +17,7 @@
 #include <inttypes.h>                   // UINT64_C
 #include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
-#include <glib.h>                       // gboolean, gpointer, guint, etc.
+#include <glib.h>                       // gboolean, gpointer, etc.
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/resources.h>       // pcmk_resource_t
@@ -328,9 +328,15 @@ struct pcmk__resource_private {
     enum rsc_role_e orig_role;      // Resource's role at start of transition
     enum rsc_role_e next_role;      // Resource's role at end of transition
     int stickiness;                 // Extra preference for current node
-    guint failure_expiration_ms;    // Failures expire after this much time
+
+    // Failures expire after this much time
+    unsigned int failure_expiration_ms;
+
     int ban_after_failures;         // Ban from node after this many failures
-    guint remote_reconnect_ms;      // Retry interval for remote connections
+
+    // Retry interval for remote connections
+    unsigned int remote_reconnect_ms;
+
     char *pending_action;           // Pending action in history, if any
     const pcmk_node_t *pending_node;// Node on which pending_action is happening
     time_t lock_time;               // When shutdown lock started

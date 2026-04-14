@@ -76,7 +76,7 @@ struct notify_blob_s {
 struct timer_rec_s {
     int call_id;
     int timeout;
-    guint ref;
+    unsigned int ref;
     stonith_t *stonith;
 };
 

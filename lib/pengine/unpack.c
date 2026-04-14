@@ -55,7 +55,7 @@ struct action_history {
     const char *key;          // Operation key of action
     const char *task;         // Action name
     const char *exit_reason;  // Exit reason given for result
-    guint interval_ms;        // Action interval
+    unsigned int interval_ms; // Action interval
     int call_id;              // Call ID of action
     int expected_exit_status; // Expected exit status of action
     int exit_status;          // Actual exit status of action
@@ -309,7 +309,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        guint *delay_ms = &(scheduler->priv->priority_fencing_ms);
+        unsigned int *delay_ms = &(scheduler->priv->priority_fencing_ms);
 
         pcmk_parse_interval_spec(value, delay_ms);
         pcmk__trace("Priority fencing delay is %s",
@@ -2654,7 +2654,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
     for (; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         char *key = NULL;
         const char *id = pcmk__xe_id(rsc_op);
 
@@ -2757,7 +2757,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
     time_t sched_time = 0;
-    guint shutdown_lock_ms = scheduler->priv->shutdown_lock_ms;
+    unsigned int shutdown_lock_ms = scheduler->priv->shutdown_lock_ms;
 
     pcmk__xe_get_time(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK, &lock_time);
     if (lock_time == 0) {
@@ -4045,7 +4045,7 @@ remap_operation(struct action_history *history,
 
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
             {
-                guint interval_ms = 0;
+                unsigned int interval_ms = 0;
                 pcmk__xe_get_guint(history->xml, PCMK_META_INTERVAL,
                                    &interval_ms);
 
@@ -4150,7 +4150,7 @@ order_after_remote_fencing(pcmk_action_t *action, pcmk_resource_t *remote_conn,
 
 static bool
 should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
-                              guint interval_ms, bool is_last_failure)
+                              unsigned int interval_ms, bool is_last_failure)
 {
     /* Clearing failures of recurring monitors has special concerns. The
      * executor reports only changes in the monitor result, so if the
@@ -4221,7 +4221,7 @@ check_operation_expiry(struct action_history *history)
     time_t last_run = 0;
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
-    const guint expiration_sec =
+    const unsigned int expiration_sec =
         pcmk__timeout_ms2s(history->rsc->priv->failure_expiration_ms);
     pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
@@ -4650,7 +4650,7 @@ static bool
 failure_is_newer(const struct action_history *history,
                  const xmlNode *last_failure)
 {
-    guint failure_interval_ms = 0U;
+    unsigned int failure_interval_ms = 0;
     long long failure_change = 0LL;
     long long this_change = 0LL;
 

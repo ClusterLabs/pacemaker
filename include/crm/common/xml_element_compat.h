@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 
 #include <sys/time.h>       // struct timeval
 
-#include <glib.h>           // gboolean, guint
+#include <glib.h>           // gboolean
 #include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus
@@ -49,7 +49,8 @@ int crm_element_value_timeval(const xmlNode *data, const char *name_sec,
 int crm_element_value_epoch(const xmlNode *xml, const char *name, time_t *dest);
 
 //! \deprecated Do not use
-int crm_element_value_ms(const xmlNode *data, const char *name, guint *dest);
+int crm_element_value_ms(const xmlNode *data, const char *name,
+                         unsigned int *dest);
 
 //! \deprecated Do not use
 int crm_element_value_ll(const xmlNode *data, const char *name,
@@ -70,7 +71,7 @@ const char *crm_xml_add_timeval(xmlNode *xml, const char *name_sec,
                                 const struct timeval *value);
 
 //! \deprecated Do not use
-const char *crm_xml_add_ms(xmlNode *node, const char *name, guint ms);
+const char *crm_xml_add_ms(xmlNode *node, const char *name, unsigned int ms);
 
 //! \deprecated Do not use
 const char *crm_xml_add_ll(xmlNode *node, const char *name, long long value);

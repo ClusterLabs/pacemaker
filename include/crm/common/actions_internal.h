@@ -16,7 +16,7 @@
 
 #include <stdbool.h>                        // bool
 #include <stdint.h>                         // uint32_t, UINT32_C()
-#include <glib.h>                           // guint, GList, GHashTable
+#include <glib.h>                           // GList, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
@@ -239,7 +239,8 @@ struct pcmk__action {
 };
 
 void pcmk__free_action(gpointer user_data);
-char *pcmk__op_key(const char *rsc_id, const char *op_type, guint interval_ms);
+char *pcmk__op_key(const char *rsc_id, const char *op_type,
+                   unsigned int interval_ms);
 char *pcmk__notify_key(const char *rsc_id, const char *notify_type,
                        const char *op_type);
 char *pcmk__transition_key(int transition_id, int action_id, int target_rc,
@@ -261,7 +262,8 @@ const char *pcmk__on_fail_text(enum pcmk__on_fail on_fail);
  * \return Action name suitable for display
  */
 static inline const char *
-pcmk__readable_action(const char *action_name, guint interval_ms) {
+pcmk__readable_action(const char *action_name, unsigned int interval_ms)
+{
     if ((interval_ms == 0)
         && pcmk__str_eq(action_name, PCMK_ACTION_MONITOR, pcmk__str_none)) {
         return "probe";

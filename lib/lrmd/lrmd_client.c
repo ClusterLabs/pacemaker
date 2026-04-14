@@ -175,7 +175,7 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
  *       result with lrmd_free_event().
  */
 lrmd_event_data_t *
-lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
+lrmd_new_event(const char *rsc_id, const char *task, unsigned int interval_ms)
 {
     lrmd_event_data_t *event = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
@@ -1876,7 +1876,7 @@ lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
 
 static int
 lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
-              const char *userdata, guint interval_ms,
+              const char *userdata, unsigned int interval_ms,
               int timeout,      /* ms */
               int start_delay,  /* ms */
               enum lrmd_call_options options, lrmd_key_value_t * params)
@@ -1907,7 +1907,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
 
 static int
 lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
-                guint interval_ms)
+                unsigned int interval_ms)
 {
     int rc = pcmk_ok;
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);

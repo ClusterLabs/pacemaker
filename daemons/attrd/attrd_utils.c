@@ -168,7 +168,7 @@ attrd_expand_value(const char *value, const char *old_value)
  */
 int
 attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                    guint interval_ms)
+                    unsigned int interval_ms)
 {
     char *pattern = NULL;
     int rc;

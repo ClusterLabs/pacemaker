@@ -677,7 +677,7 @@ static void
 crm_shutdown(int nsig)
 {
     const char *value = NULL;
-    guint default_period_ms = 0;
+    unsigned int default_period_ms = 0;
 
     if ((controld_globals.mainloop == NULL)
         || !g_main_loop_is_running(controld_globals.mainloop)) {

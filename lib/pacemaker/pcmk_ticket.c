@@ -16,7 +16,7 @@
 #include <string.h>                     // strdup
 #include <time.h>                       // time_t
 
-#include <glib.h>                       // g_str_has_suffix, GHashTable, guint
+#include <glib.h>                       // g_str_has_suffix, GHashTable
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/cib.h>                    // cib_*

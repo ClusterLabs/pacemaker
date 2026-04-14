@@ -1196,7 +1196,7 @@ find_actions_by_task(const pcmk_resource_t *rsc, const char *original_key)
         // Search again using this resource's ID
         char *key = NULL;
         char *task = NULL;
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
 
         CRM_CHECK(parse_op_key(original_key, NULL, &task, &interval_ms),
                   return NULL);
@@ -1305,7 +1305,7 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
     } else if (first_actions == NULL) {
         char *key = NULL;
         char *op_type = NULL;
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         enum rsc_role_e first_role;
 
         parse_op_key(order->task1, NULL, &op_type, &interval_ms);

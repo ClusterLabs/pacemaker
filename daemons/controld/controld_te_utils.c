@@ -124,7 +124,7 @@ controld_trigger_graph_as(const char *fn, int line)
 
 static struct abort_timer_s {
     bool aborted;
-    guint id;
+    unsigned int id;
     int priority;
     enum pcmk__graph_next action;
     const char *text;
@@ -151,7 +151,7 @@ abort_timer_popped(gpointer data)
  */
 void
 abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
-                  const char *abort_text, guint delay_ms)
+                  const char *abort_text, unsigned int delay_ms)
 {
     if (abort_timer.id) {
         // Timer already in progress, stop and reschedule
@@ -205,7 +205,7 @@ node_pending_timer_popped(gpointer key)
 }
 
 static void
-init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
+init_node_pending_timer(const pcmk__node_status_t *node, unsigned int timeout)
 {
     struct abort_timer_s *node_pending_timer = NULL;
     char *key = NULL;

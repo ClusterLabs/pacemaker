@@ -37,7 +37,7 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
-// @TODO This should be guint
+// @TODO This should be unsigned int
 long long fencing_watchdog_timeout_ms = 0;
 
 GList *stonith_watchdog_targets = NULL;

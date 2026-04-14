@@ -298,7 +298,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
 
 /*!
  * \internal
- * \brief Parse a guint from a string stored in a hash table
+ * \brief Parse an <tt>unsigned int</tt> from a string stored in a hash table
  *
  * \param[in]     table        Hash table to search
  * \param[in]     key          Hash table key to use to retrieve string
@@ -308,8 +308,8 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
-                      guint *result)
+pcmk__guint_from_hash(GHashTable *table, const char *key,
+                      unsigned int default_val, unsigned int *result)
 {
     const char *value;
     long long value_ll;
@@ -342,7 +342,7 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
     }
 
     if (result != NULL) {
-        *result = (guint) value_ll;
+        *result = (unsigned int) value_ll;
     }
     return pcmk_rc_ok;
 }
@@ -361,7 +361,7 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
  * \return Standard Pacemaker return code
  */
 int
-pcmk_parse_interval_spec(const char *input, guint *result_ms)
+pcmk_parse_interval_spec(const char *input, unsigned int *result_ms)
 {
     long long msec = PCMK__PARSE_INT_DEFAULT;
     int rc = pcmk_rc_ok;
@@ -397,7 +397,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
 
 done:
     if (result_ms != NULL) {
-        *result_ms = (msec >= UINT_MAX)? UINT_MAX : (guint) msec;
+        *result_ms = (msec >= UINT_MAX)? UINT_MAX : (unsigned int) msec;
     }
     return rc;
 }
@@ -421,7 +421,7 @@ done:
  * appears to have some minor impact on the ordering of a few pseudo_event IDs
  * in the transition graph.
  */
-static guint
+static unsigned int
 pcmk__str_hash(gconstpointer v)
 {
     const signed char *p;
@@ -477,7 +477,7 @@ pcmk__strcase_equal(gconstpointer a, gconstpointer b)
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
-static guint
+static unsigned int
 pcmk__strcase_hash(gconstpointer v)
 {
     const signed char *p;
@@ -723,7 +723,7 @@ pcmk__parse_ll_range(const char *text, long long *start, long long *end)
     long long local_start = 0;
     long long local_end = 0;
     gchar **split = NULL;
-    guint length = 0;
+    unsigned int length = 0;
     const gchar *start_s = NULL;
     const gchar *end_s = NULL;
 

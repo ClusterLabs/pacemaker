@@ -408,10 +408,10 @@ lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
     }
 
     if ((lrm_state->active_ops != NULL) && lrm_state_is_connected(lrm_state)) {
-        guint removed = g_hash_table_foreach_remove(lrm_state->active_ops,
-                                                    stop_recurring_actions,
-                                                    lrm_state);
-        guint nremaining = g_hash_table_size(lrm_state->active_ops);
+        unsigned int removed =
+            g_hash_table_foreach_remove(lrm_state->active_ops,
+                                        stop_recurring_actions, lrm_state);
+        unsigned int nremaining = g_hash_table_size(lrm_state->active_ops);
 
         if (removed || nremaining) {
             pcmk__notice("Stopped %u recurring operation%s at %s (%u "
@@ -745,7 +745,8 @@ delete_rsc_entry(lrm_state_t *lrm_state, ha_msg_input_t *input,
 }
 
 static inline gboolean
-last_failed_matches_op(rsc_history_t *entry, const char *op, guint interval_ms)
+last_failed_matches_op(rsc_history_t *entry, const char *op,
+                       unsigned int interval_ms)
 {
     if (entry == NULL) {
         return FALSE;
@@ -772,7 +773,7 @@ last_failed_matches_op(rsc_history_t *entry, const char *op, guint interval_ms)
  */
 void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
-                       const char *operation, guint interval_ms)
+                       const char *operation, unsigned int interval_ms)
 {
     lrm_state_t *lrm_state = controld_get_executor_state(node_name, false);
 
@@ -872,7 +873,7 @@ cancel_action_by_key(gpointer key, gpointer value, gpointer user_data)
 static gboolean
 cancel_op_key(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, const char *key, gboolean remove)
 {
-    guint removed = 0;
+    unsigned int removed = 0;
     struct cancel_data data;
 
     CRM_CHECK(rsc != NULL, return FALSE);
@@ -1243,7 +1244,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     int call = 0;
     const char *call_id = NULL;
     const char *op_task = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     gboolean in_progress = FALSE;
     xmlNode *params = pcmk__xe_first_child(input->xml, PCMK__XE_ATTRIBUTES,
                                            NULL, NULL);
@@ -1842,7 +1843,8 @@ stop_recurring_actions(gpointer key, gpointer value, gpointer user_data)
  * \return true if recurring actions should be cancelled, otherwise false
  */
 static bool
-should_cancel_recurring(const char *rsc_id, const char *action, guint interval_ms)
+should_cancel_recurring(const char *rsc_id, const char *action,
+                        unsigned int interval_ms)
 {
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id) && (interval_ms == 0)
         && (strcmp(action, PCMK_ACTION_MIGRATE_TO) == 0)) {
@@ -1944,7 +1946,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
     CRM_CHECK(op != NULL, return);
 
     if (should_cancel_recurring(rsc->id, operation, op->interval_ms)) {
-        guint removed = 0;
+        unsigned int removed = 0;
         struct stop_recurring_action_s data;
 
         data.rsc = rsc;
@@ -2056,7 +2058,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
 
 static bool
 did_lrm_rsc_op_fail(lrm_state_t *lrm_state, const char * rsc_id,
-                    const char * op_type, guint interval_ms)
+                    const char * op_type, unsigned int interval_ms)
 {
     rsc_history_t *entry = NULL;
 

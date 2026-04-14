@@ -25,7 +25,7 @@
 
 struct pcmk__election {
     enum election_result state;     // Current state of election
-    guint count;                    // How many times local node has voted
+    unsigned int count;             // How many times local node has voted
     void (*cb)(pcmk_cluster_t *);   // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
     mainloop_timer_t *timeout; // When to abort if all votes not received
@@ -189,7 +189,7 @@ election_timeout_stop(pcmk_cluster_t *cluster)
  * \param[in]     period   New timeout
  */
 void
-election_timeout_set_period(pcmk_cluster_t *cluster, guint period)
+election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
 {
     CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
     mainloop_timer_set_period(cluster->priv->election->timeout, period);

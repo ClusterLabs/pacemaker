@@ -148,7 +148,7 @@ struct {
     char *prop_name;              // Attribute name
     gchar *prop_set;              // --set-name (attribute block XML ID)
     gchar *prop_value;            // --parameter-value (attribute value)
-    guint timeout_ms;             // Parsed from --timeout value
+    unsigned int timeout_ms;      // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
     int check_level;              // Optional value of --validate or --force-check
 
@@ -527,7 +527,7 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         || (timeout_ms < 0)) {
         return FALSE;
     }
-    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+    options.timeout_ms = (unsigned int) QB_MIN(timeout_ms, UINT_MAX);
     return TRUE;
 }
 
@@ -2104,7 +2104,7 @@ main(int argc, char **argv)
         // Commands that use positional arguments will create override_params
         if (options.override_params == NULL) {
             GString *msg = g_string_sized_new(128);
-            guint len = g_strv_length(options.remainder);
+            unsigned int len = g_strv_length(options.remainder);
 
             g_string_append(msg, "non-option ARGV-elements:");
 

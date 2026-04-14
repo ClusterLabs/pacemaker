@@ -527,7 +527,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
     const char *op = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_OPERATION);
     const char *interval_spec = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
-    guint interval_ms = 0U;
+    unsigned int interval_ms = 0;
     char *attr = NULL;
     GHashTableIter iter;
     regex_t regex;

@@ -974,7 +974,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
  */
 void
 controld_cib_delete_last_failure(const char *rsc_id, const char *node,
-                                 const char *action, guint interval_ms)
+                                 const char *action, unsigned int interval_ms)
 {
     char *xpath = NULL;
     char *last_failure_key = NULL;
