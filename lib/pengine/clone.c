@@ -9,14 +9,31 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                        // bool, true, false
-#include <stdint.h>
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp, strchr
 
-#include <crm/pengine/status.h>
-#include <crm/pengine/internal.h>
-#include <pe_status_private.h>
-#include <crm/common/xml.h>
-#include <crm/common/output.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qbdefs.h>                  // QB_MAX, QB_MIN
+#include <qb/qblog.h>                   // LOG_TRACE
+
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*
+#include <crm/common/output.h>          // pcmk_show_*
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // rsc_printable_id
+
+#include "pe_status_private.h"          // pe__action_notif_pseudo_ops, etc.
 
 typedef struct {
     int clone_max;
