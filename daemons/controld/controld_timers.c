@@ -410,7 +410,7 @@ controld_start_recheck_timer(void)
             // We're already past the desired time
             period_ms = 500;
         } else {
-            period_ms = (guint) QB_MIN(G_MAXUINT, diff_seconds * 1000LL);
+            period_ms = (guint) QB_MIN(UINT_MAX, diff_seconds * 1000LL);
         }
 
         // Use "recheck by" only if it's sooner than interval from CIB

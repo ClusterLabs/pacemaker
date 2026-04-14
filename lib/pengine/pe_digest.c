@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,7 +102,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
             long long value_ll;
 
             if ((pcmk__scan_ll(interval_s, &value_ll, 0LL) == pcmk_rc_ok)
-                && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
+                && (value_ll >= 0) && (value_ll <= UINT_MAX)) {
                 *interval_ms = (guint) value_ll;
             }
         }

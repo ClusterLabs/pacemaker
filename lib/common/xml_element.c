@@ -1161,7 +1161,7 @@ pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest)
         return rc;
     }
 
-    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+    if ((value_ll < 0) || (value_ll > UINT_MAX)) {
         return ERANGE;
     }
     *dest = (guint) value_ll;
@@ -1758,7 +1758,7 @@ crm_element_value_ms(const xmlNode *data, const char *name, guint *dest)
                    name, value, pcmk_rc_str(rc));
         return -1;
     }
-    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+    if ((value_ll < 0) || (value_ll > UINT_MAX)) {
         pcmk__warn("Using default for %s because '%s' is out of range", name,
                    value);
         return -1;

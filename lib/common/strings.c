@@ -334,7 +334,7 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
         return rc;
     }
 
-    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+    if ((value_ll < 0) || (value_ll > UINT_MAX)) {
         pcmk__warn("Using default (%u) for %s because '%s' is not in valid "
                    "range",
                    default_val, key, value);
@@ -376,7 +376,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
 
         if (period_s != NULL) {
             msec = crm_time_get_seconds(period_s);
-            msec = QB_MIN(msec, G_MAXUINT / 1000) * 1000;
+            msec = QB_MIN(msec, UINT_MAX / 1000) * 1000;
             crm_time_free(period_s);
         }
 
@@ -397,7 +397,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
 
 done:
     if (result_ms != NULL) {
-        *result_ms = (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
+        *result_ms = (msec >= UINT_MAX)? UINT_MAX : (guint) msec;
     }
     return rc;
 }

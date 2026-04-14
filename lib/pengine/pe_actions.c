@@ -623,7 +623,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
 static xmlNode *
 most_frequent_monitor(const pcmk_resource_t *rsc)
 {
-    guint min_interval_ms = G_MAXUINT;
+    guint min_interval_ms = UINT_MAX;
     xmlNode *op = NULL;
 
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
