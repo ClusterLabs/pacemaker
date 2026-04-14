@@ -151,7 +151,7 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
                    "cib_transaction flag set outside of any transaction",
                    client->name);
         pcmk__log_xml_info(msg, "no-transaction");
-        return 0;
+        goto cleanup;
     }
 
     if (pcmk__is_set(call_options, cib_sync_call)) {
@@ -178,7 +178,7 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         xmlNode *reply = NULL;
 
         if (!pcmk__is_set(flags, crm_ipc_client_response)) {
-            return 0;
+            goto cleanup;
         }
 
         reply = pcmk__xe_create(NULL, __func__);
@@ -188,7 +188,7 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
 
         client->request_id = 0;
         pcmk__xml_free(reply);
-        return 0;
+        goto cleanup;
     }
 
     if (pcmk__str_eq(op, PCMK__VALUE_CIB_NOTIFY, pcmk__str_none)) {
@@ -200,10 +200,12 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         }
 
         pcmk__ipc_send_ack(client, id, flags, NULL, status);
-        return 0;
+        goto cleanup;
     }
 
     based_process_request(msg, privileged, client);
+
+cleanup:
     pcmk__xml_free(msg);
     return 0;
 }
