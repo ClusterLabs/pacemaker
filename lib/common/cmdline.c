@@ -152,7 +152,7 @@ pcmk__quote_cmdline(gchar **argv)
     }
 
     for (int i = 0; argv[i] != NULL; i++) {
-        gint argc = 0;
+        int argc = 0;
 
         /* Quote the argument if it's unparsable as-is (empty, all whitespace,
          * or having mismatched quotes), or if it contains more than one token

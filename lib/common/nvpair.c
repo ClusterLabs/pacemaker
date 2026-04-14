@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <string.h>
 #include <ctype.h>
-#include <glib.h>           // gchar, gint, etc.
+#include <glib.h>           // gchar, etc.
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
@@ -588,7 +588,7 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
  *         should sort equally)
  * \note This is suitable for use as a GList sorting function.
  */
-gint
+int
 pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
 {
     const xmlNode *pair_a = a;
@@ -604,9 +604,9 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
      * lower-priority ones. If we're not overwriting values, we want to process
      * from highest priority to lowest.
      */
-    const gint a_is_higher = ((unpack_data != NULL)
-                              && unpack_data->overwrite)? 1 : -1;
-    const gint b_is_higher = -a_is_higher;
+    const int a_is_higher = ((unpack_data != NULL)
+                             && unpack_data->overwrite)? 1 : -1;
+    const int b_is_higher = -a_is_higher;
 
     /* NULL values have lowest priority, regardless of the other's score
      * (it won't be possible in practice anyway, this is just a failsafe)
@@ -666,7 +666,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
 
 #include <crm/common/nvpair_compat.h>
 
-static gint
+static int
 pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
 {
     int rc = 0;

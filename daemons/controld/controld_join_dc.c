@@ -109,7 +109,7 @@ controld_remove_failed_sync_node(const char *node_name)
  * \param[in] join_id    Join round when the failure occurred
  */
 static void
-record_failed_sync_node(const char *node_name, gint join_id)
+record_failed_sync_node(const char *node_name, int join_id)
 {
     if (failed_sync_nodes == NULL) {
         failed_sync_nodes = pcmk__strikey_table(g_free, NULL);
@@ -134,7 +134,7 @@ record_failed_sync_node(const char *node_name, gint join_id)
  * \note \p *join_id is set to -1 if the node is not found.
  */
 static int
-lookup_failed_sync_node(const char *node_name, gint *join_id)
+lookup_failed_sync_node(const char *node_name, int *join_id)
 {
     *join_id = -1;
 
@@ -433,7 +433,7 @@ do_dc_join_filter_offer(long long action, enum crmd_fsa_cause cause,
     pcmk__node_status_t *join_node = NULL;
     const char *join_version = NULL;
     const char *ref = NULL;
-    gint value = 0;
+    int value = 0;
     bool accept = true;
     int count = 0;
 

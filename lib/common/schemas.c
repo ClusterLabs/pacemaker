@@ -482,7 +482,7 @@ done:
     g_clear_pointer(&transforms, g_hash_table_destroy);
 }
 
-static gint
+static int
 schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
 {
     const pcmk__schema_t *schema_a = a;

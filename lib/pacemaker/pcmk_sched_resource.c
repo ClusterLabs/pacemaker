@@ -675,7 +675,7 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
  * \return -1 if \p a should be assigned before \b, 0 if they are equal,
  *         or +1 if \p a should be assigned after \b
  */
-static gint
+static int
 cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
 {
     /* GLib insists that this function require gconstpointer arguments, but we

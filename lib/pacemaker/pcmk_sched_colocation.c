@@ -80,7 +80,7 @@ pcmk__colocation_node_attr(const pcmk_node_t *node, const char *attr,
  *         a positive number if \p colocation2 should be considered first,
  *         or 0 if order doesn't matter
  */
-static gint
+static int
 cmp_colocation_priority(const pcmk__colocation_t *colocation1,
                         const pcmk__colocation_t *colocation2, bool dependent)
 {
@@ -158,7 +158,7 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
  *         a positive number if \p b should be considered first,
  *         or 0 if order doesn't matter
  */
-static gint
+static int
 cmp_dependent_priority(gconstpointer a, gconstpointer b)
 {
     return cmp_colocation_priority(a, b, true);
@@ -184,7 +184,7 @@ cmp_dependent_priority(gconstpointer a, gconstpointer b)
  *         a positive number if \p b should be considered first,
  *         or 0 if order doesn't matter
  */
-static gint
+static int
 cmp_primary_priority(gconstpointer a, gconstpointer b)
 {
     return cmp_colocation_priority(a, b, false);

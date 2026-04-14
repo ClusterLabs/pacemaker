@@ -42,7 +42,7 @@ struct mainloop_timer_s {
 };
 
 static gboolean
-crm_trigger_prepare(GSource * source, gint * timeout)
+crm_trigger_prepare(GSource *source, int *timeout)
 {
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
@@ -426,7 +426,7 @@ static gboolean
 gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
-    gint fd = g_io_channel_unix_get_fd(gio);
+    int fd = g_io_channel_unix_get_fd(gio);
 
     pcmk__trace("%p.%d %d", data, fd, condition);
 
@@ -459,7 +459,7 @@ gio_poll_destroy(gpointer data)
  *
  * \return  best matching GLib's priority
  */
-static gint
+static int
 conv_prio_libqb2glib(enum qb_loop_priority prio)
 {
     switch (prio) {

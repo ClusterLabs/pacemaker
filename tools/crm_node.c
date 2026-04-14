@@ -322,7 +322,7 @@ static pcmk__message_entry_t fmt_functions[] = {
     { NULL, NULL, NULL }
 };
 
-static gint
+static int
 sort_node(gconstpointer a, gconstpointer b)
 {
     const pcmk_controld_api_node_t *node_a = a;

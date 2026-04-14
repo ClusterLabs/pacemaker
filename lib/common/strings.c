@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -943,7 +943,7 @@ struct str_in_list_data {
  *         if \p a comes after \p b->str, or 0 if \p a is equal to \p b->str
  *         (according to \p b->flags)
  */
-static gint
+static int
 cmp_str_in_list(gconstpointer a, gconstpointer b)
 {
     const char *element = a;

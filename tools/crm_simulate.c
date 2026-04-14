@@ -41,7 +41,7 @@ struct {
     pcmk_injections_t *injections;
     uint32_t flags;
     gchar *output_file;
-    gint repeat;
+    int repeat;
     gboolean store;
     gchar *test_dir;
     char *use_date;

@@ -286,7 +286,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
  * \retval  positive \c b->name is \c NULL or comes before \c a->name
  *                   lexicographically
  */
-static gint
+static int
 compare_xml_attr(gconstpointer a, gconstpointer b)
 {
     const xmlAttr *attr_a = a;

@@ -226,7 +226,7 @@ void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pcmk_scheduler_t *scheduler);
 
 int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b);
-extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
+int sort_op_by_callid(gconstpointer a, gconstpointer b);
 gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
@@ -253,7 +253,7 @@ pe_base_name_eq(const pcmk_resource_t *rsc, const char *id)
 
 int pe__target_rc_from_xml(const xmlNode *xml_op);
 
-gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
+int pe__cmp_node_name(gconstpointer a, gconstpointer b);
 bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
 
 pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,

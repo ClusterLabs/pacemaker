@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -308,7 +308,7 @@ node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
  *         a positive number if \p b's instance number is lower,
  *         or 0 if their instance numbers are the same
  */
-gint
+int
 pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
 {
     const pcmk_resource_t *instance1 = (const pcmk_resource_t *) a;
@@ -329,7 +329,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
     }
     pcmk__assert((div1 != NULL) && (div2 != NULL));
 
-    return (gint) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
+    return (int) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
 }
 
 /*!
@@ -357,7 +357,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
  *         a positive number if \p b should be assigned first,
  *         or 0 if assignment order doesn't matter
  */
-gint
+int
 pcmk__cmp_instance(gconstpointer a, gconstpointer b)
 {
     int rc = 0;

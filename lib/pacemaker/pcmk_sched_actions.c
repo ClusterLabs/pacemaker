@@ -1345,7 +1345,7 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 }
 
 /* lowest to highest */
-static gint
+static int
 sort_action_id(gconstpointer a, gconstpointer b)
 {
     const pcmk__related_action_t *action_wrapper2 = a;

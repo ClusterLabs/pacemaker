@@ -796,7 +796,7 @@ stonith__history_free(stonith_history_t *head)
     }
 }
 
-static gint
+static int
 stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
 {
     int rc = 0;

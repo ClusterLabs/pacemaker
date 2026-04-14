@@ -129,7 +129,7 @@ static struct {
     enum cibadmin_section_type section_type;
     char *cib_section;
     char *validate_with;
-    gint timeout_sec;
+    int timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
     gchar *cib_user;
     gchar *input_file;

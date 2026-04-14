@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -146,7 +146,7 @@ stonith_fence_history_cleanup(const char *target,
  * \return Standard comparison result (a negative integer if \p a is lesser,
  *         0 if the values are equal, and a positive integer if \p a is greater)
  */
-static gint
+static int
 cmp_op_by_completion(gconstpointer a, gconstpointer b)
 {
     const remote_fencing_op_t *op1 = a;

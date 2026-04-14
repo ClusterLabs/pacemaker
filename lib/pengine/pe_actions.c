@@ -1699,7 +1699,7 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
     CRM_CHECK(FALSE, sort_return(0, "default"));
 }
 
-gint
+int
 sort_op_by_callid(gconstpointer a, gconstpointer b)
 {
     return pe__is_newer_op((const xmlNode *) a, (const xmlNode *) b);

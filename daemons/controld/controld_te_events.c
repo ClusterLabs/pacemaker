@@ -62,7 +62,7 @@ controld_destroy_outside_events_table(void)
  *         event was not already in the set, or \p pcmk_rc_already otherwise.
  */
 static int
-record_outside_event(gint action_num)
+record_outside_event(int action_num)
 {
     if (outside_events == NULL) {
         outside_events = g_hash_table_new(NULL, NULL);

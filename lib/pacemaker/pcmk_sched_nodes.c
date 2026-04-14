@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -207,7 +207,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
  * \return -1 if \p a is preferred, +1 if \p b is preferred, or 0 if they are
  *         equally preferred
  */
-static gint
+static int
 compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
 {
     const pcmk_node_t *node1 = (const pcmk_node_t *) a;

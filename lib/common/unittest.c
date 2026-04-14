@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -31,7 +31,7 @@ pcmk__assert_validates(xmlNode *xml)
     char *cmd = NULL;
     gchar *out = NULL;
     gchar *err = NULL;
-    gint status;
+    int status;
     GError *gerr = NULL;
     char *xmllint_input = pcmk__assert_asprintf("%s/test-xmllint.XXXXXX",
                                                 pcmk__get_tmpdir());

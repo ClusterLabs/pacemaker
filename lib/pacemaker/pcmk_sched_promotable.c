@@ -255,7 +255,7 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
  *         a positive number if \p b has higher promotion priority,
  *         or 0 if promotion priorities are equal
  */
-static gint
+static int
 cmp_promotable_instance(gconstpointer a, gconstpointer b)
 {
     const pcmk_resource_t *rsc1 = (const pcmk_resource_t *) a;

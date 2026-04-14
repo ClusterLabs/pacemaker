@@ -195,11 +195,11 @@ typedef struct {
     guint query_timer;
     /*! This is the default timeout to use for each fencing device if no
      * custom timeout is received in the query. */
-    gint base_timeout;
+    int base_timeout;
     /*! This is the calculated total timeout an operation can take before
      * expiring. This is calculated by adding together all the timeout
      * values associated with the devices this fencing operation may call */
-    gint total_timeout;
+    int total_timeout;
 
     /*!
      * Fencing delay (in seconds) requested by API client (used by controller to

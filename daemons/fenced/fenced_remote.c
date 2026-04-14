@@ -88,7 +88,7 @@ static void report_timeout_period(remote_fencing_op_t * op, int op_timeout);
 static int get_op_total_timeout(const remote_fencing_op_t *op,
                                 const peer_device_info_t *chosen_peer);
 
-static gint
+static int
 sort_strings(gconstpointer a, gconstpointer b)
 {
     return strcmp(a, b);
@@ -2109,7 +2109,7 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
  *         comes before the second, 0 if they are equal, or a positive integer
  *         if the first value comes after the second."
  */
-static gint
+static int
 sort_peers(gconstpointer a, gconstpointer b)
 {
     const peer_device_info_t *peer_a = a;

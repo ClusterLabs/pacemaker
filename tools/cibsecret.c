@@ -113,7 +113,7 @@ run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
     GError *error = NULL;
     gchar *sout = NULL;
     gchar *serr = NULL;
-    gint status;
+    int status;
 
     /* A failure here is a failure starting the program (for example, it doesn't
      * exist on the $PATH), not that it ran but exited with an error code.

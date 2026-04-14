@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1061,10 +1061,10 @@ G_GNUC_INTERNAL
 void pcmk__sort_resources(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gint pcmk__cmp_instance(gconstpointer a, gconstpointer b);
+int pcmk__cmp_instance(gconstpointer a, gconstpointer b);
 
 G_GNUC_INTERNAL
-gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
+int pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
 
 
 // Functions related to probes (pcmk_sched_probes.c)
