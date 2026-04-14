@@ -9,13 +9,34 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
+#include <limits.h>                     // INT_MAX, UINT_MAX
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // free
+#include <string.h>                     // strdup, strstr
+#include <syslog.h>                     // LOG_WARNING
+#include <time.h>                       // time_t
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
-#include "pe_status_private.h"
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode, xmlAttrPtr
+#include <qb/qbdefs.h>                  // QB_MAX, QB_MIN
+
+#include <crm/common/actions.h>         // PCMK_ACTION_*, etc.
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps, etc.
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT, do_crm_log
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*, etc.
+#include <crm/common/probes.h>          // pcmk_is_probe
+#include <crm/common/results.h>         // pcmk_rc_ok
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/internal.h>       // pe__*, etc.
+
+#include "pe_status_private.h"          // pe__compare_fencing_digest
 
 static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
                              guint interval_ms);
