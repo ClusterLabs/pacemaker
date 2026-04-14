@@ -9,22 +9,40 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#include <errno.h>                      // EAGAIN
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL, size_t
+#include <stdint.h>                     // uint8_t, uint64_t
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strcmp, strchr, memcpy, strdup, etc.
+#include <syslog.h>                     // LOG_DEBUG, LOG_ERR, LOG_NOTICE
+#include <time.h>                       // time_t
 
-#include <glib.h>
+#include <glib.h>                       // g_*
 #include <libxml/tree.h>                // xmlNode
-#include <libxml/xpath.h>               // xmlXPathObject, etc.
+#include <libxml/xpath.h>               // xmlXPathObject, xmlXPathFreeObject
+#include <qb/qblog.h>                   // LOG_TRACE, QB_XS
 
-#include <crm/crm.h>
-#include <crm/services.h>
-#include <crm/common/xml.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/agents.h>          // PCMK_FENCING_PROVIDES
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT, do_crm_log
+#include <crm/common/nodes.h>           // PCMK_NODE_ATTR_*
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/probes.h>          // pcmk_is_probe, pcmk_xe_is_probe, etc.
+#include <crm/common/resources.h>       // pcmk_rsc_match_clone_only
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*, etc.
+#include <crm/common/roles.h>           // pcmk_role_*, rsc_role_e
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // crm_system_name, CRMD_*
+#include <crm/pengine/complex.h>        // uber_parent
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // pe_find_*, etc.
 
-#include <crm/common/util.h>
-#include <crm/pengine/internal.h>
-#include <pe_status_private.h>
+#include "pe_status_private.h"
 
 // A (parsed) resource action history entry
 struct action_history {
