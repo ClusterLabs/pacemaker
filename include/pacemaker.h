@@ -463,7 +463,7 @@ int pcmk_list_primitive_meta(xmlNode **xml, bool all);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
+int pcmk_ticket_constraints(xmlNode **xml, const char *ticket_id);
 
 
 /*!
@@ -476,7 +476,7 @@ int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
+int pcmk_ticket_delete(xmlNode **xml, const char *ticket_id, bool force);
 
 /*!
  * \brief Return the value of a ticket's attribute
@@ -489,7 +489,7 @@ int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+int pcmk_ticket_get_attr(xmlNode **xml, const char *ticket_id,
                          const char *attr_name, const char *attr_default);
 
 /*!
@@ -501,7 +501,7 @@ int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
+int pcmk_ticket_info(xmlNode **xml, const char *ticket_id);
 
 /*!
  * \brief Remove the given attribute(s) from a ticket
@@ -515,8 +515,8 @@ int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete,
-                            bool force);
+int pcmk_ticket_remove_attr(xmlNode **xml, const char *ticket_id,
+                            GList *attr_delete, bool force);
 
 /*!
  * \brief Set the given attribute(s) on a ticket
@@ -535,8 +535,8 @@ int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_
  * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
  *       ticket will be created with the given attributes.
  */
-int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
-                         bool force);
+int pcmk_ticket_set_attr(xmlNode **xml, const char *ticket_id,
+                         GHashTable *attr_set, bool force);
 
 /*!
  * \brief Return a ticket's state XML
@@ -550,7 +550,7 @@ int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *att
  * \note If \p ticket_id is not \c NULL and more than one ticket exists with
  *       that ID, this function returns \c pcmk_rc_duplicate_id.
  */
-int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
+int pcmk_ticket_state(xmlNode **xml, const char *ticket_id);
 
 /*!
  * \brief Ask the cluster to perform fencing
