@@ -295,7 +295,7 @@ int pcmk_list_nodes(xmlNode **xml, const char *types);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_status(xmlNodePtr *xml);
+int pcmk_status(xmlNode **xml);
 
 /*!
  * \brief Check whether each rule in a list is in effect

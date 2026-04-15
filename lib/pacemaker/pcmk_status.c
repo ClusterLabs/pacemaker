@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,17 +9,29 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <errno.h>                      // EINVAL, ENOTCONN
+#include <stdbool.h>                    // false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <time.h>                       // time, time_t
 
-#include <crm/cib/internal.h>
-#include <crm/common/output.h>
-#include <crm/common/results.h>
-#include <crm/fencing/internal.h>
-#include <crm/pengine/internal.h>
-#include <crm/stonith-ng.h>         // stonith_t
-#include <pacemaker.h>
-#include <pacemaker-internal.h>
+#include <glib.h>                       // g_list_free_full, GList
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/cib.h>                    // cib_*
+#include <crm/cib/internal.h>           // cib__*
+#include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_state
+#include <crm/common/output.h>          // pcmk_section_*, pcmk_show_*
+#include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc2exitc
+#include <crm/common/scheduler.h>       // pcmk_new_scheduler, pcmk_scheduler_t
+#include <crm/crm.h>                    // crm_system_name
+#include <crm/fencing/internal.h>       // stonith__*
+#include <crm/pengine/internal.h>       // pe__*
+#include <crm/pengine/status.h>         // cluster_status
+#include <crm/stonith-ng.h>             // stonith_history_t, stonith_t
+#include <pacemaker.h>                  // pcmk__status
+#include <pacemaker-internal.h>         // pcmk__fence_history, etc.
 
 static stonith_t *
 fencing_connect(void)
@@ -134,7 +146,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
 }
 
 int
-pcmk_status(xmlNodePtr *xml)
+pcmk_status(xmlNode **xml)
 {
     cib_t *cib = NULL;
     pcmk__output_t *out = NULL;
