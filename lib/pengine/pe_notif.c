@@ -9,12 +9,22 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp
 
-#include <crm/common/xml.h>
+#include <glib.h>                       // g_*, etc.
 
-#include <crm/pengine/internal.h>
-#include <pacemaker-internal.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/nvpair.h>          // pcmk_nvpair_t, etc.
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/roles.h>           // pcmk_role_*
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/pengine/complex.h>        // uber_parent
+#include <crm/pengine/internal.h>       // pe__*, etc.
 
 #include "pe_status_private.h"
 
