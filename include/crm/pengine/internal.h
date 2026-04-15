@@ -10,13 +10,15 @@
 #ifndef PCMK__CRM_PENGINE_INTERNAL__H
 #define PCMK__CRM_PENGINE_INTERNAL__H
 
-#include <stdbool.h>
+#include <stdbool.h>                        // bool, false
 #include <stdint.h>                         // uint32_t
-#include <string.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/status.h>
+#include <string.h>                         // strncmp
+
+#include <libxml/tree.h>                    // xmlNode
+
+#include <crm/common/internal.h>            // pcmk__clone_flags, etc.
+#include <crm/common/scheduler.h>           // pcmk_scheduler_t, etc.
 #include <crm/pengine/remote_internal.h>
-#include <crm/common/internal.h>
 
 #ifdef __cplusplus
 extern "C" {
