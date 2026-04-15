@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2023 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,15 +8,7 @@
  */
 
 #ifndef PCMK__CRM_PENGINE_PE_TYPES__H
-#  define PCMK__CRM_PENGINE_PE_TYPES__H
-
-
-#  include <stdbool.h>              // bool
-#  include <sys/types.h>            // time_t
-#  include <libxml/tree.h>          // xmlNode
-#  include <glib.h>                 // gboolean, guint, GList, GHashTable
-#  include <crm/common/iso8601.h>
-#  include <crm/common/scheduler.h>
+#define PCMK__CRM_PENGINE_PE_TYPES__H
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,7 +25,6 @@ extern "C" {
 #endif
 
 #if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-#include <crm/pengine/common.h>
 #include <crm/pengine/pe_types_compat.h>
 #endif
 

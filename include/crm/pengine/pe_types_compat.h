@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <stdint.h>                // UINT64_C
 #include <crm/common/scheduler.h>
+#include <crm/pengine/common.h>
 
 #ifdef __cplusplus
 extern "C" {
