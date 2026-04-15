@@ -2677,7 +2677,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
             continue;
         }
 
-        pcmk__xe_get_guint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_uint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
         if (interval_ms == 0) {
             pcmk__rsc_trace(rsc, "Skipping %s on %s: non-recurring",
                             id, pcmk__node_name(node));
@@ -4046,8 +4046,8 @@ remap_operation(struct action_history *history,
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
             {
                 unsigned int interval_ms = 0;
-                pcmk__xe_get_guint(history->xml, PCMK_META_INTERVAL,
-                                   &interval_ms);
+                pcmk__xe_get_uint(history->xml, PCMK_META_INTERVAL,
+                                  &interval_ms);
 
                 if (interval_ms == 0) {
                     if (!expired) {
@@ -4664,8 +4664,8 @@ failure_is_newer(const struct action_history *history,
         return false; // last_failure is for different action
     }
 
-    if ((pcmk__xe_get_guint(last_failure, PCMK_META_INTERVAL,
-                            &failure_interval_ms) != pcmk_rc_ok)
+    if ((pcmk__xe_get_uint(last_failure, PCMK_META_INTERVAL,
+                           &failure_interval_ms) != pcmk_rc_ok)
         || (history->interval_ms != failure_interval_ms)) {
         return false; // last_failure is for action with different interval
     }
@@ -4785,7 +4785,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                          history.id, rsc->id, pcmk__node_name(node));
         return;
     }
-    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &(history.interval_ms));
+    pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &(history.interval_ms));
     if (!can_affect_state(&history)) {
         pcmk__rsc_trace(rsc,
                         "Ignoring resource history entry %s for %s on %s "

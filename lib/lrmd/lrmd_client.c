@@ -314,7 +314,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         int queue_time = 0;
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
-        pcmk__xe_get_guint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event.interval_ms);
+        pcmk__xe_get_uint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event.interval_ms);
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
                          &event.start_delay);
 

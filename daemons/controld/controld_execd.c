@@ -1257,7 +1257,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
     CRM_CHECK(op_task != NULL, return FALSE);
 
     meta_key = crm_meta_name(PCMK_META_INTERVAL);
-    if (pcmk__xe_get_guint(params, meta_key, &interval_ms) != pcmk_rc_ok) {
+    if (pcmk__xe_get_uint(params, meta_key, &interval_ms) != pcmk_rc_ok) {
         free(meta_key);
         return FALSE;
     }

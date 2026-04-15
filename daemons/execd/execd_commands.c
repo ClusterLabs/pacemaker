@@ -320,7 +320,7 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
     cmd->client_id = pcmk__str_copy(client->id);
 
     pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
-    pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &cmd->interval_ms);
+    pcmk__xe_get_uint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &cmd->interval_ms);
     pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
     pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
@@ -1807,7 +1807,7 @@ execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request)
     const char *action = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     unsigned int interval_ms = 0;
 
-    pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
+    pcmk__xe_get_uint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
         return EINVAL;

@@ -56,7 +56,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
 
     // Get name and interval from op history entry
     lrm_op_task = pcmk__xe_get(lrm_op_xml, PCMK_XA_OPERATION);
-    pcmk__xe_get_guint(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
+    pcmk__xe_get_uint(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
         || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {

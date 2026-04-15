@@ -1150,7 +1150,7 @@ pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__xe_get_guint(const xmlNode *xml, const char *attr, unsigned int *dest)
+pcmk__xe_get_uint(const xmlNode *xml, const char *attr, unsigned int *dest)
 {
     long long value_ll = 0;
     int rc = pcmk_rc_ok;

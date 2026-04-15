@@ -622,9 +622,9 @@ handle_failcount_op(xmlNode * stored_msg)
         if (xml_attrs) {
             op = pcmk__xe_get(xml_attrs,
                               CRM_META "_" PCMK__META_CLEAR_FAILURE_OP);
-            pcmk__xe_get_guint(xml_attrs,
-                               CRM_META "_" PCMK__META_CLEAR_FAILURE_INTERVAL,
-                               &interval_ms);
+            pcmk__xe_get_uint(xml_attrs,
+                              CRM_META "_" PCMK__META_CLEAR_FAILURE_INTERVAL,
+                              &interval_ms);
         }
     }
     uname = pcmk__xe_get(xml_op, PCMK__META_ON_NODE);
