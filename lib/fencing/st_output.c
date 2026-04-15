@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,17 +8,25 @@
  */
 
 #include <crm_internal.h>
-#include <stdarg.h>
-#include <stdbool.h>
-#include <stdint.h>
 
-#include <crm/stonith-ng.h>
-#include <crm/common/iso8601.h>
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
-#include <crm/common/output.h>
-#include <crm/fencing/internal.h>
-#include <crm/pengine/internal.h>
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <time.h>                       // ctime, time_t, timespec
+
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/actions.h>         // PCMK_ACTION_{OFF,ON}
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/options.h>         // PCMK_VALUE_*
+#include <crm/common/output.h>          // pcmk_section_*, pcmk_show_*
+#include <crm/common/results.h>         // crm_exit_t, pcmk_ok, pcmk_rc_*
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*
+#include <crm/fencing/internal.h>       // stonith__*
+#include <crm/stonith-ng.h>             // st_*, stonith_history_t
 
 /*!
  * \internal
@@ -478,14 +486,12 @@ stonith_event_xml(pcmk__output_t *out, va_list args)
     const char *succeeded G_GNUC_UNUSED = va_arg(args, const char *);
     uint32_t show_opts G_GNUC_UNUSED = va_arg(args, uint32_t);
 
-    xmlNodePtr node = NULL;
-
-    node = pcmk__output_create_xml_node(out, PCMK_XE_FENCE_EVENT,
-                                        PCMK_XA_ACTION, event->action,
-                                        PCMK_XA_TARGET, event->target,
-                                        PCMK_XA_CLIENT, event->client,
-                                        PCMK_XA_ORIGIN, event->origin,
-                                        NULL);
+    xmlNode *node = pcmk__output_create_xml_node(out, PCMK_XE_FENCE_EVENT,
+                                                 PCMK_XA_ACTION, event->action,
+                                                 PCMK_XA_TARGET, event->target,
+                                                 PCMK_XA_CLIENT, event->client,
+                                                 PCMK_XA_ORIGIN, event->origin,
+                                                 NULL);
 
     switch (event->state) {
         case st_failed:
@@ -586,10 +592,10 @@ validate_agent_xml(pcmk__output_t *out, va_list args) {
     int rc = va_arg(args, int);
 
     const char *valid = pcmk__btoa(rc == pcmk_ok);
-    xmlNodePtr node = pcmk__output_create_xml_node(out, PCMK_XE_VALIDATE,
-                                                   PCMK_XA_AGENT, agent,
-                                                   PCMK_XA_VALID, valid,
-                                                   NULL);
+    xmlNode *node = pcmk__output_create_xml_node(out, PCMK_XE_VALIDATE,
+                                                 PCMK_XA_AGENT, agent,
+                                                 PCMK_XA_VALID, valid,
+                                                 NULL);
 
     if (device != NULL) {
         pcmk__xe_set(node, PCMK_XA_DEVICE, device);
