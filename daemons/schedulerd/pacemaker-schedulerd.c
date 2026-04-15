@@ -12,11 +12,13 @@
 #include <signal.h>                     // SIGTERM
 #include <stdbool.h>                    // true
 #include <stddef.h>                     // NULL
+#include <syslog.h>                     // LOG_INFO
 
-#include <glib.h>                       // g_set_error, FALSE, G_OPTION_*
-#include <qb/qblog.h>                   // LOG_INFO, LOG_TRACE
+#include <glib.h>                       // g_*, etc.
+#include <qb/qblog.h>                   // LOG_TRACE
 
 #include <crm_config.h>                 // PCMK_SCHEDULER_INPUT_DIR
+#include <crm/common/logging.h>         // crm_log_init, crm_log_preinit
 #include <crm/common/mainloop.h>        // mainloop_add_signal
 #include <crm/common/results.h>         // crm_exit_t, CRM_EX_*, pcmk_rc_*
 #include <crm/pengine/internal.h>       // pe__register_messages
