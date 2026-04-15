@@ -9,12 +9,26 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
+#include <limits.h>                     // UINT_MAX
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdio.h>                      // printf
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strcmp, strdup, strstr
 
-#include <crm/crm.h>
+#include <glib.h>                       // g_*, etc.
+
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps, etc.
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/nvpair.h>          // hash2field, hash2metafield
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_REMOTE_RA_ADDR
+#include <crm/common/results.h>         // pcmk_rc_ok
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
 #include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
+#include <crm/crm.h>                    // CRM_ATTR_*, CRM_FEATURE_SET, CRM_META
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/internal.h>       // pe__*, etc.
+
 #include "pe_status_private.h"
 
 /*!
