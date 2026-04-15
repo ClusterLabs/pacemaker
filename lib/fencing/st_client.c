@@ -795,7 +795,7 @@ stonith__history_free(stonith_history_t *head)
 }
 
 static int
-stonithlib_GCompareFunc(gconstpointer a, gconstpointer b)
+stonithlib_GCompareFunc(const void *a, const void *b)
 {
     int rc = 0;
     const stonith_notify_client_t *a_client = a;

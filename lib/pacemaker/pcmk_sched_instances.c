@@ -309,7 +309,7 @@ node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
  *         or 0 if their instance numbers are the same
  */
 int
-pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
+pcmk__cmp_instance_number(const void *a, const void *b)
 {
     const pcmk_resource_t *instance1 = (const pcmk_resource_t *) a;
     const pcmk_resource_t *instance2 = (const pcmk_resource_t *) b;
@@ -358,7 +358,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
  *         or 0 if assignment order doesn't matter
  */
 int
-pcmk__cmp_instance(gconstpointer a, gconstpointer b)
+pcmk__cmp_instance(const void *a, const void *b)
 {
     int rc = 0;
     pcmk_node_t *node1 = NULL;

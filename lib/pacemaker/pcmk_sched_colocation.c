@@ -159,7 +159,7 @@ cmp_colocation_priority(const pcmk__colocation_t *colocation1,
  *         or 0 if order doesn't matter
  */
 static int
-cmp_dependent_priority(gconstpointer a, gconstpointer b)
+cmp_dependent_priority(const void *a, const void *b)
 {
     return cmp_colocation_priority(a, b, true);
 }
@@ -185,7 +185,7 @@ cmp_dependent_priority(gconstpointer a, gconstpointer b)
  *         or 0 if order doesn't matter
  */
 static int
-cmp_primary_priority(gconstpointer a, gconstpointer b)
+cmp_primary_priority(const void *a, const void *b)
 {
     return cmp_colocation_priority(a, b, false);
 }

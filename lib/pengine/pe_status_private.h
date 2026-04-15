@@ -72,7 +72,7 @@ void pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
                     pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-int pe__cmp_rsc_priority(gconstpointer a, gconstpointer b);
+int pe__cmp_rsc_priority(const void *a, const void *b);
 
 G_GNUC_INTERNAL
 gboolean pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,

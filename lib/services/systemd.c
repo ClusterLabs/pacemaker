@@ -601,7 +601,7 @@ invoke_unit_by_name(const char *arg_name, svc_action_t *op, char **path)
  *       NULL is considered less than non-NULL.
  */
 static int
-sort_str(gconstpointer a, gconstpointer b)
+sort_str(const void *a, const void *b)
 {
     if (!a && !b) {
         return 0;

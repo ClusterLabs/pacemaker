@@ -208,7 +208,7 @@ pcmk__copy_node_list(const GList *list, bool reset)
  *         equally preferred
  */
 static int
-compare_nodes(gconstpointer a, gconstpointer b, void *data)
+compare_nodes(const void *a, const void *b, void *data)
 {
     const pcmk_node_t *node1 = (const pcmk_node_t *) a;
     const pcmk_node_t *node2 = (const pcmk_node_t *) b;

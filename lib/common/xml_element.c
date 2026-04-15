@@ -287,7 +287,7 @@ pcmk__xe_copy_attrs(xmlNode *target, const xmlNode *src, uint32_t flags)
  *                   lexicographically
  */
 static int
-compare_xml_attr(gconstpointer a, gconstpointer b)
+compare_xml_attr(const void *a, const void *b)
 {
     const xmlAttr *attr_a = a;
     const xmlAttr *attr_b = b;

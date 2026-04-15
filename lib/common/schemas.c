@@ -483,7 +483,7 @@ done:
 }
 
 static int
-schema_sort_GCompareFunc(gconstpointer a, gconstpointer b)
+schema_sort_GCompareFunc(const void *a, const void *b)
 {
     const pcmk__schema_t *schema_a = a;
     const pcmk__schema_t *schema_b = b;

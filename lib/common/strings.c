@@ -422,7 +422,7 @@ done:
  * in the transition graph.
  */
 static unsigned int
-pcmk__str_hash(gconstpointer v)
+pcmk__str_hash(const void *v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -472,13 +472,13 @@ pcmk__insert_dup(GHashTable *table, const char *name, const char *value)
 
 /* used with hash tables where case does not matter */
 static gboolean
-pcmk__strcase_equal(gconstpointer a, gconstpointer b)
+pcmk__strcase_equal(const void *a, const void *b)
 {
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
 static unsigned int
-pcmk__strcase_hash(gconstpointer v)
+pcmk__strcase_hash(const void *v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -944,7 +944,7 @@ struct str_in_list_data {
  *         (according to \p b->flags)
  */
 static int
-cmp_str_in_list(gconstpointer a, gconstpointer b)
+cmp_str_in_list(const void *a, const void *b)
 {
     const char *element = a;
     const struct str_in_list_data *data = b;

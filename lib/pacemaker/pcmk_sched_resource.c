@@ -676,9 +676,9 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
  *         or +1 if \p a should be assigned after \b
  */
 static int
-cmp_resources(gconstpointer a, gconstpointer b, void *data)
+cmp_resources(const void *a, const void *b, void *data)
 {
-    /* GLib insists that this function require gconstpointer arguments, but we
+    /* GLib insists that this function require const void * arguments, but we
      * make a small, temporary change to each argument (setting the
      * pe_rsc_merging flag) during comparison
      */

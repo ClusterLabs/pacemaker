@@ -28,7 +28,7 @@
 static GHashTable *cib_op_callback_table = NULL;
 
 static int
-ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
+ciblib_GCompareFunc(const void *a, const void *b)
 {
     int rc = 0;
     const cib_notify_client_t *a_client = a;

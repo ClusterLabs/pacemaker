@@ -60,7 +60,7 @@ pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
                      PCMK_NODE_ATTR_STANDBY, "#", NULL }
 
 static int
-compare_attribute(gconstpointer a, gconstpointer b)
+compare_attribute(const void *a, const void *b)
 {
     int rc;
 

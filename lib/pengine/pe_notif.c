@@ -47,7 +47,7 @@ typedef struct {
  * \return -1 if \p a sorts before \p b, 0 if they are equal, otherwise 1
  */
 static int
-compare_notify_entries(gconstpointer a, gconstpointer b)
+compare_notify_entries(const void *a, const void *b)
 {
     int tmp;
     const notify_entry_t *entry_a = a;

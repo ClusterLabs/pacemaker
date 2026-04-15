@@ -145,7 +145,7 @@ stonith_fence_history_cleanup(const char *target,
  *         0 if the values are equal, and a positive integer if \p a is greater)
  */
 static int
-cmp_op_by_completion(gconstpointer a, gconstpointer b)
+cmp_op_by_completion(const void *a, const void *b)
 {
     const remote_fencing_op_t *op1 = a;
     const remote_fencing_op_t *op2 = b;

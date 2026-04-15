@@ -1061,10 +1061,10 @@ G_GNUC_INTERNAL
 void pcmk__sort_resources(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-int pcmk__cmp_instance(gconstpointer a, gconstpointer b);
+int pcmk__cmp_instance(const void *a, const void *b);
 
 G_GNUC_INTERNAL
-int pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
+int pcmk__cmp_instance_number(const void *a, const void *b);
 
 
 // Functions related to probes (pcmk_sched_probes.c)

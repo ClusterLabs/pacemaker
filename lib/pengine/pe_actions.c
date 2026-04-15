@@ -1721,7 +1721,7 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
 }
 
 int
-sort_op_by_callid(gconstpointer a, gconstpointer b)
+sort_op_by_callid(const void *a, const void *b)
 {
     return pe__is_newer_op((const xmlNode *) a, (const xmlNode *) b);
 }

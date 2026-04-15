@@ -332,7 +332,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 };
 
 static int
-sort_node(gconstpointer a, gconstpointer b)
+sort_node(const void *a, const void *b)
 {
     const pcmk_controld_api_node_t *node_a = a;
     const pcmk_controld_api_node_t *node_b = b;

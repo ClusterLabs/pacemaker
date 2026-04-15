@@ -196,7 +196,7 @@ pe__node_list2table(const GList *list)
  * \retval  1 \c a comes after \c b (or \c b is \c NULL and \c a is not)
  */
 int
-pe__cmp_node_name(gconstpointer a, gconstpointer b)
+pe__cmp_node_name(const void *a, const void *b)
 {
     const pcmk_node_t *node1 = (const pcmk_node_t *) a;
     const pcmk_node_t *node2 = (const pcmk_node_t *) b;
@@ -346,7 +346,7 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
  * \retval  1 a's priority < b's priority (or \c a is \c NULL and \c b is not)
  */
 int
-pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
+pe__cmp_rsc_priority(const void *a, const void *b)
 {
     const pcmk_resource_t *resource1 = (const pcmk_resource_t *)a;
     const pcmk_resource_t *resource2 = (const pcmk_resource_t *)b;

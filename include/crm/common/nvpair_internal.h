@@ -44,7 +44,7 @@ typedef struct {
     crm_time_t *next_change;
 } pcmk__nvpair_unpack_t;
 
-int pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, void *user_data);
+int pcmk__cmp_nvpair_blocks(const void *a, const void *b, void *user_data);
 
 void pcmk__unpack_nvpair_block(void *data, void *user_data);
 

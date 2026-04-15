@@ -589,7 +589,7 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
  * \note This is suitable for use as a GList sorting function.
  */
 int
-pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, void *user_data)
+pcmk__cmp_nvpair_blocks(const void *a, const void *b, void *user_data)
 {
     const xmlNode *pair_a = a;
     const xmlNode *pair_b = b;
@@ -667,7 +667,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, void *user_data)
 #include <crm/common/nvpair_compat.h>
 
 static int
-pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
+pcmk__compare_nvpair(const void *a, const void *b)
 {
     int rc = 0;
     const pcmk_nvpair_t *pair_a = a;
