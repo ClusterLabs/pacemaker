@@ -9,15 +9,33 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                // bool, true, false
-#include <stdint.h>                 // uint32_t
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdio.h>                      // sscanf
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp, strdup, strlen
 
-#include <crm/common/output.h>
-#include <crm/pengine/status.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/output.h>          // pcmk_show_*
+#include <crm/common/resources.h>       // pcmk_rsc_match_*
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_*, rsc_role_e, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>
-#include <crm/common/xml.h>
-#include <pe_status_private.h>
+#include <crm/pengine/status.h>
+
+#include "pe_status_private.h"          // pe__force_anon, etc.
 
 /*!
  * \internal
