@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,14 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>                   // g_str_has_prefix()
+#include <stddef.h>                     // NULL
 
-#include <crm/pengine/status.h>
+#include <glib.h>                       // g_*, etc.
+
+#include <crm/common/options.h>         // PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY, etc.
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
