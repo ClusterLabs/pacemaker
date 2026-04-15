@@ -9,14 +9,32 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t, uint64_t
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strchr, strcmp, strdup
+#include <time.h>                       // time_t
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // LOG_TRACE, qb_log_*
 
-#include "pe_status_private.h"
+#include <crm/common/actions.h>         // parse_op_key, PCMK_ACTION_ON
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/nvpair.h>          // pcmk_unpack_nvpair_blocks
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*, etc.
+#include <crm/common/probes.h>          // pcmk_xe_mask_probe_failure
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // pe_find_*, rsc_printable_id
+
+#include "pe_status_private.h"          // pe__cmp_rsc_priority
 
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 
