@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -7,17 +7,30 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <sys/types.h>
-#include <regex.h>
+#include <errno.h>                      // EINVAL
+#include <regex.h>                      // regex_t, REG_*, etc.
+#include <stdbool.h>                    // bool
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <string.h>                    // strdup
+#include <time.h>                       // time_t
 
-#include <glib.h>
-#include <libxml/xpath.h>           // xmlXPathObject, etc.
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xpath.h>               // xmlXPathObject, xmlXPathFreeObject
+#include <qb/qbdefs.h>                  // QB_MAX
+#include <qb/qblog.h>                   // QB_XS
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/common/util.h>
-#include <crm/pengine/internal.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_CLEAR_FAILCOUNT
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // pcmk_parse_score, pcmk_readable_score
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
 
 static gboolean
 is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
