@@ -9,17 +9,25 @@
 
 #include <crm_internal.h>
 
+#include <stddef.h>                     // NULL
 #include <stdint.h>                     // uint32_t
-#include <sys/param.h>
+#include <string.h>                     // memset
 
-#include <glib.h>
+#include <glib.h>                       // g_*
 #include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_LOG_ASSERT
+#include <crm/common/resources.h>       // pcmk_rsc_match_history
+#include <crm/common/results.h>         // pcmk_rc_ok
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // CRM_FEATURE_SET
+#include <crm/pengine/internal.h>       // pe_create_node
+#include <crm/pengine/status.h>         // pe_find_*
 
-#include <crm/pengine/internal.h>
-#include <pe_status_private.h>
+#include "pe_status_private.h"
 
 #define XPATH_DEPRECATED_RULES                          \
     "//" PCMK_XE_OP_DEFAULTS "//" PCMK_XE_EXPRESSION    \
