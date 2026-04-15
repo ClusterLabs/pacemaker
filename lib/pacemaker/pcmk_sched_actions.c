@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1824,6 +1824,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 
     sorted_op_list = rsc_history_as_list(rsc_entry, &start_index, &stop_index);
     if (start_index < stop_index) {
+        g_list_free(sorted_op_list);
         return; // Resource is stopped
     }
 
