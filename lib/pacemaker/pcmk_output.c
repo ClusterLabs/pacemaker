@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,19 +9,38 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <inttypes.h>                   // PRIu32
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdio.h>                      // snprintf
+#include <stdlib.h>                     // free
+#include <string.h>                     // strdup, strlen
+#include <time.h>                       // clock_t, CLOCKS_PER_SEC, time_t
 
-#include <crm/common/output.h>
-#include <crm/common/results.h>
-#include <crm/common/xml.h>
-#include <crm/stonith-ng.h>         // stonith_history_t
-#include <crm/fencing/internal.h>   // stonith__*
-#include <crm/pengine/internal.h>
-#include <libxml/tree.h>
-#include <pacemaker-internal.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlGetNodePath, xmlNode
+#include <libxml/xmlstring.h>           // xmlChar
+#include <qb/qbdefs.h>                  // QB_MAX
 
-#include <inttypes.h>
-#include <stdint.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_*
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/options.h>         // PCMK_VALUE_NONE, PCMK_VALUE_TRUE
+#include <crm/common/output.h>          // pcmk_section_*, pcmk_show_*
+#include <crm/common/results.h>         // crm_exit_*, pcmk_rc_*, etc.
+#include <crm/common/roles.h>           // pcmk_role_*, rsc_role_e
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // pcmk_readable_score
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // CRM_SYSTEM_MCP
+#include <crm/fencing/internal.h>       // stonith__*
+#include <crm/pengine/complex.h>        // uber_parent
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/stonith-ng.h>             // st_*, stonith_history_t
+#include <pacemaker-internal.h>         // pcmk__colocation_t, etc.
 
 static char *
 colocations_header(pcmk_resource_t *rsc, pcmk__colocation_t *cons,
@@ -1042,7 +1061,7 @@ add_digest_xml(xmlNode *parent, const char *type, const char *digest,
                xmlNode *digest_source)
 {
     if (digest != NULL) {
-        xmlNodePtr digest_xml = pcmk__xe_create(parent, PCMK_XE_DIGEST);
+        xmlNode *digest_xml = pcmk__xe_create(parent, PCMK_XE_DIGEST);
 
         pcmk__xe_set(digest_xml, PCMK_XA_TYPE, pcmk__s(type, "unspecified"));
         pcmk__xe_set(digest_xml, PCMK_XA_HASH, digest);
@@ -1422,7 +1441,7 @@ inject_cluster_action(pcmk__output_t *out, va_list args)
 {
     const char *node = va_arg(args, const char *);
     const char *task = va_arg(args, const char *);
-    xmlNodePtr rsc = va_arg(args, xmlNodePtr);
+    xmlNode *rsc = va_arg(args, xmlNode *);
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1445,9 +1464,9 @@ inject_cluster_action_xml(pcmk__output_t *out, va_list args)
 {
     const char *node = va_arg(args, const char *);
     const char *task = va_arg(args, const char *);
-    xmlNodePtr rsc = va_arg(args, xmlNodePtr);
+    xmlNode *rsc = va_arg(args, xmlNode *);
 
-    xmlNodePtr xml_node = NULL;
+    xmlNode *xml_node = NULL;
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1504,7 +1523,7 @@ inject_attr(pcmk__output_t *out, va_list args)
 {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
-    xmlNodePtr cib_node = va_arg(args, xmlNodePtr);
+    xmlNode *cib_node = va_arg(args, xmlNode *);
 
     xmlChar *node_path = NULL;
 
@@ -1527,7 +1546,7 @@ inject_attr_xml(pcmk__output_t *out, va_list args)
 {
     const char *name = va_arg(args, const char *);
     const char *value = va_arg(args, const char *);
-    xmlNodePtr cib_node = va_arg(args, xmlNodePtr);
+    xmlNode *cib_node = va_arg(args, xmlNode *);
 
     xmlChar *node_path = NULL;
 
@@ -1608,7 +1627,7 @@ inject_modify_config_xml(pcmk__output_t *out, va_list args)
     const char *quorum = va_arg(args, const char *);
     const char *watchdog = va_arg(args, const char *);
 
-    xmlNodePtr node = NULL;
+    xmlNode *node = NULL;
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1732,7 +1751,7 @@ inject_pseudo_action_xml(pcmk__output_t *out, va_list args)
     const char *node = va_arg(args, const char *);
     const char *task = va_arg(args, const char *);
 
-    xmlNodePtr xml_node = NULL;
+    xmlNode *xml_node = NULL;
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -1783,7 +1802,7 @@ inject_rsc_action_xml(pcmk__output_t *out, va_list args)
     const char *node = va_arg(args, const char *);
     guint interval_ms = va_arg(args, guint);
 
-    xmlNodePtr xml_node = NULL;
+    xmlNode *xml_node = NULL;
 
     if (out->is_quiet(out)) {
         return pcmk_rc_no_output;
@@ -2253,7 +2272,7 @@ attribute_xml(pcmk__output_t *out, va_list args)
     bool quiet G_GNUC_UNUSED = va_arg(args, int);
     bool legacy G_GNUC_UNUSED = va_arg(args, int);
 
-    xmlNodePtr node = NULL;
+    xmlNode *node = NULL;
 
     node = pcmk__output_create_xml_node(out, PCMK_XE_ATTRIBUTE,
                                         PCMK_XA_NAME, name,
