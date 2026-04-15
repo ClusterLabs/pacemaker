@@ -131,7 +131,7 @@ log_fsa_input(fsa_data_t *stored_msg)
 }
 
 static void
-log_fsa_data(gpointer data, gpointer user_data)
+log_fsa_data(void *data, void *user_data)
 {
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;

@@ -143,8 +143,7 @@ log_level_from_glib(GLogLevelFlags log_level)
  */
 static void
 handle_glib_message(const gchar *log_domain, GLogLevelFlags log_level,
-                    const gchar *message, gpointer user_data)
-
+                    const gchar *message, void *user_data)
 {
     uint8_t syslog_level = log_level_from_glib(log_level);
 

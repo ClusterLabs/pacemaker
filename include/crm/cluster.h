@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,6 @@
 
 #ifndef PCMK__CRM_CLUSTER__H
 #define PCMK__CRM_CLUSTER__H
-
-#include <glib.h>               // gpointer
 
 #if SUPPORT_COROSYNC
 #include <corosync/cpg.h>       // cpg_callbacks_t, etc.
@@ -37,7 +35,7 @@ struct pcmk__cluster {
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated Call pcmk_cluster_set_destroy_fn() to set this
-    void (*destroy) (gpointer);
+    void (*destroy)(void *);
 
 #if SUPPORT_COROSYNC
     // NOTE: sbd (as of at least 1.5.2) uses this
@@ -59,7 +57,7 @@ int pcmk_cluster_disconnect(pcmk_cluster_t *cluster);
 pcmk_cluster_t *pcmk_cluster_new(void);
 void pcmk_cluster_free(pcmk_cluster_t *cluster);
 
-int pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer));
+int pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(void *));
 #if SUPPORT_COROSYNC
 int pcmk_cpg_set_deliver_fn(pcmk_cluster_t *cluster, cpg_deliver_fn_t fn);
 int pcmk_cpg_set_confchg_fn(pcmk_cluster_t *cluster, cpg_confchg_fn_t fn);

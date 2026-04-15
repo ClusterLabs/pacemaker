@@ -16,7 +16,7 @@
 #include <stdint.h>                 // int32_t, uint16_t, UINT64_C
 #include <sys/types.h>              // ssize_t
 
-#include <glib.h>                   // gpointer, g_string_free
+#include <glib.h>                   // g_*, etc.
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
 
@@ -107,7 +107,7 @@ based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
 }
 
 static void
-cib_notify_send_one(gpointer key, gpointer value, gpointer user_data)
+cib_notify_send_one(void *key, void *value, void *user_data)
 {
     const char *type = NULL;
     int rc = pcmk_rc_ok;

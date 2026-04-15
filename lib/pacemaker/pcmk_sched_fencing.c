@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -473,7 +473,7 @@ pcmk__node_unfenced(const pcmk_node_t *node)
  * \param[in,out] user_data  Resource to order
  */
 void
-pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data)
+pcmk__order_restart_vs_unfence(void *data, void *user_data)
 {
     pcmk_node_t *node = (pcmk_node_t *) data;
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;

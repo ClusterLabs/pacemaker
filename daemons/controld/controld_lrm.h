@@ -40,7 +40,7 @@ typedef struct {
     GHashTable *stop_params;
 } rsc_history_t;
 
-void history_free(gpointer data);
+void history_free(void *data);
 
 enum active_op_e {
     active_op_remove    = (UINT32_C(1) << 0),

@@ -173,7 +173,8 @@ xml_init(pcmk__output_t *out) {
 }
 
 static void
-add_error_node(gpointer data, gpointer user_data) {
+add_error_node(void *data, void *user_data)
+{
     const char *str = (const char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
 
@@ -217,7 +218,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
         if (g_slist_length(priv->errors) > 0) {
             xmlNodePtr errors_node = pcmk__xe_create(node, PCMK_XE_ERRORS);
-            g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
+            g_slist_foreach(priv->errors, add_error_node, (void *) errors_node);
         }
 
         free(rc_as_str);

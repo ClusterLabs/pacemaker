@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -76,7 +76,7 @@ crmd_quorum_callback(unsigned long long seq, gboolean quorate)
 }
 
 static void
-crmd_cs_destroy(gpointer user_data)
+crmd_cs_destroy(void *user_data)
 {
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
         pcmk__crit("Lost connection to cluster layer, shutting down");

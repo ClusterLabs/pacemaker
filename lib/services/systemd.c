@@ -1352,7 +1352,7 @@ invoke_unit_by_path(svc_action_t *op, const char *unit)
 }
 
 static gboolean
-systemd_timeout_callback(gpointer p)
+systemd_timeout_callback(void *p)
 {
     svc_action_t * op = p;
 

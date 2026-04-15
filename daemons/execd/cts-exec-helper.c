@@ -26,7 +26,7 @@
 #define SUMMARY "cts-exec-helper - inject commands into the Pacemaker executor and watch for events"
 
 static int exec_call_id = 0;
-static gboolean start_test(gpointer user_data);
+static gboolean start_test(void *user_data);
 static void try_connect(void);
 
 static char *key = NULL;
@@ -55,13 +55,17 @@ static struct {
 } options;
 
 static gboolean
-interval_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+interval_cb(const gchar *option_name, const gchar *optarg, void *data,
+            GError **error)
+{
     return pcmk_parse_interval_spec(optarg,
                                     &options.interval_ms) == pcmk_rc_ok;
 }
 
 static gboolean
-notify_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+notify_cb(const gchar *option_name, const gchar *optarg, void *data,
+          GError **error)
+{
     if (pcmk__str_any_of(option_name, "--notify-orig", "-n", NULL)) {
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     } else if (pcmk__str_any_of(option_name, "--notify-changes", "-o", NULL)) {
@@ -72,7 +76,9 @@ notify_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError *
 }
 
 static gboolean
-param_key_val_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+param_key_val_cb(const gchar *option_name, const gchar *optarg, void *data,
+                 GError **error)
+{
     if (pcmk__str_any_of(option_name, "--param-key", "-k", NULL)) {
         pcmk__str_update(&key, optarg);
     } else if (pcmk__str_any_of(option_name, "--param-val", "-v", NULL)) {
@@ -213,7 +219,7 @@ read_events(lrmd_event_data_t * event)
 }
 
 static gboolean
-timeout_err(gpointer data)
+timeout_err(void *data)
 {
     print_result("LISTEN EVENT FAILURE - timeout occurred, never found");
     test_exit(CRM_EX_TIMEOUT);
@@ -263,7 +269,7 @@ try_connect(void)
 }
 
 static gboolean
-start_test(gpointer user_data)
+start_test(void *user_data)
 {
     int rc = 0;
 
@@ -487,16 +493,15 @@ generate_params(void)
     params = pe_rsc_params(rsc, NULL, scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-                                      (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &key,
+                                      (void **) &value)) {
             options.params = lrmd_key_value_add(options.params, key, value);
         }
     }
 
     // Add resource meta-attributes to options.params
     g_hash_table_iter_init(&iter, rsc->priv->meta);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-                                  (gpointer *) &value)) {
+    while (g_hash_table_iter_next(&iter, (void **) &key, (void **) &value)) {
         char *crm_name = crm_meta_name(key);
 
         options.params = lrmd_key_value_add(options.params, crm_name, value);

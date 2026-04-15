@@ -66,7 +66,7 @@ pcmk__new_nvpair(const char *name, const char *value)
  * \param[in,out] nvpair  Name/value pair to free
  */
 static void
-pcmk__free_nvpair(gpointer data)
+pcmk__free_nvpair(void *data)
 {
     if (data) {
         pcmk_nvpair_t *nvpair = data;
@@ -194,7 +194,7 @@ pcmk__format_nvpair(const char *name, const char *value, const char *units)
  * \param[in,out] user_data  XML node
  */
 void
-hash2smartfield(gpointer key, gpointer value, gpointer user_data)
+hash2smartfield(void *key, void *value, void *user_data)
 {
     /* @TODO Generate PCMK__XE_PARAM nodes for all keys that aren't valid XML
      * attribute names (not just those that start with digits), or possibly for
@@ -236,7 +236,7 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
  * \param[in,out] user_data  XML node
  */
 void
-hash2field(gpointer key, gpointer value, gpointer user_data)
+hash2field(void *key, void *value, void *user_data)
 {
     const char *name = key;
     const char *s_value = value;
@@ -264,7 +264,7 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
  * \param[in,out] user_data  XML node
  */
 void
-hash2metafield(gpointer key, gpointer value, gpointer user_data)
+hash2metafield(void *key, void *value, void *user_data)
 {
     char *crm_name = NULL;
 
@@ -444,7 +444,7 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
  * \note This is suitable for use as a GList iterator function
  */
 void
-pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
+pcmk__unpack_nvpair_block(void *data, void *user_data)
 {
     xmlNode *pair = data;
     pcmk__nvpair_unpack_t *unpack_data = user_data;
@@ -589,7 +589,7 @@ crm_meta_value(GHashTable *meta, const char *attr_name)
  * \note This is suitable for use as a GList sorting function.
  */
 int
-pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
+pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, void *user_data)
 {
     const xmlNode *pair_a = a;
     const xmlNode *pair_b = b;
@@ -707,7 +707,7 @@ pcmk_xml_attrs2nvpairs(const xmlNode *xml)
 }
 
 static void
-pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
+pcmk__nvpair_add_xml_attr(void *data, void *user_data)
 {
     pcmk_nvpair_t *pair = data;
     xmlNode *parent = user_data;
@@ -722,7 +722,7 @@ pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml)
 }
 
 void
-hash2nvpair(gpointer key, gpointer value, gpointer user_data)
+hash2nvpair(void *key, void *value, void *user_data)
 {
     const char *name = key;
     const char *s_value = value;

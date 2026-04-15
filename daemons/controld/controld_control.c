@@ -30,7 +30,7 @@ extern gboolean crm_connect_corosync(pcmk_cluster_t *cluster);
 #endif
 
 static void crm_shutdown(int nsig);
-static gboolean crm_read_options(gpointer user_data);
+static gboolean crm_read_options(void *user_data);
 
 // A_HA_CONNECT
 void
@@ -650,7 +650,7 @@ controld_trigger_config_as(const char *fn, int line)
 }
 
 gboolean
-crm_read_options(gpointer user_data)
+crm_read_options(void *user_data)
 {
     cib_t *cib_conn = controld_globals.cib_conn;
     int call_id = cib_conn->cmds->query(cib_conn,

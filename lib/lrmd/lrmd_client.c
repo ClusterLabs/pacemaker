@@ -18,7 +18,7 @@
 #include <time.h>                   // time
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // g_list_free_full, gpointer
+#include <glib.h>                   // g_list_free_full
 #include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
 #include <libxml/parser.h>          // xmlNode
 #include <qb/qbdefs.h>              // QB_MAX
@@ -274,7 +274,7 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
 }
 
 static void
-lrmd_dispatch_internal(gpointer data, gpointer user_data)
+lrmd_dispatch_internal(void *data, void *user_data)
 {
     xmlNode *msg = data;
     lrmd_t *lrmd = user_data;
@@ -361,7 +361,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
 
 // \return Always 0, to indicate that IPC mainloop source should be kept
 static int
-lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+lrmd_ipc_dispatch(const char *buffer, ssize_t length, void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -533,7 +533,7 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
  *         to leave it in the mainloop
  */
 static int
-lrmd_tls_dispatch(gpointer userdata)
+lrmd_tls_dispatch(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -635,7 +635,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
 }
 
 static void
-lrmd_ipc_connection_destroy(gpointer userdata)
+lrmd_ipc_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1084,7 +1084,7 @@ lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
 }
 
 static void
-lrmd_tls_connection_destroy(gpointer userdata)
+lrmd_tls_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1170,7 +1170,7 @@ tls_client_handshake(lrmd_t *lrmd)
  *         mainloop
  */
 static int
-process_pending_notifies(gpointer userdata)
+process_pending_notifies(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1417,7 +1417,7 @@ struct handshake_data_s {
 };
 
 static gboolean
-try_handshake_cb(gpointer user_data)
+try_handshake_cb(void *user_data)
 {
     struct handshake_data_s *hs = user_data;
     lrmd_t *lrmd = hs->lrmd;
@@ -1895,7 +1895,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+        hash2smartfield((void *) tmp->key, (void *) tmp->value, args);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
@@ -2068,7 +2068,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+        hash2smartfield((void *) tmp->key, (void *) tmp->value, args);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,

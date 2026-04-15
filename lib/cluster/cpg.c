@@ -78,7 +78,7 @@ struct pcmk__cpg_msg_s {
 
 typedef struct pcmk__cpg_msg_s pcmk__cpg_msg_t;
 
-static void crm_cs_flush(gpointer data);
+static void crm_cs_flush(void *data);
 
 #define msg_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
 
@@ -184,7 +184,7 @@ bail:
  * \return FALSE (to indicate to glib that timer should not be removed)
  */
 static gboolean
-crm_cs_flush_cb(gpointer data)
+crm_cs_flush_cb(void *data)
 {
     cs_message_timer = 0;
     crm_cs_flush(data);
@@ -201,7 +201,7 @@ crm_cs_flush_cb(gpointer data)
  * \param[in] data   CPG handle
  */
 static void
-crm_cs_flush(gpointer data)
+crm_cs_flush(void *data)
 {
     unsigned int sent = 0;
     unsigned int queue_len = 0;
@@ -268,7 +268,7 @@ crm_cs_flush(gpointer data)
  * \return 0 on success, -1 on error (per mainloop_io_t interface)
  */
 static int
-pcmk_cpg_dispatch(gpointer user_data)
+pcmk_cpg_dispatch(void *user_data)
 {
     cs_error_t rc = CS_OK;
     pcmk_cluster_t *cluster = (pcmk_cluster_t *) user_data;

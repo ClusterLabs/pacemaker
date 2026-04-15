@@ -15,7 +15,7 @@
 
 #include <sys/types.h>          // pid_t, uid_t, gid_t
 
-#include <glib.h>               // GSourceFunc, gpointer
+#include <glib.h>               // GSourceFunc
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,7 +32,7 @@ void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
 unsigned int pcmk__create_timer(unsigned int interval_ms, GSourceFunc fn,
-                                gpointer data);
+                                void *data);
 unsigned int pcmk__timeout_ms2s(unsigned int timeout_ms);
 
 #ifdef __cplusplus

@@ -100,7 +100,7 @@ static bool
 too_many_fencing_failures(const char *target)
 {
     GHashTableIter iter;
-    gpointer value = NULL;
+    void *value = NULL;
 
     if (fencing_fail_counts == NULL) {
         return false;
@@ -108,7 +108,7 @@ too_many_fencing_failures(const char *target)
 
     if (target == NULL) {
         g_hash_table_iter_init(&iter, fencing_fail_counts);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &target, &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &target, &value)) {
             if (GPOINTER_TO_INT(value) >= fencing_max_attempts) {
                 goto too_many;
             }
@@ -151,8 +151,8 @@ controld_reset_fencing_fail_count(const char *target)
 static void
 increment_fencing_fail_count(const char *target)
 {
-    gpointer key = NULL;
-    gpointer value = NULL;
+    void *key = NULL;
+    void *value = NULL;
 
     if (fencing_fail_counts == NULL) {
         fencing_fail_counts = pcmk__strikey_table(free, NULL);
@@ -160,7 +160,7 @@ increment_fencing_fail_count(const char *target)
 
     if (g_hash_table_lookup_extended(fencing_fail_counts, target, &key,
                                      &value)) {
-        gpointer new_value = GINT_TO_POINTER(GPOINTER_TO_INT(value) + 1);
+        void *new_value = GINT_TO_POINTER(GPOINTER_TO_INT(value) + 1);
 
         // Increment value in the table without freeing key
         g_hash_table_steal(fencing_fail_counts, key);
@@ -648,7 +648,7 @@ handle_fence_notification(stonith_t *st, stonith_event_t *event)
  *       30 attempts, meaning the controller could be blocked as long as 58s.
  */
 gboolean
-controld_timer_fencer_connect(gpointer user_data)
+controld_timer_fencer_connect(void *user_data)
 {
     int rc = pcmk_ok;
 
@@ -746,7 +746,7 @@ controld_disconnect_fencer(bool destroy)
 }
 
 static gboolean
-sync_fencing_history(gpointer user_data)
+sync_fencing_history(void *user_data)
 {
     if ((fencer_api != NULL) && (fencer_api->state != stonith_disconnected)) {
         stonith_history_t *history = NULL;
@@ -1044,7 +1044,7 @@ fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 }
 
 static gboolean
-fencing_history_sync_set_trigger(gpointer user_data)
+fencing_history_sync_set_trigger(void *user_data)
 {
     mainloop_set_trigger(fencing_history_sync_trigger);
     return FALSE;

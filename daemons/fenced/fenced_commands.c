@@ -69,7 +69,7 @@ struct device_search_s {
     uint32_t support_action_only;
 };
 
-static gboolean stonith_device_dispatch(gpointer user_data);
+static gboolean stonith_device_dispatch(void *user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
 
@@ -151,7 +151,7 @@ fenced_has_watchdog_device(void)
  * \param[in,out] user_data  User data
  */
 void
-fenced_foreach_device(GHFunc fn, gpointer user_data)
+fenced_foreach_device(GHFunc fn, void *user_data)
 {
     if (device_table == NULL) {
         return;
@@ -622,7 +622,8 @@ fork_cb(int pid, void *user_data)
 }
 
 static int
-get_agent_metadata_cb(gpointer data) {
+get_agent_metadata_cb(void *data)
+{
     fenced_device_t *device = data;
     unsigned int period_ms = 0;
     int rc = get_agent_metadata(device->agent, &device->agent_metadata);
@@ -789,13 +790,13 @@ done:
 }
 
 static gboolean
-stonith_device_dispatch(gpointer user_data)
+stonith_device_dispatch(void *user_data)
 {
     return stonith_device_execute(user_data);
 }
 
 static gboolean
-start_delay_helper(gpointer data)
+start_delay_helper(void *data)
 {
     async_command_t *cmd = data;
     fenced_device_t *device = cmd_device(cmd);
@@ -884,7 +885,7 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
 }
 
 static void
-free_device(gpointer data)
+free_device(void *data)
 {
     fenced_device_t *device = data;
 
@@ -1634,7 +1635,7 @@ count_active_levels(const stonith_topology_t *tp)
 }
 
 static void
-free_topology_entry(gpointer data)
+free_topology_entry(void *data)
 {
     stonith_topology_t *tp = data;
 
@@ -2321,7 +2322,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 }
 
 static void
-search_devices(gpointer key, gpointer value, gpointer user_data)
+search_devices(void *key, void *value, void *user_data)
 {
     fenced_device_t *dev = value;
     struct device_search_s *search = user_data;

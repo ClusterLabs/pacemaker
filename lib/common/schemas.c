@@ -455,8 +455,8 @@ pcmk__load_schemas_from_dir(const char *dir)
             if (transforms != NULL) {
                 // The schema becomes the owner of transform_list
                 g_hash_table_lookup_extended(transforms, version_s,
-                                             (gpointer *) &orig_key,
-                                             (gpointer *) &transform_list);
+                                             (void **) &orig_key,
+                                             (void **) &transform_list);
                 g_hash_table_steal(transforms, version_s);
             }
 
@@ -641,7 +641,7 @@ validate_with_relaxng(xmlDocPtr doc, xmlRelaxNGValidityErrorFunc error_handler,
 }
 
 static void
-free_schema(gpointer data)
+free_schema(void *data)
 {
     pcmk__schema_t *schema = data;
     relaxng_ctx_cache_t *ctx = NULL;

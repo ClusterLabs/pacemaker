@@ -120,7 +120,7 @@ cli_resource_print(pcmk_resource_t *rsc, bool expanded)
 
     scheduler = rsc->priv->scheduler;
     out = scheduler->priv->out;
-    all = g_list_prepend(all, (gpointer) "*");
+    all = g_list_prepend(all, (void *) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
     out->message(out, (const char *) rsc->priv->xml->name, pcmk_show_pending,
@@ -392,7 +392,8 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &name,
+                                      (void **) &value)) {
             out->message(out, "override", rsc_name, name, value);
         }
 
@@ -467,7 +468,8 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &name,
+                                      (void **) &value)) {
             out->message(out, "override", rsc_name, name, value);
         }
 

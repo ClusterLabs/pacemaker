@@ -82,7 +82,7 @@ static void handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd
 static GList *fail_all_monitor_cmds(GList * list);
 
 static void
-free_cmd(gpointer user_data)
+free_cmd(void *user_data)
 {
     remote_ra_cmd_t *cmd = user_data;
 
@@ -124,7 +124,7 @@ generate_callid(void)
 }
 
 static gboolean
-recurring_helper(gpointer data)
+recurring_helper(void *data)
 {
     remote_ra_cmd_t *cmd = data;
     lrm_state_t *connection_rsc = NULL;
@@ -143,7 +143,7 @@ recurring_helper(gpointer data)
 }
 
 static gboolean
-start_delay_helper(gpointer data)
+start_delay_helper(void *data)
 {
     remote_ra_cmd_t *cmd = data;
     lrm_state_t *connection_rsc = NULL;
@@ -466,7 +466,7 @@ remaining_timeout_sec(const remote_ra_cmd_t *cmd)
 }
 
 static gboolean
-retry_start_cmd_cb(gpointer data)
+retry_start_cmd_cb(void *data)
 {
     lrm_state_t *lrm_state = data;
     remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
@@ -508,7 +508,7 @@ retry_start_cmd_cb(gpointer data)
 
 
 static gboolean
-connection_takeover_timeout_cb(gpointer data)
+connection_takeover_timeout_cb(void *data)
 {
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
@@ -525,7 +525,7 @@ connection_takeover_timeout_cb(gpointer data)
 }
 
 static gboolean
-monitor_timeout_cb(gpointer data)
+monitor_timeout_cb(void *data)
 {
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
@@ -834,7 +834,7 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
 }
 
 static gboolean
-handle_remote_ra_exec(gpointer user_data)
+handle_remote_ra_exec(void *user_data)
 {
     int rc = 0;
     lrm_state_t *lrm_state = user_data;

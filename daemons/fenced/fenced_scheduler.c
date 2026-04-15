@@ -137,7 +137,7 @@ local_node_allowed_for(const pcmk_resource_t *rsc)
  * \param[in,out] user_data  Ignored
  */
 static void
-register_if_fencing_device(gpointer data, gpointer user_data)
+register_if_fencing_device(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     const char *rsc_id = pcmk__s(rsc->priv->history_id, rsc->id);
@@ -218,8 +218,8 @@ register_if_fencing_device(gpointer data, gpointer user_data)
                                        PCMK_FENCING_PROVIDES);
 
     g_hash_table_iter_init(&hash_iter, pe_rsc_params(rsc, node, scheduler));
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *) &name,
-                                  (gpointer *) &value)) {
+    while (g_hash_table_iter_next(&hash_iter, (void **) &name,
+                                  (void **) &value)) {
         if ((name == NULL) || (value == NULL)) {
             continue;
         }

@@ -62,9 +62,7 @@ stonith_send_broadcast_history(xmlNode *history,
 }
 
 static gboolean
-stonith_remove_history_entry (gpointer key,
-                              gpointer value,
-                              gpointer user_data)
+stonith_remove_history_entry(void *key, void *value, void *user_data)
 {
     remote_fencing_op_t *op = value;
     const char *target = (const char *) user_data;
@@ -97,8 +95,8 @@ stonith_fence_history_cleanup(const char *target,
         /* we'll do the local clean when we receive back our own broadcast */
     } else if (stonith_remote_op_list) {
         g_hash_table_foreach_remove(stonith_remote_op_list,
-                             stonith_remove_history_entry,
-                             (gpointer) target);
+                                    stonith_remove_history_entry,
+                                    (void *) target);
         fenced_send_notification(PCMK__VALUE_ST_NOTIFY_HISTORY, NULL, NULL);
     }
 }
@@ -186,7 +184,7 @@ cmp_op_by_completion(gconstpointer a, gconstpointer b)
  * \param[in] user_data  Ignored
  */
 static void
-remove_completed_remote_op(gpointer data, gpointer user_data)
+remove_completed_remote_op(void *data, void *user_data)
 {
     const remote_fencing_op_t *op = data;
 

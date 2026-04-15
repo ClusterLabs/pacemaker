@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -483,7 +483,7 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
  * \return FALSE (indicating that source should be not be re-added)
  */
 gboolean
-action_timer_callback(gpointer data)
+action_timer_callback(void *data)
 {
     pcmk__graph_action_t *action = (pcmk__graph_action_t *) data;
     const char *task = NULL;

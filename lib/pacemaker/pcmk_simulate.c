@@ -152,7 +152,7 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
     section_opts |= pcmk_section_nodes | pcmk_section_resources;
     show_opts |= pcmk_show_inactive_rscs | pcmk_show_failed_detail;
 
-    all = g_list_prepend(all, (gpointer) "*");
+    all = g_list_prepend(all, (void *) "*");
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);

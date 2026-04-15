@@ -108,7 +108,7 @@ dbus_watch_flags_to_string(int flags)
  *       would indicate the file descriptor is no longer required).
  */
 static int
-dispatch_fd_data(gpointer userdata)
+dispatch_fd_data(void *userdata)
 {
     bool oom = FALSE;
     DBusWatch *watch = userdata;
@@ -143,7 +143,7 @@ dispatch_fd_data(gpointer userdata)
 }
 
 static void
-watch_fd_closed(gpointer userdata)
+watch_fd_closed(void *userdata)
 {
     pcmk__trace("DBus watch for file descriptor %d is now closed",
                 dbus_watch_get_unix_fd((DBusWatch *) userdata));
@@ -200,7 +200,7 @@ register_watch_functions(DBusConnection *connection)
  */
 
 static gboolean
-timer_popped(gpointer data)
+timer_popped(void *data)
 {
     pcmk__debug("%dms DBus timer expired",
                 dbus_timeout_get_interval((DBusTimeout *) data));

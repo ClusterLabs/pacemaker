@@ -241,7 +241,7 @@ pcmk__corosync_disconnect(pcmk_cluster_t *cluster)
  * \return 0 on success, -1 on error (per mainloop_io_t interface)
  */
 static int
-quorum_dispatch_cb(gpointer user_data)
+quorum_dispatch_cb(void *user_data)
 {
     int rc = quorum_dispatch(pcmk_quorum_handle, CS_DISPATCH_ALL);
 
@@ -306,7 +306,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
     /* Reset membership_id for all cached nodes so we can tell which ones aren't
      * in the view list */
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         node->membership_id = 0;
     }
 
@@ -349,7 +349,7 @@ quorum_notification_cb(quorum_handle_t handle, uint32_t quorate,
 void
 pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                    gboolean),
-                              void (*destroy)(gpointer))
+                              void (*destroy)(void *))
 {
     cs_error_t rc;
     int fd = 0;
@@ -636,7 +636,7 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
             pcmk__node_status_t *node = NULL;
 
             g_hash_table_iter_init(&iter, pcmk__peer_cache);
-            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
                 if ((node != NULL)
                     && (node->cluster_layer_id > 0)
                     && (node->cluster_layer_id != nodeid)

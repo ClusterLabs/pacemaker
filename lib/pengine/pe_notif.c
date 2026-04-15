@@ -262,7 +262,7 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
  * \param[in,out] user_data  Notify action to copy into
  */
 static void
-copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
+copy_meta_to_notify(void *key, void *value, void *user_data)
 {
     pcmk_action_t *notify = (pcmk_action_t *) user_data;
 

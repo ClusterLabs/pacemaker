@@ -52,7 +52,7 @@ execute_pseudo_action(pcmk__graph_t *graph, pcmk__graph_action_t *pseudo)
         pcmk__node_status_t *node = NULL;
 
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             xmlNode *cmd = NULL;
 
             if (controld_is_local_node(node->name)) {
@@ -477,7 +477,7 @@ struct te_peer_s
         int migrate_jobs;
 };
 
-static void te_peer_free(gpointer p)
+static void te_peer_free(void *p)
 {
     struct te_peer_s *peer = p;
 
@@ -495,7 +495,7 @@ void te_reset_job_counts(void)
     }
 
     g_hash_table_iter_init(&iter, te_targets);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & peer)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &peer)) {
         peer->jobs = 0;
         peer->migrate_jobs = 0;
     }

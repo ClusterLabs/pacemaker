@@ -236,7 +236,7 @@ gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
 
-extern void destroy_ticket(gpointer data);
+void destroy_ticket(void *data);
 pcmk__ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 
 // Resources for manipulating resource names
@@ -269,7 +269,7 @@ pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          bool calc_secure,
                                          pcmk_scheduler_t *scheduler);
 
-void pe__free_digests(gpointer ptr);
+void pe__free_digests(void *ptr);
 
 pcmk__op_digest_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          const xmlNode *xml_op,

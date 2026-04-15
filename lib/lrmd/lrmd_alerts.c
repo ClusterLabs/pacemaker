@@ -57,7 +57,7 @@ alert_key2param_ms(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
 }
 
 static void
-set_ev_kv(gpointer key, gpointer value, gpointer user_data)
+set_ev_kv(void *key, void *value, void *user_data)
 {
     lrmd_key_value_t **head = (lrmd_key_value_t **) user_data;
 

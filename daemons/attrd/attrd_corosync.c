@@ -177,7 +177,7 @@ attrd_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
  * \param[in] unused Unused
  */
 static void
-attrd_cpg_destroy(gpointer unused)
+attrd_cpg_destroy(void *unused)
 {
     if (attrd_shutting_down()) {
         pcmk__info("Disconnected from Corosync process group");
@@ -433,7 +433,7 @@ attrd_peer_update_one(const pcmk__node_status_t *peer, xmlNode *xml,
         pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_HOST_ID);
         g_hash_table_iter_init(&vIter, a->values);
 
-        while (g_hash_table_iter_next(&vIter, (gpointer *) & host, NULL)) {
+        while (g_hash_table_iter_next(&vIter, (void **) &host, NULL)) {
             update_attr_on_host(a, peer, xml, attr, value, host, filter);
         }
 
@@ -460,10 +460,10 @@ broadcast_unseen_local_values(void)
     xmlNode *sync = NULL;
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+    while (g_hash_table_iter_next(&aIter, NULL, (void **) &a)) {
 
         g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+        while (g_hash_table_iter_next(&vIter, NULL, (void **) &v)) {
 
             if (!pcmk__is_set(v->flags, attrd_value_from_peer)
                 && pcmk__str_eq(v->nodename, attrd_cluster->priv->node_name,
@@ -550,7 +550,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
 
     g_hash_table_iter_init(&iter, attributes);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &attr, NULL)) {
+    while (g_hash_table_iter_next(&iter, (void **) &attr, NULL)) {
         if (regexec(&regex, attr, 0, NULL, 0) == 0) {
             pcmk__trace("Matched %s when clearing %s", attr,
                         pcmk__s(rsc, "all resources"));
@@ -616,7 +616,7 @@ attrd_erase_removed_peer_attributes(void)
     }
 
     g_hash_table_iter_init(&iter, removed_peers);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &host, NULL)) {
+    while (g_hash_table_iter_next(&iter, (void **) &host, NULL)) {
         attrd_cib_erase_transient_attrs(host);
         g_hash_table_iter_remove(&iter);
     }
@@ -642,7 +642,7 @@ attrd_peer_remove(const char *host, bool uncache, const char *source)
                  host, source, (uncache? "and" : "without"));
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+    while (g_hash_table_iter_next(&aIter, NULL, (void **) &a)) {
         if(g_hash_table_remove(a->values, host)) {
             pcmk__debug("Removed %s[%s] for peer %s", a->id, host, source);
         }
@@ -702,9 +702,9 @@ attrd_peer_sync(pcmk__node_status_t *peer)
     pcmk__xe_set(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+    while (g_hash_table_iter_next(&aIter, NULL, (void **) &a)) {
         g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+        while (g_hash_table_iter_next(&vIter, NULL, (void **) &v)) {
             pcmk__debug("Syncing %s[%s]='%s' to %s", a->id, v->nodename,
                         readable_value(v), readable_peer(peer));
             attrd_add_value_xml(sync, a, v, false);

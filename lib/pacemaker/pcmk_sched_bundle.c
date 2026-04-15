@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,7 +73,7 @@ assign_replica(pcmk__bundle_replica_t *replica, void *user_data)
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, replica->child->priv->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (!pcmk__same_node(node, replica->node)) {
                 node->assign->score = -PCMK_SCORE_INFINITY;
             } else if (!pcmk__threshold_reached(replica->child, node, NULL)) {
@@ -146,7 +146,7 @@ pcmk__bundle_assign(pcmk_resource_t *rsc, const pcmk_node_t *prefer,
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, bundled_resource->priv->allowed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pe__node_is_bundle_instance(rsc, node)) {
                 node->assign->score = 0;
             } else {

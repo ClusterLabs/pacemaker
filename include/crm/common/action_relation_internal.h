@@ -16,7 +16,6 @@
 
 #include <stdbool.h>                        // bool
 #include <stdint.h>                         // uint32_t
-#include <glib.h>                           // gpointer
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t, pcmk_action_t
 
 #ifdef __cplusplus
@@ -186,7 +185,7 @@ typedef struct {
                                         #flags_to_clear);                   \
     } while (0)
 
-void pcmk__free_action_relation(gpointer user_data);
+void pcmk__free_action_relation(void *user_data);
 
 #ifdef __cplusplus
 }

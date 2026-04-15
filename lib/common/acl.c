@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -680,7 +680,7 @@ apply_acl_to_match(xmlNode *match, void *user_data)
  * \param[in,out] user_data  XML document to match against (<tt>xmlDoc *</tt>)
  */
 static void
-apply_acl_to_doc(gpointer data, gpointer user_data)
+apply_acl_to_doc(void *data, void *user_data)
 {
     xml_acl_t *acl = data;
     xmlDoc *doc = user_data;

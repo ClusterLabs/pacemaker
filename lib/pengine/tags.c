@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@
 GList *
 pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
 {
-    gpointer value;
+    void *value = NULL;
     GList *retval = NULL;
 
     if (scheduler->priv->tags == NULL) {
@@ -53,7 +53,7 @@ pe__rscs_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
 GList *
 pe__unames_with_tag(pcmk_scheduler_t *scheduler, const char *tag_name)
 {
-    gpointer value;
+    void *value = NULL;
     GList *retval = NULL;
 
     if (scheduler->priv->tags == NULL) {

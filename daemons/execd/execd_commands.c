@@ -101,7 +101,7 @@ typedef struct {
 } lrmd_cmd_t;
 
 static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
-static gboolean execute_resource_action(gpointer user_data);
+static gboolean execute_resource_action(void *user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
 
 #ifdef PCMK__TIME_USE_CGT
@@ -379,7 +379,7 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
 }
 
 static gboolean
-stonith_recurring_op_helper(gpointer data)
+stonith_recurring_op_helper(void *data)
 {
     lrmd_cmd_t *cmd = data;
     lrmd_rsc_t *rsc;
@@ -418,7 +418,7 @@ start_recurring_timer(lrmd_cmd_t *cmd)
 }
 
 static gboolean
-start_delay_helper(gpointer data)
+start_delay_helper(void *data)
 {
     lrmd_cmd_t *cmd = data;
     lrmd_rsc_t *rsc = NULL;
@@ -559,7 +559,7 @@ execd_create_reply_as(const char *origin, int rc, int call_id)
 }
 
 static void
-send_client_notify(gpointer key, gpointer value, gpointer user_data)
+send_client_notify(void *key, void *value, void *user_data)
 {
     xmlNode *update_msg = user_data;
     pcmk__client_t *client = value;
@@ -675,8 +675,9 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         xmlNode *args = pcmk__xe_create(notify, PCMK__XE_ATTRIBUTES);
 
         g_hash_table_iter_init(&iter, cmd->params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            hash2smartfield((gpointer) key, (gpointer) value, args);
+        while (g_hash_table_iter_next(&iter, (void **) &key,
+                                      (void **) &value)) {
+            hash2smartfield((void *) key, (void *) value, args);
         }
     }
     if ((cmd->client_id != NULL)
@@ -781,13 +782,13 @@ struct notify_new_client_data {
 };
 
 static void
-notify_one_client(gpointer key, gpointer value, gpointer user_data)
+notify_one_client(void *key, void *value, void *user_data)
 {
     pcmk__client_t *client = value;
     struct notify_new_client_data *data = user_data;
 
     if (!pcmk__str_eq(client->id, data->new_client->id, pcmk__str_casei)) {
-        send_client_notify(key, (gpointer) client, (gpointer) data->notify);
+        send_client_notify(key, (void *) client, (void *) data->notify);
     }
 }
 
@@ -812,7 +813,7 @@ client_disconnect_cleanup(const char *client_id)
     char *key = NULL;
 
     g_hash_table_iter_init(&iter, rsc_list);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
+    while (g_hash_table_iter_next(&iter, (void **) &key, (void **) &rsc)) {
         if (pcmk__is_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
             /* This client is disconnecting, drop any recurring operations
              * it may have initiated on the resource */
@@ -1130,7 +1131,7 @@ execd_fencer_connection_failed(void)
                "devices will be considered failed)");
 
     g_hash_table_iter_init(&iter, rsc_list);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rsc)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &rsc)) {
         if (!pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
                           pcmk__str_none)) {
             continue;
@@ -1202,7 +1203,8 @@ start_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, cmd->params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &key,
+                                      (void **) &value)) {
             device_params = stonith__key_value_add(device_params, key, value);
         }
     }
@@ -1406,7 +1408,7 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 }
 
 static gboolean
-execute_resource_action(gpointer user_data)
+execute_resource_action(void *user_data)
 {
     lrmd_rsc_t *rsc = (lrmd_rsc_t *) user_data;
     lrmd_cmd_t *cmd = NULL;
@@ -1459,7 +1461,7 @@ execute_resource_action(gpointer user_data)
 }
 
 void
-execd_free_rsc(gpointer data)
+execd_free_rsc(void *data)
 {
     GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
@@ -1870,8 +1872,7 @@ execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
         char *key = NULL;
 
         g_hash_table_iter_init(&iter, rsc_list);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-                                      (gpointer *) &rsc)) {
+        while (g_hash_table_iter_next(&iter, (void **) &key, (void **) &rsc)) {
             add_recurring_op_xml(*reply, rsc);
         }
     } else if (rsc) {

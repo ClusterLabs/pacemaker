@@ -17,7 +17,7 @@
 #include <stdio.h>                  // NULL
 #include <stdint.h>                 // uint32_t
 #include <stdbool.h>                // bool, false
-#include <glib.h>                   // gpointer, GList, GHashTable
+#include <glib.h>                   // GList, GHashTable
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/internal.h>    // pcmk__location_t, etc.
@@ -450,7 +450,7 @@ G_GNUC_INTERNAL
 bool pcmk__node_unfenced(const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
+void pcmk__order_restart_vs_unfence(void *data, void *user_data);
 
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
@@ -544,7 +544,7 @@ void pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                                      float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
-void pcmk__add_dependent_scores(gpointer data, gpointer user_data);
+void pcmk__add_dependent_scores(void *data, void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,

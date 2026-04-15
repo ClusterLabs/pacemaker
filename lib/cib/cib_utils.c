@@ -829,7 +829,7 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
 }
 
 void
-cib_native_notify(gpointer data, gpointer user_data)
+cib_native_notify(void *data, void *user_data)
 {
     xmlNode *msg = user_data;
     cib_notify_client_t *entry = data;

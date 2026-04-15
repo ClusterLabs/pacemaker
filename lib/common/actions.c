@@ -186,7 +186,7 @@ pcmk__on_fail_text(enum pcmk__on_fail on_fail)
  * \param[in,out] user_data  Action object to free
  */
 void
-pcmk__free_action(gpointer user_data)
+pcmk__free_action(void *user_data)
 {
     pcmk_action_t *action = user_data;
 

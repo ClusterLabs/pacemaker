@@ -29,7 +29,8 @@ typedef struct {
 } private_data_t;
 
 static void
-free_list_data(gpointer data) {
+free_list_data(void *data)
+{
     text_list_data_t *list_data = data;
 
     free(list_data->singular_noun);
@@ -248,7 +249,7 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
 static void
 text_increment_list(pcmk__output_t *out) {
     private_data_t *priv = NULL;
-    gpointer tail;
+    void *tail = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;

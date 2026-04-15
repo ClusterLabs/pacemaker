@@ -48,7 +48,7 @@ pcmk__ipc_client_count(void)
  * \note The parameters are the same as for g_hash_table_foreach().
  */
 void
-pcmk__foreach_ipc_client(GHFunc func, gpointer user_data)
+pcmk__foreach_ipc_client(GHFunc func, void *user_data)
 {
     if ((func != NULL) && (client_connections != NULL)) {
         g_hash_table_foreach(client_connections, func, user_data);
@@ -70,12 +70,12 @@ pcmk__client_t *
 pcmk__find_client_by_id(const char *id)
 {
     if ((client_connections != NULL) && (id != NULL)) {
-        gpointer key;
+        void *key = NULL;
         pcmk__client_t *client = NULL;
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, client_connections);
-        while (g_hash_table_iter_next(&iter, &key, (gpointer *) & client)) {
+        while (g_hash_table_iter_next(&iter, &key, (void **) &client)) {
             if (strcmp(client->id, id) == 0) {
                 return client;
             }
@@ -267,7 +267,7 @@ pcmk_free_ipc_event(struct iovec *event)
 }
 
 static void
-free_event(gpointer data)
+free_event(void *data)
 {
     pcmk_free_ipc_event((struct iovec *) data);
 }
@@ -435,7 +435,7 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
 static int crm_ipcs_flush_events(pcmk__client_t *c);
 
 static gboolean
-crm_ipcs_flush_events_cb(gpointer data)
+crm_ipcs_flush_events_cb(void *data)
 {
     pcmk__client_t *c = data;
 

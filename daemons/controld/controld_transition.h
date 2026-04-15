@@ -44,7 +44,7 @@ void notify_crmd(pcmk__graph_t * graph);
 
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                         void *user_data);
-gboolean action_timer_callback(gpointer data);
+gboolean action_timer_callback(void *data);
 void te_update_diff(const char *event, xmlNode *msg);
 
 void controld_init_transition_trigger(void);

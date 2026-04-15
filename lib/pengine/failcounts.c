@@ -301,7 +301,7 @@ struct failcount_data {
  * \param[in] user_data  Fail count data to update
  */
 static void
-update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
+update_failcount_for_attr(void *key, void *value, void *user_data)
 {
     struct failcount_data *fc_data = user_data;
 
@@ -349,7 +349,7 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
  * \param[in] user_data  Fail count data to update
  */
 static void
-update_launched_failcount(gpointer data, gpointer user_data)
+update_launched_failcount(void *data, void *user_data)
 {
     pcmk_resource_t *launched = data;
     struct failcount_data *fc_data = user_data;

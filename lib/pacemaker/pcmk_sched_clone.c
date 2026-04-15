@@ -448,7 +448,7 @@ pcmk__clone_apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
 
 // GFunc wrapper for calling the action_flags() resource method
 static void
-call_action_flags(gpointer data, gpointer user_data)
+call_action_flags(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = user_data;
 
@@ -512,7 +512,7 @@ rsc_probed_on(const pcmk_resource_t *rsc, const pcmk_node_t *node)
         pcmk_node_t *known_node = NULL;
 
         g_hash_table_iter_init(&iter, rsc->priv->probed_nodes);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &known_node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &known_node)) {
             if (pcmk__same_node(node, known_node)) {
                 return true;
             }

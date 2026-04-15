@@ -213,7 +213,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static void
-recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
+recursive_clear_unique(pcmk_resource_t *rsc, void *user_data)
 {
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     pcmk__insert_meta(rsc->priv, PCMK_META_GLOBALLY_UNIQUE,
@@ -943,7 +943,7 @@ native_location(const pcmk_resource_t *rsc, GList **list, uint32_t target)
         if (pcmk__is_set(target, pcmk__rsc_node_pending)
             && (rsc->priv->pending_node != NULL)
             && !pe_find_node_id(result, rsc->priv->pending_node->priv->id)) {
-            result = g_list_append(result, (gpointer) rsc->priv->pending_node);
+            result = g_list_append(result, (void *) rsc->priv->pending_node);
         }
         if (pcmk__is_set(target, pcmk__rsc_node_assigned)
             && (rsc->priv->assigned_node != NULL)) {
@@ -1052,7 +1052,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 }
 
 static void
-destroy_node_table(gpointer data)
+destroy_node_table(void *data)
 {
     g_clear_pointer(&data, g_hash_table_destroy);
 }

@@ -122,7 +122,7 @@ get_resource_type(const char *name)
  *       values.
  */
 static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
+dup_attr(void *key, void *value, void *user_data)
 {
     GHashTable *table = user_data;
 

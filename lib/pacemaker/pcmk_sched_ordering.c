@@ -1365,14 +1365,14 @@ rsc_order_first(pcmk_resource_t *first_rsc, pcmk__action_relation_t *order)
 
 // GFunc to call pcmk__block_colocation_dependents()
 static void
-block_colocation_dependents(gpointer data, gpointer user_data)
+block_colocation_dependents(void *data, void *user_data)
 {
     pcmk__block_colocation_dependents(data);
 }
 
 // GFunc to call pcmk__update_action_for_orderings()
 static void
-update_action_for_orderings(gpointer data, gpointer user_data)
+update_action_for_orderings(void *data, void *user_data)
 {
     pcmk__update_action_for_orderings((pcmk_action_t *) data,
                                       (pcmk_scheduler_t *) user_data);

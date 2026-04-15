@@ -47,7 +47,7 @@ election_complete(pcmk_cluster_t *cluster)
 }
 
 static gboolean
-election_timer_cb(gpointer user_data)
+election_timer_cb(void *user_data)
 {
     pcmk_cluster_t *cluster = user_data;
 
@@ -374,14 +374,14 @@ election_check(pcmk_cluster_t *cluster)
 
             pcmk__warn("Received too many votes in election");
             g_hash_table_iter_init(&gIter, pcmk__peer_cache);
-            while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
+            while (g_hash_table_iter_next(&gIter, NULL, (void **) &node)) {
                 if (pcmk__cluster_is_node_active(node)) {
                     pcmk__warn("* expected vote: %s", node->name);
                 }
             }
 
             g_hash_table_iter_init(&gIter, cluster->priv->election->voted);
-            while (g_hash_table_iter_next(&gIter, (gpointer *) & key, NULL)) {
+            while (g_hash_table_iter_next(&gIter, (void **) &key, NULL)) {
                 pcmk__warn("* actual vote: %s", key);
             }
 

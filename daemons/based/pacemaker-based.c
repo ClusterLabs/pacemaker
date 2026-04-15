@@ -121,7 +121,7 @@ based_metadata(pcmk__output_t *out)
 }
 
 static gboolean
-disk_writes_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+disk_writes_cb(const gchar *option_name, const gchar *optarg, void *data,
                GError **error)
 {
     based_enable_writes(0);
@@ -324,7 +324,7 @@ cib_cs_dispatch(cpg_handle_t handle,
 }
 
 static void
-cib_cs_destroy(gpointer user_data)
+cib_cs_destroy(void *user_data)
 {
     if (cib_shutdown_flag) {
         pcmk__info("Corosync disconnection complete");

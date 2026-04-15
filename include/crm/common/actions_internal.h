@@ -238,7 +238,7 @@ struct pcmk__action {
     GList *actions_after;
 };
 
-void pcmk__free_action(gpointer user_data);
+void pcmk__free_action(void *user_data);
 char *pcmk__op_key(const char *rsc_id, const char *op_type,
                    unsigned int interval_ms);
 char *pcmk__notify_key(const char *rsc_id, const char *notify_type,

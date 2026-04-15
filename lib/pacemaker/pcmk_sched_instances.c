@@ -139,7 +139,7 @@ new_node_table(pcmk_node_t *node)
     GHashTable *table = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
     node = pe__copy_node(node);
-    g_hash_table_insert(table, (gpointer) node->priv->id, node);
+    g_hash_table_insert(table, (void *) node->priv->id, node);
     return table;
 }
 
@@ -733,7 +733,7 @@ reset_allowed_node_counts(pcmk_resource_t *rsc)
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         node->assign->count = 0;
         if (pcmk__node_available(node, false, false)) {
             available_nodes++;

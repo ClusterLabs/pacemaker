@@ -213,7 +213,7 @@ pcmk__add_this_with(GList **list, const pcmk__colocation_t *colocation,
                     colocation->id, colocation->dependent->id,
                     colocation->primary->id, colocation->node_attribute,
                     pcmk_readable_score(colocation->score), rsc->id);
-    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+    *list = g_list_insert_sorted(*list, (void *) colocation,
                                  cmp_primary_priority);
 }
 
@@ -273,7 +273,7 @@ pcmk__add_with_this(GList **list, const pcmk__colocation_t *colocation,
                     colocation->id, colocation->dependent->id,
                     colocation->primary->id, colocation->node_attribute,
                     pcmk_readable_score(colocation->score), rsc->id);
-    *list = g_list_insert_sorted(*list, (gpointer) colocation,
+    *list = g_list_insert_sorted(*list, (void *) colocation,
                                  cmp_dependent_priority);
 }
 
@@ -1611,7 +1611,7 @@ allowed_on_one(const pcmk_resource_t *rsc)
     int allowed_nodes = 0;
 
     g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &allowed_node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &allowed_node)) {
         if ((allowed_node->assign->score >= 0) && (++allowed_nodes > 1)) {
             pcmk__rsc_trace(rsc, "%s is allowed on multiple nodes", rsc->id);
             return false;
@@ -1911,7 +1911,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
  * \param[in,out] user_data  Resource being assigned
  */
 void
-pcmk__add_dependent_scores(gpointer data, gpointer user_data)
+pcmk__add_dependent_scores(void *data, void *user_data)
 {
     pcmk__colocation_t *colocation = data;
     pcmk_resource_t *primary = user_data;
@@ -1966,7 +1966,7 @@ pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
                  && (colocation != NULL));
 
     g_hash_table_iter_init(&iter, dependent->priv->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &dependent_node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &dependent_node)) {
         const pcmk_node_t *primary_node = NULL;
 
         primary_node = pe_find_node_id(primary_nodes,

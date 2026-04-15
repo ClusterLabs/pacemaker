@@ -20,12 +20,12 @@
 
 //! FSA mainloop timer type
 typedef struct {
-    unsigned int source_id;                 //!< Timer source ID
-    unsigned int period_ms;                 //!< Timer period
-    enum crmd_fsa_input fsa_input;          //!< Input to register if timer pops
-    gboolean (*callback) (gpointer data);   //!< What do if timer pops
-    bool log_error;                         //!< Timer popping indicates error
-    int counter;                            //!< For detecting loops
+    unsigned int source_id;             //!< Timer source ID
+    unsigned int period_ms;             //!< Timer period
+    enum crmd_fsa_input fsa_input;      //!< Input to register if timer pops
+    gboolean (*callback)(void *data);   //!< What do if timer pops
+    bool log_error;                     //!< Timer popping indicates error
+    int counter;                        //!< For detecting loops
 } fsa_timer_t;
 
 //! Wait before retrying a failed cib or executor connection
@@ -193,7 +193,7 @@ do_timer_control(long long action, enum crmd_fsa_cause cause,
 }
 
 static gboolean
-crm_timer_popped(gpointer data)
+crm_timer_popped(void *data)
 {
     fsa_timer_t *timer = (fsa_timer_t *) data;
 

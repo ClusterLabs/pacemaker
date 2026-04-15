@@ -69,7 +69,7 @@ G_GNUC_INTERNAL
 gboolean cancel_recurring_action(svc_action_t * op);
 
 G_GNUC_INTERNAL
-gboolean recurring_action_timer(gpointer data);
+gboolean recurring_action_timer(void *data);
 
 G_GNUC_INTERNAL
 int services__finalize_async_op(svc_action_t *op);

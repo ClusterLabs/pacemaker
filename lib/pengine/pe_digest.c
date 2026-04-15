@@ -37,11 +37,11 @@
  *
  * \param[in,out] ptr  Pointer to cache entry to free
  *
- * \note The argument is a gpointer so this can be used as a hash table
+ * \note The argument is a <tt>void *</tt> so this can be used as a hash table
  *       free function.
  */
 void
-pe__free_digests(gpointer ptr)
+pe__free_digests(void *ptr)
 {
     pcmk__op_digest_t *data = ptr;
 

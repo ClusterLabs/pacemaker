@@ -36,7 +36,7 @@
 
 #include "pe_status_private.h"          // pe__cmp_rsc_priority
 
-gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
+gboolean ghash_free_str_str(void *key, void *value, void *user_data);
 
 /*!
  * \internal
@@ -175,7 +175,7 @@ pe__node_list2table(const GList *list)
         pcmk_node_t *new_node = NULL;
 
         new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
-        g_hash_table_insert(result, (gpointer) new_node->priv->id, new_node);
+        g_hash_table_insert(result, (void *) new_node->priv->id, new_node);
     }
     return result;
 }
@@ -400,8 +400,8 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     match = g_hash_table_lookup(rsc->priv->allowed_nodes, node->priv->id);
     if (match == NULL) {
         match = pe__copy_node(node);
-        g_hash_table_insert(rsc->priv->allowed_nodes,
-                            (gpointer) match->priv->id, match);
+        g_hash_table_insert(rsc->priv->allowed_nodes, (void *) match->priv->id,
+                            match);
     }
     match->assign->score = pcmk__add_scores(match->assign->score, score);
     pcmk__rsc_trace(rsc,
@@ -544,7 +544,7 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
 }
 
 void
-destroy_ticket(gpointer data)
+destroy_ticket(void *data)
 {
     pcmk__ticket_t *ticket = data;
 

@@ -18,7 +18,9 @@
 #include <crm/common/util.h>
 
 static gboolean
-bump_verbosity(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+bump_verbosity(const gchar *option_name, const gchar *optarg, void *data,
+               GError **error)
+{
     pcmk__common_args_t *common_args = (pcmk__common_args_t *) data;
     common_args->verbosity++;
     return TRUE;
@@ -46,7 +48,8 @@ pcmk__new_common_args(const char *summary)
 }
 
 static void
-free_common_args(gpointer data) {
+free_common_args(void *data)
+{
     pcmk__common_args_t *common_args = (pcmk__common_args_t *) data;
 
     free(common_args->summary);

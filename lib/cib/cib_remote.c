@@ -17,7 +17,7 @@
 #include <time.h>                   // time, time_t
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // gpointer, gboolean, g_list_foreach
+#include <glib.h>                   // gboolean, g_*, G_*
 #include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
@@ -217,7 +217,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
 }
 
 static int
-cib_remote_callback_dispatch(gpointer user_data)
+cib_remote_callback_dispatch(void *user_data)
 {
     int rc;
     cib_t *cib = user_data;
@@ -283,7 +283,7 @@ cib_remote_callback_dispatch(gpointer user_data)
 }
 
 static int
-cib_remote_command_dispatch(gpointer user_data)
+cib_remote_command_dispatch(void *user_data)
 {
     int rc;
     cib_t *cib = user_data;
@@ -359,7 +359,7 @@ cib_tls_close(cib_t *cib)
 }
 
 static void
-cib_remote_connection_destroy(gpointer user_data)
+cib_remote_connection_destroy(void *user_data)
 {
     pcmk__err("Connection destroyed");
     cib_tls_close(user_data);
@@ -672,7 +672,7 @@ cib_remote_register_notification(cib_t * cib, const char *callback, int enabled)
 }
 
 static int
-cib_remote_set_connection_dnotify(cib_t * cib, void (*dnotify) (gpointer user_data))
+cib_remote_set_connection_dnotify(cib_t *cib, void (*dnotify)(void *user_data))
 {
     return -EPROTONOSUPPORT;
 }

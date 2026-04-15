@@ -14,7 +14,7 @@
 #include <signal.h>     // sighandler_t
 #include <sys/types.h>  // pid_t, ssize_t
 
-#include <glib.h>       // gpointer, gboolean, GSourceFunc, GMainLoop
+#include <glib.h>       // gboolean, GSourceFunc, GMainLoop
 #include <qb/qbipcs.h>  // qb_ipcs_service_t, etc.
 
 #include <crm/common/ipc.h>
@@ -51,8 +51,9 @@ typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *p, int core,
 void mainloop_cleanup(void);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-crm_trigger_t *mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
-                                    gpointer userdata);
+crm_trigger_t *mainloop_add_trigger(int priority,
+                                    int (*dispatch)(void *user_data),
+                                    void *userdata);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
 void mainloop_set_trigger(crm_trigger_t * source);
@@ -100,14 +101,14 @@ struct ipc_client_callbacks {
      *
      * \return Negative value to remove source, anything else to keep it
      */
-    int (*dispatch) (const char *buffer, ssize_t length, gpointer userdata);
+    int (*dispatch)(const char *buffer, ssize_t length, void *userdata);
 
     /*!
      * \brief Destroy function for mainloop IPC connection client data
      *
      * \param[in,out] userdata  User data passed when creating mainloop source
      */
-    void (*destroy) (gpointer userdata);
+    void (*destroy)(void *userdata);
 };
 
 qb_ipcs_service_t *mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
@@ -155,14 +156,14 @@ struct mainloop_fd_callbacks {
      *
      * \return Negative value to remove source, anything else to keep it
      */
-    int (*dispatch) (gpointer userdata);
+    int (*dispatch)(void *userdata);
 
     /*!
      * \brief Destroy function for mainloop file descriptor client data
      *
      * \param[in,out] userdata  User data passed when creating mainloop source
      */
-    void (*destroy) (gpointer userdata);
+    void (*destroy)(void *userdata);
 };
 
 mainloop_io_t *mainloop_add_fd(const char *name, int priority, int fd, void *userdata,

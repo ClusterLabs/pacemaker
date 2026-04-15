@@ -84,7 +84,7 @@ struct health_sum {
  *                           added if \p key is a node health attribute
  */
 static void
-add_node_health_value(gpointer key, gpointer value, gpointer user_data)
+add_node_health_value(void *key, void *value, void *user_data)
 {
     if (key == NULL) {
         return;
@@ -156,8 +156,7 @@ pe__node_health(pcmk_node_t *node)
     }
 
     g_hash_table_iter_init(&iter, node->priv->attrs);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &name,
-                                  (gpointer *) &value)) {
+    while (g_hash_table_iter_next(&iter, (void **) &name, (void **) &value)) {
         if ((name != NULL) && g_str_has_prefix(name, "#health")) {
             int parse_rc = pcmk_rc_ok;
 

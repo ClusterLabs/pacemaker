@@ -199,14 +199,14 @@ throttle_send_command(enum throttle_state_e mode)
 }
 
 static gboolean
-throttle_timer_cb(gpointer data)
+throttle_timer_cb(void *data)
 {
     throttle_send_command(throttle_mode());
     return TRUE;
 }
 
 static void
-throttle_record_free(gpointer p)
+throttle_record_free(void *p)
 {
     struct throttle_record_s *r = p;
     free(r->node);
@@ -306,7 +306,7 @@ throttle_get_total_job_limit(int l)
 
     g_hash_table_iter_init(&iter, throttle_records);
 
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &r)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &r)) {
         switch(r->mode) {
 
             case throttle_extreme:

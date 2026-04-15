@@ -11,7 +11,7 @@
 #  define CONTROLD_TIMERS__H
 
 #  include <stdbool.h>              // bool
-#  include <glib.h>                 // gboolean, gpointer
+#  include <glib.h>                 // GHashTable
 #  include <controld_fsa.h>         // crmd_fsa_input
 
 bool controld_init_fsa_timers(void);

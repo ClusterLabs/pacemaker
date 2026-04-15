@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2025 the Pacemaker project contributors
+ * Copyright 2005-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -35,7 +35,7 @@ struct {
 } options;
 
 static gboolean
-patch_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+patch_cb(const gchar *option_name, const gchar *optarg, void *data,
          GError **error)
 {
     options.patch = true;

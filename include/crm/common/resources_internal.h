@@ -17,7 +17,7 @@
 #include <inttypes.h>                   // UINT64_C
 #include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
-#include <glib.h>                       // gboolean, gpointer, etc.
+#include <glib.h>                       // gboolean, etc.
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/resources.h>       // pcmk_resource_t
@@ -459,7 +459,7 @@ struct pcmk__resource_private {
     const pcmk__assignment_methods_t *cmds; // Resource assignment methods
 };
 
-void pcmk__free_resource(gpointer user_data);
+void pcmk__free_resource(void *user_data);
 const char *pcmk__multiply_active_text(const pcmk_resource_t *rsc);
 
 /*!

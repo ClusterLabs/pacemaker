@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -180,7 +180,7 @@ pcmk_cluster_free(pcmk_cluster_t *cluster)
  * \return Standard Pacemaker return code
  */
 int
-pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
+pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(void *))
 {
     if (cluster == NULL) {
         return EINVAL;
@@ -336,7 +336,7 @@ pcmk__node_name_from_uuid(const char *uuid)
     }
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (pcmk__str_eq(uuid, pcmk__cluster_get_xml_id(node),
                          pcmk__str_none)) {
             return node->name;

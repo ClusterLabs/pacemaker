@@ -58,7 +58,7 @@ pcmk__add_idref(GHashTable *table, const char *id, const char *referrer)
  * \param[in,out] data  pcmk__idref_t to free
  */
 void
-pcmk__free_idref(gpointer data)
+pcmk__free_idref(void *data)
 {
     pcmk__idref_t *idref = data;
 

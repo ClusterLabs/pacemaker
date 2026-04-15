@@ -22,7 +22,7 @@
 static GHashTable *lrm_state_table = NULL;
 
 static void
-free_rsc_info(gpointer value)
+free_rsc_info(void *value)
 {
     lrmd_rsc_info_t *rsc_info = value;
 
@@ -30,7 +30,7 @@ free_rsc_info(gpointer value)
 }
 
 static void
-free_deletion_op(gpointer value)
+free_deletion_op(void *value)
 {
     struct pending_deletion_op_s *op = value;
 
@@ -40,7 +40,7 @@ free_deletion_op(gpointer value)
 }
 
 static void
-free_recurring_op(gpointer value)
+free_recurring_op(void *value)
 {
     active_op_t *op = value;
 
@@ -53,7 +53,7 @@ free_recurring_op(gpointer value)
 }
 
 static gboolean
-fail_pending_op(gpointer key, gpointer value, gpointer user_data)
+fail_pending_op(void *key, void *value, void *user_data)
 {
     lrmd_event_data_t event = { 0, };
     lrm_state_t *lrm_state = user_data;
@@ -121,7 +121,7 @@ lrm_state_create(const char *node_name)
 }
 
 static void
-internal_lrm_state_destroy(gpointer data)
+internal_lrm_state_destroy(void *data)
 {
     lrm_state_t *lrm_state = data;
 
@@ -450,8 +450,8 @@ controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
         GHashTableIter iter;
 
         g_hash_table_iter_init(&iter, parameters);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &key,
-                                      (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &key,
+                                      (void **) &value)) {
             params = lrmd_key_value_add(params, key, value);
         }
     }

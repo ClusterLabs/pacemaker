@@ -376,7 +376,7 @@ pcmk__sleep_ms(unsigned int ms)
  *       \p data is left intact.
  */
 unsigned int
-pcmk__create_timer(unsigned int interval_ms, GSourceFunc fn, gpointer data)
+pcmk__create_timer(unsigned int interval_ms, GSourceFunc fn, void *data)
 {
     pcmk__assert(interval_ms != 0 && fn != NULL);
 

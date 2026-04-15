@@ -873,7 +873,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
  *       pcmk__create_graph().)
  */
 static void
-add_action_to_graph(gpointer data, gpointer user_data)
+add_action_to_graph(void *data, void *user_data)
 {
     pcmk_action_t *action = (pcmk_action_t *) data;
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) user_data;
@@ -1088,7 +1088,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
             }
         }
 
-        add_action_to_graph((gpointer) action, (gpointer) scheduler);
+        add_action_to_graph((void *) action, (void *) scheduler);
     }
 
     pcmk__log_xml_trace(scheduler->priv->graph, "graph");

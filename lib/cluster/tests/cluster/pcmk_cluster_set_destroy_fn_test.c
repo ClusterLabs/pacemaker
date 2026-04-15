@@ -9,18 +9,16 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>                           // gpointer
-
 #include <crm/cluster.h>                    // pcmk_cluster_t, etc.
 #include <crm/common/unittest_internal.h>
 
 static void
-destroy_fn1(gpointer arg)
+destroy_fn1(void *arg)
 {
 }
 
 static void
-destroy_fn2(gpointer arg)
+destroy_fn2(void *arg)
 {
 }
 

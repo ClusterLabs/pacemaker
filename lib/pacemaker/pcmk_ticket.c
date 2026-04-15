@@ -72,7 +72,8 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
     ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
                                  ticket_id);
     g_hash_table_iter_init(&hash_iter, attr_set);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
+    while (g_hash_table_iter_next(&hash_iter, (void **) &key,
+                                  (void **) &value)) {
         pcmk__xe_set(*ticket_state_xml, key, value);
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)

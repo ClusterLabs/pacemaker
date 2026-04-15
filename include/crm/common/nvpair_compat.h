@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 #define PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 
-#include <glib.h>               // GHashTable, gpointer, GSList
+#include <glib.h>               // GHashTable, GSList
 #include <libxml/tree.h>        // xmlNode
 
 #include <crm/common/iso8601.h> // crm_time_t
@@ -39,7 +39,7 @@ GSList *pcmk_xml_attrs2nvpairs(const xmlNode *xml);
 void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
 
 //! \deprecated Do not use
-void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
+void hash2nvpair(void *key, void *value, void *user_data);
 
 //! \deprecated Do not use
 void pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,

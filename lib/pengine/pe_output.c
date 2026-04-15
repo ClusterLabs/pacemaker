@@ -198,7 +198,7 @@ get_operation_list(xmlNode *rsc_entry) {
 }
 
 static void
-add_dump_node(gpointer key, gpointer value, gpointer user_data)
+add_dump_node(void *key, void *value, void *user_data)
 {
     xmlNodePtr node = user_data;
 
@@ -207,7 +207,7 @@ add_dump_node(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-append_dump_text(gpointer key, gpointer value, gpointer user_data)
+append_dump_text(void *key, void *value, void *user_data)
 {
     char **dump_text = user_data;
     char *new_text = pcmk__assert_asprintf("%s %s=%s",
@@ -2390,7 +2390,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
 
         GList *attr_list = NULL;
         GHashTableIter iter;
-        gpointer key;
+        void *key = NULL;
 
         if (!node || !node->details || !node->details->online) {
             continue;
@@ -3430,7 +3430,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     bool details = va_arg(args, int);
 
     GHashTableIter iter;
-    gpointer value;
+    void *value = NULL;
 
     if (g_hash_table_size(tickets) == 0) {
         return pcmk_rc_no_output;

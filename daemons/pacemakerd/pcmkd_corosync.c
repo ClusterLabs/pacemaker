@@ -66,7 +66,7 @@ static corosync_cfg_callbacks_t cfg_callbacks = {
 };
 
 static int
-pcmk_cfg_dispatch(gpointer user_data)
+pcmk_cfg_dispatch(void *user_data)
 {
     corosync_cfg_handle_t *handle = (corosync_cfg_handle_t *) user_data;
     cs_error_t rc = corosync_cfg_dispatch(*handle, CS_DISPATCH_ALL);
@@ -93,7 +93,7 @@ close_cfg(void)
 }
 
 static gboolean
-cluster_reconnect_cb(gpointer data)
+cluster_reconnect_cb(void *data)
 {
     if (cluster_connect_cfg()) {
         g_clear_pointer(&reconnect_timer, mainloop_timer_del);
@@ -114,7 +114,7 @@ cluster_reconnect_cb(gpointer data)
 
 
 static void
-cfg_connection_destroy(gpointer user_data)
+cfg_connection_destroy(void *user_data)
 {
     pcmk__warn("Lost connection to cluster layer (connection will be "
                "reattempted once per second)");

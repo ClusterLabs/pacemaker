@@ -95,12 +95,15 @@ static pcmk__message_entry_t fmt_functions[] = {
 };
 
 static gboolean
-pid_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+pid_cb(const gchar *option_name, const gchar *optarg, void *data, GError **err)
+{
     return TRUE;
 }
 
 static gboolean
-standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+standby_cb(const gchar *option_name, const gchar *optarg, void *data,
+           GError **err)
+{
     options.standby = TRUE;
     pcmk__set_env_option(PCMK__ENV_NODE_START_STATE, PCMK_VALUE_STANDBY, false);
     return TRUE;

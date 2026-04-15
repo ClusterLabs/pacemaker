@@ -18,7 +18,7 @@
 #include <time.h>                   // time_t
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // gboolean, gpointer, g_*, etc.
+#include <glib.h>                   // gboolean, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
@@ -178,7 +178,7 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
  *       is received.
  */
 static gboolean
-digest_timer_cb(gpointer data)
+digest_timer_cb(void *data)
 {
     xmlNode *ping = NULL;
 
@@ -892,7 +892,7 @@ based_peer_callback(xmlNode *msg, void *private_data)
 }
 
 static gboolean
-cib_force_exit(gpointer data)
+cib_force_exit(void *data)
 {
     pcmk__notice("Exiting immediately after %s without shutdown acknowledgment",
                  pcmk__readable_interval(EXIT_ESCALATION_MS));

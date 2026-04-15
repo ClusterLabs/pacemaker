@@ -509,7 +509,7 @@ pcmk__strikey_table(GDestroyNotify key_destroy_func,
 }
 
 static void
-copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
+copy_str_table_entry(void *key, void *value, void *user_data)
 {
     if (key && value && user_data) {
         pcmk__insert_dup((GHashTable *) user_data,

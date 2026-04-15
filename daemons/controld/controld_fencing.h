@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,7 +19,7 @@ void controld_configure_fencing(GHashTable *options);
 void controld_reset_fencing_fail_count(const char *target);
 
 // Fencer API client
-gboolean controld_timer_fencer_connect(gpointer user_data);
+gboolean controld_timer_fencer_connect(void *user_data);
 void controld_disconnect_fencer(bool destroy);
 int controld_execute_fence_action(pcmk__graph_t *graph,
                                   pcmk__graph_action_t *action);

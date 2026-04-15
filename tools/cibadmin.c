@@ -551,7 +551,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
 };
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+command_cb(const gchar *option_name, const gchar *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-u", "--upgrade", NULL)) {
@@ -604,7 +604,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-show_access_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+show_access_cb(const gchar *option_name, const gchar *optarg, void *data,
                GError **error)
 {
     if (pcmk__str_eq(optarg, "auto", pcmk__str_null_matches)) {
@@ -629,7 +629,7 @@ show_access_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-section_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+section_cb(const gchar *option_name, const gchar *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-o", "--scope", NULL)) {

@@ -1567,7 +1567,7 @@ force_restart(pcmk_resource_t *rsc, const char *task, unsigned int interval_ms,
  * \param[in]     user_data  Where resource should be reloaded
  */
 static void
-schedule_reload(gpointer data, gpointer user_data)
+schedule_reload(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
@@ -1719,7 +1719,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                   "Device parameters changed (reload)", NULL,
                                   rsc->priv->scheduler);
                 pcmk__log_xml_debug(digest_data->params_all, "params:reload");
-                schedule_reload((gpointer) rsc, (gpointer) node);
+                schedule_reload((void *) rsc, (void *) node);
 
             } else {
                 pcmk__rsc_trace(rsc,

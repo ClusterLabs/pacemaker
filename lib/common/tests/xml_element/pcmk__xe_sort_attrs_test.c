@@ -60,7 +60,7 @@ assert_order(xmlNode *test_xml, const xmlNode *reference_xml)
         xml_node_private_t *nodepriv = test_attr->_private;
         uint32_t flags = (nodepriv != NULL)? nodepriv->flags : pcmk__xf_none;
 
-        gpointer old_flags_ptr = g_hash_table_lookup(attr_flags, test_name);
+        void *old_flags_ptr = g_hash_table_lookup(attr_flags, test_name);
         uint32_t old_flags = pcmk__xf_none;
 
         if (old_flags_ptr != NULL) {

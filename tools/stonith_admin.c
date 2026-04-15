@@ -73,11 +73,16 @@ struct {
     .delay = 0
 };
 
-gboolean add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_env_params(const gchar *option_name, const gchar *optarg,
+                        void *data, GError **error);
+gboolean add_fencing_device(const gchar *option_name, const gchar *optarg,
+                            void *data, GError **error);
+gboolean add_fencing_params(const gchar *option_name, const gchar *optarg,
+                            void *data, GError **error);
+gboolean add_tolerance(const gchar *option_name, const gchar *optarg,
+                       void *data, GError **error);
+gboolean set_tag(const gchar *option_name, const gchar *optarg, void *data,
+                 GError **error);
 
 #define INDENT "                                    "
 
@@ -239,7 +244,9 @@ static const int st_opts = st_opt_sync_call|st_opt_allow_self_fencing;
 static char *name = NULL;
 
 gboolean
-add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+add_env_params(const gchar *option_name, const gchar *optarg, void *data,
+               GError **error)
+{
     char *key = pcmk__assert_asprintf("OCF_RESKEY_%s", optarg);
     const char *env = getenv(key);
     gboolean retval = TRUE;
@@ -262,7 +269,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 }
 
 gboolean
-add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data,
+add_fencing_device(const gchar *option_name, const gchar *optarg, void *data,
                    GError **error)
 {
     options.devices = g_list_append(options.devices, pcmk__str_copy(optarg));
@@ -270,7 +277,9 @@ add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 gboolean
-add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+add_tolerance(const gchar *option_name, const gchar *optarg, void *data,
+              GError **error)
+{
     // pcmk__request_fencing() expects an unsigned int
     long long tolerance_ms = 0;
 
@@ -286,7 +295,7 @@ add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 }
 
 gboolean
-add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data,
+add_fencing_params(const gchar *option_name, const gchar *optarg, void *data,
                    GError **error)
 {
     gchar *name = NULL;
@@ -317,7 +326,9 @@ add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 gboolean
-set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+set_tag(const gchar *option_name, const gchar *optarg, void *data,
+        GError **error)
+{
     free(name);
     name = pcmk__assert_asprintf("%s.%s", crm_system_name, optarg);
     return TRUE;
@@ -608,7 +619,8 @@ main(int argc, char **argv)
             /* register_device wants a stonith_key_value_t instead of a GHashTable */
             stonith_key_value_t *params = NULL;
             GHashTableIter iter;
-            gpointer key, val;
+            void *key = NULL;
+            void *val = NULL;
 
             if (options.params != NULL) {
                 g_hash_table_iter_init(&iter, options.params);

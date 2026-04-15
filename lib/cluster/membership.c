@@ -300,13 +300,13 @@ remote_cache_refresh_helper(xmlNode *result, void *user_data)
 }
 
 static void
-mark_dirty(gpointer key, gpointer value, gpointer user_data)
+mark_dirty(void *key, void *value, void *user_data)
 {
     set_peer_flags((pcmk__node_status_t *) value, pcmk__node_status_dirty);
 }
 
 static gboolean
-is_dirty(gpointer key, gpointer value, gpointer user_data)
+is_dirty(void *key, void *value, void *user_data)
 {
     const pcmk__node_status_t *node = value;
 
@@ -420,7 +420,7 @@ pcmk__cluster_is_node_active(const pcmk__node_status_t *node)
  *         or \c FALSE otherwise
  */
 static gboolean
-should_forget_cluster_node(gpointer key, gpointer value, gpointer user_data)
+should_forget_cluster_node(void *key, void *value, void *user_data)
 {
     pcmk__node_status_t *node = value;
     pcmk__node_status_t *search = user_data;
@@ -513,7 +513,7 @@ pcmk__cluster_forget_cluster_node(uint32_t id, const char *node_name)
 }
 
 static void
-count_peer(gpointer key, gpointer value, gpointer user_data)
+count_peer(void *key, void *value, void *user_data)
 {
     unsigned int *count = user_data;
     pcmk__node_status_t *node = value;
@@ -544,7 +544,7 @@ pcmk__cluster_num_active_nodes(void)
 }
 
 static void
-destroy_crm_node(gpointer data)
+destroy_crm_node(void *data)
 {
     pcmk__node_status_t *node = data;
 
@@ -642,14 +642,14 @@ dump_peer_hash(int level, const char *caller)
     pcmk__node_status_t *node = NULL;
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &id, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, (void **) &id, (void **) &node)) {
         do_crm_log(level, "%s: Node %" PRIu32 "/%s = %p - %s",
                    caller, node->cluster_layer_id, node->name, node, id);
     }
 }
 
 static gboolean
-hash_find_by_data(gpointer key, gpointer value, gpointer user_data)
+hash_find_by_data(void *key, void *value, void *user_data)
 {
     return value == user_data;
 }
@@ -680,7 +680,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
 
     if (uname != NULL) {
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__str_eq(node->name, uname, pcmk__str_casei)) {
                 pcmk__trace("Name match: %s", node->name);
                 by_name = node;
@@ -691,7 +691,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
 
     if (id > 0) {
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (node->cluster_layer_id == id) {
                 pcmk__trace("ID match: %" PRIu32, node->cluster_layer_id);
                 by_id = node;
@@ -701,7 +701,7 @@ search_cluster_member_cache(unsigned int id, const char *uname,
 
     } else if (uuid != NULL) {
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             const char *this_xml_id = pcmk__cluster_get_xml_id(node);
 
             if (pcmk__str_eq(uuid, this_xml_id, pcmk__str_none)) {
@@ -888,7 +888,7 @@ remove_conflicting_peer(pcmk__node_status_t *node)
     }
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &existing_node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &existing_node)) {
         if ((existing_node->cluster_layer_id > 0)
             && (existing_node->cluster_layer_id != node->cluster_layer_id)
             && pcmk__str_eq(existing_node->name, node->name, pcmk__str_casei)) {
@@ -1343,7 +1343,7 @@ pcmk__reap_unseen_nodes(uint64_t membership)
 
     pcmk__trace("Reaping unseen nodes...");
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *)&node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (node->membership_id != membership) {
             if (node->state) {
                 /* Calling update_peer_state_iter() allows us to remove the node
@@ -1370,7 +1370,7 @@ find_cib_cluster_node(const char *id, const char *uname)
 
     if (uname) {
         g_hash_table_iter_init(&iter, cluster_node_cib_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__str_eq(node->name, uname, pcmk__str_casei)) {
                 pcmk__trace("Name match: %s = %p", node->name, node);
                 by_name = node;
@@ -1381,7 +1381,7 @@ find_cib_cluster_node(const char *id, const char *uname)
 
     if (id) {
         g_hash_table_iter_init(&iter, cluster_node_cib_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if (pcmk__str_eq(id, pcmk__cluster_get_xml_id(node),
                              pcmk__str_none)) {
                 pcmk__trace("ID match: %s= %p", id, node);

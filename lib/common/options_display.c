@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -166,12 +166,12 @@ option_list_default(pcmk__output_t *out, va_list args)
         // Store deprecated and advanced options to display later if appropriate
         if (pcmk__is_set(option->flags, pcmk__opt_deprecated)) {
             if (show_deprecated) {
-                deprecated = g_slist_prepend(deprecated, (gpointer) option);
+                deprecated = g_slist_prepend(deprecated, (void *) option);
             }
 
         } else if (pcmk__is_set(option->flags, pcmk__opt_advanced)) {
             if (show_advanced) {
-                advanced = g_slist_prepend(advanced, (gpointer) option);
+                advanced = g_slist_prepend(advanced, (void *) option);
             }
 
         } else {
@@ -180,7 +180,7 @@ option_list_default(pcmk__output_t *out, va_list args)
         }
 
         if (show_deprecated && (option->alt_name != NULL)) {
-            aliased = g_slist_prepend(aliased, (gpointer) option);
+            aliased = g_slist_prepend(aliased, (void *) option);
         }
     }
 

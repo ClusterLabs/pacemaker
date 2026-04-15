@@ -22,7 +22,7 @@
  * \param[in,out] user_data  Node object to free
  */
 void
-pcmk__free_node(gpointer user_data)
+pcmk__free_node(void *user_data)
 {
     pcmk_node_t *node = user_data;
 

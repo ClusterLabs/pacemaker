@@ -14,7 +14,7 @@
 #ifndef PCMK__CRM_COMMON_LOCATION_INTERNAL__H
 #define PCMK__CRM_COMMON_LOCATION_INTERNAL__H
 
-#include <glib.h>                       // gpointer, GList
+#include <glib.h>                       // GList
 
 #include <crm/common/nodes_internal.h>  // enum pcmk__probe_mode
 #include <crm/common/resources.h>       // enum rsc_role_e
@@ -33,7 +33,7 @@ typedef struct {
     GList *nodes;                       // Copies of affected nodes, with score
 } pcmk__location_t;
 
-void pcmk__free_location(gpointer user_data);
+void pcmk__free_location(void *user_data);
 
 #ifdef __cplusplus
 }

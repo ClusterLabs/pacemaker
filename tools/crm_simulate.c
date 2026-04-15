@@ -65,32 +65,42 @@ static pcmk__supported_format_t formats[] = {
 };
 
 static gboolean
-all_actions_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+all_actions_cb(const gchar *option_name, const gchar *optarg, void *data,
+               GError **error)
+{
     options.flags |= pcmk_sim_all_actions;
     return TRUE;
 }
 
 static gboolean
-attrs_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+attrs_cb(const gchar *option_name, const gchar *optarg, void *data,
+         GError **error)
+{
     section_opts |= pcmk_section_attributes;
     return TRUE;
 }
 
 static gboolean
-failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+failcounts_cb(const gchar *option_name, const gchar *optarg, void *data,
+              GError **error)
+{
     section_opts |= pcmk_section_failcounts | pcmk_section_failures;
     return TRUE;
 }
 
 static gboolean
-in_place_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+in_place_cb(const gchar *option_name, const gchar *optarg, void *data,
+            GError **error)
+{
     options.store = TRUE;
     options.flags |= pcmk_sim_process | pcmk_sim_simulate;
     return TRUE;
 }
 
 static gboolean
-live_check_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+live_check_cb(const gchar *option_name, const gchar *optarg, void *data,
+              GError **error)
+{
     if (options.xml_file) {
         free(options.xml_file);
     }
@@ -101,126 +111,166 @@ live_check_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 }
 
 static gboolean
-node_down_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+node_down_cb(const gchar *option_name, const gchar *optarg, void *data,
+             GError **error)
+{
     options.injections->node_down = g_list_append(options.injections->node_down, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-node_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+node_fail_cb(const gchar *option_name, const gchar *optarg, void *data,
+             GError **error)
+{
     options.injections->node_fail = g_list_append(options.injections->node_fail, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-node_up_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+node_up_cb(const gchar *option_name, const gchar *optarg, void *data,
+           GError **error)
+{
     pcmk__simulate_node_config = true;
     options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-op_fail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+op_fail_cb(const gchar *option_name, const gchar *optarg, void *data,
+           GError **error)
+{
     options.flags |= pcmk_sim_process | pcmk_sim_simulate;
     options.injections->op_fail = g_list_append(options.injections->op_fail, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-op_inject_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+op_inject_cb(const gchar *option_name, const gchar *optarg, void *data,
+             GError **error)
+{
     options.injections->op_inject = g_list_append(options.injections->op_inject, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-pending_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+pending_cb(const gchar *option_name, const gchar *optarg, void *data,
+           GError **error)
+{
     options.flags |= pcmk_sim_show_pending;
     return TRUE;
 }
 
 static gboolean
-process_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+process_cb(const gchar *option_name, const gchar *optarg, void *data,
+           GError **error)
+{
     options.flags |= pcmk_sim_process;
     return TRUE;
 }
 
 static gboolean
-quorum_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+quorum_cb(const gchar *option_name, const gchar *optarg, void *data,
+          GError **error)
+{
     pcmk__str_update(&options.injections->quorum, optarg);
     return TRUE;
 }
 
 static gboolean
-save_dotfile_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+save_dotfile_cb(const gchar *option_name, const gchar *optarg, void *data,
+                GError **error)
+{
     options.flags |= pcmk_sim_process;
     pcmk__str_update(&options.dot_file, optarg);
     return TRUE;
 }
 
 static gboolean
-save_graph_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+save_graph_cb(const gchar *option_name, const gchar *optarg, void *data,
+              GError **error)
+{
     options.flags |= pcmk_sim_process;
     pcmk__str_update(&options.graph_file, optarg);
     return TRUE;
 }
 
 static gboolean
-show_scores_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+show_scores_cb(const gchar *option_name, const gchar *optarg, void *data,
+               GError **error)
+{
     options.flags |= pcmk_sim_process | pcmk_sim_show_scores;
     return TRUE;
 }
 
 static gboolean
-simulate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+simulate_cb(const gchar *option_name, const gchar *optarg, void *data,
+            GError **error)
+{
     options.flags |= pcmk_sim_process | pcmk_sim_simulate;
     return TRUE;
 }
 
 static gboolean
-ticket_activate_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+ticket_activate_cb(const gchar *option_name, const gchar *optarg, void *data,
+                   GError **error)
+{
     options.injections->ticket_activate = g_list_append(options.injections->ticket_activate, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-ticket_grant_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+ticket_grant_cb(const gchar *option_name, const gchar *optarg, void *data,
+                GError **error)
+{
     options.injections->ticket_grant = g_list_append(options.injections->ticket_grant, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-ticket_revoke_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+ticket_revoke_cb(const gchar *option_name, const gchar *optarg, void *data,
+                 GError **error)
+{
     options.injections->ticket_revoke = g_list_append(options.injections->ticket_revoke, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-ticket_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+ticket_standby_cb(const gchar *option_name, const gchar *optarg, void *data,
+                  GError **error)
+{
     options.injections->ticket_standby = g_list_append(options.injections->ticket_standby, g_strdup(optarg));
     return TRUE;
 }
 
 static gboolean
-utilization_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+utilization_cb(const gchar *option_name, const gchar *optarg, void *data,
+               GError **error)
+{
     options.flags |= pcmk_sim_process | pcmk_sim_show_utilization;
     return TRUE;
 }
 
 static gboolean
-watchdog_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+watchdog_cb(const gchar *option_name, const gchar *optarg, void *data,
+            GError **error)
+{
     pcmk__str_update(&options.injections->watchdog, optarg);
     return TRUE;
 }
 
 static gboolean
-xml_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+xml_file_cb(const gchar *option_name, const gchar *optarg, void *data,
+            GError **error)
+{
     pcmk__str_update(&options.xml_file, optarg);
     options.flags |= pcmk_sim_sanitized;
     return TRUE;
 }
 
 static gboolean
-xml_pipe_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+xml_pipe_cb(const gchar *option_name, const gchar *optarg, void *data,
+            GError **error)
+{
     pcmk__str_update(&options.xml_file, "-");
     options.flags |= pcmk_sim_sanitized;
     return TRUE;

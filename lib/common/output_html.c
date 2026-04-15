@@ -130,7 +130,7 @@ html_init(pcmk__output_t *out) {
 }
 
 static void
-add_error_node(gpointer data, gpointer user_data) {
+add_error_node(void *data, void *user_data) {
     char *str = (char *) data;
     pcmk__output_t *out = (pcmk__output_t *) user_data;
     out->list_item(out, NULL, "%s", str);
@@ -199,7 +199,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     if (g_slist_length(priv->errors) > 0) {
         out->begin_list(out, "Errors", NULL, NULL);
-        g_slist_foreach(priv->errors, add_error_node, (gpointer) out);
+        g_slist_foreach(priv->errors, add_error_node, (void *) out);
         out->end_list(out);
     }
 

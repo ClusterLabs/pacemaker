@@ -88,7 +88,7 @@ log_action(stonith_action_t *action, pid_t pid)
 }
 
 static void
-append_config_arg(gpointer key, gpointer value, gpointer user_data)
+append_config_arg(void *key, void *value, void *user_data)
 {
     /* Filter out parameters handled directly by Pacemaker.
      *

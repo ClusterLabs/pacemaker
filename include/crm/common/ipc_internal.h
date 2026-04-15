@@ -19,7 +19,7 @@
 #include <sys/uio.h>                // struct iovec
 #include <sys/types.h>              // uid_t, gid_t, pid_t, size_t
 
-#include <glib.h>                   // gpointer, GQueue, ...
+#include <glib.h>                   // GQueue, ...
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qbipcs.h>              // qb_ipcs_connection_t, ...
 
@@ -200,7 +200,7 @@ typedef struct {
     } while (0)
 
 unsigned int pcmk__ipc_client_count(void);
-void pcmk__foreach_ipc_client(GHFunc func, gpointer user_data);
+void pcmk__foreach_ipc_client(GHFunc func, void *user_data);
 
 void pcmk__client_cleanup(void);
 

@@ -703,7 +703,7 @@ clear_actions_tracking_flag(pcmk_scheduler_t *scheduler)
  * \param[in]     user_data  Unused
  */
 static void
-add_start_restart_orderings_for_rsc(gpointer data, gpointer user_data)
+add_start_restart_orderings_for_rsc(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     GList *probes = NULL;

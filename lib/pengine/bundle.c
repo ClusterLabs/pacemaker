@@ -635,14 +635,13 @@ done:
 static void
 disallow_node(pcmk_resource_t *rsc, const char *uname)
 {
-    gpointer match = g_hash_table_lookup(rsc->priv->allowed_nodes, uname);
+    void *match = g_hash_table_lookup(rsc->priv->allowed_nodes, uname);
 
     if (match) {
         ((pcmk_node_t *) match)->assign->score = -PCMK_SCORE_INFINITY;
         ((pcmk_node_t *) match)->assign->probe_mode = pcmk__probe_never;
     }
-    g_list_foreach(rsc->priv->children, (GFunc) disallow_node,
-                   (gpointer) uname);
+    g_list_foreach(rsc->priv->children, (GFunc) disallow_node, (void *) uname);
 }
 
 static int
@@ -2092,8 +2091,8 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
             node = node_iter->data;
 
             // If insert returns true, we haven't counted this node yet
-            if (g_hash_table_insert(nodes, (gpointer) node->details,
-                                    (gpointer) node)
+            if (g_hash_table_insert(nodes, (void *) node->details,
+                                    (void *) node)
                 && !pe__count_active_node(rsc, node, &active, count_all,
                                           count_clean)) {
                 goto done;

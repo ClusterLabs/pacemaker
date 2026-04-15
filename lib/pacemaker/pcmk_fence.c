@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -158,7 +158,7 @@ fence_callback(stonith_t * stonith, stonith_callback_data_t * data)
 }
 
 static gboolean
-async_fence_helper(gpointer user_data)
+async_fence_helper(void *user_data)
 {
     stonith_t *st = async_fence_data.st;
     int call_id = 0;

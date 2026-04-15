@@ -73,7 +73,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             GHashTableIter iter;
 
             g_hash_table_iter_init(&iter, a->values);
-            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
+            while (g_hash_table_iter_next(&iter, NULL, (void **) &v)) {
                 host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
                 pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, v->nodename);
                 pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE, v->current);
@@ -257,7 +257,7 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
         }
 
         g_hash_table_iter_init(&aIter, attributes);
-        while (g_hash_table_iter_next(&aIter, (gpointer *) & attr, NULL)) {
+        while (g_hash_table_iter_next(&aIter, (void **) &attr, NULL)) {
             int status = regexec(&r_patt, attr, 0, NULL, 0);
 
             if (status == 0) {

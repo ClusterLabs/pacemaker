@@ -207,7 +207,7 @@ pcmk__rscs_matching_id(const char *id, const pcmk_scheduler_t *scheduler)
  * \param[in]     user_data  Ignored
  */
 static void
-set_assignment_methods_for_rsc(gpointer data, gpointer user_data)
+set_assignment_methods_for_rsc(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
 
@@ -265,7 +265,7 @@ pcmk__colocated_resources(const pcmk_resource_t *rsc,
 
     pcmk__rsc_trace(orig_rsc, "%s is in colocation chain with %s",
                     rsc->id, orig_rsc->id);
-    colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
+    colocated_rscs = g_list_prepend(colocated_rscs, (void *) rsc);
 
     // Follow colocations where this resource is the dependent resource
     colocations = pcmk__this_with_colocations(rsc);
@@ -676,7 +676,7 @@ get_node_score(const pcmk_node_t *node, GHashTable *nodes)
  *         or +1 if \p a should be assigned after \b
  */
 static int
-cmp_resources(gconstpointer a, gconstpointer b, gpointer data)
+cmp_resources(gconstpointer a, gconstpointer b, void *data)
 {
     /* GLib insists that this function require gconstpointer arguments, but we
      * make a small, temporary change to each argument (setting the

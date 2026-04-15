@@ -72,7 +72,7 @@ struct rsc_node_info {
  * \note This is suitable for use with \c g_list_foreach().
  */
 static void
-prepend_node_info(gpointer data, gpointer user_data)
+prepend_node_info(void *data, void *user_data)
 {
     const pcmk_node_t *node = data;
     struct rsc_node_info *rni = user_data;
@@ -410,7 +410,7 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
 }
 
 static void
-free_attr_update_data(gpointer data)
+free_attr_update_data(void *data)
 {
     attr_update_data_t *ud = data;
 
@@ -945,13 +945,13 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
             }
         }
 
-        g_hash_table_add(rscs, (gpointer) failed_id);
+        g_hash_table_add(rscs, (void *) failed_id);
     }
 
     free(interval_ms_s);
 
     g_hash_table_iter_init(&iter, rscs);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
+    while (g_hash_table_iter_next(&iter, (void **) &failed_id, NULL)) {
         pcmk_resource_t *rsc = NULL;
 
         pcmk__debug("Erasing failures of %s on %s", failed_id,
@@ -1033,10 +1033,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
                 GHashTableIter iter;
 
                 g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-                while (g_hash_table_iter_next(&iter, NULL,
-                                              (gpointer *) &node)) {
+                while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
                     if ((node != NULL) && (node->assign->score >= 0)) {
-                        nodes = g_list_prepend(nodes, (gpointer *) node);
+                        nodes = g_list_prepend(nodes, (void **) node);
                     }
                 }
 
@@ -1319,7 +1318,8 @@ generate_resource_params(pcmk_resource_t *rsc)
     params = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &key,
+                                      (void **) &value)) {
             pcmk__insert_dup(combined, key, value);
         }
     }
@@ -2361,8 +2361,8 @@ apply_overrides(GHashTable *params, GHashTable *overrides)
         char *value = NULL;
 
         g_hash_table_iter_init(&iter, overrides);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &name,
-                                      (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &name,
+                                      (void **) &value)) {
             pcmk__insert_dup(params, name, value);
         }
     }

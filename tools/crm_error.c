@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,7 @@ struct {
 };
 
 static gboolean
-result_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+result_type_cb(const gchar *option_name, const gchar *optarg, void *data,
                GError **error)
 {
     if (pcmk__str_any_of(option_name, "--exit", "-X", NULL)) {

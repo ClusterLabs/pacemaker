@@ -89,8 +89,8 @@ static int stonith_send_command(stonith_t *stonith, const char *op,
                                 xmlNode *data, xmlNode **output_data,
                                 int call_options, int timeout);
 
-static void stonith_connection_destroy(gpointer user_data);
-static void stonith_send_notification(gpointer data, gpointer user_data);
+static void stonith_connection_destroy(void *user_data);
+static void stonith_send_notification(void *data, void *user_data);
 static int stonith_api_del_notification(stonith_t *stonith,
                                         const char *event);
 
@@ -248,9 +248,7 @@ stonith__watchdog_fencing_enabled_for_node(const char *node)
    loop over it to remove the marked items
  */
 static void
-foreach_notify_entry (stonith_private_t *private,
-                GFunc func,
-                gpointer user_data)
+foreach_notify_entry(stonith_private_t *private, GFunc func, void *user_data)
 {
     private->notify_refcnt++;
     g_list_foreach(private->notify_list, func, user_data);
@@ -276,7 +274,7 @@ foreach_notify_entry (stonith_private_t *private,
 }
 
 static void
-stonith_connection_destroy(gpointer user_data)
+stonith_connection_destroy(void *user_data)
 {
     stonith_t *stonith = user_data;
     stonith_private_t *native = NULL;
@@ -313,7 +311,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace standard,
         standard = get_namespace_from_agent(agent);
     }
     if (standard == st_namespace_lha) {
-        hash2field((gpointer) "plugin", (gpointer) agent, args);
+        hash2field((void *) "plugin", (void *) agent, args);
         agent = "fence_legacy";
     }
 #endif
@@ -329,7 +327,7 @@ create_device_registration_xml(const char *id, enum stonith_namespace standard,
     }
 
     for (; params; params = params->next) {
-        hash2field((gpointer) params->key, (gpointer) params->value, args);
+        hash2field((void *) params->key, (void *) params->value, args);
     }
 
     return data;
@@ -853,7 +851,7 @@ stonith_create_op(int call_id, const char *token, const char *op, xmlNode * data
 }
 
 static void
-stonith_destroy_op_callback(gpointer data)
+stonith_destroy_op_callback(void *data)
 {
     stonith_callback_client_t *blob = data;
 
@@ -1010,7 +1008,7 @@ invoke_registered_callbacks(stonith_t *stonith, const xmlNode *msg, int call_id)
 }
 
 static gboolean
-stonith_async_timeout_handler(gpointer data)
+stonith_async_timeout_handler(void *data)
 {
     struct timer_rec_s *timer = data;
 
@@ -1069,7 +1067,7 @@ update_callback_timeout(int call_id, int timeout, stonith_t * st)
 }
 
 static int
-stonith_dispatch_internal(const char *buffer, ssize_t length, gpointer userdata)
+stonith_dispatch_internal(const char *buffer, ssize_t length, void *userdata)
 {
     const char *type = NULL;
     struct notify_blob_s blob;
@@ -1317,7 +1315,7 @@ stonith_api_add_notification(stonith_t * stonith, const char *event,
 }
 
 static void
-del_notify_entry(gpointer data, gpointer user_data)
+del_notify_entry(void *data, void *user_data)
 {
     stonith_notify_client_t *entry = data;
     stonith_t * stonith = user_data;
@@ -1531,7 +1529,7 @@ event_free(stonith_event_t * event)
 }
 
 static void
-stonith_send_notification(gpointer data, gpointer user_data)
+stonith_send_notification(void *data, void *user_data)
 {
     struct notify_blob_s *blob = user_data;
     stonith_notify_client_t *entry = data;
@@ -1786,7 +1784,7 @@ free_stonith_api(stonith_t *stonith)
 }
 
 static gboolean
-is_fencing_param(gpointer key, gpointer value, gpointer user_data)
+is_fencing_param(void *key, void *value, void *user_data)
 {
     return pcmk_stonith_param(key);
 }
@@ -2887,7 +2885,7 @@ stonith_api_delete(stonith_t *stonith)
 }
 
 static void
-stonith_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
+stonith_dump_pending_op(void *key, void *value, void *user_data)
 {
     int call = GPOINTER_TO_INT(key);
     stonith_callback_client_t *blob = value;

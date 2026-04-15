@@ -128,7 +128,7 @@ pcmk__intkey_table(GDestroyNotify value_destroy_func)
  *       already exists in the table, the old value is freed and replaced.
  */
 static inline gboolean
-pcmk__intkey_table_insert(GHashTable *hash_table, int key, gpointer value)
+pcmk__intkey_table_insert(GHashTable *hash_table, int key, void *value)
 {
     return g_hash_table_insert(hash_table, GINT_TO_POINTER(key), value);
 }
@@ -142,7 +142,7 @@ pcmk__intkey_table_insert(GHashTable *hash_table, int key, gpointer value)
  *
  * \return Value in table for \key (or NULL if not found)
  */
-static inline gpointer
+static inline void *
 pcmk__intkey_table_lookup(GHashTable *hash_table, int key)
 {
     return g_hash_table_lookup(hash_table, GINT_TO_POINTER(key));

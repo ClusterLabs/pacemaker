@@ -2382,7 +2382,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                                 pcmk__s(rsc->priv->history_id, "the same"),
                                 pcmk__node_name(n));
                 g_hash_table_insert(iter->priv->probed_nodes,
-                                    (gpointer) n->priv->id, n);
+                                    (void *) n->priv->id, n);
             }
             if (pcmk__is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
@@ -2995,7 +2995,7 @@ set_active(pcmk_resource_t *rsc)
 }
 
 static void
-set_node_score(gpointer key, gpointer value, gpointer user_data)
+set_node_score(void *key, void *value, void *user_data)
 {
     pcmk_node_t *node = value;
     int *score = user_data;
@@ -3287,8 +3287,7 @@ add_dangling_migration(pcmk_resource_t *rsc, const pcmk_node_t *node)
                     rsc->id, pcmk__node_name(node));
     rsc->priv->orig_role = pcmk_role_stopped;
     rsc->priv->dangling_migration_sources =
-        g_list_prepend(rsc->priv->dangling_migration_sources,
-                       (gpointer) node);
+        g_list_prepend(rsc->priv->dangling_migration_sources, (void *) node);
 }
 
 /*!
@@ -3502,7 +3501,7 @@ unpack_migrate_to_failure(struct action_history *history)
         // Mark node as having dangling migration so we can force a stop later
         history->rsc->priv->dangling_migration_sources =
             g_list_prepend(history->rsc->priv->dangling_migration_sources,
-                           (gpointer) history->node);
+                           (void *) history->node);
     }
 }
 
@@ -4967,7 +4966,7 @@ done:
  * \param[in]     user_data  \c GHashTable to insert into
  */
 static gboolean
-insert_attr(gpointer key, gpointer value, gpointer user_data)
+insert_attr(void *key, void *value, void *user_data)
 {
     GHashTable *table = user_data;
 

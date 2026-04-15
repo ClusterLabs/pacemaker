@@ -41,7 +41,8 @@ struct {
     .bash_export = FALSE
 };
 
-gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean command_cb(const gchar *option_name, const gchar *optarg, void *data,
+                    GError **error);
 
 static GOptionEntry command_options[] = {
     { "status", 'S', 0, G_OPTION_ARG_CALLBACK, command_cb,
@@ -96,7 +97,8 @@ static GOptionEntry additional_options[] = {
 };
 
 gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error)
+command_cb(const gchar *option_name, const gchar *optarg, void *data,
+           GError **error)
 {
     if (!strcmp(option_name, "--status") || !strcmp(option_name, "-S")) {
         command = cmd_health;

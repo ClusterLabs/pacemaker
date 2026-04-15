@@ -14,7 +14,7 @@
 #include <stdint.h>                 // uint32_t
 #include <time.h>                   // time_t
 
-#include <glib.h>                   // GList, GHashTable, GMainLoop, gpointer
+#include <glib.h>                   // GList, GHashTable, GMainLoop
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/internal.h>    // pcmk__client_t, pcmk__action_result_t
@@ -66,7 +66,7 @@ int lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg);
 
 void notify_of_new_client(pcmk__client_t *new_client);
 
-void execd_free_rsc(gpointer data);
+void execd_free_rsc(void *data);
 
 void handle_shutdown_ack(void);
 

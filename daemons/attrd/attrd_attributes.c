@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -172,9 +172,9 @@ attrd_clear_value_seen(void)
     attribute_value_t *v = NULL;
 
     g_hash_table_iter_init(&aIter, attributes);
-    while (g_hash_table_iter_next(&aIter, NULL, (gpointer *) & a)) {
+    while (g_hash_table_iter_next(&aIter, NULL, (void **) &a)) {
         g_hash_table_iter_init(&vIter, a->values);
-        while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & v)) {
+        while (g_hash_table_iter_next(&vIter, NULL, (void **) &v)) {
             attrd_clear_value_flags(v, attrd_value_from_peer);
         }
     }
