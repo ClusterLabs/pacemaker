@@ -9,14 +9,27 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                        // bool, true, false
-#include <stdint.h>
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <string.h>                     // strchr
 
-#include <crm/pengine/status.h>
-#include <crm/pengine/internal.h>
-#include <crm/common/xml.h>
-#include <crm/common/output.h>
-#include <pe_status_private.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_ORDERED
+#include <crm/common/output.h>          // pcmk_show_*
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_*, rsc_role_e
+#include <crm/common/scheduler.h>       // pcmk_resource_t
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // rsc_printable_id
+
+#include "pe_status_private.h"          // pe__group_max_per_node, etc.
 
 typedef struct {
     pcmk_resource_t *last_child;    // Last group member
