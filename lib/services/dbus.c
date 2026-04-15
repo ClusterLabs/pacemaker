@@ -703,7 +703,7 @@ async_query_result_cb(DBusPendingCall *pending, void *user_data)
  */
 char *
 pcmk_dbus_get_property(DBusConnection *connection, const char *target,
-                       const char *obj, const gchar * iface, const char *name,
+                       const char *obj, const char *iface, const char *name,
                        property_callback_func callback, void *userdata,
                        DBusPendingCall **pending, int timeout)
 {

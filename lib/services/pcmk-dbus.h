@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2024 the Pacemaker project contributors
+ * Copyright 2014-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -40,10 +40,14 @@ G_GNUC_INTERNAL
 bool pcmk_dbus_type_check(DBusMessage *msg, DBusMessageIter *field, int expected, const char *function, int line);
 
 G_GNUC_INTERNAL
-char *pcmk_dbus_get_property(
-    DBusConnection *connection, const char *target, const char *obj, const gchar * iface, const char *name,
-    void (*callback)(const char *name, const char *value, void *userdata), void *userdata,
-    DBusPendingCall **pending, int timeout);
+char *pcmk_dbus_get_property(DBusConnection *connection, const char *target,
+                             const char *obj, const char *iface,
+                             const char *name,
+                             void (*callback)(const char *name,
+                                              const char *value,
+                                              void *userdata),
+                             void *userdata, DBusPendingCall **pending,
+                             int timeout);
 
 G_GNUC_INTERNAL
 bool pcmk_dbus_find_error(const DBusPendingCall *pending, DBusMessage *reply,

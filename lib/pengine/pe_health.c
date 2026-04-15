@@ -90,7 +90,7 @@ add_node_health_value(void *key, void *value, void *user_data)
         return;
     }
 
-    if (g_str_has_prefix((const gchar *) key, "#health")) {
+    if (g_str_has_prefix((const char *) key, "#health")) {
         struct health_sum *health_sum = user_data;
         int score = 0;
         int rc = pcmk_parse_score((const char *) value, &score, 0);

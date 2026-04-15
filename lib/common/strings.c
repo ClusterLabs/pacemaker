@@ -724,8 +724,8 @@ pcmk__parse_ll_range(const char *text, long long *start, long long *end)
     long long local_end = 0;
     gchar **split = NULL;
     unsigned int length = 0;
-    const gchar *start_s = NULL;
-    const gchar *end_s = NULL;
+    const char *start_s = NULL;
+    const char *end_s = NULL;
 
     // Do not free
     char *remainder = NULL;

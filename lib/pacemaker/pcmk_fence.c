@@ -47,8 +47,8 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
     const char *pattern = NULL;
 
     gchar **name_value = NULL;
-    const gchar *name = NULL;
-    const gchar *value = NULL;
+    const char *name = NULL;
+    const char *value = NULL;
     int rc = pcmk_rc_ok;
 
     if (target == NULL) {

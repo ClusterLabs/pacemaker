@@ -359,8 +359,7 @@ cibadmin_post_default(pcmk__output_t *out, cib_t *cib_conn, int call_options,
 
 static void
 cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
-                    const gchar *acl_user, crm_exit_t *exit_code,
-                    GError **error)
+                    const char *acl_user, crm_exit_t *exit_code, GError **error)
 {
     if ((options.acl_render_mode != pcmk__acl_render_none)
         && (*exit_code == CRM_EX_OK)
@@ -406,7 +405,7 @@ cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
 static crm_exit_t
 cibadmin_handle_command(pcmk__output_t *out,
                         const cibadmin_cmd_info_t *cmd_info, int call_options,
-                        const gchar *acl_user, xmlNode *input, GError **error)
+                        const char *acl_user, xmlNode *input, GError **error)
 {
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
