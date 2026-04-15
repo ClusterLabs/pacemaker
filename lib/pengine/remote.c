@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,11 +9,20 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
 
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
-#include <glib.h>
+#include <glib.h>                       // GList
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/actions.h>         // crm_create_op_xml, PCMK_ACTION_*
+#include <crm/common/agents.h>          // PCMK_RESOURCE_CLASS_OCF
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/nvpair.h>          // crm_create_nvpair_xml
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_REMOTE_*, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe_create_remote_xml, etc.
 
 /*!
  * \internal
