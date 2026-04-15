@@ -308,8 +308,8 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__guint_from_hash(GHashTable *table, const char *key,
-                      unsigned int default_val, unsigned int *result)
+pcmk__uint_from_hash(GHashTable *table, const char *key,
+                     unsigned int default_val, unsigned int *result)
 {
     const char *value;
     long long value_ll;

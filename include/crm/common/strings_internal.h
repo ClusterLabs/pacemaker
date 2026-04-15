@@ -43,8 +43,8 @@ enum pcmk__str_flags {
 
 int pcmk__scan_double(const char *text, double *result,
                       const char *default_text, char **end_text);
-int pcmk__guint_from_hash(GHashTable *table, const char *key,
-                          unsigned int default_val, unsigned int *result);
+int pcmk__uint_from_hash(GHashTable *table, const char *key,
+                         unsigned int default_val, unsigned int *result);
 void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,

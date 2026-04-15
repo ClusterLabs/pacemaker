@@ -19,8 +19,8 @@ null_args(void **state)
     GHashTable *tbl = pcmk__strkey_table(free, free);
     unsigned int result = 0;
 
-    assert_int_equal(pcmk__guint_from_hash(NULL, "abc", 123, &result), EINVAL);
-    assert_int_equal(pcmk__guint_from_hash(tbl, NULL, 123, &result), EINVAL);
+    assert_int_equal(pcmk__uint_from_hash(NULL, "abc", 123, &result), EINVAL);
+    assert_int_equal(pcmk__uint_from_hash(tbl, NULL, 123, &result), EINVAL);
 
     g_hash_table_destroy(tbl);
 }
@@ -31,7 +31,8 @@ missing_key(void **state)
     GHashTable *tbl = pcmk__strkey_table(free, free);
     unsigned int result = 0;
 
-    assert_int_equal(pcmk__guint_from_hash(tbl, "abc", 123, &result), pcmk_rc_ok);
+    assert_int_equal(pcmk__uint_from_hash(tbl, "abc", 123, &result),
+                     pcmk_rc_ok);
     assert_int_equal(result, 123);
 
     g_hash_table_destroy(tbl);
@@ -45,7 +46,8 @@ standard_usage(void **state)
 
     g_hash_table_insert(tbl, strdup("abc"), strdup("123"));
 
-    assert_int_equal(pcmk__guint_from_hash(tbl, "abc", 456, &result), pcmk_rc_ok);
+    assert_int_equal(pcmk__uint_from_hash(tbl, "abc", 456, &result),
+                     pcmk_rc_ok);
     assert_int_equal(result, 123);
 
     g_hash_table_destroy(tbl);
@@ -61,13 +63,14 @@ conversion_errors(void **state)
     g_hash_table_insert(tbl, strdup("toobig"), strdup("20000000000000000"));
     g_hash_table_insert(tbl, strdup("baddata"), strdup("asdf"));
 
-    assert_int_equal(pcmk__guint_from_hash(tbl, "negative", 456, &result), ERANGE);
+    assert_int_equal(pcmk__uint_from_hash(tbl, "negative", 456, &result),
+                     ERANGE);
     assert_int_equal(result, 456);
 
-    assert_int_equal(pcmk__guint_from_hash(tbl, "toobig", 456, &result), ERANGE);
+    assert_int_equal(pcmk__uint_from_hash(tbl, "toobig", 456, &result), ERANGE);
     assert_int_equal(result, 456);
 
-    assert_int_equal(pcmk__guint_from_hash(tbl, "baddata", 456, &result),
+    assert_int_equal(pcmk__uint_from_hash(tbl, "baddata", 456, &result),
                      pcmk_rc_bad_input);
     assert_int_equal(result, 456);
 

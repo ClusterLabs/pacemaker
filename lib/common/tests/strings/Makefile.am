@@ -16,7 +16,6 @@ check_PROGRAMS = pcmk__add_word_test
 check_PROGRAMS += pcmk__btoa_test
 check_PROGRAMS += pcmk__compress_test
 check_PROGRAMS += pcmk__g_strcat_test
-check_PROGRAMS += pcmk__guint_from_hash_test
 check_PROGRAMS += pcmk__numeric_strcasecmp_test
 check_PROGRAMS += pcmk__parse_bool_test
 check_PROGRAMS += pcmk__parse_ll_range_test
@@ -33,5 +32,6 @@ check_PROGRAMS += pcmk__str_update_test
 check_PROGRAMS += pcmk__strcmp_test
 check_PROGRAMS += pcmk__strkey_table_test
 check_PROGRAMS += pcmk__strikey_table_test
+check_PROGRAMS += pcmk__uint_from_hash_test
 
 TESTS = $(check_PROGRAMS)

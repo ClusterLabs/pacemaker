@@ -748,8 +748,8 @@ pcmk__action_is_recurring(const pcmk_action_t *action)
 {
     unsigned int interval_ms = 0;
 
-    if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
-                              &interval_ms) != pcmk_rc_ok) {
+    if (pcmk__uint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
+                             &interval_ms) != pcmk_rc_ok) {
         return false;
     }
     return (interval_ms > 0);

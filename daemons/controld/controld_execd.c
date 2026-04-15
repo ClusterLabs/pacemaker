@@ -1624,8 +1624,8 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
     op_timeout = crm_meta_value(params, PCMK_META_TIMEOUT);
     pcmk__scan_min_int(op_timeout, &op->timeout, 0);
 
-    if (pcmk__guint_from_hash(params, CRM_META "_" PCMK_META_INTERVAL, 0,
-                              &(op->interval_ms)) != pcmk_rc_ok) {
+    if (pcmk__uint_from_hash(params, CRM_META "_" PCMK_META_INTERVAL, 0,
+                             &(op->interval_ms)) != pcmk_rc_ok) {
         op->interval_ms = 0;
     }
 
