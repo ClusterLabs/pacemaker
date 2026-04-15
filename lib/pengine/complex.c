@@ -1088,7 +1088,7 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->priv->with_this_colocations);
     g_list_free(rsc->priv->this_with_colocations);
     g_list_free(rsc->priv->location_constraints);
-    g_list_free(rsc->priv->ticket_constraints);
+    g_list_free_full(rsc->priv->ticket_constraints, free);
 
     if (rsc->priv->meta != NULL) {
         g_hash_table_destroy(rsc->priv->meta);
