@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,13 +9,21 @@
 
 #include <crm_internal.h>
 
-#include <libxml/xpath.h>           // xmlXPathObject, etc.
+#include <errno.h>                      // ENXIO, EOPNOTSUPP
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // free
 
-#include <crm/cib/internal.h>
-#include <crm/common/cib.h>
-#include <crm/common/iso8601.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xpath.h>               // xmlXPathObject, xmlXPathFreeObject
+
+#include <crm/common/cib.h>             // pcmk_find_cib_element
+#include <crm/common/iso8601.h>         // crm_time_t
+#include <crm/common/options.h>         // PCMK_VALUE_DATE_SPEC
+#include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc2exitc
+#include <crm/common/rules.h>           // expression_type
+#include <crm/common/scheduler.h>       // pcmk_free_scheduler, pcmk_scheduler_t
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <pacemaker.h>                  // pcmk_check_rules
 #include <pacemaker-internal.h>
 
 #include "libpacemaker_private.h"
@@ -35,8 +43,8 @@
 static int
 eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
 {
-    xmlNodePtr cib_constraints = NULL;
-    xmlNodePtr match = NULL;
+    xmlNode *cib_constraints = NULL;
+    xmlNode *match = NULL;
     xmlXPathObject *xpath_obj = NULL;
     char *xpath = NULL;
     int rc = pcmk_rc_ok;
@@ -160,7 +168,7 @@ eval_rule(pcmk_scheduler_t *scheduler, const char *rule_id, const char **error)
  * \return Standard Pacemaker return code
  */
 int
-pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
+pcmk__check_rules(pcmk__output_t *out, xmlNode *input, const crm_time_t *date,
                   const char **rule_ids)
 {
     pcmk_scheduler_t *scheduler = NULL;
@@ -195,7 +203,7 @@ pcmk__check_rules(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *date,
 
 // Documented in pacemaker.h
 int
-pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
+pcmk_check_rules(xmlNode **xml, xmlNode *input, const crm_time_t *date,
                  const char **rule_ids)
 {
     pcmk__output_t *out = NULL;
