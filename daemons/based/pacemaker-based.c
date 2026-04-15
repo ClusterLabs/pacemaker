@@ -121,7 +121,7 @@ based_metadata(pcmk__output_t *out)
 }
 
 static gboolean
-disk_writes_cb(const gchar *option_name, const gchar *optarg, void *data,
+disk_writes_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     based_enable_writes(0);

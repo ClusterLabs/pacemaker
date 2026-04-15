@@ -41,8 +41,8 @@ struct {
     .mode = crm_rule_mode_none
 };
 
-static gboolean mode_cb(const gchar *option_name, const gchar *optarg,
-                        void *data, GError **error);
+static gboolean mode_cb(const char *option_name, const char *optarg, void *data,
+                        GError **error);
 
 static GOptionEntry mode_entries[] = {
     { "check", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
@@ -72,8 +72,7 @@ static GOptionEntry addl_entries[] = {
 };
 
 static gboolean
-mode_cb(const gchar *option_name, const gchar *optarg, void *data,
-        GError **error)
+mode_cb(const char *option_name, const char *optarg, void *data, GError **error)
 {
     if (strcmp(option_name, "c")) {
         options.mode = crm_rule_mode_check;

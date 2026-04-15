@@ -72,7 +72,7 @@ static struct {
  *       [a-zA-Z0-9_] characters and do not start with a digit.
  */
 static bool
-valid_env_var_name(const gchar *name)
+valid_env_var_name(const char *name)
 {
     if (!isalpha(*name) && (*name != '_')) {
         // Invalid first character

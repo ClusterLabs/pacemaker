@@ -41,7 +41,7 @@ struct {
     .bash_export = FALSE
 };
 
-gboolean command_cb(const gchar *option_name, const gchar *optarg, void *data,
+gboolean command_cb(const char *option_name, const char *optarg, void *data,
                     GError **error);
 
 static GOptionEntry command_options[] = {
@@ -97,7 +97,7 @@ static GOptionEntry additional_options[] = {
 };
 
 gboolean
-command_cb(const gchar *option_name, const gchar *optarg, void *data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     if (!strcmp(option_name, "--status") || !strcmp(option_name, "-S")) {

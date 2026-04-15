@@ -117,7 +117,7 @@ void pcmk__add_arg_group(GOptionContext *context, const char *name,
  *
  * \param[in,out] argv  Command line (typically from pcmk__cmdline_preproc())
  */
-gchar *pcmk__quote_cmdline(gchar **argv);
+gchar *pcmk__quote_cmdline(char **argv);
 
 /*!
  * \internal

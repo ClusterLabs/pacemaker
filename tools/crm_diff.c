@@ -35,7 +35,7 @@ struct {
 } options;
 
 static gboolean
-patch_cb(const gchar *option_name, const gchar *optarg, void *data,
+patch_cb(const char *option_name, const char *optarg, void *data,
          GError **error)
 {
     options.patch = true;

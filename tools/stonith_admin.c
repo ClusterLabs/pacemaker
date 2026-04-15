@@ -73,15 +73,15 @@ struct {
     .delay = 0
 };
 
-gboolean add_env_params(const gchar *option_name, const gchar *optarg,
-                        void *data, GError **error);
-gboolean add_fencing_device(const gchar *option_name, const gchar *optarg,
+gboolean add_env_params(const char *option_name, const char *optarg, void *data,
+                        GError **error);
+gboolean add_fencing_device(const char *option_name, const char *optarg,
                             void *data, GError **error);
-gboolean add_fencing_params(const gchar *option_name, const gchar *optarg,
+gboolean add_fencing_params(const char *option_name, const char *optarg,
                             void *data, GError **error);
-gboolean add_tolerance(const gchar *option_name, const gchar *optarg,
-                       void *data, GError **error);
-gboolean set_tag(const gchar *option_name, const gchar *optarg, void *data,
+gboolean add_tolerance(const char *option_name, const char *optarg, void *data,
+                       GError **error);
+gboolean set_tag(const char *option_name, const char *optarg, void *data,
                  GError **error);
 
 #define INDENT "                                    "
@@ -244,7 +244,7 @@ static const int st_opts = st_opt_sync_call|st_opt_allow_self_fencing;
 static char *name = NULL;
 
 gboolean
-add_env_params(const gchar *option_name, const gchar *optarg, void *data,
+add_env_params(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     char *key = pcmk__assert_asprintf("OCF_RESKEY_%s", optarg);
@@ -269,7 +269,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 gboolean
-add_fencing_device(const gchar *option_name, const gchar *optarg, void *data,
+add_fencing_device(const char *option_name, const char *optarg, void *data,
                    GError **error)
 {
     options.devices = g_list_append(options.devices, pcmk__str_copy(optarg));
@@ -277,7 +277,7 @@ add_fencing_device(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 gboolean
-add_tolerance(const gchar *option_name, const gchar *optarg, void *data,
+add_tolerance(const char *option_name, const char *optarg, void *data,
               GError **error)
 {
     // pcmk__request_fencing() expects an unsigned int
@@ -295,7 +295,7 @@ add_tolerance(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 gboolean
-add_fencing_params(const gchar *option_name, const gchar *optarg, void *data,
+add_fencing_params(const char *option_name, const char *optarg, void *data,
                    GError **error)
 {
     gchar *name = NULL;
@@ -326,8 +326,7 @@ add_fencing_params(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 gboolean
-set_tag(const gchar *option_name, const gchar *optarg, void *data,
-        GError **error)
+set_tag(const char *option_name, const char *optarg, void *data, GError **error)
 {
     free(name);
     name = pcmk__assert_asprintf("%s.%s", crm_system_name, optarg);

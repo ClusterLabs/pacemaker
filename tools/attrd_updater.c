@@ -52,7 +52,7 @@ struct {
 };
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, void *data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **err)
 {
     pcmk__str_update(&options.attr_value, optarg);
@@ -75,7 +75,7 @@ command_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-private_cb(const gchar *option_name, const gchar *optarg, void *data,
+private_cb(const char *option_name, const char *optarg, void *data,
            GError **err)
 {
     pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_private);
@@ -83,7 +83,7 @@ private_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-section_cb(const gchar *option_name, const gchar *optarg, void *data,
+section_cb(const char *option_name, const char *optarg, void *data,
            GError **err)
 {
     if (pcmk__str_any_of(optarg, PCMK_XE_NODES, "forever", NULL)) {
@@ -101,7 +101,7 @@ section_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-attr_set_type_cb(const gchar *option_name, const gchar *optarg, void *data,
+attr_set_type_cb(const char *option_name, const char *optarg, void *data,
                  GError **error)
 {
     if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
@@ -112,7 +112,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-wait_cb(const gchar *option_name, const gchar *optarg, void *data, GError **err)
+wait_cb(const char *option_name, const char *optarg, void *data, GError **err)
 {
     if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);

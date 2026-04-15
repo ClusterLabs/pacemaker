@@ -65,7 +65,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 static gboolean
-all_actions_cb(const gchar *option_name, const gchar *optarg, void *data,
+all_actions_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     options.flags |= pcmk_sim_all_actions;
@@ -73,7 +73,7 @@ all_actions_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-attrs_cb(const gchar *option_name, const gchar *optarg, void *data,
+attrs_cb(const char *option_name, const char *optarg, void *data,
          GError **error)
 {
     section_opts |= pcmk_section_attributes;
@@ -81,7 +81,7 @@ attrs_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-failcounts_cb(const gchar *option_name, const gchar *optarg, void *data,
+failcounts_cb(const char *option_name, const char *optarg, void *data,
               GError **error)
 {
     section_opts |= pcmk_section_failcounts | pcmk_section_failures;
@@ -89,7 +89,7 @@ failcounts_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-in_place_cb(const gchar *option_name, const gchar *optarg, void *data,
+in_place_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     options.store = TRUE;
@@ -98,7 +98,7 @@ in_place_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-live_check_cb(const gchar *option_name, const gchar *optarg, void *data,
+live_check_cb(const char *option_name, const char *optarg, void *data,
               GError **error)
 {
     if (options.xml_file) {
@@ -111,7 +111,7 @@ live_check_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-node_down_cb(const gchar *option_name, const gchar *optarg, void *data,
+node_down_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
     options.injections->node_down = g_list_append(options.injections->node_down, g_strdup(optarg));
@@ -119,7 +119,7 @@ node_down_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-node_fail_cb(const gchar *option_name, const gchar *optarg, void *data,
+node_fail_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
     options.injections->node_fail = g_list_append(options.injections->node_fail, g_strdup(optarg));
@@ -127,7 +127,7 @@ node_fail_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-node_up_cb(const gchar *option_name, const gchar *optarg, void *data,
+node_up_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     pcmk__simulate_node_config = true;
@@ -136,7 +136,7 @@ node_up_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-op_fail_cb(const gchar *option_name, const gchar *optarg, void *data,
+op_fail_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     options.flags |= pcmk_sim_process | pcmk_sim_simulate;
@@ -145,7 +145,7 @@ op_fail_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-op_inject_cb(const gchar *option_name, const gchar *optarg, void *data,
+op_inject_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
     options.injections->op_inject = g_list_append(options.injections->op_inject, g_strdup(optarg));
@@ -153,7 +153,7 @@ op_inject_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-pending_cb(const gchar *option_name, const gchar *optarg, void *data,
+pending_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     options.flags |= pcmk_sim_show_pending;
@@ -161,7 +161,7 @@ pending_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-process_cb(const gchar *option_name, const gchar *optarg, void *data,
+process_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     options.flags |= pcmk_sim_process;
@@ -169,7 +169,7 @@ process_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-quorum_cb(const gchar *option_name, const gchar *optarg, void *data,
+quorum_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     pcmk__str_update(&options.injections->quorum, optarg);
@@ -177,7 +177,7 @@ quorum_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-save_dotfile_cb(const gchar *option_name, const gchar *optarg, void *data,
+save_dotfile_cb(const char *option_name, const char *optarg, void *data,
                 GError **error)
 {
     options.flags |= pcmk_sim_process;
@@ -186,7 +186,7 @@ save_dotfile_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-save_graph_cb(const gchar *option_name, const gchar *optarg, void *data,
+save_graph_cb(const char *option_name, const char *optarg, void *data,
               GError **error)
 {
     options.flags |= pcmk_sim_process;
@@ -195,7 +195,7 @@ save_graph_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-show_scores_cb(const gchar *option_name, const gchar *optarg, void *data,
+show_scores_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     options.flags |= pcmk_sim_process | pcmk_sim_show_scores;
@@ -203,7 +203,7 @@ show_scores_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-simulate_cb(const gchar *option_name, const gchar *optarg, void *data,
+simulate_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     options.flags |= pcmk_sim_process | pcmk_sim_simulate;
@@ -211,7 +211,7 @@ simulate_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-ticket_activate_cb(const gchar *option_name, const gchar *optarg, void *data,
+ticket_activate_cb(const char *option_name, const char *optarg, void *data,
                    GError **error)
 {
     options.injections->ticket_activate = g_list_append(options.injections->ticket_activate, g_strdup(optarg));
@@ -219,7 +219,7 @@ ticket_activate_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-ticket_grant_cb(const gchar *option_name, const gchar *optarg, void *data,
+ticket_grant_cb(const char *option_name, const char *optarg, void *data,
                 GError **error)
 {
     options.injections->ticket_grant = g_list_append(options.injections->ticket_grant, g_strdup(optarg));
@@ -227,7 +227,7 @@ ticket_grant_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-ticket_revoke_cb(const gchar *option_name, const gchar *optarg, void *data,
+ticket_revoke_cb(const char *option_name, const char *optarg, void *data,
                  GError **error)
 {
     options.injections->ticket_revoke = g_list_append(options.injections->ticket_revoke, g_strdup(optarg));
@@ -235,7 +235,7 @@ ticket_revoke_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-ticket_standby_cb(const gchar *option_name, const gchar *optarg, void *data,
+ticket_standby_cb(const char *option_name, const char *optarg, void *data,
                   GError **error)
 {
     options.injections->ticket_standby = g_list_append(options.injections->ticket_standby, g_strdup(optarg));
@@ -243,7 +243,7 @@ ticket_standby_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-utilization_cb(const gchar *option_name, const gchar *optarg, void *data,
+utilization_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     options.flags |= pcmk_sim_process | pcmk_sim_show_utilization;
@@ -251,7 +251,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-watchdog_cb(const gchar *option_name, const gchar *optarg, void *data,
+watchdog_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     pcmk__str_update(&options.injections->watchdog, optarg);
@@ -259,7 +259,7 @@ watchdog_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-xml_file_cb(const gchar *option_name, const gchar *optarg, void *data,
+xml_file_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     pcmk__str_update(&options.xml_file, optarg);
@@ -268,7 +268,7 @@ xml_file_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-xml_pipe_cb(const gchar *option_name, const gchar *optarg, void *data,
+xml_pipe_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     pcmk__str_update(&options.xml_file, "-");

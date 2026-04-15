@@ -95,13 +95,13 @@ static pcmk__message_entry_t fmt_functions[] = {
 };
 
 static gboolean
-pid_cb(const gchar *option_name, const gchar *optarg, void *data, GError **err)
+pid_cb(const char *option_name, const char *optarg, void *data, GError **err)
 {
     return TRUE;
 }
 
 static gboolean
-standby_cb(const gchar *option_name, const gchar *optarg, void *data,
+standby_cb(const char *option_name, const char *optarg, void *data,
            GError **err)
 {
     options.standby = TRUE;

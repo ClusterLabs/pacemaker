@@ -55,7 +55,7 @@ static struct {
 } options;
 
 static gboolean
-interval_cb(const gchar *option_name, const gchar *optarg, void *data,
+interval_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     return pcmk_parse_interval_spec(optarg,
@@ -63,7 +63,7 @@ interval_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-notify_cb(const gchar *option_name, const gchar *optarg, void *data,
+notify_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     if (pcmk__str_any_of(option_name, "--notify-orig", "-n", NULL)) {
@@ -76,7 +76,7 @@ notify_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-param_key_val_cb(const gchar *option_name, const gchar *optarg, void *data,
+param_key_val_cb(const char *option_name, const char *optarg, void *data,
                  GError **error)
 {
     if (pcmk__str_any_of(option_name, "--param-key", "-k", NULL)) {

@@ -1033,7 +1033,7 @@ switch_shadow_instance(pcmk__output_t *out, GError **error)
 }
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, void *data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-w", "--which", NULL)) {

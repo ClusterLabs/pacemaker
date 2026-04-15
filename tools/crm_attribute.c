@@ -80,8 +80,7 @@ struct {
 #define INDENT "                               "
 
 static gboolean
-list_cb(const gchar *option_name, const gchar *optarg, void *data,
-        GError **error)
+list_cb(const char *option_name, const char *optarg, void *data, GError **error)
 {
     options.command = attr_cmd_list;
     pcmk__str_update(&options.opt_list, optarg);
@@ -89,7 +88,7 @@ list_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-delete_cb(const gchar *option_name, const gchar *optarg, void *data,
+delete_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     options.command = attr_cmd_delete;
@@ -98,7 +97,7 @@ delete_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-attr_name_cb(const gchar *option_name, const gchar *optarg, void *data,
+attr_name_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
     options.promotion_score = false;
@@ -111,7 +110,7 @@ attr_name_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-promotion_cb(const gchar *option_name, const gchar *optarg, void *data,
+promotion_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
     char *score_name = NULL;
@@ -134,7 +133,7 @@ promotion_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-update_cb(const gchar *option_name, const gchar *optarg, void *data,
+update_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     options.command = attr_cmd_update;
@@ -143,7 +142,7 @@ update_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-utilization_cb(const gchar *option_name, const gchar *optarg, void *data,
+utilization_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     if (options.type) {
@@ -156,7 +155,7 @@ utilization_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-value_cb(const gchar *option_name, const gchar *optarg, void *data,
+value_cb(const char *option_name, const char *optarg, void *data,
          GError **error)
 {
     options.command = attr_cmd_query;
@@ -165,7 +164,7 @@ value_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-wait_cb(const gchar *option_name, const gchar *optarg, void *data, GError **err)
+wait_cb(const char *option_name, const char *optarg, void *data, GError **err)
 {
     if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);

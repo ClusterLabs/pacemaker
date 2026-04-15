@@ -39,11 +39,11 @@ struct {
     .force_flag = FALSE
 };
 
-gboolean command_cb(const gchar *option_name, const gchar *optarg, void *data,
+gboolean command_cb(const char *option_name, const char *optarg, void *data,
                     GError **error);
-gboolean name_cb(const gchar *option_name, const gchar *optarg, void *data,
+gboolean name_cb(const char *option_name, const char *optarg, void *data,
                  GError **error);
-gboolean remove_cb(const gchar *option_name, const gchar *optarg, void *data,
+gboolean remove_cb(const char *option_name, const char *optarg, void *data,
                    GError **error);
 
 static GError *error = NULL;
@@ -105,7 +105,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 gboolean
-command_cb(const gchar *option_name, const gchar *optarg, void *data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_eq("-i", option_name, pcmk__str_casei) || pcmk__str_eq("--cluster-id", option_name, pcmk__str_casei)) {
@@ -127,8 +127,7 @@ command_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 gboolean
-name_cb(const gchar *option_name, const gchar *optarg, void *data,
-        GError **error)
+name_cb(const char *option_name, const char *optarg, void *data, GError **error)
 {
     options.command = 'N';
     pcmk__scan_min_int(optarg, &(options.nodeid), 0);
@@ -136,7 +135,7 @@ name_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 gboolean
-remove_cb(const gchar *option_name, const gchar *optarg, void *data,
+remove_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     if (optarg == NULL) {

@@ -62,7 +62,7 @@ static GOptionEntry entries[] = {
  *
  * \note On error, \p out->err() will be called to record stderr of the process
  */
-typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline);
+typedef int (*rsh_fn_t)(pcmk__output_t *out, char **nodes, const char *cmdline);
 
 /*!
  * \internal
@@ -82,7 +82,7 @@ typedef int (*rsh_fn_t)(pcmk__output_t *out, gchar **nodes, const char *cmdline)
  *
  * \note On error, \p out->err() will be called to record stderr of the process
  */
-typedef int (*rcp_fn_t)(pcmk__output_t *out, gchar **nodes, const char *to,
+typedef int (*rcp_fn_t)(pcmk__output_t *out, char **nodes, const char *to,
                         const char *from);
 
 struct subcommand_entry {
@@ -150,7 +150,7 @@ done:
 }
 
 static int
-pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+pssh(pcmk__output_t *out, char **nodes, const char *cmdline)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
@@ -166,7 +166,7 @@ pssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 }
 
 static int
-pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+pdsh(pcmk__output_t *out, char **nodes, const char *cmdline)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
@@ -183,11 +183,11 @@ pdsh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 }
 
 static int
-ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
+ssh(pcmk__output_t *out, char **nodes, const char *cmdline)
 {
     int rc = pcmk_rc_ok;
 
-    for (gchar **node = nodes; *node != NULL; node++) {
+    for (char **node = nodes; *node != NULL; node++) {
         char *s = pcmk__assert_asprintf("ssh " SSH_OPTS " \"%s\" -- \"%s\"",
                                         *node, cmdline);
 
@@ -204,7 +204,7 @@ ssh(pcmk__output_t *out, gchar **nodes, const char *cmdline)
 }
 
 static int
-pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+pscp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
@@ -221,7 +221,7 @@ pscp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 }
 
 static int
-pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+pdcp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 {
     int rc = pcmk_rc_ok;
     char *s = NULL;
@@ -239,11 +239,11 @@ pdcp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
 }
 
 static int
-scp(pcmk__output_t *out, gchar **nodes, const char *to, const char *from)
+scp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 {
     int rc = pcmk_rc_ok;
 
-    for (gchar **node = nodes; *node != NULL; node++) {
+    for (char **node = nodes; *node != NULL; node++) {
         char *s = pcmk__assert_asprintf("scp -pqr " SSH_OPTS " \"%s\" "
                                         "\"%s:%s\"",
                                         from, *node, to);

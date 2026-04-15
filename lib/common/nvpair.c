@@ -122,7 +122,7 @@ pcmk_free_nvpairs(GSList *nvpairs)
  *       \p *value using \c g_free(). On failure, nothing is allocated.
  */
 int
-pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
+pcmk__scan_nvpair(const char *input, gchar **name, gchar **value)
 {
     /* @COMPAT Consider rejecting leading (and possibly trailing) whitespace in
      * value and stripping outer quotes from value (for example,

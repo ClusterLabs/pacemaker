@@ -70,7 +70,7 @@ static pcmk__supported_format_t formats[] = {
 };
 
 static gboolean
-attr_value_cb(const gchar *option_name, const gchar *optarg, void *data,
+attr_value_cb(const char *option_name, const char *optarg, void *data,
               GError **err)
 {
     pcmk__str_update(&options.attr_value, optarg);
@@ -89,7 +89,7 @@ attr_value_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, void *data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **err)
 {
     if (pcmk__str_any_of(option_name, "--info", "-l", NULL)) {
@@ -110,7 +110,7 @@ command_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-delete_attr_cb(const gchar *option_name, const gchar *optarg, void *data,
+delete_attr_cb(const char *option_name, const char *optarg, void *data,
                GError **err)
 {
     attr_delete = g_list_append(attr_delete, strdup(optarg));
@@ -119,7 +119,7 @@ delete_attr_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-get_attr_cb(const gchar *option_name, const gchar *optarg, void *data,
+get_attr_cb(const char *option_name, const char *optarg, void *data,
             GError **err)
 {
     pcmk__str_update(&options.get_attr_name, optarg);
@@ -128,7 +128,7 @@ get_attr_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-grant_standby_cb(const gchar *option_name, const gchar *optarg, void *data,
+grant_standby_cb(const char *option_name, const char *optarg, void *data,
                  GError **err)
 {
     if (pcmk__str_any_of(option_name, "--grant", "-g", NULL)) {
@@ -149,7 +149,7 @@ grant_standby_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-set_attr_cb(const gchar *option_name, const gchar *optarg, void *data,
+set_attr_cb(const char *option_name, const char *optarg, void *data,
             GError **err)
 {
     pcmk__str_update(&options.attr_name, optarg);
@@ -273,7 +273,7 @@ static GOptionEntry deprecated_entries[] = {
 };
 
 static void
-ticket_grant_warning(gchar *ticket_id)
+ticket_grant_warning(char *ticket_id)
 {
     out->err(out, "This command cannot help you verify whether '%s' has "
                   "been already granted elsewhere.\n"
@@ -284,7 +284,7 @@ ticket_grant_warning(gchar *ticket_id)
 }
 
 static void
-ticket_revoke_warning(gchar *ticket_id)
+ticket_revoke_warning(char *ticket_id)
 {
     out->err(out, "Revoking '%s' can trigger the specified '" PCMK_XA_LOSS_POLICY
               "'(s) relating to '%s'.\n\n"

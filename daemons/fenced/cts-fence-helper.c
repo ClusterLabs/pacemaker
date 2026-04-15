@@ -55,8 +55,7 @@ struct {
 };
 
 static gboolean
-mode_cb(const gchar *option_name, const gchar *optarg, void *data,
-        GError **error)
+mode_cb(const char *option_name, const char *optarg, void *data, GError **error)
 {
     if (pcmk__str_any_of(option_name, "--mainloop_api_test", "-m", NULL)) {
         options.mode = test_api_mainloop;

@@ -28,7 +28,7 @@ struct {
 };
 
 static gboolean
-result_type_cb(const gchar *option_name, const gchar *optarg, void *data,
+result_type_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     if (pcmk__str_any_of(option_name, "--exit", "-X", NULL)) {

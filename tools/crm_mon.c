@@ -301,7 +301,8 @@ find_section_bit(const char *name) {
 }
 
 static gboolean
-apply_exclude(const gchar *excludes, GError **error) {
+apply_exclude(const char *excludes, GError **error)
+{
     char **parts = NULL;
     gboolean result = TRUE;
 
@@ -331,7 +332,8 @@ apply_exclude(const gchar *excludes, GError **error) {
 }
 
 static gboolean
-apply_include(const gchar *includes, GError **error) {
+apply_include(const char *includes, GError **error)
+{
     char **parts = NULL;
     gboolean result = TRUE;
 
@@ -399,8 +401,8 @@ apply_include_exclude(GSList *lst, GError **error) {
 }
 
 static gboolean
-user_include_exclude_cb(const gchar *option_name, const gchar *optarg,
-                        void *data, GError **err)
+user_include_exclude_cb(const char *option_name, const char *optarg, void *data,
+                        GError **err)
 {
     char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
@@ -409,7 +411,7 @@ user_include_exclude_cb(const gchar *option_name, const gchar *optarg,
 }
 
 static gboolean
-include_exclude_cb(const gchar *option_name, const gchar *optarg, void *data,
+include_exclude_cb(const char *option_name, const char *optarg, void *data,
                    GError **err)
 {
     char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
@@ -419,8 +421,7 @@ include_exclude_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-as_xml_cb(const gchar *option_name, const gchar *optarg, void *data,
-          GError **err)
+as_xml_cb(const char *option_name, const char *optarg, void *data, GError **err)
 {
     pcmk__str_update(&args->output_ty, "xml");
     output_format = mon_output_legacy_xml;
@@ -428,14 +429,14 @@ as_xml_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-pid_file_cb(const gchar *option_name, const gchar *optarg, void *data,
+pid_file_cb(const char *option_name, const char *optarg, void *data,
             GError **err)
 {
     return TRUE;
 }
 
 static gboolean
-fence_history_cb(const gchar *option_name, const gchar *optarg, void *data,
+fence_history_cb(const char *option_name, const char *optarg, void *data,
                  GError **err)
 {
     if (optarg == NULL) {
@@ -475,7 +476,7 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-group_by_node_cb(const gchar *option_name, const gchar *optarg, void *data,
+group_by_node_cb(const char *option_name, const char *optarg, void *data,
                  GError **err)
 {
     show_opts |= pcmk_show_rscs_by_node;
@@ -483,14 +484,14 @@ group_by_node_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-hide_headers_cb(const gchar *option_name, const gchar *optarg, void *data,
+hide_headers_cb(const char *option_name, const char *optarg, void *data,
                 GError **err)
 {
     return user_include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
-inactive_resources_cb(const gchar *option_name, const gchar *optarg, void *data,
+inactive_resources_cb(const char *option_name, const char *optarg, void *data,
                       GError **err)
 {
     show_opts |= pcmk_show_inactive_rscs;
@@ -498,7 +499,7 @@ inactive_resources_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-print_brief_cb(const gchar *option_name, const gchar *optarg, void *data,
+print_brief_cb(const char *option_name, const char *optarg, void *data,
                GError **err)
 {
     show_opts |= pcmk_show_brief;
@@ -506,7 +507,7 @@ print_brief_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-print_detail_cb(const gchar *option_name, const gchar *optarg, void *data,
+print_detail_cb(const char *option_name, const char *optarg, void *data,
                 GError **err)
 {
     show_opts |= pcmk_show_details;
@@ -514,7 +515,7 @@ print_detail_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-print_description_cb(const gchar *option_name, const gchar *optarg, void *data,
+print_description_cb(const char *option_name, const char *optarg, void *data,
                      GError **err)
 {
     show_opts |= pcmk_show_description;
@@ -522,7 +523,7 @@ print_description_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-print_timing_cb(const gchar *option_name, const gchar *optarg, void *data,
+print_timing_cb(const char *option_name, const char *optarg, void *data,
                 GError **err)
 {
     show_opts |= pcmk_show_timing;
@@ -530,7 +531,7 @@ print_timing_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-reconnect_cb(const gchar *option_name, const gchar *optarg, void *data,
+reconnect_cb(const char *option_name, const char *optarg, void *data,
              GError **err)
 {
     long long reconnect_ms = 0;
@@ -566,7 +567,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, void *data,
  * \param[out] err          Where to store error (ignored)
  */
 static gboolean
-one_shot_cb(const gchar *option_name, const gchar *optarg, void *data,
+one_shot_cb(const char *option_name, const char *optarg, void *data,
             GError **err)
 {
     options.exec_mode = mon_exec_one_shot;
@@ -583,7 +584,7 @@ one_shot_cb(const gchar *option_name, const gchar *optarg, void *data,
  * \param[out] err          Where to store error (ignored)
  */
 static gboolean
-daemonize_cb(const gchar *option_name, const gchar *optarg, void *data,
+daemonize_cb(const char *option_name, const char *optarg, void *data,
              GError **err)
 {
     options.exec_mode = mon_exec_daemonized;
@@ -591,14 +592,14 @@ daemonize_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-show_attributes_cb(const gchar *option_name, const gchar *optarg, void *data,
+show_attributes_cb(const char *option_name, const char *optarg, void *data,
                    GError **err)
 {
     return user_include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
-show_bans_cb(const gchar *option_name, const gchar *optarg, void *data,
+show_bans_cb(const char *option_name, const char *optarg, void *data,
              GError **err)
 {
     if (optarg != NULL) {
@@ -612,28 +613,28 @@ show_bans_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-show_failcounts_cb(const gchar *option_name, const gchar *optarg, void *data,
+show_failcounts_cb(const char *option_name, const char *optarg, void *data,
                    GError **err)
 {
     return user_include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
-show_operations_cb(const gchar *option_name, const gchar *optarg, void *data,
+show_operations_cb(const char *option_name, const char *optarg, void *data,
                    GError **err)
 {
     return user_include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
-show_tickets_cb(const gchar *option_name, const gchar *optarg, void *data,
+show_tickets_cb(const char *option_name, const char *optarg, void *data,
                 GError **err)
 {
     return user_include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
-use_cib_file_cb(const gchar *option_name, const gchar *optarg, void *data,
+use_cib_file_cb(const char *option_name, const char *optarg, void *data,
                 GError **err)
 {
     setenv("CIB_file", optarg, 1);

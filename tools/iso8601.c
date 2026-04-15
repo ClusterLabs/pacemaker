@@ -36,7 +36,7 @@ struct {
 #define INDENT "                              "
 
 static gboolean
-date_now_cb(const gchar *option_name, const gchar *optarg, void *data,
+date_now_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     if (pcmk__str_any_of(option_name, "--now", "-n", NULL)) {
@@ -49,7 +49,7 @@ date_now_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-modifier_cb(const gchar *option_name, const gchar *optarg, void *data,
+modifier_cb(const char *option_name, const char *optarg, void *data,
             GError **error)
 {
     if (pcmk__str_any_of(option_name, "--seconds", "-s", NULL)) {

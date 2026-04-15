@@ -54,7 +54,7 @@ void pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                                 GHashTable *values, crm_time_t *next_change,
                                 xmlDoc *doc);
 
-int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
+int pcmk__scan_nvpair(const char *input, gchar **name, gchar **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
 

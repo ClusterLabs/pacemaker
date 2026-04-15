@@ -18,7 +18,7 @@
 #include <crm/common/util.h>
 
 static gboolean
-bump_verbosity(const gchar *option_name, const gchar *optarg, void *data,
+bump_verbosity(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     pcmk__common_args_t *common_args = (pcmk__common_args_t *) data;
@@ -146,7 +146,7 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
 }
 
 gchar *
-pcmk__quote_cmdline(gchar **argv)
+pcmk__quote_cmdline(char **argv)
 {
     GString *cmdline = NULL;
 

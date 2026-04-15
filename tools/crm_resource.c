@@ -310,7 +310,7 @@ build_constraint_list(xmlNode *root)
 }
 
 static gboolean
-validate_opt_list(const gchar *optarg)
+validate_opt_list(const char *optarg)
 {
     if (pcmk__str_eq(optarg, PCMK_VALUE_FENCING, pcmk__str_none)) {
         options.opt_list = pcmk__opt_fencing;
@@ -328,7 +328,7 @@ validate_opt_list(const gchar *optarg)
 // GOptionArgFunc callback functions
 
 static gboolean
-attr_set_type_cb(const gchar *option_name, const gchar *optarg, void *data,
+attr_set_type_cb(const char *option_name, const char *optarg, void *data,
                  GError **error)
 {
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
@@ -356,7 +356,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, void *data,
  *         error occurred, in which case \p *error is set
  */
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, void *data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     // Sorted by enum rsc_command name
@@ -494,7 +494,7 @@ command_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-option_cb(const gchar *option_name, const gchar *optarg, void *data,
+option_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     gchar *name = NULL;
@@ -519,7 +519,7 @@ option_cb(const gchar *option_name, const gchar *optarg, void *data,
 }
 
 static gboolean
-timeout_cb(const gchar *option_name, const gchar *optarg, void *data,
+timeout_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     long long timeout_ms = 0;

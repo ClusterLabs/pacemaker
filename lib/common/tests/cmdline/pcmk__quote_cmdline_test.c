@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,10 +18,10 @@
  * used)."
  */
 static void
-assert_quote_cmdline(const char **argv, const gchar *expected_single,
-                     const gchar *expected_double)
+assert_quote_cmdline(const char **argv, const char *expected_single,
+                     const char *expected_double)
 {
-    gchar *processed = pcmk__quote_cmdline((gchar **) argv);
+    gchar *processed = pcmk__quote_cmdline((char **) argv);
 
     assert_true(pcmk__str_any_of(processed, expected_single, expected_double,
                                  NULL));
