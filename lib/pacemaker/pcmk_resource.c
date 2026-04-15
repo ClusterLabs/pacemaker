@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,19 +9,27 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <stdbool.h>
+#include <errno.h>                      // EINVAL, ENOTCONN, EOPNOTSUPP
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
 
-#include <glib.h>
+#include <glib.h>                       // g_str_has_suffix, GHashTable, guint
 #include <libxml/tree.h>                // xmlNode
 
-#include <crm/cib/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/results.h>
-#include <crm/pengine/internal.h>
+#include <crm/cib.h>                    // cib_new, cib_t, etc.
+#include <crm/cib/internal.h>           // cib__clean_up_connection
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/options.h>         // PCMK_META_INTERVAL
+#include <crm/common/results.h>         // pcmk_legacy2rc, pcmk_rc_*, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // crm_system_name
+#include <crm/pengine/internal.h>       // pe__*
 
-#include <pacemaker.h>
-#include <pacemaker-internal.h>
+#include <pacemaker.h>                  // pcmk_resource_{delete,digests}
+#include <pacemaker-internal.h>         // pcmk__register_*, pcmk__resource_*
 
 // Search path for resource operation history (takes node name and resource ID)
 #define XPATH_OP_HISTORY "//" PCMK_XE_STATUS                            \
@@ -148,7 +156,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
 }
 
 int
-pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type)
+pcmk_resource_delete(xmlNode **xml, const char *rsc_id, const char *rsc_type)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -237,7 +245,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 }
 
 int
-pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
+pcmk_resource_digests(xmlNode **xml, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *overrides)
 {
     pcmk__output_t *out = NULL;

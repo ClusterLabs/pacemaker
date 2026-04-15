@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -211,7 +211,8 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
  *       or if \p rsc_type is incorrect for \p rsc_id (deleting something
  *       that doesn't exist always succeeds).
  */
-int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type);
+int pcmk_resource_delete(xmlNode **xml, const char *rsc_id,
+                         const char *rsc_type);
 
 /*!
  * \brief Calculate and output resource operation digests
@@ -223,7 +224,7 @@ int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_ty
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
+int pcmk_resource_digests(xmlNode **xml, pcmk_resource_t *rsc,
                           const pcmk_node_t *node, GHashTable *overrides);
 
 /*!
