@@ -633,7 +633,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     pcmk__xe_set(notify, PCMK__XA_LRMD_ORIGIN, __func__);
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
-    pcmk__xe_set_guint(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
+    pcmk__xe_set_uint(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
@@ -1828,8 +1828,7 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
 
         pcmk__xe_set(op_xml, PCMK__XA_LRMD_RSC_ACTION,
                      pcmk__s(cmd->real_action, cmd->action));
-        pcmk__xe_set_guint(op_xml, PCMK__XA_LRMD_RSC_INTERVAL,
-                           cmd->interval_ms);
+        pcmk__xe_set_uint(op_xml, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
         pcmk__xe_set_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
     }
 }

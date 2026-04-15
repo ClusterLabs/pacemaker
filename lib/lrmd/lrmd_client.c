@@ -1890,7 +1890,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    pcmk__xe_set_uint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
     pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
 
@@ -1915,7 +1915,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    pcmk__xe_set_uint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
     pcmk__xml_free(data);
     return rc;

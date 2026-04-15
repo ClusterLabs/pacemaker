@@ -151,7 +151,7 @@ int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
                        uint32_t default_value);
 
 int pcmk__xe_get_uint(const xmlNode *xml, const char *attr, unsigned int *dest);
-void pcmk__xe_set_guint(xmlNode *xml, const char *attr, unsigned int value);
+void pcmk__xe_set_uint(xmlNode *xml, const char *attr, unsigned int value);
 
 int pcmk__xe_get_int(const xmlNode *xml, const char *name, int *dest);
 void pcmk__xe_set_int(xmlNode *xml, const char *attr, int value);

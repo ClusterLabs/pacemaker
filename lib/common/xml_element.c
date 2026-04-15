@@ -1180,7 +1180,7 @@ pcmk__xe_get_uint(const xmlNode *xml, const char *attr, unsigned int *dest)
  * \param[in]     value  Attribute value to set
  */
 void
-pcmk__xe_set_guint(xmlNode *xml, const char *attr, unsigned int value)
+pcmk__xe_set_uint(xmlNode *xml, const char *attr, unsigned int value)
 {
     char *value_s = NULL;
 
