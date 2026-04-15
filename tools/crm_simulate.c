@@ -114,7 +114,8 @@ static gboolean
 node_down_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
-    options.injections->node_down = g_list_append(options.injections->node_down, g_strdup(optarg));
+    options.injections->node_down = g_list_append(options.injections->node_down,
+                                                  pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -122,7 +123,8 @@ static gboolean
 node_fail_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
-    options.injections->node_fail = g_list_append(options.injections->node_fail, g_strdup(optarg));
+    options.injections->node_fail = g_list_append(options.injections->node_fail,
+                                                  pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -131,7 +133,8 @@ node_up_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     pcmk__simulate_node_config = true;
-    options.injections->node_up = g_list_append(options.injections->node_up, g_strdup(optarg));
+    options.injections->node_up = g_list_append(options.injections->node_up,
+                                                pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -140,7 +143,8 @@ op_fail_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     options.flags |= pcmk_sim_process | pcmk_sim_simulate;
-    options.injections->op_fail = g_list_append(options.injections->op_fail, g_strdup(optarg));
+    options.injections->op_fail = g_list_append(options.injections->op_fail,
+                                                pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -148,7 +152,8 @@ static gboolean
 op_inject_cb(const char *option_name, const char *optarg, void *data,
              GError **error)
 {
-    options.injections->op_inject = g_list_append(options.injections->op_inject, g_strdup(optarg));
+    options.injections->op_inject = g_list_append(options.injections->op_inject,
+                                                  pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -214,7 +219,9 @@ static gboolean
 ticket_activate_cb(const char *option_name, const char *optarg, void *data,
                    GError **error)
 {
-    options.injections->ticket_activate = g_list_append(options.injections->ticket_activate, g_strdup(optarg));
+    options.injections->ticket_activate =
+        g_list_append(options.injections->ticket_activate,
+                      pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -222,7 +229,8 @@ static gboolean
 ticket_grant_cb(const char *option_name, const char *optarg, void *data,
                 GError **error)
 {
-    options.injections->ticket_grant = g_list_append(options.injections->ticket_grant, g_strdup(optarg));
+    options.injections->ticket_grant =
+        g_list_append(options.injections->ticket_grant, pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -230,7 +238,9 @@ static gboolean
 ticket_revoke_cb(const char *option_name, const char *optarg, void *data,
                  GError **error)
 {
-    options.injections->ticket_revoke = g_list_append(options.injections->ticket_revoke, g_strdup(optarg));
+    options.injections->ticket_revoke =
+        g_list_append(options.injections->ticket_revoke,
+                      pcmk__str_copy(optarg));
     return TRUE;
 }
 
@@ -238,7 +248,9 @@ static gboolean
 ticket_standby_cb(const char *option_name, const char *optarg, void *data,
                   GError **error)
 {
-    options.injections->ticket_standby = g_list_append(options.injections->ticket_standby, g_strdup(optarg));
+    options.injections->ticket_standby =
+        g_list_append(options.injections->ticket_standby,
+                      pcmk__str_copy(optarg));
     return TRUE;
 }
 

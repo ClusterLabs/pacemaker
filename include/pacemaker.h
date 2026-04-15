@@ -50,31 +50,33 @@ enum pcmk_sim_flags {
 /*!
  * \brief Synthetic cluster events that can be injected into the cluster
  *        for running simulations.
+ *
+ * \note This struct should typically be freed using \c pcmk_free_injections().
  */
 typedef struct {
-    /*! A list of node names (gchar *) to simulate bringing online */
+    /*! A list of node names (char *) to simulate bringing online */
     GList *node_up;
-    /*! A list of node names (gchar *) to simulate bringing offline */
+    /*! A list of node names (char *) to simulate bringing offline */
     GList *node_down;
-    /*! A list of node names (gchar *) to simulate failing */
+    /*! A list of node names (char *) to simulate failing */
     GList *node_fail;
-    /*! A list of operations (gchar *) to inject.  The format of these strings
+    /*! A list of operations (char *) to inject.  The format of these strings
      * is described in the "Operation Specification" section of crm_simulate
      * help output.
      */
     GList *op_inject;
-    /*! A list of operations (gchar *) that should return a given error code
+    /*! A list of operations (char *) that should return a given error code
      * if they fail.  The format of these strings is described in the
      * "Operation Specification" section of crm_simulate help output.
      */
     GList *op_fail;
-    /*! A list of tickets (gchar *) to simulate granting */
+    /*! A list of tickets (char *) to simulate granting */
     GList *ticket_grant;
-    /*! A list of tickets (gchar *) to simulate revoking */
+    /*! A list of tickets (char *) to simulate revoking */
     GList *ticket_revoke;
-    /*! A list of tickets (gchar *) to simulate putting on standby */
+    /*! A list of tickets (char *) to simulate putting on standby */
     GList *ticket_standby;
-    /*! A list of tickets (gchar *) to simulate activating */
+    /*! A list of tickets (char *) to simulate activating */
     GList *ticket_activate;
     /*! Does the cluster have an active watchdog device? */
     char *watchdog;
