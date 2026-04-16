@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -132,6 +132,8 @@ output_config_error(void *ctx, const char *msg, ...)
     if (options.verbosity > 0) {
         out->err(out, "error: %s", buf);
     }
+
+    free(buf);
     va_end(ap);
 }
 
@@ -156,6 +158,8 @@ output_config_warning(void *ctx, const char *msg, ...)
     if (options.verbosity > 0) {
         out->err(out, "warning: %s", buf);
     }
+
+    free(buf);
     va_end(ap);
 }
 
