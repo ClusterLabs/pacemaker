@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -634,6 +634,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
     pcmk__assert(rc == pcmk_ok);
 
 done:
+    free(resource);
     free(task);
     free(node);
     free(key);
