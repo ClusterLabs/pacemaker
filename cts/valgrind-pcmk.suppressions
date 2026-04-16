@@ -23,7 +23,6 @@
    Bash reader_loop leaks
    Memcheck:Leak
    fun:malloc
-   fun:xmalloc
    ...
    fun:reader_loop
    fun:main
