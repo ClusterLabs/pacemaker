@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -104,6 +104,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
     }
 
     out->end_list(out);
+    g_list_free_full(ops, (GDestroyNotify) pcmk__xml_free);
     return rc;
 }
 
