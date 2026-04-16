@@ -107,8 +107,10 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
     } else {
         (*out)->dest = fopen(filename, "w");
         if ((*out)->dest == NULL) {
+            int rc = errno;
+
             g_clear_pointer(out, pcmk__output_free);
-            return errno;
+            return rc;
         }
     }
 
