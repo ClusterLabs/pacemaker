@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -590,7 +590,7 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     char *id = clone_strip(rsc->id);
     const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
     pcmk_resource_t *active = NULL;
-    const char *reason = "allowed";
+    const char *reason = NULL;
 
     // Some checks apply only to anonymous clone instances
     if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
@@ -641,7 +641,8 @@ promotion_score_applies(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 check_allowed:
     if (is_allowed(rsc, node)) {
         pcmk__rsc_trace(rsc, "Counting %s promotion score (for %s) on %s: %s",
-                        rsc->id, id, pcmk__node_name(node), reason);
+                        rsc->id, id, pcmk__node_name(node),
+                        pcmk__s(reason, "allowed"));
         free(id);
         return true;
     }

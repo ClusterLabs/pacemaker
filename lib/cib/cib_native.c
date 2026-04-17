@@ -350,6 +350,7 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
          */
         if (pcmk__xe_is(reply, PCMK__XE_ACK) && ack_is_failure(reply)) {
             rc = -EPROTO;
+            pcmk__xml_free(reply);
             goto done;
         }
 
@@ -369,6 +370,8 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
                 rc = -EPROTO;
             }
         }
+
+        pcmk__xml_free(reply);
     }
 
 done:

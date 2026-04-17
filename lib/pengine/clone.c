@@ -753,6 +753,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     if (pcmk__is_set(show_opts, pcmk_show_clone_detail)) {
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
+
+        g_list_free(promoted_list);
+        g_list_free(started_list);
         return pcmk_rc_ok;
     }
 

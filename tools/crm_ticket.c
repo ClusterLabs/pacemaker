@@ -370,7 +370,7 @@ main(int argc, char **argv)
     pcmk__cli_init_logging("crm_ticket", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    if (rc != pcmk_rc_ok) {
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error creating output format %s: %s", args->output_ty,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -407,7 +407,10 @@ load_transforms_from_dir(const char *dir)
                 g_hash_table_insert(transforms, version_s, list);
 
             } else {
-                list = g_list_append(list, namelist[i]);
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
+                g_list_append(list, namelist[i]);
+#pragma GCC diagnostic pop
                 free(version_s);
             }
 
@@ -1067,6 +1070,7 @@ apply_upgrade(const xmlNode *input_xml, int schema_index, gboolean to_logs)
     }
 
     // Final result document from upgrade pipeline needs private data
+    pcmk__assert(new_xml != NULL);
     pcmk__xml_new_private_data((xmlNode *) new_xml->doc);
 
     // Ensure result validates with its new schema

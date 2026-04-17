@@ -734,6 +734,8 @@ free_xml_with_position(xmlNode *node, int position)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
+    xml_doc_private_t *docpriv = NULL;
+    GString *xpath = NULL;
 
     if (node == NULL) {
         return pcmk_rc_ok;
@@ -765,37 +767,41 @@ free_xml_with_position(xmlNode *node, int position)
         return EACCES;
     }
 
-    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
-        && !pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-
-        xml_doc_private_t *docpriv = doc->_private;
-        GString *xpath = pcmk__element_xpath(node);
-
-        if (xpath != NULL) {
-            pcmk__deleted_xml_t *deleted_obj = NULL;
-
-            pcmk__trace("Deleting %s %p from %p", xpath->str, node, doc);
-
-            deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
-            deleted_obj->path = g_string_free(xpath, FALSE);
-            deleted_obj->position = -1;
-
-            // Record the position only for XML comments for now
-            if (node->type == XML_COMMENT_NODE) {
-                if (position >= 0) {
-                    deleted_obj->position = position;
-
-                } else {
-                    deleted_obj->position = pcmk__xml_position(node,
-                                                               pcmk__xf_skip);
-                }
-            }
-
-            docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
-                                                  deleted_obj);
-            pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
-        }
+    if (!pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
+        || pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        pcmk__xml_free_node(node);
+        return pcmk_rc_ok;
     }
+
+    pcmk__assert(doc != NULL);
+
+    docpriv = doc->_private;
+    xpath = pcmk__element_xpath(node);
+
+    if (xpath != NULL) {
+        pcmk__deleted_xml_t *deleted_obj = NULL;
+
+        pcmk__trace("Deleting %s %p from %p", xpath->str, node, doc);
+
+        deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
+        deleted_obj->path = g_string_free(xpath, FALSE);
+        deleted_obj->position = -1;
+
+        // Record the position only for XML comments for now
+        if (node->type == XML_COMMENT_NODE) {
+            if (position >= 0) {
+                deleted_obj->position = position;
+
+            } else {
+                deleted_obj->position = pcmk__xml_position(node, pcmk__xf_skip);
+            }
+        }
+
+        docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
+                                              deleted_obj);
+        pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
+    }
+
     pcmk__xml_free_node(node);
     return pcmk_rc_ok;
 }

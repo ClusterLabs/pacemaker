@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,8 +28,7 @@ enum loss_ticket_policy {
 
 typedef struct {
     const char *id;
-    pcmk_resource_t *rsc;
-    pcmk__ticket_t *ticket;
+    const pcmk__ticket_t *ticket;
     enum loss_ticket_policy loss_policy;
     int role;
 } rsc_ticket_t;
@@ -171,7 +170,6 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
     new_rsc_ticket = pcmk__assert_alloc(1, sizeof(rsc_ticket_t));
     new_rsc_ticket->id = id;
     new_rsc_ticket->ticket = ticket;
-    new_rsc_ticket->rsc = rsc;
     new_rsc_ticket->role = role;
 
     if (pcmk__str_eq(loss_policy, PCMK_VALUE_FENCE, pcmk__str_casei)) {
@@ -188,37 +186,37 @@ rsc_ticket_new(const char *id, pcmk_resource_t *rsc, pcmk__ticket_t *ticket,
 
     if (new_rsc_ticket->loss_policy == loss_ticket_fence) {
         pcmk__debug("On loss of ticket '%s': Fence the nodes running %s (%s)",
-                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    new_rsc_ticket->ticket->id, rsc->id,
                     pcmk_role_text(new_rsc_ticket->role));
 
     } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_FREEZE, pcmk__str_casei)) {
         pcmk__debug("On loss of ticket '%s': Freeze %s (%s)",
-                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    new_rsc_ticket->ticket->id, rsc->id,
                     pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_freeze;
 
     } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_DEMOTE, pcmk__str_casei)) {
         pcmk__debug("On loss of ticket '%s': Demote %s (%s)",
-                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    new_rsc_ticket->ticket->id, rsc->id,
                     pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_demote;
 
     } else if (pcmk__str_eq(loss_policy, PCMK_VALUE_STOP, pcmk__str_casei)) {
         pcmk__debug("On loss of ticket '%s': Stop %s (%s)",
-                    new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                    new_rsc_ticket->ticket->id, rsc->id,
                     pcmk_role_text(new_rsc_ticket->role));
         new_rsc_ticket->loss_policy = loss_ticket_stop;
 
     } else {
         if (new_rsc_ticket->role == pcmk_role_promoted) {
             pcmk__debug("On loss of ticket '%s': Default to demote %s (%s)",
-                        new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                        new_rsc_ticket->ticket->id, rsc->id,
                         pcmk_role_text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_demote;
 
         } else {
             pcmk__debug("On loss of ticket '%s': Default to stop %s (%s)",
-                        new_rsc_ticket->ticket->id, new_rsc_ticket->rsc->id,
+                        new_rsc_ticket->ticket->id, rsc->id,
                         pcmk_role_text(new_rsc_ticket->role));
             new_rsc_ticket->loss_policy = loss_ticket_stop;
         }

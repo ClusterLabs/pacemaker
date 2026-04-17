@@ -27,6 +27,7 @@ clang:
 	OUT=$$(cd $(top_builddir)					\
 		&& scan-build $(CLANG_checkers:%=-enable-checker %)	\
 		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
+		-j $(shell nproc --ignore=1) 				\
 		clean all 2>&1);					\
 	REPORT=$$(echo "$$OUT"						\
 		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
@@ -124,6 +125,7 @@ cppcheck:
 		--include=/usr/include/qb/qblog.h 		\
 		--output-file=$(CPPCHECK_OUT)			\
 		--max-configs=30 --inline-suppr -q		\
+		-j $(shell nproc --ignore=1) 			\
 		--library=posix --library=gnu --library=gtk	\
 		$(GLIB_INCL_DEF_CFLAGS) -D__GNUC__ 		\
 		$(foreach dir,$(CPPCHECK_DIRS),$(top_srcdir)/$(dir))

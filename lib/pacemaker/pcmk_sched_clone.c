@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -565,6 +565,8 @@ probe_anonymous_clone(pcmk_resource_t *clone, pcmk_node_t *node)
 
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
         const pcmk_node_t *instance_node = NULL;
+
+        pcmk__assert(instance != NULL);
 
         instance_node = instance->priv->fns->location(instance, NULL,
                                                       pcmk__rsc_node_assigned);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1271,10 +1271,9 @@ order_resource_actions_after(pcmk_action_t *first_action,
 
         } else {
             pcmk__clear_action_flags(then_action_iter, pcmk__action_runnable);
-            // coverity[null_field] order->rsc1 can't be NULL here
-            pcmk__warn("%s of %s is unrunnable because there is no %s of %s "
+            pcmk__warn("%s of %s is unrunnable because there is no %s "
                        "to order it after", then_action_iter->task, rsc->id,
-                       order->task1, order->rsc1->id);
+                       order->task1);
         }
     }
 
