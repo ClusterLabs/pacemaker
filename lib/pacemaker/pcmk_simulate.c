@@ -513,9 +513,8 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
         return;
     }
 
-    pcmk__xe_get_time(scheduler->input, PCMK_XA_EXECUTION_DATE,
-                      &original_date);
-    if (original_date == 0) {
+    if (pcmk__xe_get_time(scheduler->input, PCMK_XA_EXECUTION_DATE,
+                          &original_date) != pcmk_rc_ok) {
         return;
     }
 
