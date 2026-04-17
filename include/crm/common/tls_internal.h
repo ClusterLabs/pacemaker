@@ -167,9 +167,8 @@ void pcmk__tls_check_cert_expiration(gnutls_session_t session);
  *
  * \param[in,out] remote       Newly established remote connection
  * \param[in]     timeout_sec  Abort handshake if not completed within this time
- * \param[out]    gnutls_rc    If this is non-NULL, it will be set to the GnuTLS
- *                             rc (for logging) if this function returns EPROTO,
- *                             otherwise GNUTLS_E_SUCCESS
+ * \param[out]    gnutls_rc    Set to the gnutls error code if this function
+ *                             returns \c EPROTO, otherwise \c GNUTLS_E_SUCCESS
  *
  * \return Standard Pacemaker return code
  */
@@ -181,9 +180,8 @@ int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
  * \brief Make a single attempt to perform the client TLS handshake
  *
  * \param[in,out] remote       Newly established remote connection
- * \param[out]    gnutls_rc    If this is non-NULL, it will be set to the GnuTLS
- *                             rc (for logging) if this function returns EPROTO,
- *                             otherwise GNUTLS_E_SUCCESS
+ * \param[out]    gnutls_rc    Set to the gnutls error code if this function
+ *                             returns \c EPROTO, otherwise \c GNUTLS_E_SUCCESS
  *
  * \return Standard Pacemaker return code
  */

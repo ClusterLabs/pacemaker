@@ -469,9 +469,8 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
 {
     int rc = pcmk_rc_ok;
 
-    if (gnutls_rc != NULL) {
-        *gnutls_rc = GNUTLS_E_SUCCESS;
-    }
+    pcmk__assert(gnutls_rc != NULL);
+    *gnutls_rc = GNUTLS_E_SUCCESS;
 
     rc = gnutls_handshake(remote->tls_session);
 
@@ -497,10 +496,7 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
         }
 
         default:
-            if (gnutls_rc != NULL) {
-                *gnutls_rc = rc;
-            }
-
+            *gnutls_rc = rc;
             rc = EPROTO;
             break;
     }
