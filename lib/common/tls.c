@@ -492,6 +492,9 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
             gnutls_certificate_verification_status_print(status, type, &out, 0);
             pcmk__err("Certificate verification failed: %s", out.data);
             gnutls_free(out.data);
+
+            *gnutls_rc = rc;
+            rc = EPROTO;
             break;
         }
 
