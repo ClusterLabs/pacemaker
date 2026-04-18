@@ -249,6 +249,9 @@ pcmk__inject_action_result(xmlNode *cib_resource, lrmd_event_data_t *op,
  * \param[in]     uuid      UUID of node to inject
  *
  * \return XML of \c PCMK__XE_NODE_STATE entry for new node
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
  * \note If the global pcmk__simulate_node_config has been set to true, a
  *       node entry in the configuration section will be added, as well as a
  *       node state entry in the status section.
@@ -349,6 +352,9 @@ done:
  * \param[in]     up        If true, change state to online, otherwise offline
  *
  * \return XML of changed (or added) node state entry
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
  */
 xmlNode *
 pcmk__inject_node_state_change(cib_t *cib_conn, const char *node, bool up)
@@ -638,6 +644,7 @@ done:
     free(task);
     free(node);
     free(key);
+    pcmk__xml_free(cib_node);
 }
 
 /*!
