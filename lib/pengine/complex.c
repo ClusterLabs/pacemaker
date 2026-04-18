@@ -376,8 +376,8 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     return TRUE;
 }
 
-static gboolean
-add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
+static bool
+add_template_rsc(const xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *template_ref = NULL;
     const char *id = NULL;
@@ -385,28 +385,28 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     if (xml_obj == NULL) {
         pcmk__config_err("No resource object for processing resource list "
                          "of template");
-        return FALSE;
+        return false;
     }
 
     template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
-        return TRUE;
+        return true;
     }
 
     id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("'%s' object must have a id", xml_obj->name);
-        return FALSE;
+        return false;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
                          id);
-        return FALSE;
+        return false;
     }
 
     pcmk__add_idref(scheduler->priv->templates, template_ref, id);
-    return TRUE;
+    return true;
 }
 
 /*!
