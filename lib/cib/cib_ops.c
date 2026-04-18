@@ -918,20 +918,24 @@ cib__process_upgrade(const char *op, int options, const char *section,
 {
     int rc = pcmk_rc_ok;
     const char *max_schema = pcmk__xe_get(req, PCMK__XA_CIB_SCHEMA_MAX);
-    const char *original_schema = NULL;
+    char *original_schema = NULL;
     const char *new_schema = NULL;
 
-    original_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
+    // pcmk__update_schema() may free the original validate-with string
+    original_schema = pcmk__xe_get_copy(*cib, PCMK_XA_VALIDATE_WITH);
+
     rc = pcmk__update_schema(cib, max_schema, true,
                              !pcmk__is_set(options, cib_verbose));
     new_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
+        free(original_schema);
         update_counter(*cib, PCMK_XA_ADMIN_EPOCH, false);
         update_counter(*cib, PCMK_XA_EPOCH, true);
         update_counter(*cib, PCMK_XA_NUM_UPDATES, true);
         return pcmk_rc_ok;
     }
 
+    free(original_schema);
     return rc;
 }
