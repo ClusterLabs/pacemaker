@@ -976,7 +976,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                                &rule_input, rsc_private->utilization, NULL,
                                scheduler);
 
-    if ((expanded_xml != NULL) && !add_template_rsc(xml_obj, scheduler)) {
+    // ((rsc_private->orig_xml != NULL) means rsc was expanded from a template
+    if ((rsc_private->orig_xml != NULL)
+        && !add_template_rsc(rsc_private->orig_xml, scheduler)) {
+
         rc = pcmk_rc_unpack_error;
     }
 
