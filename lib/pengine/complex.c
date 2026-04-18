@@ -432,12 +432,6 @@ detect_unique(const pcmk_resource_t *rsc)
     return pcmk__is_true(value);
 }
 
-static void
-free_params_table(gpointer data)
-{
-    g_clear_pointer(&data, g_hash_table_destroy);
-}
-
 /*!
  * \brief Get a table of resource parameters
  *
@@ -472,8 +466,9 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Find the parameter table for given node
     if (rsc->priv->parameter_cache == NULL) {
-        rsc->priv->parameter_cache = pcmk__strikey_table(free,
-                                                         free_params_table);
+        rsc->priv->parameter_cache =
+            pcmk__strikey_table(free, (GDestroyNotify) g_hash_table_destroy);
+
     } else {
         params_on_node = g_hash_table_lookup(rsc->priv->parameter_cache,
                                              node_name);
