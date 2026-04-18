@@ -985,8 +985,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
 done:
     if (rc != pcmk_rc_ok) {
-        pcmk__free_resource(*rsc);
-        *rsc = NULL;
+        g_clear_pointer(rsc, pcmk__free_resource);
     }
     return rc;
 }
