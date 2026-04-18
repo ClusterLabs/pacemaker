@@ -676,7 +676,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     pcmk_resource_t *parent, pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     const char *value = NULL;
     const char *id = NULL;
@@ -705,25 +704,30 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         goto done;
     }
 
-    rc = unpack_template(xml_obj, &expanded_xml, scheduler);
-    if (rc != pcmk_rc_ok) {
-        goto done;
-    }
-
     *rsc = pcmk__assert_alloc(1, sizeof(pcmk_resource_t));
     (*rsc)->priv = pcmk__assert_alloc(1, sizeof(pcmk__resource_private_t));
 
     rsc_private = (*rsc)->priv;
     rsc_private->scheduler = scheduler;
 
-    if (expanded_xml) {
-        pcmk__log_xml_trace(expanded_xml, "[expanded XML]");
-        rsc_private->xml = expanded_xml;
+    rc = unpack_template(xml_obj, &rsc_private->xml, scheduler);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (rsc_private->xml != NULL) {
+        /* rsc_private->xml is the effective XML and was expanded from a
+         * template. Save rsc's original XML from the configuration in
+         * rsc_private->orig_xml for later use.
+         */
+        pcmk__log_xml_trace(rsc_private->xml, "[expanded XML]");
         rsc_private->orig_xml = xml_obj;
 
     } else {
+        /* rsc_private->xml is both the effective XML and the original XML.
+         * rsc_private->orig_xml remains NULL.
+         */
         rsc_private->xml = xml_obj;
-        rsc_private->orig_xml = NULL;
     }
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
