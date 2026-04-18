@@ -723,23 +723,10 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         goto done;
     }
 
-    *rsc = calloc(1, sizeof(pcmk_resource_t));
-    if (*rsc == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Unable to allocate memory for resource '%s'", id);
-        rc = ENOMEM;
-        goto done;
-    }
+    *rsc = pcmk__assert_alloc(1, sizeof(pcmk_resource_t));
+    (*rsc)->priv = pcmk__assert_alloc(1, sizeof(pcmk__resource_private_t));
 
-    (*rsc)->priv = calloc(1, sizeof(pcmk__resource_private_t));
-    if ((*rsc)->priv == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Unable to allocate memory for resource '%s'", id);
-        rc = ENOMEM;
-        goto done;
-    }
     rsc_private = (*rsc)->priv;
-
     rsc_private->scheduler = scheduler;
 
     if (expanded_xml) {
