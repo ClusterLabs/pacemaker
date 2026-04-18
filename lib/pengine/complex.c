@@ -263,7 +263,7 @@ template_op_key(xmlNode * op)
     return key;
 }
 
-static gboolean
+static int
 unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
                 pcmk_scheduler_t *scheduler)
 {
@@ -278,38 +278,38 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
     if (xml_obj == NULL) {
         pcmk__config_err("No resource object for template unpacking");
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
-        return TRUE;
+        return pcmk_rc_ok;
     }
 
     id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("'%s' object must have a id", xml_obj->name);
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
                          id);
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
                                          "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     template = pcmk__xe_first_child(cib_resources, PCMK_XE_TEMPLATE,
                                     PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);
-        return FALSE;
+        return pcmk_rc_unpack_error;
     }
 
     new_xml = pcmk__xml_copy(NULL, template);
@@ -363,7 +363,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     *expanded_xml = new_xml;
-    return TRUE;
+    return pcmk_rc_ok;
 }
 
 static bool
@@ -708,8 +708,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         goto done;
     }
 
-    if (unpack_template(xml_obj, &expanded_xml, scheduler) == FALSE) {
-        rc = pcmk_rc_unpack_error;
+    rc = unpack_template(xml_obj, &expanded_xml, scheduler);
+    if (rc != pcmk_rc_ok) {
         goto done;
     }
 
