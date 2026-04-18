@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1065,14 +1065,11 @@ common_free(pcmk_resource_t * rsc)
         && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
 
         pcmk__xml_free(rsc->priv->xml);
-        rsc->priv->xml = NULL;
         pcmk__xml_free(rsc->priv->orig_xml);
-        rsc->priv->orig_xml = NULL;
 
     } else if (rsc->priv->orig_xml != NULL) {
-        // rsc->private->xml was expanded from a template
+        // rsc->priv->xml was expanded from a template
         pcmk__xml_free(rsc->priv->xml);
-        rsc->priv->xml = NULL;
     }
     free(rsc->id);
 
