@@ -870,17 +870,18 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         }
 
         pcmk__trace("Unpacking <%s " PCMK_XA_ID "='%s'>", xml_obj->name, id);
-        if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
-                                scheduler) == pcmk_rc_ok) {
-            scheduler->priv->resources =
-                g_list_append(scheduler->priv->resources, new_rsc);
-            pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
-        } else {
-            pcmk__config_err("Ignoring <%s> resource '%s' "
-                             "because configuration is invalid",
-                             xml_obj->name, id);
+        if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
+                                scheduler) != pcmk_rc_ok) {
+
+            pcmk__config_err("Ignoring <%s> resource '%s' because "
+                             "configuration is invalid", xml_obj->name, id);
+            continue;
         }
+
+        scheduler->priv->resources = g_list_append(scheduler->priv->resources,
+                                                   new_rsc);
+        pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
     }
 
     for (gIter = scheduler->priv->resources;
