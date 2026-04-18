@@ -274,12 +274,6 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *id = NULL;
     int rc = pcmk_rc_ok;
 
-    if (xml_obj == NULL) {
-        pcmk__config_err("No resource object for template unpacking");
-        rc = pcmk_rc_unpack_error;
-        goto done;
-    }
-
     template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         goto done;
@@ -687,10 +681,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         .now = NULL,
     };
 
-    CRM_CHECK(rsc != NULL, return EINVAL);
-    CRM_CHECK((xml_obj != NULL) && (scheduler != NULL),
-              rc = EINVAL;
-              goto done);
+    pcmk__assert((xml_obj != NULL) && (rsc != NULL) && (scheduler != NULL));
 
     rule_input.now = scheduler->priv->now;
 
