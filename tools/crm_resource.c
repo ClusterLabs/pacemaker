@@ -1244,6 +1244,7 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     GList *after = NULL;
     GList *remaining = NULL;
     int rc = pcmk_rc_ok;
+    xmlNode *cib_xml = NULL;
 
     if (!out->is_quiet(out)) {
         before = build_constraint_list(scheduler->input);
@@ -1263,37 +1264,37 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
                                 cib_conn, true, options.force);
     }
 
-    if (!out->is_quiet(out)) {
-        xmlNode *cib_xml = NULL;
-
-        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
-            g_list_free_full(before, free);
-            pcmk__xml_free(cib_xml);
-            return pcmk_rc2exitc(rc);
-        }
-
-        pcmk_reset_scheduler(scheduler);
-        scheduler->input = cib_xml;
-        cluster_status(scheduler);
-
-        after = build_constraint_list(scheduler->input);
-        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
-
-        for (const GList *iter = remaining; iter != NULL; iter = iter->next) {
-            const char *constraint = iter->data;
-
-            out->info(out, "Removing constraint: %s", constraint);
-        }
-
-        g_list_free_full(before, free);
-        g_list_free_full(after, free);
-        g_list_free(remaining);
+    if (out->is_quiet(out)) {
+        return pcmk_rc2exitc(rc);
     }
+
+    rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
+        g_list_free_full(before, free);
+        pcmk__xml_free(cib_xml);
+        return pcmk_rc2exitc(rc);
+    }
+
+    pcmk_reset_scheduler(scheduler);
+    scheduler->input = cib_xml;
+    cluster_status(scheduler);
+
+    after = build_constraint_list(scheduler->input);
+    remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
+
+    for (const GList *iter = remaining; iter != NULL; iter = iter->next) {
+        const char *constraint = iter->data;
+
+        out->info(out, "Removing constraint: %s", constraint);
+    }
+
+    g_list_free_full(before, free);
+    g_list_free_full(after, free);
+    g_list_free(remaining);
 
     return pcmk_rc2exitc(rc);
 }
