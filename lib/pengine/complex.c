@@ -247,7 +247,7 @@ get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
 }
 
 static char *
-template_op_key(xmlNode * op)
+template_op_key(const xmlNode *op)
 {
     const char *name = pcmk__xe_get(op, PCMK_XA_NAME);
     const char *role = pcmk__xe_get(op, PCMK_XA_ROLE);
@@ -273,43 +273,50 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     xmlNode *child_xml = NULL;
     xmlNode *rsc_ops = NULL;
     xmlNode *template_ops = NULL;
+    GHashTable *rsc_ops_hash = NULL;
     const char *template_ref = NULL;
     const char *id = NULL;
+    int rc = pcmk_rc_ok;
 
     if (xml_obj == NULL) {
         pcmk__config_err("No resource object for template unpacking");
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
-        return pcmk_rc_ok;
+        goto done;
     }
 
     id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("'%s' object must have a id", xml_obj->name);
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
                          id);
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
                                          "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (cib_resources == NULL) {
         pcmk__config_err("No resources configured");
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     template = pcmk__xe_first_child(cib_resources, PCMK_XE_TEMPLATE,
                                     PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);
-        return pcmk_rc_unpack_error;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     new_xml = pcmk__xml_copy(NULL, template);
@@ -331,39 +338,41 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         }
     }
 
-    if (template_ops && rsc_ops) {
-        xmlNode *op = NULL;
-        GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
+    if ((template_ops == NULL) || (rsc_ops == NULL)) {
+        goto done;
+    }
 
-        for (op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL); op != NULL;
-             op = pcmk__xe_next(op, NULL)) {
+    // Operations configured in the resource override those in the template
+    rsc_ops_hash = pcmk__strkey_table(free, NULL);
 
-            char *key = template_op_key(op);
+    for (const xmlNode *op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL);
+         op != NULL; op = pcmk__xe_next(op, NULL)) {
 
-            g_hash_table_insert(rsc_ops_hash, key, op);
+        g_hash_table_insert(rsc_ops_hash, template_op_key(op), (void *) op);
+    }
+
+    for (xmlNode *op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
+         op != NULL; op = pcmk__xe_next(op, NULL)) {
+
+        char *key = template_op_key(op);
+
+        if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
+            pcmk__xml_copy(rsc_ops, op);
         }
 
-        for (op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
-             op != NULL; op = pcmk__xe_next(op, NULL)) {
+        free(key);
+    }
 
-            char *key = template_op_key(op);
+    // template_ops has been replaced by rsc_ops
+    pcmk__xml_free(template_ops);
 
-            if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
-                pcmk__xml_copy(rsc_ops, op);
-            }
-
-            free(key);
-        }
-
-        if (rsc_ops_hash) {
-            g_hash_table_destroy(rsc_ops_hash);
-        }
-
-        pcmk__xml_free(template_ops);
+done:
+    if (rsc_ops_hash != NULL) {
+        g_hash_table_destroy(rsc_ops_hash);
     }
 
     *expanded_xml = new_xml;
-    return pcmk_rc_ok;
+    return rc;
 }
 
 static bool
