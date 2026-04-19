@@ -298,7 +298,9 @@ build_constraint_list(xmlNode *root)
         xmlNode *match = pcmk__xpath_result(xpathObj, ndx);
 
         if (match != NULL) {
-            retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
+            // Insert a copy in case root is freed
+            retval = g_list_insert_sorted(retval,
+                                          pcmk__str_copy(pcmk__xe_id(match)),
                                           (GCompareFunc) g_strcmp0);
         }
     }
@@ -1270,11 +1272,12 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         if (rc != pcmk_rc_ok) {
             g_set_error(&error, PCMK__RC_ERROR, rc,
                         _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
-            g_list_free(before);
+            g_list_free_full(before, free);
             pcmk__xml_free(cib_xml);
             return pcmk_rc2exitc(rc);
         }
 
+        pcmk_reset_scheduler(scheduler);
         scheduler->input = cib_xml;
         cluster_status(scheduler);
 
@@ -1287,8 +1290,8 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
             out->info(out, "Removing constraint: %s", constraint);
         }
 
-        g_list_free(before);
-        g_list_free(after);
+        g_list_free_full(before, free);
+        g_list_free_full(after, free);
         g_list_free(remaining);
     }
 
