@@ -479,9 +479,7 @@ pcmk__load_schemas_from_dir(const char *dir)
 
 done:
     free(namelist);
-    if (transforms != NULL) {
-        g_hash_table_destroy(transforms);
-    }
+    g_clear_pointer(&transforms, g_hash_table_destroy);
 }
 
 static gint

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -68,9 +68,7 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     }
 
     g_list_free(list);
-    if (table != NULL) {
-        g_hash_table_destroy(table);
-    }
+    g_clear_pointer(&table, g_hash_table_destroy);
     pcmk__xml_free(xml);
 }
 

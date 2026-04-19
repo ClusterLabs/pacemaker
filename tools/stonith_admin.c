@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -716,9 +716,7 @@ main(int argc, char **argv)
     free(name);
     g_list_free_full(options.devices, free);
 
-    if (options.params != NULL) {
-        g_hash_table_destroy(options.params);
-    }
+    g_clear_pointer(&options.params, g_hash_table_destroy);
 
     if (st != NULL) {
         st->cmds->disconnect(st);

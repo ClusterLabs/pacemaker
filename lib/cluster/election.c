@@ -137,10 +137,7 @@ election_reset(pcmk_cluster_t *cluster)
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
         pcmk__trace("Resetting election");
         mainloop_timer_stop(cluster->priv->election->timeout);
-        if (cluster->priv->election->voted != NULL) {
-            g_hash_table_destroy(cluster->priv->election->voted);
-            cluster->priv->election->voted = NULL;
-        }
+        g_clear_pointer(&cluster->priv->election->voted, g_hash_table_destroy);
     }
 }
 

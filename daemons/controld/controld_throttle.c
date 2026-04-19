@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -295,10 +295,8 @@ throttle_fini(void)
         mainloop_timer_del(throttle_timer);
         throttle_timer = NULL;
     }
-    if (throttle_records != NULL) {
-        g_hash_table_destroy(throttle_records);
-        throttle_records = NULL;
-    }
+
+    g_clear_pointer(&throttle_records, g_hash_table_destroy);
 }
 
 int

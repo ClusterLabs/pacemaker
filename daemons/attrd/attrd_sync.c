@@ -182,12 +182,7 @@ attrd_add_client_to_waitlist(pcmk__request_t *request)
 void
 attrd_free_waitlist(void)
 {
-    if (waitlist == NULL) {
-        return;
-    }
-
-    g_hash_table_destroy(waitlist);
-    waitlist = NULL;
+    g_clear_pointer(&waitlist, g_hash_table_destroy);
 }
 
 /*!
@@ -530,10 +525,7 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 void
 attrd_free_confirmations(void)
 {
-    if (expected_confirmations != NULL) {
-        g_hash_table_destroy(expected_confirmations);
-        expected_confirmations = NULL;
-    }
+    g_clear_pointer(&expected_confirmations, g_hash_table_destroy);
 }
 
 /*!

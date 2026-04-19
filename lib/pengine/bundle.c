@@ -735,9 +735,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->assign->probe_mode = pcmk__probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
-        if (replica->child->priv->allowed_nodes != NULL) {
-            g_hash_table_destroy(replica->child->priv->allowed_nodes);
-        }
+        g_clear_pointer(&replica->child->priv->allowed_nodes,
+                        g_hash_table_destroy);
         replica->child->priv->allowed_nodes =
             pcmk__strkey_table(NULL, pcmk__free_node_copy);
         g_hash_table_insert(replica->child->priv->allowed_nodes,

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,10 +51,7 @@ controld_remove_all_outside_events(void)
 void
 controld_destroy_outside_events_table(void)
 {
-    if (outside_events != NULL) {
-        g_hash_table_destroy(outside_events);
-        outside_events = NULL;
-    }
+    g_clear_pointer(&outside_events, g_hash_table_destroy);
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -209,13 +209,9 @@ stonith__destroy_action(stonith_action_t *action)
 {
     if (action) {
         free(action->agent);
-        if (action->args) {
-            g_hash_table_destroy(action->args);
-        }
         free(action->action);
-        if (action->svc_action) {
-            services_action_free(action->svc_action);
-        }
+        g_clear_pointer(&action->args, g_hash_table_destroy);
+        g_clear_pointer(&action->svc_action, services_action_free);
         pcmk__reset_result(&(action->result));
         free(action);
     }

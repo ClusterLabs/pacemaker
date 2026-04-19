@@ -675,9 +675,7 @@ done:
         the_cib->cmds->set_user(the_cib, NULL);
     }
 
-    if (alert_attribute_value != NULL) {
-        g_hash_table_destroy(alert_attribute_value);
-    }
+    g_clear_pointer(&alert_attribute_value, g_hash_table_destroy);
 }
 
 /*!

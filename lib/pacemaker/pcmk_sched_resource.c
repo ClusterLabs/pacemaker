@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2025 the Pacemaker project contributors
+ * Copyright 2014-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -774,12 +774,9 @@ done:
                 ((r2_node == NULL)? "" : " on "),
                 ((r2_node == NULL)? "" : r2_node->priv->id),
                 reason);
-    if (r1_nodes != NULL) {
-        g_hash_table_destroy(r1_nodes);
-    }
-    if (r2_nodes != NULL) {
-        g_hash_table_destroy(r2_nodes);
-    }
+
+    g_clear_pointer(&r1_nodes, g_hash_table_destroy);
+    g_clear_pointer(&r2_nodes, g_hash_table_destroy);
     return rc;
 }
 

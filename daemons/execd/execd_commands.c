@@ -364,9 +364,9 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     if (cmd->delay_id) {
         g_source_remove(cmd->delay_id);
     }
-    if (cmd->params) {
-        g_hash_table_destroy(cmd->params);
-    }
+
+    g_clear_pointer(&cmd->params, g_hash_table_destroy);
+
     pcmk__reset_result(&(cmd->result));
     free(cmd->origin);
     free(cmd->action);

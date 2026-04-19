@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -75,8 +75,5 @@ attrd_forget_node_xml_id(const char *node_name)
 void
 attrd_cleanup_xml_ids(void)
 {
-    if (node_xml_ids != NULL) {
-        g_hash_table_destroy(node_xml_ids);
-        node_xml_ids = NULL;
-    }
+    g_clear_pointer(&node_xml_ids, g_hash_table_destroy);
 }

@@ -619,10 +619,7 @@ main(int argc, char **argv)
     }
 
  done:
-    if (attr_set) {
-        g_hash_table_destroy(attr_set);
-    }
-    attr_set = NULL;
+    g_clear_pointer(&attr_set, g_hash_table_destroy);
 
     if (attr_delete) {
         g_list_free_full(attr_delete, free);

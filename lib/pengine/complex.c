@@ -147,17 +147,13 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         p = p->priv->parent;
     }
 
-    if (parent_orig_meta != NULL) {
-        // This will not overwrite any values already existing for child
-        g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
+    if (parent_orig_meta == NULL) {
+        return;
     }
 
-    if (parent_orig_meta != NULL) {
-        g_hash_table_destroy(parent_orig_meta);
-    }
-    
-    return ;
-
+    // This will not overwrite any values already existing for child
+    g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
+    g_hash_table_destroy(parent_orig_meta);
 }
 
 /*
@@ -367,10 +363,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     pcmk__xml_free(template_ops);
 
 done:
-    if (rsc_ops_hash != NULL) {
-        g_hash_table_destroy(rsc_ops_hash);
-    }
-
+    g_clear_pointer(&rsc_ops_hash, g_hash_table_destroy);
     *expanded_xml = new_xml;
     return rc;
 }
@@ -442,7 +435,7 @@ detect_unique(const pcmk_resource_t *rsc)
 static void
 free_params_table(gpointer data)
 {
-    g_hash_table_destroy((GHashTable *) data);
+    g_clear_pointer(&data, g_hash_table_destroy);
 }
 
 /*!
@@ -1045,9 +1038,7 @@ common_free(pcmk_resource_t * rsc)
 
     pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    if (rsc->priv->parameter_cache != NULL) {
-        g_hash_table_destroy(rsc->priv->parameter_cache);
-    }
+    g_clear_pointer(&rsc->priv->parameter_cache, g_hash_table_destroy);
 
     if ((rsc->priv->parent == NULL)
         && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
@@ -1075,21 +1066,12 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->priv->location_constraints);
     g_list_free_full(rsc->priv->ticket_constraints, free);
 
-    if (rsc->priv->meta != NULL) {
-        g_hash_table_destroy(rsc->priv->meta);
-    }
-    if (rsc->priv->utilization != NULL) {
-        g_hash_table_destroy(rsc->priv->utilization);
-    }
-    if (rsc->priv->probed_nodes != NULL) {
-        g_hash_table_destroy(rsc->priv->probed_nodes);
-    }
-    if (rsc->priv->allowed_nodes != NULL) {
-        g_hash_table_destroy(rsc->priv->allowed_nodes);
-    }
+    g_clear_pointer(&rsc->priv->meta, g_hash_table_destroy);
+    g_clear_pointer(&rsc->priv->utilization, g_hash_table_destroy);
+    g_clear_pointer(&rsc->priv->probed_nodes, g_hash_table_destroy);
+    g_clear_pointer(&rsc->priv->allowed_nodes, g_hash_table_destroy);
 
     free(rsc->priv);
-
     free(rsc);
 }
 

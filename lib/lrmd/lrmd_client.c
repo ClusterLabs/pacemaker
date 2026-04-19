@@ -251,9 +251,7 @@ lrmd_free_event(lrmd_event_data_t *event)
     free((void *) event->user_data);
     free((void *) event->remote_nodename);
     lrmd__reset_result(event);
-    if (event->params != NULL) {
-        g_hash_table_destroy(event->params);
-    }
+    g_clear_pointer(&event->params, g_hash_table_destroy);
     free(event);
 }
 
@@ -334,9 +332,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
     pcmk__trace("op %s notify event received", type);
     native->callback(&event);
 
-    if (event.params) {
-        g_hash_table_destroy(event.params);
-    }
+    g_clear_pointer(&event.params, g_hash_table_destroy);
     lrmd__reset_result(&event);
 }
 

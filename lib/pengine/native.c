@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -141,9 +141,8 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     pcmk_node_t *local_node = NULL;
 
                     /* make sure it doesn't come up again */
-                    if (rsc->priv->allowed_nodes != NULL) {
-                        g_hash_table_destroy(rsc->priv->allowed_nodes);
-                    }
+                    g_clear_pointer(&rsc->priv->allowed_nodes,
+                                    g_hash_table_destroy);
                     rsc->priv->allowed_nodes =
                         pe__node_list2table(scheduler->nodes);
                     g_hash_table_iter_init(&gIter, rsc->priv->allowed_nodes);
@@ -1037,11 +1036,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 static void
 destroy_node_table(gpointer data)
 {
-    GHashTable *node_table = data;
-
-    if (node_table) {
-        g_hash_table_destroy(node_table);
-    }
+    g_clear_pointer(&data, g_hash_table_destroy);
 }
 
 int
@@ -1124,18 +1119,9 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
         }
     }
 
-    if (rsc_table) {
-        g_hash_table_destroy(rsc_table);
-        rsc_table = NULL;
-    }
-    if (active_table) {
-        g_hash_table_destroy(active_table);
-        active_table = NULL;
-    }
-    if (sorted_rscs) {
-        g_list_free(sorted_rscs);
-    }
-
+    g_clear_pointer(&rsc_table, g_hash_table_destroy);
+    g_clear_pointer(&active_table, g_hash_table_destroy);
+    g_clear_pointer(&sorted_rscs, g_list_free);
     return rc;
 }
 

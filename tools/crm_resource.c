@@ -2375,9 +2375,7 @@ done:
     g_free(options.agent);
     g_free(options.class);
     g_free(options.provider);
-    if (options.override_params != NULL) {
-        g_hash_table_destroy(options.override_params);
-    }
+    g_clear_pointer(&options.override_params, g_hash_table_destroy);
     g_strfreev(options.remainder);
 
     // Don't destroy options.cmdline_params here. See comment in option_cb().

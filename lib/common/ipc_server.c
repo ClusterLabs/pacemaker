@@ -121,8 +121,7 @@ pcmk__client_cleanup(void)
             pcmk__warn("Exiting with %d active IPC client%s", active,
                        pcmk__plural_s(active));
         }
-        g_hash_table_destroy(client_connections);
-        client_connections = NULL;
+        g_clear_pointer(&client_connections, g_hash_table_destroy);
     }
 }
 

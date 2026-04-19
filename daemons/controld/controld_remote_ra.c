@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -449,9 +449,7 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
 
     lrm_op_callback(&op);
 
-    if (op.params) {
-        g_hash_table_destroy(op.params);
-    }
+    g_clear_pointer(&op.params, g_hash_table_destroy);
     lrmd__reset_result(&op);
 }
 

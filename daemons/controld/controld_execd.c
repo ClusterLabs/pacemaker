@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -137,9 +137,7 @@ history_free(gpointer data)
 {
     rsc_history_t *history = (rsc_history_t*)data;
 
-    if (history->stop_params) {
-        g_hash_table_destroy(history->stop_params);
-    }
+    g_clear_pointer(&history->stop_params, g_hash_table_destroy);
 
     /* Don't need to free history->rsc.id because it's set to history->id */
     free(history->rsc.type);
@@ -224,9 +222,8 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
                                                PCMK_ACTION_RELOAD,
                                                PCMK_ACTION_RELOAD_AGENT,
                                                PCMK_ACTION_MONITOR, NULL)) {
-            if (entry->stop_params) {
-                g_hash_table_destroy(entry->stop_params);
-            }
+
+            g_clear_pointer(&entry->stop_params, g_hash_table_destroy);
             entry->stop_params = pcmk__strkey_table(free, free);
 
             g_hash_table_foreach(op->params, copy_instance_keys, entry->stop_params);
@@ -1680,8 +1677,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
             g_hash_table_foreach(params, copy_meta_keys, op->params);
             g_hash_table_foreach(entry->stop_params, copy_instance_keys, op->params);
-            g_hash_table_destroy(params);
-            params = NULL;
+            g_clear_pointer(&params, g_hash_table_destroy);
         }
     }
 

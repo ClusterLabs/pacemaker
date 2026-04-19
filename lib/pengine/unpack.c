@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -3641,9 +3641,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
 
     // Ban the resource from all nodes
     pcmk__notice("%s will not be started under current conditions", rsc->id);
-    if (rsc->priv->allowed_nodes != NULL) {
-        g_hash_table_destroy(rsc->priv->allowed_nodes);
-    }
+    g_clear_pointer(&rsc->priv->allowed_nodes, g_hash_table_destroy);
     rsc->priv->allowed_nodes = pe__node_list2table(scheduler->nodes);
     g_hash_table_foreach(rsc->priv->allowed_nodes, set_node_score, &score);
 }

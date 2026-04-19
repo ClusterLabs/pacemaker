@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,15 +41,9 @@ pcmk__free_node(gpointer user_data)
     pcmk__trace("Freeing node %s",
                 (is_remote? "(guest or remote)" : pcmk__node_name(node)));
 
-    if (node->priv->attrs != NULL) {
-        g_hash_table_destroy(node->priv->attrs);
-    }
-    if (node->priv->utilization != NULL) {
-        g_hash_table_destroy(node->priv->utilization);
-    }
-    if (node->priv->digest_cache != NULL) {
-        g_hash_table_destroy(node->priv->digest_cache);
-    }
+    g_clear_pointer(&node->priv->attrs, g_hash_table_destroy);
+    g_clear_pointer(&node->priv->utilization, g_hash_table_destroy);
+    g_clear_pointer(&node->priv->digest_cache, g_hash_table_destroy);
     g_list_free(node->details->running_rsc);
     g_list_free(node->priv->assigned_resources);
     free(node->priv);

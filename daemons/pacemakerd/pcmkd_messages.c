@@ -176,10 +176,7 @@ pacemakerd_register_handlers(void)
 void
 pacemakerd_unregister_handlers(void)
 {
-    if (pacemakerd_handlers != NULL) {
-        g_hash_table_destroy(pacemakerd_handlers);
-        pacemakerd_handlers = NULL;
-    }
+    g_clear_pointer(&pacemakerd_handlers, g_hash_table_destroy);
 }
 
 void

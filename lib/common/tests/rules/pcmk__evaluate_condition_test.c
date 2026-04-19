@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -88,8 +88,7 @@ attribute_expression(void **state)
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, NULL),
                      pcmk_rc_ok);
 
-    g_hash_table_destroy(rule_input.node_attrs);
-    rule_input.node_attrs = NULL;
+    g_clear_pointer(&rule_input.node_attrs, g_hash_table_destroy);
     pcmk__xml_free(xml);
 }
 
@@ -110,8 +109,7 @@ location_expression(void **state)
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, NULL),
                      pcmk_rc_ok);
 
-    g_hash_table_destroy(rule_input.node_attrs);
-    rule_input.node_attrs = NULL;
+    g_clear_pointer(&rule_input.node_attrs, g_hash_table_destroy);
     pcmk__xml_free(xml);
 }
 

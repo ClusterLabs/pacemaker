@@ -587,26 +587,9 @@ pcmk__cluster_init_node_caches(void)
 void
 pcmk__cluster_destroy_node_caches(void)
 {
-    if (pcmk__peer_cache != NULL) {
-        pcmk__trace("Destroying peer cache with %u members",
-                    g_hash_table_size(pcmk__peer_cache));
-        g_hash_table_destroy(pcmk__peer_cache);
-        pcmk__peer_cache = NULL;
-    }
-
-    if (pcmk__remote_peer_cache != NULL) {
-        pcmk__trace("Destroying remote peer cache with %u members",
-                    pcmk__cluster_num_remote_nodes());
-        g_hash_table_destroy(pcmk__remote_peer_cache);
-        pcmk__remote_peer_cache = NULL;
-    }
-
-    if (cluster_node_cib_cache != NULL) {
-        pcmk__trace("Destroying configured cluster node cache with %u members",
-                    g_hash_table_size(cluster_node_cib_cache));
-        g_hash_table_destroy(cluster_node_cib_cache);
-        cluster_node_cib_cache = NULL;
-    }
+    g_clear_pointer(&pcmk__peer_cache, g_hash_table_destroy);
+    g_clear_pointer(&pcmk__remote_peer_cache, g_hash_table_destroy);
+    g_clear_pointer(&cluster_node_cib_cache, g_hash_table_destroy);
 }
 
 static void (*peer_status_callback)(enum pcmk__node_update,

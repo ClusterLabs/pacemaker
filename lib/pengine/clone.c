@@ -831,10 +831,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             GList *list = g_hash_table_get_values(rsc->priv->allowed_nodes);
 
             /* Custom stopped table for non-unique clones */
-            if (stopped != NULL) {
-                g_hash_table_destroy(stopped);
-                stopped = NULL;
-            }
+            g_clear_pointer(&stopped, g_hash_table_destroy);
 
             if (list == NULL) {
                 /* Clusters with PCMK_OPT_SYMMETRIC_CLUSTER=false haven't

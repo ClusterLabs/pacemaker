@@ -427,10 +427,7 @@ execd_register_handlers(void)
 void
 execd_unregister_handlers(void)
 {
-    if (execd_handlers != NULL) {
-        g_hash_table_destroy(execd_handlers);
-        execd_handlers = NULL;
-    }
+    g_clear_pointer(&execd_handlers, g_hash_table_destroy);
 }
 
 bool

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1422,9 +1422,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
                        dependent->id, primary->id);
     }
 
-    if (work != NULL) {
-        g_hash_table_destroy(work);
-    }
+    g_clear_pointer(&work, g_hash_table_destroy);
 }
 
 /*!
@@ -1900,9 +1898,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         }
     }
 
-    if (*nodes != NULL) {
-       g_hash_table_destroy(*nodes);
-    }
+    g_clear_pointer(nodes, g_hash_table_destroy);
     *nodes = work;
 
     pcmk__clear_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);

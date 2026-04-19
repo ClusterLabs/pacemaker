@@ -43,10 +43,7 @@ pcmk__output_free(pcmk__output_t *out) {
 
     out->free_priv(out);
 
-    if (out->messages != NULL) {
-        g_hash_table_destroy(out->messages);
-    }
-
+    g_clear_pointer(&out->messages, g_hash_table_destroy);
     g_free(out->request);
     free(out);
 }
@@ -183,11 +180,9 @@ pcmk__register_formats(GOptionGroup *group,
 }
 
 void
-pcmk__unregister_formats(void) {
-    if (formatters != NULL) {
-        g_hash_table_destroy(formatters);
-        formatters = NULL;
-    }
+pcmk__unregister_formats(void)
+{
+    g_clear_pointer(&formatters, g_hash_table_destroy);
 }
 
 int
