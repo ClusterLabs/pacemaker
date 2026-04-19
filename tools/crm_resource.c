@@ -1264,7 +1264,7 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     }
 
     if (out->is_quiet(out)) {
-        return pcmk_rc2exitc(rc);
+        goto done;
     }
 
     pcmk_reset_scheduler(scheduler);
@@ -1275,8 +1275,7 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     if (rc != pcmk_rc_ok) {
         g_set_error(&error, PCMK__RC_ERROR, rc,
                     _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
-        g_list_free_full(before, free);
-        return pcmk_rc2exitc(rc);
+        goto done;
     }
 
     cluster_status(scheduler);
@@ -1290,6 +1289,7 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         out->info(out, "Removing constraint: %s", constraint);
     }
 
+done:
     g_list_free_full(before, free);
     g_list_free_full(after, free);
     g_list_free(remaining);
