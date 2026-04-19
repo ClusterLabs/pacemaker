@@ -253,26 +253,15 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
     }
 }
 
-gboolean
+void
 lrm_state_init_local(void)
 {
-    if (lrm_state_table) {
-        return TRUE;
+    if (lrm_state_table != NULL) {
+        return;
     }
 
     lrm_state_table = pcmk__strikey_table(NULL, internal_lrm_state_destroy);
-    if (!lrm_state_table) {
-        return FALSE;
-    }
-
     proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
-    if (!proxy_table) {
-        g_hash_table_destroy(lrm_state_table);
-        lrm_state_table = NULL;
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 void
