@@ -329,7 +329,7 @@ do_startup(long long action, enum crmd_fsa_cause cause,
 
     controld_globals.cib_conn = cib_new();
 
-    lrm_state_init_local();
+    controld_execd_state_table_init();
     if (!controld_init_fsa_timers()) {
         register_fsa_error(I_ERROR, msg_data);
     }

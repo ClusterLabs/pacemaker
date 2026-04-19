@@ -236,7 +236,7 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 }
 
 void
-lrm_state_init_local(void)
+controld_execd_state_table_init(void)
 {
     if (lrm_state_table != NULL) {
         return;
