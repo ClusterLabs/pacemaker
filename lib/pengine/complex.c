@@ -362,17 +362,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         pcmk__xml_free(template_ops);
     }
 
-    /*pcmk__xml_free(*expanded_xml); */
     *expanded_xml = new_xml;
-
-#if 0 /* Disable multi-level templates for now */
-    if (!unpack_template(new_xml, expanded_xml, scheduler)) {
-       pcmk__xml_free(*expanded_xml);
-       *expanded_xml = NULL;
-       return FALSE;
-    }
-#endif
-
     return TRUE;
 }
 
