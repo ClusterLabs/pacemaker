@@ -1609,8 +1609,7 @@ lrmd_ipc_disconnect(lrmd_t * lrmd)
 
     if (native->source != NULL) {
         /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
         native->ipc = NULL;
 
     } else if (native->ipc) {
@@ -1641,8 +1640,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
 
     if (native->source != NULL) {
         /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
 
     } else if (native->sock >= 0) {
         close(native->sock);
