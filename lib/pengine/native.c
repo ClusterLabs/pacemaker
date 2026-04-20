@@ -1114,9 +1114,7 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
             rc = pcmk_rc_ok;
         }
 
-        if (sorted_nodes) {
-            g_list_free(sorted_nodes);
-        }
+        g_list_free(sorted_nodes);
     }
 
     g_clear_pointer(&rsc_table, g_hash_table_destroy);

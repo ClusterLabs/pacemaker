@@ -685,10 +685,8 @@ free_schema(gpointer data)
 void
 pcmk__schema_cleanup(void)
 {
-    if (known_schemas != NULL) {
-        g_list_free_full(known_schemas, free_schema);
-        known_schemas = NULL;
-    }
+    g_list_free_full(known_schemas, free_schema);
+    known_schemas = NULL;
     initialized = false;
 
     wrap_libxslt(true);

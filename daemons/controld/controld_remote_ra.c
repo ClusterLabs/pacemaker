@@ -770,12 +770,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
 static void
 handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
 {
-    remote_ra_data_t *ra_data = NULL;
-
     pcmk__assert(lrm_state != NULL);
-    ra_data = lrm_state->remote_ra_data;
 
-    if (!pcmk__is_set(ra_data->status, takeover_complete)) {
+    if (!pcmk__is_set(lrm_state->remote_ra_data->status, takeover_complete)) {
         /* delete pending ops when ever the remote connection is intentionally stopped */
         g_hash_table_remove_all(lrm_state->active_ops);
     } else {
@@ -787,15 +784,13 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     lrm_remote_clear_flags(lrm_state, remote_active);
     lrm_state_disconnect(lrm_state);
 
-    if (ra_data->cmds) {
-        g_list_free_full(ra_data->cmds, free_cmd);
-    }
-    if (ra_data->recurring_cmds) {
-        g_list_free_full(ra_data->recurring_cmds, free_cmd);
-    }
-    ra_data->cmds = NULL;
-    ra_data->recurring_cmds = NULL;
-    ra_data->cur_cmd = NULL;
+    g_list_free_full(lrm_state->remote_ra_data->cmds, free_cmd);
+    lrm_state->remote_ra_data->cmds = NULL;
+
+    g_list_free_full(lrm_state->remote_ra_data->recurring_cmds, free_cmd);
+    lrm_state->remote_ra_data->recurring_cmds = NULL;
+
+    lrm_state->remote_ra_data->cur_cmd = NULL;
 
     if (cmd) {
         pcmk__set_result(&(cmd->result), PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);

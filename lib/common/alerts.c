@@ -448,7 +448,5 @@ pcmk__unpack_alerts(const xmlNode *alerts)
 void
 pcmk__free_alerts(GList *alert_list)
 {
-    if (alert_list != NULL) {
-        g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
-    }
+    g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
 }

@@ -389,8 +389,10 @@ pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
 void
 pcmk__free_param_checks(pcmk_scheduler_t *scheduler)
 {
-    if ((scheduler != NULL) && (scheduler->priv->param_check != NULL)) {
-        g_list_free_full(scheduler->priv->param_check, free);
-        scheduler->priv->param_check = NULL;
+    if (scheduler == NULL) {
+        return;
     }
+
+    g_list_free_full(scheduler->priv->param_check, free);
+    scheduler->priv->param_check = NULL;
 }

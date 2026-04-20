@@ -1639,9 +1639,7 @@ free_topology_entry(gpointer data)
     stonith_topology_t *tp = data;
 
     for (int i = 0; i < ST__LEVEL_COUNT; i++) {
-        if (tp->levels[i] != NULL) {
-            g_list_free_full(tp->levels[i], free);
-        }
+        g_list_free_full(tp->levels[i], free);
     }
 
     free(tp->target);

@@ -255,10 +255,8 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
         g_clear_pointer(&docpriv->acl_user, free);
         g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
-        if(docpriv->deleted_objs) {
-            g_list_free_full(docpriv->deleted_objs, free_deleted_object);
-            docpriv->deleted_objs = NULL;
-        }
+        g_list_free_full(docpriv->deleted_objs, free_deleted_object);
+        docpriv->deleted_objs = NULL;
     }
 }
 

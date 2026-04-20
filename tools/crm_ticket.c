@@ -621,9 +621,7 @@ main(int argc, char **argv)
  done:
     g_clear_pointer(&attr_set, g_hash_table_destroy);
 
-    if (attr_delete) {
-        g_list_free_full(attr_delete, free);
-    }
+    g_list_free_full(attr_delete, free);
     attr_delete = NULL;
 
     g_clear_pointer(&scheduler, pcmk_free_scheduler);

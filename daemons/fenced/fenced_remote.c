@@ -625,10 +625,8 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     /* Free non-essential parts of the record
      * Keep the record around so we can query the history
      */
-    if (op->query_results) {
-        g_list_free_full(op->query_results, free_remote_query);
-        op->query_results = NULL;
-    }
+    g_list_free_full(op->query_results, free_remote_query);
+    op->query_results = NULL;
 
     g_clear_pointer(&op->request, pcmk__xml_free);
     pcmk__xml_free(local_data);
@@ -832,10 +830,9 @@ set_op_device_list(remote_fencing_op_t * op, GList *devices)
 {
     GList *lpc = NULL;
 
-    if (op->devices_list) {
-        g_list_free_full(op->devices_list, free);
-        op->devices_list = NULL;
-    }
+    g_list_free_full(op->devices_list, free);
+    op->devices_list = NULL;
+
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         const char *device = lpc->data;
 

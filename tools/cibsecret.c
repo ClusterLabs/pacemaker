@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 the Pacemaker project contributors
+ * Copyright 2025-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -406,10 +406,7 @@ done:
 
     free(nd.local_node);
     free(xml_node);
-
-    if (nd.all_nodes != NULL) {
-        g_list_free_full(nd.all_nodes, g_free);
-    }
+    g_list_free_full(nd.all_nodes, g_free);
 
     return reachable;
 }
