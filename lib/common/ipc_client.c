@@ -119,8 +119,7 @@ free_daemon_specific_data(pcmk_ipc_api_t *api)
 {
     if ((api != NULL) && (api->cmds != NULL)) {
         if ((api->cmds->free_data != NULL) && (api->api_data != NULL)) {
-            api->cmds->free_data(api->api_data);
-            api->api_data = NULL;
+            g_clear_pointer(&api->api_data, api->cmds->free_data);
         }
 
         g_clear_pointer(&api->cmds, free);
@@ -1475,8 +1474,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
             index++;
         }
 
-        pcmk_free_ipc_event(iov);
-        iov = NULL;
+        g_clear_pointer(&iov, pcmk_free_ipc_event);
     } while (true);
 
     /* If we should not wait for a response, bail now */

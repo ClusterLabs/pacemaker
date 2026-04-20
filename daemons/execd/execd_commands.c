@@ -495,8 +495,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     dup->userdata_str = cmd->userdata_str;
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
-    free_lrmd_cmd(cmd);
-    cmd = NULL;
+    g_clear_pointer(&cmd, free_lrmd_cmd);
 
     /* If dup is not pending, that means it has already executed at least once
      * and is waiting in the interval. In that case, stop waiting and initiate

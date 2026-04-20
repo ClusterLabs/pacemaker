@@ -764,8 +764,7 @@ pcmk_dbus_get_property(DBusConnection *connection, const char *target,
                                        query_data, timeout);
         if (local_pending == NULL) {
             // async_query_result_cb() was not called in this case
-            free_property_query(query_data);
-            query_data = NULL;
+            g_clear_pointer(&query_data, free_property_query);
         }
 
         if (pending) {

@@ -207,15 +207,11 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         /* Store failed monitors here, otherwise the block below will cause them
          * to be forgotten when a stop happens.
          */
-        if (entry->failed) {
-            lrmd_free_event(entry->failed);
-        }
+        lrmd_free_event(entry->failed);
         entry->failed = lrmd_copy_event(op);
 
     } else if (op->interval_ms == 0) {
-        if (entry->last) {
-            lrmd_free_event(entry->last);
-        }
+        lrmd_free_event(entry->last);
         entry->last = lrmd_copy_event(op);
 
         if (op->params && pcmk__strcase_any_of(op->op_type, PCMK_ACTION_START,
@@ -788,8 +784,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                                                    rsc_id);
 
         if (last_failed_matches_op(entry, operation, interval_ms)) {
-            lrmd_free_event(entry->failed);
-            entry->failed = NULL;
+            g_clear_pointer(&entry->failed, lrmd_free_event);
         }
     }
 }

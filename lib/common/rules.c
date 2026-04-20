@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -220,8 +220,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
                              parent_id, id,                                 \
                              pcmk__time_component_attr(component),          \
                              pcmk_rc_str(rc));                              \
-            crm_time_free(*end);                                            \
-            *end = NULL;                                                    \
+            g_clear_pointer(end, crm_time_free);                            \
             return rc;                                                      \
         }                                                                   \
     } while (0)

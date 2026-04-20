@@ -289,8 +289,7 @@ crmd_exit(crm_exit_t exit_code)
 
     throttle_fini();
 
-    pcmk_cluster_free(controld_globals.cluster);
-    controld_globals.cluster = NULL;
+    g_clear_pointer(&controld_globals.cluster, pcmk_cluster_free);
 
     /* Graceful */
     pcmk__trace("Done preparing for exit with status %d (%s)", exit_code,

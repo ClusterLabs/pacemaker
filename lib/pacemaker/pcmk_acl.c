@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -363,8 +363,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     res = xsltApplyStylesheetUser(xslt, annotated_doc, NULL,
                                   NULL, NULL, xslt_ctxt);
 
-    pcmk__xml_free_doc(annotated_doc);
-    annotated_doc = NULL;
+    g_clear_pointer(&annotated_doc, pcmk__xml_free_doc);
     xsltFreeTransformContext(xslt_ctxt);
     xslt_ctxt = NULL;
 
