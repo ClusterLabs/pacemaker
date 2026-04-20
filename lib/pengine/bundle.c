@@ -1846,8 +1846,7 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
         return;
     }
 
-    pcmk__free_node_copy(replica->node);
-    replica->node = NULL;
+    g_clear_pointer(&replica->node, pcmk__free_node_copy);
 
     if (replica->ip) {
         g_clear_pointer(&replica->ip->priv->xml, pcmk__xml_free);
