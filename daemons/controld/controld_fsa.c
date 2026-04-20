@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -96,8 +96,7 @@ void
 controld_destroy_fsa_trigger(void)
 {
     // This basically will not work, since mainloop has a reference to it
-    mainloop_destroy_trigger(fsa_trigger);
-    fsa_trigger = NULL;
+    g_clear_pointer(&fsa_trigger, mainloop_destroy_trigger);
 }
 
 /*!

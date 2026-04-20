@@ -224,8 +224,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
-    mainloop_destroy_trigger(config_read_trigger);
-    config_read_trigger = NULL;
+    g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
 
     controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();

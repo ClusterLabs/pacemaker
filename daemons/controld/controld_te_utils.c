@@ -112,8 +112,7 @@ controld_init_transition_trigger(void)
 void
 controld_destroy_transition_trigger(void)
 {
-    mainloop_destroy_trigger(transition_trigger);
-    transition_trigger = NULL;
+    g_clear_pointer(&transition_trigger, mainloop_destroy_trigger);
 }
 
 void
