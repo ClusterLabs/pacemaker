@@ -605,10 +605,9 @@ lrmd_tls_connection_destroy(gpointer userdata)
         gnutls_deinit(native->remote->tls_session);
         native->remote->tls_session = NULL;
     }
-    if (native->tls) {
-        pcmk__free_tls(native->tls);
-        native->tls = NULL;
-    }
+
+    g_clear_pointer(&native->tls, pcmk__free_tls);
+
     if (native->sock >= 0) {
         close(native->sock);
     }

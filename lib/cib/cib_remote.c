@@ -340,8 +340,7 @@ cib_tls_close(cib_t *cib)
 
         private->command.tls_session = NULL;
         private->callback.tls_session = NULL;
-        pcmk__free_tls(tls);
-        tls = NULL;
+        g_clear_pointer(&tls, pcmk__free_tls);
     }
 
     if (private->command.tcp_socket >= 0) {

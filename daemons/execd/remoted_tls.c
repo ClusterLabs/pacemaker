@@ -456,10 +456,7 @@ lrmd_init_remote_tls_server(void)
 void
 execd_stop_tls_server(void)
 {
-    if (tls != NULL) {
-        pcmk__free_tls(tls);
-        tls = NULL;
-    }
+    g_clear_pointer(&tls, pcmk__free_tls);
 
     if (ssock >= 0) {
         close(ssock);
