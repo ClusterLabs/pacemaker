@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1295,14 +1295,9 @@ pcmk__reset_result(pcmk__action_result_t *result)
         return;
     }
 
-    free(result->exit_reason);
-    result->exit_reason = NULL;
-
-    free(result->action_stdout);
-    result->action_stdout = NULL;
-
-    free(result->action_stderr);
-    result->action_stderr = NULL;
+    g_clear_pointer(&result->exit_reason, free);
+    g_clear_pointer(&result->action_stdout, free);
+    g_clear_pointer(&result->action_stderr, free);
 }
 
 /*!

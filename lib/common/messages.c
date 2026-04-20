@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -241,8 +241,6 @@ pcmk__process_request(pcmk__request_t *request, GHashTable *handlers)
 void
 pcmk__reset_request(pcmk__request_t *request)
 {
-    free(request->op);
-    request->op = NULL;
-
+    g_clear_pointer(&request->op, free);
     pcmk__reset_result(&(request->result));
 }

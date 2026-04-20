@@ -290,7 +290,7 @@ stonith_connection_destroy(gpointer user_data)
     native->ipc = NULL;
     native->source = NULL;
 
-    free(native->token); native->token = NULL;
+    g_clear_pointer(&native->token, free);
     stonith->state = stonith_disconnected;
     pcmk__xe_set(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     pcmk__xe_set(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
@@ -886,7 +886,7 @@ stonith_api_signoff(stonith_t * stonith)
         crm_ipc_destroy(ipc);
     }
 
-    free(native->token); native->token = NULL;
+    g_clear_pointer(&native->token, free);
     stonith->state = stonith_disconnected;
     return pcmk_ok;
 }
@@ -1706,7 +1706,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
   done:
     if (!crm_ipc_connected(native->ipc)) {
         pcmk__err("Fencer disconnected");
-        free(native->token); native->token = NULL;
+        g_clear_pointer(&native->token, free);
         stonith->state = stonith_disconnected;
     }
 

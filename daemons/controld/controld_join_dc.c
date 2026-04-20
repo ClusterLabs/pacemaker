@@ -674,9 +674,7 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
 void
 free_max_generation(void)
 {
-    free(max_generation_from);
-    max_generation_from = NULL;
-
+    g_clear_pointer(&max_generation_from, free);
     g_clear_pointer(&max_generation_xml, pcmk__xml_free);
 }
 

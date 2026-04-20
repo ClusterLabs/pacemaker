@@ -147,8 +147,7 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     if (series_wrap == 0) { // Don't save any inputs of this kind
-        free(filename);
-        filename = NULL;
+        g_clear_pointer(&filename, free);
 
     } else if (!is_repoke) { // Input changed, save to disk
         free(filename);

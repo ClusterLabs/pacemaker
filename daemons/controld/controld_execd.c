@@ -1183,8 +1183,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      */
     op = construct_op(lrm_state, xml, pcmk__xe_id(xml_rsc), "asyncmon");
 
-    free((char*) op->user_data);
-    op->user_data = NULL;
+    g_clear_pointer(&op->user_data, free);
     op->interval_ms = 0;
 
     if (user_name && !pcmk__is_privileged(user_name)) {

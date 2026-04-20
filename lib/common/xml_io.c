@@ -77,8 +77,8 @@ decompress_file(const char *filename)
         rc = pcmk__bzlib2rc(rc);
         pcmk__err("Could not read compressed %s: %s " QB_XS " rc=%d", filename,
                   pcmk_rc_str(rc), rc);
-        free(buffer);
-        buffer = NULL;
+        g_clear_pointer(&buffer, free);
+
     } else {
         buffer[length] = '\0';
     }

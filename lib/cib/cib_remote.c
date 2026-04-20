@@ -309,8 +309,7 @@ cib_remote_command_dispatch(gpointer user_data)
         return 0;
     }
 
-    free(private->command.buffer);
-    private->command.buffer = NULL;
+    g_clear_pointer(&private->command.buffer, free);
     pcmk__err("Received late reply for remote cib connection, discarding");
 
     if (rc != pcmk_rc_ok) {
@@ -356,10 +355,8 @@ cib_tls_close(cib_t *cib)
     private->command.tcp_socket = -1;
     private->callback.tcp_socket = -1;
 
-    free(private->command.buffer);
-    free(private->callback.buffer);
-    private->command.buffer = NULL;
-    private->callback.buffer = NULL;
+    g_clear_pointer(&private->command.buffer, free);
+    g_clear_pointer(&private->callback.buffer, free);
 
     return 0;
 }

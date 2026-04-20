@@ -374,8 +374,7 @@ request_fencing(stonith_t *st, const char *target, const char *command,
 
         // If reason is identical to return code string, don't display it twice
         if (pcmk__str_eq(rc_str, reason, pcmk__str_none)) {
-            free(reason);
-            reason = NULL;
+            g_clear_pointer(&reason, free);
         }
 
         g_set_error(error, PCMK__RC_ERROR, rc,

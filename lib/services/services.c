@@ -1294,11 +1294,12 @@ services__format_result(svc_action_t *action, int agent_status,
 void
 services__set_cancelled(svc_action_t *action)
 {
-    if (action != NULL) {
-        action->status = PCMK_EXEC_CANCELLED;
-        free(action->opaque->exit_reason);
-        action->opaque->exit_reason = NULL;
+    if (action == NULL) {
+        return;
     }
+
+    action->status = PCMK_EXEC_CANCELLED;
+    g_clear_pointer(&action->opaque->exit_reason, free);
 }
 
 /*!

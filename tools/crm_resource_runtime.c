@@ -1932,8 +1932,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            PCMK_META_TARGET_ROLE,
                                            orig_target_role, false, cib,
                                            cib_xml_orig, force);
-        free(orig_target_role);
-        orig_target_role = NULL;
+        g_clear_pointer(&orig_target_role, free);
+
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
@@ -1948,9 +1948,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    if (target_active != NULL) {
-        g_list_free_full(target_active, free);
-    }
+    g_list_free_full(target_active, free);
     target_active = restart_target_active;
 
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);

@@ -555,10 +555,8 @@ recurring_action_timer(gpointer data)
     pcmk__debug("Scheduling another invocation of %s", op->id);
 
     /* Clean out the old result */
-    free(op->stdout_data);
-    op->stdout_data = NULL;
-    free(op->stderr_data);
-    op->stderr_data = NULL;
+    g_clear_pointer(&op->stdout_data, free);
+    g_clear_pointer(&op->stderr_data, free);
     op->opaque->repeat_timer = 0;
 
     services_action_async(op, NULL);

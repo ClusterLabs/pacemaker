@@ -693,8 +693,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * need something that will get freed during scheduler data cleanup to
          * use as the node ID and uname.
          */
-        free(id);
-        id = NULL;
+        g_clear_pointer(&id, free);
         uname = pcmk__xe_id(xml_remote);
 
         /* Ensure a node has been created for the guest (it may have already

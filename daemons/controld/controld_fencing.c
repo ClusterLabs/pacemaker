@@ -737,17 +737,14 @@ controld_disconnect_fencer(bool destroy)
     }
     if (destroy) {
         if (fencer_api != NULL) {
-            fencer_api->cmds->free(fencer_api);
-            fencer_api = NULL;
+            g_clear_pointer(&fencer_api, fencer_api->cmds->free);
         }
         if (controld_fencer_connect_timer) {
             mainloop_timer_del(controld_fencer_connect_timer);
             controld_fencer_connect_timer = NULL;
         }
-        if (te_client_id) {
-            free(te_client_id);
-            te_client_id = NULL;
-        }
+
+        g_clear_pointer(&te_client_id, free);
     }
 }
 

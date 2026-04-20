@@ -220,8 +220,7 @@ group_unpack(pcmk_resource_t *rsc)
 
     if (rsc->priv->children == NULL) {
         // Not possible with schema validation enabled
-        free(group_data);
-        rsc->priv->variant_opaque = NULL;
+        g_clear_pointer(&rsc->priv->variant_opaque, free);
         pcmk__config_err("Group %s has no members", rsc->id);
         return FALSE;
     }

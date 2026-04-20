@@ -616,20 +616,17 @@ lrmd_tls_connection_destroy(gpointer userdata)
         mainloop_destroy_trigger(native->process_notify);
         native->process_notify = NULL;
     }
-    if (native->pending_notify) {
-        g_list_free_full(native->pending_notify,
-                         (GDestroyNotify) pcmk__xml_free);
-        native->pending_notify = NULL;
-    }
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+
     if (native->handshake_trigger != NULL) {
         mainloop_destroy_trigger(native->handshake_trigger);
         native->handshake_trigger = NULL;
     }
 
-    free(native->remote->buffer);
-    free(native->remote->start_state);
-    native->remote->buffer = NULL;
-    native->remote->start_state = NULL;
+    g_clear_pointer(&native->remote->buffer, free);
+    g_clear_pointer(&native->remote->start_state, free);
     native->source = 0;
     native->sock = -1;
 
@@ -1658,11 +1655,8 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
         native->sock = -1;
     }
 
-    if (native->pending_notify) {
-        g_list_free_full(native->pending_notify,
-                         (GDestroyNotify) pcmk__xml_free);
-        native->pending_notify = NULL;
-    }
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
 }
 
 static int
@@ -1687,11 +1681,8 @@ lrmd_api_disconnect(lrmd_t * lrmd)
             rc = -EPROTONOSUPPORT;
     }
 
-    free(native->token);
-    native->token = NULL;
-
-    free(native->peer_version);
-    native->peer_version = NULL;
+    g_clear_pointer(&native->token, free);
+    g_clear_pointer(&native->peer_version, free);
     return rc;
 }
 
@@ -2515,11 +2506,8 @@ lrmd__reset_result(lrmd_event_data_t *event)
         return;
     }
 
-    free((void *) event->exit_reason);
-    event->exit_reason = NULL;
-
-    free((void *) event->output);
-    event->output = NULL;
+    g_clear_pointer(&event->exit_reason, free);
+    g_clear_pointer(&event->output, free);
 }
 
 /*!

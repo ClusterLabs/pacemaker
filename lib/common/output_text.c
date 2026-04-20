@@ -48,8 +48,7 @@ text_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     g_queue_free_full(priv->parent_q, free_list_data);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool
@@ -473,10 +472,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
     if (rc == 0) {
         fprintf(stderr, "%s: ", prompt);
 
-        if (*dest != NULL) {
-            free(*dest);
-            *dest = NULL;
-        }
+        g_clear_pointer(dest, free);
 
 #if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
@@ -488,8 +484,7 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
     }
 
     if (rc < 1) {
-        free(*dest);
-        *dest = NULL;
+        g_clear_pointer(dest, free);
     }
 
     if (orig_c_lflag != 0) {

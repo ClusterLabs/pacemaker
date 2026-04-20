@@ -2602,8 +2602,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
          */
         pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
                         rsc->priv->history_id, rsc->id);
-        free(rsc->priv->history_id);
-        rsc->priv->history_id = NULL;
+        g_clear_pointer(&rsc->priv->history_id, free);
 
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node,

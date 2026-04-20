@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -768,12 +768,7 @@ handle_remote_state(const xmlNode *msg)
                             0);
 
     conn_host = pcmk__xe_get(msg, PCMK__XA_CONNECTION_HOST);
-    if (conn_host) {
-        pcmk__str_update(&remote_peer->conn_host, conn_host);
-    } else if (remote_peer->conn_host) {
-        free(remote_peer->conn_host);
-        remote_peer->conn_host = NULL;
-    }
+    pcmk__str_update(&remote_peer->conn_host, conn_host);
 
     return I_NULL;
 }

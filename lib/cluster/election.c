@@ -157,8 +157,7 @@ election_fini(pcmk_cluster_t *cluster)
         election_reset(cluster);
         pcmk__trace("Destroying election");
         mainloop_timer_del(cluster->priv->election->timeout);
-        free(cluster->priv->election);
-        cluster->priv->election = NULL;
+        g_clear_pointer(&cluster->priv->election, free);
     }
 }
 

@@ -343,10 +343,7 @@ apply_include(const gchar *includes, GError **error) {
             show = all_includes(output_format);
         } else if (g_str_has_prefix(*s, "bans")) {
             show |= pcmk_section_bans;
-            if (options.neg_location_prefix != NULL) {
-                free(options.neg_location_prefix);
-                options.neg_location_prefix = NULL;
-            }
+            g_clear_pointer(&options.neg_location_prefix, free);
 
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);

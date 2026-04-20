@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -126,8 +126,8 @@ free_daemon_specific_data(pcmk_ipc_api_t *api)
             api->cmds->free_data(api->api_data);
             api->api_data = NULL;
         }
-        free(api->cmds);
-        api->cmds = NULL;
+
+        g_clear_pointer(&api->cmds, free);
     }
 }
 

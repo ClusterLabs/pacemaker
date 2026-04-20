@@ -95,8 +95,7 @@ alert_complete(svc_action_t *action)
     }
 
     free(cb_data->client_id);
-    free(action->cb_data);
-    action->cb_data = NULL;
+    g_clear_pointer(&action->cb_data, free);
 }
 
 int

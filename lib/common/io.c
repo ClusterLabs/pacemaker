@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,8 +332,7 @@ pcmk__daemon_can_write(const char *dir, const char *file)
         s_res = stat(full_file, &buf);
         if (s_res < 0) {
             pcmk__notice("%s not found: %s", target, pcmk_rc_str(errno));
-            free(full_file);
-            full_file = NULL;
+            g_clear_pointer(&full_file, &free);
             target = NULL;
 
         } else if (!S_ISREG(buf.st_mode)) {
@@ -460,8 +459,7 @@ pcmk__file_contents(const char *filename, char **contents)
 
         read_len = fread(*contents, 1, length, fp);
         if (read_len != length) {
-            free(*contents);
-            *contents = NULL;
+            g_clear_pointer(contents, &free);
             rc = EIO;
         } else {
             /* Coverity thinks *contents isn't null-terminated. It doesn't

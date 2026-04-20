@@ -830,7 +830,7 @@ mainloop_gio_destroy(gpointer c)
 
     pcmk__trace("Destroyed client %s[%p]", c_name, c);
 
-    free(client->name); client->name = NULL;
+    free(client->name);
     free(client);
 
     free(c_name);

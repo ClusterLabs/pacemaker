@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -368,8 +368,8 @@ free_private_data(xmlNode *node, void *user_data)
             free_private_data((xmlNode *) iter, user_data);
         }
     }
-    free(node->_private);
-    node->_private = NULL;
+
+    g_clear_pointer(&node->_private, free);
     return true;
 }
 

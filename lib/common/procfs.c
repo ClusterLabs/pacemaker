@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -396,8 +396,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
         int rc = errno;
 
         pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
-        free(loadfile);
-        loadfile = NULL;
+        g_clear_pointer(&loadfile, free);
         return false;
     }
 
