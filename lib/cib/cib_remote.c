@@ -157,8 +157,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
                       msg_id);
         }
 
-        pcmk__xml_free(op_reply);
-        op_reply = NULL;
+        g_clear_pointer(&op_reply, pcmk__xml_free);
 
         /* wasn't the right reply, try and read some more */
         remaining_time = time(NULL) - start_time;

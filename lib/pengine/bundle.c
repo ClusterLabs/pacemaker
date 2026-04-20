@@ -1851,18 +1851,15 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
     replica->node = NULL;
 
     if (replica->ip) {
-        pcmk__xml_free(replica->ip->priv->xml);
-        replica->ip->priv->xml = NULL;
+        g_clear_pointer(&replica->ip->priv->xml, pcmk__xml_free);
         pcmk__free_resource(replica->ip);
     }
     if (replica->container) {
-        pcmk__xml_free(replica->container->priv->xml);
-        replica->container->priv->xml = NULL;
+        g_clear_pointer(&replica->container->priv->xml, pcmk__xml_free);
         pcmk__free_resource(replica->container);
     }
     if (replica->remote) {
-        pcmk__xml_free(replica->remote->priv->xml);
-        replica->remote->priv->xml = NULL;
+        g_clear_pointer(&replica->remote->priv->xml, pcmk__xml_free);
         pcmk__free_resource(replica->remote);
     }
     free(replica->ipaddr);
@@ -1896,10 +1893,10 @@ pe__free_bundle(pcmk_resource_t *rsc)
     g_list_free(rsc->priv->children);
 
     if(bundle_data->child) {
-        pcmk__xml_free(bundle_data->child->priv->xml);
-        bundle_data->child->priv->xml = NULL;
+        g_clear_pointer(&bundle_data->child->priv->xml, pcmk__xml_free);
         pcmk__free_resource(bundle_data->child);
     }
+
     common_free(rsc);
 }
 

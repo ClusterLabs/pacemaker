@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -71,8 +71,7 @@ unknown_ticket(void **state)
 
     assert_int_equal(pcmk_ticket_delete(&xml, "XYZ", false), ENXIO);
     pcmk__assert_validates(xml);
-    pcmk__xml_free(xml);
-    xml = NULL;
+    g_clear_pointer(&xml, pcmk__xml_free);
 
     assert_int_equal(pcmk_ticket_delete(&xml, "XYZ", true), pcmk_rc_ok);
     pcmk__assert_validates(xml);

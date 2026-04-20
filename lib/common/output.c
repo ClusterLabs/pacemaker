@@ -266,10 +266,7 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
         return EINVAL;
     }
 
-    if (*xml != NULL) {
-        pcmk__xml_free(*xml);
-        *xml = NULL;
-    }
+    g_clear_pointer(xml, pcmk__xml_free);
     pcmk__register_formats(NULL, xml_format);
     return pcmk__output_new(out, "xml", NULL, NULL);
 }

@@ -938,11 +938,11 @@ clone_free(pcmk_resource_t * rsc)
 
         pcmk__assert(child_rsc != NULL);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        pcmk__xml_free(child_rsc->priv->xml);
-        child_rsc->priv->xml = NULL;
+        g_clear_pointer(&child_rsc->priv->xml, pcmk__xml_free);
+
         /* There could be a saved unexpanded xml */
-        pcmk__xml_free(child_rsc->priv->orig_xml);
-        child_rsc->priv->orig_xml = NULL;
+        g_clear_pointer(&child_rsc->priv->orig_xml, pcmk__xml_free);
+
         pcmk__free_resource(child_rsc);
     }
 

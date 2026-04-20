@@ -677,8 +677,7 @@ free_max_generation(void)
     free(max_generation_from);
     max_generation_from = NULL;
 
-    pcmk__xml_free(max_generation_xml);
-    max_generation_xml = NULL;
+    g_clear_pointer(&max_generation_xml, pcmk__xml_free);
 }
 
 void

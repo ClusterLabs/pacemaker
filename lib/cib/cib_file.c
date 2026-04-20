@@ -691,8 +691,7 @@ file_signoff(cib_t *cib)
     }
 
     /* Free the in-memory CIB */
-    pcmk__xml_free(private->cib_xml);
-    private->cib_xml = NULL;
+    g_clear_pointer(&private->cib_xml, pcmk__xml_free);
     return rc;
 }
 

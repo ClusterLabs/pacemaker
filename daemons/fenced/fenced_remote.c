@@ -260,17 +260,9 @@ free_remote_op(gpointer data)
     free(op->client_name);
     free(op->originator);
 
-    if (op->query_results) {
-        g_list_free_full(op->query_results, free_remote_query);
-    }
-    if (op->request) {
-        pcmk__xml_free(op->request);
-        op->request = NULL;
-    }
-    if (op->devices_list) {
-        g_list_free_full(op->devices_list, free);
-        op->devices_list = NULL;
-    }
+    g_list_free_full(op->query_results, free_remote_query);
+    g_clear_pointer(&op->request, pcmk__xml_free);
+    g_list_free_full(op->devices_list, free);
     g_list_free_full(op->automatic_list, free);
     g_list_free(op->duplicates);
 
@@ -637,11 +629,8 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
         g_list_free_full(op->query_results, free_remote_query);
         op->query_results = NULL;
     }
-    if (op->request) {
-        pcmk__xml_free(op->request);
-        op->request = NULL;
-    }
 
+    g_clear_pointer(&op->request, pcmk__xml_free);
     pcmk__xml_free(local_data);
 }
 

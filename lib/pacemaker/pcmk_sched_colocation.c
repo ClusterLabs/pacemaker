@@ -909,8 +909,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, PCMK_XA_RSC, true,
                           scheduler)) {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
@@ -930,8 +930,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &primary_set, PCMK_XA_WITH_RSC, true,
                           scheduler)) {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
@@ -949,8 +949,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (any_sets) {
         pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_COLOCATION);
     } else {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
     }
 
     return pcmk_rc_ok;

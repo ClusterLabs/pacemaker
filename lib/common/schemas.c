@@ -1300,8 +1300,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
                 }
             }
 
-            pcmk__xml_free(converted);
-            converted = NULL;
+            g_clear_pointer(&converted, pcmk__xml_free);
             return pcmk_rc_transform_failed;
 
         } else {

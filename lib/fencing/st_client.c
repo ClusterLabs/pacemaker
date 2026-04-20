@@ -649,10 +649,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
         }
     }
 
-    if (output) {
-        pcmk__xml_free(output);
-    }
-
+    pcmk__xml_free(output);
     return rc;
 }
 
@@ -1693,16 +1690,16 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     } else if (reply_id <= 0) {
         pcmk__err("Received bad reply: No id set");
         pcmk__log_xml_err(op_reply, "Bad reply");
-        pcmk__xml_free(op_reply);
-        op_reply = NULL;
+
+        g_clear_pointer(&op_reply, pcmk__xml_free);
         rc = -ENOMSG;
 
     } else {
         pcmk__err("Received bad reply: %d (wanted %d)", reply_id,
                   stonith->call_id);
         pcmk__log_xml_err(op_reply, "Old reply");
-        pcmk__xml_free(op_reply);
-        op_reply = NULL;
+
+        g_clear_pointer(&op_reply, pcmk__xml_free);
         rc = -ENOMSG;
     }
 

@@ -352,12 +352,6 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     return 0;
 }
 
-static void
-lrmd_free_xml(gpointer userdata)
-{
-    pcmk__xml_free((xmlNode *) userdata);
-}
-
 static bool
 remote_executor_connected(lrmd_t * lrmd)
 {
@@ -419,7 +413,7 @@ process_pending_notifies(gpointer userdata)
 
     pcmk__trace("Processing pending notifies");
     g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
-    g_list_free_full(native->pending_notify, lrmd_free_xml);
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
     native->pending_notify = NULL;
     return G_SOURCE_CONTINUE;
 }
@@ -623,7 +617,8 @@ lrmd_tls_connection_destroy(gpointer userdata)
         native->process_notify = NULL;
     }
     if (native->pending_notify) {
-        g_list_free_full(native->pending_notify, lrmd_free_xml);
+        g_list_free_full(native->pending_notify,
+                         (GDestroyNotify) pcmk__xml_free);
         native->pending_notify = NULL;
     }
     if (native->handshake_trigger != NULL) {
@@ -704,8 +699,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
 
         if (!msg_type) {
             pcmk__err("Empty msg type received while waiting for reply");
-            pcmk__xml_free(*reply);
-            *reply = NULL;
+            g_clear_pointer(reply, pcmk__xml_free);
+
         } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
             pcmk__info("queueing notify");
@@ -718,8 +713,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             /* msg isn't a reply, make some noise */
             pcmk__err("Expected a reply, got %s", msg_type);
-            pcmk__xml_free(*reply);
-            *reply = NULL;
+            g_clear_pointer(reply, pcmk__xml_free);
+
         } else if (reply_id != expected_reply_id) {
             if (native->expected_late_replies > 0) {
                 native->expected_late_replies--;
@@ -727,8 +722,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
                 pcmk__err("Got outdated reply, expected id %d got id %d",
                           expected_reply_id, reply_id);
             }
-            pcmk__xml_free(*reply);
-            *reply = NULL;
+
+            g_clear_pointer(reply, pcmk__xml_free);
         }
     }
 
@@ -1664,7 +1659,8 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
     }
 
     if (native->pending_notify) {
-        g_list_free_full(native->pending_notify, lrmd_free_xml);
+        g_list_free_full(native->pending_notify,
+                         (GDestroyNotify) pcmk__xml_free);
         native->pending_notify = NULL;
     }
 }

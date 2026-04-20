@@ -1951,7 +1951,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             case -pcmk_err_diff_failed:
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
-                pcmk__xml_free(current_cib); current_cib = NULL;
+                g_clear_pointer(&current_cib, pcmk__xml_free);
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
@@ -1959,7 +1959,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             default:
                 pcmk__notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
                              rc);
-                pcmk__xml_free(current_cib); current_cib = NULL;
+                g_clear_pointer(&current_cib, pcmk__xml_free);
                 break;
         }
     }
