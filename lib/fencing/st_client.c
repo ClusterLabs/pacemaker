@@ -1168,8 +1168,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             }
             if (rc != pcmk_rc_ok) {
                 crm_ipc_close(native->ipc);
-                crm_ipc_destroy(native->ipc);
-                native->ipc = NULL;
+                g_clear_pointer(&native->ipc, crm_ipc_destroy);
             }
         }
 

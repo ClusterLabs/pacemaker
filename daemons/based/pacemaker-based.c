@@ -234,11 +234,10 @@ main(int argc, char **argv)
         pcmk__crit("Aborting start-up because another CIB manager instance is "
                    "already active");
         goto done;
-    } else {
-        /* not up or not authentic, we'll proceed either way */
-        crm_ipc_destroy(old_instance);
-        old_instance = NULL;
     }
+
+    // Not up or not authentic; we'll proceed either way
+    g_clear_pointer(&old_instance, crm_ipc_destroy);
 
     if (stand_alone) {
         rc = setup_stand_alone(&error);
