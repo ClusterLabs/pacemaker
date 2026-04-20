@@ -1476,8 +1476,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
                 stop_action(container, node, FALSE);
             }
         }
-        g_list_free(scheduler->priv->stop_needed);
-        scheduler->priv->stop_needed = NULL;
+
+        g_clear_pointer(&scheduler->priv->stop_needed, g_list_free);
     }
 
     /* Now that we know status of all Pacemaker Remote connections and nodes,

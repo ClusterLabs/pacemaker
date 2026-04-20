@@ -351,8 +351,8 @@ controld_purge_fencing_cleanup(void)
         pcmk__info("Purging %s from fencing cleanup list", target);
         free(target);
     }
-    g_list_free(fencing_cleanup_list);
-    fencing_cleanup_list = NULL;
+
+    g_clear_pointer(&fencing_cleanup_list, g_list_free);
 }
 
 /*!
@@ -373,8 +373,8 @@ controld_execute_fencing_cleanup(void)
         update_node_state_after_fencing(target, uuid);
         free(target);
     }
-    g_list_free(fencing_cleanup_list);
-    fencing_cleanup_list = NULL;
+
+    g_clear_pointer(&fencing_cleanup_list, g_list_free);
 }
 
 /* end fencing cleanup list functions */

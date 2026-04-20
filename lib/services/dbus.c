@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2025 the Pacemaker project contributors
+ * Copyright 2014-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -66,8 +66,8 @@ dispatch_messages(void)
             dbus_connection_dispatch(connection);
         }
     }
-    g_list_free(conn_dispatches);
-    conn_dispatches = NULL;
+
+    g_clear_pointer(&conn_dispatches, g_list_free);
 }
 
 

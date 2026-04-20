@@ -117,13 +117,13 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
 static void
 history_free_recurring_ops(rsc_history_t *history)
 {
-    GList *iter;
+    for (GList *iter = history->recurring_op_list; iter != NULL;
+         iter = iter->next) {
 
-    for (iter = history->recurring_op_list; iter != NULL; iter = iter->next) {
         lrmd_free_event(iter->data);
     }
-    g_list_free(history->recurring_op_list);
-    history->recurring_op_list = NULL;
+
+    g_clear_pointer(&history->recurring_op_list, g_list_free);
 }
 
 /*!
@@ -1794,7 +1794,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
     }
 
     controld_set_fsa_input_flags(R_SENT_RSC_STOP);
-    g_list_free(lrm_state_list); lrm_state_list = NULL;
+    g_clear_pointer(&lrm_state_list, g_list_free);
     return res;
 }
 
