@@ -69,8 +69,7 @@ stonith_t *
 execd_get_fencer_connection(void)
 {
     if ((fencer_api != NULL) && (fencer_api->state == stonith_disconnected)) {
-        stonith__api_free(fencer_api);
-        fencer_api = NULL;
+        g_clear_pointer(&fencer_api, stonith__api_free);
     }
 
     if (fencer_api == NULL) {
@@ -88,8 +87,7 @@ execd_get_fencer_connection(void)
             pcmk__err("Could not connect to fencer in 10 attempts: %s "
                       QB_XS " rc=%d",
                       pcmk_rc_str(rc), rc);
-            stonith__api_free(fencer_api);
-            fencer_api = NULL;
+            g_clear_pointer(&fencer_api, stonith__api_free);
 
         } else {
             stonith_api_operations_t *cmds = fencer_api->cmds;

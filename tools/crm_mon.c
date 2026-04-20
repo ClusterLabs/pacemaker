@@ -886,8 +886,7 @@ setup_fencer_connection(void)
                                             crm_mon_fencer_display_cb);
         }
     } else {
-        stonith__api_free(st);
-        st = NULL;
+        g_clear_pointer(&st, stonith__api_free);
     }
 
     return rc;
@@ -937,8 +936,7 @@ setup_cib_connection(void)
 
             out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
-            stonith__api_free(st);
-            st = NULL;
+            g_clear_pointer(&st, stonith__api_free);
         }
     }
     return rc;
