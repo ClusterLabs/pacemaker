@@ -291,11 +291,7 @@ controld_configure_throttle(GHashTable *options)
 void
 throttle_fini(void)
 {
-    if (throttle_timer != NULL) {
-        mainloop_timer_del(throttle_timer);
-        throttle_timer = NULL;
-    }
-
+    g_clear_pointer(&throttle_timer, mainloop_timer_del);
     g_clear_pointer(&throttle_records, g_hash_table_destroy);
 }
 

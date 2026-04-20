@@ -739,11 +739,8 @@ controld_disconnect_fencer(bool destroy)
         if (fencer_api != NULL) {
             g_clear_pointer(&fencer_api, fencer_api->cmds->free);
         }
-        if (controld_fencer_connect_timer) {
-            mainloop_timer_del(controld_fencer_connect_timer);
-            controld_fencer_connect_timer = NULL;
-        }
 
+        g_clear_pointer(&controld_fencer_connect_timer, mainloop_timer_del);
         g_clear_pointer(&te_client_id, free);
     }
 }
@@ -1026,10 +1023,9 @@ void
 controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
 {
     if (free_timers) {
-        mainloop_timer_del(fencing_history_sync_timer_short);
-        fencing_history_sync_timer_short = NULL;
-        mainloop_timer_del(fencing_history_sync_timer_long);
-        fencing_history_sync_timer_long = NULL;
+        g_clear_pointer(&fencing_history_sync_timer_short, mainloop_timer_del);
+        g_clear_pointer(&fencing_history_sync_timer_long, mainloop_timer_del);
+
     } else {
         mainloop_timer_stop(fencing_history_sync_timer_short);
         mainloop_timer_stop(fencing_history_sync_timer_long);
