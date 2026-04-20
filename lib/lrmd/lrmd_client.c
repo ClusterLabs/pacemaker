@@ -602,8 +602,7 @@ lrmd_tls_connection_destroy(gpointer userdata)
 
     if (native->remote->tls_session) {
         gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(native->remote->tls_session);
-        native->remote->tls_session = NULL;
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     }
 
     g_clear_pointer(&native->tls, pcmk__free_tls);
@@ -1241,8 +1240,7 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
                ((rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
     report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
 
-    gnutls_deinit(native->remote->tls_session);
-    native->remote->tls_session = NULL;
+    g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     lrmd_tls_connection_destroy(lrmd);
 }
 
@@ -1629,8 +1627,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
 
     if (native->remote->tls_session) {
         gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(native->remote->tls_session);
-        native->remote->tls_session = NULL;
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     }
 
     if (native->async_timer) {

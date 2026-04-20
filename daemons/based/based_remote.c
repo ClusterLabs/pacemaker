@@ -527,8 +527,8 @@ based_remote_client_destroy(gpointer user_data)
                                  pcmk__client_tls_handshake_complete)) {
                     gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_WR);
                 }
-                gnutls_deinit(client->remote->tls_session);
-                client->remote->tls_session = NULL;
+
+                g_clear_pointer(&client->remote->tls_session, gnutls_deinit);
             }
             break;
         default:
