@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2025 the Pacemaker project contributors
+ * Copyright 2006-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,12 +22,13 @@ static pcmk_ipc_api_t *attrd_api = NULL;
 void
 controld_close_attrd_ipc(void)
 {
-    if (attrd_api != NULL) {
-        pcmk__trace("Closing connection to " PCMK__SERVER_ATTRD);
-        pcmk_disconnect_ipc(attrd_api);
-        pcmk_free_ipc_api(attrd_api);
-        attrd_api = NULL;
+    if (attrd_api == NULL) {
+        return;
     }
+
+    pcmk__trace("Closing connection to " PCMK__SERVER_ATTRD);
+    pcmk_disconnect_ipc(attrd_api);
+    g_clear_pointer(&attrd_api, pcmk_free_ipc_api);
 }
 
 static inline const char *

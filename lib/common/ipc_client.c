@@ -56,8 +56,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
 
     (*api)->server = server;
     if (pcmk_ipc_name(*api, false) == NULL) {
-        pcmk_free_ipc_api(*api);
-        *api = NULL;
+        g_clear_pointer(api, pcmk_free_ipc_api);
         return EOPNOTSUPP;
     }
 
@@ -89,31 +88,28 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         default: // pcmk_ipc_unknown
-            pcmk_free_ipc_api(*api);
-            *api = NULL;
+            g_clear_pointer(api, pcmk_free_ipc_api);
             return EINVAL;
     }
     if ((*api)->cmds == NULL) {
-        pcmk_free_ipc_api(*api);
-        *api = NULL;
+        g_clear_pointer(api, pcmk_free_ipc_api);
         return ENOMEM;
     }
 
     (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false), 0);
     if ((*api)->ipc == NULL) {
-        pcmk_free_ipc_api(*api);
-        *api = NULL;
+        g_clear_pointer(api, pcmk_free_ipc_api);
         return ENOMEM;
     }
 
     // If daemon API has its own data to track, allocate it
-    if ((*api)->cmds->new_data != NULL) {
-        if ((*api)->cmds->new_data(*api) != pcmk_rc_ok) {
-            pcmk_free_ipc_api(*api);
-            *api = NULL;
-            return ENOMEM;
-        }
+    if (((*api)->cmds->new_data != NULL)
+        && ((*api)->cmds->new_data(*api) != pcmk_rc_ok)) {
+
+        g_clear_pointer(api, pcmk_free_ipc_api);
+        return ENOMEM;
     }
+
     pcmk__trace("Created %s API IPC object", pcmk_ipc_name(*api, true));
     return pcmk_rc_ok;
 }

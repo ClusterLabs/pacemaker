@@ -202,9 +202,7 @@ controld_shutdown_schedulerd_ipc(void)
     controld_clear_fsa_input_flags(R_PE_REQUIRED);
     pcmk_disconnect_ipc(schedulerd_api);
     handle_disconnect();
-
-    pcmk_free_ipc_api(schedulerd_api);
-    schedulerd_api = NULL;
+    g_clear_pointer(&schedulerd_api, pcmk_free_ipc_api);
 }
 
 static void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
