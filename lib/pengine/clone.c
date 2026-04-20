@@ -1199,17 +1199,14 @@ pe__free_clone_notification_data(pcmk_resource_t *clone)
 
     get_clone_variant_data(clone_data, clone);
 
-    pe__free_action_notification_data(clone_data->demote_notify);
-    clone_data->demote_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->stop_notify);
-    clone_data->stop_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->start_notify);
-    clone_data->start_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->promote_notify);
-    clone_data->promote_notify = NULL;
+    g_clear_pointer(&clone_data->demote_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->stop_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->start_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->promote_notify,
+                    pe__free_action_notification_data);
 }
 
 /*!
