@@ -280,11 +280,6 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     }
 
     id = pcmk__xe_id(xml_obj);
-    if (id == NULL) {
-        pcmk__config_err("'%s' object must have a id", xml_obj->name);
-        rc = pcmk_rc_unpack_error;
-        goto done;
-    }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
