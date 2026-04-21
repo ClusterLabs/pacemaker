@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,18 +9,25 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <unistd.h>
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <string.h>                     // strdup
+#include <sys/types.h>                  // ssize_t
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/services.h>
-#include <crm/common/mainloop.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
 
-#include <crm/pengine/status.h>
-#include <crm/cib.h>
-#include <crm/lrmd.h>
-#include <crm/lrmd_internal.h>
+#include <crm/common/internal.h>        // pcmk__xe_*, pcmk__xml_*, etc.
+#include <crm/common/ipc.h>             // crm_ipc_*
+#include <crm/common/logging.h>         // CRM_CHECK, crm_log_xml_explicit
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/results.h>         // pcmk_ok, pcmk_rc_*, pcmk_strerror
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // crm_system_name
+#include <crm/lrmd.h>                   // lrmd_t
+
+#include "pacemaker-controld.h"         // remote_proxy_*
 
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 GHashTable *proxy_table = NULL;
