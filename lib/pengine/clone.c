@@ -241,8 +241,8 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     inc_num = pcmk__itoa(clone_data->total_clones);
     inc_max = pcmk__itoa(clone_data->clone_max);
 
+    // Set PCMK__META_CLONE in a copy, not the original element
     child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
-
     pcmk__xe_set(child_copy, PCMK__META_CLONE, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
@@ -266,6 +266,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
   bail:
     free(inc_num);
     free(inc_max);
+    pcmk__xml_free(child_copy);
 
     return child_rsc;
 }
@@ -929,24 +930,9 @@ clone_free(pcmk_resource_t * rsc)
 
     get_clone_variant_data(clone_data, rsc);
 
-    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
+    pcmk__rsc_trace(rsc, "Freeing clone %s, starting with child list", rsc->id);
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-
-        pcmk__assert(child_rsc != NULL);
-        pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        g_clear_pointer(&child_rsc->priv->xml, pcmk__xml_free);
-
-        /* There could be a saved unexpanded xml */
-        g_clear_pointer(&child_rsc->priv->orig_xml, pcmk__xml_free);
-
-        pcmk__free_resource(child_rsc);
-    }
-
-    g_list_free(rsc->priv->children);
+    g_list_free_full(rsc->priv->children, pcmk__free_resource);
 
     if (clone_data) {
         pcmk__assert((clone_data->demote_notify == NULL)
