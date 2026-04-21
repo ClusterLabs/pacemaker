@@ -340,13 +340,24 @@ struct pcmk__resource_private {
     pcmk_resource_t *parent;        // Resource's parent resource, if any
     pcmk_scheduler_t *scheduler;    // Scheduler data containing resource
 
-    // Resource configuration (possibly expanded from template)
+    /* Effective resource configuration (possibly expanded from template).
+     *
+     * This is not part of scheduler->input but may have been copied from it.
+     */
     xmlNode *xml;
 
-    // Original resource configuration, if using template
+    /* Original resource configuration. In the common case (without template
+     * expansion), this is equal to xml. In that case, do not free this
+     * directly.
+     *
+     * This is not part of scheduler->input but may have been copied from it.
+     */
     xmlNode *orig_xml;
 
-    // Configuration of resource operations (possibly expanded from template)
+    /* Configuration of resource operations (possibly expanded from template)
+     *
+     * This is part of scheduler->input.
+     */
     xmlNode *ops_xml;
 
     /*

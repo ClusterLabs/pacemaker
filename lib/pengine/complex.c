@@ -265,13 +265,10 @@ template_op_key(const xmlNode *op)
 }
 
 static int
-unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
-                pcmk_scheduler_t *scheduler)
+unpack_template(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
     xmlNode *cib_resources = NULL;
     xmlNode *template = NULL;
-    xmlNode *new_xml = NULL;
-    xmlNode *child_xml = NULL;
     xmlNode *rsc_ops = NULL;
     xmlNode *template_ops = NULL;
     GHashTable *rsc_ops_hash = NULL;
@@ -279,12 +276,12 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     const char *id = NULL;
     int rc = pcmk_rc_ok;
 
-    template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
+    template_ref = pcmk__xe_get(rsc->priv->orig_xml, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
         goto done;
     }
 
-    id = pcmk__xe_id(xml_obj);
+    id = pcmk__xe_id(rsc->priv->orig_xml);
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
@@ -308,19 +305,20 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         goto done;
     }
 
-    new_xml = pcmk__xml_copy(NULL, template);
-    xmlNodeSetName(new_xml, xml_obj->name);
-    pcmk__xe_set(new_xml, PCMK_XA_ID, id);
-    pcmk__xe_set(new_xml, PCMK__META_CLONE,
-                 pcmk__xe_get(xml_obj, PCMK__META_CLONE));
+    rsc->priv->xml = pcmk__xml_copy(NULL, template);
+    xmlNodeSetName(rsc->priv->xml, rsc->priv->orig_xml->name);
+    pcmk__xe_set(rsc->priv->xml, PCMK_XA_ID, id);
+    pcmk__xe_set(rsc->priv->xml, PCMK__META_CLONE,
+                 pcmk__xe_get(rsc->priv->orig_xml, PCMK__META_CLONE));
 
-    template_ops = pcmk__xe_first_child(new_xml, PCMK_XE_OPERATIONS, NULL,
-                                        NULL);
+    template_ops = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_OPERATIONS,
+                                        NULL, NULL);
 
-    for (child_xml = pcmk__xe_first_child(xml_obj, NULL, NULL, NULL);
+    for (xmlNode *child_xml = pcmk__xe_first_child(rsc->priv->orig_xml, NULL,
+                                                   NULL, NULL);
          child_xml != NULL; child_xml = pcmk__xe_next(child_xml, NULL)) {
 
-        xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
+        xmlNode *new_child = pcmk__xml_copy(rsc->priv->xml, child_xml);
 
         if ((rsc_ops == NULL) && pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
             /* Multiple PCMK_XE_OPERATIONS children are not possible with schema
@@ -360,8 +358,11 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     pcmk__xml_free(template_ops);
 
 done:
+    if (rc == pcmk_rc_ok) {
+        pcmk__log_xml_trace(rsc->priv->xml, "[expanded XML]");
+    }
+
     g_clear_pointer(&rsc_ops_hash, g_hash_table_destroy);
-    *expanded_xml = new_xml;
     return rc;
 }
 
@@ -703,25 +704,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
 
     rsc_private = (*rsc)->priv;
     rsc_private->scheduler = scheduler;
+    rsc_private->orig_xml = pcmk__xml_copy(NULL, xml_obj);
+    rsc_private->xml = rsc_private->orig_xml;
 
-    rc = unpack_template(xml_obj, &rsc_private->xml, scheduler);
+    rc = unpack_template(*rsc, scheduler);
     if (rc != pcmk_rc_ok) {
         goto done;
-    }
-
-    if (rsc_private->xml != NULL) {
-        /* rsc_private->xml is the effective XML and was expanded from a
-         * template. Save rsc's original XML from the configuration in
-         * rsc_private->orig_xml for later use.
-         */
-        pcmk__log_xml_trace(rsc_private->xml, "[expanded XML]");
-        rsc_private->orig_xml = xml_obj;
-
-    } else {
-        /* rsc_private->xml is both the effective XML and the original XML.
-         * rsc_private->orig_xml remains NULL.
-         */
-        rsc_private->xml = xml_obj;
     }
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
@@ -948,8 +936,8 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                                &rule_input, rsc_private->utilization, NULL,
                                scheduler);
 
-    // ((rsc_private->orig_xml != NULL) means rsc was expanded from a template
-    if ((rsc_private->orig_xml != NULL)
+    // First condition means resource was expanded from a template
+    if ((rsc_private->xml != rsc_private->orig_xml)
         && !add_template_rsc(rsc_private->orig_xml, scheduler)) {
 
         rc = pcmk_rc_unpack_error;
@@ -1033,22 +1021,17 @@ common_free(pcmk_resource_t * rsc)
 
     g_clear_pointer(&rsc->priv->parameter_cache, g_hash_table_destroy);
 
-    if ((rsc->priv->parent == NULL)
-        && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
-
-        pcmk__xml_free(rsc->priv->xml);
-        pcmk__xml_free(rsc->priv->orig_xml);
-
-    } else if (rsc->priv->orig_xml != NULL) {
-        // rsc->priv->xml was expanded from a template
-        pcmk__xml_free(rsc->priv->xml);
-    }
     free(rsc->id);
 
     free(rsc->priv->variant_opaque);
     free(rsc->priv->history_id);
     free(rsc->priv->pending_action);
     pcmk__free_node_copy(rsc->priv->assigned_node);
+
+    if (rsc->priv->orig_xml != rsc->priv->xml) {
+        pcmk__xml_free(rsc->priv->orig_xml);
+    }
+    pcmk__xml_free(rsc->priv->xml);
 
     g_list_free(rsc->priv->actions);
     g_list_free(rsc->priv->active_nodes);
