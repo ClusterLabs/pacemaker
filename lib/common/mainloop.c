@@ -26,7 +26,7 @@
 struct trigger_s {
     GSource source;
     bool running;
-    gboolean trigger;
+    bool trigger;
     void *user_data;
     unsigned int id;
 };
@@ -111,7 +111,7 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
         /* Wait until the existing job is complete before starting the next one */
         return G_SOURCE_CONTINUE;
     }
-    trig->trigger = FALSE;
+    trig->trigger = false;
 
     if (callback) {
         int callback_rc = callback(trig->user_data);
@@ -148,7 +148,7 @@ mainloop_setup_trigger(GSource * source, int priority,
     trigger = (crm_trigger_t *) source;
 
     trigger->id = 0;
-    trigger->trigger = FALSE;
+    trigger->trigger = false;
     trigger->user_data = userdata;
 
     if (dispatch) {
@@ -197,7 +197,7 @@ void
 mainloop_set_trigger(crm_trigger_t * source)
 {
     if(source) {
-        source->trigger = TRUE;
+        source->trigger = true;
     }
 }
 
@@ -258,7 +258,7 @@ crm_signal_dispatch(GSource *source, GSourceFunc callback, void *userdata)
                      ((sig->handler != NULL)? "invoking" : "no"));
     }
 
-    sig->trigger.trigger = FALSE;
+    sig->trigger.trigger = false;
     if (sig->handler) {
         sig->handler(sig->signal);
     }
