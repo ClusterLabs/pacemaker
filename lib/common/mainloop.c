@@ -25,7 +25,7 @@
 
 struct trigger_s {
     GSource source;
-    gboolean running;
+    bool running;
     gboolean trigger;
     void *user_data;
     unsigned int id;
@@ -118,7 +118,7 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
 
         if (callback_rc < 0) {
             pcmk__trace("Trigger handler %p not yet complete", trig);
-            trig->running = TRUE;
+            trig->running = true;
         } else if (callback_rc == 0) {
             rc = G_SOURCE_REMOVE;
         }
@@ -166,7 +166,7 @@ void
 mainloop_trigger_complete(crm_trigger_t * trig)
 {
     pcmk__trace("Trigger handler %p complete", trig);
-    trig->running = FALSE;
+    trig->running = false;
 }
 
 /*!
