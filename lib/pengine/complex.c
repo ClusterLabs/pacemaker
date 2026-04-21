@@ -317,7 +317,11 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
         xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
-        if (pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
+        if ((rsc_ops == NULL) && pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
+            /* Multiple PCMK_XE_OPERATIONS children are not possible with schema
+             * validation enabled. However, in pe__unpack_resource(), we use
+             * only the first in case of multiple. Do the same here.
+             */
             rsc_ops = new_child;
         }
     }
