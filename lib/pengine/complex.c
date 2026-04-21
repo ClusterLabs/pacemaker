@@ -291,7 +291,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
                                          "//" PCMK_XE_RESOURCES, LOG_TRACE);
     if (cib_resources == NULL) {
-        pcmk__config_err("No resources configured");
+        pcmk__config_err("No " PCMK_XE_RESOURCES " section");
         rc = pcmk_rc_unpack_error;
         goto done;
     }
