@@ -138,8 +138,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
                                    LOG_TRACE);
     unpack_nodes(section, scheduler);
 
-    section = pcmk__xpath_find_one(scheduler->input->doc,
-                                   "//" PCMK_XE_RESOURCES, LOG_TRACE);
+    section = pcmk_find_cib_element(scheduler->input, PCMK_XE_RESOURCES);
+
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_location_only)) {
         unpack_remote_nodes(section, scheduler);
     }

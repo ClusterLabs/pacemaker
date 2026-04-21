@@ -288,8 +288,7 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
         goto done;
     }
 
-    cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
-                                         "//" PCMK_XE_RESOURCES, LOG_TRACE);
+    cib_resources = pcmk_find_cib_element(scheduler->input, PCMK_XE_RESOURCES);
     if (cib_resources == NULL) {
         pcmk__config_err("No " PCMK_XE_RESOURCES " section");
         rc = pcmk_rc_unpack_error;
