@@ -20,8 +20,6 @@
 #include <pacemaker-controld.h>
 
 static GHashTable *lrm_state_table = NULL;
-extern GHashTable *proxy_table;
-int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
 static void
