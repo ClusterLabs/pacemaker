@@ -42,17 +42,6 @@ int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 GHashTable *proxy_table = NULL;
 
 static void
-remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
-{
-    /* sending to the remote node that an ipc connection has been destroyed */
-    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
-    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
-    lrmd_internal_proxy_send(lrmd, msg);
-    pcmk__xml_free(msg);
-}
-
-static void
 remote_proxy_end_session(controld_remote_proxy_t *proxy)
 {
     if (proxy == NULL) {
@@ -113,7 +102,7 @@ remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg)
     pcmk__xml_free(event);
 }
 
-int
+static int
 remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
     // Async responses from servers to clients via the remote executor
@@ -144,7 +133,18 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     return 1;
 }
 
-void
+static void
+remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
+{
+    /* sending to the remote node that an ipc connection has been destroyed */
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
+    lrmd_internal_proxy_send(lrmd, msg);
+    pcmk__xml_free(msg);
+}
+
+static void
 remote_proxy_disconnected(gpointer userdata)
 {
     controld_remote_proxy_t *proxy = userdata;

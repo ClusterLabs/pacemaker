@@ -12,7 +12,6 @@
 
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // uint32_t
-#include <sys/types.h>              // ssize_t
 
 #include <glib.h>                   // gpointer
 #include <libxml/tree.h>            // xmlNode
@@ -33,9 +32,6 @@ typedef struct {
     lrmd_t *lrm;
 } controld_remote_proxy_t;
 
-int remote_proxy_dispatch(const char *buffer, ssize_t length,
-                          gpointer userdata);
-void remote_proxy_disconnected(gpointer data);
 void remote_proxy_free(gpointer data);
 
 int controld_remote_proxy_send(const char *session, xmlNode *msg);
