@@ -32,6 +32,7 @@ typedef struct {
 } controld_remote_proxy_t;
 
 void controld_remote_proxy_table_init(void);
+void controld_remote_proxy_table_free(void);
 
 int controld_remote_proxy_send(const char *session, xmlNode *msg);
 void controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg);

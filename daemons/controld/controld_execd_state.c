@@ -249,7 +249,6 @@ void
 controld_execd_state_table_free(void)
 {
     g_clear_pointer(&lrm_state_table, g_hash_table_destroy);
-    g_clear_pointer(&proxy_table, g_hash_table_destroy);
 }
 
 /*!

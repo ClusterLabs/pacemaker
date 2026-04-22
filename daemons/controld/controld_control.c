@@ -224,6 +224,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
 
     controld_execd_state_table_free();
+    controld_remote_proxy_table_free();
 
     g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
 

@@ -62,6 +62,12 @@ controld_remote_proxy_table_init(void)
     proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
 }
 
+void
+controld_remote_proxy_table_free(void)
+{
+    g_clear_pointer(&proxy_table, g_hash_table_destroy);
+}
+
 static void
 remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
                             int msg_id)
