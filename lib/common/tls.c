@@ -9,13 +9,17 @@
 
 #include <crm_internal.h>
 
+#include <ctype.h>                  // isxdigit
 #include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <pwd.h>                    // getpwuid
 #include <signal.h>                 // signal, SIGPIPE, SIG_IGN
 #include <stdbool.h>                // bool
 #include <stdlib.h>                 // NULL, getenv, free
-#include <string.h>                 // memcpy, strdup
+#include <string.h>                 // memcpy, strdup, strlen
+#include <sys/stat.h>               // S_ISREG, stat
 #include <syslog.h>                 // LOG_WARNING
 #include <time.h>                   // time, time_t
+#include <unistd.h>                 // geteuid
 
 #include <glib.h>                   // g_clear_pointer, g_file_get_contents
 #include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_E_SUCCESS
@@ -26,7 +30,6 @@
 #include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
-#include <crm/lrmd.h>               // DEFAULT_REMOTE_USERNAME
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
@@ -183,6 +186,10 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
     (*tls)->server = server;
 
     if ((*tls)->cred_type == GNUTLS_CRD_ANON) {
+        pcmk__warn("Using anonymous authentication.  This is insecure and will "
+                   "be removed in a future release.  Use X509 certificates or PSK "
+                   "instead.");
+
         if (server) {
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
@@ -409,18 +416,11 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
 }
 
 void
-pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key)
+pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                             gnutls_datum_t *key, bool raw)
 {
-    gnutls_psk_set_client_credentials(tls->credentials.psk_c,
-                                      DEFAULT_REMOTE_USERNAME, key,
-                                      GNUTLS_PSK_KEY_RAW);
-}
-
-void
-pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                           gnutls_psk_server_credentials_function *cb)
-{
-    gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
+    gnutls_psk_set_client_credentials(tls->credentials.psk_c, username, key,
+                                      raw ? GNUTLS_PSK_KEY_RAW : GNUTLS_PSK_KEY_HEX);
 }
 
 void
@@ -469,9 +469,8 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
 {
     int rc = pcmk_rc_ok;
 
-    if (gnutls_rc != NULL) {
-        *gnutls_rc = GNUTLS_E_SUCCESS;
-    }
+    pcmk__assert(gnutls_rc != NULL);
+    *gnutls_rc = GNUTLS_E_SUCCESS;
 
     rc = gnutls_handshake(remote->tls_session);
 
@@ -493,14 +492,14 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
             gnutls_certificate_verification_status_print(status, type, &out, 0);
             pcmk__err("Certificate verification failed: %s", out.data);
             gnutls_free(out.data);
+
+            *gnutls_rc = rc;
+            rc = EPROTO;
             break;
         }
 
         default:
-            if (gnutls_rc != NULL) {
-                *gnutls_rc = rc;
-            }
-
+            *gnutls_rc = rc;
             rc = EPROTO;
             break;
     }
@@ -554,10 +553,11 @@ pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
 }
 
 int
-pcmk__load_key(const char *location, gnutls_datum_t *key)
+pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw)
 {
     gchar *contents = NULL;
     gsize len = 0;
+    int rc = pcmk_rc_ok;
 
     pcmk__assert((location != NULL) && (key != NULL));
 
@@ -565,11 +565,71 @@ pcmk__load_key(const char *location, gnutls_datum_t *key)
         return ENOKEY;
     }
 
+    if (!raw) {
+        /* This is a plain text key.  gnutls expects only hex characters, so
+         * remove any whitespace and check that the characters are valid.
+         */
+        contents = g_strstrip(contents);
+
+        for (const char *c = contents; *c != '\0'; c++) {
+            if (!isxdigit(*c)) {
+                pcmk__err("Key file %s contains characters besides hex digits",
+                          location);
+                rc = ENOKEY;
+                goto done;
+            }
+        }
+
+        len = strlen(contents);
+    }
+
     key->size = len;
     key->data = gnutls_malloc(key->size);
     pcmk__mem_assert(key->data);
     memcpy(key->data, contents, key->size);
 
+done:
     g_free(contents);
-    return pcmk_rc_ok;
+    return rc;
+}
+
+bool
+pcmk__cred_file_useable(const char *location, bool *file_exists)
+{
+    int rc = pcmk_rc_ok;
+    struct stat sb;
+    uid_t euid;
+
+    pcmk__assert((location != NULL) && (file_exists != NULL));
+
+    rc = stat(location, &sb);
+    if ((rc != 0) || !S_ISREG(sb.st_mode)) {
+        *file_exists = false;
+        return false;
+    }
+
+    *file_exists = true;
+
+    euid = geteuid();
+    if (sb.st_uid != euid) {
+        struct passwd *pwent = getpwuid(euid);
+
+        if (pwent == NULL) {
+            pcmk__err("Refusing to use PSK credentials file %s because it is "
+                      "not owned by UID %lld", (long long) euid);
+        } else {
+            pcmk__err("Refusing to use PSK credentials file %s because it is "
+                      "not owned by %s", location, pwent->pw_name);
+        }
+
+        return false;
+    }
+
+    if ((sb.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+        pcmk__err("Refusing to use PSK credentials file %s because it has "
+                  "group and/or other permissions set", location);
+        return false;
+    }
+
+    return true;
 }

@@ -44,6 +44,8 @@
 #define HAVE_PAM 1
 #endif
 
+#define CREDFILE PACEMAKER_CONFIG_DIR "/cib-credentials"
+
 static pcmk__tls_t *tls = NULL;
 
 int remote_fd = 0;
@@ -692,29 +694,67 @@ based_remote_init(void)
 {
     const char *port_s = NULL;
     int port = 0;
+    int rc = pcmk_rc_ok;
+    bool have_psk = false;
 
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
 
-    if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        // @TODO Implement pre-shared key authentication (see T961)
-        int rc = pcmk__init_tls(&tls, true, false);
-
-        if (rc != pcmk_rc_ok) {
-            pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
-                      "on port %d", pcmk_rc_str(rc), port);
-            remote_tls_fd = -1;
-
-        } else {
-            pcmk__notice("Starting TLS listener on port %d", port);
-            remote_tls_fd = init_remote_listener(port);
-        }
+    if ((pcmk__scan_port(port_s, &port) != pcmk_rc_ok) || (port <= 0)) {
+        goto try_clear_port;
     }
 
+    /* X509 certificates take precedence over PSK in pcmk__init_tls,
+     * so don't perform any of the following (potentially noisy) checks
+     * if we don't care about their results.
+     */
+    if (!pcmk__x509_enabled()) {
+        bool file_exists = false;
+
+        have_psk = pcmk__cred_file_useable(CREDFILE, &file_exists);
+
+        if (!have_psk && file_exists) {
+            /* The credential file exists but doesn't have the right owner
+             * or permissions.  Don't fall back to anonymous on config
+             * errors.
+             */
+            pcmk__err("Not starting TLS listener on port %d", port);
+            goto try_clear_port;
+        }
+
+        pcmk__warn("Falling back to anonymous authentication for remote "
+                   "CIB connections");
+    }
+
+    /* Now that we know whether to fall back to anonymous authentication
+     * or not, we can actually initialize TLS support.
+     */
+    rc = pcmk__init_tls(&tls, true, have_psk);
+    if (rc != pcmk_rc_ok) {
+        pcmk__err("Failed to initialize TLS: %s. Not starting TLS listener ",
+                  "on port %d", pcmk_rc_str(rc), port);
+
+        remote_tls_fd = -1;
+        goto try_clear_port;
+    }
+
+    if (tls->cred_type == GNUTLS_CRD_PSK) {
+        gnutls_psk_set_server_credentials_file(tls->credentials.psk_s,
+                                               CREDFILE);
+    }
+
+    pcmk__notice("Starting TLS listener on port %d", port);
+    remote_tls_fd = init_remote_listener(port);
+
+try_clear_port:
+    /* Regardless of whether or not we successfully enabled remote-tls-port,
+     * we also want to try to enable remote-clear-port as well.
+     */
     port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
-        pcmk__warn("Starting clear-text listener on port %d. This is insecure; "
-                   PCMK_XA_REMOTE_TLS_PORT " is recommended instead.", port);
+        pcmk__warn("Starting clear-text listener on port %d. This is insecure "
+                   "and will be removed in a future release. Use "
+                   PCMK_XA_REMOTE_TLS_PORT " instead.", port);
         remote_fd = init_remote_listener(port);
     }
 }
