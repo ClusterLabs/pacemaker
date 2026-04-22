@@ -70,25 +70,6 @@ remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg)
     pcmk__xml_free(event);
 }
 
-void
-remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
-                            int msg_id)
-{
-    /* sending to the remote node a response msg. */
-    xmlNode *response = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    xmlNode *wrapper = NULL;
-
-    pcmk__xe_set(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
-    pcmk__xe_set(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
-    pcmk__xe_set_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
-
-    wrapper = pcmk__xe_create(response, PCMK__XE_LRMD_IPC_MSG);
-    pcmk__xml_copy(wrapper, msg);
-
-    lrmd_internal_proxy_send(proxy->lrm, response);
-    pcmk__xml_free(response);
-}
-
 static void
 remote_proxy_end_session(controld_remote_proxy_t *proxy)
 {
@@ -111,6 +92,25 @@ remote_proxy_free(gpointer data)
     free(proxy->node_name);
     free(proxy->session_id);
     free(proxy);
+}
+
+static void
+remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
+                            int msg_id)
+{
+    /* sending to the remote node a response msg. */
+    xmlNode *response = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *wrapper = NULL;
+
+    pcmk__xe_set(response, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_RESPONSE);
+    pcmk__xe_set(response, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
+    pcmk__xe_set_int(response, PCMK__XA_LRMD_IPC_MSG_ID, msg_id);
+
+    wrapper = pcmk__xe_create(response, PCMK__XE_LRMD_IPC_MSG);
+    pcmk__xml_copy(wrapper, msg);
+
+    lrmd_internal_proxy_send(proxy->lrm, response);
+    pcmk__xml_free(response);
 }
 
 int
