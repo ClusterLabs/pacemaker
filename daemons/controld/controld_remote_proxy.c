@@ -75,7 +75,7 @@ remote_proxy_nack_shutdown(lrmd_t *lrmd)
 }
 
 void
-remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
+remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg)
 {
     /* sending to the remote node an event msg. */
     xmlNode *event = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
@@ -93,7 +93,8 @@ remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
 }
 
 void
-remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
+remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
+                            int msg_id)
 {
     /* sending to the remote node a response msg. */
     xmlNode *response = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
@@ -111,7 +112,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
 }
 
 static void
-remote_proxy_end_session(remote_proxy_t *proxy)
+remote_proxy_end_session(controld_remote_proxy_t *proxy)
 {
     if (proxy == NULL) {
         return;
@@ -126,7 +127,7 @@ remote_proxy_end_session(remote_proxy_t *proxy)
 void
 remote_proxy_free(gpointer data)
 {
-    remote_proxy_t *proxy = data;
+    controld_remote_proxy_t *proxy = data;
 
     pcmk__trace("Freed proxy session ID %s", proxy->session_id);
     free(proxy->node_name);
@@ -140,7 +141,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     // Async responses from servers to clients via the remote executor
     xmlNode *xml = NULL;
     uint32_t flags = 0;
-    remote_proxy_t *proxy = userdata;
+    controld_remote_proxy_t *proxy = userdata;
 
     xml = pcmk__xml_parse(buffer);
     if (xml == NULL) {
@@ -169,7 +170,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 void
 remote_proxy_disconnected(gpointer userdata)
 {
-    remote_proxy_t *proxy = userdata;
+    controld_remote_proxy_t *proxy = userdata;
 
     proxy->source = NULL;
     proxy->ipc = NULL;
@@ -182,7 +183,7 @@ remote_proxy_disconnected(gpointer userdata)
     g_hash_table_remove(proxy_table, proxy->session_id);
 }
 
-remote_proxy_t *
+controld_remote_proxy_t *
 remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
                  const char *channel)
 {
@@ -191,7 +192,7 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
         .destroy = remote_proxy_disconnected
     };
 
-    remote_proxy_t *proxy = NULL;
+    controld_remote_proxy_t *proxy = NULL;
 
     if(channel == NULL) {
         pcmk__err("No channel specified to proxy");
@@ -199,7 +200,7 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
         return NULL;
     }
 
-    proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));
+    proxy = pcmk__assert_alloc(1, sizeof(controld_remote_proxy_t));
 
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);
@@ -233,7 +234,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
 {
     const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
-    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
     int msg_id = 0;
 
     /* sessions are raw ipc connections to IPC,
