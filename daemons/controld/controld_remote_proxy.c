@@ -39,7 +39,7 @@
 #include "pacemaker-controld.h"         // remote_proxy_*
 
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
-GHashTable *proxy_table = NULL;
+static GHashTable *proxy_table = NULL;
 
 static void
 remote_proxy_free(gpointer data)
