@@ -33,9 +33,6 @@ typedef struct {
     lrmd_t *lrm;
 } controld_remote_proxy_t;
 
-void remote_proxy_ack_shutdown(lrmd_t *lrmd);
-void remote_proxy_nack_shutdown(lrmd_t *lrmd);
-
 int remote_proxy_dispatch(const char *buffer, ssize_t length,
                           gpointer userdata);
 void remote_proxy_disconnected(gpointer data);
