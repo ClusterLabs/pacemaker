@@ -123,19 +123,6 @@ lrm_state_create(const char *node_name)
     return state;
 }
 
-static gboolean
-remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
-{
-    controld_remote_proxy_t *proxy = value;
-    const char *node_name = user_data;
-
-    if (pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
-        return TRUE;
-    }
-
-    return FALSE;
-}
-
 static void
 internal_lrm_state_destroy(gpointer data)
 {
@@ -152,10 +139,6 @@ internal_lrm_state_destroy(gpointer data)
      */
     controld_remote_proxy_disconnect_node(lrm_state->node_name);
 
-    pcmk__trace("Destroying proxy table %s with %u members",
-                lrm_state->node_name, g_hash_table_size(proxy_table));
-    // Just in case there's still any leftovers in proxy_table
-    g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 

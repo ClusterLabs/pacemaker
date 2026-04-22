@@ -558,6 +558,15 @@ find_proxy_by_node(const char *node_name)
     return NULL;
 }
 
+static gboolean
+remote_proxy_node_matches(void *key, void *value, void *user_data)
+{
+    controld_remote_proxy_t *proxy = value;
+    const char *node_name = user_data;
+
+    return pcmk__str_eq(proxy->node_name, node_name, pcmk__str_casei);
+}
+
 void
 controld_remote_proxy_disconnect_node(const char *node_name)
 {
@@ -577,4 +586,11 @@ controld_remote_proxy_disconnect_node(const char *node_name)
 
         proxy = find_proxy_by_node(node_name);
     }
+
+    /* In case there are any leftovers in proxy_table
+     *
+     * @TODO Is that even possible?
+     */
+    g_hash_table_foreach_remove(proxy_table, remote_proxy_node_matches,
+                                (void *) node_name);
 }
