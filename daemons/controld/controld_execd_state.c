@@ -243,7 +243,6 @@ controld_execd_state_table_init(void)
     }
 
     lrm_state_table = pcmk__strikey_table(NULL, internal_lrm_state_destroy);
-    proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
 }
 
 void
