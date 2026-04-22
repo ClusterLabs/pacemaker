@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>                      // EACCES
+#include <errno.h>                      // EACCES, ENXIO
 #include <stdbool.h>                    // bool, true
 #include <stddef.h>                     // NULL
 #include <stdint.h>                     // uint32_t
@@ -205,6 +205,25 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
     g_hash_table_insert(proxy_table, proxy->session_id, proxy);
 
     return proxy;
+}
+
+int
+controld_remote_proxy_send(const char *session, xmlNode *msg)
+{
+    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+
+    if (proxy == NULL) {
+        return ENXIO;
+    }
+
+    if (controld_get_executor_state(proxy->node_name, false) == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
+                proxy->node_name);
+    remote_proxy_relay_event(proxy, msg);
+    return pcmk_rc_ok;
 }
 
 static void

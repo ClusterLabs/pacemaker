@@ -39,6 +39,7 @@ void remote_proxy_disconnected(gpointer data);
 void remote_proxy_free(gpointer data);
 
 void remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg);
+int controld_remote_proxy_send(const char *session, xmlNode *msg);
 void controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg);
 
 #endif  // CONTROLD_REMOTE_PROXY_H

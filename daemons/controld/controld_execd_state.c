@@ -376,25 +376,6 @@ controld_connect_local_executor(lrm_state_t *lrm_state)
     return rc;
 }
 
-int
-controld_remote_proxy_send(const char *session, xmlNode *msg)
-{
-    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
-
-    if (proxy == NULL) {
-        return ENXIO;
-    }
-
-    if (controld_get_executor_state(proxy->node_name, false) == NULL) {
-        return pcmk_rc_ok;
-    }
-
-    pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
-                proxy->node_name);
-    remote_proxy_relay_event(proxy, msg);
-    return pcmk_rc_ok;
-}
-
 // \return Standard Pacemaker return code
 int
 controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
