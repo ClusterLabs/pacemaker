@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -112,8 +112,7 @@ controld_init_transition_trigger(void)
 void
 controld_destroy_transition_trigger(void)
 {
-    mainloop_destroy_trigger(transition_trigger);
-    transition_trigger = NULL;
+    g_clear_pointer(&transition_trigger, mainloop_destroy_trigger);
 }
 
 void
@@ -291,12 +290,7 @@ controld_node_pending_timer(const pcmk__node_status_t *node)
 void
 controld_free_node_pending_timers(void)
 {
-    if (node_pending_timers == NULL) {
-        return;
-    }
-
-    g_hash_table_destroy(node_pending_timers);
-    node_pending_timers = NULL;
+    g_clear_pointer(&node_pending_timers, g_hash_table_destroy);
 }
 
 static const char *

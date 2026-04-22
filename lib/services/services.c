@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -267,9 +267,7 @@ services__create_resource_action(const char *name, const char *standard,
     op = new_action();
     if (op == NULL) {
         pcmk__crit("Cannot prepare action: %s", strerror(ENOMEM));
-        if (params != NULL) {
-            g_hash_table_destroy(params);
-        }
+        g_clear_pointer(&params, g_hash_table_destroy);
         return NULL;
     }
 
@@ -281,9 +279,9 @@ services__create_resource_action(const char *name, const char *standard,
     // Take ownership of params
     if (pcmk__is_set(ra_caps, pcmk_ra_cap_params)) {
         op->params = params;
-    } else if (params != NULL) {
-        g_hash_table_destroy(params);
-        params = NULL;
+
+    } else {
+        g_clear_pointer(&params, g_hash_table_destroy);
     }
 
     if (required_argument_missing(ra_caps, name, standard, provider, agent,
@@ -622,11 +620,7 @@ services_action_free(svc_action_t * op)
     free(op->stdout_data);
     free(op->stderr_data);
 
-    if (op->params) {
-        g_hash_table_destroy(op->params);
-        op->params = NULL;
-    }
-
+    g_clear_pointer(&op->params, g_hash_table_destroy);
     free(op);
 }
 
@@ -1300,11 +1294,12 @@ services__format_result(svc_action_t *action, int agent_status,
 void
 services__set_cancelled(svc_action_t *action)
 {
-    if (action != NULL) {
-        action->status = PCMK_EXEC_CANCELLED;
-        free(action->opaque->exit_reason);
-        action->opaque->exit_reason = NULL;
+    if (action == NULL) {
+        return;
     }
+
+    action->status = PCMK_EXEC_CANCELLED;
+    g_clear_pointer(&action->opaque->exit_reason, free);
 }
 
 /*!

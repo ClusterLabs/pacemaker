@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -192,9 +192,9 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
                 pcmk__trace("%s = %s", key, pcmk__s(name, "<null>"));
 
                 if (!node_name_is_valid(key, name)) {
-                    free(name);
-                    name = NULL;
+                    g_clear_pointer(&name, free);
                 }
+
                 free(key);
             }
             break;

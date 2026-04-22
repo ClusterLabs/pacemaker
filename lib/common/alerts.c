@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -71,9 +71,8 @@ pcmk__free_alert(pcmk__alert_t *entry)
         free(entry->recipient);
 
         g_strfreev(entry->select_attribute_name);
-        if (entry->envvars) {
-            g_hash_table_destroy(entry->envvars);
-        }
+        g_clear_pointer(&entry->envvars, g_hash_table_destroy);
+
         free(entry);
     }
 }
@@ -449,7 +448,5 @@ pcmk__unpack_alerts(const xmlNode *alerts)
 void
 pcmk__free_alerts(GList *alert_list)
 {
-    if (alert_list != NULL) {
-        g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
-    }
+    g_list_free_full(alert_list, (GDestroyNotify) pcmk__free_alert);
 }

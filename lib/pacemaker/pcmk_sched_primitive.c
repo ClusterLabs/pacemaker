@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -332,9 +332,8 @@ apply_this_with(pcmk__colocation_t *colocation, pcmk_resource_t *rsc)
         rsc->priv->allowed_nodes = archive;
         archive = NULL;
     }
-    if (archive != NULL) {
-        g_hash_table_destroy(archive);
-    }
+
+    g_clear_pointer(&archive, g_hash_table_destroy);
 }
 
 /*!

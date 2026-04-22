@@ -251,9 +251,7 @@ lrmd_free_event(lrmd_event_data_t *event)
     free((void *) event->user_data);
     free((void *) event->remote_nodename);
     lrmd__reset_result(event);
-    if (event->params != NULL) {
-        g_hash_table_destroy(event->params);
-    }
+    g_clear_pointer(&event->params, g_hash_table_destroy);
     free(event);
 }
 
@@ -334,9 +332,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
     pcmk__trace("op %s notify event received", type);
     native->callback(&event);
 
-    if (event.params) {
-        g_hash_table_destroy(event.params);
-    }
+    g_clear_pointer(&event.params, g_hash_table_destroy);
     lrmd__reset_result(&event);
 }
 
@@ -354,12 +350,6 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         pcmk__xml_free(msg);
     }
     return 0;
-}
-
-static void
-lrmd_free_xml(gpointer userdata)
-{
-    pcmk__xml_free((xmlNode *) userdata);
 }
 
 static bool
@@ -423,7 +413,7 @@ process_pending_notifies(gpointer userdata)
 
     pcmk__trace("Processing pending notifies");
     g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
-    g_list_free_full(native->pending_notify, lrmd_free_xml);
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
     native->pending_notify = NULL;
     return G_SOURCE_CONTINUE;
 }
@@ -612,33 +602,24 @@ lrmd_tls_connection_destroy(gpointer userdata)
 
     if (native->remote->tls_session) {
         gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(native->remote->tls_session);
-        native->remote->tls_session = NULL;
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     }
-    if (native->tls) {
-        pcmk__free_tls(native->tls);
-        native->tls = NULL;
-    }
+
+    g_clear_pointer(&native->tls, pcmk__free_tls);
+
     if (native->sock >= 0) {
         close(native->sock);
     }
-    if (native->process_notify) {
-        mainloop_destroy_trigger(native->process_notify);
-        native->process_notify = NULL;
-    }
-    if (native->pending_notify) {
-        g_list_free_full(native->pending_notify, lrmd_free_xml);
-        native->pending_notify = NULL;
-    }
-    if (native->handshake_trigger != NULL) {
-        mainloop_destroy_trigger(native->handshake_trigger);
-        native->handshake_trigger = NULL;
-    }
 
-    free(native->remote->buffer);
-    free(native->remote->start_state);
-    native->remote->buffer = NULL;
-    native->remote->start_state = NULL;
+    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+
+    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
+
+    g_clear_pointer(&native->remote->buffer, free);
+    g_clear_pointer(&native->remote->start_state, free);
     native->source = 0;
     native->sock = -1;
 
@@ -708,8 +689,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
 
         if (!msg_type) {
             pcmk__err("Empty msg type received while waiting for reply");
-            pcmk__xml_free(*reply);
-            *reply = NULL;
+            g_clear_pointer(reply, pcmk__xml_free);
+
         } else if (pcmk__str_eq(msg_type, "notify", pcmk__str_casei)) {
             /* got a notify while waiting for reply, trigger the notify to be processed later */
             pcmk__info("queueing notify");
@@ -722,8 +703,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
             /* msg isn't a reply, make some noise */
             pcmk__err("Expected a reply, got %s", msg_type);
-            pcmk__xml_free(*reply);
-            *reply = NULL;
+            g_clear_pointer(reply, pcmk__xml_free);
+
         } else if (reply_id != expected_reply_id) {
             if (native->expected_late_replies > 0) {
                 native->expected_late_replies--;
@@ -731,8 +712,8 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
                 pcmk__err("Got outdated reply, expected id %d got id %d",
                           expected_reply_id, reply_id);
             }
-            pcmk__xml_free(*reply);
-            *reply = NULL;
+
+            g_clear_pointer(reply, pcmk__xml_free);
         }
     }
 
@@ -1259,8 +1240,7 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
                ((rc == EPROTO)? gnutls_strerror(tls_rc) : pcmk_rc_str(rc)));
     report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
 
-    gnutls_deinit(native->remote->tls_session);
-    native->remote->tls_session = NULL;
+    g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     lrmd_tls_connection_destroy(lrmd);
 }
 
@@ -1627,8 +1607,7 @@ lrmd_ipc_disconnect(lrmd_t * lrmd)
 
     if (native->source != NULL) {
         /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
         native->ipc = NULL;
 
     } else if (native->ipc) {
@@ -1648,8 +1627,7 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
 
     if (native->remote->tls_session) {
         gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(native->remote->tls_session);
-        native->remote->tls_session = NULL;
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     }
 
     if (native->async_timer) {
@@ -1659,18 +1637,15 @@ lrmd_tls_disconnect(lrmd_t * lrmd)
 
     if (native->source != NULL) {
         /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
 
     } else if (native->sock >= 0) {
         close(native->sock);
         native->sock = -1;
     }
 
-    if (native->pending_notify) {
-        g_list_free_full(native->pending_notify, lrmd_free_xml);
-        native->pending_notify = NULL;
-    }
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
 }
 
 static int
@@ -1695,11 +1670,8 @@ lrmd_api_disconnect(lrmd_t * lrmd)
             rc = -EPROTONOSUPPORT;
     }
 
-    free(native->token);
-    native->token = NULL;
-
-    free(native->peer_version);
-    native->peer_version = NULL;
+    g_clear_pointer(&native->token, free);
+    g_clear_pointer(&native->peer_version, free);
     return rc;
 }
 
@@ -2523,11 +2495,8 @@ lrmd__reset_result(lrmd_event_data_t *event)
         return;
     }
 
-    free((void *) event->exit_reason);
-    event->exit_reason = NULL;
-
-    free((void *) event->output);
-    event->output = NULL;
+    g_clear_pointer(&event->exit_reason, free);
+    g_clear_pointer(&event->output, free);
 }
 
 /*!

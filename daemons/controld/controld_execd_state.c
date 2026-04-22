@@ -52,9 +52,7 @@ free_recurring_op(gpointer value)
     free(op->rsc_id);
     free(op->op_type);
     free(op->op_key);
-    if (op->params) {
-        g_hash_table_destroy(op->params);
-    }
+    g_clear_pointer(&op->params, g_hash_table_destroy);
     free(op);
 }
 
@@ -199,26 +197,11 @@ internal_lrm_state_destroy(gpointer data)
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
-    if (lrm_state->rsc_info_cache) {
-        pcmk__trace("Destroying rsc info cache with %u members",
-                    g_hash_table_size(lrm_state->rsc_info_cache));
-        g_hash_table_destroy(lrm_state->rsc_info_cache);
-    }
-    if (lrm_state->resource_history) {
-        pcmk__trace("Destroying history op cache with %u members",
-                    g_hash_table_size(lrm_state->resource_history));
-        g_hash_table_destroy(lrm_state->resource_history);
-    }
-    if (lrm_state->deletion_ops) {
-        pcmk__trace("Destroying deletion op cache with %u members",
-                    g_hash_table_size(lrm_state->deletion_ops));
-        g_hash_table_destroy(lrm_state->deletion_ops);
-    }
-    if (lrm_state->active_ops != NULL) {
-        pcmk__trace("Destroying pending op cache with %u members",
-                    g_hash_table_size(lrm_state->active_ops));
-        g_hash_table_destroy(lrm_state->active_ops);
-    }
+    g_clear_pointer(&lrm_state->rsc_info_cache, g_hash_table_destroy);
+    g_clear_pointer(&lrm_state->resource_history, g_hash_table_destroy);
+    g_clear_pointer(&lrm_state->deletion_ops, g_hash_table_destroy);
+    g_clear_pointer(&lrm_state->active_ops, g_hash_table_destroy);
+
     metadata_cache_free(lrm_state->metadata_cache);
 
     free((char *)lrm_state->node_name);
@@ -253,41 +236,22 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
     }
 }
 
-gboolean
+void
 lrm_state_init_local(void)
 {
-    if (lrm_state_table) {
-        return TRUE;
+    if (lrm_state_table != NULL) {
+        return;
     }
 
     lrm_state_table = pcmk__strikey_table(NULL, internal_lrm_state_destroy);
-    if (!lrm_state_table) {
-        return FALSE;
-    }
-
     proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
-    if (!proxy_table) {
-        g_hash_table_destroy(lrm_state_table);
-        lrm_state_table = NULL;
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 void
 lrm_state_destroy_all(void)
 {
-    if (lrm_state_table) {
-        pcmk__trace("Destroying state table with %u members",
-                    g_hash_table_size(lrm_state_table));
-        g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
-    }
-    if(proxy_table) {
-        pcmk__trace("Destroying proxy table with %u members",
-                    g_hash_table_size(proxy_table));
-        g_hash_table_destroy(proxy_table); proxy_table = NULL;
-    }
+    g_clear_pointer(&lrm_state_table, g_hash_table_destroy);
+    g_clear_pointer(&proxy_table, g_hash_table_destroy);
 }
 
 /*!

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -425,8 +425,7 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         // @TODO Should this be more like pcmk__unassign_resource()?
         pcmk__info("Unassigning %s from %s", rsc->id,
                    pcmk__node_name(rsc->priv->assigned_node));
-        pcmk__free_node_copy(rsc->priv->assigned_node);
-        rsc->priv->assigned_node = NULL;
+        g_clear_pointer(&rsc->priv->assigned_node, pcmk__free_node_copy);
     }
 }
 
@@ -531,9 +530,7 @@ destroy_ticket(gpointer data)
 {
     pcmk__ticket_t *ticket = data;
 
-    if (ticket->state) {
-        g_hash_table_destroy(ticket->state);
-    }
+    g_clear_pointer(&ticket->state, g_hash_table_destroy);
     free(ticket->id);
     free(ticket);
 }

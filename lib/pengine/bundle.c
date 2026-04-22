@@ -693,8 +693,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
          * need something that will get freed during scheduler data cleanup to
          * use as the node ID and uname.
          */
-        free(id);
-        id = NULL;
+        g_clear_pointer(&id, free);
         uname = pcmk__xe_id(xml_remote);
 
         /* Ensure a node has been created for the guest (it may have already
@@ -735,9 +734,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
         replica->node->assign->probe_mode = pcmk__probe_exclusive;
 
         /* Ensure the node shows up as allowed and with the correct discovery set */
-        if (replica->child->priv->allowed_nodes != NULL) {
-            g_hash_table_destroy(replica->child->priv->allowed_nodes);
-        }
+        g_clear_pointer(&replica->child->priv->allowed_nodes,
+                        g_hash_table_destroy);
         replica->child->priv->allowed_nodes =
             pcmk__strkey_table(NULL, pcmk__free_node_copy);
         g_hash_table_insert(replica->child->priv->allowed_nodes,
@@ -1848,22 +1846,18 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
         return;
     }
 
-    pcmk__free_node_copy(replica->node);
-    replica->node = NULL;
+    g_clear_pointer(&replica->node, pcmk__free_node_copy);
 
     if (replica->ip) {
-        pcmk__xml_free(replica->ip->priv->xml);
-        replica->ip->priv->xml = NULL;
+        g_clear_pointer(&replica->ip->priv->xml, pcmk__xml_free);
         pcmk__free_resource(replica->ip);
     }
     if (replica->container) {
-        pcmk__xml_free(replica->container->priv->xml);
-        replica->container->priv->xml = NULL;
+        g_clear_pointer(&replica->container->priv->xml, pcmk__xml_free);
         pcmk__free_resource(replica->container);
     }
     if (replica->remote) {
-        pcmk__xml_free(replica->remote->priv->xml);
-        replica->remote->priv->xml = NULL;
+        g_clear_pointer(&replica->remote->priv->xml, pcmk__xml_free);
         pcmk__free_resource(replica->remote);
     }
     free(replica->ipaddr);
@@ -1897,10 +1891,10 @@ pe__free_bundle(pcmk_resource_t *rsc)
     g_list_free(rsc->priv->children);
 
     if(bundle_data->child) {
-        pcmk__xml_free(bundle_data->child->priv->xml);
-        bundle_data->child->priv->xml = NULL;
+        g_clear_pointer(&bundle_data->child->priv->xml, pcmk__xml_free);
         pcmk__free_resource(bundle_data->child);
     }
+
     common_free(rsc);
 }
 

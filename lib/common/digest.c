@@ -336,8 +336,9 @@ pcmk__filter_op_for_digest(xmlNode *param_set)
      */
     key = crm_meta_name(PCMK_META_INTERVAL);
     pcmk__xe_get_guint(param_set, key, &interval_ms);
-    free(key);
-    key = NULL;
+
+    g_clear_pointer(&key, free);
+
     if (interval_ms != 0) {
         key = crm_meta_name(PCMK_META_TIMEOUT);
         timeout = pcmk__xe_get_copy(param_set, key);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -96,8 +96,7 @@ static gboolean
 cluster_reconnect_cb(gpointer data)
 {
     if (cluster_connect_cfg()) {
-        mainloop_timer_del(reconnect_timer);
-        reconnect_timer = NULL;
+        g_clear_pointer(&reconnect_timer, mainloop_timer_del);
         pcmk__notice("Cluster reconnect succeeded");
         pacemakerd_read_config();
         restart_cluster_subdaemons();
@@ -129,13 +128,11 @@ void
 cluster_disconnect_cfg(void)
 {
     close_cfg();
-    if (reconnect_timer != NULL) {
-        /* The mainloop should be gone by this point, so this isn't necessary,
-         * but cleaning up memory should make valgrind happier.
-         */
-        mainloop_timer_del(reconnect_timer);
-        reconnect_timer = NULL;
-    }
+
+    /* The mainloop should be gone by this point, so this isn't necessary, but
+     * cleaning up memory should make valgrind happier.
+     */
+    g_clear_pointer(&reconnect_timer, mainloop_timer_del);
 }
 
 #define cs_repeat(counter, max, code) do {		\

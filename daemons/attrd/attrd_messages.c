@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -259,10 +259,7 @@ attrd_register_handlers(void)
 void
 attrd_unregister_handlers(void)
 {
-    if (attrd_handlers != NULL) {
-        g_hash_table_destroy(attrd_handlers);
-        attrd_handlers = NULL;
-    }
+    g_clear_pointer(&attrd_handlers, g_hash_table_destroy);
 }
 
 void

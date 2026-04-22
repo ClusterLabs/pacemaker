@@ -74,8 +74,7 @@ log_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     g_queue_free(priv->prefixes);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool

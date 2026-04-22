@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -374,8 +374,7 @@ request_fencing(stonith_t *st, const char *target, const char *command,
 
         // If reason is identical to return code string, don't display it twice
         if (pcmk__str_eq(rc_str, reason, pcmk__str_none)) {
-            free(reason);
-            reason = NULL;
+            g_clear_pointer(&reason, free);
         }
 
         g_set_error(error, PCMK__RC_ERROR, rc,
@@ -716,9 +715,7 @@ main(int argc, char **argv)
     free(name);
     g_list_free_full(options.devices, free);
 
-    if (options.params != NULL) {
-        g_hash_table_destroy(options.params);
-    }
+    g_clear_pointer(&options.params, g_hash_table_destroy);
 
     if (st != NULL) {
         st->cmds->disconnect(st);

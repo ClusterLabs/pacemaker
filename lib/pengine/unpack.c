@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -870,17 +870,18 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         }
 
         pcmk__trace("Unpacking <%s " PCMK_XA_ID "='%s'>", xml_obj->name, id);
-        if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
-                                scheduler) == pcmk_rc_ok) {
-            scheduler->priv->resources =
-                g_list_append(scheduler->priv->resources, new_rsc);
-            pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
 
-        } else {
-            pcmk__config_err("Ignoring <%s> resource '%s' "
-                             "because configuration is invalid",
-                             xml_obj->name, id);
+        if (pe__unpack_resource(xml_obj, &new_rsc, NULL,
+                                scheduler) != pcmk_rc_ok) {
+
+            pcmk__config_err("Ignoring <%s> resource '%s' because "
+                             "configuration is invalid", xml_obj->name, id);
+            continue;
         }
+
+        scheduler->priv->resources = g_list_append(scheduler->priv->resources,
+                                                   new_rsc);
+        pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
     }
 
     for (gIter = scheduler->priv->resources;
@@ -1476,8 +1477,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
                 stop_action(container, node, FALSE);
             }
         }
-        g_list_free(scheduler->priv->stop_needed);
-        scheduler->priv->stop_needed = NULL;
+
+        g_clear_pointer(&scheduler->priv->stop_needed, g_list_free);
     }
 
     /* Now that we know status of all Pacemaker Remote connections and nodes,
@@ -2602,8 +2603,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
          */
         pcmk__rsc_trace(rsc, "Clearing history ID %s for %s (stopped)",
                         rsc->priv->history_id, rsc->id);
-        free(rsc->priv->history_id);
-        rsc->priv->history_id = NULL;
+        g_clear_pointer(&rsc->priv->history_id, free);
 
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node,
@@ -3641,9 +3641,7 @@ ban_from_all_nodes(pcmk_resource_t *rsc)
 
     // Ban the resource from all nodes
     pcmk__notice("%s will not be started under current conditions", rsc->id);
-    if (rsc->priv->allowed_nodes != NULL) {
-        g_hash_table_destroy(rsc->priv->allowed_nodes);
-    }
+    g_clear_pointer(&rsc->priv->allowed_nodes, g_hash_table_destroy);
     rsc->priv->allowed_nodes = pe__node_list2table(scheduler->nodes);
     g_hash_table_foreach(rsc->priv->allowed_nodes, set_node_score, &score);
 }

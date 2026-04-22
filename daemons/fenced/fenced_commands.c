@@ -939,12 +939,7 @@ fenced_init_device_table(void)
 void
 fenced_free_device_table(void)
 {
-    if (device_table == NULL) {
-        return;
-    }
-
-    g_hash_table_destroy(device_table);
-    device_table = NULL;
+    g_clear_pointer(&device_table, g_hash_table_destroy);
 }
 
 static GHashTable *
@@ -994,12 +989,7 @@ GHashTable *metadata_cache = NULL;
 void
 free_metadata_cache(void)
 {
-    if (metadata_cache == NULL) {
-        return;
-    }
-
-    g_hash_table_destroy(metadata_cache);
-    metadata_cache = NULL;
+    g_clear_pointer(&metadata_cache, g_hash_table_destroy);
 }
 
 static void
@@ -1649,9 +1639,7 @@ free_topology_entry(gpointer data)
     stonith_topology_t *tp = data;
 
     for (int i = 0; i < ST__LEVEL_COUNT; i++) {
-        if (tp->levels[i] != NULL) {
-            g_list_free_full(tp->levels[i], free);
-        }
+        g_list_free_full(tp->levels[i], free);
     }
 
     free(tp->target);
@@ -1664,12 +1652,7 @@ free_topology_entry(gpointer data)
 void
 free_topology_list(void)
 {
-    if (topology == NULL) {
-        return;
-    }
-
-    g_hash_table_destroy(topology);
-    topology = NULL;
+    g_clear_pointer(&topology, g_hash_table_destroy);
 }
 
 void
@@ -3686,10 +3669,7 @@ fenced_register_handlers(void)
 void
 fenced_unregister_handlers(void)
 {
-    if (fenced_handlers != NULL) {
-        g_hash_table_destroy(fenced_handlers);
-        fenced_handlers = NULL;
-    }
+    g_clear_pointer(&fenced_handlers, g_hash_table_destroy);
 }
 
 void

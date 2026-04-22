@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 the Pacemaker project contributors
+ * Copyright 2011-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -105,10 +105,7 @@ done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
 
     /* Free any reply data that was allocated */
-    if (reply_data.data.pairs) {
-        g_list_free_full(reply_data.data.pairs, free);
-    }
-
+    g_list_free_full(reply_data.data.pairs, free);
     return false;
 }
 

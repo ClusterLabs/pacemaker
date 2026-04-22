@@ -109,7 +109,7 @@ GList *lrm_state_get_list(void);
 /*!
  * \brief Initiate internal state tables
  */
-gboolean lrm_state_init_local(void);
+void lrm_state_init_local(void);
 
 /*!
  * \brief Destroy all state entries and internal state tables

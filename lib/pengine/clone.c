@@ -831,10 +831,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             GList *list = g_hash_table_get_values(rsc->priv->allowed_nodes);
 
             /* Custom stopped table for non-unique clones */
-            if (stopped != NULL) {
-                g_hash_table_destroy(stopped);
-                stopped = NULL;
-            }
+            g_clear_pointer(&stopped, g_hash_table_destroy);
 
             if (list == NULL) {
                 /* Clusters with PCMK_OPT_SYMMETRIC_CLUSTER=false haven't
@@ -941,11 +938,11 @@ clone_free(pcmk_resource_t * rsc)
 
         pcmk__assert(child_rsc != NULL);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        pcmk__xml_free(child_rsc->priv->xml);
-        child_rsc->priv->xml = NULL;
+        g_clear_pointer(&child_rsc->priv->xml, pcmk__xml_free);
+
         /* There could be a saved unexpanded xml */
-        pcmk__xml_free(child_rsc->priv->orig_xml);
-        child_rsc->priv->orig_xml = NULL;
+        g_clear_pointer(&child_rsc->priv->orig_xml, pcmk__xml_free);
+
         pcmk__free_resource(child_rsc);
     }
 
@@ -1202,17 +1199,14 @@ pe__free_clone_notification_data(pcmk_resource_t *clone)
 
     get_clone_variant_data(clone_data, clone);
 
-    pe__free_action_notification_data(clone_data->demote_notify);
-    clone_data->demote_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->stop_notify);
-    clone_data->stop_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->start_notify);
-    clone_data->start_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->promote_notify);
-    clone_data->promote_notify = NULL;
+    g_clear_pointer(&clone_data->demote_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->stop_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->start_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->promote_notify,
+                    pe__free_action_notification_data);
 }
 
 /*!

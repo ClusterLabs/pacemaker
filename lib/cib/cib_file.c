@@ -113,8 +113,7 @@ unregister_client(const cib_t *cib)
      * instead of destroying the client table when there are no more clients.
      */
     if (g_hash_table_size(client_table) == 0) {
-        g_hash_table_destroy(client_table);
-        client_table = NULL;
+        g_clear_pointer(&client_table, g_hash_table_destroy);
     }
 }
 
@@ -692,8 +691,7 @@ file_signoff(cib_t *cib)
     }
 
     /* Free the in-memory CIB */
-    pcmk__xml_free(private->cib_xml);
-    private->cib_xml = NULL;
+    g_clear_pointer(&private->cib_xml, pcmk__xml_free);
     return rc;
 }
 

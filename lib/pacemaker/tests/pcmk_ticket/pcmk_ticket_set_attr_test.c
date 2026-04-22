@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -77,8 +77,7 @@ unknown_ticket_no_attrs(void **state)
     /* Setting no attributes on a ticket that doesn't exist is a no-op */
     assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", NULL, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    pcmk__xml_free(xml);
-    xml = NULL;
+    g_clear_pointer(&xml, pcmk__xml_free);
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
                      &xml_search, cib_xpath);

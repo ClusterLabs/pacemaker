@@ -56,8 +56,7 @@ curses_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     g_queue_free_full(priv->parent_q, free_list_data);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool
@@ -328,8 +327,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
     }
 
     if (rc < 1) {
-        free(*dest);
-        *dest = NULL;
+        g_clear_pointer(dest, free);
     }
 
     if (do_echo) {

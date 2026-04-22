@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,8 +38,7 @@ pcmk__new_common_args(const char *summary)
     args->summary = strdup(summary);
     // cppcheck-suppress nullPointerOutOfMemory
     if (args->summary == NULL) {
-        free(args);
-        args = NULL;
+        g_clear_pointer(&args, free);
         crm_exit(CRM_EX_OSERR);
     }
 

@@ -262,8 +262,7 @@ cib_native_signoff(cib_t *cib)
 
     if (native->source != NULL) {
         /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
         native->ipc = NULL;
 
     } else if (native->ipc) {

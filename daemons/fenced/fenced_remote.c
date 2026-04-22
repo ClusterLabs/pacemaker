@@ -109,10 +109,7 @@ free_remote_query(gpointer data)
 void
 free_stonith_remote_op_list(void)
 {
-    if (stonith_remote_op_list != NULL) {
-        g_hash_table_destroy(stonith_remote_op_list);
-        stonith_remote_op_list = NULL;
-    }
+    g_clear_pointer(&stonith_remote_op_list, g_hash_table_destroy);
 }
 
 struct peer_count_data {
@@ -263,17 +260,9 @@ free_remote_op(gpointer data)
     free(op->client_name);
     free(op->originator);
 
-    if (op->query_results) {
-        g_list_free_full(op->query_results, free_remote_query);
-    }
-    if (op->request) {
-        pcmk__xml_free(op->request);
-        op->request = NULL;
-    }
-    if (op->devices_list) {
-        g_list_free_full(op->devices_list, free);
-        op->devices_list = NULL;
-    }
+    g_list_free_full(op->query_results, free_remote_query);
+    g_clear_pointer(&op->request, pcmk__xml_free);
+    g_list_free_full(op->devices_list, free);
     g_list_free_full(op->automatic_list, free);
     g_list_free(op->duplicates);
 
@@ -636,15 +625,10 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
     /* Free non-essential parts of the record
      * Keep the record around so we can query the history
      */
-    if (op->query_results) {
-        g_list_free_full(op->query_results, free_remote_query);
-        op->query_results = NULL;
-    }
-    if (op->request) {
-        pcmk__xml_free(op->request);
-        op->request = NULL;
-    }
+    g_list_free_full(op->query_results, free_remote_query);
+    op->query_results = NULL;
 
+    g_clear_pointer(&op->request, pcmk__xml_free);
     pcmk__xml_free(local_data);
 }
 
@@ -846,10 +830,9 @@ set_op_device_list(remote_fencing_op_t * op, GList *devices)
 {
     GList *lpc = NULL;
 
-    if (op->devices_list) {
-        g_list_free_full(op->devices_list, free);
-        op->devices_list = NULL;
-    }
+    g_list_free_full(op->devices_list, free);
+    op->devices_list = NULL;
+
     for (lpc = devices; lpc != NULL; lpc = lpc->next) {
         const char *device = lpc->data;
 

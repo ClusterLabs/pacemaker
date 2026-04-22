@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -74,8 +74,7 @@ attrd_handle_election_op(const pcmk__node_status_t *peer, xmlNode *xml)
         case election_start:
             pcmk__debug("Unsetting writer (was %s) and starting new election",
                         pcmk__s(peer_writer, "unset"));
-            free(peer_writer);
-            peer_writer = NULL;
+            g_clear_pointer(&peer_writer, free);
             election_vote(attrd_cluster);
             break;
 
@@ -147,8 +146,7 @@ attrd_remove_voter(const pcmk__node_status_t *peer)
     if ((peer_writer != NULL)
         && pcmk__str_eq(peer->name, peer_writer, pcmk__str_casei)) {
 
-        free(peer_writer);
-        peer_writer = NULL;
+        g_clear_pointer(&peer_writer, free);
         pcmk__notice("Lost attribute writer %s", peer->name);
 
         /* Clear any election dampening in effect. Otherwise, if the lost writer

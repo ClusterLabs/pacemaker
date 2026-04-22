@@ -270,8 +270,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             last_cib_op_done = call_id;
             if (a->timer && !a->timeout_ms) {
                 // Remove temporary dampening for failed writes
-                mainloop_timer_del(a->timer);
-                a->timer = NULL;
+                g_clear_pointer(&a->timer, mainloop_timer_del);
             }
             break;
 
@@ -675,9 +674,7 @@ done:
         the_cib->cmds->set_user(the_cib, NULL);
     }
 
-    if (alert_attribute_value != NULL) {
-        g_hash_table_destroy(alert_attribute_value);
-    }
+    g_clear_pointer(&alert_attribute_value, g_hash_table_destroy);
 }
 
 /*!

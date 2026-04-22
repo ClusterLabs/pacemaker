@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1110,9 +1110,7 @@ custom_action(pcmk_resource_t *rsc, char *key, const char *task,
 
             GHashTable *attrs = action->node->priv->attrs;
 
-            if (action->extra != NULL) {
-                g_hash_table_destroy(action->extra);
-            }
+            g_clear_pointer(&action->extra, g_hash_table_destroy);
             action->extra = pcmk__unpack_action_rsc_params(action->op_entry,
                                                            attrs, scheduler);
             pcmk__set_action_flags(action, pcmk__action_attrs_evaluated);

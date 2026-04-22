@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -909,8 +909,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &dependent_set, PCMK_XA_RSC, true,
                           scheduler)) {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
@@ -930,8 +930,8 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &primary_set, PCMK_XA_WITH_RSC, true,
                           scheduler)) {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
@@ -949,8 +949,7 @@ unpack_colocation_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (any_sets) {
         pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_COLOCATION);
     } else {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
     }
 
     return pcmk_rc_ok;
@@ -1422,9 +1421,7 @@ pcmk__apply_coloc_to_scores(pcmk_resource_t *dependent,
                        dependent->id, primary->id);
     }
 
-    if (work != NULL) {
-        g_hash_table_destroy(work);
-    }
+    g_clear_pointer(&work, g_hash_table_destroy);
 }
 
 /*!
@@ -1900,9 +1897,7 @@ pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
         }
     }
 
-    if (*nodes != NULL) {
-       g_hash_table_destroy(*nodes);
-    }
+    g_clear_pointer(nodes, g_hash_table_destroy);
     *nodes = work;
 
     pcmk__clear_rsc_flags(source_rsc, pcmk__rsc_updating_nodes);

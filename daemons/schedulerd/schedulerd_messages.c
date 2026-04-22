@@ -147,8 +147,7 @@ handle_pecalc_request(pcmk__request_t *request)
     }
 
     if (series_wrap == 0) { // Don't save any inputs of this kind
-        free(filename);
-        filename = NULL;
+        g_clear_pointer(&filename, free);
 
     } else if (!is_repoke) { // Input changed, save to disk
         free(filename);
@@ -223,10 +222,7 @@ schedulerd_register_handlers(void)
 void
 schedulerd_unregister_handlers(void)
 {
-    if (schedulerd_handlers != NULL) {
-        g_hash_table_destroy(schedulerd_handlers);
-        schedulerd_handlers = NULL;
-    }
+    g_clear_pointer(&schedulerd_handlers, g_hash_table_destroy);
 }
 
 void

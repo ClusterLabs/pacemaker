@@ -56,9 +56,7 @@ static GHashTable *removed_peers = NULL;
 void
 attrd_free_removed_peers(void)
 {
-    if (removed_peers != NULL) {
-        g_hash_table_destroy(removed_peers);
-    }
+    g_clear_pointer(&removed_peers, g_hash_table_destroy);
 }
 
 static xmlNode *

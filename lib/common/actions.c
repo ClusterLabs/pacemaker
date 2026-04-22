@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -193,14 +193,12 @@ pcmk__free_action(gpointer user_data)
     if (action == NULL) {
         return;
     }
+
     g_list_free_full(action->actions_before, free);
     g_list_free_full(action->actions_after, free);
-    if (action->extra != NULL) {
-        g_hash_table_destroy(action->extra);
-    }
-    if (action->meta != NULL) {
-        g_hash_table_destroy(action->meta);
-    }
+    g_clear_pointer(&action->extra, g_hash_table_destroy);
+    g_clear_pointer(&action->meta, g_hash_table_destroy);
+
     pcmk__free_node_copy(action->node);
     free(action->cancel_task);
     free(action->reason);

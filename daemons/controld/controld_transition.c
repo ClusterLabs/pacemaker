@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,8 +36,7 @@ do_te_control(long long action, enum crmd_fsa_cause cause,
     cib_t *cib_conn = controld_globals.cib_conn;
 
     if (pcmk__is_set(action, A_TE_STOP)) {
-        pcmk__free_graph(controld_globals.transition_graph);
-        controld_globals.transition_graph = NULL;
+        g_clear_pointer(&controld_globals.transition_graph, pcmk__free_graph);
 
         if (cib_conn != NULL) {
             cib_conn->cmds->del_notify_callback(cib_conn,

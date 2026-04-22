@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -664,8 +664,8 @@ pcmk__cpg_confchg_cb(cpg_handle_t handle,
         node_left(group_name->value, counter, local_nodeid, &left_list[i],
                   sorted, member_list_entries);
     }
-    free(sorted);
-    sorted = NULL;
+
+    g_clear_pointer(&sorted, free);
 
     for (int i = 0; i < joined_list_entries; i++) {
         pcmk__info("Group %s event %d: node %u pid %u joined%s",

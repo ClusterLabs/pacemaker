@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -147,17 +147,13 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         p = p->priv->parent;
     }
 
-    if (parent_orig_meta != NULL) {
-        // This will not overwrite any values already existing for child
-        g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
+    if (parent_orig_meta == NULL) {
+        return;
     }
 
-    if (parent_orig_meta != NULL) {
-        g_hash_table_destroy(parent_orig_meta);
-    }
-    
-    return ;
-
+    // This will not overwrite any values already existing for child
+    g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
+    g_hash_table_destroy(parent_orig_meta);
 }
 
 /*
@@ -247,7 +243,7 @@ get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
 }
 
 static char *
-template_op_key(xmlNode * op)
+template_op_key(const xmlNode *op)
 {
     const char *name = pcmk__xe_get(op, PCMK_XA_NAME);
     const char *role = pcmk__xe_get(op, PCMK_XA_ROLE);
@@ -263,7 +259,7 @@ template_op_key(xmlNode * op)
     return key;
 }
 
-static gboolean
+static int
 unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
                 pcmk_scheduler_t *scheduler)
 {
@@ -273,43 +269,38 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
     xmlNode *child_xml = NULL;
     xmlNode *rsc_ops = NULL;
     xmlNode *template_ops = NULL;
+    GHashTable *rsc_ops_hash = NULL;
     const char *template_ref = NULL;
     const char *id = NULL;
-
-    if (xml_obj == NULL) {
-        pcmk__config_err("No resource object for template unpacking");
-        return FALSE;
-    }
+    int rc = pcmk_rc_ok;
 
     template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
-        return TRUE;
+        goto done;
     }
 
     id = pcmk__xe_id(xml_obj);
-    if (id == NULL) {
-        pcmk__config_err("'%s' object must have a id", xml_obj->name);
-        return FALSE;
-    }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
                          id);
-        return FALSE;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
-    cib_resources = pcmk__xpath_find_one(scheduler->input->doc,
-                                         "//" PCMK_XE_RESOURCES, LOG_TRACE);
+    cib_resources = pcmk_find_cib_element(scheduler->input, PCMK_XE_RESOURCES);
     if (cib_resources == NULL) {
-        pcmk__config_err("No resources configured");
-        return FALSE;
+        pcmk__config_err("No " PCMK_XE_RESOURCES " section");
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     template = pcmk__xe_first_child(cib_resources, PCMK_XE_TEMPLATE,
                                     PCMK_XA_ID, template_ref);
     if (template == NULL) {
         pcmk__config_err("No template named '%s'", template_ref);
-        return FALSE;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     new_xml = pcmk__xml_copy(NULL, template);
@@ -326,58 +317,51 @@ unpack_template(xmlNode *xml_obj, xmlNode **expanded_xml,
 
         xmlNode *new_child = pcmk__xml_copy(new_xml, child_xml);
 
-        if (pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
+        if ((rsc_ops == NULL) && pcmk__xe_is(new_child, PCMK_XE_OPERATIONS)) {
+            /* Multiple PCMK_XE_OPERATIONS children are not possible with schema
+             * validation enabled. However, in pe__unpack_resource(), we use
+             * only the first in case of multiple. Do the same here.
+             */
             rsc_ops = new_child;
         }
     }
 
-    if (template_ops && rsc_ops) {
-        xmlNode *op = NULL;
-        GHashTable *rsc_ops_hash = pcmk__strkey_table(free, NULL);
-
-        for (op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL); op != NULL;
-             op = pcmk__xe_next(op, NULL)) {
-
-            char *key = template_op_key(op);
-
-            g_hash_table_insert(rsc_ops_hash, key, op);
-        }
-
-        for (op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
-             op != NULL; op = pcmk__xe_next(op, NULL)) {
-
-            char *key = template_op_key(op);
-
-            if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
-                pcmk__xml_copy(rsc_ops, op);
-            }
-
-            free(key);
-        }
-
-        if (rsc_ops_hash) {
-            g_hash_table_destroy(rsc_ops_hash);
-        }
-
-        pcmk__xml_free(template_ops);
+    if ((template_ops == NULL) || (rsc_ops == NULL)) {
+        goto done;
     }
 
-    /*pcmk__xml_free(*expanded_xml); */
+    // Operations configured in the resource override those in the template
+    rsc_ops_hash = pcmk__strkey_table(free, NULL);
+
+    for (const xmlNode *op = pcmk__xe_first_child(rsc_ops, NULL, NULL, NULL);
+         op != NULL; op = pcmk__xe_next(op, NULL)) {
+
+        g_hash_table_insert(rsc_ops_hash, template_op_key(op), (void *) op);
+    }
+
+    for (xmlNode *op = pcmk__xe_first_child(template_ops, NULL, NULL, NULL);
+         op != NULL; op = pcmk__xe_next(op, NULL)) {
+
+        char *key = template_op_key(op);
+
+        if (g_hash_table_lookup(rsc_ops_hash, key) == NULL) {
+            pcmk__xml_copy(rsc_ops, op);
+        }
+
+        free(key);
+    }
+
+    // template_ops has been replaced by rsc_ops
+    pcmk__xml_free(template_ops);
+
+done:
+    g_clear_pointer(&rsc_ops_hash, g_hash_table_destroy);
     *expanded_xml = new_xml;
-
-#if 0 /* Disable multi-level templates for now */
-    if (!unpack_template(new_xml, expanded_xml, scheduler)) {
-       pcmk__xml_free(*expanded_xml);
-       *expanded_xml = NULL;
-       return FALSE;
-    }
-#endif
-
-    return TRUE;
+    return rc;
 }
 
-static gboolean
-add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
+static bool
+add_template_rsc(const xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
     const char *template_ref = NULL;
     const char *id = NULL;
@@ -385,28 +369,28 @@ add_template_rsc(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     if (xml_obj == NULL) {
         pcmk__config_err("No resource object for processing resource list "
                          "of template");
-        return FALSE;
+        return false;
     }
 
     template_ref = pcmk__xe_get(xml_obj, PCMK_XA_TEMPLATE);
     if (template_ref == NULL) {
-        return TRUE;
+        return true;
     }
 
     id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("'%s' object must have a id", xml_obj->name);
-        return FALSE;
+        return false;
     }
 
     if (pcmk__str_eq(template_ref, id, pcmk__str_none)) {
         pcmk__config_err("The resource object '%s' should not reference itself",
                          id);
-        return FALSE;
+        return false;
     }
 
     pcmk__add_idref(scheduler->priv->templates, template_ref, id);
-    return TRUE;
+    return true;
 }
 
 /*!
@@ -438,12 +422,6 @@ detect_unique(const pcmk_resource_t *rsc)
         return false;
     }
     return pcmk__is_true(value);
-}
-
-static void
-free_params_table(gpointer data)
-{
-    g_hash_table_destroy((GHashTable *) data);
 }
 
 /*!
@@ -480,8 +458,9 @@ pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
 
     // Find the parameter table for given node
     if (rsc->priv->parameter_cache == NULL) {
-        rsc->priv->parameter_cache = pcmk__strikey_table(free,
-                                                         free_params_table);
+        rsc->priv->parameter_cache =
+            pcmk__strikey_table(free, (GDestroyNotify) g_hash_table_destroy);
+
     } else {
         params_on_node = g_hash_table_lookup(rsc->priv->parameter_cache,
                                              node_name);
@@ -689,7 +668,6 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                     pcmk_resource_t *parent, pcmk_scheduler_t *scheduler)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *expanded_xml = NULL;
     xmlNode *ops = NULL;
     const char *value = NULL;
     const char *id = NULL;
@@ -701,10 +679,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         .now = NULL,
     };
 
-    CRM_CHECK(rsc != NULL, return EINVAL);
-    CRM_CHECK((xml_obj != NULL) && (scheduler != NULL),
-              rc = EINVAL;
-              goto done);
+    pcmk__assert((xml_obj != NULL) && (rsc != NULL) && (scheduler != NULL));
 
     rule_input.now = scheduler->priv->now;
 
@@ -718,38 +693,30 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
         goto done;
     }
 
-    if (unpack_template(xml_obj, &expanded_xml, scheduler) == FALSE) {
-        rc = pcmk_rc_unpack_error;
-        goto done;
-    }
+    *rsc = pcmk__assert_alloc(1, sizeof(pcmk_resource_t));
+    (*rsc)->priv = pcmk__assert_alloc(1, sizeof(pcmk__resource_private_t));
 
-    *rsc = calloc(1, sizeof(pcmk_resource_t));
-    if (*rsc == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Unable to allocate memory for resource '%s'", id);
-        rc = ENOMEM;
-        goto done;
-    }
-
-    (*rsc)->priv = calloc(1, sizeof(pcmk__resource_private_t));
-    if ((*rsc)->priv == NULL) {
-        pcmk__sched_err(scheduler,
-                        "Unable to allocate memory for resource '%s'", id);
-        rc = ENOMEM;
-        goto done;
-    }
     rsc_private = (*rsc)->priv;
-
     rsc_private->scheduler = scheduler;
 
-    if (expanded_xml) {
-        pcmk__log_xml_trace(expanded_xml, "[expanded XML]");
-        rsc_private->xml = expanded_xml;
+    rc = unpack_template(xml_obj, &rsc_private->xml, scheduler);
+    if (rc != pcmk_rc_ok) {
+        goto done;
+    }
+
+    if (rsc_private->xml != NULL) {
+        /* rsc_private->xml is the effective XML and was expanded from a
+         * template. Save rsc's original XML from the configuration in
+         * rsc_private->orig_xml for later use.
+         */
+        pcmk__log_xml_trace(rsc_private->xml, "[expanded XML]");
         rsc_private->orig_xml = xml_obj;
 
     } else {
+        /* rsc_private->xml is both the effective XML and the original XML.
+         * rsc_private->orig_xml remains NULL.
+         */
         rsc_private->xml = xml_obj;
-        rsc_private->orig_xml = NULL;
     }
 
     /* Do not use xml_obj from here on, use (*rsc)->xml in case templates are involved */
@@ -976,14 +943,16 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
                                &rule_input, rsc_private->utilization, NULL,
                                scheduler);
 
-    if ((expanded_xml != NULL) && !add_template_rsc(xml_obj, scheduler)) {
+    // ((rsc_private->orig_xml != NULL) means rsc was expanded from a template
+    if ((rsc_private->orig_xml != NULL)
+        && !add_template_rsc(rsc_private->orig_xml, scheduler)) {
+
         rc = pcmk_rc_unpack_error;
     }
 
 done:
     if (rc != pcmk_rc_ok) {
-        pcmk__free_resource(*rsc);
-        *rsc = NULL;
+        g_clear_pointer(rsc, pcmk__free_resource);
     }
     return rc;
 }
@@ -1057,22 +1026,17 @@ common_free(pcmk_resource_t * rsc)
 
     pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    if (rsc->priv->parameter_cache != NULL) {
-        g_hash_table_destroy(rsc->priv->parameter_cache);
-    }
+    g_clear_pointer(&rsc->priv->parameter_cache, g_hash_table_destroy);
 
     if ((rsc->priv->parent == NULL)
         && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
 
         pcmk__xml_free(rsc->priv->xml);
-        rsc->priv->xml = NULL;
         pcmk__xml_free(rsc->priv->orig_xml);
-        rsc->priv->orig_xml = NULL;
 
     } else if (rsc->priv->orig_xml != NULL) {
-        // rsc->private->xml was expanded from a template
+        // rsc->priv->xml was expanded from a template
         pcmk__xml_free(rsc->priv->xml);
-        rsc->priv->xml = NULL;
     }
     free(rsc->id);
 
@@ -1090,21 +1054,12 @@ common_free(pcmk_resource_t * rsc)
     g_list_free(rsc->priv->location_constraints);
     g_list_free_full(rsc->priv->ticket_constraints, free);
 
-    if (rsc->priv->meta != NULL) {
-        g_hash_table_destroy(rsc->priv->meta);
-    }
-    if (rsc->priv->utilization != NULL) {
-        g_hash_table_destroy(rsc->priv->utilization);
-    }
-    if (rsc->priv->probed_nodes != NULL) {
-        g_hash_table_destroy(rsc->priv->probed_nodes);
-    }
-    if (rsc->priv->allowed_nodes != NULL) {
-        g_hash_table_destroy(rsc->priv->allowed_nodes);
-    }
+    g_clear_pointer(&rsc->priv->meta, g_hash_table_destroy);
+    g_clear_pointer(&rsc->priv->utilization, g_hash_table_destroy);
+    g_clear_pointer(&rsc->priv->probed_nodes, g_hash_table_destroy);
+    g_clear_pointer(&rsc->priv->allowed_nodes, g_hash_table_destroy);
 
     free(rsc->priv);
-
     free(rsc);
 }
 

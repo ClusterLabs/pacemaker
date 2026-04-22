@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,12 +139,10 @@ main(int argc, char **argv)
                    "already active");
         initialize = false;
         goto done;
-
-    } else {
-        /* not up or not authentic, we'll proceed either way */
-        crm_ipc_destroy(old_instance);
-        old_instance = NULL;
     }
+
+    // Not up or not authentic; we'll proceed either way
+    g_clear_pointer(&old_instance, crm_ipc_destroy);
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         exit_code = CRM_EX_FATAL;

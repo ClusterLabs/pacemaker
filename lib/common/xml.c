@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -255,10 +255,8 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
         g_clear_pointer(&docpriv->acl_user, free);
         g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
-        if(docpriv->deleted_objs) {
-            g_list_free_full(docpriv->deleted_objs, free_deleted_object);
-            docpriv->deleted_objs = NULL;
-        }
+        g_list_free_full(docpriv->deleted_objs, free_deleted_object);
+        docpriv->deleted_objs = NULL;
     }
 }
 
@@ -368,8 +366,8 @@ free_private_data(xmlNode *node, void *user_data)
             free_private_data((xmlNode *) iter, user_data);
         }
     }
-    free(node->_private);
-    node->_private = NULL;
+
+    g_clear_pointer(&node->_private, free);
     return true;
 }
 

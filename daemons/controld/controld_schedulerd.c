@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -202,9 +202,7 @@ controld_shutdown_schedulerd_ipc(void)
     controld_clear_fsa_input_flags(R_PE_REQUIRED);
     pcmk_disconnect_ipc(schedulerd_api);
     handle_disconnect();
-
-    pcmk_free_ipc_api(schedulerd_api);
-    schedulerd_api = NULL;
+    g_clear_pointer(&schedulerd_api, pcmk_free_ipc_api);
 }
 
 static void do_pe_invoke_callback(xmlNode *msg, int call_id, int rc,
@@ -312,10 +310,7 @@ controld_expect_sched_reply(char *ref)
 void
 controld_free_sched_timer(void)
 {
-    if (controld_sched_timer != NULL) {
-        mainloop_timer_del(controld_sched_timer);
-        controld_sched_timer = NULL;
-    }
+    g_clear_pointer(&controld_sched_timer, mainloop_timer_del);
 }
 
 // A_PE_INVOKE
@@ -454,8 +449,7 @@ sleep_timer(gpointer data)
 {
     controld_set_fsa_action_flags(A_PE_INVOKE);
     controld_trigger_fsa();
-    mainloop_timer_del(controld_cib_retry_timer);
-    controld_cib_retry_timer = NULL;
+    g_clear_pointer(&controld_cib_retry_timer, mainloop_timer_del);
     return G_SOURCE_REMOVE;
 }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -117,13 +117,13 @@ history_remove_recurring_op(rsc_history_t *history, const lrmd_event_data_t *op)
 static void
 history_free_recurring_ops(rsc_history_t *history)
 {
-    GList *iter;
+    for (GList *iter = history->recurring_op_list; iter != NULL;
+         iter = iter->next) {
 
-    for (iter = history->recurring_op_list; iter != NULL; iter = iter->next) {
         lrmd_free_event(iter->data);
     }
-    g_list_free(history->recurring_op_list);
-    history->recurring_op_list = NULL;
+
+    g_clear_pointer(&history->recurring_op_list, g_list_free);
 }
 
 /*!
@@ -137,9 +137,7 @@ history_free(gpointer data)
 {
     rsc_history_t *history = (rsc_history_t*)data;
 
-    if (history->stop_params) {
-        g_hash_table_destroy(history->stop_params);
-    }
+    g_clear_pointer(&history->stop_params, g_hash_table_destroy);
 
     /* Don't need to free history->rsc.id because it's set to history->id */
     free(history->rsc.type);
@@ -209,24 +207,19 @@ update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_
         /* Store failed monitors here, otherwise the block below will cause them
          * to be forgotten when a stop happens.
          */
-        if (entry->failed) {
-            lrmd_free_event(entry->failed);
-        }
+        lrmd_free_event(entry->failed);
         entry->failed = lrmd_copy_event(op);
 
     } else if (op->interval_ms == 0) {
-        if (entry->last) {
-            lrmd_free_event(entry->last);
-        }
+        lrmd_free_event(entry->last);
         entry->last = lrmd_copy_event(op);
 
         if (op->params && pcmk__strcase_any_of(op->op_type, PCMK_ACTION_START,
                                                PCMK_ACTION_RELOAD,
                                                PCMK_ACTION_RELOAD_AGENT,
                                                PCMK_ACTION_MONITOR, NULL)) {
-            if (entry->stop_params) {
-                g_hash_table_destroy(entry->stop_params);
-            }
+
+            g_clear_pointer(&entry->stop_params, g_hash_table_destroy);
             entry->stop_params = pcmk__strkey_table(free, free);
 
             g_hash_table_foreach(op->params, copy_instance_keys, entry->stop_params);
@@ -791,8 +784,7 @@ lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                                                    rsc_id);
 
         if (last_failed_matches_op(entry, operation, interval_ms)) {
-            lrmd_free_event(entry->failed);
-            entry->failed = NULL;
+            g_clear_pointer(&entry->failed, lrmd_free_event);
         }
     }
 }
@@ -1186,8 +1178,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
      */
     op = construct_op(lrm_state, xml, pcmk__xe_id(xml_rsc), "asyncmon");
 
-    free((char*) op->user_data);
-    op->user_data = NULL;
+    g_clear_pointer(&op->user_data, free);
     op->interval_ms = 0;
 
     if (user_name && !pcmk__is_privileged(user_name)) {
@@ -1680,8 +1671,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
 
             g_hash_table_foreach(params, copy_meta_keys, op->params);
             g_hash_table_foreach(entry->stop_params, copy_instance_keys, op->params);
-            g_hash_table_destroy(params);
-            params = NULL;
+            g_clear_pointer(&params, g_hash_table_destroy);
         }
     }
 
@@ -1799,7 +1789,7 @@ verify_stopped(enum crmd_fsa_state cur_state, int log_level)
     }
 
     controld_set_fsa_input_flags(R_SENT_RSC_STOP);
-    g_list_free(lrm_state_list); lrm_state_list = NULL;
+    g_clear_pointer(&lrm_state_list, g_list_free);
     return res;
 }
 

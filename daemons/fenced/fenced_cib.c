@@ -540,14 +540,13 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
             case -pcmk_err_diff_failed:
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
-                pcmk__xml_free(local_cib);
-                local_cib = NULL;
+                g_clear_pointer(&local_cib, pcmk__xml_free);
                 break;
             default:
                 pcmk__warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
                            rc);
-                pcmk__xml_free(local_cib);
-                local_cib = NULL;
+                g_clear_pointer(&local_cib, pcmk__xml_free);
+                break;
         }
     }
 
@@ -619,8 +618,8 @@ fenced_cib_cleanup(void)
                                            update_cib_cache_cb);
         cib__clean_up_connection(&cib_api);
     }
-    pcmk__xml_free(local_cib);
-    local_cib = NULL;
+
+    g_clear_pointer(&local_cib, pcmk__xml_free);
 }
 
 void

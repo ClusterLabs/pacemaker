@@ -675,8 +675,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
             }
 
             cli_resource_check(out, rsc, NULL);
-            g_list_free(hosts);
-            hosts = NULL;
+            g_clear_pointer(&hosts, g_list_free);
         }
 
     } else if ((rsc != NULL) && (host_uname != NULL)) {
@@ -763,8 +762,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
             cli_resource_check(out, rsc, NULL);
             pcmk__output_xml_pop_parent(out);
-            g_list_free(hosts);
-            hosts = NULL;
+            g_clear_pointer(&hosts, g_list_free);
         }
 
         pcmk__output_xml_pop_parent(out);

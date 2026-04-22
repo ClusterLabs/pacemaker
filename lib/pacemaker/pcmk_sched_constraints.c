@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -329,9 +329,9 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
     }
 
     if (!any_refs) {
-        pcmk__xml_free(new_xml);
-        new_xml = NULL;
+        g_clear_pointer(&new_xml, pcmk__xml_free);
     }
+
     return new_xml;
 }
 

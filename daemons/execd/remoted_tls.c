@@ -180,8 +180,7 @@ lrmd_remote_client_destroy(gpointer user_data)
         int csock = pcmk__tls_get_client_sock(client->remote);
 
         gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(client->remote->tls_session);
-        client->remote->tls_session = NULL;
+        g_clear_pointer(&client->remote->tls_session, gnutls_deinit);
         close(csock);
     }
 
@@ -456,10 +455,7 @@ lrmd_init_remote_tls_server(void)
 void
 execd_stop_tls_server(void)
 {
-    if (tls != NULL) {
-        pcmk__free_tls(tls);
-        tls = NULL;
-    }
+    g_clear_pointer(&tls, pcmk__free_tls);
 
     if (ssock >= 0) {
         close(ssock);

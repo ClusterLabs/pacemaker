@@ -370,13 +370,13 @@ controld_free_fsa_timers(void)
     controld_stop_timer(wait_timer);
     controld_stop_timer(recheck_timer);
 
-    free(transition_timer); transition_timer = NULL;
-    free(integration_timer); integration_timer = NULL;
-    free(finalization_timer); finalization_timer = NULL;
-    free(election_timer); election_timer = NULL;
-    free(shutdown_escalation_timer); shutdown_escalation_timer = NULL;
-    free(wait_timer); wait_timer = NULL;
-    free(recheck_timer); recheck_timer = NULL;
+    g_clear_pointer(&transition_timer, free);
+    g_clear_pointer(&integration_timer, free);
+    g_clear_pointer(&finalization_timer, free);
+    g_clear_pointer(&election_timer, free);
+    g_clear_pointer(&shutdown_escalation_timer, free);
+    g_clear_pointer(&wait_timer, free);
+    g_clear_pointer(&recheck_timer, free);
 }
 
 /*!

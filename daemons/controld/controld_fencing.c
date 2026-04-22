@@ -351,8 +351,8 @@ controld_purge_fencing_cleanup(void)
         pcmk__info("Purging %s from fencing cleanup list", target);
         free(target);
     }
-    g_list_free(fencing_cleanup_list);
-    fencing_cleanup_list = NULL;
+
+    g_clear_pointer(&fencing_cleanup_list, g_list_free);
 }
 
 /*!
@@ -373,8 +373,8 @@ controld_execute_fencing_cleanup(void)
         update_node_state_after_fencing(target, uuid);
         free(target);
     }
-    g_list_free(fencing_cleanup_list);
-    fencing_cleanup_list = NULL;
+
+    g_clear_pointer(&fencing_cleanup_list, g_list_free);
 }
 
 /* end fencing cleanup list functions */
@@ -737,17 +737,11 @@ controld_disconnect_fencer(bool destroy)
     }
     if (destroy) {
         if (fencer_api != NULL) {
-            fencer_api->cmds->free(fencer_api);
-            fencer_api = NULL;
+            g_clear_pointer(&fencer_api, fencer_api->cmds->free);
         }
-        if (controld_fencer_connect_timer) {
-            mainloop_timer_del(controld_fencer_connect_timer);
-            controld_fencer_connect_timer = NULL;
-        }
-        if (te_client_id) {
-            free(te_client_id);
-            te_client_id = NULL;
-        }
+
+        g_clear_pointer(&controld_fencer_connect_timer, mainloop_timer_del);
+        g_clear_pointer(&te_client_id, free);
     }
 }
 
@@ -1029,10 +1023,9 @@ void
 controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
 {
     if (free_timers) {
-        mainloop_timer_del(fencing_history_sync_timer_short);
-        fencing_history_sync_timer_short = NULL;
-        mainloop_timer_del(fencing_history_sync_timer_long);
-        fencing_history_sync_timer_long = NULL;
+        g_clear_pointer(&fencing_history_sync_timer_short, mainloop_timer_del);
+        g_clear_pointer(&fencing_history_sync_timer_long, mainloop_timer_del);
+
     } else {
         mainloop_timer_stop(fencing_history_sync_timer_short);
         mainloop_timer_stop(fencing_history_sync_timer_long);

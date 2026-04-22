@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2025 the Pacemaker project contributors
+ * Copyright 2016-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -95,8 +95,7 @@ alert_complete(svc_action_t *action)
     }
 
     free(cb_data->client_id);
-    free(action->cb_data);
-    action->cb_data = NULL;
+    g_clear_pointer(&action->cb_data, free);
 }
 
 int
@@ -191,7 +190,6 @@ lrmd_drain_alerts(GMainLoop *mloop)
                     (timer_ms / 1000.0));
         draining_alerts = TRUE;
         pcmk_drain_main_loop(mloop, timer_ms, drain_check);
-        g_hash_table_destroy(inflight_alerts);
-        inflight_alerts = NULL;
+        g_clear_pointer(&inflight_alerts, g_hash_table_destroy);
     }
 }

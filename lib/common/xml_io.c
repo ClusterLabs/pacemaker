@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -77,8 +77,8 @@ decompress_file(const char *filename)
         rc = pcmk__bzlib2rc(rc);
         pcmk__err("Could not read compressed %s: %s " QB_XS " rc=%d", filename,
                   pcmk_rc_str(rc), rc);
-        free(buffer);
-        buffer = NULL;
+        g_clear_pointer(&buffer, free);
+
     } else {
         buffer[length] = '\0';
     }
@@ -149,8 +149,7 @@ pcmk__xml_read(const char *filename)
     last_error = xmlCtxtGetLastError(ctxt);
     if ((last_error != NULL) && (xml != NULL)) {
         pcmk__log_xml_debug(xml, "partial");
-        pcmk__xml_free(xml);
-        xml = NULL;
+        g_clear_pointer(&xml, pcmk__xml_free);
     }
 
     xmlFreeParserCtxt(ctxt);
@@ -195,8 +194,7 @@ pcmk__xml_parse(const char *input)
     last_error = xmlCtxtGetLastError(ctxt);
     if ((last_error != NULL) && (xml != NULL)) {
         pcmk__log_xml_debug(xml, "partial");
-        pcmk__xml_free(xml);
-        xml = NULL;
+        g_clear_pointer(&xml, pcmk__xml_free);
     }
 
     xmlFreeParserCtxt(ctxt);

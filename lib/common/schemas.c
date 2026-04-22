@@ -479,9 +479,7 @@ pcmk__load_schemas_from_dir(const char *dir)
 
 done:
     free(namelist);
-    if (transforms != NULL) {
-        g_hash_table_destroy(transforms);
-    }
+    g_clear_pointer(&transforms, g_hash_table_destroy);
 }
 
 static gint
@@ -687,10 +685,8 @@ free_schema(gpointer data)
 void
 pcmk__schema_cleanup(void)
 {
-    if (known_schemas != NULL) {
-        g_list_free_full(known_schemas, free_schema);
-        known_schemas = NULL;
-    }
+    g_list_free_full(known_schemas, free_schema);
+    known_schemas = NULL;
     initialized = false;
 
     wrap_libxslt(true);
@@ -1302,8 +1298,7 @@ pcmk__update_configured_schema(xmlNode **xml, bool to_logs)
                 }
             }
 
-            pcmk__xml_free(converted);
-            converted = NULL;
+            g_clear_pointer(&converted, pcmk__xml_free);
             return pcmk_rc_transform_failed;
 
         } else {

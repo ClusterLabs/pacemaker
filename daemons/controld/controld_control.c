@@ -224,8 +224,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
     lrm_state_destroy_all();
 
-    mainloop_destroy_trigger(config_read_trigger);
-    config_read_trigger = NULL;
+    g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
 
     controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();
@@ -237,20 +236,11 @@ crmd_exit(crm_exit_t exit_code)
     controld_cleanup_fencing_history_sync(NULL, true);
     controld_free_sched_timer();
 
-    free(controld_globals.our_uuid);
-    controld_globals.our_uuid = NULL;
-
-    free(controld_globals.dc_name);
-    controld_globals.dc_name = NULL;
-
-    free(controld_globals.dc_version);
-    controld_globals.dc_version = NULL;
-
-    free(controld_globals.cluster_name);
-    controld_globals.cluster_name = NULL;
-
-    free(controld_globals.te_uuid);
-    controld_globals.te_uuid = NULL;
+    g_clear_pointer(&controld_globals.our_uuid, free);
+    g_clear_pointer(&controld_globals.dc_name, free);
+    g_clear_pointer(&controld_globals.dc_version, free);
+    g_clear_pointer(&controld_globals.cluster_name, free);
+    g_clear_pointer(&controld_globals.te_uuid, free);
 
     free_max_generation();
     controld_destroy_failed_sync_table();
@@ -299,8 +289,7 @@ crmd_exit(crm_exit_t exit_code)
 
     throttle_fini();
 
-    pcmk_cluster_free(controld_globals.cluster);
-    controld_globals.cluster = NULL;
+    g_clear_pointer(&controld_globals.cluster, pcmk_cluster_free);
 
     /* Graceful */
     pcmk__trace("Done preparing for exit with status %d (%s)", exit_code,

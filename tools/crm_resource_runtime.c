@@ -1851,14 +1851,12 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     if(rc != pcmk_rc_ok) {
         out->err(out, "Could not set " PCMK_META_TARGET_ROLE " for %s: %s (%d)",
                  rsc_id, pcmk_rc_str(rc), rc);
-        if (current_active != NULL) {
-            g_list_free_full(current_active, free);
-            current_active = NULL;
-        }
-        if (restart_target_active != NULL) {
-            g_list_free_full(restart_target_active, free);
-            restart_target_active = NULL;
-        }
+
+        g_list_free_full(current_active, free);
+        current_active = NULL;
+
+        g_list_free_full(restart_target_active, free);
+        restart_target_active = NULL;
         goto done;
     }
 
@@ -1897,9 +1895,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                 goto failure;
             }
 
-            if (current_active != NULL) {
-                g_list_free_full(current_active, free);
-            }
+            g_list_free_full(current_active, free);
             current_active = get_active_resources(host,
                                                   scheduler->priv->resources);
 
@@ -1932,8 +1928,8 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                                            PCMK_META_TARGET_ROLE,
                                            orig_target_role, false, cib,
                                            cib_xml_orig, force);
-        free(orig_target_role);
-        orig_target_role = NULL;
+        g_clear_pointer(&orig_target_role, free);
+
     } else {
         rc = cli_resource_delete_attribute(rsc, rsc_id, NULL,
                                            PCMK_XE_META_ATTRIBUTES, NULL,
@@ -1948,9 +1944,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
         goto done;
     }
 
-    if (target_active != NULL) {
-        g_list_free_full(target_active, free);
-    }
+    g_list_free_full(target_active, free);
     target_active = restart_target_active;
 
     list_delta = pcmk__subtract_lists(target_active, current_active, (GCompareFunc) strcmp);
@@ -1986,9 +1980,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
             /* It's OK if dependent resources moved to a different node,
              * so we check active resources on all nodes.
              */
-            if (current_active != NULL) {
-                g_list_free_full(current_active, free);
-            }
+            g_list_free_full(current_active, free);
             current_active = get_active_resources(NULL,
                                                   scheduler->priv->resources);
 
@@ -2028,18 +2020,15 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
     }
 
 done:
-    if (list_delta != NULL) {
-        g_list_free(list_delta);
-    }
-    if (current_active != NULL) {
-        g_list_free_full(current_active, free);
-    }
+    g_list_free(list_delta);
+    g_list_free_full(current_active, free);
+
     if (target_active != NULL && (target_active != restart_target_active)) {
         g_list_free_full(target_active, free);
     }
-    if (restart_target_active != NULL) {
-        g_list_free_full(restart_target_active, free);
-    }
+
+    g_list_free_full(restart_target_active, free);
+
     free(rsc_id);
     free(lookup_id);
     pcmk_free_scheduler(scheduler);

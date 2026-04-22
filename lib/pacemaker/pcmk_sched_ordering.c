@@ -935,8 +935,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_first, PCMK_XA_FIRST, true,
                           scheduler)) {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
@@ -956,8 +956,8 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
      */
     if (!pcmk__tag_to_set(*expanded_xml, &rsc_set_then, PCMK_XA_THEN, true,
                           scheduler)) {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
@@ -975,8 +975,7 @@ unpack_order_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     if (any_sets) {
         pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_ORDER);
     } else {
-        pcmk__xml_free(*expanded_xml);
-        *expanded_xml = NULL;
+        g_clear_pointer(expanded_xml, pcmk__xml_free);
     }
 
     return pcmk_rc_ok;

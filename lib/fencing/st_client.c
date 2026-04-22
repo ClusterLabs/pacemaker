@@ -290,7 +290,7 @@ stonith_connection_destroy(gpointer user_data)
     native->ipc = NULL;
     native->source = NULL;
 
-    free(native->token); native->token = NULL;
+    g_clear_pointer(&native->token, free);
     stonith->state = stonith_disconnected;
     pcmk__xe_set(blob.xml, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     pcmk__xe_set(blob.xml, PCMK__XA_SUBT, PCMK__VALUE_ST_NOTIFY_DISCONNECT);
@@ -649,10 +649,7 @@ stonith_api_list(stonith_t * stonith, int call_options, const char *id, char **l
         }
     }
 
-    if (output) {
-        pcmk__xml_free(output);
-    }
-
+    pcmk__xml_free(output);
     return rc;
 }
 
@@ -876,8 +873,7 @@ stonith_api_signoff(stonith_t * stonith)
 
     if (native->source != NULL) {
         /* Attached to mainloop */
-        mainloop_del_ipc_client(native->source);
-        native->source = NULL;
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
         native->ipc = NULL;
 
     } else if (native->ipc) {
@@ -889,7 +885,7 @@ stonith_api_signoff(stonith_t * stonith)
         crm_ipc_destroy(ipc);
     }
 
-    free(native->token); native->token = NULL;
+    g_clear_pointer(&native->token, free);
     stonith->state = stonith_disconnected;
     return pcmk_ok;
 }
@@ -1172,8 +1168,7 @@ stonith_api_signon(stonith_t * stonith, const char *name, int *stonith_fd)
             }
             if (rc != pcmk_rc_ok) {
                 crm_ipc_close(native->ipc);
-                crm_ipc_destroy(native->ipc);
-                native->ipc = NULL;
+                g_clear_pointer(&native->ipc, crm_ipc_destroy);
             }
         }
 
@@ -1693,23 +1688,23 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     } else if (reply_id <= 0) {
         pcmk__err("Received bad reply: No id set");
         pcmk__log_xml_err(op_reply, "Bad reply");
-        pcmk__xml_free(op_reply);
-        op_reply = NULL;
+
+        g_clear_pointer(&op_reply, pcmk__xml_free);
         rc = -ENOMSG;
 
     } else {
         pcmk__err("Received bad reply: %d (wanted %d)", reply_id,
                   stonith->call_id);
         pcmk__log_xml_err(op_reply, "Old reply");
-        pcmk__xml_free(op_reply);
-        op_reply = NULL;
+
+        g_clear_pointer(&op_reply, pcmk__xml_free);
         rc = -ENOMSG;
     }
 
   done:
     if (!crm_ipc_connected(native->ipc)) {
         pcmk__err("Fencer disconnected");
-        free(native->token); native->token = NULL;
+        g_clear_pointer(&native->token, free);
         stonith->state = stonith_disconnected;
     }
 

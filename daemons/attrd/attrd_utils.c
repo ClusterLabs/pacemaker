@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -68,10 +68,7 @@ attrd_shutdown(int nsig)
     attrd_free_waitlist();
     attrd_free_confirmations();
 
-    if (peer_protocol_vers != NULL) {
-        g_hash_table_destroy(peer_protocol_vers);
-        peer_protocol_vers = NULL;
-    }
+    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
 
     if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
         /* If there's no main loop active, just exit. This should be possible

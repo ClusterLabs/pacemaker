@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,9 +38,7 @@ free_graph_action(gpointer user_data)
         pcmk__warn("Cancelling timer for graph action %d", action->id);
         g_source_remove(action->timer);
     }
-    if (action->params != NULL) {
-        g_hash_table_destroy(action->params);
-    }
+    g_clear_pointer(&action->params, g_hash_table_destroy);
     pcmk__xml_free(action->xml);
     free(action);
 }

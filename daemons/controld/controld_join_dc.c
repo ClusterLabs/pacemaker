@@ -84,10 +84,7 @@ join_phase_text(enum controld_join_phase phase)
 void
 controld_destroy_failed_sync_table(void)
 {
-    if (failed_sync_nodes != NULL) {
-        g_hash_table_destroy(failed_sync_nodes);
-        failed_sync_nodes = NULL;
-    }
+    g_clear_pointer(&failed_sync_nodes, g_hash_table_destroy);
 }
 
 /*!
@@ -677,11 +674,8 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
 void
 free_max_generation(void)
 {
-    free(max_generation_from);
-    max_generation_from = NULL;
-
-    pcmk__xml_free(max_generation_xml);
-    max_generation_xml = NULL;
+    g_clear_pointer(&max_generation_from, free);
+    g_clear_pointer(&max_generation_xml, pcmk__xml_free);
 }
 
 void

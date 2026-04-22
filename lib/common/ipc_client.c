@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -56,8 +56,7 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
 
     (*api)->server = server;
     if (pcmk_ipc_name(*api, false) == NULL) {
-        pcmk_free_ipc_api(*api);
-        *api = NULL;
+        g_clear_pointer(api, pcmk_free_ipc_api);
         return EOPNOTSUPP;
     }
 
@@ -89,31 +88,28 @@ pcmk_new_ipc_api(pcmk_ipc_api_t **api, enum pcmk_ipc_server server)
             break;
 
         default: // pcmk_ipc_unknown
-            pcmk_free_ipc_api(*api);
-            *api = NULL;
+            g_clear_pointer(api, pcmk_free_ipc_api);
             return EINVAL;
     }
     if ((*api)->cmds == NULL) {
-        pcmk_free_ipc_api(*api);
-        *api = NULL;
+        g_clear_pointer(api, pcmk_free_ipc_api);
         return ENOMEM;
     }
 
     (*api)->ipc = crm_ipc_new(pcmk_ipc_name(*api, false), 0);
     if ((*api)->ipc == NULL) {
-        pcmk_free_ipc_api(*api);
-        *api = NULL;
+        g_clear_pointer(api, pcmk_free_ipc_api);
         return ENOMEM;
     }
 
     // If daemon API has its own data to track, allocate it
-    if ((*api)->cmds->new_data != NULL) {
-        if ((*api)->cmds->new_data(*api) != pcmk_rc_ok) {
-            pcmk_free_ipc_api(*api);
-            *api = NULL;
-            return ENOMEM;
-        }
+    if (((*api)->cmds->new_data != NULL)
+        && ((*api)->cmds->new_data(*api) != pcmk_rc_ok)) {
+
+        g_clear_pointer(api, pcmk_free_ipc_api);
+        return ENOMEM;
     }
+
     pcmk__trace("Created %s API IPC object", pcmk_ipc_name(*api, true));
     return pcmk_rc_ok;
 }
@@ -123,11 +119,10 @@ free_daemon_specific_data(pcmk_ipc_api_t *api)
 {
     if ((api != NULL) && (api->cmds != NULL)) {
         if ((api->cmds->free_data != NULL) && (api->api_data != NULL)) {
-            api->cmds->free_data(api->api_data);
-            api->api_data = NULL;
+            g_clear_pointer(&api->api_data, api->cmds->free_data);
         }
-        free(api->cmds);
-        api->cmds = NULL;
+
+        g_clear_pointer(&api->cmds, free);
     }
 }
 
@@ -1479,8 +1474,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
             index++;
         }
 
-        pcmk_free_ipc_event(iov);
-        iov = NULL;
+        g_clear_pointer(&iov, pcmk_free_ipc_event);
     } while (true);
 
     /* If we should not wait for a response, bail now */

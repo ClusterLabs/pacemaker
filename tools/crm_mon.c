@@ -343,10 +343,7 @@ apply_include(const gchar *includes, GError **error) {
             show = all_includes(output_format);
         } else if (g_str_has_prefix(*s, "bans")) {
             show |= pcmk_section_bans;
-            if (options.neg_location_prefix != NULL) {
-                free(options.neg_location_prefix);
-                options.neg_location_prefix = NULL;
-            }
+            g_clear_pointer(&options.neg_location_prefix, free);
 
             if (strlen(*s) > 4 && (*s)[4] == ':') {
                 options.neg_location_prefix = strdup(*s+5);
@@ -889,8 +886,7 @@ setup_fencer_connection(void)
                                             crm_mon_fencer_display_cb);
         }
     } else {
-        stonith__api_free(st);
-        st = NULL;
+        g_clear_pointer(&st, stonith__api_free);
     }
 
     return rc;
@@ -940,8 +936,7 @@ setup_cib_connection(void)
 
             out->err(out, "Cannot monitor CIB changes; exiting");
             cib__clean_up_connection(&cib);
-            stonith__api_free(st);
-            st = NULL;
+            g_clear_pointer(&st, stonith__api_free);
         }
     }
     return rc;
@@ -1951,7 +1946,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             case -pcmk_err_diff_failed:
                 pcmk__notice("[%s] Patch aborted: %s (%d)", event,
                              pcmk_strerror(rc), rc);
-                pcmk__xml_free(current_cib); current_cib = NULL;
+                g_clear_pointer(&current_cib, pcmk__xml_free);
                 break;
             case pcmk_ok:
                 cib_updated = TRUE;
@@ -1959,7 +1954,7 @@ crm_diff_update(const char *event, xmlNode * msg)
             default:
                 pcmk__notice("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
                              rc);
-                pcmk__xml_free(current_cib); current_cib = NULL;
+                g_clear_pointer(&current_cib, pcmk__xml_free);
                 break;
         }
     }

@@ -401,12 +401,9 @@ mainloop_destroy_signal(int sig)
 static qb_array_t *gio_map = NULL;
 
 void
-mainloop_cleanup(void) 
+mainloop_cleanup(void)
 {
-    if (gio_map != NULL) {
-        qb_array_free(gio_map);
-        gio_map = NULL;
-    }
+    g_clear_pointer(&gio_map, qb_array_free);
 
     for (int sig = 0; sig < NSIG; ++sig) {
         mainloop_destroy_signal_entry(sig);
@@ -830,7 +827,7 @@ mainloop_gio_destroy(gpointer c)
 
     pcmk__trace("Destroyed client %s[%p]", c_name, c);
 
-    free(client->name); client->name = NULL;
+    free(client->name);
     free(client);
 
     free(c_name);
