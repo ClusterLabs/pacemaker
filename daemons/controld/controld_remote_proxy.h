@@ -33,10 +33,6 @@ typedef struct {
     lrmd_t *lrm;
 } controld_remote_proxy_t;
 
-controld_remote_proxy_t *remote_proxy_new(lrmd_t *lrmd, const char *node_name,
-                                          const char *session_id,
-                                          const char *channel);
-
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
 void remote_proxy_nack_shutdown(lrmd_t *lrmd);
 
