@@ -377,18 +377,6 @@ controld_connect_local_executor(lrm_state_t *lrm_state)
     return rc;
 }
 
-static remote_proxy_t *
-crmd_remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id, const char *channel)
-{
-    struct ipc_client_callbacks proxy_callbacks = {
-        .dispatch = remote_proxy_dispatch,
-        .destroy = remote_proxy_disconnected
-    };
-    remote_proxy_t *proxy = remote_proxy_new(lrmd, &proxy_callbacks, node_name,
-                                             session_id, channel);
-    return proxy;
-}
-
 gboolean
 crmd_is_proxy_session(const char *session)
 {
@@ -468,7 +456,8 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
         const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
 
-        proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
+        proxy = remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
+
         if (!remote_ra_controlling_guest(lrm_state)) {
             if (proxy != NULL) {
                 cib_t *cib_conn = controld_globals.cib_conn;
