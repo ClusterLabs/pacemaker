@@ -13,7 +13,6 @@
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // uint32_t
 
-#include <glib.h>                   // gpointer
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/ipc.h>         // crm_ipc_t
@@ -32,7 +31,7 @@ typedef struct {
     lrmd_t *lrm;
 } controld_remote_proxy_t;
 
-void remote_proxy_free(gpointer data);
+void controld_remote_proxy_table_init(void);
 
 int controld_remote_proxy_send(const char *session, xmlNode *msg);
 void controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg);

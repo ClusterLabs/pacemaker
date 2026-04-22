@@ -41,7 +41,7 @@
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 GHashTable *proxy_table = NULL;
 
-void
+static void
 remote_proxy_free(gpointer data)
 {
     controld_remote_proxy_t *proxy = data;
@@ -50,6 +50,16 @@ remote_proxy_free(gpointer data)
     free(proxy->node_name);
     free(proxy->session_id);
     free(proxy);
+}
+
+void
+controld_remote_proxy_table_init(void)
+{
+    if (proxy_table != NULL) {
+        return;
+    }
+
+    proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
 }
 
 static void

@@ -331,6 +331,8 @@ do_startup(long long action, enum crmd_fsa_cause cause,
     controld_globals.cib_conn = cib_new();
 
     controld_execd_state_table_init();
+    controld_remote_proxy_table_init();
+
     if (!controld_init_fsa_timers()) {
         register_fsa_error(I_ERROR, msg_data);
     }
