@@ -1292,10 +1292,7 @@ send_msg_via_ipc(xmlNode * msg, const char *sys, const char *src)
 
         controld_invoke_execd(&fsa_data);
 
-    } else if (crmd_is_proxy_session(sys)) {
-        crmd_proxy_send(sys, msg);
-
-    } else {
+    } else if (controld_remote_proxy_send(sys, msg) != pcmk_rc_ok) {
         pcmk__info("Received invalid request: unknown subsystem '%s'", sys);
     }
 }
