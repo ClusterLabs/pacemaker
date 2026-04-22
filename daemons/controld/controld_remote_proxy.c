@@ -22,7 +22,7 @@
 #include <crm/common/internal.h>        // pcmk__xe_*, pcmk__xml_*, etc.
 #include <crm/common/ipc.h>             // crm_ipc_*
 #include <crm/common/logging.h>         // CRM_CHECK, crm_log_xml_explicit
-#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/mainloop.h>        // ipc_client_callbacks, mainloop_*
 #include <crm/common/results.h>         // pcmk_ok, pcmk_rc_*, pcmk_strerror
 #include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
 #include <crm/crm.h>                    // crm_system_name
@@ -183,9 +183,14 @@ remote_proxy_disconnected(gpointer userdata)
 }
 
 remote_proxy_t *
-remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
-                 const char *node_name, const char *session_id, const char *channel)
+remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
+                 const char *channel)
 {
+    static struct ipc_client_callbacks callbacks = {
+        .dispatch = remote_proxy_dispatch,
+        .destroy = remote_proxy_disconnected
+    };
+
     remote_proxy_t *proxy = NULL;
 
     if(channel == NULL) {
@@ -206,7 +211,8 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
         proxy->is_local = true;
 
     } else {
-        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, proxy_callbacks);
+        proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0,
+                                                proxy, &callbacks);
         proxy->ipc = mainloop_get_ipc_client(proxy->source);
         if (proxy->source == NULL) {
             remote_proxy_free(proxy);
