@@ -65,8 +65,6 @@ void delete_fsa_input(fsa_data_t * fsa_data);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
 
-int controld_remote_proxy_send(const char *session, xmlNode *msg);
-
 bool controld_authorize_ipc_message(const xmlNode *client_msg,
                                     pcmk__client_t *curr_client,
                                     const char *proxy_session);
