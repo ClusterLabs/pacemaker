@@ -742,12 +742,12 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     rsc_private->allowed_nodes = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
     value = pcmk__xe_get(rsc_private->xml, PCMK__META_CLONE);
-    if (value) {
+    if (value != NULL) {
         (*rsc)->id = pcmk__assert_asprintf("%s:%s", id, value);
         pcmk__insert_meta(rsc_private, PCMK__META_CLONE, value);
 
     } else {
-        (*rsc)->id = strdup(id);
+        (*rsc)->id = pcmk__str_copy(id);
     }
 
     rsc_private->fns = &resource_class_functions[rsc_private->variant];
