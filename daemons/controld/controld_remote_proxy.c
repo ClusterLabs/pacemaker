@@ -52,24 +52,6 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
     pcmk__xml_free(msg);
 }
 
-void
-remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg)
-{
-    /* sending to the remote node an event msg. */
-    xmlNode *event = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    xmlNode *wrapper = NULL;
-
-    pcmk__xe_set(event, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
-    pcmk__xe_set(event, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
-
-    wrapper = pcmk__xe_create(event, PCMK__XE_LRMD_IPC_MSG);
-    pcmk__xml_copy(wrapper, msg);
-
-    crm_log_xml_explicit(event, "EventForProxy");
-    lrmd_internal_proxy_send(proxy->lrm, event);
-    pcmk__xml_free(event);
-}
-
 static void
 remote_proxy_end_session(controld_remote_proxy_t *proxy)
 {
@@ -113,6 +95,24 @@ remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
     pcmk__xml_free(response);
 }
 
+static void
+remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg)
+{
+    /* sending to the remote node an event msg. */
+    xmlNode *event = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+    xmlNode *wrapper = NULL;
+
+    pcmk__xe_set(event, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_EVENT);
+    pcmk__xe_set(event, PCMK__XA_LRMD_IPC_SESSION, proxy->session_id);
+
+    wrapper = pcmk__xe_create(event, PCMK__XE_LRMD_IPC_MSG);
+    pcmk__xml_copy(wrapper, msg);
+
+    crm_log_xml_explicit(event, "EventForProxy");
+    lrmd_internal_proxy_send(proxy->lrm, event);
+    pcmk__xml_free(event);
+}
+
 int
 remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 {
@@ -143,7 +143,6 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     pcmk__xml_free(xml);
     return 1;
 }
-
 
 void
 remote_proxy_disconnected(gpointer userdata)
