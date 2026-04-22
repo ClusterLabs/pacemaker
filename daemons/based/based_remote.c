@@ -721,8 +721,10 @@ based_remote_init(void)
             goto try_clear_port;
         }
 
-        pcmk__warn("Falling back to anonymous authentication for remote "
-                   "CIB connections");
+        if (!have_psk) {
+            pcmk__warn("Falling back to anonymous authentication for remote "
+                       "CIB connections");
+        }
     }
 
     /* Now that we know whether to fall back to anonymous authentication
