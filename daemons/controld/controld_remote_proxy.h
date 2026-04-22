@@ -36,5 +36,6 @@ void controld_remote_proxy_table_free(void);
 
 int controld_remote_proxy_send(const char *session, xmlNode *msg);
 void controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg);
+void controld_remote_proxy_disconnect_node(const char *node_name);
 
 #endif  // CONTROLD_REMOTE_PROXY_H
