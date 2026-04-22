@@ -376,28 +376,23 @@ controld_connect_local_executor(lrm_state_t *lrm_state)
     return rc;
 }
 
-gboolean
-crmd_is_proxy_session(const char *session)
-{
-    return g_hash_table_lookup(proxy_table, session) ? TRUE : FALSE;
-}
-
-void
-crmd_proxy_send(const char *session, xmlNode *msg)
+int
+controld_remote_proxy_send(const char *session, xmlNode *msg)
 {
     controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
-    lrm_state_t *lrm_state = NULL;
 
-    if (!proxy) {
-        return;
+    if (proxy == NULL) {
+        return ENXIO;
     }
-    pcmk__log_xml_trace(msg, "to-proxy");
-    lrm_state = controld_get_executor_state(proxy->node_name, false);
-    if (lrm_state) {
-        pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
-                    proxy->node_name);
-        remote_proxy_relay_event(proxy, msg);
+
+    if (controld_get_executor_state(proxy->node_name, false) == NULL) {
+        return pcmk_rc_ok;
     }
+
+    pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
+                proxy->node_name);
+    remote_proxy_relay_event(proxy, msg);
+    return pcmk_rc_ok;
 }
 
 // \return Standard Pacemaker return code
