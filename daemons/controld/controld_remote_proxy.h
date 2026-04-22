@@ -31,10 +31,11 @@ typedef struct {
     mainloop_io_t *source;
     uint32_t last_request_id;
     lrmd_t *lrm;
-} remote_proxy_t;
+} controld_remote_proxy_t;
 
-remote_proxy_t *remote_proxy_new(lrmd_t *lrmd, const char *node_name,
-                                 const char *session_id, const char *channel);
+controld_remote_proxy_t *remote_proxy_new(lrmd_t *lrmd, const char *node_name,
+                                          const char *session_id,
+                                          const char *channel);
 
 void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
@@ -45,8 +46,8 @@ int remote_proxy_dispatch(const char *buffer, ssize_t length,
 void remote_proxy_disconnected(gpointer data);
 void remote_proxy_free(gpointer data);
 
-void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
-void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg,
+void remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg);
+void remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
                                  int msg_id);
 
 #endif  // CONTROLD_REMOTE_PROXY_H

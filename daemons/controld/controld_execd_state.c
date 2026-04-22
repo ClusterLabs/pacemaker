@@ -127,7 +127,7 @@ lrm_state_create(const char *node_name)
 static gboolean
 remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
 {
-    remote_proxy_t *proxy = value;
+    controld_remote_proxy_t *proxy = value;
     const char *node_name = user_data;
 
     if (pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
@@ -137,11 +137,11 @@ remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-static remote_proxy_t *
+static controld_remote_proxy_t *
 find_connected_proxy_by_node(const char * node_name)
 {
     GHashTableIter gIter;
-    remote_proxy_t *proxy = NULL;
+    controld_remote_proxy_t *proxy = NULL;
 
     CRM_CHECK(proxy_table != NULL, return NULL);
 
@@ -160,7 +160,7 @@ find_connected_proxy_by_node(const char * node_name)
 static void
 remote_proxy_disconnect_by_node(const char * node_name)
 {
-    remote_proxy_t *proxy = NULL;
+    controld_remote_proxy_t *proxy = NULL;
 
     CRM_CHECK(proxy_table != NULL, return);
 
@@ -386,7 +386,7 @@ crmd_is_proxy_session(const char *session)
 void
 crmd_proxy_send(const char *session, xmlNode *msg)
 {
-    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
     lrm_state_t *lrm_state = NULL;
 
     if (!proxy) {
@@ -450,7 +450,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
-    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
     const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
