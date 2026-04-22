@@ -37,7 +37,6 @@ controld_remote_proxy_t *remote_proxy_new(lrmd_t *lrmd, const char *node_name,
                                           const char *session_id,
                                           const char *channel);
 
-void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
 void remote_proxy_ack_shutdown(lrmd_t *lrmd);
 void remote_proxy_nack_shutdown(lrmd_t *lrmd);
 
@@ -49,5 +48,6 @@ void remote_proxy_free(gpointer data);
 void remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg);
 void remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
                                  int msg_id);
+void controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg);
 
 #endif  // CONTROLD_REMOTE_PROXY_H
