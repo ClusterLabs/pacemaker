@@ -147,10 +147,6 @@ expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
         p = p->priv->parent;
     }
 
-    if (parent_orig_meta == NULL) {
-        return;
-    }
-
     // This will not overwrite any values already existing for child
     g_hash_table_foreach(parent_orig_meta, dup_attr, meta_hash);
     g_hash_table_destroy(parent_orig_meta);
