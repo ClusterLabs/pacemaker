@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                    // true
 #include <stddef.h>                     // NULL
 #include <stdint.h>                     // uint32_t
 #include <stdlib.h>                     // free
@@ -202,7 +203,7 @@ remote_proxy_new(lrmd_t *lrmd, struct ipc_client_callbacks *proxy_callbacks,
     if ((pcmk__parse_server(crm_system_name) == pcmk_ipc_controld)
         && (pcmk__parse_server(channel) == pcmk_ipc_controld)) {
         // The controller doesn't need to connect to itself
-        proxy->is_local = TRUE;
+        proxy->is_local = true;
 
     } else {
         proxy->source = mainloop_add_ipc_client(channel, G_PRIORITY_LOW, 0, proxy, proxy_callbacks);
@@ -260,7 +261,7 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
         }
 
         // Controller requests MUST be handled by the controller, not us
-        CRM_CHECK(proxy->is_local == FALSE,
+        CRM_CHECK(!proxy->is_local,
                   remote_proxy_end_session(proxy); return);
 
         if (!crm_ipc_connected(proxy->ipc)) {
