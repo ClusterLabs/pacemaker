@@ -539,3 +539,42 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
         pcmk__err("Unknown proxy operation: %s", op);
     }
 }
+
+static controld_remote_proxy_t *
+find_proxy_by_node(const char *node_name)
+{
+    GHashTableIter gIter;
+    controld_remote_proxy_t *proxy = NULL;
+
+    g_hash_table_iter_init(&gIter, proxy_table);
+
+    while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) &proxy)) {
+        if (proxy->source
+            && pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
+            return proxy;
+        }
+    }
+
+    return NULL;
+}
+
+void
+controld_remote_proxy_disconnect_node(const char *node_name)
+{
+    controld_remote_proxy_t *proxy = NULL;
+
+    CRM_CHECK(proxy_table != NULL, return);
+
+    proxy = find_proxy_by_node(node_name);
+
+    while (proxy != NULL) {
+        /* mainloop_del_ipc_client() eventually calls remote_proxy_disconnected()
+         * , which removes the entry from proxy_table.
+         * Do not do this in a g_hash_table_iter_next() loop. */
+        if (proxy->source) {
+            mainloop_del_ipc_client(proxy->source);
+        }
+
+        proxy = find_proxy_by_node(node_name);
+    }
+}

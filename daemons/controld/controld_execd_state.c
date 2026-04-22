@@ -136,43 +136,6 @@ remote_proxy_remove_by_node(gpointer key, gpointer value, gpointer user_data)
     return FALSE;
 }
 
-static controld_remote_proxy_t *
-find_connected_proxy_by_node(const char * node_name)
-{
-    GHashTableIter gIter;
-    controld_remote_proxy_t *proxy = NULL;
-
-    CRM_CHECK(proxy_table != NULL, return NULL);
-
-    g_hash_table_iter_init(&gIter, proxy_table);
-
-    while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) &proxy)) {
-        if (proxy->source
-            && pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
-            return proxy;
-        }
-    }
-
-    return NULL;
-}
-
-static void
-remote_proxy_disconnect_by_node(const char * node_name)
-{
-    controld_remote_proxy_t *proxy = NULL;
-
-    CRM_CHECK(proxy_table != NULL, return);
-
-    while ((proxy = find_connected_proxy_by_node(node_name)) != NULL) {
-        /* mainloop_del_ipc_client() eventually calls remote_proxy_disconnected()
-         * , which removes the entry from proxy_table.
-         * Do not do this in a g_hash_table_iter_next() loop. */
-        if (proxy->source) {
-            mainloop_del_ipc_client(proxy->source);
-        }
-    }
-}
-
 static void
 internal_lrm_state_destroy(gpointer data)
 {
@@ -187,7 +150,7 @@ internal_lrm_state_destroy(gpointer data)
      * remote_proxy_disconnected() will be called and as well remove the
      * entries from proxy_table.
      */
-    remote_proxy_disconnect_by_node(lrm_state->node_name);
+    controld_remote_proxy_disconnect_node(lrm_state->node_name);
 
     pcmk__trace("Destroying proxy table %s with %u members",
                 lrm_state->node_name, g_hash_table_size(proxy_table));
@@ -301,7 +264,7 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
     }
     pcmk__trace("Disconnecting %s", lrm_state->node_name);
 
-    remote_proxy_disconnect_by_node(lrm_state->node_name);
+    controld_remote_proxy_disconnect_node(lrm_state->node_name);
 
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
