@@ -14,7 +14,7 @@ noinst_HEADERS		= fencing_private.h
 
 lib_LTLIBRARIES		= libstonithd.la
 
-libstonithd_la_LDFLAGS	= -version-info 56:1:0
+libstonithd_la_LDFLAGS	= -version-info 57:0:1
 
 libstonithd_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libstonithd_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

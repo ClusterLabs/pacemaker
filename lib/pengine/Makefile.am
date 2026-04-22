@@ -29,7 +29,7 @@ libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules_compat.c
 endif
 
-libpe_status_la_LDFLAGS	= -version-info 56:1:0
+libpe_status_la_LDFLAGS	= -version-info 57:0:1
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
