@@ -10,10 +10,11 @@
 #ifndef CONTROLD_REMOTE_PROXY_H
 #define CONTROLD_REMOTE_PROXY_H
 
+#include <stdbool.h>                // bool
 #include <stdint.h>                 // uint32_t
 #include <sys/types.h>              // ssize_t
 
-#include <glib.h>                   // gboolean, gpointer
+#include <glib.h>                   // gpointer
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/ipc.h>         // crm_ipc_t
@@ -24,7 +25,7 @@ typedef struct {
     char *node_name;
     char *session_id;
 
-    gboolean is_local;
+    bool is_local;
 
     crm_ipc_t *ipc;
     mainloop_io_t *source;
