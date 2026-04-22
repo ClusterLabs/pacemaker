@@ -222,7 +222,8 @@ crmd_exit(crm_exit_t exit_code)
 
     verify_stopped(controld_globals.fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
-    lrm_state_destroy_all();
+
+    controld_execd_state_table_free();
 
     g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
 
