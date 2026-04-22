@@ -41,19 +41,6 @@
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 GHashTable *proxy_table = NULL;
 
-static void
-remote_proxy_end_session(controld_remote_proxy_t *proxy)
-{
-    if (proxy == NULL) {
-        return;
-    }
-    pcmk__trace("Ending session ID %s", proxy->session_id);
-
-    if (proxy->source) {
-        mainloop_del_ipc_client(proxy->source);
-    }
-}
-
 void
 remote_proxy_free(gpointer data)
 {
@@ -286,6 +273,19 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
         route_message(C_IPC_MESSAGE, msg);
     }
     controld_trigger_fsa();
+}
+
+static void
+remote_proxy_end_session(controld_remote_proxy_t *proxy)
+{
+    if (proxy == NULL) {
+        return;
+    }
+    pcmk__trace("Ending session ID %s", proxy->session_id);
+
+    if (proxy->source) {
+        mainloop_del_ipc_client(proxy->source);
+    }
 }
 
 void
