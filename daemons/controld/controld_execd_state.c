@@ -557,7 +557,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
         }
 
     } else {
-        remote_proxy_cb(lrmd, lrm_state->node_name, msg);
+        controld_remote_proxy_cb(lrmd, lrm_state, msg);
     }
 }
 

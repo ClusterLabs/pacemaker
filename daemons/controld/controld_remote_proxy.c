@@ -230,8 +230,9 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
 }
 
 void
-remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
+controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
 {
+    lrm_state_t *lrm_state = user_data;
     const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
@@ -285,8 +286,9 @@ remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg)
                        pcmk_rc_str(rc));
         }
 
-        pcmk__assert(node_name != NULL);
-        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER, node_name);
+        pcmk__assert(lrm_state->node_name != NULL);
+        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
+                              lrm_state->node_name);
 
         if (pcmk__is_set(flags, crm_ipc_proxied)) {
             const char *type = pcmk__xe_get(request, PCMK__XA_T);
