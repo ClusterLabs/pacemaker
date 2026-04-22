@@ -13,7 +13,6 @@
 #include <stdbool.h>
 
 #include <crm/crm.h>
-#include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
 #include <crm/lrmd_internal.h>
 
@@ -401,167 +400,6 @@ crmd_proxy_send(const char *session, xmlNode *msg)
     }
 }
 
-static void
-crmd_proxy_dispatch(const char *session, xmlNode *msg)
-{
-    pcmk__trace("Processing proxied IPC message from session %s", session);
-    pcmk__log_xml_trace(msg, "controller[inbound]");
-    pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, session);
-    if (controld_authorize_ipc_message(msg, NULL, session)) {
-        route_message(C_IPC_MESSAGE, msg);
-    }
-    controld_trigger_fsa();
-}
-
-static void
-remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
-{
-    if (rc != pcmk_ok) {
-        pcmk__err("Query resulted in an error: %s", pcmk_strerror(rc));
-
-        if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            pcmk__err("The cluster is mis-configured - shutting down and "
-                      "staying down");
-        }
-
-    } else {
-        lrmd_t * lrmd = (lrmd_t *)user_data;
-        crm_time_t *now = crm_time_new(NULL);
-        GHashTable *config_hash = pcmk__strkey_table(free, free);
-        pcmk_rule_input_t rule_input = {
-            .now = now,
-        };
-
-        pcmk__debug("Call %d : Parsing CIB options", call_id);
-        pcmk_unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                                  config_hash, NULL);
-
-        /* Now send it to the remote peer */
-        lrmd__validate_remote_settings(lrmd, config_hash);
-
-        g_hash_table_destroy(config_hash);
-        crm_time_free(now);
-    }
-}
-
-static void
-crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
-{
-    lrm_state_t *lrm_state = userdata;
-    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
-    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
-
-    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
-    if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
-        const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
-
-        proxy = remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
-
-        if (!remote_ra_controlling_guest(lrm_state)) {
-            if (proxy != NULL) {
-                cib_t *cib_conn = controld_globals.cib_conn;
-
-                /* Look up PCMK_OPT_FENCING_WATCHDOG_TIMEOUT and send to the
-                 * remote peer for validation
-                 */
-                int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
-                                               NULL, cib_none);
-                cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
-                                                       lrmd,
-                                                       "remote_config_check",
-                                                       remote_config_check,
-                                                       NULL);
-            }
-        } else {
-            pcmk__debug("Skipping remote_config_check for guest-nodes");
-        }
-
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
-        char *now_s = NULL;
-
-        pcmk__notice("%s requested shutdown of its remote connection",
-                     lrm_state->node_name);
-
-        if (!remote_ra_is_in_maintenance(lrm_state)) {
-            now_s = pcmk__ttoa(time(NULL));
-            update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
-                         true);
-            free(now_s);
-
-            remote_proxy_ack_shutdown(lrmd);
-
-            pcmk__warn("Reconnection attempts to %s may result in failures "
-                       "that must be cleared",
-                       lrm_state->node_name);
-        } else {
-            remote_proxy_nack_shutdown(lrmd);
-
-            pcmk__notice("Remote resource for %s is not managed so no ordered "
-                         "shutdown happening",
-                         lrm_state->node_name);
-        }
-        return;
-
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei) && proxy && proxy->is_local) {
-        /* This is for the controller, which we are, so don't try
-         * to send to ourselves over IPC -- do it directly.
-         */
-        uint32_t flags = 0U;
-        int rc = pcmk_rc_ok;
-        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
-                                                NULL, NULL);
-        xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-        CRM_CHECK(request != NULL, return);
-        CRM_CHECK(lrm_state->node_name, return);
-        pcmk__xe_set(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
-        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
-                              lrm_state->node_name);
-
-        /* Pacemaker Remote nodes don't know their own names (as known to the
-         * cluster). When getting a node info request with no name or ID, add
-         * the name, so we don't return info for ourselves instead of the
-         * Pacemaker Remote node.
-         */
-        if (pcmk__str_eq(pcmk__xe_get(request, PCMK__XA_CRM_TASK),
-                         CRM_OP_NODE_INFO, pcmk__str_none)) {
-            int node_id = 0;
-
-            pcmk__xe_get_int(request, PCMK_XA_ID, &node_id);
-            if ((node_id <= 0)
-                && (pcmk__xe_get(request, PCMK_XA_UNAME) == NULL)) {
-                pcmk__xe_set(request, PCMK_XA_UNAME, lrm_state->node_name);
-            }
-        }
-
-        crmd_proxy_dispatch(session, request);
-
-        rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
-        if (rc != pcmk_rc_ok) {
-            pcmk__warn("Couldn't parse controller flags from remote request: "
-                       "%s",
-                       pcmk_rc_str(rc));
-        }
-        if (pcmk__is_set(flags, crm_ipc_client_response)) {
-            int msg_id = 0;
-            xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
-
-            pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
-            pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
-
-            pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
-            remote_proxy_relay_response(proxy, op_reply, msg_id);
-
-            pcmk__xml_free(op_reply);
-        }
-
-    } else {
-        controld_remote_proxy_cb(lrmd, lrm_state, msg);
-    }
-}
-
-
 // \return Standard Pacemaker return code
 int
 controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
@@ -582,7 +420,8 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
         }
         lrm_state->conn = api;
         api->cmds->set_callback(api, remote_lrm_op_callback);
-        lrmd_internal_set_proxy_callback(api, lrm_state, crmd_remote_proxy_cb);
+        lrmd_internal_set_proxy_callback(api, lrm_state,
+                                         controld_remote_proxy_cb);
     }
 
     pcmk__trace("Initiating remote connection to %s:%d with timeout %dms",
