@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>                      // EACCES
-#include <stdbool.h>                    // true
+#include <stdbool.h>                    // bool, true
 #include <stddef.h>                     // NULL
 #include <stdint.h>                     // uint32_t
 #include <stdlib.h>                     // free
@@ -48,36 +48,6 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
     xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
-    lrmd_internal_proxy_send(lrmd, msg);
-    pcmk__xml_free(msg);
-}
-
-/*!
- * \internal
- * \brief Acknowledge a remote proxy shutdown request
- *
- * \param[in,out] lrmd  Connection to proxy
- */
-void
-remote_proxy_ack_shutdown(lrmd_t *lrmd)
-{
-    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_ACK);
-    lrmd_internal_proxy_send(lrmd, msg);
-    pcmk__xml_free(msg);
-}
-
-/*!
- * \internal
- * \brief Reject a remote proxy shutdown request
- *
- * \param[in,out] lrmd  Connection to proxy
- */
-void
-remote_proxy_nack_shutdown(lrmd_t *lrmd)
-{
-    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
-    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_SHUTDOWN_NACK);
     lrmd_internal_proxy_send(lrmd, msg);
     pcmk__xml_free(msg);
 }
@@ -270,6 +240,24 @@ remote_config_check(xmlNode *msg, int call_id, int rc, xmlNode *output,
     }
 }
 
+/*!
+ * \internal
+ * \brief Acknowledge or reject a remote proxy shutdown request
+ *
+ * \param[in,out] lrmd  Connection to proxy
+ * \param[in]     ack   If \c true, send ack; if \c false, send nack
+ */
+static void
+remote_proxy_ack_shutdown(lrmd_t *lrmd, bool ack)
+{
+    xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
+
+    pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP,
+                 (ack? LRMD_IPC_OP_SHUTDOWN_ACK : LRMD_IPC_OP_SHUTDOWN_NACK));
+    lrmd_internal_proxy_send(lrmd, msg);
+    pcmk__xml_free(msg);
+}
+
 static void
 crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
@@ -336,13 +324,13 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
                          true);
             free(now_s);
 
-            remote_proxy_ack_shutdown(lrmd);
+            remote_proxy_ack_shutdown(lrmd, true);
 
             pcmk__warn("Reconnection attempts to %s may result in failures "
                        "that must be cleared",
                        lrm_state->node_name);
         } else {
-            remote_proxy_nack_shutdown(lrmd);
+            remote_proxy_ack_shutdown(lrmd, false);
 
             pcmk__notice("Remote resource for %s is not managed so no ordered "
                          "shutdown happening",
