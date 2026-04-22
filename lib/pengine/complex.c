@@ -123,28 +123,24 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-expand_parents_fixed_nvpairs(pcmk_resource_t *rsc,
+expand_parents_fixed_nvpairs(const pcmk_resource_t *rsc,
                              const pcmk_rule_input_t *rule_input,
                              GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
-    pcmk_resource_t *p = rsc->priv->parent;
-
-    if (p == NULL) {
-        return ;
-    }
 
     /* Search all parent resources, get the fixed value of
      * PCMK_XE_META_ATTRIBUTES set only in the original xml, and stack it in the
      * hash table. The fixed value of the lower parent resource takes precedence
      * and is not overwritten.
      */
-    while(p != NULL) {
+    for (const pcmk_resource_t *parent = rsc->priv->parent; parent != NULL;
+         parent = parent->priv->parent) {
+
         /* A hash table for comparison is generated, including the id-ref. */
-        pe__unpack_dataset_nvpairs(p->priv->xml, PCMK_XE_META_ATTRIBUTES,
+        pe__unpack_dataset_nvpairs(parent->priv->xml, PCMK_XE_META_ATTRIBUTES,
                                    rule_input, parent_orig_meta, NULL,
                                    scheduler);
-        p = p->priv->parent;
     }
 
     // This will not overwrite any values already existing for child
