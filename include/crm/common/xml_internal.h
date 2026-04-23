@@ -1,11 +1,15 @@
 /*
- * Copyright 2017-2025 the Pacemaker project contributors
+ * Copyright 2017-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <xml_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_XML_INTERNAL__H
 #define PCMK__CRM_COMMON_XML_INTERNAL__H
@@ -14,6 +18,7 @@
  * Internal-only wrappers for and extensions to libxml2 (libxslt)
  */
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>   // uint32_t
 #include <stdio.h>
@@ -144,23 +149,23 @@ do {                                                                            
  */
 enum pcmk__xml_fmt_options {
     //! Exclude certain XML attributes (for calculating digests)
-    pcmk__xml_fmt_filtered   = (1 << 0),
+    pcmk__xml_fmt_filtered   = (UINT32_C(1) << 0),
 
     //! Include indentation and newlines
-    pcmk__xml_fmt_pretty     = (1 << 1),
+    pcmk__xml_fmt_pretty     = (UINT32_C(1) << 1),
 
     //! Include the opening tag of an XML element, and include XML comments
-    pcmk__xml_fmt_open       = (1 << 3),
+    pcmk__xml_fmt_open       = (UINT32_C(1) << 3),
 
     //! Include the children of an XML element
-    pcmk__xml_fmt_children   = (1 << 4),
+    pcmk__xml_fmt_children   = (UINT32_C(1) << 4),
 
     //! Include the closing tag of an XML element
-    pcmk__xml_fmt_close      = (1 << 5),
+    pcmk__xml_fmt_close      = (UINT32_C(1) << 5),
 
     // @COMPAT Can we start including text nodes unconditionally?
     //! Include XML text nodes
-    pcmk__xml_fmt_text       = (1 << 6),
+    pcmk__xml_fmt_text       = (UINT32_C(1) << 6),
 };
 
 int pcmk__xml_show(pcmk__output_t *out, const char *prefix, const xmlNode *data,
@@ -321,6 +326,7 @@ pcmk__xml_next(const xmlNode *child)
 void pcmk__xml_free(xmlNode *xml);
 void pcmk__xml_free_doc(xmlDoc *doc);
 xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
+xmlNode *pcmk__xml_replace_with_copy(xmlNode *old, xmlNode *new);
 
 /*!
  * \internal
@@ -328,16 +334,16 @@ xmlNode *pcmk__xml_copy(xmlNode *parent, xmlNode *src);
  */
 enum pcmk__xa_flags {
     //! Flag has no effect
-    pcmk__xaf_none          = 0U,
+    pcmk__xaf_none          = 0,
 
     //! Don't overwrite existing values
-    pcmk__xaf_no_overwrite  = (1U << 0),
+    pcmk__xaf_no_overwrite  = (UINT32_C(1) << 0),
 
     /*!
      * Treat values as score updates where possible (see
      * \c pcmk__xe_set_score())
      */
-    pcmk__xaf_score_update  = (1U << 1),
+    pcmk__xaf_score_update  = (UINT32_C(1) << 1),
 };
 
 void pcmk__xml_sanitize_id(char *id);
@@ -433,17 +439,10 @@ pcmk__xml_attr_value(const xmlAttr *attr)
            : (const char *) attr->children->content;
 }
 
-/*!
- * \internal
- * \brief Check whether a given CIB element was modified in a CIB patchset
- *
- * \param[in] patchset  CIB XML patchset
- * \param[in] element   XML tag of CIB element to check (\c NULL is equivalent
- *                      to \c PCMK_XE_CIB). Supported values include any CIB
- *                      element supported by \c pcmk__cib_abs_xpath_for().
- *
- * \return \c true if \p element was modified, or \c false otherwise
- */
+void pcmk__xml_patchset_add_digest(xmlNode *patchset, const xmlNode *target);
+int pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
+                                int target[3]);
+
 bool pcmk__cib_element_in_patchset(const xmlNode *patchset,
                                    const char *element);
 

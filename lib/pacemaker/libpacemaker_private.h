@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2024 the Pacemaker project contributors
+ * Copyright 2021-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,8 +20,8 @@
 #include <glib.h>                   // guint, gpointer, GList, GHashTable
 #include <libxml/tree.h>            // xmlNode
 
+#include <crm/common/internal.h>    // pcmk__location_t, etc.
 #include <crm/common/scheduler.h>   // pcmk_action_t, pcmk_node_t, etc.
-#include <crm/common/scheduler_internal.h>  // pcmk__location_t, etc.
 #include <crm/cib.h>                // cib_t
 #include <crm/lrmd_events.h>        // lrmd_event_data_t
 #include <crm/pengine/internal.h>   // pe__const_top_resource(), etc.
@@ -34,13 +34,13 @@ extern "C" {
 
 // Colocation flags
 enum pcmk__coloc_flags {
-    pcmk__coloc_none        = 0U,
+    pcmk__coloc_none        = 0,
 
     // Primary is affected even if already active
-    pcmk__coloc_influence   = (1U << 0),
+    pcmk__coloc_influence   = (UINT32_C(1) << 0),
 
     // Colocation was explicitly configured in CIB
-    pcmk__coloc_explicit    = (1U << 1),
+    pcmk__coloc_explicit    = (UINT32_C(1) << 1),
 };
 
 // Flags to modify the behavior of add_colocated_node_scores()
@@ -49,20 +49,20 @@ enum pcmk__coloc_select {
     pcmk__coloc_select_default      = 0,
 
     // Apply "this with" colocations instead of "with this" colocations
-    pcmk__coloc_select_this_with    = (1 << 0),
+    pcmk__coloc_select_this_with    = (UINT32_C(1) << 0),
 
     // Apply only colocations with non-negative scores
-    pcmk__coloc_select_nonnegative  = (1 << 1),
+    pcmk__coloc_select_nonnegative  = (UINT32_C(1) << 1),
 
     // Apply only colocations with at least one matching node
-    pcmk__coloc_select_active       = (1 << 2),
+    pcmk__coloc_select_active       = (UINT32_C(1) << 2),
 };
 
 // Flags the update_ordered_actions() method can return
 enum pcmk__updated {
     pcmk__updated_none      = 0,        // Nothing changed
-    pcmk__updated_first     = (1 << 0), // First action was updated
-    pcmk__updated_then      = (1 << 1), // Then action was updated
+    pcmk__updated_first     = (UINT32_C(1) << 0), // First action was updated
+    pcmk__updated_then      = (UINT32_C(1) << 1), // Then action was updated
 };
 
 #define pcmk__set_updated_flags(au_flags, action, flags_to_set) do {        \
@@ -435,13 +435,13 @@ void pcmk__create_graph(pcmk_scheduler_t *scheduler);
 // Fencing (pcmk_sched_fencing.c)
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_fence(pcmk_action_t *stonith_op,
-                          pcmk_scheduler_t *scheduler);
+void pcmk__order_vs_fencing(pcmk_action_t *fencing,
+                            pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-void pcmk__order_vs_unfence(const pcmk_resource_t *rsc, pcmk_node_t *node,
-                            pcmk_action_t *action,
-                            enum pcmk__action_relation_flags order);
+void pcmk__order_vs_unfencing(const pcmk_resource_t *rsc, pcmk_node_t *node,
+                              pcmk_action_t *action,
+                              enum pcmk__action_relation_flags order);
 
 G_GNUC_INTERNAL
 void pcmk__fence_guest(pcmk_node_t *node);
@@ -941,13 +941,14 @@ void pcmk__create_instance_actions(pcmk_resource_t *rsc, GList *instances);
 G_GNUC_INTERNAL
 bool pcmk__instance_matches(const pcmk_resource_t *instance,
                             const pcmk_node_t *node, enum rsc_role_e role,
-                            bool current);
+                            bool current, const char *node_attribute);
 
 G_GNUC_INTERNAL
 pcmk_resource_t *pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
                                                 const pcmk_resource_t *rsc,
                                                 enum rsc_role_e role,
-                                                bool current);
+                                                bool current,
+                                                const char *node_attribute);
 
 G_GNUC_INTERNAL
 uint32_t pcmk__instance_update_ordered_actions(pcmk_action_t *first,

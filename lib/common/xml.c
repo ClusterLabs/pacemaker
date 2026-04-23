@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>                     // uint32_t
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,7 +24,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>    // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
 //! libxml2 supports only XML version 1.0, at least as of libxml2-2.12.5
@@ -149,7 +149,7 @@ pcmk__xml_doc_all_flags_set(const xmlDoc *doc, uint32_t flags)
     if (doc != NULL) {
         xml_doc_private_t *docpriv = doc->_private;
 
-        return (docpriv != NULL) && pcmk_all_flags_set(docpriv->flags, flags);
+        return (docpriv != NULL) && pcmk__all_flags_set(docpriv->flags, flags);
     }
     return false;
 }
@@ -252,17 +252,11 @@ reset_xml_private_data(xml_doc_private_t *docpriv)
     if (docpriv != NULL) {
         pcmk__assert(docpriv->check == PCMK__XML_DOC_PRIVATE_MAGIC);
 
-        pcmk__str_update(&(docpriv->acl_user), NULL);
+        g_clear_pointer(&docpriv->acl_user, free);
+        g_clear_pointer(&docpriv->acls, pcmk__free_acls);
 
-        if (docpriv->acls != NULL) {
-            pcmk__free_acls(docpriv->acls);
-            docpriv->acls = NULL;
-        }
-
-        if(docpriv->deleted_objs) {
-            g_list_free_full(docpriv->deleted_objs, free_deleted_object);
-            docpriv->deleted_objs = NULL;
-        }
+        g_list_free_full(docpriv->deleted_objs, free_deleted_object);
+        docpriv->deleted_objs = NULL;
     }
 }
 
@@ -372,8 +366,8 @@ free_private_data(xmlNode *node, void *user_data)
             free_private_data((xmlNode *) iter, user_data);
         }
     }
-    free(node->_private);
-    node->_private = NULL;
+
+    g_clear_pointer(&node->_private, free);
     return true;
 }
 
@@ -418,7 +412,7 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
     for (const xmlNode *cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_node_private_t *nodepriv = ((xmlNode*)cIter->prev)->_private;
 
-        if (!pcmk_is_set(nodepriv->flags, ignore_if_set)) {
+        if (!pcmk__is_set(nodepriv->flags, ignore_if_set)) {
             position++;
         }
     }
@@ -478,7 +472,7 @@ pcmk__xml_commit_changes(xmlDoc *doc)
         return;
     }
 
-    if (pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+    if (pcmk__is_set(docpriv->flags, pcmk__xf_dirty)) {
         pcmk__xml_tree_foreach(xmlDocGetRootElement(doc), commit_attr_deletions,
                                NULL);
     }
@@ -567,8 +561,8 @@ pcmk__xml_is_name_start_char(const char *utf8, int *len)
         for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
             g_string_append_printf(buf, " 0x%.2X", utf8[i]);
         }
-        crm_info("Invalid UTF-8 character (bytes:%s)",
-                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        pcmk__info("Invalid UTF-8 character (bytes:%s)",
+                   (pcmk__str_empty(buf->str)? " <none>" : buf->str));
         g_string_free(buf, TRUE);
         return false;
     }
@@ -628,8 +622,8 @@ pcmk__xml_is_name_char(const char *utf8, int *len)
         for (int i = 0; (i < 4) && (utf8[i] != '\0'); i++) {
             g_string_append_printf(buf, " 0x%.2X", utf8[i]);
         }
-        crm_info("Invalid UTF-8 character (bytes:%s)",
-                 (pcmk__str_empty(buf->str)? " <none>" : buf->str));
+        pcmk__info("Invalid UTF-8 character (bytes:%s)",
+                   (pcmk__str_empty(buf->str)? " <none>" : buf->str));
         g_string_free(buf, TRUE);
         return false;
     }
@@ -738,6 +732,8 @@ free_xml_with_position(xmlNode *node, int position)
 {
     xmlDoc *doc = NULL;
     xml_node_private_t *nodepriv = NULL;
+    xml_doc_private_t *docpriv = NULL;
+    GString *xpath = NULL;
 
     if (node == NULL) {
         return pcmk_rc_ok;
@@ -769,37 +765,41 @@ free_xml_with_position(xmlNode *node, int position)
         return EACCES;
     }
 
-    if (pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
-        && !pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
-
-        xml_doc_private_t *docpriv = doc->_private;
-        GString *xpath = pcmk__element_xpath(node);
-
-        if (xpath != NULL) {
-            pcmk__deleted_xml_t *deleted_obj = NULL;
-
-            crm_trace("Deleting %s %p from %p", xpath->str, node, doc);
-
-            deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
-            deleted_obj->path = g_string_free(xpath, FALSE);
-            deleted_obj->position = -1;
-
-            // Record the position only for XML comments for now
-            if (node->type == XML_COMMENT_NODE) {
-                if (position >= 0) {
-                    deleted_obj->position = position;
-
-                } else {
-                    deleted_obj->position = pcmk__xml_position(node,
-                                                               pcmk__xf_skip);
-                }
-            }
-
-            docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
-                                                  deleted_obj);
-            pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
-        }
+    if (!pcmk__xml_doc_all_flags_set(node->doc, pcmk__xf_tracking)
+        || pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        pcmk__xml_free_node(node);
+        return pcmk_rc_ok;
     }
+
+    pcmk__assert(doc != NULL);
+
+    docpriv = doc->_private;
+    xpath = pcmk__element_xpath(node);
+
+    if (xpath != NULL) {
+        pcmk__deleted_xml_t *deleted_obj = NULL;
+
+        pcmk__trace("Deleting %s %p from %p", xpath->str, node, doc);
+
+        deleted_obj = pcmk__assert_alloc(1, sizeof(pcmk__deleted_xml_t));
+        deleted_obj->path = g_string_free(xpath, FALSE);
+        deleted_obj->position = -1;
+
+        // Record the position only for XML comments for now
+        if (node->type == XML_COMMENT_NODE) {
+            if (position >= 0) {
+                deleted_obj->position = position;
+
+            } else {
+                deleted_obj->position = pcmk__xml_position(node, pcmk__xf_skip);
+            }
+        }
+
+        docpriv->deleted_objs = g_list_append(docpriv->deleted_objs,
+                                              deleted_obj);
+        pcmk__xml_doc_set_flags(node->doc, pcmk__xf_dirty);
+    }
+
     pcmk__xml_free_node(node);
     return pcmk_rc_ok;
 }
@@ -858,6 +858,51 @@ pcmk__xml_copy(xmlNode *parent, xmlNode *src)
 
     pcmk__xml_new_private_data(copy);
     return copy;
+}
+
+/*!
+ * \internal
+ * \brief Replace one XML node with a copy of another XML node
+ *
+ * This function handles change tracking and applies ACLs.
+ *
+ * \param[in,out] old  XML node to replace
+ * \param[in]     new  XML node to copy as replacement for \p old
+ *
+ * \return Copy of \p new that replaced \p old
+ *
+ * \note This frees \p old.
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free() (but note that it may be part of a larger XML
+ *       tree).
+ */
+xmlNode *
+pcmk__xml_replace_with_copy(xmlNode *old, xmlNode *new)
+{
+    xmlNode *new_copy = NULL;
+
+    pcmk__assert((old != NULL) && (new != NULL));
+
+    /* Pass old to pcmk__xml_copy() so that new_copy gets created within the
+     * same doc. But old won't remain its parent.
+     */
+    new_copy = pcmk__xml_copy(old, new);
+    old = xmlReplaceNode(old, new_copy);
+
+    // old == NULL means memory allocation error
+    pcmk__assert(old != NULL);
+
+    // May be unnecessary but avoids slight changes to some test outputs
+    pcmk__xml_tree_foreach(new_copy, pcmk__xml_reset_node_flags, NULL);
+
+    if (pcmk__xml_doc_all_flags_set(new_copy->doc, pcmk__xf_tracking)) {
+        // Replaced sections may have included relevant ACLs
+        pcmk__apply_acls(new_copy->doc);
+    }
+    pcmk__xml_mark_changes(old, new_copy);
+    pcmk__xml_free_node(old);
+
+    return new_copy;
 }
 
 /*!
@@ -1113,7 +1158,7 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
      * checking ACLs)
      */
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__xe_set(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Reset flags (so the attribute doesn't appear as newly created)
@@ -1124,8 +1169,8 @@ mark_attr_deleted(xmlNode *new_xml, const char *element, const char *attr_name,
     // Check ACLs and mark restored value for later removal
     pcmk__xa_remove(attr, false);
 
-    crm_trace("XML attribute %s=%s was removed from %s",
-              attr_name, old_value, element);
+    pcmk__trace("XML attribute %s=%s was removed from %s", attr_name, old_value,
+                element);
 }
 
 /*
@@ -1137,18 +1182,18 @@ mark_attr_changed(xmlNode *new_xml, const char *element, const char *attr_name,
                   const char *old_value)
 {
     xml_doc_private_t *docpriv = new_xml->doc->_private;
-    char *vcopy = crm_element_value_copy(new_xml, attr_name);
+    char *vcopy = pcmk__xe_get_copy(new_xml, attr_name);
 
-    crm_trace("XML attribute %s was changed from '%s' to '%s' in %s",
-              attr_name, old_value, vcopy, element);
+    pcmk__trace("XML attribute %s was changed from '%s' to '%s' in %s",
+                attr_name, old_value, vcopy, element);
 
     // Restore the original value (without checking ACLs)
     pcmk__clear_xml_flags(docpriv, pcmk__xf_tracking);
-    crm_xml_add(new_xml, attr_name, old_value);
+    pcmk__xe_set(new_xml, attr_name, old_value);
     pcmk__set_xml_flags(docpriv, pcmk__xf_tracking);
 
     // Change it back to the new value, to check ACLs
-    crm_xml_add(new_xml, attr_name, vcopy);
+    pcmk__xe_set(new_xml, attr_name, vcopy);
     free(vcopy);
 }
 
@@ -1169,8 +1214,8 @@ mark_attr_moved(xmlNode *new_xml, const char *element, xmlAttr *old_attr,
 {
     xml_node_private_t *nodepriv = new_attr->_private;
 
-    crm_trace("XML attribute %s moved from position %d to %d in %s",
-              old_attr->name, p_old, p_new, element);
+    pcmk__trace("XML attribute %s moved from position %d to %d in %s",
+                old_attr->name, p_old, p_new, element);
 
     // Mark document, element, and all element's parents as changed
     pcmk__mark_xml_node_dirty(new_xml);
@@ -1211,7 +1256,7 @@ xml_diff_old_attrs(xmlNode *old_xml, xmlNode *new_xml)
                                              pcmk__xf_skip);
             int old_pos = pcmk__xml_position((xmlNode*) old_attr,
                                              pcmk__xf_skip);
-            const char *new_value = crm_element_value(new_xml, name);
+            const char *new_value = pcmk__xe_get(new_xml, name);
 
             // This attribute isn't new
             pcmk__clear_xml_flags(nodepriv, pcmk__xf_created);
@@ -1254,12 +1299,11 @@ mark_created_attrs(xmlNode *new_xml)
         xml_node_private_t *nodepriv = attr_iter->_private;
 
         attr_iter = attr_iter->next;
-        if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+        if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
             const char *attr_name = (const char *) new_attr->name;
 
-            crm_trace("Created new attribute %s=%s in %s",
-                      attr_name, pcmk__xml_attr_value(new_attr),
-                      new_xml->name);
+            pcmk__trace("Created new attribute %s=%s in %s", attr_name,
+                        pcmk__xml_attr_value(new_attr), new_xml->name);
 
             /* Check ACLs (we can't use the remove-then-create trick because it
              * would modify the attribute position).
@@ -1314,6 +1358,11 @@ xml_diff_attrs(xmlNode *old_xml, xmlNode *new_xml)
  *
  * \param[in,out] old_child   Child of old XML
  * \param[in,out] new_parent  New XML that does not contain \p old_child
+ *
+ * \note The deletion is checked using the new XML's ACLs. The ACLs may have
+ *       also changed between the old and new XML trees. Callers should take
+ *       reasonable action if there were ACL changes that themselves would have
+ *       been denied.
  */
 static void
 mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
@@ -1327,7 +1376,7 @@ mark_child_deleted(xmlNode *old_child, xmlNode *new_parent)
     pcmk__xml_tree_foreach(candidate, pcmk__xml_reset_node_flags, NULL);
 
     // free_xml_with_position() will check whether ACLs allow the deletion
-    pcmk__apply_acl(xmlDocGetRootElement(candidate->doc));
+    pcmk__apply_acls(candidate->doc);
 
     /* Try to remove the child again (which will track it in document's
      * deleted_objs on success)
@@ -1358,9 +1407,9 @@ mark_child_moved(xmlNode *old_child, xmlNode *new_child, int old_pos,
     xmlNode *new_parent = new_child->parent;
     xml_node_private_t *nodepriv = new_child->_private;
 
-    crm_trace("Child element %s with " PCMK_XA_ID "='%s' moved from position "
-              "%d to %d under %s",
-              new_child->name, id_s, old_pos, new_pos, new_parent->name);
+    pcmk__trace("Child element %s with " PCMK_XA_ID "='%s' moved from position "
+                "%d to %d under %s",
+                new_child->name, id_s, old_pos, new_pos, new_parent->name);
     pcmk__mark_xml_node_dirty(new_parent);
     pcmk__set_xml_flags(nodepriv, pcmk__xf_moved);
 
@@ -1396,7 +1445,7 @@ new_comment_matches(const xmlNode *old_comment, const xmlNode *new_comment)
 {
     xml_node_private_t *nodepriv = new_comment->_private;
 
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_skip)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_skip)) {
         /* @TODO Should we also return false if old_comment has pcmk__xf_skip
          * set? This preserves existing behavior at time of writing.
          */
@@ -1651,10 +1700,10 @@ pcmk__xml_artefact_root(enum pcmk__xml_artefact_ns ns)
             break;
         case pcmk__xml_artefact_ns_base_rng:
         case pcmk__xml_artefact_ns_base_xslt:
-            ret = crm_strdup_printf("%s/base", base);
+            ret = pcmk__assert_asprintf("%s/base", base);
             break;
         default:
-            crm_err("XML artefact family specified as %u not recognized", ns);
+            pcmk__err("XML artefact family specified as %u not recognized", ns);
     }
     return ret;
 }
@@ -1667,22 +1716,22 @@ find_artefact(enum pcmk__xml_artefact_ns ns, const char *path, const char *files
     switch (ns) {
         case pcmk__xml_artefact_ns_legacy_rng:
         case pcmk__xml_artefact_ns_base_rng:
-            if (pcmk__ends_with(filespec, ".rng")) {
-                ret = crm_strdup_printf("%s/%s", path, filespec);
+            if (g_str_has_suffix(filespec, ".rng")) {
+                ret = pcmk__assert_asprintf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.rng", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s.rng", path, filespec);
             }
             break;
         case pcmk__xml_artefact_ns_legacy_xslt:
         case pcmk__xml_artefact_ns_base_xslt:
-            if (pcmk__ends_with(filespec, ".xsl")) {
-                ret = crm_strdup_printf("%s/%s", path, filespec);
+            if (g_str_has_suffix(filespec, ".xsl")) {
+                ret = pcmk__assert_asprintf("%s/%s", path, filespec);
             } else {
-                ret = crm_strdup_printf("%s/%s.xsl", path, filespec);
+                ret = pcmk__assert_asprintf("%s/%s.xsl", path, filespec);
             }
             break;
         default:
-            crm_err("XML artefact family specified as %u not recognized", ns);
+            pcmk__err("XML artefact family specified as %u not recognized", ns);
     }
 
     return ret;
@@ -1799,16 +1848,16 @@ xml_track_changes(xmlNode *xml, const char *user, xmlNode *acl_source,
     }
 
     pcmk__xml_commit_changes(xml->doc);
-    crm_trace("Tracking changes%s to %p",
-              (enforce_acls? " with ACLs" : ""), xml);
+    pcmk__trace("Tracking changes%s to %p", (enforce_acls? " with ACLs" : ""),
+                xml);
     pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_tracking);
     if (enforce_acls) {
         if (acl_source == NULL) {
             acl_source = xml;
         }
         pcmk__xml_doc_set_flags(xml->doc, pcmk__xf_acl_enabled);
-        pcmk__unpack_acl(acl_source, xml, user);
-        pcmk__apply_acl(xml);
+        pcmk__unpack_acls(acl_source->doc, xml->doc->_private, user);
+        pcmk__apply_acls(xml->doc);
     }
 }
 

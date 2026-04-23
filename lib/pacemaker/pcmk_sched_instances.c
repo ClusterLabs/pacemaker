@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,11 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+#include <stdint.h>                 // UINT32_C
+
+#include <glib.h>                   // g_str_has_suffix()
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 #include "libpacemaker_private.h"
@@ -32,8 +37,8 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 {
     pcmk_node_t *allowed_node = NULL;
 
-    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)) {
-        pcmk__rsc_trace(instance, "%s cannot run on %s: orphaned",
+    if (pcmk__is_set(instance->flags, pcmk__rsc_removed)) {
+        pcmk__rsc_trace(instance, "%s cannot run on %s: removed",
                         instance->id, pcmk__node_name(node));
         return false;
     }
@@ -47,8 +52,8 @@ can_run_instance(const pcmk_resource_t *instance, const pcmk_node_t *node,
 
     allowed_node = pcmk__top_allowed_node(instance, node);
     if (allowed_node == NULL) {
-        crm_warn("%s cannot run on %s: node not allowed",
-                 instance->id, pcmk__node_name(node));
+        pcmk__warn("%s cannot run on %s: node not allowed", instance->id,
+                   pcmk__node_name(node));
         return false;
     }
 
@@ -222,15 +227,17 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
 
     // Compare nodes by updated scores
     if (node1->assign->score < node2->assign->score) {
-        crm_trace("Assign %s (%d on %s) after %s (%d on %s)",
-                  instance1->id, node1->assign->score, pcmk__node_name(node1),
-                  instance2->id, node2->assign->score, pcmk__node_name(node2));
+        pcmk__trace("Assign %s (%d on %s) after %s (%d on %s)",
+                    instance1->id, node1->assign->score, pcmk__node_name(node1),
+                    instance2->id, node2->assign->score,
+                    pcmk__node_name(node2));
         rc = 1;
 
     } else if (node1->assign->score > node2->assign->score) {
-        crm_trace("Assign %s (%d on %s) before %s (%d on %s)",
-                  instance1->id, node1->assign->score, pcmk__node_name(node1),
-                  instance2->id, node2->assign->score, pcmk__node_name(node2));
+        pcmk__trace("Assign %s (%d on %s) before %s (%d on %s)",
+                    instance1->id, node1->assign->score, pcmk__node_name(node1),
+                    instance2->id, node2->assign->score,
+                    pcmk__node_name(node2));
         rc = -1;
     }
 
@@ -250,7 +257,7 @@ cmp_instance_by_colocation(const pcmk_resource_t *instance1,
 static bool
 did_fail(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_failed)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_failed)) {
         return true;
     }
 
@@ -375,15 +382,15 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
      */
     if ((nnodes1 > 0) && (nnodes2 > 0)) {
         if (nnodes1 < nnodes2) {
-            crm_trace("Assign %s (active on %d) before %s (active on %d): "
-                      "less multiply active",
-                      instance1->id, nnodes1, instance2->id, nnodes2);
+            pcmk__trace("Assign %s (active on %d) before %s (active on %d): "
+                        "less multiply active",
+                        instance1->id, nnodes1, instance2->id, nnodes2);
             return -1;
 
         } else if (nnodes1 > nnodes2) {
-            crm_trace("Assign %s (active on %d) after %s (active on %d): "
-                      "more multiply active",
-                      instance1->id, nnodes1, instance2->id, nnodes2);
+            pcmk__trace("Assign %s (active on %d) after %s (active on %d): "
+                        "more multiply active",
+                        instance1->id, nnodes1, instance2->id, nnodes2);
             return 1;
         }
     }
@@ -394,42 +401,43 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     can1 = node_is_allowed(instance1, &node1);
     can2 = node_is_allowed(instance2, &node2);
     if (can1 && !can2) {
-        crm_trace("Assign %s before %s: not active on a disallowed node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: not active on a disallowed node",
+                    instance1->id, instance2->id);
         return -1;
 
     } else if (!can1 && can2) {
-        crm_trace("Assign %s after %s: active on a disallowed node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: active on a disallowed node",
+                    instance1->id, instance2->id);
         return 1;
     }
 
     // Prefer instance with higher configured priority
     if (instance1->priv->priority > instance2->priv->priority) {
-        crm_trace("Assign %s before %s: priority (%d > %d)",
-                  instance1->id, instance2->id,
-                  instance1->priv->priority, instance2->priv->priority);
+        pcmk__trace("Assign %s before %s: priority (%d > %d)",
+                    instance1->id, instance2->id,
+                    instance1->priv->priority, instance2->priv->priority);
         return -1;
 
     } else if (instance1->priv->priority < instance2->priv->priority) {
-        crm_trace("Assign %s after %s: priority (%d < %d)",
-                  instance1->id, instance2->id,
-                  instance1->priv->priority, instance2->priv->priority);
+        pcmk__trace("Assign %s after %s: priority (%d < %d)",
+                    instance1->id, instance2->id,
+                    instance1->priv->priority, instance2->priv->priority);
         return 1;
     }
 
     // Prefer active instance
     if ((node1 == NULL) && (node2 == NULL)) {
-        crm_trace("No assignment preference for %s vs. %s: inactive",
-                  instance1->id, instance2->id);
+        pcmk__trace("No assignment preference for %s vs. %s: inactive",
+                    instance1->id, instance2->id);
         return 0;
 
     } else if (node1 == NULL) {
-        crm_trace("Assign %s after %s: active", instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: active", instance1->id, instance2->id);
         return 1;
 
     } else if (node2 == NULL) {
-        crm_trace("Assign %s before %s: active", instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: active", instance1->id,
+                    instance2->id);
         return -1;
     }
 
@@ -437,13 +445,13 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     can1 = pcmk__node_available(node1, false, false);
     can2 = pcmk__node_available(node2, false, false);
     if (can1 && !can2) {
-        crm_trace("Assign %s before %s: current node can run resources",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: current node can run resources",
+                    instance1->id, instance2->id);
         return -1;
 
     } else if (!can1 && can2) {
-        crm_trace("Assign %s after %s: current node can't run resources",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: current node can't run resources",
+                    instance1->id, instance2->id);
         return 1;
     }
 
@@ -451,31 +459,32 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     node1 = pcmk__top_allowed_node(instance1, node1);
     node2 = pcmk__top_allowed_node(instance2, node2);
     if ((node1 == NULL) && (node2 == NULL)) {
-        crm_trace("No assignment preference for %s vs. %s: "
-                  "parent not allowed on either instance's current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("No assignment preference for %s vs. %s: "
+                    "parent not allowed on either instance's current node",
+                    instance1->id, instance2->id);
         return 0;
 
     } else if (node1 == NULL) {
-        crm_trace("Assign %s after %s: parent not allowed on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: parent not allowed on current node",
+                    instance1->id, instance2->id);
         return 1;
 
     } else if (node2 == NULL) {
-        crm_trace("Assign %s before %s: parent allowed on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: parent allowed on current node",
+                    instance1->id, instance2->id);
         return -1;
     }
 
     // Prefer instance whose current node is running fewer other instances
     if (node1->assign->count < node2->assign->count) {
-        crm_trace("Assign %s before %s: fewer active instances on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: fewer active instances on current "
+                    "node",
+                    instance1->id, instance2->id);
         return -1;
 
     } else if (node1->assign->count > node2->assign->count) {
-        crm_trace("Assign %s after %s: more active instances on current node",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: more active instances on current node",
+                    instance1->id, instance2->id);
         return 1;
     }
 
@@ -483,12 +492,12 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     can1 = did_fail(instance1);
     can2 = did_fail(instance2);
     if (!can1 && can2) {
-        crm_trace("Assign %s before %s: not failed",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: not failed",
+                    instance1->id, instance2->id);
         return -1;
     } else if (can1 && !can2) {
-        crm_trace("Assign %s after %s: failed",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: failed",
+                    instance1->id, instance2->id);
         return 1;
     }
 
@@ -501,14 +510,14 @@ pcmk__cmp_instance(gconstpointer a, gconstpointer b)
     // Prefer instance with lower instance number
     rc = pcmk__cmp_instance_number(instance1, instance2);
     if (rc < 0) {
-        crm_trace("Assign %s before %s: instance number",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s before %s: instance number",
+                    instance1->id, instance2->id);
     } else if (rc > 0) {
-        crm_trace("Assign %s after %s: instance number",
-                  instance1->id, instance2->id);
+        pcmk__trace("Assign %s after %s: instance number",
+                    instance1->id, instance2->id);
     } else {
-        crm_trace("No assignment preference for %s vs. %s",
-                  instance1->id, instance2->id);
+        pcmk__trace("No assignment preference for %s vs. %s",
+                    instance1->id, instance2->id);
     }
     return rc;
 }
@@ -540,7 +549,7 @@ increment_parent_count(pcmk_resource_t *instance,
          * shouldn't be possible if the resource is managed, and we won't be
          * able to limit the number of instances assigned to the node.
          */
-        CRM_LOG_ASSERT(!pcmk_is_set(instance->flags, pcmk__rsc_managed));
+        CRM_LOG_ASSERT(!pcmk__is_set(instance->flags, pcmk__rsc_managed));
 
     } else {
         allowed->assign->count++;
@@ -568,7 +577,7 @@ assign_instance(pcmk_resource_t *instance, const pcmk_node_t *prefer,
     pcmk__rsc_trace(instance, "Assigning %s (preferring %s)", instance->id,
                     ((prefer == NULL)? "no node" : prefer->priv->name));
 
-    if (pcmk_is_set(instance->flags, pcmk__rsc_assigning)) {
+    if (pcmk__is_set(instance->flags, pcmk__rsc_assigning)) {
         pcmk__rsc_debug(instance,
                         "Assignment loop detected involving %s colocations",
                         instance->id);
@@ -750,8 +759,8 @@ preferred_node(const pcmk_resource_t *instance, int optimal_per_node)
 
     // Check whether instance is active, healthy, and not yet assigned
     if ((instance->priv->active_nodes == NULL)
-        || !pcmk_is_set(instance->flags, pcmk__rsc_unassigned)
-        || pcmk_is_set(instance->flags, pcmk__rsc_failed)) {
+        || !pcmk__is_set(instance->flags, pcmk__rsc_unassigned)
+        || pcmk__is_set(instance->flags, pcmk__rsc_failed)) {
         return NULL;
     }
 
@@ -819,7 +828,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
         int available = max_total - assigned;
 
         instance = iter->data;
-        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
+        if (!pcmk__is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue;   // Already assigned
         }
 
@@ -837,7 +846,7 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
     for (iter = instances; iter != NULL; iter = iter->next) {
         instance = (pcmk_resource_t *) iter->data;
 
-        if (!pcmk_is_set(instance->flags, pcmk__rsc_unassigned)) {
+        if (!pcmk__is_set(instance->flags, pcmk__rsc_unassigned)) {
             continue; // Already assigned
         }
 
@@ -846,11 +855,11 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
             if (pcmk__top_allowed_node(instance, current) == NULL) {
                 const char *unmanaged = "";
 
-                if (!pcmk_is_set(instance->flags, pcmk__rsc_managed)) {
+                if (!pcmk__is_set(instance->flags, pcmk__rsc_managed)) {
                     unmanaged = "Unmanaged resource ";
                 }
-                crm_notice("%s%s is running on %s which is no longer allowed",
-                           unmanaged, instance->id, pcmk__node_name(current));
+                pcmk__notice("%s%s is running on %s which is no longer allowed",
+                             unmanaged, instance->id, pcmk__node_name(current));
             }
         }
 
@@ -874,17 +883,18 @@ pcmk__assign_instances(pcmk_resource_t *collective, GList *instances,
 }
 
 enum instance_state {
-    instance_starting   = (1 << 0),
-    instance_stopping   = (1 << 1),
+    instance_none       = 0,
+    instance_starting   = (UINT32_C(1) << 0),
+    instance_stopping   = (UINT32_C(1) << 1),
 
     /* This indicates that some instance is restarting. It's not the same as
      * instance_starting|instance_stopping, which would indicate that some
      * instance is starting, and some instance (not necessarily the same one) is
      * stopping.
      */
-    instance_restarting = (1 << 2),
+    instance_restarting = (UINT32_C(1) << 2),
 
-    instance_active     = (1 << 3),
+    instance_active     = (UINT32_C(1) << 3),
 
     instance_all        = instance_starting|instance_stopping
                           |instance_restarting|instance_active,
@@ -901,17 +911,17 @@ static void
 check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 {
     const GList *iter = NULL;
-    uint32_t instance_state = 0; // State of just this instance
+    uint32_t instance_state = instance_none; // State of just this instance
 
     // No need to check further if all conditions have already been detected
-    if (pcmk_all_flags_set(*state, instance_all)) {
+    if (pcmk__all_flags_set(*state, instance_all)) {
         return;
     }
 
     // If instance is a collective (a cloned group), check its children instead
     if (instance->priv->variant > pcmk__rsc_variant_primitive) {
         for (iter = instance->priv->children;
-             (iter != NULL) && !pcmk_all_flags_set(*state, instance_all);
+             (iter != NULL) && !pcmk__all_flags_set(*state, instance_all);
              iter = iter->next) {
             check_instance_state((const pcmk_resource_t *) iter->data, state);
         }
@@ -926,17 +936,18 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 
     // Check each of the instance's actions for runnable start or stop
     for (iter = instance->priv->actions;
-         (iter != NULL) && !pcmk_all_flags_set(instance_state,
-                                               instance_starting
-                                               |instance_stopping);
+         (iter != NULL)
+         && !pcmk__all_flags_set(instance_state,
+                                 instance_starting|instance_stopping);
          iter = iter->next) {
 
         const pcmk_action_t *action = (const pcmk_action_t *) iter->data;
-        const bool optional = pcmk_is_set(action->flags, pcmk__action_optional);
+        const bool optional = pcmk__is_set(action->flags,
+                                           pcmk__action_optional);
 
         if (pcmk__str_eq(PCMK_ACTION_START, action->task, pcmk__str_none)) {
             if (!optional
-                && pcmk_is_set(action->flags, pcmk__action_runnable)) {
+                && pcmk__is_set(action->flags, pcmk__action_runnable)) {
 
                 pcmk__rsc_trace(instance, "Instance is starting due to %s",
                                 action->uuid);
@@ -954,8 +965,9 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
              * is implied rather than actually executed.
              */
             if (!optional
-                && pcmk_any_flags_set(action->flags, pcmk__action_pseudo
-                                                     |pcmk__action_runnable)) {
+                && pcmk__any_flags_set(action->flags,
+                                       pcmk__action_pseudo
+                                       |pcmk__action_runnable)) {
                 pcmk__rsc_trace(instance, "Instance is stopping due to %s",
                                 action->uuid);
                 instance_state |= instance_stopping;
@@ -967,8 +979,8 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
         }
     }
 
-    if (pcmk_all_flags_set(instance_state,
-                           instance_starting|instance_stopping)) {
+    if (pcmk__all_flags_set(instance_state,
+                            instance_starting|instance_stopping)) {
         instance_state |= instance_restarting;
     }
     *state |= instance_state;
@@ -984,7 +996,7 @@ check_instance_state(const pcmk_resource_t *instance, uint32_t *state)
 void
 pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 {
-    uint32_t state = 0;
+    uint32_t state = instance_none;
 
     pcmk_action_t *stop = NULL;
     pcmk_action_t *stopped = NULL;
@@ -1005,25 +1017,25 @@ pcmk__create_instance_actions(pcmk_resource_t *collective, GList *instances)
 
     // Create pseudo-actions for rsc start and started
     start = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_START,
-                                      !pcmk_is_set(state, instance_starting),
+                                      !pcmk__is_set(state, instance_starting),
                                       true);
     started = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_RUNNING,
-                                        !pcmk_is_set(state, instance_starting),
+                                        !pcmk__is_set(state, instance_starting),
                                         false);
     started->priority = PCMK_SCORE_INFINITY;
-    if (pcmk_any_flags_set(state, instance_active|instance_starting)) {
+    if (pcmk__any_flags_set(state, instance_active|instance_starting)) {
         pcmk__set_action_flags(started, pcmk__action_runnable);
     }
 
     // Create pseudo-actions for rsc stop and stopped
     stop = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOP,
-                                     !pcmk_is_set(state, instance_stopping),
+                                     !pcmk__is_set(state, instance_stopping),
                                      true);
     stopped = pe__new_rsc_pseudo_action(collective, PCMK_ACTION_STOPPED,
-                                        !pcmk_is_set(state, instance_stopping),
+                                        !pcmk__is_set(state, instance_stopping),
                                         true);
     stopped->priority = PCMK_SCORE_INFINITY;
-    if (!pcmk_is_set(state, instance_restarting)) {
+    if (!pcmk__is_set(state, instance_restarting)) {
         pcmk__set_action_flags(stop, pcmk__action_migratable);
     }
 
@@ -1073,18 +1085,22 @@ free_instance_list(const pcmk_resource_t *rsc, GList *list)
  * \internal
  * \brief Check whether an instance is compatible with a role and node
  *
- * \param[in] instance  Clone instance or bundle replica container
- * \param[in] node      Instance must match this node
- * \param[in] role      If not pcmk_role_unknown, instance must match this role
- * \param[in] current   If true, compare instance's original node and role,
- *                      otherwise compare assigned next node and role
+ * \param[in] instance       Clone instance or bundle replica container
+ * \param[in] node           Instance must match this node
+ * \param[in] role           If not pcmk_role_unknown, instance must match this role
+ * \param[in] current        If true, compare instance's original node and role,
+ *                           otherwise compare assigned next node and role
+ * \param[in] node_attribute If not NULL, instance's node must have the same value
+ *                           for this attribute as \p node (instead of requiring
+ *                           the exact same node)
  *
  * \return true if \p instance is compatible with \p node and \p role,
  *         otherwise false
  */
 bool
 pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
-                       enum rsc_role_e role, bool current)
+                       enum rsc_role_e role, bool current,
+                       const char *node_attribute)
 {
     pcmk_node_t *instance_node = NULL;
 
@@ -1117,7 +1133,25 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (!pcmk__same_node(instance_node, node)) {
+    if (node_attribute != NULL) {
+        // Compare by node attribute value instead of node identity
+        const char *instance_value = pcmk__colocation_node_attr(instance_node,
+                                                                node_attribute,
+                                                                instance);
+        const char *target_value = pcmk__colocation_node_attr(node,
+                                                              node_attribute,
+                                                              instance);
+
+        if (!pcmk__str_eq(instance_value, target_value, pcmk__str_casei)) {
+            pcmk__rsc_trace(instance,
+                            "%s is not a compatible instance "
+                            "(instance has %s=%s, target node has %s=%s)",
+                            instance->id, node_attribute,
+                            pcmk__s(instance_value, "<none>"),
+                            node_attribute, pcmk__s(target_value, "<none>"));
+            return false;
+        }
+    } else if (!pcmk__same_node(instance_node, node)) {
         pcmk__rsc_trace(instance,
                         "%s is not a compatible instance "
                         "(assigned to %s not %s)",
@@ -1136,12 +1170,14 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
  * \internal
  * \brief Find an instance that matches a given resource by node and role
  *
- * \param[in] match_rsc  Resource that instance must match (for logging only)
- * \param[in] rsc        Clone or bundle resource to check for matching instance
- * \param[in] node       Instance must match this node
- * \param[in] role       If not pcmk_role_unknown, instance must match this role
- * \param[in] current    If true, compare instance's original node and role,
- *                       otherwise compare assigned next node and role
+ * \param[in] match_rsc      Resource that instance must match (for logging only)
+ * \param[in] rsc            Clone or bundle resource to check for matching instance
+ * \param[in] node           Instance must match this node
+ * \param[in] role           If not pcmk_role_unknown, instance must match this role
+ * \param[in] current        If true, compare instance's original node and role,
+ *                           otherwise compare assigned next node and role
+ * \param[in] node_attribute If not NULL, match instances by this node attribute
+ *                           instead of by node identity
  *
  * \return \p rsc instance matching \p node and \p role if any, otherwise NULL
  */
@@ -1149,7 +1185,7 @@ static pcmk_resource_t *
 find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
                                  const pcmk_resource_t *rsc,
                                  const pcmk_node_t *node, enum rsc_role_e role,
-                                 bool current)
+                                 bool current, const char *node_attribute)
 {
     GList *instances = NULL;
 
@@ -1157,7 +1193,8 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
     for (GList *iter = instances; iter != NULL; iter = iter->next) {
         pcmk_resource_t *instance = (pcmk_resource_t *) iter->data;
 
-        if (pcmk__instance_matches(instance, node, role, current)) {
+        if (pcmk__instance_matches(instance, node, role, current,
+                                   node_attribute)) {
             pcmk__rsc_trace(match_rsc,
                             "Found %s %s instance %s compatible with %s on %s",
                             display_role(role), rsc->id, instance->id,
@@ -1179,11 +1216,13 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
  * \internal
  * \brief Find a clone instance or bundle container compatible with a resource
  *
- * \param[in] match_rsc  Resource that instance must match
- * \param[in] rsc        Clone or bundle resource to check for matching instance
- * \param[in] role       If not pcmk_role_unknown, instance must match this role
- * \param[in] current    If true, compare instance's original node and role,
- *                       otherwise compare assigned next node and role
+ * \param[in] match_rsc      Resource that instance must match
+ * \param[in] rsc            Clone or bundle resource to check for matching instance
+ * \param[in] role           If not pcmk_role_unknown, instance must match this role
+ * \param[in] current        If true, compare instance's original node and role,
+ *                           otherwise compare assigned next node and role
+ * \param[in] node_attribute If not NULL, match instances by this node attribute
+ *                           instead of by node identity
  *
  * \return Compatible (by \p role and \p match_rsc location) instance of \p rsc
  *         if any, otherwise NULL
@@ -1191,7 +1230,7 @@ find_compatible_instance_on_node(const pcmk_resource_t *match_rsc,
 pcmk_resource_t *
 pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
                                const pcmk_resource_t *rsc, enum rsc_role_e role,
-                               bool current)
+                               bool current, const char *node_attribute)
 {
     pcmk_resource_t *instance = NULL;
     GList *nodes = NULL;
@@ -1207,7 +1246,7 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
     node = match_rsc->priv->fns->location(match_rsc, NULL, target);
     if (node != NULL) {
         return find_compatible_instance_on_node(match_rsc, rsc, node, role,
-                                                current);
+                                                current, node_attribute);
     }
 
     // Otherwise check for an instance matching any of match_rsc's allowed nodes
@@ -1216,7 +1255,8 @@ pcmk__find_compatible_instance(const pcmk_resource_t *match_rsc,
          iter = iter->next) {
         instance = find_compatible_instance_on_node(match_rsc, rsc,
                                                     (pcmk_node_t *) iter->data,
-                                                    role, current);
+                                                    role, current,
+                                                    node_attribute);
     }
 
     if (instance == NULL) {
@@ -1254,8 +1294,9 @@ unassign_if_mandatory(const pcmk_action_t *first, const pcmk_action_t *then,
     /* If the "first" action must be runnable, but there is no "first"
      * instance, the "then" instance must not be allowed to come up.
      */
-    } else if (pcmk_any_flags_set(type, pcmk__ar_unrunnable_first_blocks
-                                        |pcmk__ar_first_implies_then)) {
+    } else if (pcmk__any_flags_set(type,
+                                   pcmk__ar_unrunnable_first_blocks
+                                   |pcmk__ar_first_implies_then)) {
         pcmk__rsc_info(then->rsc,
                        "Inhibiting %s from being active "
                        "because there is no %s instance to interleave",
@@ -1325,15 +1366,19 @@ find_instance_action(const pcmk_action_t *action, const pcmk_resource_t *instanc
         return matching_action;
     }
 
-    if (pcmk_is_set(instance->flags, pcmk__rsc_removed)
+    if (pcmk__is_set(instance->flags, pcmk__rsc_removed)
         || pcmk__is_down_action(action_name)) {
-        crm_trace("No %s action found for %s%s",
-                  action_name,
-                  pcmk_is_set(instance->flags, pcmk__rsc_removed)? "orphan " : "",
-                  instance->id);
+
+        const bool removed = pcmk__is_set(instance->flags, pcmk__rsc_removed);
+
+        pcmk__trace("No %s action found for %s%s", action_name,
+                    (removed? "removed " : ""), instance->id);
+
+    } else if (pcmk__is_down_action(action_name)) {
+        pcmk__trace("No %s action found for %s", action_name, instance->id);
     } else {
-        crm_err("No %s action found for %s to interleave (bug?)",
-                action_name, instance->id);
+        pcmk__err("No %s action found for %s to interleave (bug?)",
+                  action_name, instance->id);
     }
     return NULL;
 }
@@ -1406,9 +1451,11 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
     const char *orig_first_task = orig_action_name(first);
 
     // Stops and demotes must be interleaved with instance on current node
-    bool current = pcmk__ends_with(first->uuid, "_" PCMK_ACTION_STOPPED "_0")
-                   || pcmk__ends_with(first->uuid,
-                                      "_" PCMK_ACTION_DEMOTED "_0");
+    bool current = (first->uuid != NULL)
+                   && (g_str_has_suffix(first->uuid,
+                                        "_" PCMK_ACTION_STOPPED "_0")
+                       || g_str_has_suffix(first->uuid,
+                                           "_" PCMK_ACTION_DEMOTED "_0"));
 
     // Update the specified actions for each "then" instance individually
     instances = get_instance_list(then->rsc);
@@ -1423,7 +1470,7 @@ update_interleaved_actions(pcmk_action_t *first, pcmk_action_t *then,
         first_instance = pcmk__find_compatible_instance(then_instance,
                                                         first->rsc,
                                                         pcmk_role_unknown,
-                                                        current);
+                                                        current, NULL);
 
         if (first_instance == NULL) { // No instance can be interleaved
             if (unassign_if_mandatory(first, then, then_instance, type,
@@ -1475,33 +1522,33 @@ can_interleave_actions(const pcmk_action_t *first, const pcmk_action_t *then)
     pcmk_resource_t *rsc = NULL;
 
     if ((first->rsc == NULL) || (then->rsc == NULL)) {
-        crm_trace("Not interleaving %s with %s: not resource actions",
-                  first->uuid, then->uuid);
+        pcmk__trace("Not interleaving %s with %s: not resource actions",
+                    first->uuid, then->uuid);
         return false;
     }
 
     if (first->rsc == then->rsc) {
-        crm_trace("Not interleaving %s with %s: same resource",
-                  first->uuid, then->uuid);
+        pcmk__trace("Not interleaving %s with %s: same resource",
+                    first->uuid, then->uuid);
         return false;
     }
 
     if ((first->rsc->priv->variant < pcmk__rsc_variant_clone)
         || (then->rsc->priv->variant < pcmk__rsc_variant_clone)) {
-        crm_trace("Not interleaving %s with %s: not clones or bundles",
-                  first->uuid, then->uuid);
+        pcmk__trace("Not interleaving %s with %s: not clones or bundles",
+                    first->uuid, then->uuid);
         return false;
     }
 
-    if (pcmk__ends_with(then->uuid, "_stop_0")
-        || pcmk__ends_with(then->uuid, "_demote_0")) {
+    if (g_str_has_suffix(then->uuid, "_stop_0")
+        || g_str_has_suffix(then->uuid, "_demote_0")) {
         rsc = first->rsc;
     } else {
         rsc = then->rsc;
     }
 
-    interleave = crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                                 PCMK_META_INTERLEAVE));
+    interleave = pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
+                                                   PCMK_META_INTERLEAVE));
     pcmk__rsc_trace(rsc, "'%s then %s' will %sbe interleaved (based on %s)",
                     first->uuid, then->uuid, (interleave? "" : "not "),
                     rsc->id);
@@ -1549,7 +1596,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
 
     // Check whether action is runnable
     instance_flags = instance->priv->cmds->action_flags(instance_action, node);
-    if (!pcmk_is_set(instance_flags, pcmk__action_runnable)) {
+    if (!pcmk__is_set(instance_flags, pcmk__action_runnable)) {
         return changed;
     }
 
@@ -1560,7 +1607,7 @@ update_noninterleaved_actions(pcmk_resource_t *instance, pcmk_action_t *first,
                                                            type, scheduler);
 
     // Propagate any changes to later actions
-    if (pcmk_is_set(changed, pcmk__updated_then)) {
+    if (pcmk__is_set(changed, pcmk__updated_then)) {
         for (GList *after_iter = instance_action->actions_after;
              after_iter != NULL; after_iter = after_iter->next) {
             pcmk__related_action_t *after = after_iter->data;
@@ -1684,8 +1731,8 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
                                                             node);
 
         // If any instance action is mandatory, so is the collective action
-        if (pcmk_is_set(flags, pcmk__action_optional)
-            && !pcmk_is_set(instance_flags, pcmk__action_optional)) {
+        if (pcmk__is_set(flags, pcmk__action_optional)
+            && !pcmk__is_set(instance_flags, pcmk__action_optional)) {
             pcmk__rsc_trace(instance, "%s is mandatory because %s is",
                             action->uuid, instance_action->uuid);
             pe__clear_action_summary_flags(flags, action,
@@ -1694,7 +1741,7 @@ pcmk__collective_action_flags(pcmk_action_t *action, const GList *instances,
         }
 
         // If any instance action is runnable, so is the collective action
-        if (pcmk_is_set(instance_flags, pcmk__action_runnable)) {
+        if (pcmk__is_set(instance_flags, pcmk__action_runnable)) {
             any_runnable = true;
         }
     }

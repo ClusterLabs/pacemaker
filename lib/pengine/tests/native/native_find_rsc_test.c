@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/common/unittest_internal.h>
 #include <crm/common/scheduler.h>
 #include <crm/common/xml.h>
@@ -29,7 +31,7 @@ setup(void **state) {
 
     pcmk__xml_test_setup_group(state);
 
-    path = crm_strdup_printf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
+    path = pcmk__assert_asprintf("%s/crm_mon.xml", getenv("PCMK_CTS_CLI_DIR"));
     input = pcmk__xml_read(path);
     free(path);
 
@@ -96,11 +98,11 @@ bad_args(void **state) {
     assert_null(native_find_rsc(rsc, NULL, NULL, 0));
 
     /* No resources exist with these names. */
-    name = crm_strdup_printf("%sX", rsc->id);
+    name = pcmk__assert_asprintf("%sX", rsc->id);
     assert_null(native_find_rsc(rsc, name, NULL, 0));
     free(name);
 
-    name = crm_strdup_printf("x%s", rsc->id);
+    name = pcmk__assert_asprintf("x%s", rsc->id);
     assert_null(native_find_rsc(rsc, name, NULL, 0));
     free(name);
 

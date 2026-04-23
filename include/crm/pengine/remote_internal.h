@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
 #define PCMK__CRM_PENGINE_REMOTE_INTERNAL__H
+
+#include <stdbool.h>
 
 #include <glib.h>                   // gboolean
 #include <libxml/tree.h>            // xmlNode

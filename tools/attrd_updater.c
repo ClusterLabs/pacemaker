@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <unistd.h>
 #include <stdlib.h>
@@ -19,14 +20,8 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/ipc_attrd_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/xml_internal.h>
 
-#include <crm/common/attrs_internal.h>
-
-#include <pcmki/pcmki_output.h>
+#include <pacemaker-internal.h>
 
 #define SUMMARY "query and update Pacemaker node attributes"
 
@@ -318,7 +313,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

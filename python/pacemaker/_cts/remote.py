@@ -1,7 +1,7 @@
 """Remote command runner for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["RemoteExec", "RemoteFactory"]
-__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -10,7 +10,7 @@ import os
 from subprocess import Popen, PIPE
 from threading import Thread
 
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 
 
 def convert2string(lines):
@@ -54,7 +54,6 @@ class AsyncCmd(Thread):
         """
         self._command = command
         self._delegate = delegate
-        self._logger = LogFactory()
         self._node = node
         self._proc = proc
 
@@ -69,20 +68,20 @@ class AsyncCmd(Thread):
             # pylint: disable=consider-using-with
             self._proc = Popen(self._command, stdout=PIPE, stderr=PIPE, close_fds=True, shell=True)
 
-        self._logger.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
+        logging.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
         self._proc.wait()
 
         if self._delegate:
-            self._logger.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode} to {self._delegate!r}")
+            logging.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode} to {self._delegate!r}")
         else:
-            self._logger.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode}")
+            logging.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode}")
 
         if self._proc.stderr:
             err = self._proc.stderr.readlines()
             self._proc.stderr.close()
 
             for line in err:
-                self._logger.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
+                logging.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
 
             err = convert2string(err)
 
@@ -111,9 +110,8 @@ class RemoteExec:
         cp_command -- The scp command string to use for copying files
         silent     -- Should we log command status?
         """
-        self._command = command
-        self._cp_command = cp_command
-        self._logger = LogFactory()
+        self.command = command
+        self.cp_command = cp_command
         self._silent = silent
         self._our_node = os.uname()[1].lower()
 
@@ -129,19 +127,19 @@ class RemoteExec:
         if sysname is None or sysname.lower() in [self._our_node, "localhost"]:
             ret = command
         else:
-            ret = f"{self._command} {sysname} '{self._fixcmd(command)}'"
+            ret = f"{self.command} {sysname} '{self._fixcmd(command)}'"
 
         return ret
 
     def _log(self, args):
         """Log a message."""
         if not self._silent:
-            self._logger.log(args)
+            logging.log(args)
 
     def _debug(self, args):
         """Log a message at the debug level."""
         if not self._silent:
-            self._logger.debug(args)
+            logging.debug(args)
 
     def call_async(self, node, command, delegate=None):
         """
@@ -170,7 +168,7 @@ class RemoteExec:
         node        -- The remote machine to run on
         command     -- The command to run, as a string
         synchronous -- Should we wait for the command to complete?
-        verbose     -- If 0, do not lo:g anything.  If 1, log the command and its
+        verbose     -- If 0, do not log anything.  If 1, log the command and its
                        return code but not its output.  If 2, additionally log
                        command output.
 
@@ -223,8 +221,8 @@ class RemoteExec:
         Returns the return code of the cp_command.
         """
         # @TODO Use subprocess module with argument array instead
-        # (self._cp_command should be an array too)
-        cmd = f"{self._cp_command} '{source}' '{target}'"
+        # (self.cp_command should be an array too)
+        cmd = f"{self.cp_command} '{source}' '{target}'"
         rc = os.system(cmd)
 
         if not silent:
@@ -235,8 +233,17 @@ class RemoteExec:
     def exists_on_all(self, filename, hosts):
         """Return True if specified file exists on all specified hosts."""
         for host in hosts:
-            rc = self(host, f"test -r {filename}")
+            (rc, _) = self(host, f"test -r {filename}")
             if rc != 0:
+                return False
+
+        return True
+
+    def exists_on_none(self, filename, hosts):
+        """Return True if specified file does not exist on any specified host."""
+        for host in hosts:
+            (rc, _) = self(host, f"test -r {filename}")
+            if rc == 0:
                 return False
 
         return True
@@ -271,11 +278,3 @@ class RemoteFactory:
                                                 RemoteFactory.cp_command,
                                                 False)
         return RemoteFactory.instance
-
-    def enable_qarsh(self):
-        """Enable the QA remote shell."""
-        # http://nstraz.wordpress.com/2008/12/03/introducing-qarsh/
-        print("Using QARSH for connections to cluster nodes")
-
-        RemoteFactory.command = "qarsh -t 300 -l root"
-        RemoteFactory.cp_command = "qacp -q"

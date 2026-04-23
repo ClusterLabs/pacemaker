@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,6 +17,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <ctype.h>
+
+#include <glib.h>		// g_str_has_prefix()
 
 #if HAVE_LINUX_PROCFS
 /*!
@@ -33,7 +36,10 @@ find_cib_loadfile(const char *server)
 {
     pid_t pid = pcmk__procfs_pid_of(server);
 
-    return pid? crm_strdup_printf("/proc/%lld/stat", (long long) pid) : NULL;
+    if (pid == 0) {
+        return NULL;
+    }
+    return pcmk__assert_asprintf("/proc/%lld/stat", (long long) pid);
 }
 
 /*!
@@ -134,7 +140,8 @@ pcmk__procfs_pid_of(const char *name)
 
     dp = opendir("/proc");
     if (dp == NULL) {
-        crm_notice("Can not read /proc directory to track existing components");
+        pcmk__notice("Can not read /proc directory to track existing "
+                     "components");
         return 0;
     }
 
@@ -143,7 +150,8 @@ pcmk__procfs_pid_of(const char *name)
             && pcmk__str_eq(entry_name, name, pcmk__str_casei)
             && (pcmk__pid_active(pid, NULL) == pcmk_rc_ok)) {
 
-            crm_info("Found %s active as process %lld", name, (long long) pid);
+            pcmk__info("Found %s active as process %lld", name,
+                       (long long) pid);
             break;
         }
         pid = 0;
@@ -171,12 +179,13 @@ pcmk__procfs_num_cores(void)
     /* Parse /proc/stat instead of /proc/cpuinfo because it's smaller */
     stream = fopen("/proc/stat", "r");
     if (stream == NULL) {
-        crm_perror(LOG_INFO, "Could not open /proc/stat");
+        pcmk__info("Could not open /proc/stat: %s", strerror(errno));
+
     } else {
         char buffer[2048];
 
         while (fgets(buffer, sizeof(buffer), stream)) {
-            if (pcmk__starts_with(buffer, "cpu") && isdigit(buffer[3])) {
+            if (g_str_has_prefix(buffer, "cpu") && isdigit(buffer[3])) {
                 ++cores;
             }
         }
@@ -192,33 +201,46 @@ pcmk__procfs_num_cores(void)
  * \internal
  * \brief Get the executable path corresponding to a process ID
  *
- * \param[in]  pid        Process ID to check
- * \param[out] path       Where to store executable path
- * \param[in]  path_size  Size of \p path in characters (ideally PATH_MAX)
+ * \param[in]  pid   Process ID to check
+ * \param[out] path  Where to store executable path (can be \c NULL)
  *
  * \return Standard Pacemaker error code (as possible errno values from
  *         readlink())
  */
 int
-pcmk__procfs_pid2path(pid_t pid, char path[], size_t path_size)
+pcmk__procfs_pid2path(pid_t pid, char **path)
 {
 #if HAVE_LINUX_PROCFS
-    char procfs_exe_path[PATH_MAX];
+    char *procfs_path = NULL;
     ssize_t link_rc;
 
-    if (snprintf(procfs_exe_path, PATH_MAX, "/proc/%lld/exe",
-                 (long long) pid) >= PATH_MAX) {
-        return ENAMETOOLONG; // Truncated (shouldn't be possible in practice)
-    }
+    /* The readlink(2) man page recommends calling lstat() to get the required
+     * buffer size, and then dynamically allocate the buffer. However,
+     * st_size == 0 for symlinks under /proc. So we use PATH_MAX.
+     */
+    char real_path[PATH_MAX] = { '\0', };
 
-    link_rc = readlink(procfs_exe_path, path, path_size - 1);
+    pcmk__assert((path == NULL) || (*path == NULL));
+
+    procfs_path = pcmk__assert_asprintf("/proc/%lld/exe", (long long) pid);
+
+    link_rc = readlink(procfs_path, real_path, sizeof(real_path));
+    free(procfs_path);
+
     if (link_rc < 0) {
         return errno;
-    } else if (link_rc >= (path_size - 1)) {
+    } else if (link_rc >= sizeof(real_path)) {
         return ENAMETOOLONG;
     }
 
-    path[link_rc] = '\0';
+    if (path != NULL) {
+        /* Make Coverity happy; we already zero-initialized real_path, and we
+         * returned ENAMETOOLONG if it's no longer null-terminated
+         */
+        real_path[link_rc] = '\0';
+
+        *path = pcmk__str_copy(real_path);
+    }
     return pcmk_rc_ok;
 #else
     return EOPNOTSUPP;
@@ -239,9 +261,7 @@ pcmk__procfs_has_pids(void)
     static bool checked = false;
 
     if (!checked) {
-        char path[PATH_MAX];
-
-        have_pids = pcmk__procfs_pid2path(getpid(), path, sizeof(path)) == pcmk_rc_ok;
+        have_pids = pcmk__procfs_pid2path(getpid(), NULL) == pcmk_rc_ok;
         checked = true;
     }
     return have_pids;
@@ -286,7 +306,7 @@ pcmk__sysrq_trigger(char t)
     FILE *procf = fopen("/proc/sysrq-trigger", "a");
 
     if (procf == NULL) {
-        crm_warn("Could not open sysrq-trigger: %s", strerror(errno));
+        pcmk__warn("Could not open sysrq-trigger: %s", strerror(errno));
     } else {
         fprintf(procf, "%c\n", t);
         fclose(procf);
@@ -363,26 +383,25 @@ pcmk__throttle_cib_load(const char *server, float *load)
 
         loadfile = find_cib_loadfile(server);
         if (loadfile == NULL) {
-            crm_warn("Couldn't find CIB load file");
+            pcmk__warn("Couldn't find CIB load file");
             return false;
         }
 
         ticks_per_s = sysconf(_SC_CLK_TCK);
-        crm_trace("Found %s", loadfile);
+        pcmk__trace("Found %s", loadfile);
     }
 
     stream = fopen(loadfile, "r");
     if (stream == NULL) {
         int rc = errno;
 
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
-        free(loadfile);
-        loadfile = NULL;
+        pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        g_clear_pointer(&loadfile, free);
         return false;
     }
 
     if (fgets(buffer, sizeof(buffer), stream) != NULL) {
-        char *comm = pcmk__assert_alloc(1, 256);
+        char *comm = pcmk__assert_alloc(256, sizeof(char));
         char state = 0;
         int rc = 0, pid = 0, ppid = 0, pgrp = 0, session = 0, tty_nr = 0, tpgid = 0;
         unsigned long flags = 0, minflt = 0, cminflt = 0, majflt = 0, cmajflt = 0, utime = 0, stime = 0;
@@ -393,7 +412,7 @@ pcmk__throttle_cib_load(const char *server, float *load)
         free(comm);
 
         if (rc != 15) {
-            crm_err("Only %d of 15 fields found in %s", rc, loadfile);
+            pcmk__err("Only %d of 15 fields found in %s", rc, loadfile);
             fclose(stream);
             return false;
 
@@ -406,12 +425,12 @@ pcmk__throttle_cib_load(const char *server, float *load)
             *load = delta_utime + delta_stime; /* Cast to a float before division */
             *load /= ticks_per_s;
             *load /= elapsed;
-            crm_debug("cib load: %f (%lu ticks in %lds)", *load,
-                      delta_utime + delta_stime, (long) elapsed);
+            pcmk__debug("cib load: %f (%lu ticks in %llds)", *load,
+                        (delta_utime + delta_stime), (long long) elapsed);
 
         } else {
-            crm_debug("Init %lu + %lu ticks at %ld (%lu tps)", utime, stime,
-                      (long) now, ticks_per_s);
+            pcmk__debug("Init %lu + %lu ticks at %lld (%lu tps)", utime, stime,
+                        (long long) now, ticks_per_s);
         }
 
         last_call = now;
@@ -442,19 +461,13 @@ pcmk__throttle_load_avg(float *load)
     stream = fopen(loadfile, "r");
     if (stream == NULL) {
         int rc = errno;
-        crm_warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
+        pcmk__warn("Couldn't read %s: %s (%d)", loadfile, pcmk_rc_str(rc), rc);
         return false;
     }
 
     if (fgets(buffer, sizeof(buffer), stream) != NULL) {
-        char *nl = strstr(buffer, "\n");
-
         /* Grab the 1-minute average, ignore the rest */
         *load = strtof(buffer, NULL);
-        if (nl != NULL) {
-            nl[0] = 0;
-        }
-
         fclose(stream);
         return true;
     }

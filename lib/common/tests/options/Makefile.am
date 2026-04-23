@@ -1,5 +1,5 @@
 #
-# Copyright 2022-2024 the Pacemaker project contributors
+# Copyright 2022-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,8 +12,8 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__env_option_test 		\
-		 pcmk__set_env_option_test 	\
-		 pcmk__env_option_enabled_test
+check_PROGRAMS = pcmk__env_option_test
+check_PROGRAMS += pcmk__set_env_option_test
+check_PROGRAMS += pcmk__env_option_enabled_test
 
 TESTS = $(check_PROGRAMS)

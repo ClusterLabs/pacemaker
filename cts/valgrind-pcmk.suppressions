@@ -23,7 +23,6 @@
    Bash reader_loop leaks
    Memcheck:Leak
    fun:malloc
-   fun:xmalloc
    ...
    fun:reader_loop
    fun:main
@@ -348,4 +347,18 @@
    ...
    fun:call_init
    fun:_dl_init
+}
+
+{
+   glib - iconv
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   ...
+   fun:g_convert_with_iconv
+   fun:g_convert
+   ...
+   fun:g_option_context_parse
+   fun:g_option_context_parse_strv
+   fun:main
 }

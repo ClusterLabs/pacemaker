@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,8 +20,8 @@ EXTRA_DIST 	= pacemakerd.8.inc
 
 ## SOURCES
 
-noinst_HEADERS		= pacemakerd.h \
-			  pcmkd_corosync.h
+noinst_HEADERS = pacemakerd.h
+noinst_HEADERS += pcmkd_corosync.h
 
 pacemakerd_CFLAGS	= $(CFLAGS_HARDENED_EXE)
 pacemakerd_LDFLAGS	= $(LDFLAGS_HARDENED_EXE)
@@ -34,6 +34,7 @@ pacemakerd_SOURCES	= pacemakerd.c
 if BUILD_CS_SUPPORT
 pacemakerd_SOURCES	+= pcmkd_corosync.c
 endif
+pacemakerd_SOURCES	+= pcmkd_ipc.c
 pacemakerd_SOURCES	+= pcmkd_messages.c
 pacemakerd_SOURCES	+= pcmkd_subdaemons.c
 

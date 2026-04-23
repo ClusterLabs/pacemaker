@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,13 +17,11 @@
 static void
 destroy_fn1(gpointer arg)
 {
-    return;
 }
 
 static void
 destroy_fn2(gpointer arg)
 {
-    return;
 }
 
 static void

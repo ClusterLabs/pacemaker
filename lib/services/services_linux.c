@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                    // bool, true, false
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/wait.h>
@@ -26,6 +27,8 @@
 #include "crm/services_internal.h"
 
 #include "services_private.h"
+
+static const char *filter_dir = NULL;
 
 static void close_pipe(int fildes[]);
 
@@ -61,8 +64,9 @@ sigchld_setup(struct sigchld_data_s *data)
 
     // Block SIGCHLD (saving previous set of blocked signals to restore later)
     if (sigprocmask(SIG_BLOCK, &(data->mask), &(data->old_mask)) < 0) {
-        crm_info("Wait for child process completion failed: %s "
-                 QB_XS " source=sigprocmask", pcmk_rc_str(errno));
+        pcmk__info("Wait for child process completion failed: %s "
+                   QB_XS " source=sigprocmask",
+                   pcmk_rc_str(errno));
         return false;
     }
 
@@ -81,8 +85,9 @@ sigchld_open(struct sigchld_data_s *data)
 
     fd = signalfd(-1, &(data->mask), SFD_NONBLOCK);
     if (fd < 0) {
-        crm_info("Wait for child process completion failed: %s "
-                 QB_XS " source=signalfd", pcmk_rc_str(errno));
+        pcmk__info("Wait for child process completion failed: %s "
+                   QB_XS " source=signalfd",
+                   pcmk_rc_str(errno));
     }
     return fd;
 }
@@ -108,8 +113,9 @@ sigchld_received(int fd, int pid, struct sigchld_data_s *data)
     }
     s = read(fd, &fdsi, sizeof(struct signalfd_siginfo));
     if (s != sizeof(struct signalfd_siginfo)) {
-        crm_info("Wait for child process completion failed: %s "
-                 QB_XS " source=read", pcmk_rc_str(errno));
+        pcmk__info("Wait for child process completion failed: %s "
+                   QB_XS " source=read",
+                   pcmk_rc_str(errno));
 
     } else if (fdsi.ssi_signo == SIGCHLD) {
         if (fdsi.ssi_pid == pid) {
@@ -135,14 +141,14 @@ sigchld_cleanup(struct sigchld_data_s *data)
     // Restore the original set of blocked signals
     if ((sigismember(&(data->old_mask), SIGCHLD) == 0)
         && (sigprocmask(SIG_UNBLOCK, &(data->mask), NULL) < 0)) {
-        crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not clean up after child process completion: %s",
+                   pcmk_rc_str(errno));
     }
 
     // Resend any ignored SIGCHLD for other children so that they'll be handled.
     if (data->ignored && kill(getpid(), SIGCHLD) != 0) {
-        crm_warn("Could not resend ignored SIGCHLD to ourselves: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not resend ignored SIGCHLD to ourselves: %s",
+                   pcmk_rc_str(errno));
     }
 }
 
@@ -167,8 +173,9 @@ sigchld_handler(void)
     if ((last_sigchld_data != NULL)
         && (last_sigchld_data->pipe_fd[1] >= 0)
         && (write(last_sigchld_data->pipe_fd[1], "", 1) == -1)) {
-        crm_info("Wait for child process completion failed: %s "
-                 QB_XS " source=write", pcmk_rc_str(errno));
+        pcmk__info("Wait for child process completion failed: %s "
+                   QB_XS " source=write",
+                   pcmk_rc_str(errno));
     }
 }
 
@@ -180,20 +187,21 @@ sigchld_setup(struct sigchld_data_s *data)
     data->pipe_fd[0] = data->pipe_fd[1] = -1;
 
     if (pipe(data->pipe_fd) == -1) {
-        crm_info("Wait for child process completion failed: %s "
-                 QB_XS " source=pipe", pcmk_rc_str(errno));
+        pcmk__info("Wait for child process completion failed: %s "
+                   QB_XS " source=pipe",
+                   pcmk_rc_str(errno));
         return false;
     }
 
     rc = pcmk__set_nonblocking(data->pipe_fd[0]);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not set pipe input non-blocking: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__info("Could not set pipe input non-blocking: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
     }
     rc = pcmk__set_nonblocking(data->pipe_fd[1]);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not set pipe output non-blocking: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__info("Could not set pipe output non-blocking: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
     }
 
     // Set SIGCHLD handler
@@ -201,8 +209,9 @@ sigchld_setup(struct sigchld_data_s *data)
     data->sa.sa_flags = 0;
     sigemptyset(&(data->sa.sa_mask));
     if (sigaction(SIGCHLD, &(data->sa), &(data->old_sa)) < 0) {
-        crm_info("Wait for child process completion failed: %s "
-                 QB_XS " source=sigaction", pcmk_rc_str(errno));
+        pcmk__info("Wait for child process completion failed: %s "
+                   QB_XS " source=sigaction",
+                   pcmk_rc_str(errno));
     }
 
     data->ignored = false;
@@ -223,7 +232,6 @@ static void
 sigchld_close(int fd)
 {
     // Pipe will be closed in sigchld_cleanup()
-    return;
 }
 
 static bool
@@ -245,16 +253,16 @@ sigchld_cleanup(struct sigchld_data_s *data)
 {
     // Restore the previous SIGCHLD handler
     if (sigaction(SIGCHLD, &(data->old_sa), NULL) < 0) {
-        crm_warn("Could not clean up after child process completion: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not clean up after child process completion: %s",
+                   pcmk_rc_str(errno));
     }
 
     close_pipe(data->pipe_fd);
 
     // Resend any ignored SIGCHLD for other children so that they'll be handled.
     if (data->ignored && kill(getpid(), SIGCHLD) != 0) {
-        crm_warn("Could not resend ignored SIGCHLD to ourselves: %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not resend ignored SIGCHLD to ourselves: %s",
+                   pcmk_rc_str(errno));
     }
 }
 
@@ -295,22 +303,22 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     static const size_t buf_read_len = sizeof(buf) - 1;
 
     if (fd < 0) {
-        crm_trace("No fd for %s", op->id);
+        pcmk__trace("No fd for %s", op->id);
         return FALSE;
     }
 
     if (is_stderr && op->stderr_data) {
         len = strlen(op->stderr_data);
         data = op->stderr_data;
-        crm_trace("Reading %s stderr into offset %zu", op->id, len);
+        pcmk__trace("Reading %s stderr into offset %zu", op->id, len);
 
     } else if (is_stderr == FALSE && op->stdout_data) {
         len = strlen(op->stdout_data);
         data = op->stdout_data;
-        crm_trace("Reading %s stdout into offset %zu", op->id, len);
+        pcmk__trace("Reading %s stdout into offset %zu", op->id, len);
 
     } else {
-        crm_trace("Reading %s %s", op->id, out_type(is_stderr));
+        pcmk__trace("Reading %s %s", op->id, out_type(is_stderr));
     }
 
     do {
@@ -319,8 +327,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
         if (rc > 0) {
             if (len < MAX_OUTPUT) {
                 buf[rc] = 0;
-                crm_trace("Received %zd bytes of %s %s: %.80s",
-                          rc, op->id, out_type(is_stderr), buf);
+                pcmk__trace("Received %zd bytes of %s %s: %.80s", rc, op->id,
+                            out_type(is_stderr), buf);
                 data = pcmk__realloc(data, len + rc + 1);
                 strcpy(data + len, buf);
                 len += rc;
@@ -335,8 +343,8 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
     } while ((rc == buf_read_len) || (rc < 0));
 
     if (discarded > 0) {
-        crm_warn("Truncated %s %s to %zu bytes (discarded %zu)",
-                 op->id, out_type(is_stderr), len, discarded);
+        pcmk__warn("Truncated %s %s to %zu bytes (discarded %zu)", op->id,
+                   out_type(is_stderr), len, discarded);
     }
 
     if (is_stderr) {
@@ -369,7 +377,7 @@ pipe_out_done(gpointer user_data)
 {
     svc_action_t *op = (svc_action_t *) user_data;
 
-    crm_trace("%p", op);
+    pcmk__trace("%p", op);
 
     op->opaque->stdout_gsource = NULL;
     if (op->opaque->stdout_fd > STDOUT_FILENO) {
@@ -403,18 +411,29 @@ static struct mainloop_fd_callbacks stderr_callbacks = {
 static void
 set_ocf_env(const char *key, const char *value, gpointer user_data)
 {
+    // @FIXME @COMPAT This seems like it should be a fatal error
     if (setenv(key, value, 1) != 0) {
-        crm_perror(LOG_ERR, "setenv failed for key:%s and value:%s", key, value);
+        int rc = errno;
+
+        pcmk__err("setenv failed for key='%s' and value='%s': %s",
+                  pcmk__s(key, ""), pcmk__s(value, ""), strerror(rc));
     }
 }
 
 static void
 set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 {
-    char buffer[500];
+    const char *ckey = key;
 
-    snprintf(buffer, sizeof(buffer), strcmp(key, "OCF_CHECK_LEVEL") != 0 ? "OCF_RESKEY_%s" : "%s", (char *)key);
-    set_ocf_env(buffer, value, user_data);
+    if (pcmk__str_eq(ckey, "OCF_CHECK_LEVEL", pcmk__str_none)) {
+        set_ocf_env(ckey, value, user_data);
+
+    } else {
+        char *buffer = pcmk__assert_asprintf("OCF_RESKEY_%s", ckey);
+
+        set_ocf_env(buffer, value, user_data);
+        free(buffer);
+    }
 }
 
 static void
@@ -429,10 +448,24 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
     }
 
     if (rc < 0) {
-        crm_perror(LOG_ERR, "setenv %s=%s",
-                  (char*)key, (value? (char*)value : ""));
+        // @FIXME @COMPAT This seems like it should be a fatal error
+        rc = errno;
+
+        if (value != NULL) {
+            pcmk__err("setenv %s='%s' failed: %s", (const char *) key,
+                      (const char *) value, strerror(rc));
+        } else {
+            pcmk__err("unsetenv %s failed: %s", (const char *) key,
+                      strerror(rc));
+        }
+
     } else {
-        crm_trace("setenv %s=%s", (char*)key, (value? (char*)value : ""));
+        if (value != NULL) {
+            pcmk__trace("setenv %s='%s'", (const char *) key,
+                        (const char *) value);
+        } else {
+            pcmk__trace("unsetenv %s", (const char *) key);
+        }
     }
 }
 
@@ -484,7 +517,8 @@ static void
 pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
 {
     svc_action_t *op = user_data;
-    char *buffer = crm_strdup_printf("%s=%s\n", (char *)key, (char *) value);
+    char *buffer = pcmk__assert_asprintf("%s=%s\n", (const char *) key,
+                                         (const char *) value);
     size_t len = strlen(buffer);
     size_t total = 0;
     ssize_t ret = 0;
@@ -518,13 +552,11 @@ recurring_action_timer(gpointer data)
 {
     svc_action_t *op = data;
 
-    crm_debug("Scheduling another invocation of %s", op->id);
+    pcmk__debug("Scheduling another invocation of %s", op->id);
 
     /* Clean out the old result */
-    free(op->stdout_data);
-    op->stdout_data = NULL;
-    free(op->stderr_data);
-    op->stderr_data = NULL;
+    g_clear_pointer(&op->stdout_data, free);
+    g_clear_pointer(&op->stderr_data, free);
     op->opaque->repeat_timer = 0;
 
     services_action_async(op, NULL);
@@ -607,8 +639,8 @@ finish_op_output(svc_action_t *op, bool is_stderr)
     }
 
     if (op->synchronous || *source) {
-        crm_trace("Finish reading %s[%d] %s",
-                  op->id, op->pid, (is_stderr? "stderr" : "stdout"));
+        pcmk__trace("Finish reading %s[%d] %s", op->id, op->pid,
+                    (is_stderr? "stderr" : "stdout"));
         svc_read_output(fd, op, is_stderr);
         if (op->synchronous) {
             close(fd);
@@ -623,7 +655,8 @@ finish_op_output(svc_action_t *op, bool is_stderr)
 static void
 log_op_output(svc_action_t *op)
 {
-    char *prefix = crm_strdup_printf("%s[%d] error output", op->id, op->pid);
+    char *prefix = pcmk__assert_asprintf("%s[%d] error output", op->id,
+                                         op->pid);
 
     /* The library caller has better context to know how important the output
      * is, so log it at info and debug severity here. They can log it again at
@@ -635,15 +668,10 @@ log_op_output(svc_action_t *op)
     free(prefix);
 }
 
-// Truncate exit reasons at this many characters
-#define EXIT_REASON_MAX_LEN 128
-
 static void
 parse_exit_reason_from_stderr(svc_action_t *op)
 {
-    const char *reason_start = NULL;
-    const char *reason_end = NULL;
-    const int prefix_len = strlen(PCMK_OCF_REASON_PREFIX);
+    const char *reason = NULL;
 
     if ((op->stderr_data == NULL) ||
         // Only OCF agents have exit reasons in stderr
@@ -652,31 +680,21 @@ parse_exit_reason_from_stderr(svc_action_t *op)
     }
 
     // Find the last occurrence of the magic string indicating an exit reason
-    for (const char *cur = strstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
-         cur != NULL; cur = strstr(cur, PCMK_OCF_REASON_PREFIX)) {
+    reason = g_strrstr(op->stderr_data, PCMK_OCF_REASON_PREFIX);
 
-        cur += prefix_len; // Skip over magic string
-        reason_start = cur;
+    if (reason != NULL) {
+        // Skip over the magic string itself
+        reason += sizeof(PCMK_OCF_REASON_PREFIX) - 1;
     }
 
-    if ((reason_start == NULL) || (reason_start[0] == '\n')
-        || (reason_start[0] == '\0')) {
-        return; // No or empty exit reason
+    if (pcmk__str_empty(reason) || (reason[0] == '\n')) {
+        // No exit reason or empty exit reason
+        return;
     }
 
     // Exit reason goes to end of line (or end of output)
-    reason_end = strchr(reason_start, '\n');
-    if (reason_end == NULL) {
-        reason_end = reason_start + strlen(reason_start);
-    }
-
-    // Limit size of exit reason to something reasonable
-    if (reason_end > (reason_start + EXIT_REASON_MAX_LEN)) {
-        reason_end = reason_start + EXIT_REASON_MAX_LEN;
-    }
-
     free(op->opaque->exit_reason);
-    op->opaque->exit_reason = strndup(reason_start, reason_end - reason_start);
+    op->opaque->exit_reason = strndup(reason, strcspn(reason, "\n"));
 }
 
 /*!
@@ -684,19 +702,17 @@ parse_exit_reason_from_stderr(svc_action_t *op)
  * \brief Process the completion of an asynchronous child process
  *
  * \param[in,out] p         Child process that completed
- * \param[in]     pid       Process ID of child
  * \param[in]     core      (Unused)
  * \param[in]     signo     Signal that interrupted child, if any
  * \param[in]     exitcode  Exit status of child process
  */
 static void
-async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
-                      int exitcode)
+async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
 {
     svc_action_t *op = mainloop_child_userdata(p);
 
     mainloop_clear_child_userdata(p);
-    CRM_CHECK(op->pid == pid,
+    CRM_CHECK(op->pid == p->pid,
               services__set_result(op, services__generic_error(op),
                                    PCMK_EXEC_ERROR, "Bug in mainloop handling");
               return);
@@ -711,7 +727,7 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     close_op_input(op);
 
     if (signo == 0) {
-        crm_debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
+        pcmk__debug("%s[%d] exited with status %d", op->id, op->pid, exitcode);
         services__set_result(op, exitcode, PCMK_EXEC_DONE, NULL);
         log_op_output(op);
         parse_exit_reason_from_stderr(op);
@@ -719,8 +735,8 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
     } else if (mainloop_child_timeout(p)) {
         const char *kind = services__action_kind(op);
 
-        crm_info("%s %s[%d] timed out after %s",
-                 kind, op->id, op->pid, pcmk__readable_interval(op->timeout));
+        pcmk__info("%s %s[%d] timed out after %s", kind, op->id, op->pid,
+                   pcmk__readable_interval(op->timeout));
         services__format_result(op, services__generic_error(op),
                                 PCMK_EXEC_TIMEOUT,
                                 "%s did not complete within %s",
@@ -730,13 +746,13 @@ async_action_complete(mainloop_child_t *p, pid_t pid, int core, int signo,
         /* If an in-flight recurring operation was killed because it was
          * cancelled, don't treat that as a failure.
          */
-        crm_info("%s[%d] terminated with signal %d (%s)",
-                 op->id, op->pid, signo, strsignal(signo));
+        pcmk__info("%s[%d] terminated with signal %d (%s)", op->id, op->pid,
+                   signo, strsignal(signo));
         services__set_result(op, PCMK_OCF_OK, PCMK_EXEC_CANCELLED, NULL);
 
     } else {
-        crm_info("%s[%d] terminated with signal %d (%s)",
-                 op->id, op->pid, signo, strsignal(signo));
+        pcmk__info("%s[%d] terminated with signal %d (%s)", op->id, op->pid,
+                   signo, strsignal(signo));
         services__format_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                 "%s interrupted by %s signal",
                                 services__action_kind(op), strsignal(signo));
@@ -953,12 +969,12 @@ action_launch_child(svc_action_t *op)
         sp.sched_priority = 0;
 
         if (sched_setscheduler(0, SCHED_OTHER, &sp) == -1) {
-            crm_info("Could not reset scheduling policy for %s", op->id);
+            pcmk__info("Could not reset scheduling policy for %s", op->id);
         }
     }
 
     if (setpriority(PRIO_PROCESS, 0, 0) == -1) {
-        crm_info("Could not reset process priority for %s", op->id);
+        pcmk__info("Could not reset process priority for %s", op->id);
     }
 
     /* Man: The call setpgrp() is equivalent to setpgid(0,0)
@@ -967,7 +983,7 @@ action_launch_child(svc_action_t *op)
      */
     setpgid(0, 0);
 
-    pcmk__close_fds_in_child(false);
+    pcmk__close_fds_in_child();
 
     /* It would be nice if errors in this function could be reported as
      * execution status (for example, PCMK_EXEC_NO_SECRETS for the secrets error
@@ -984,13 +1000,13 @@ action_launch_child(svc_action_t *op)
     rc = pcmk__substitute_secrets(op->rsc, op->params);
     if (rc != pcmk_rc_ok) {
         if (pcmk__str_eq(op->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-            crm_info("Proceeding with stop operation for %s "
-                     "despite being unable to load CIB secrets (%s)",
-                     op->rsc, pcmk_rc_str(rc));
+            pcmk__info("Proceeding with stop operation for %s despite being "
+                       "unable to load CIB secrets (%s)",
+                       op->rsc, pcmk_rc_str(rc));
         } else {
-            crm_err("Considering %s unconfigured "
-                    "because unable to load CIB secrets: %s",
-                    op->rsc, pcmk_rc_str(rc));
+            pcmk__err("Considering %s unconfigured because unable to load CIB "
+                      "secrets: %s",
+                      op->rsc, pcmk_rc_str(rc));
             exit_child(op, services__configuration_error(op, false),
                        "Unable to load CIB secrets");
         }
@@ -1004,9 +1020,9 @@ action_launch_child(svc_action_t *op)
 
         // If requested, set effective group
         if (op->opaque->gid && (setgid(op->opaque->gid) < 0)) {
-            crm_err("Considering %s unauthorized because could not set "
-                    "child group to %d: %s",
-                    op->id, op->opaque->gid, strerror(errno));
+            pcmk__err("Considering %s unauthorized because could not set child "
+                      "group to %d: %s",
+                      op->id, op->opaque->gid, strerror(errno));
             exit_child(op, services__authorization_error(op),
                        "Could not set group for child process");
         }
@@ -1014,16 +1030,18 @@ action_launch_child(svc_action_t *op)
         // Erase supplementary group list
         // (We could do initgroups() if we kept a copy of the username)
         if (setgroups(0, NULL) < 0) {
-            crm_err("Considering %s unauthorized because could not "
-                    "clear supplementary groups: %s", op->id, strerror(errno));
+            pcmk__err("Considering %s unauthorized because could not clear "
+                      "supplementary groups: %s",
+                      op->id, strerror(errno));
             exit_child(op, services__authorization_error(op),
                        "Could not clear supplementary groups for child process");
         }
 
         // Set effective user
         if (setuid(op->opaque->uid) < 0) {
-            crm_err("Considering %s unauthorized because could not set user "
-                    "to %d: %s", op->id, op->opaque->uid, strerror(errno));
+            pcmk__err("Considering %s unauthorized because could not set user "
+                      "to %d: %s",
+                      op->id, op->opaque->uid, strerror(errno));
             exit_child(op, services__authorization_error(op),
                        "Could not set user for child process");
         }
@@ -1035,7 +1053,7 @@ action_launch_child(svc_action_t *op)
     // An earlier stat() should have avoided most possible errors
     rc = errno;
     services__handle_exec_error(op, rc);
-    crm_err("Unable to execute %s: %s", op->id, strerror(rc));
+    pcmk__err("Unable to execute %s: %s", op->id, strerror(rc));
     exit_child(op, op->rc, "Child process was unable to execute file");
 }
 
@@ -1068,7 +1086,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     fds[2].events = POLLIN;
     fds[2].revents = 0;
 
-    crm_trace("Waiting for %s[%d]", op->id, op->pid);
+    pcmk__trace("Waiting for %s[%d]", op->id, op->pid);
     do {
         int poll_rc = poll(fds, 3, timeout);
 
@@ -1093,9 +1111,9 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
                 } else if (wait_rc < 0) {
                     wait_reason = pcmk_rc_str(errno);
-                    crm_info("Wait for completion of %s[%d] failed: %s "
-                             QB_XS " source=waitpid",
-                             op->id, op->pid, wait_reason);
+                    pcmk__info("Wait for completion of %s[%d] failed: %s "
+                               QB_XS " source=waitpid",
+                               op->id, op->pid, wait_reason);
                     wait_rc = 0; // Act as if process is still running
 
 #ifndef HAVE_SYS_SIGNALFD_H
@@ -1118,8 +1136,9 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
         } else if ((poll_rc < 0) && (errno != EINTR)) {
             wait_reason = pcmk_rc_str(errno);
-            crm_info("Wait for completion of %s[%d] failed: %s "
-                     QB_XS " source=poll", op->id, op->pid, wait_reason);
+            pcmk__info("Wait for completion of %s[%d] failed: %s "
+                       QB_XS " source=poll",
+                       op->id, op->pid, wait_reason);
             break;
         }
 
@@ -1127,7 +1146,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
 
     } while ((op->timeout < 0 || timeout > 0));
 
-    crm_trace("Stopped waiting for %s[%d]", op->id, op->pid);
+    pcmk__trace("Stopped waiting for %s[%d]", op->id, op->pid);
     finish_op_output(op, true);
     finish_op_output(op, false);
     close_op_input(op);
@@ -1140,8 +1159,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
                                     PCMK_EXEC_TIMEOUT,
                                     "%s did not exit within specified timeout",
                                     services__action_kind(op));
-            crm_info("%s[%d] timed out after %dms",
-                     op->id, op->pid, op->timeout);
+            pcmk__info("%s[%d] timed out after %dms", op->id, op->pid,
+                       op->timeout);
 
         } else {
             services__set_result(op, services__generic_error(op),
@@ -1152,8 +1171,8 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
            This is to limit killing wrong target a bit more. */
         if ((wait_rc == 0) && (waitpid(op->pid, &status, WNOHANG) == 0)) {
             if (kill(op->pid, SIGKILL)) {
-                crm_warn("Could not kill rogue child %s[%d]: %s",
-                         op->id, op->pid, pcmk_rc_str(errno));
+                pcmk__warn("Could not kill rogue child %s[%d]: %s", op->id,
+                           op->pid, pcmk_rc_str(errno));
             }
             /* Safe to skip WNOHANG here as we sent non-ignorable signal. */
             while ((waitpid(op->pid, &status, 0) == (pid_t) -1)
@@ -1165,7 +1184,7 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
     } else if (WIFEXITED(status)) {
         services__set_result(op, WEXITSTATUS(status), PCMK_EXEC_DONE, NULL);
         parse_exit_reason_from_stderr(op);
-        crm_info("%s[%d] exited with status %d", op->id, op->pid, op->rc);
+        pcmk__info("%s[%d] exited with status %d", op->id, op->pid, op->rc);
 
     } else if (WIFSIGNALED(status)) {
         int signo = WTERMSIG(status);
@@ -1173,12 +1192,12 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
         services__format_result(op, services__generic_error(op),
                                 PCMK_EXEC_ERROR, "%s interrupted by %s signal",
                                 services__action_kind(op), strsignal(signo));
-        crm_info("%s[%d] terminated with signal %d (%s)",
-                 op->id, op->pid, signo, strsignal(signo));
+        pcmk__info("%s[%d] terminated with signal %d (%s)", op->id, op->pid,
+                   signo, strsignal(signo));
 
 #ifdef WCOREDUMP
         if (WCOREDUMP(status)) {
-            crm_warn("%s[%d] dumped core", op->id, op->pid);
+            pcmk__warn("%s[%d] dumped core", op->id, op->pid);
         }
 #endif
 
@@ -1218,16 +1237,16 @@ services__execute_file(svc_action_t *op)
     // Catch common failure conditions early
     if (stat(op->opaque->exec, &st) != 0) {
         rc = errno;
-        crm_info("Cannot execute '%s': %s " QB_XS " stat rc=%d",
-                 op->opaque->exec, pcmk_rc_str(rc), rc);
+        pcmk__info("Cannot execute '%s': %s " QB_XS " stat rc=%d",
+                   op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
 
     if (pipe(stdout_fd) < 0) {
         rc = errno;
-        crm_info("Cannot execute '%s': %s " QB_XS " pipe(stdout) rc=%d",
-                 op->opaque->exec, pcmk_rc_str(rc), rc);
+        pcmk__info("Cannot execute '%s': %s " QB_XS " pipe(stdout) rc=%d",
+                   op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
@@ -1237,21 +1256,21 @@ services__execute_file(svc_action_t *op)
 
         close_pipe(stdout_fd);
 
-        crm_info("Cannot execute '%s': %s " QB_XS " pipe(stderr) rc=%d",
-                 op->opaque->exec, pcmk_rc_str(rc), rc);
+        pcmk__info("Cannot execute '%s': %s " QB_XS " pipe(stderr) rc=%d",
+                   op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
         goto done;
     }
 
-    if (pcmk_is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
+    if (pcmk__is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)) {
         if (pipe(stdin_fd) < 0) {
             rc = errno;
 
             close_pipe(stdout_fd);
             close_pipe(stderr_fd);
 
-            crm_info("Cannot execute '%s': %s " QB_XS " pipe(stdin) rc=%d",
-                     op->opaque->exec, pcmk_rc_str(rc), rc);
+            pcmk__info("Cannot execute '%s': %s " QB_XS " pipe(stdin) rc=%d",
+                       op->opaque->exec, pcmk_rc_str(rc), rc);
             services__handle_exec_error(op, rc);
             goto done;
         }
@@ -1275,8 +1294,8 @@ services__execute_file(svc_action_t *op)
             close_pipe(stdout_fd);
             close_pipe(stderr_fd);
 
-            crm_info("Cannot execute '%s': %s " QB_XS " fork rc=%d",
-                     op->opaque->exec, pcmk_rc_str(rc), rc);
+            pcmk__info("Cannot execute '%s': %s " QB_XS " fork rc=%d",
+                       op->opaque->exec, pcmk_rc_str(rc), rc);
             services__handle_exec_error(op, rc);
             if (op->synchronous) {
                 sigchld_cleanup(&data);
@@ -1292,26 +1311,26 @@ services__execute_file(svc_action_t *op)
             }
             if (STDOUT_FILENO != stdout_fd[1]) {
                 if (dup2(stdout_fd[1], STDOUT_FILENO) != STDOUT_FILENO) {
-                    crm_warn("Can't redirect output from '%s': %s "
-                             QB_XS " errno=%d",
-                             op->opaque->exec, pcmk_rc_str(errno), errno);
+                    pcmk__warn("Can't redirect output from '%s': %s "
+                               QB_XS " errno=%d",
+                               op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdout_fd[1]);
             }
             if (STDERR_FILENO != stderr_fd[1]) {
                 if (dup2(stderr_fd[1], STDERR_FILENO) != STDERR_FILENO) {
-                    crm_warn("Can't redirect error output from '%s': %s "
-                             QB_XS " errno=%d",
-                             op->opaque->exec, pcmk_rc_str(errno), errno);
+                    pcmk__warn("Can't redirect error output from '%s': %s "
+                               QB_XS " errno=%d",
+                               op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stderr_fd[1]);
             }
             if ((stdin_fd[0] >= 0) &&
                 (STDIN_FILENO != stdin_fd[0])) {
                 if (dup2(stdin_fd[0], STDIN_FILENO) != STDIN_FILENO) {
-                    crm_warn("Can't redirect input to '%s': %s "
-                             QB_XS " errno=%d",
-                             op->opaque->exec, pcmk_rc_str(errno), errno);
+                    pcmk__warn("Can't redirect input to '%s': %s "
+                               QB_XS " errno=%d",
+                               op->opaque->exec, pcmk_rc_str(errno), errno);
                 }
                 close(stdin_fd[0]);
             }
@@ -1334,17 +1353,17 @@ services__execute_file(svc_action_t *op)
     op->opaque->stdout_fd = stdout_fd[0];
     rc = pcmk__set_nonblocking(op->opaque->stdout_fd);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not set '%s' output non-blocking: %s "
-                 QB_XS " rc=%d",
-                 op->opaque->exec, pcmk_rc_str(rc), rc);
+        pcmk__info("Could not set '%s' output non-blocking: %s "
+                   QB_XS " rc=%d",
+                   op->opaque->exec, pcmk_rc_str(rc), rc);
     }
 
     op->opaque->stderr_fd = stderr_fd[0];
     rc = pcmk__set_nonblocking(op->opaque->stderr_fd);
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not set '%s' error output non-blocking: %s "
-                 QB_XS " rc=%d",
-                 op->opaque->exec, pcmk_rc_str(rc), rc);
+        pcmk__info("Could not set '%s' error output non-blocking: %s "
+                   QB_XS " rc=%d",
+                   op->opaque->exec, pcmk_rc_str(rc), rc);
     }
 
     op->opaque->stdin_fd = stdin_fd[1];
@@ -1353,9 +1372,9 @@ services__execute_file(svc_action_t *op)
         // as long as no other standard uses stdin_fd assume stonith
         rc = pcmk__set_nonblocking(op->opaque->stdin_fd);
         if (rc != pcmk_rc_ok) {
-            crm_info("Could not set '%s' input non-blocking: %s "
-                    QB_XS " fd=%d,rc=%d", op->opaque->exec,
-                    pcmk_rc_str(rc), op->opaque->stdin_fd, rc);
+            pcmk__info("Could not set '%s' input non-blocking: %s "
+                       QB_XS " fd=%d,rc=%d", op->opaque->exec,
+                       pcmk_rc_str(rc), op->opaque->stdin_fd, rc);
         }
         pipe_in_action_stdin_parameters(op);
         // as long as we are handling parameters directly in here just close
@@ -1374,10 +1393,15 @@ services__execute_file(svc_action_t *op)
         goto done;
     }
 
-    crm_trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
-    mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
-                                  pcmk_is_set(op->flags, SVC_ACTION_LEAVE_GROUP)? mainloop_leave_pid_group : 0,
-                                  async_action_complete);
+    pcmk__trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
+    if (pcmk__is_set(op->flags, SVC_ACTION_LEAVE_GROUP)) {
+        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
+                                      mainloop_leave_pid_group,
+                                      async_action_complete);
+    } else {
+        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op, 0,
+                                      async_action_complete);
+    }
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,
@@ -1398,82 +1422,105 @@ done:
     }
 }
 
+/*!
+ * \internal
+ * \brief \c scandir() filter for non-hidden executable regular files
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is an executable regular file and its name does not
+ *           begin with \c "."
+ * \retval 0 otherwise
+ */
+static int
+exec_file_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (entry->d_name[0] == '.') {
+        return rc;
+    }
+
+    buf = pcmk__assert_asprintf("%s/%s", filter_dir, entry->d_name);
+
+    if ((stat(buf, &sb) == 0) && S_ISREG(sb.st_mode)
+        && pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+
+        rc = 1;
+    }
+
+    free(buf);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief \c scandir() filter for non-hidden directories
+ *
+ * \param[in] entry  Directory entry
+ *
+ * \retval 1 if the entry is a directory and its name does not begin with \c "."
+ * \retval 0 otherwise
+ */
+static int
+directory_filter(const struct dirent *entry)
+{
+    char *buf = NULL;
+    struct stat sb;
+    int rc = 0;
+
+    if (entry->d_name[0] == '.') {
+        return rc;
+    }
+
+    buf = pcmk__assert_asprintf("%s/%s", filter_dir, entry->d_name);
+
+    if ((stat(buf, &sb) == 0) && S_ISDIR(sb.st_mode)) {
+        rc = 1;
+    }
+
+    free(buf);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief List directory's top-level contents of the given type
+ *
+ * Hidden files (those beginning with \c '.') are skipped.
+ *
+ * \param[in] dir         Full path of directory to list
+ * \param[in] exec_files  If \c true, list only executable files within \p dir.
+ *                        If \c false, list only directories within \p dir.
+ *
+ * \return Newly allocated list of newly allocated names of directory entries
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       <tt>g_list_free_full(list, free)</tt>.
+ */
 GList *
-services_os_get_single_directory_list(const char *root, gboolean files, gboolean executable)
+services__list_dir(const char *dir, bool exec_files)
 {
     GList *list = NULL;
     struct dirent **namelist = NULL;
-    int entries = 0, lpc = 0;
-    char buffer[PATH_MAX];
+    int entries = 0;
 
-    entries = scandir(root, &namelist, NULL, alphasort);
-    if (entries <= 0) {
-        return list;
+    filter_dir = dir;
+    entries = scandir(dir, &namelist,
+                      (exec_files? exec_file_filter : directory_filter),
+                      alphasort);
+    filter_dir = NULL;
+
+    if (entries < 0) {
+        return NULL;
     }
 
-    for (lpc = 0; lpc < entries; lpc++) {
-        struct stat sb;
-
-        if ('.' == namelist[lpc]->d_name[0]) {
-            free(namelist[lpc]);
-            continue;
-        }
-
-        snprintf(buffer, sizeof(buffer), "%s/%s", root, namelist[lpc]->d_name);
-
-        if (stat(buffer, &sb)) {
-            continue;
-        }
-
-        if (S_ISDIR(sb.st_mode)) {
-            if (files) {
-                free(namelist[lpc]);
-                continue;
-            }
-
-        } else if (S_ISREG(sb.st_mode)) {
-            if (files == FALSE) {
-                free(namelist[lpc]);
-                continue;
-
-            } else if (executable
-                       && (sb.st_mode & S_IXUSR) == 0
-                       && (sb.st_mode & S_IXGRP) == 0 && (sb.st_mode & S_IXOTH) == 0) {
-                free(namelist[lpc]);
-                continue;
-            }
-        }
-
-        list = g_list_append(list, strdup(namelist[lpc]->d_name));
-
-        free(namelist[lpc]);
+    for (int i = 0; i < entries; i++) {
+        list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
+        free(namelist[i]);
     }
-
     free(namelist);
     return list;
-}
-
-GList *
-services_os_get_directory_list(const char *root, gboolean files, gboolean executable)
-{
-    GList *result = NULL;
-    char *dirs = strdup(root);
-    char *dir = NULL;
-
-    if (pcmk__str_empty(dirs)) {
-        free(dirs);
-        return result;
-    }
-
-    for (dir = strtok(dirs, ":"); dir != NULL; dir = strtok(NULL, ":")) {
-        GList *tmp = services_os_get_single_directory_list(dir, files, executable);
-
-        if (tmp) {
-            result = g_list_concat(result, tmp);
-        }
-    }
-
-    free(dirs);
-
-    return result;
 }

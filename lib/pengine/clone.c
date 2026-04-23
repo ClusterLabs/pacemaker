@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,10 +17,8 @@
 #include <pe_status_private.h>
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
-#include <crm/common/xml_internal.h>
-#include <crm/common/scheduler_internal.h>
 
-typedef struct clone_variant_data_s {
+typedef struct {
     int clone_max;
     int clone_node_max;
 
@@ -166,11 +164,11 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 {
     GString *attrs = NULL;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         pcmk__add_separated_word(&attrs, 64, "promotable", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         pcmk__add_separated_word(&attrs, 64, "unique", ", ");
     }
 
@@ -178,10 +176,10 @@ clone_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
@@ -221,7 +219,7 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
 pcmk_resource_t *
 pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 {
-    gboolean as_orphan = FALSE;
+    bool removed = false;
     char *inc_num = NULL;
     char *inc_max = NULL;
     pcmk_resource_t *child_rsc = NULL;
@@ -233,8 +231,10 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     CRM_CHECK(clone_data->xml_obj_child != NULL, return FALSE);
 
     if (clone_data->total_clones >= clone_data->clone_max) {
-        // If we've already used all available instances, this is an orphan
-        as_orphan = TRUE;
+        /* If we've already used all available instances, this instance is
+         * treated as removed
+         */
+        removed = true;
     }
 
     // Allocate instance numbers in numerical order (starting at 0)
@@ -243,7 +243,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
 
     child_copy = pcmk__xml_copy(NULL, clone_data->xml_obj_child);
 
-    crm_xml_add(child_copy, PCMK__META_CLONE, inc_num);
+    pcmk__xe_set(child_copy, PCMK__META_CLONE, inc_num);
 
     if (pe__unpack_resource(child_copy, &child_rsc, rsc,
                             scheduler) != pcmk_rc_ok) {
@@ -256,7 +256,7 @@ pe__create_clone_child(pcmk_resource_t *rsc, pcmk_scheduler_t *scheduler)
     pcmk__rsc_trace(child_rsc, "Setting clone attributes for: %s",
                     child_rsc->id);
     rsc->priv->children = g_list_append(rsc->priv->children, child_rsc);
-    if (as_orphan) {
+    if (removed) {
         pe__set_resource_flags_recursive(child_rsc, pcmk__rsc_removed);
     }
 
@@ -333,7 +333,7 @@ clone_unpack(pcmk_resource_t *rsc)
     clone_data = pcmk__assert_alloc(1, sizeof(clone_variant_data_t));
     rsc->priv->variant_opaque = clone_data;
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         // Use 1 as default but 0 for minimum and invalid
         // @COMPAT PCMK__META_PROMOTED_MAX_LEGACY deprecated since 2.0.0
         clone_data->promoted_max =
@@ -359,8 +359,8 @@ clone_unpack(pcmk_resource_t *rsc)
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
                                             QB_MAX(1, num_nodes));
 
-    if (crm_is_true(g_hash_table_lookup(rsc->priv->meta,
-                                        PCMK_META_ORDERED))) {
+    if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
+                                          PCMK_META_ORDERED))) {
         clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
                                                "Clone", rsc->id,
                                                clone_data->flags,
@@ -368,7 +368,7 @@ clone_unpack(pcmk_resource_t *rsc)
                                                "pcmk__clone_ordered");
     }
 
-    if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)
         && (clone_data->clone_node_max > 1)) {
 
         pcmk__config_err("Ignoring " PCMK_META_CLONE_NODE_MAX " of %d for %s "
@@ -421,7 +421,7 @@ clone_unpack(pcmk_resource_t *rsc)
 
     if (clone_data->clone_max <= 0) {
         /* Create one child instance so that unpack_find_resource() will hook up
-         * any orphans up to the parent correctly.
+         * any removed instances up to the parent correctly.
          */
         if (pe__create_clone_child(rsc, rsc->priv->scheduler) == NULL) {
             return FALSE;
@@ -501,7 +501,7 @@ is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any)
 {
     bool all = !any;
 
-    if (pcmk_is_set(rsc->flags, flag)) {
+    if (pcmk__is_set(rsc->flags, flag)) {
         if(any) {
             return TRUE;
         }
@@ -547,8 +547,11 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                         pcmk__str_star_matches)
+                       || ((strchr(rsc->id, ':') != NULL)
+                           && pcmk__str_in_list(rsc->id, only_rsc,
+                                                pcmk__str_star_matches));
 
     all = g_list_prepend(all, (gpointer) "*");
 
@@ -643,8 +646,11 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                       (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    print_everything = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                         pcmk__str_star_matches)
+                       || ((strchr(rsc->id, ':') != NULL)
+                           && pcmk__str_in_list(rsc->id, only_rsc,
+                                                pcmk__str_star_matches));
 
     for (gIter = rsc->priv->children; gIter != NULL; gIter = gIter->next) {
         gboolean print_full = FALSE;
@@ -660,20 +666,20 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             continue;
         }
 
-        if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
+        if (pcmk__is_set(show_opts, pcmk_show_clone_detail)) {
             print_full = TRUE;
         }
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
-            // Print individual instance when unique (except stopped orphans)
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
+            // Print individual instance when unique, unless stopped and removed
             if (partially_active
-                || !pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
+                || !pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
                 print_full = TRUE;
             }
 
         // Everything else in this block is for anonymous clones
 
-        } else if (pcmk_is_set(show_opts, pcmk_show_pending)
+        } else if (pcmk__is_set(show_opts, pcmk_show_pending)
                    && (child_rsc->priv->pending_action != NULL)
                    && (strcmp(child_rsc->priv->pending_action,
                               "probe") != 0)) {
@@ -681,10 +687,10 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             print_full = TRUE;
 
         } else if (partially_active == FALSE) {
-            // List stopped instances when requested (except orphans)
-            if (!pcmk_is_set(child_rsc->flags, pcmk__rsc_removed)
-                && !pcmk_is_set(show_opts, pcmk_show_clone_detail)
-                && pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
+            // List stopped instances when requested (except removed instances)
+            if (!pcmk__is_set(child_rsc->flags, pcmk__rsc_removed)
+                && !pcmk__is_set(show_opts, pcmk_show_clone_detail)
+                && pcmk__is_set(show_opts, pcmk_show_inactive_rscs)) {
                 if (stopped == NULL) {
                     stopped = pcmk__strkey_table(free, free);
                 }
@@ -695,7 +701,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                    || !is_set_recursive(child_rsc, pcmk__rsc_managed, FALSE)
                    || is_set_recursive(child_rsc, pcmk__rsc_failed, TRUE)) {
 
-            // Print individual instance when active orphaned/unmanaged/failed
+            // Print individual instance when active removed/unmanaged/failed
             print_full = TRUE;
 
         } else if (child_rsc->priv->fns->active(child_rsc, true)) {
@@ -745,8 +751,11 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         }
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_clone_detail)) {
+    if (pcmk__is_set(show_opts, pcmk_show_clone_detail)) {
         PCMK__OUTPUT_LIST_FOOTER(out, rc);
+
+        g_list_free(promoted_list);
+        g_list_free(started_list);
         return pcmk_rc_ok;
     }
 
@@ -791,7 +800,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
     if ((list_text != NULL) && (list_text->len > 0)) {
         clone_header(out, &rc, rsc, clone_data, desc);
 
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
             enum rsc_role_e role = configured_role(rsc);
 
             if (role == pcmk_role_unpromoted) {
@@ -814,18 +823,15 @@ pe__clone_default(pcmk__output_t *out, va_list args)
         g_string_free(list_text, TRUE);
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_inactive_rscs)) {
-        if (!pcmk_is_set(rsc->flags, pcmk__rsc_unique)
+    if (pcmk__is_set(show_opts, pcmk_show_inactive_rscs)) {
+        if (!pcmk__is_set(rsc->flags, pcmk__rsc_unique)
             && (clone_data->clone_max > active_instances)) {
 
             GList *nIter;
             GList *list = g_hash_table_get_values(rsc->priv->allowed_nodes);
 
             /* Custom stopped table for non-unique clones */
-            if (stopped != NULL) {
-                g_hash_table_destroy(stopped);
-                stopped = NULL;
-            }
+            g_clear_pointer(&stopped, g_hash_table_destroy);
 
             if (list == NULL) {
                 /* Clusters with PCMK_OPT_SYMMETRIC_CLUSTER=false haven't
@@ -858,14 +864,17 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                     probe_op = pe__failed_probe_for_rsc(rsc,
                                                         node->priv->name);
                     if (probe_op != NULL) {
-                        int rc;
+                        int rc = pcmk_rc_ok;
+                        char *key = pcmk__str_copy(node->priv->name);
+                        char *value = NULL;
 
-                        pcmk__scan_min_int(crm_element_value(probe_op,
-                                                             PCMK__XA_RC_CODE),
+                        pcmk__scan_min_int(pcmk__xe_get(probe_op,
+                                                        PCMK__XA_RC_CODE),
                                            &rc, 0);
-                        g_hash_table_insert(stopped, strdup(node->priv->name),
-                                            crm_strdup_printf("Stopped (%s)",
-                                                              crm_exit_str(rc)));
+                        value = pcmk__assert_asprintf("Stopped (%s)",
+                                                      crm_exit_str(rc));
+                        g_hash_table_insert(stopped, key, value);
+
                     } else {
                         pcmk__insert_dup(stopped, node->priv->name, state);
                     }
@@ -929,11 +938,11 @@ clone_free(pcmk_resource_t * rsc)
 
         pcmk__assert(child_rsc != NULL);
         pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        pcmk__xml_free(child_rsc->priv->xml);
-        child_rsc->priv->xml = NULL;
+        g_clear_pointer(&child_rsc->priv->xml, pcmk__xml_free);
+
         /* There could be a saved unexpanded xml */
-        pcmk__xml_free(child_rsc->priv->orig_xml);
-        child_rsc->priv->orig_xml = NULL;
+        g_clear_pointer(&child_rsc->priv->orig_xml, pcmk__xml_free);
+
         pcmk__free_resource(child_rsc);
     }
 
@@ -995,32 +1004,31 @@ bool
 pe__clone_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                       bool check_parent)
 {
-    bool passes = FALSE;
     clone_variant_data_t *clone_data = NULL;
 
-    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-    } else {
-        get_clone_variant_data(clone_data, rsc);
-        passes = pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child),
-                                   only_rsc, pcmk__str_star_matches);
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
 
-        if (!passes) {
-            for (const GList *iter = rsc->priv->children;
-                 iter != NULL; iter = iter->next) {
+    get_clone_variant_data(clone_data, rsc);
 
-                const pcmk_resource_t *child_rsc = NULL;
+    if (pcmk__str_in_list(pcmk__xe_id(clone_data->xml_obj_child), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
 
-                child_rsc = (const pcmk_resource_t *) iter->data;
-                if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                       false)) {
-                    passes = true;
-                    break;
-                }
-            }
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child_rsc = iter->data;
+
+        if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc, false)) {
+            return false;
         }
     }
-    return !passes;
+
+    return true;
 }
 
 const char *
@@ -1045,7 +1053,7 @@ pe__clone_is_ordered(const pcmk_resource_t *clone)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
-    return pcmk_is_set(clone_data->flags, pcmk__clone_ordered);
+    return pcmk__is_set(clone_data->flags, pcmk__clone_ordered);
 }
 
 /*!
@@ -1064,7 +1072,7 @@ pe__set_clone_flag(pcmk_resource_t *clone, enum pcmk__clone_flags flag)
     clone_variant_data_t *clone_data = NULL;
 
     get_clone_variant_data(clone_data, clone);
-    if (pcmk_is_set(clone_data->flags, flag)) {
+    if (pcmk__is_set(clone_data->flags, flag)) {
         return pcmk_rc_already;
     }
     clone_data->flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
@@ -1090,7 +1098,7 @@ pe__clone_flag_is_set(const pcmk_resource_t *clone, uint32_t flags)
     get_clone_variant_data(clone_data, clone);
     pcmk__assert(clone_data != NULL);
 
-    return pcmk_all_flags_set(clone_data->flags, flags);
+    return pcmk__all_flags_set(clone_data->flags, flags);
 }
 
 /*!
@@ -1191,17 +1199,14 @@ pe__free_clone_notification_data(pcmk_resource_t *clone)
 
     get_clone_variant_data(clone_data, clone);
 
-    pe__free_action_notification_data(clone_data->demote_notify);
-    clone_data->demote_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->stop_notify);
-    clone_data->stop_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->start_notify);
-    clone_data->start_notify = NULL;
-
-    pe__free_action_notification_data(clone_data->promote_notify);
-    clone_data->promote_notify = NULL;
+    g_clear_pointer(&clone_data->demote_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->stop_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->start_notify,
+                    pe__free_action_notification_data);
+    g_clear_pointer(&clone_data->promote_notify,
+                    pe__free_action_notification_data);
 }
 
 /*!

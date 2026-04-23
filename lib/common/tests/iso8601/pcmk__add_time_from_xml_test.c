@@ -14,7 +14,6 @@
 #include <crm/common/unittest_internal.h>
 
 #include <crm/common/iso8601.h>
-#include <crm/common/iso8601_internal.h>
 #include <crm/common/xml.h>
 #include "../../crmcommon_private.h"
 

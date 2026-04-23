@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -54,23 +54,26 @@ enum pcmk__node_status_flags {
     pcmk__node_status_dirty  = (UINT32_C(1) << 1),
 };
 
-// Used with node cache search functions
+/*!
+ * \internal
+ * \brief Used with node cache search functions
+ */
 enum pcmk__node_search_flags {
     //! Does not affect search
     pcmk__node_search_none              = 0,
 
     //! Search for cluster nodes from membership cache
-    pcmk__node_search_cluster_member    = (1 << 0),
+    pcmk__node_search_cluster_member    = (UINT32_C(1) << 0),
 
     //! Search for remote nodes
-    pcmk__node_search_remote            = (1 << 1),
+    pcmk__node_search_remote            = (UINT32_C(1) << 1),
 
     //! Search for cluster member nodes and remote nodes
     pcmk__node_search_any               = pcmk__node_search_cluster_member
                                           |pcmk__node_search_remote,
 
     //! Search for cluster nodes from CIB (as of last cache refresh)
-    pcmk__node_search_cluster_cib       = (1 << 2),
+    pcmk__node_search_cluster_cib       = (UINT32_C(1) << 2),
 };
 
 /*!
@@ -108,7 +111,7 @@ struct pcmk__cluster_private {
 };
 
 //! Node status data (may be a cluster node or a Pacemaker Remote node)
-typedef struct pcmk__node_status {
+typedef struct {
     //! Node name as known to cluster layer, or Pacemaker Remote node name
     char *name;
 
@@ -185,51 +188,6 @@ crm_get_cluster_proc(void)
     return crm_proc_none;
 }
 
-/*!
- * \internal
- * \brief Get log-friendly string description of a Corosync return code
- *
- * \param[in] error  Corosync return code
- *
- * \return Log-friendly string description corresponding to \p error
- */
-static inline const char *
-pcmk__cs_err_str(int error)
-{
-#  if SUPPORT_COROSYNC
-    switch (error) {
-        case CS_OK:                         return "OK";
-        case CS_ERR_LIBRARY:                return "Library error";
-        case CS_ERR_VERSION:                return "Version error";
-        case CS_ERR_INIT:                   return "Initialization error";
-        case CS_ERR_TIMEOUT:                return "Timeout";
-        case CS_ERR_TRY_AGAIN:              return "Try again";
-        case CS_ERR_INVALID_PARAM:          return "Invalid parameter";
-        case CS_ERR_NO_MEMORY:              return "No memory";
-        case CS_ERR_BAD_HANDLE:             return "Bad handle";
-        case CS_ERR_BUSY:                   return "Busy";
-        case CS_ERR_ACCESS:                 return "Access error";
-        case CS_ERR_NOT_EXIST:              return "Doesn't exist";
-        case CS_ERR_NAME_TOO_LONG:          return "Name too long";
-        case CS_ERR_EXIST:                  return "Exists";
-        case CS_ERR_NO_SPACE:               return "No space";
-        case CS_ERR_INTERRUPT:              return "Interrupt";
-        case CS_ERR_NAME_NOT_FOUND:         return "Name not found";
-        case CS_ERR_NO_RESOURCES:           return "No resources";
-        case CS_ERR_NOT_SUPPORTED:          return "Not supported";
-        case CS_ERR_BAD_OPERATION:          return "Bad operation";
-        case CS_ERR_FAILED_OPERATION:       return "Failed operation";
-        case CS_ERR_MESSAGE_ERROR:          return "Message error";
-        case CS_ERR_QUEUE_FULL:             return "Queue full";
-        case CS_ERR_QUEUE_NOT_AVAILABLE:    return "Queue not available";
-        case CS_ERR_BAD_FLAGS:              return "Bad flags";
-        case CS_ERR_TOO_BIG:                return "Too big";
-        case CS_ERR_NO_SECTIONS:            return "No sections";
-    }
-#  endif
-    return "Corosync error";
-}
-
 #  if SUPPORT_COROSYNC
 
 #if 0
@@ -272,8 +230,13 @@ pcmk__node_status_t *pcmk__update_peer_state(const char *source,
                                              const char *state,
                                              uint64_t membership);
 
-void pcmk__update_peer_expected(const char *source, pcmk__node_status_t *node,
-                                const char *expected);
+void pcmk__update_peer_expected_as(const char *function,
+                                   pcmk__node_status_t *node,
+                                   const char *expected);
+
+#define pcmk__update_peer_expected(node, expected)  \
+        pcmk__update_peer_expected_as(__func__, (node), (expected));
+
 void pcmk__reap_unseen_nodes(uint64_t ring_id);
 
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,

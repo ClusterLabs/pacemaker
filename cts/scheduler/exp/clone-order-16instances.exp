@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0">
     <action_set>
       <rsc_op id="11" operation="monitor" operation_key="dlm_monitor_30000" internal_operation_key="dlm:2_monitor_30000" on_node="virt-009.cluster-qe.lab.eng.brq.redhat.com" on_node_uuid="1">

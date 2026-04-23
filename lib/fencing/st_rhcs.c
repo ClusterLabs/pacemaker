@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <dirent.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -40,12 +41,12 @@ rhcs_agent_filter(const struct dirent *entry)
     struct stat sb;
     int rc = 0;
 
-    if (!pcmk__starts_with(entry->d_name, "fence_")) {
+    if (!g_str_has_prefix(entry->d_name, "fence_")) {
         goto done;
     }
 
     // glibc doesn't enforce PATH_MAX, so don't limit buf size
-    buf = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
+    buf = pcmk__assert_asprintf(PCMK__FENCE_BINDIR "/%s", entry->d_name);
     if ((stat(buf, &sb) != 0) || !S_ISREG(sb.st_mode)) {
         goto done;
     }
@@ -75,7 +76,7 @@ stonith__list_rhcs_agents(stonith_key_value_t **devices)
     if (file_num < 0) {
         int rc = errno;
 
-        crm_err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
+        pcmk__err("Could not list " PCMK__FENCE_BINDIR ": %s", pcmk_rc_str(rc));
         free(namelist);
         return 0;
     }
@@ -97,8 +98,9 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
     CRM_CHECK(metadata != NULL, return);
     CRM_CHECK(parameter != NULL, return);
 
-    xpath = crm_strdup_printf("//" PCMK_XE_PARAMETER "[@" PCMK_XA_NAME "='%s']",
-                              parameter);
+    xpath = pcmk__assert_asprintf("//" PCMK_XE_PARAMETER
+                                  "[@" PCMK_XA_NAME "='%s']",
+                                  parameter);
     /* Fudge metadata so that the parameter isn't required in config
      * Pacemaker handles and adds it */
     xpathObj = pcmk__xpath_search(metadata->doc, xpath);
@@ -106,7 +108,7 @@ stonith_rhcs_parameter_not_required(xmlNode *metadata, const char *parameter)
         xmlNode *tmp = pcmk__xpath_result(xpathObj, 0);
 
         if (tmp != NULL) {
-            crm_xml_add(tmp, "required", "0");
+            pcmk__xe_set(tmp, "required", "0");
         }
     }
     xmlXPathFreeObject(xpathObj);
@@ -136,31 +138,32 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
 
     if (result == NULL) {
         if (rc < 0) {
-            crm_warn("Could not execute metadata action for %s: %s "
-                     QB_XS " rc=%d", agent, pcmk_strerror(rc), rc);
+            pcmk__warn("Could not execute metadata action for %s: %s "
+                       QB_XS " rc=%d",
+                       agent, pcmk_strerror(rc), rc);
         }
         stonith__destroy_action(action);
         return rc;
     }
 
     if (result->execution_status != PCMK_EXEC_DONE) {
-        crm_warn("Could not execute metadata action for %s: %s",
-                 agent, pcmk_exec_status_str(result->execution_status));
+        pcmk__warn("Could not execute metadata action for %s: %s", agent,
+                   pcmk_exec_status_str(result->execution_status));
         rc = pcmk_rc2legacy(stonith__result2rc(result));
         stonith__destroy_action(action);
         return rc;
     }
 
     if (!pcmk__result_ok(result)) {
-        crm_warn("Metadata action for %s returned error code %d",
-                 agent, result->exit_status);
+        pcmk__warn("Metadata action for %s returned error code %d", agent,
+                   result->exit_status);
         rc = pcmk_rc2legacy(stonith__result2rc(result));
         stonith__destroy_action(action);
         return rc;
     }
 
     if (result->action_stdout == NULL) {
-        crm_warn("Metadata action for %s returned no data", agent);
+        pcmk__warn("Metadata action for %s returned no data", agent);
         stonith__destroy_action(action);
         return -ENODATA;
     }
@@ -169,7 +172,7 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
     stonith__destroy_action(action);
 
     if (xml == NULL) {
-        crm_warn("Metadata for %s is invalid", agent);
+        pcmk__warn("Metadata for %s is invalid", agent);
         return -pcmk_err_schema_validation;
     }
 
@@ -190,12 +193,12 @@ stonith__rhcs_get_metadata(const char *agent, int timeout_sec,
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
 
         tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
-        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
-        crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, PCMK_ACTION_STOP);
+        pcmk__xe_set(tmp, PCMK_META_TIMEOUT, timeout_str);
 
         tmp = pcmk__xe_create(actions, PCMK_XE_ACTION);
-        crm_xml_add(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
-        crm_xml_add(tmp, PCMK_META_TIMEOUT, timeout_str);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, PCMK_ACTION_START);
+        pcmk__xe_set(tmp, PCMK_META_TIMEOUT, timeout_str);
     }
     xmlXPathFreeObject(xpathObj);
 
@@ -257,7 +260,7 @@ bool
 stonith__agent_is_rhcs(const char *agent)
 {
     struct stat prop;
-    char *buffer = crm_strdup_printf(PCMK__FENCE_BINDIR "/%s", agent);
+    char *buffer = pcmk__assert_asprintf(PCMK__FENCE_BINDIR "/%s", agent);
     int rc = stat(buffer, &prop);
 
     free(buffer);
@@ -283,9 +286,9 @@ stonith__rhcs_validate(stonith_t *st, int call_options, const char *target,
 
         if (rc == pcmk_ok) {
             host_arg = stonith__default_host_arg(metadata);
-            crm_trace("Using '%s' as default " PCMK_STONITH_HOST_ARGUMENT
-                      " for %s",
-                      pcmk__s(host_arg, PCMK_VALUE_NONE), agent);
+            pcmk__trace("Using '%s' as default " PCMK_FENCING_HOST_ARGUMENT
+                        " for %s",
+                        pcmk__s(host_arg, PCMK_VALUE_NONE), agent);
         }
 
         pcmk__xml_free(metadata);

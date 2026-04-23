@@ -18,3 +18,5 @@ setup(name='pacemaker',
       description='Python libraries for Pacemaker',
       packages=['pacemaker', 'pacemaker._cts', 'pacemaker._cts.tests'],
      )
+
+# vim: set filetype=python:

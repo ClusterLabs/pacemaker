@@ -887,4 +887,4 @@ fi
 LC_ALL="C"
 export LC_ALL
 
-# vim: set expandtab tabstop=8 softtabstop=4 shiftwidth=4 textwidth=80:
+# vim: set filetype=sh:

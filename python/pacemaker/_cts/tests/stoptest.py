@@ -1,9 +1,10 @@
 """Stop the cluster manager on a given node."""
 
 __all__ = ["StopTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -43,16 +44,16 @@ class StopTest(CTSTest):
 
         # Technically we should always be able to notice ourselves stopping
         patterns = [
-            self.templates["Pat:We_stopped"] % node,
+            self._cm.templates["Pat:We_stopped"] % node,
         ]
 
         # Any active node needs to notice this one left
         # (note that this won't work if we have multiple partitions)
         for other in self._env["nodes"]:
             if self._cm.expected_status[other] == "up" and other != node:
-                patterns.append(self.templates["Pat:They_stopped"] % (other, node))
+                patterns.append(self._cm.templates["Pat:They_stopped"] % (other, node))
 
-        watch = self.create_watch(patterns, self._env["DeadTime"])
+        watch = self.create_watch(patterns, self._env["dead_time"])
         watch.set_watch()
 
         if node == self._cm.our_node:
@@ -79,11 +80,11 @@ class StopTest(CTSTest):
                 self.debug(line)
 
             for regex in watch.unmatched:
-                self._logger.log(f"ERROR: Shutdown pattern not found: {regex}")
+                logging.log(f"ERROR: Shutdown pattern not found: {regex}")
                 unmatched_str += f"{regex}||"
                 failreason = "Missing shutdown pattern"
 
-        self._cm.cluster_stable(self._env["DeadTime"])
+        self._cm.cluster_stable(self._env["dead_time"])
 
         if not watch.unmatched or self._cm.upcount() == 0:
             return self.success()

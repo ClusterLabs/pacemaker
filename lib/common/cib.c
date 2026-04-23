@@ -15,7 +15,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/cib.h>
-#include <crm/common/cib_internal.h>
 
 /*
  * Functions to help find particular sections of the CIB
@@ -162,8 +161,8 @@ pcmk_cib_parent_name_for(const char *element_name)
 /*!
  * \brief Find an element in the CIB
  *
- * \param[in,out] cib           Top-level CIB XML to search
- * \param[in]     element_name  Name of CIB element to search for
+ * \param[in] cib           Top-level CIB XML to search
+ * \param[in] element_name  Name of CIB element to search for
  *
  * \return XML element in \p cib corresponding to \p element_name
  *         (or \p cib itself if element is unknown or not found)
@@ -184,7 +183,8 @@ pcmk_find_cib_element(xmlNode *cib, const char *element_name)
 int
 pcmk__check_feature_set(const char *cib_version)
 {
-    if (cib_version && compare_version(cib_version, CRM_FEATURE_SET) > 0) {
+    if ((cib_version != NULL)
+        && (pcmk__compare_versions(cib_version, CRM_FEATURE_SET) > 0)) {
         return EPROTONOSUPPORT;
     }
 

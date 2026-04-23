@@ -6,7 +6,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="2.0.4-1.e97f9675f.git.el7-e97f9675f"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-cluster-name" name="cluster-name" value="test-cluster"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-maintenance-mode" name="maintenance-mode" value="false"/>
       </cluster_property_set>
     </crm_config>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,21 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <signal.h>
-#include <sys/types.h>
+#include <errno.h>                  // ENOTCONN
+#include <signal.h>                 // SIGTERM
+#include <stdbool.h>                // true
+#include <stdlib.h>                 // unsetenv
+#include <syslog.h>                 // LOG_INFO
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/services.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/remote_internal.h>
-#include <crm/fencing/internal.h>           // stonith__api_new()
-#include <crm/lrmd_internal.h>
+#include <glib.h>                   // G_OPTION_*
+#include <qb/qblog.h>               // QB_XS
+
+#include <crm/common/ipc.h>         // crm_ipc_flags
+#include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/options.h>     // PCMK_VALUE_NONE
+#include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*, crm_exit
+#include <crm/crm.h>                // crm_system_name
+#include <crm/fencing/internal.h>   // stonith__api_free, stonith__api_connect_retry
+#include <crm/lrmd_internal.h>      // lrmd__remote_send_xml
+#include <crm/stonith-ng.h>         // stonith_s, stonith_t, stonith_state
 
 #include "pacemaker-execd.h"
 
@@ -38,9 +41,7 @@
 #endif
 
 static GMainLoop *mainloop = NULL;
-static qb_ipcs_service_t *ipcs = NULL;
-static stonith_t *stonith_api = NULL;
-int lrmd_call_id = 0;
+static stonith_t *fencer_api = NULL;
 time_t start_time;
 
 static struct {
@@ -58,145 +59,45 @@ static gboolean shutting_down = FALSE;
 static void exit_executor(void);
 
 static void
-stonith_connection_destroy_cb(stonith_t * st, stonith_event_t * e)
+fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
 {
-    stonith_api->state = stonith_disconnected;
-    stonith_connection_failed();
+    fencer_api->state = stonith_disconnected;
+    execd_fencer_connection_failed();
 }
 
 stonith_t *
-get_stonith_connection(void)
+execd_get_fencer_connection(void)
 {
-    if (stonith_api && stonith_api->state == stonith_disconnected) {
-        stonith__api_free(stonith_api);
-        stonith_api = NULL;
+    if ((fencer_api != NULL) && (fencer_api->state == stonith_disconnected)) {
+        g_clear_pointer(&fencer_api, stonith__api_free);
     }
 
-    if (stonith_api == NULL) {
+    if (fencer_api == NULL) {
         int rc = pcmk_ok;
 
-        stonith_api = stonith__api_new();
-        if (stonith_api == NULL) {
-            crm_err("Could not connect to fencer: API memory allocation failed");
+        fencer_api = stonith__api_new();
+        if (fencer_api == NULL) {
+            pcmk__err("Could not connect to fencer: API memory allocation "
+                      "failed");
             return NULL;
         }
-        rc = stonith__api_connect_retry(stonith_api, crm_system_name, 10);
+
+        rc = stonith__api_connect_retry(fencer_api, crm_system_name, 10);
         if (rc != pcmk_rc_ok) {
-            crm_err("Could not connect to fencer in 10 attempts: %s "
-                    QB_XS " rc=%d", pcmk_rc_str(rc), rc);
-            stonith__api_free(stonith_api);
-            stonith_api = NULL;
-        } else {
-            stonith_api_operations_t *cmds = stonith_api->cmds;
+            pcmk__err("Could not connect to fencer in 10 attempts: %s "
+                      QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
+            g_clear_pointer(&fencer_api, stonith__api_free);
 
-            cmds->register_notification(stonith_api,
+        } else {
+            stonith_api_operations_t *cmds = fencer_api->cmds;
+
+            cmds->register_notification(fencer_api,
                                         PCMK__VALUE_ST_NOTIFY_DISCONNECT,
-                                        stonith_connection_destroy_cb);
+                                        fencer_connection_destroy_cb);
         }
     }
-    return stonith_api;
-}
-
-static int32_t
-lrmd_ipc_accept(qb_ipcs_connection_t * c, uid_t uid, gid_t gid)
-{
-    crm_trace("Connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -ENOMEM;
-    }
-    return 0;
-}
-
-static void
-lrmd_ipc_created(qb_ipcs_connection_t * c)
-{
-    pcmk__client_t *new_client = pcmk__find_client(c);
-
-    crm_trace("Connection %p", c);
-    pcmk__assert(new_client != NULL);
-    /* Now that the connection is offically established, alert
-     * the other clients a new connection exists. */
-
-    notify_of_new_client(new_client);
-}
-
-static int32_t
-lrmd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *request = NULL;
-
-    CRM_CHECK(client != NULL, crm_err("Invalid client");
-              return FALSE);
-    CRM_CHECK(client->id != NULL, crm_err("Invalid client: %p", client);
-              return FALSE);
-
-    rc = pcmk__ipc_msg_append(&client->buffer, data);
-
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
-
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        request = pcmk__client_data2xml(client, &id, &flags);
-        g_byte_array_free(client->buffer, TRUE);
-        client->buffer = NULL;
-
-    } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        crm_err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (client->buffer != NULL) {
-            g_byte_array_free(client->buffer, TRUE);
-            client->buffer = NULL;
-        }
-
-        return 0;
-    }
-
-    CRM_CHECK(flags & crm_ipc_client_response, crm_err("Invalid client request: %p", client);
-              return FALSE);
-
-    if (!request) {
-        return 0;
-    }
-
-    /* @TODO functionize some of this to reduce duplication with
-     * lrmd_remote_client_msg()
-     */
-
-    if (!client->name) {
-        const char *value = crm_element_value(request,
-                                              PCMK__XA_LRMD_CLIENTNAME);
-
-        if (value == NULL) {
-            client->name = pcmk__itoa(pcmk__client_pid(c));
-        } else {
-            client->name = pcmk__str_copy(value);
-        }
-    }
-
-    lrmd_call_id++;
-    if (lrmd_call_id < 1) {
-        lrmd_call_id = 1;
-    }
-
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
-
-    process_lrmd_message(client, id, request);
-
-    pcmk__xml_free(request);
-    return 0;
+    return fencer_api;
 }
 
 /*!
@@ -220,44 +121,11 @@ lrmd_client_destroy(pcmk__client_t *client)
 #endif
 }
 
-static int32_t
-lrmd_ipc_closed(qb_ipcs_connection_t * c)
-{
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        return 0;
-    }
-
-    crm_trace("Connection %p", c);
-    client_disconnect_cleanup(client->id);
-#ifdef PCMK__COMPILE_REMOTE
-    ipc_proxy_remove_provider(client);
-#endif
-    lrmd_client_destroy(client);
-    return 0;
-}
-
-static void
-lrmd_ipc_destroy(qb_ipcs_connection_t * c)
-{
-    lrmd_ipc_closed(c);
-    crm_trace("Connection %p", c);
-}
-
-static struct qb_ipcs_service_handlers lrmd_ipc_callbacks = {
-    .connection_accept = lrmd_ipc_accept,
-    .connection_created = lrmd_ipc_created,
-    .msg_process = lrmd_ipc_dispatch,
-    .connection_closed = lrmd_ipc_closed,
-    .connection_destroyed = lrmd_ipc_destroy
-};
-
 // \return Standard Pacemaker return code
 int
 lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 {
-    crm_trace("Sending reply (%d) to client (%s)", id, client->id);
+    pcmk__trace("Sending reply (%d) to client (%s)", id, client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             return pcmk__ipc_send_xml(client, id, reply, crm_ipc_flags_none);
@@ -266,9 +134,9 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
             return lrmd__remote_send_xml(client->remote, reply, id, "reply");
 #endif
         default:
-            crm_err("Could not send reply: unknown type for client %s "
-                    QB_XS " flags=%#llx",
-                    pcmk__client_name(client), client->flags);
+            pcmk__err("Could not send reply: unknown type for client %s "
+                      QB_XS " flags=%#llx",
+                      pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
 }
@@ -277,27 +145,27 @@ lrmd_server_send_reply(pcmk__client_t *client, uint32_t id, xmlNode *reply)
 int
 lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 {
-    crm_trace("Sending notification to client (%s)", client->id);
+    pcmk__trace("Sending notification to client (%s)", client->id);
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
             if (client->ipcs == NULL) {
-                crm_trace("Could not notify local client: disconnected");
+                pcmk__trace("Could not notify local client: disconnected");
                 return ENOTCONN;
             }
             return pcmk__ipc_send_xml(client, 0, msg, crm_ipc_server_event);
 #ifdef PCMK__COMPILE_REMOTE
         case pcmk__client_tls:
             if (client->remote == NULL) {
-                crm_trace("Could not notify remote client: disconnected");
+                pcmk__trace("Could not notify remote client: disconnected");
                 return ENOTCONN;
             } else {
                 return lrmd__remote_send_xml(client->remote, msg, 0, "notify");
             }
 #endif
         default:
-            crm_err("Could not notify client %s with unknown transport "
-                    QB_XS " flags=%#llx",
-                    pcmk__client_name(client), client->flags);
+            pcmk__err("Could not notify client %s with unknown transport "
+                      QB_XS " flags=%#llx",
+                      pcmk__client_name(client), client->flags);
     }
     return ENOTCONN;
 }
@@ -311,24 +179,21 @@ exit_executor(void)
 {
     const guint nclients = pcmk__ipc_client_count();
 
-    crm_info("Terminating with %d client%s",
-             nclients, pcmk__plural_s(nclients));
-    stonith__api_free(stonith_api);
-    if (ipcs) {
-        mainloop_del_ipc_server(ipcs);
-    }
+    pcmk__info("Terminating with %d client%s", nclients,
+               pcmk__plural_s(nclients));
+    stonith__api_free(fencer_api);
+    execd_ipc_cleanup();
 
 #ifdef PCMK__COMPILE_REMOTE
     execd_stop_tls_server();
     ipc_proxy_cleanup();
 #endif
 
-    pcmk__client_cleanup();
-
     if (mainloop) {
         lrmd_drain_alerts(mainloop);
     }
 
+    execd_unregister_handlers();
     g_hash_table_destroy(rsc_list);
 
     // @TODO End mainloop instead so all cleanup is done
@@ -352,13 +217,14 @@ lrmd_shutdown(int nsig)
      */
     if (ipc_proxy) {
         if (shutting_down) {
-            crm_notice("Waiting for cluster to stop resources before exiting");
+            pcmk__notice("Waiting for cluster to stop resources before "
+                         "exiting");
             return;
         }
 
-        crm_info("Sending shutdown request to cluster");
+        pcmk__info("Sending shutdown request to cluster");
         if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
-            crm_crit("Shutdown request failed, exiting immediately");
+            pcmk__crit("Shutdown request failed, exiting immediately");
 
         } else {
             /* We requested a shutdown. Now, we need to wait for an
@@ -392,12 +258,12 @@ handle_shutdown_ack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
-        crm_info("IPC proxy provider acknowledged shutdown request");
+        pcmk__info("IPC proxy provider acknowledged shutdown request");
         return;
     }
 #endif
-    crm_debug("Ignoring unexpected shutdown acknowledgment "
-              "from IPC proxy provider");
+    pcmk__debug("Ignoring unexpected shutdown acknowledgment from IPC proxy "
+                "provider");
 }
 
 /*!
@@ -409,13 +275,14 @@ handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (shutting_down) {
-        crm_info("Exiting immediately after IPC proxy provider "
-                 "indicated no resources will be stopped");
+        pcmk__info("Exiting immediately after IPC proxy provider indicated no "
+                   "resources will be stopped");
         exit_executor();
         return;
     }
 #endif
-    crm_debug("Ignoring unexpected shutdown rejection from IPC proxy provider");
+    pcmk__debug("Ignoring unexpected shutdown rejection from IPC proxy "
+                "provider");
 }
 
 static GOptionEntry entries[] = {
@@ -449,7 +316,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 }
 
 int
-main(int argc, char **argv, char **envp)
+main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -467,7 +334,7 @@ main(int argc, char **argv, char **envp)
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
-    remoted_spawn_pidone(argc, argv, envp);
+    remoted_spawn_pidone(argc, argv);
 #endif
 
     args = pcmk__new_common_args(SUMMARY);
@@ -496,21 +363,12 @@ main(int argc, char **argv, char **envp)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
     // Open additional log files
-    if (options.log_files != NULL) {
-        for (gchar **fname = options.log_files; *fname != NULL; fname++) {
-            rc = pcmk__add_logfile(*fname);
-
-            if (rc != pcmk_rc_ok) {
-                out->err(out, "Logging to %s is disabled: %s",
-                         *fname, pcmk_rc_str(rc));
-            }
-        }
-    }
+    pcmk__add_logfiles(options.log_files, out);
 
     pcmk__cli_init_logging(EXECD_NAME, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
@@ -542,7 +400,7 @@ main(int argc, char **argv, char **envp)
 
     start_time = time(NULL);
 
-    crm_notice("Starting Pacemaker " EXECD_TYPE " executor");
+    pcmk__notice("Starting Pacemaker " EXECD_TYPE " executor");
 
     /* The presence of this variable allegedly controls whether child
      * processes like httpd will try and use Systemd's sd_notify
@@ -555,22 +413,20 @@ main(int argc, char **argv, char **envp)
         int rc = pcmk__build_path(PCMK__OCF_TMP_DIR, 0755);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Could not create resource agent temporary directory "
-                     PCMK__OCF_TMP_DIR ": %s", pcmk_rc_str(rc));
+            pcmk__warn("Could not create resource agent temporary directory "
+                       PCMK__OCF_TMP_DIR ": %s",
+                       pcmk_rc_str(rc));
         }
     }
 
-    rsc_list = pcmk__strkey_table(NULL, free_rsc);
-    ipcs = mainloop_add_ipc_server(CRM_SYSTEM_LRMD, QB_IPC_SHM, &lrmd_ipc_callbacks);
-    if (ipcs == NULL) {
-        crm_err("Failed to create IPC server: shutting down and inhibiting respawn");
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
+    rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
+
+    execd_ipc_init();
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
-        crm_err("Failed to create TLS listener: shutting down and staying down");
+        pcmk__err("Failed to create TLS listener: shutting down and staying "
+                  "down");
         exit_code = CRM_EX_FATAL;
         goto done;
     }
@@ -579,8 +435,9 @@ main(int argc, char **argv, char **envp)
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
-    crm_notice("Pacemaker " EXECD_TYPE " executor successfully started and accepting connections");
-    crm_notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
+    pcmk__notice("Pacemaker " EXECD_TYPE " executor successfully started and "
+                 "accepting connections");
+    pcmk__notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
 
     /* should never get here */

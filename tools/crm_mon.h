@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,8 +14,8 @@
 
 #include <glib.h>
 
+#include <crm/common/internal.h>
 #include <crm/common/scheduler.h>
-#include <crm/common/output_internal.h>
 #include <crm/stonith-ng.h>
 
 /*
@@ -35,7 +35,7 @@
 #    endif
 #  endif
 
-typedef enum mon_output_format_e {
+typedef enum {
     mon_output_unset,
     mon_output_none,
     mon_output_plain,

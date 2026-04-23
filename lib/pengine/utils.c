@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,8 +17,6 @@
 #include <crm/pengine/internal.h>
 
 #include "pe_status_private.h"
-
-extern bool pcmk__is_daemon;
 
 gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
 
@@ -50,13 +48,13 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
         }
         return true;
 
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
+    } else if (!pcmk__is_set(scheduler->flags, pcmk__sched_fencing_enabled)) {
         return false; /* Turned off */
 
-    } else if (!pcmk_is_set(scheduler->flags, pcmk__sched_have_fencing)) {
+    } else if (!pcmk__is_set(scheduler->flags, pcmk__sched_have_fencing)) {
         return false; /* No devices */
 
-    } else if (pcmk_is_set(scheduler->flags, pcmk__sched_quorate)) {
+    } else if (pcmk__is_set(scheduler->flags, pcmk__sched_quorate)) {
         return true;
 
     } else if (scheduler->no_quorum_policy == pcmk_no_quorum_ignore) {
@@ -71,7 +69,8 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
          * so the above test by itself isn't good enough.
          */
         if (pcmk__is_pacemaker_remote_node(node)
-            && !pcmk_is_set(scheduler->flags, pcmk__sched_fence_remote_no_quorum)) {
+            && !pcmk__is_set(scheduler->flags,
+                             pcmk__sched_fence_remote_no_quorum)) {
             /* If we're on a system without quorum, it's entirely possible that
              * the remote resource was automatically moved to a node on the
              * partition with quorum.  We can't tell that from this node - the
@@ -100,12 +99,12 @@ pe_can_fence(const pcmk_scheduler_t *scheduler, const pcmk_node_t *node)
             }
         }
 
-        crm_notice("We can fence %s without quorum because they're in our membership",
-                   pcmk__node_name(node));
+        pcmk__notice("We can fence %s without quorum because they're in our "
+                     "membership", pcmk__node_name(node));
         return true;
     }
 
-    crm_trace("Cannot fence %s", pcmk__node_name(node));
+    pcmk__trace("Cannot fence %s", pcmk__node_name(node));
     return false;
 }
 
@@ -287,8 +286,8 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
                         const char *comment, GHashTable *nodes,
                         pcmk_scheduler_t *scheduler)
 {
-    if ((rsc != NULL) && pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
-        // Don't show allocation scores for orphans
+    if ((rsc != NULL) && pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
+        // Don't show allocation scores for removed resources
         return;
     }
     if (nodes == NULL) {
@@ -361,7 +360,7 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
 {
     pcmk_node_t *match = NULL;
 
-    if ((pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+    if ((pcmk__is_set(rsc->flags, pcmk__rsc_exclusive_probes)
          || (node->assign->probe_mode == pcmk__probe_never))
         && pcmk__str_eq(tag, "symmetric_default", pcmk__str_casei)) {
         /* This string comparision may be fragile, but exclusive resources and
@@ -424,10 +423,9 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         && (rsc->priv->assigned_node != NULL)) {
 
         // @TODO Should this be more like pcmk__unassign_resource()?
-        crm_info("Unassigning %s from %s",
-                 rsc->id, pcmk__node_name(rsc->priv->assigned_node));
-        pcmk__free_node_copy(rsc->priv->assigned_node);
-        rsc->priv->assigned_node = NULL;
+        pcmk__info("Unassigning %s from %s", rsc->id,
+                   pcmk__node_name(rsc->priv->assigned_node));
+        g_clear_pointer(&rsc->priv->assigned_node, pcmk__free_node_copy);
     }
 }
 
@@ -460,8 +458,8 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
         return FALSE;
 
     } else if (local_role > pcmk_role_started) {
-        if (pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                        pcmk__rsc_promotable)) {
+        if (pcmk__is_set(pe__const_top_resource(rsc, false)->flags,
+                         pcmk__rsc_promotable)) {
             if (local_role > pcmk_role_unpromoted) {
                 /* This is what we'd do anyway, just leave the default to avoid messing up the placement algorithm */
                 return FALSE;
@@ -494,8 +492,8 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
         return FALSE;
     }
 
-    crm_trace("Creating action wrappers for ordering: %s then %s",
-              first->uuid, then->uuid);
+    pcmk__trace("Creating action wrappers for ordering: %s then %s",
+                first->uuid, then->uuid);
 
     /* Ensure we never create a dependency on ourselves... it's happened */
     pcmk__assert(first != then);
@@ -506,7 +504,7 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
         pcmk__related_action_t *after = gIter->data;
 
         if ((after->action == then)
-            && pcmk_any_flags_set(after->flags, flags)) {
+            && pcmk__any_flags_set(after->flags, flags)) {
             return FALSE;
         }
     }
@@ -532,9 +530,7 @@ destroy_ticket(gpointer data)
 {
     pcmk__ticket_t *ticket = data;
 
-    if (ticket->state) {
-        g_hash_table_destroy(ticket->state);
-    }
+    g_clear_pointer(&ticket->state, g_hash_table_destroy);
     free(ticket->id);
     free(ticket);
 }
@@ -564,7 +560,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
             return NULL;
         }
 
-        crm_trace("Creating ticket entry for %s", ticket_id);
+        pcmk__trace("Creating ticket entry for %s", ticket_id);
 
         ticket->id = strdup(ticket_id);
         ticket->last_granted = -1;
@@ -580,7 +576,7 @@ ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler)
 const char *
 rsc_printable_id(const pcmk_resource_t *rsc)
 {
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_unique)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_unique)) {
         return rsc->id;
     }
     return pcmk__xe_id(rsc->priv->xml);
@@ -628,13 +624,13 @@ void
 trigger_unfencing(pcmk_resource_t *rsc, pcmk_node_t *node, const char *reason,
                   pcmk_action_t *dependency, pcmk_scheduler_t *scheduler)
 {
-    if (!pcmk_is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
+    if (!pcmk__is_set(scheduler->flags, pcmk__sched_enable_unfencing)) {
         /* No resources require it */
         return;
 
     } else if ((rsc != NULL)
-               && !pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
-        /* Wasn't a stonith device */
+               && !pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        // Wasn't a fencing device
         return;
 
     } else if(node
@@ -738,8 +734,8 @@ pe__resource_is_disabled(const pcmk_resource_t *rsc)
 
         if ((target_role_e == pcmk_role_stopped)
             || ((target_role_e == pcmk_role_unpromoted)
-                && pcmk_is_set(pe__const_top_resource(rsc, false)->flags,
-                               pcmk__rsc_promotable))) {
+                && pcmk__is_set(pe__const_top_resource(rsc, false)->flags,
+                                pcmk__rsc_promotable))) {
             return true;
         }
     }
@@ -858,7 +854,7 @@ pe__build_rsc_list(pcmk_scheduler_t *scheduler, const char *s)
              * into the filter list.  Otherwise, use the printable ID of whatever
              * resource was found that matches what was asked for.
              */
-            if (strstr(s, ":") != NULL) {
+            if (strchr(s, ':') != NULL) {
                 resources = g_list_prepend(resources, strdup(rsc->id));
             } else {
                 resources = g_list_prepend(resources, strdup(rsc_printable_id(rsc)));
@@ -901,7 +897,7 @@ pe__failed_probe_for_rsc(const pcmk_resource_t *rsc, const char *name)
         /* This resource operation was not run on the given node.  Note that if name is
          * NULL, this will always succeed.
          */
-        value = crm_element_value(xml_op, PCMK__META_ON_NODE);
+        value = pcmk__xe_get(xml_op, PCMK__META_ON_NODE);
         if (value == NULL || !pcmk__str_eq(value, name, pcmk__str_casei|pcmk__str_null_matches)) {
             continue;
         }

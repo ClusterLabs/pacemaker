@@ -43,10 +43,10 @@ assert_comment(const char *content)
     nodepriv = node->_private;
     assert_non_null(nodepriv);
     assert_int_equal(nodepriv->check, PCMK__XML_NODE_PRIVATE_MAGIC);
-    assert_true(pcmk_all_flags_set(nodepriv->flags,
-                                   pcmk__xf_dirty|pcmk__xf_created));
+    assert_true(pcmk__all_flags_set(nodepriv->flags,
+                                    pcmk__xf_dirty|pcmk__xf_created));
 
-    assert_true(pcmk_is_set(docpriv->flags, pcmk__xf_dirty));
+    assert_true(pcmk__is_set(docpriv->flags, pcmk__xf_dirty));
 
     pcmk__xml_free(node);
     pcmk__xml_free_doc(doc);

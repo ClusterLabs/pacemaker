@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <glib.h>
 
@@ -43,7 +45,7 @@ add_expected_result(pcmk_action_t *probe, const pcmk_resource_t *rsc,
 
 /*!
  * \internal
- * \brief Create any needed robes on a node for a list of resources
+ * \brief Create any needed probes on a node for a list of resources
  *
  * \param[in,out] rscs  List of resources to create probes for
  * \param[in,out] node  Node to create probes on
@@ -110,9 +112,9 @@ guest_resource_will_stop(const pcmk_node_t *node)
     /* Ideally, we'd check whether the guest has a required stop, but that
      * information doesn't exist yet, so approximate it ...
      */
-    return pcmk_is_set(node->priv->flags, pcmk__node_remote_reset)
+    return pcmk__is_set(node->priv->flags, pcmk__node_remote_reset)
            || node->details->unclean
-           || pcmk_is_set(guest_rsc->flags, pcmk__rsc_failed)
+           || pcmk__is_set(guest_rsc->flags, pcmk__rsc_failed)
            || (guest_rsc->priv->next_role == pcmk_role_stopped)
 
            // Guest is moving
@@ -137,15 +139,15 @@ probe_action(pcmk_resource_t *rsc, pcmk_node_t *node)
     pcmk_action_t *probe = NULL;
     char *key = pcmk__op_key(rsc->id, PCMK_ACTION_MONITOR, 0);
 
-    crm_debug("Scheduling probe of %s %s on %s",
-              pcmk_role_text(rsc->priv->orig_role), rsc->id,
-              pcmk__node_name(node));
+    pcmk__debug("Scheduling probe of %s %s on %s",
+                pcmk_role_text(rsc->priv->orig_role), rsc->id,
+                pcmk__node_name(node));
 
     probe = custom_action(rsc, key, PCMK_ACTION_MONITOR, node, FALSE,
                           rsc->priv->scheduler);
     pcmk__clear_action_flags(probe, pcmk__action_optional);
 
-    pcmk__order_vs_unfence(rsc, node, probe, pcmk__ar_ordered);
+    pcmk__order_vs_unfencing(rsc, node, probe, pcmk__ar_ordered);
     add_expected_result(probe, rsc, node);
     return probe;
 }
@@ -172,14 +174,14 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
 
     pcmk__assert((rsc != NULL) && (node != NULL));
 
-    if (!pcmk_is_set(rsc->priv->scheduler->flags,
-                     pcmk__sched_probe_resources)) {
+    if (!pcmk__is_set(rsc->priv->scheduler->flags,
+                      pcmk__sched_probe_resources)) {
         reason = "start-up probes are disabled";
         goto no_probe;
     }
 
     if (pcmk__is_pacemaker_remote_node(node)) {
-        if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
             reason = "Pacemaker Remote nodes cannot run stonith agents";
             goto no_probe;
 
@@ -189,7 +191,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
             reason = "guest nodes cannot run resources containing guest nodes";
             goto no_probe;
 
-        } else if (pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+        } else if (pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
             reason = "Pacemaker Remote nodes cannot host remote connections";
             goto no_probe;
         }
@@ -201,12 +203,12 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     }
 
     if ((rsc->priv->launcher != NULL)
-        && !pcmk_is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
+        && !pcmk__is_set(rsc->flags, pcmk__rsc_is_remote_connection)) {
         reason = "resource is inside a container";
         goto no_probe;
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_removed)) {
-        reason = "resource is orphaned";
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_removed)) {
+        reason = "resource is removed";
         goto no_probe;
 
     } else if (g_hash_table_lookup(rsc->priv->probed_nodes,
@@ -218,8 +220,8 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     allowed = g_hash_table_lookup(rsc->priv->allowed_nodes,
                                   node->priv->id);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_exclusive_probes)
-        || pcmk_is_set(top->flags, pcmk__rsc_exclusive_probes)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_exclusive_probes)
+        || pcmk__is_set(top->flags, pcmk__rsc_exclusive_probes)) {
         // Exclusive discovery is enabled ...
 
         if (allowed == NULL) {
@@ -281,7 +283,7 @@ pcmk__probe_rsc_on_node(pcmk_resource_t *rsc, pcmk_node_t *node)
     /* Prevent a start if the resource can't be probed, but don't cause the
      * resource or entire clone to stop if already active.
      */
-    if (!pcmk_is_set(probe->flags, pcmk__action_runnable)
+    if (!pcmk__is_set(probe->flags, pcmk__action_runnable)
         && (top->priv->active_nodes == NULL)) {
         pcmk__set_relation_flags(flags, pcmk__ar_unrunnable_first_blocks);
     }
@@ -386,8 +388,8 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                              pcmk__str_none)) {
             continue;
         } else if ((first == NULL)
-                   && !pcmk__ends_with(order->task1,
-                                       "_" PCMK_ACTION_STOP "_0")) {
+                   && !g_str_has_suffix(order->task1,
+                                        "_" PCMK_ACTION_STOP "_0")) {
             continue;
         }
 
@@ -402,18 +404,18 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
                                                pcmk__str_none)) {
                 continue;
             } else if ((then == NULL)
-                       && pcmk__ends_with(order->task2,
-                                          "_" PCMK_ACTION_STOP "_0")) {
+                       && g_str_has_suffix(order->task2,
+                                           "_" PCMK_ACTION_STOP "_0")) {
                 continue;
             }
         }
 
         // Preserve certain order options for future filtering
-        if (pcmk_is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
+        if (pcmk__is_set(order->flags, pcmk__ar_if_first_unmigratable)) {
             pcmk__set_relation_flags(order_flags,
                                      pcmk__ar_if_first_unmigratable);
         }
-        if (pcmk_is_set(order->flags, pcmk__ar_if_on_same_node)) {
+        if (pcmk__is_set(order->flags, pcmk__ar_if_on_same_node)) {
             pcmk__set_relation_flags(order_flags, pcmk__ar_if_on_same_node);
         }
 
@@ -443,11 +445,11 @@ add_probe_orderings_for_stops(pcmk_scheduler_t *scheduler)
             }
         }
 
-        crm_trace("Implying 'probe then' orderings for '%s then %s' "
-                  "(id=%d, type=%.6x)",
-                  ((first == NULL)? order->task1 : first->uuid),
-                  ((then == NULL)? order->task2 : then->uuid),
-                  order->id, order->flags);
+        pcmk__trace("Implying 'probe then' orderings for '%s then %s' "
+                    "(id=%d, type=%.6x)",
+                    ((first != NULL)? first->uuid : order->task1),
+                    ((then != NULL)? then->uuid : order->task2),
+                    order->id, order->flags);
 
         for (GList *probe_iter = probes; probe_iter != NULL;
              probe_iter = probe_iter->next) {
@@ -497,19 +499,19 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
      * many instances before we know the state on all nodes.
      */
     if ((after->action->rsc->priv->variant <= pcmk__rsc_variant_group)
-        || pcmk_is_set(probe->flags, pcmk__action_runnable)
+        || pcmk__is_set(probe->flags, pcmk__action_runnable)
         // The order type is already enforced for its parent.
-        || pcmk_is_set(after->flags, pcmk__ar_unrunnable_first_blocks)
+        || pcmk__is_set(after->flags, pcmk__ar_unrunnable_first_blocks)
         || (pe__const_top_resource(probe->rsc, false) != after->action->rsc)
         || !pcmk__str_eq(after->action->task, PCMK_ACTION_START,
                          pcmk__str_none)) {
         return;
     }
 
-    crm_trace("Adding probe start orderings for 'unrunnable %s@%s "
-              "then instances of %s@%s'",
-              probe->uuid, pcmk__node_name(probe->node),
-              after->action->uuid, pcmk__node_name(after->action->node));
+    pcmk__trace("Adding probe start orderings for 'unrunnable %s@%s "
+                "then instances of %s@%s'",
+                probe->uuid, pcmk__node_name(probe->node),
+                after->action->uuid, pcmk__node_name(after->action->node));
 
     for (GList *then_iter = after->action->actions_after; then_iter != NULL;
          then_iter = then_iter->next) {
@@ -524,19 +526,17 @@ add_start_orderings_for_probe(pcmk_action_t *probe,
             continue;
         }
 
-        crm_trace("Adding probe start ordering for 'unrunnable %s@%s "
-                  "then %s@%s' (type=%#.6x)",
-                  probe->uuid, pcmk__node_name(probe->node),
-                  then->action->uuid, pcmk__node_name(then->action->node),
-                  flags);
+        pcmk__trace("Adding probe start ordering for 'unrunnable %s@%s "
+                    "then %s@%s' (type=%#.6x)",
+                    probe->uuid, pcmk__node_name(probe->node),
+                    then->action->uuid, pcmk__node_name(then->action->node),
+                    flags);
 
         /* Prevent the instance from starting if the instance can't, but don't
          * cause any other intances to stop if already active.
          */
         order_actions(probe, then->action, flags);
     }
-
-    return;
 }
 
 /*!
@@ -565,14 +565,14 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
     }
 
     // Avoid running into any possible loop
-    if (pcmk_is_set(after->flags, pcmk__action_detect_loop)) {
+    if (pcmk__is_set(after->flags, pcmk__action_detect_loop)) {
         return;
     }
     pcmk__set_action_flags(after, pcmk__action_detect_loop);
 
-    crm_trace("Adding probe restart orderings for '%s@%s then %s@%s'",
-              probe->uuid, pcmk__node_name(probe->node),
-              after->uuid, pcmk__node_name(after->node));
+    pcmk__trace("Adding probe restart orderings for '%s@%s then %s@%s'",
+                probe->uuid, pcmk__node_name(probe->node),
+                after->uuid, pcmk__node_name(after->node));
 
     /* Add restart orderings if "then" is for a different primitive.
      * Orderings for collective resources will be added later.
@@ -595,7 +595,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
                 pcmk_action_t *then = (pcmk_action_t *) iter->data;
 
                 // Skip pseudo-actions (for example, those implied by fencing)
-                if (!pcmk_is_set(then->flags, pcmk__action_pseudo)) {
+                if (!pcmk__is_set(then->flags, pcmk__action_pseudo)) {
                     order_actions(probe, then, pcmk__ar_ordered);
                 }
             }
@@ -608,13 +608,13 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
     if ((after->rsc != NULL)
         && (after->rsc->priv->variant > pcmk__rsc_variant_group)) {
 
-        interleave = crm_is_true(g_hash_table_lookup(after->rsc->priv->meta,
-                                                     PCMK_META_INTERLEAVE));
+        interleave = pcmk__is_true(g_hash_table_lookup(after->rsc->priv->meta,
+                                                       PCMK_META_INTERLEAVE));
         if (interleave) {
             compatible_rsc = pcmk__find_compatible_instance(probe->rsc,
                                                             after->rsc,
                                                             pcmk_role_unknown,
-                                                            false);
+                                                            false, NULL);
         }
     }
 
@@ -634,7 +634,7 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
          * only used for unfencing case, which tends to introduce transition
          * loops...
          */
-        if (!pcmk_is_set(after_wrapper->flags, pcmk__ar_first_implies_then)) {
+        if (!pcmk__is_set(after_wrapper->flags, pcmk__ar_first_implies_then)) {
             /* The order type between a group/clone and its child such as
              * B.start-> B_child.start is:
              * pcmk__ar_then_implies_first_graphed
@@ -667,12 +667,12 @@ add_restart_orderings_for_probe(pcmk_action_t *probe, pcmk_action_t *after)
             }
         }
 
-        crm_trace("Recursively adding probe restart orderings for "
-                  "'%s@%s then %s@%s' (type=%#.6x)",
-                  after->uuid, pcmk__node_name(after->node),
-                  after_wrapper->action->uuid,
-                  pcmk__node_name(after_wrapper->action->node),
-                  after_wrapper->flags);
+        pcmk__trace("Recursively adding probe restart orderings for "
+                    "'%s@%s then %s@%s' (type=%#.6x)",
+                    after->uuid, pcmk__node_name(after->node),
+                    after_wrapper->action->uuid,
+                    pcmk__node_name(after_wrapper->action->node),
+                    after_wrapper->flags);
 
         add_restart_orderings_for_probe(probe, after_wrapper->action);
     }
@@ -793,7 +793,7 @@ order_then_probes(pcmk_scheduler_t *scheduler)
         }
 
         if (start == NULL) {
-            crm_debug("No start action for %s", rsc->id);
+            pcmk__debug("No start action for %s", rsc->id);
             continue;
         }
 
@@ -814,8 +814,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
 
                     before = clone_actions->data;
 
-                    crm_trace("Testing '%s then %s' for %s",
-                              first->uuid, before->action->uuid, start->uuid);
+                    pcmk__trace("Testing '%s then %s' for %s",
+                                first->uuid, before->action->uuid, start->uuid);
 
                     pcmk__assert(before->action->rsc != NULL);
                     first_rsc = before->action->rsc;
@@ -824,7 +824,8 @@ order_then_probes(pcmk_scheduler_t *scheduler)
 
             } else if (!pcmk__str_eq(first->task, PCMK_ACTION_START,
                                      pcmk__str_none)) {
-                crm_trace("Not a start op %s for %s", first->uuid, start->uuid);
+                pcmk__trace("Not a start op %s for %s", first->uuid,
+                            start->uuid);
             }
 
             if (first_rsc == NULL) {
@@ -832,23 +833,25 @@ order_then_probes(pcmk_scheduler_t *scheduler)
 
             } else if (pe__const_top_resource(first_rsc, false)
                        == pe__const_top_resource(start->rsc, false)) {
-                crm_trace("Same parent %s for %s", first_rsc->id, start->uuid);
+                pcmk__trace("Same parent %s for %s", first_rsc->id,
+                            start->uuid);
                 continue;
 
             } else if (!pcmk__is_clone(pe__const_top_resource(first_rsc,
                                                               false))) {
-                crm_trace("Not a clone %s for %s", first_rsc->id, start->uuid);
+                pcmk__trace("Not a clone %s for %s", first_rsc->id,
+                            start->uuid);
                 continue;
             }
 
-            crm_debug("Applying %s before %s", first->uuid, start->uuid);
+            pcmk__debug("Applying %s before %s", first->uuid, start->uuid);
 
             for (GList *probe_iter = probes; probe_iter != NULL;
                  probe_iter = probe_iter->next) {
 
                 pcmk_action_t *probe = (pcmk_action_t *) probe_iter->data;
 
-                crm_debug("Ordering %s before %s", first->uuid, probe->uuid);
+                pcmk__debug("Ordering %s before %s", first->uuid, probe->uuid);
                 order_actions(first, probe, pcmk__ar_ordered);
             }
         }
@@ -894,7 +897,7 @@ pcmk__schedule_probes(pcmk_scheduler_t *scheduler)
             continue;
         }
 
-        if (!pcmk_is_set(node->priv->flags, pcmk__node_probes_allowed)) {
+        if (!pcmk__is_set(node->priv->flags, pcmk__node_probes_allowed)) {
             // The user requested that probes not be done on this node
             continue;
         }

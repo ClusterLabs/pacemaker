@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,8 @@
 
 #include <crm_internal.h>
 
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
+#include <stdbool.h>
+
 #include <crm/common/iso8601.h>
 #include <crm/common/xml.h>
 #include <crm/pengine/status.h>
@@ -131,7 +131,7 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(out);
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

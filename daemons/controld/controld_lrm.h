@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,15 +9,23 @@
 #ifndef CONTROLD_LRM__H
 #  define CONTROLD_LRM__H
 
+#include <stdbool.h>
+#include <stdint.h>                 // UINT32_C
+#include <crm/lrmd.h>               // lrmd_t
+
+#include <controld_fsa.h>           // fsa_data_t
 #include <controld_messages.h>
+#include <controld_remote_ra.h>     // remote_ra_data_t
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                             const char *operation, guint interval_ms);
+void controld_invoke_execd(fsa_data_t *msg_data);
+
 void lrm_op_callback(lrmd_event_data_t * op);
 lrmd_t *crmd_local_lrmd_conn(void);
 
-typedef struct resource_history_s {
+typedef struct {
     char *id;
     uint32_t last_callid;
     lrmd_rsc_info_t rsc;
@@ -35,12 +43,12 @@ typedef struct resource_history_s {
 void history_free(gpointer data);
 
 enum active_op_e {
-    active_op_remove    = (1 << 0),
-    active_op_cancelled = (1 << 1),
+    active_op_remove    = (UINT32_C(1) << 0),
+    active_op_cancelled = (UINT32_C(1) << 1),
 };
 
 // In-flight action (recurring or pending)
-typedef struct active_op_s {
+typedef struct {
     guint interval_ms;
     int call_id;
     uint32_t flags; // bitmask of active_op_e
@@ -65,10 +73,10 @@ typedef struct active_op_s {
             (active_op)->flags, (flags_to_clear), #flags_to_clear);         \
     } while (0)
 
-typedef struct lrm_state_s {
+typedef struct {
     const char *node_name;
-    void *conn;                 // Reserved for controld_execd_state.c usage
-    void *remote_ra_data;       // Reserved for controld_remote_ra.c usage
+    lrmd_t *conn;                       // Reserved for controld_execd_state.c
+    remote_ra_data_t *remote_ra_data;   // Reserved for controld_remote_ra.c
 
     GHashTable *resource_history;
     GHashTable *active_ops;     // Pending and recurring actions
@@ -101,7 +109,7 @@ GList *lrm_state_get_list(void);
 /*!
  * \brief Initiate internal state tables
  */
-gboolean lrm_state_init_local(void);
+void lrm_state_init_local(void);
 
 /*!
  * \brief Destroy all state entries and internal state tables

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,7 @@
 
 #include <crm/crm.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -24,7 +25,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/cmdline_internal.h>
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
@@ -78,8 +78,8 @@ attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
     }
 
     pcmk__insert_dup(attr_set, options.attr_name, options.attr_value);
-    pcmk__str_update(&options.attr_name, NULL);
-    pcmk__str_update(&options.attr_value, NULL);
+    g_clear_pointer(&options.attr_name, free);
+    g_clear_pointer(&options.attr_value, free);
 
     modified = true;
 
@@ -147,8 +147,8 @@ set_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     }
 
     pcmk__insert_dup(attr_set, options.attr_name, options.attr_value);
-    pcmk__str_update(&options.attr_name, NULL);
-    pcmk__str_update(&options.attr_value, NULL);
+    g_clear_pointer(&options.attr_name, free);
+    g_clear_pointer(&options.attr_value, free);
 
     modified = true;
 
@@ -370,7 +370,7 @@ main(int argc, char **argv)
     pcmk__cli_init_logging("crm_ticket", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    if (rc != pcmk_rc_ok) {
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error creating output format %s: %s", args->output_ty,
@@ -382,7 +382,7 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(out);
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
@@ -396,16 +396,7 @@ main(int argc, char **argv)
     }
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
 
-    cib_conn = cib_new();
-    if (cib_conn == NULL) {
-        exit_code = CRM_EX_DISCONNECT;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB manager");
-        goto done;
-    }
-
-    rc = cib__signon_attempts(cib_conn, cib_command, 5);
-    rc = pcmk_legacy2rc(rc);
-
+    rc = cib__create_signon(&cib_conn);
     if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Could not connect to the CIB: %s",
@@ -575,7 +566,7 @@ main(int argc, char **argv)
                 const char *value = NULL;
 
                 value = g_hash_table_lookup(attr_set, PCMK__XA_GRANTED);
-                if (crm_is_true(value)) {
+                if (pcmk__is_true(value)) {
                     ticket_grant_warning(options.ticket_id);
                 } else {
                     ticket_revoke_warning(options.ticket_id);
@@ -628,18 +619,12 @@ main(int argc, char **argv)
     }
 
  done:
-    if (attr_set) {
-        g_hash_table_destroy(attr_set);
-    }
-    attr_set = NULL;
+    g_clear_pointer(&attr_set, g_hash_table_destroy);
 
-    if (attr_delete) {
-        g_list_free_full(attr_delete, free);
-    }
+    g_list_free_full(attr_delete, free);
     attr_delete = NULL;
 
-    pcmk_free_scheduler(scheduler);
-    scheduler = NULL;
+    g_clear_pointer(&scheduler, pcmk_free_scheduler);
 
     cib__clean_up_connection(&cib_conn);
 

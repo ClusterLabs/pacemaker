@@ -5,7 +5,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.0.10-9342a4147fc69f2081f8563a34509da5be0a89d0"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="freeze"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
         <nvpair id="cib-bootstrap-options-dc-deadtime" name="dc-deadtime" value="6s"/>
       </cluster_property_set>
     </crm_config>

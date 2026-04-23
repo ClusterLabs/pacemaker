@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,12 +8,14 @@
  */
 
 #include <crm_internal.h>
+
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
+
 #include <crm/crm.h>
 #include <crm/common/output.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__history_description()
 #include <crm/pengine/internal.h>
@@ -24,13 +26,13 @@
 
 #if PCMK__ENABLE_CURSES
 
-typedef struct curses_list_data_s {
+typedef struct {
     unsigned int len;
     char *singular_noun;
     char *plural_noun;
 } curses_list_data_t;
 
-typedef struct private_data_s {
+typedef struct {
     GQueue *parent_q;
 } private_data_t;
 
@@ -54,8 +56,7 @@ curses_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     g_queue_free_full(priv->parent_q, free_list_data);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool
@@ -124,7 +125,8 @@ curses_subprocess_output(pcmk__output_t *out, int exit_status,
  * object if version is requested, so this is never called.
  */
 static void
-curses_ver(pcmk__output_t *out, bool extended) {
+curses_ver(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 }
 
@@ -315,7 +317,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
             free(*dest);
         }
 
-        *dest = pcmk__assert_alloc(1, 1024);
+        *dest = pcmk__assert_alloc(1024, sizeof(char));
         /* On older systems, scanw is defined as taking a char * for its first argument,
          * while newer systems rightly want a const char *.  Accomodate both here due
          * to building with -Werror.
@@ -325,8 +327,7 @@ curses_prompt(const char *prompt, bool do_echo, char **dest)
     }
 
     if (rc < 1) {
-        free(*dest);
-        *dest = NULL;
+        g_clear_pointer(dest, free);
     }
 
     if (do_echo) {
@@ -430,11 +431,11 @@ static int
 cluster_maint_mode_console(pcmk__output_t *out, va_list args) {
     uint64_t flags = va_arg(args, uint64_t);
 
-    if (pcmk_is_set(flags, pcmk__sched_in_maintenance)) {
+    if (pcmk__is_set(flags, pcmk__sched_in_maintenance)) {
         curses_formatted_printf(out, "\n              *** Resource management is DISABLED ***\n");
         curses_formatted_printf(out, "  The cluster will not attempt to start, stop or recover services\n");
         return pcmk_rc_ok;
-    } else if (pcmk_is_set(flags, pcmk__sched_stop_all)) {
+    } else if (pcmk__is_set(flags, pcmk__sched_stop_all)) {
         curses_formatted_printf(out, "\n    *** Resource management is DISABLED ***\n");
         curses_formatted_printf(out, "  The cluster will keep all resources stopped\n");
         return pcmk_rc_ok;

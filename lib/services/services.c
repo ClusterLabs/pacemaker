@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>                // bool, true, false
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <stdio.h>
@@ -123,7 +124,7 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
         const char *found_class = resources_find_service_class(agent);
 
         if (found_class != NULL) {
-            crm_debug("Found %s agent %s for %s", found_class, agent, rsc);
+            pcmk__debug("Found %s agent %s for %s", found_class, agent, rsc);
             expanded_class = pcmk__str_copy(found_class);
         } else {
             const char *default_standard = NULL;
@@ -135,8 +136,8 @@ expand_resource_class(const char *rsc, const char *standard, const char *agent)
 #else
 #error No standards supported for service alias (configure script bug)
 #endif
-            crm_info("Assuming resource class %s for agent %s for %s",
-                     default_standard, agent, rsc);
+            pcmk__info("Assuming resource class %s for agent %s for %s",
+                       default_standard, agent, rsc);
             expanded_class = pcmk__str_copy(default_standard);
         }
     }
@@ -180,32 +181,34 @@ required_argument_missing(uint32_t ra_caps, const char *name,
                           const char *agent, const char *action)
 {
     if (pcmk__str_empty(name)) {
-        crm_info("Cannot create operation without resource name (bug?)");
+        pcmk__info("Cannot create operation without resource name (bug?)");
         return true;
     }
 
     if (pcmk__str_empty(standard)) {
-        crm_info("Cannot create operation for %s without resource class (bug?)",
-                 name);
+        pcmk__info("Cannot create operation for %s without resource class "
+                   "(bug?)",
+                   name);
         return true;
     }
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_provider)
         && pcmk__str_empty(provider)) {
-        crm_info("Cannot create operation for %s resource %s "
-                 "without provider (bug?)", standard, name);
+        pcmk__info("Cannot create operation for %s resource %s without "
+                   "provider (bug?)",
+                   standard, name);
         return true;
     }
 
     if (pcmk__str_empty(agent)) {
-        crm_info("Cannot create operation for %s without agent name (bug?)",
-                 name);
+        pcmk__info("Cannot create operation for %s without agent name (bug?)",
+                   name);
         return true;
     }
 
     if (pcmk__str_empty(action)) {
-        crm_info("Cannot create operation for %s without action name (bug?)",
-                 name);
+        pcmk__info("Cannot create operation for %s without action name (bug?)",
+                   name);
         return true;
     }
     return false;
@@ -232,7 +235,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
         return ENOMEM;
     }
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_status)
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_status)
         && pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei)) {
         action = PCMK_ACTION_STATUS;
     }
@@ -241,7 +244,7 @@ copy_action_arguments(svc_action_t *op, uint32_t ra_caps, const char *name,
         return ENOMEM;
     }
 
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_provider)) {
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_provider)) {
         op->provider = strdup(provider);
         if (op->provider == NULL) {
             return ENOMEM;
@@ -263,10 +266,8 @@ services__create_resource_action(const char *name, const char *standard,
 
     op = new_action();
     if (op == NULL) {
-        crm_crit("Cannot prepare action: %s", strerror(ENOMEM));
-        if (params != NULL) {
-            g_hash_table_destroy(params);
-        }
+        pcmk__crit("Cannot prepare action: %s", strerror(ENOMEM));
+        g_clear_pointer(&params, g_hash_table_destroy);
         return NULL;
     }
 
@@ -276,11 +277,11 @@ services__create_resource_action(const char *name, const char *standard,
     op->sequence = ++operations;
 
     // Take ownership of params
-    if (pcmk_is_set(ra_caps, pcmk_ra_cap_params)) {
+    if (pcmk__is_set(ra_caps, pcmk_ra_cap_params)) {
         op->params = params;
-    } else if (params != NULL) {
-        g_hash_table_destroy(params);
-        params = NULL;
+
+    } else {
+        g_clear_pointer(&params, g_hash_table_destroy);
     }
 
     if (required_argument_missing(ra_caps, name, standard, provider, agent,
@@ -295,8 +296,8 @@ services__create_resource_action(const char *name, const char *standard,
 
     if (copy_action_arguments(op, ra_caps, name, standard, provider, agent,
                               action) != pcmk_rc_ok) {
-        crm_crit("Cannot prepare %s action for %s: %s",
-                 action, name, strerror(ENOMEM));
+        pcmk__crit("Cannot prepare %s action for %s: %s", action, name,
+                   strerror(ENOMEM));
         services__handle_exec_error(op, ENOMEM);
         return op;
     }
@@ -313,13 +314,13 @@ services__create_resource_action(const char *name, const char *standard,
         rc = services__systemd_prepare(op);
 #endif
     } else {
-        crm_info("Unknown resource standard: %s", op->standard);
+        pcmk__info("Unknown resource standard: %s", op->standard);
         rc = ENOENT;
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_info("Cannot prepare %s operation for %s: %s",
-                 action, name, strerror(rc));
+        pcmk__info("Cannot prepare %s operation for %s: %s", action, name,
+                   strerror(rc));
         services__handle_exec_error(op, rc);
     }
     return op;
@@ -356,7 +357,8 @@ services_action_create_generic(const char *exec, const char *args[])
     op->opaque->exec = strdup(exec);
     op->opaque->args[0] = strdup(exec);
     if ((op->opaque->exec == NULL) || (op->opaque->args[0] == NULL)) {
-        crm_crit("Cannot prepare action for '%s': %s", exec, strerror(ENOMEM));
+        pcmk__crit("Cannot prepare action for '%s': %s", exec,
+                   strerror(ENOMEM));
         services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                              strerror(ENOMEM));
         return op;
@@ -369,8 +371,8 @@ services_action_create_generic(const char *exec, const char *args[])
     for (int cur_arg = 1; args[cur_arg - 1] != NULL; cur_arg++) {
 
         if (cur_arg == PCMK__NELEM(op->opaque->args)) {
-            crm_info("Cannot prepare action for '%s': Too many arguments",
-                     exec);
+            pcmk__info("Cannot prepare action for '%s': Too many arguments",
+                       exec);
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_ERROR_HARD, "Too many arguments");
             break;
@@ -378,8 +380,8 @@ services_action_create_generic(const char *exec, const char *args[])
 
         op->opaque->args[cur_arg] = strdup(args[cur_arg - 1]);
         if (op->opaque->args[cur_arg] == NULL) {
-            crm_crit("Cannot prepare action for '%s': %s",
-                     exec, strerror(ENOMEM));
+            pcmk__crit("Cannot prepare action for '%s': %s", exec,
+                       strerror(ENOMEM));
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_ERROR,
                                  strerror(ENOMEM));
             break;
@@ -435,8 +437,12 @@ services_alert_create(const char *id, const char *exec, int timeout,
 int
 services_action_user(svc_action_t *op, const char *user)
 {
+    int rc = pcmk_ok;
+
     CRM_CHECK((op != NULL) && (user != NULL), return -EINVAL);
-    return crm_user_lookup(user, &(op->opaque->uid), &(op->opaque->gid));
+
+    rc = pcmk__lookup_user(user, &(op->opaque->uid), &(op->opaque->gid));
+    return pcmk_rc2legacy(rc);
 }
 
 /*!
@@ -473,17 +479,19 @@ services_set_op_pending(svc_action_t *op, DBusPendingCall *pending)
 {
     if (op->opaque->pending && (op->opaque->pending != pending)) {
         if (pending) {
-            crm_info("Lost pending %s DBus call (%p)", op->id, op->opaque->pending);
+            pcmk__info("Lost pending %s DBus call (%p)", op->id,
+                       op->opaque->pending);
         } else {
-            crm_trace("Done with pending %s DBus call (%p)", op->id, op->opaque->pending);
+            pcmk__trace("Done with pending %s DBus call (%p)", op->id,
+                        op->opaque->pending);
         }
         dbus_pending_call_unref(op->opaque->pending);
     }
     op->opaque->pending = pending;
     if (pending) {
-        crm_trace("Updated pending %s DBus call (%p)", op->id, pending);
+        pcmk__trace("Updated pending %s DBus call (%p)", op->id, pending);
     } else {
-        crm_trace("Cleared pending %s DBus call", op->id);
+        pcmk__trace("Cleared pending %s DBus call", op->id);
     }
 }
 #endif
@@ -497,7 +505,7 @@ services_action_cleanup(svc_action_t * op)
 
 #if HAVE_DBUS
     if(op->opaque->timerid != 0) {
-        crm_trace("Removing timer for call %s to %s", op->action, op->rsc);
+        pcmk__trace("Removing timer for call %s to %s", op->action, op->rsc);
         g_source_remove(op->opaque->timerid);
         op->opaque->timerid = 0;
     }
@@ -505,11 +513,11 @@ services_action_cleanup(svc_action_t * op)
     if(op->opaque->pending) {
         if (dbus_pending_call_get_completed(op->opaque->pending)) {
             // This should never be the case
-            crm_warn("Result of %s op %s was unhandled",
-                     op->standard, op->id);
+            pcmk__warn("Result of %s op %s was unhandled", op->standard,
+                       op->id);
         } else {
-            crm_debug("Will ignore any result of canceled %s op %s",
-                      op->standard, op->id);
+            pcmk__debug("Will ignore any result of canceled %s op %s",
+                        op->standard, op->id);
         }
         dbus_pending_call_cancel(op->opaque->pending);
         services_set_op_pending(op, NULL);
@@ -556,8 +564,8 @@ services_result2ocf(const char *standard, const char *action, int exit_status)
 #endif
 
     } else {
-        crm_warn("Treating result from unknown standard '%s' as OCF",
-                 ((standard == NULL)? "unspecified" : standard));
+        pcmk__warn("Treating result from unknown standard '%s' as OCF",
+                   pcmk__s(standard, "unspecified"));
         return services__ocf2ocf(exit_status);
     }
 }
@@ -612,18 +620,14 @@ services_action_free(svc_action_t * op)
     free(op->stdout_data);
     free(op->stderr_data);
 
-    if (op->params) {
-        g_hash_table_destroy(op->params);
-        op->params = NULL;
-    }
-
+    g_clear_pointer(&op->params, g_hash_table_destroy);
     free(op);
 }
 
 gboolean
 cancel_recurring_action(svc_action_t * op)
 {
-    crm_info("Cancelling %s operation %s", op->standard, op->id);
+    pcmk__info("Cancelling %s operation %s", op->standard, op->id);
 
     if (recurring_actions) {
         g_hash_table_remove(recurring_actions, op->id);
@@ -673,11 +677,12 @@ services_action_cancel(const char *name, const char *action, guint interval_ms)
      * process goes away.
      */
     if (op->pid != 0) {
-        crm_info("Terminating in-flight op %s[%d] early because it was cancelled",
-                 id, op->pid);
+        pcmk__info("Terminating in-flight op %s[%d] early because it was "
+                   "cancelled",
+                   id, op->pid);
         cancelled = mainloop_child_kill(op->pid);
         if (cancelled == FALSE) {
-            crm_err("Termination of %s[%d] failed", id, op->pid);
+            pcmk__err("Termination of %s[%d] failed", id, op->pid);
         }
         goto done;
     }
@@ -867,8 +872,8 @@ services_action_async_fork_notify(svc_action_t * op,
         g_hash_table_replace(recurring_actions, op->id, op);
     }
 
-    if (!pcmk_is_set(op->flags, SVC_ACTION_NON_BLOCKED)
-        && op->rsc && is_op_blocked(op->rsc)) {
+    if (!pcmk__is_set(op->flags, SVC_ACTION_NON_BLOCKED)
+        && (op->rsc != NULL) && is_op_blocked(op->rsc)) {
         blocked_ops = g_list_append(blocked_ops, op);
         return TRUE;
     }
@@ -953,15 +958,15 @@ execute_metadata_action(svc_action_t *op)
     const char *class = op->standard;
 
     if (op->agent == NULL) {
-        crm_info("Meta-data requested without specifying agent");
+        pcmk__info("Meta-data requested without specifying agent");
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL, "Agent not specified");
         return EINVAL;
     }
 
     if (class == NULL) {
-        crm_info("Meta-data requested for agent %s without specifying class",
-                op->agent);
+        pcmk__info("Meta-data requested for agent %s without specifying class",
+                   op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_FATAL,
                              "Agent standard not specified");
@@ -973,8 +978,8 @@ execute_metadata_action(svc_action_t *op)
         class = resources_find_service_class(op->agent);
     }
     if (class == NULL) {
-        crm_info("Meta-data requested for %s, but could not determine class",
-                 op->agent);
+        pcmk__info("Meta-data requested for %s, but could not determine class",
+                   op->agent);
         services__set_result(op, services__generic_error(op),
                              PCMK_EXEC_ERROR_HARD,
                              "Agent standard could not be determined");
@@ -998,7 +1003,7 @@ services_action_sync(svc_action_t * op)
     gboolean rc = TRUE;
 
     if (op == NULL) {
-        crm_trace("No operation to execute");
+        pcmk__trace("No operation to execute");
         return FALSE;
     }
 
@@ -1016,21 +1021,15 @@ services_action_sync(svc_action_t * op)
     } else {
         rc = (execute_action(op) == pcmk_rc_ok);
     }
-    crm_trace(" > " PCMK__OP_FMT ": %s = %d",
-              op->rsc, op->action, op->interval_ms, op->opaque->exec, op->rc);
+    pcmk__trace(" > " PCMK__OP_FMT ": %s = %d", op->rsc, op->action,
+                op->interval_ms, op->opaque->exec, op->rc);
     if (op->stdout_data) {
-        crm_trace(" >  stdout: %s", op->stdout_data);
+        pcmk__trace(" >  stdout: %s", op->stdout_data);
     }
     if (op->stderr_data) {
-        crm_trace(" >  stderr: %s", op->stderr_data);
+        pcmk__trace(" >  stderr: %s", op->stderr_data);
     }
     return rc;
-}
-
-GList *
-get_directory_list(const char *root, gboolean files, gboolean executable)
-{
-    return services_os_get_directory_list(root, files, executable);
 }
 
 GList *
@@ -1066,8 +1065,8 @@ resources_list_standards(void)
 GList *
 resources_list_providers(const char *standard)
 {
-    if (pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
-        return resources_os_list_ocf_providers();
+    if (pcmk__is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider)) {
+        return services__list_ocf_providers();
     }
 
     return NULL;
@@ -1088,7 +1087,7 @@ resources_list_agents(const char *standard, const char *provider)
 
         if (standard == NULL) {
             tmp1 = result;
-            tmp2 = resources_os_list_ocf_agents(NULL);
+            tmp2 = services__list_ocf_agents(NULL);
             if (tmp2) {
                 result = g_list_concat(tmp1, tmp2);
             }
@@ -1109,7 +1108,7 @@ resources_list_agents(const char *standard, const char *provider)
         return result;
 
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_OCF) == 0) {
-        return resources_os_list_ocf_agents(provider);
+        return services__list_ocf_agents(provider);
 #if PCMK__ENABLE_LSB
     } else if (strcasecmp(standard, PCMK_RESOURCE_CLASS_LSB) == 0) {
         return services__list_lsb_agents();
@@ -1146,7 +1145,8 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 
     rc = FALSE;
 
-    has_providers = pcmk_is_set(pcmk_get_ra_caps(standard), pcmk_ra_cap_provider);
+    has_providers = pcmk__is_set(pcmk_get_ra_caps(standard),
+                                 pcmk_ra_cap_provider);
     if (has_providers == TRUE && provider != NULL) {
         providers = resources_list_providers(standard);
         for (iter = providers; iter != NULL; iter = iter->next) {
@@ -1183,7 +1183,7 @@ resources_agent_exists(const char *standard, const char *provider, const char *a
 #endif
 
     if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_OCF, pcmk__str_casei)) {
-        rc = services__ocf_agent_exists(provider, agent);
+        rc = services__ocf_agent_exists(provider, agent, NULL);
 
 #if PCMK__ENABLE_LSB
     } else if (pcmk__str_eq(standard, PCMK_RESOURCE_CLASS_LSB, pcmk__str_casei)) {
@@ -1294,11 +1294,12 @@ services__format_result(svc_action_t *action, int agent_status,
 void
 services__set_cancelled(svc_action_t *action)
 {
-    if (action != NULL) {
-        action->status = PCMK_EXEC_CANCELLED;
-        free(action->opaque->exit_reason);
-        action->opaque->exit_reason = NULL;
+    if (action == NULL) {
+        return;
     }
+
+    action->status = PCMK_EXEC_CANCELLED;
+    g_clear_pointer(&action->opaque->exit_reason, free);
 }
 
 /*!
@@ -1376,3 +1377,85 @@ services__grab_stderr(svc_action_t *action)
     action->stderr_data = NULL;
     return output;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/services_compat.h>
+
+static GList *
+gdl_helper(const char *dir, bool files, bool executable)
+{
+    GList *list = NULL;
+    struct dirent **namelist = NULL;
+    int entries = scandir(dir, &namelist, NULL, alphasort);
+
+    if (entries < 0) {
+        return NULL;
+    }
+
+    for (int i = 0; i < entries; i++) {
+        char *buffer = NULL;
+        struct stat sb;
+        int rc = 0;
+
+        if ('.' == namelist[i]->d_name[0]) {
+            continue;
+        }
+
+        buffer = pcmk__assert_asprintf("%s/%s", dir, namelist[i]->d_name);
+        rc = stat(buffer, &sb);
+        free(buffer);
+
+        if (rc != 0) {
+            continue;
+        }
+
+        if (S_ISDIR(sb.st_mode)) {
+            if (files) {
+                continue;
+            }
+
+        } else if (S_ISREG(sb.st_mode)) {
+            if (!files) {
+                continue;
+            }
+
+            if (executable
+                && !pcmk__any_flags_set(sb.st_mode, S_IXUSR|S_IXGRP|S_IXOTH)) {
+                continue;
+            }
+        }
+
+        list = g_list_append(list, pcmk__str_copy(namelist[i]->d_name));
+    }
+
+    for (int i = 0; i < entries; i++) {
+        free(namelist[i]);
+    }
+    free(namelist);
+    return list;
+}
+
+GList *
+get_directory_list(const char *root, gboolean files, gboolean executable)
+{
+    gchar **dir_paths = NULL;
+    GList *list = NULL;
+
+    if (pcmk__str_empty(root)) {
+        return NULL;
+    }
+
+    dir_paths = g_strsplit(root, ":", 0);
+
+    for (gchar **dir = dir_paths; *dir != NULL; dir++) {
+        list = g_list_concat(list, gdl_helper(*dir, files, executable));
+    }
+
+    g_strfreev(dir_paths);
+    return list;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

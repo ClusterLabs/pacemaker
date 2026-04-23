@@ -1,11 +1,12 @@
 """Kill a pacemaker daemon and test how the cluster recovers."""
 
 __all__ = ["ComponentFail"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -56,35 +57,30 @@ class ComponentFail(CTSTest):
         if not ret:
             return self.failure("Setup failed")
 
-        if not self._cm.cluster_stable(self._env["StableTime"]):
+        if not self._cm.cluster_stable(self._env["stable_time"]):
             return self.failure("Setup failed - unstable")
-
-        node_is_dc = self._cm.is_node_dc(node, None)
 
         # select a component to kill
         chosen = self._env.random_gen.choice(self._complist)
-        while chosen.dc_only and not node_is_dc:
-            chosen = self._env.random_gen.choice(self._complist)
+        node_is_dc = self._cm.is_node_dc(node, None)
 
         self.debug(f"...component {chosen.name} (dc={node_is_dc})")
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
             self._patterns.extend([
-                self.templates["Pat:ChildKilled"] % (node, chosen.name),
-                self.templates["Pat:ChildRespawn"] % (node, chosen.name),
+                self._cm.templates["Pat:ChildKilled"] % (node, chosen.name),
+                self._cm.templates["Pat:ChildRespawn"] % (node, chosen.name),
             ])
 
         self._patterns.extend(chosen.pats)
-        if node_is_dc:
-            self._patterns.extend(chosen.dc_pats)
 
         # @TODO this should be a flag in the Component
         if chosen.name in ["corosync", "pacemaker-based", "pacemaker-fenced"]:
             # Ignore actions for fence devices if fencer will respawn
             # (their registration will be lost, and probes will fail)
             self._okerrpatterns = [
-                self.templates["Pat:Fencing_active"],
+                self._cm.templates["Pat:Resource_active"],
             ]
             (_, lines) = self._rsh(node, "crm_resource -c", verbose=1)
 
@@ -94,8 +90,8 @@ class ComponentFail(CTSTest):
 
                     if r.rclass == "stonith":
                         self._okerrpatterns.extend([
-                            self.templates["Pat:Fencing_recover"] % r.id,
-                            self.templates["Pat:Fencing_probe"] % r.id,
+                            self._cm.templates["Pat:Fencing_recover"] % r.id,
+                            self._cm.templates["Pat:Fencing_probe"] % r.id,
                         ])
 
         # supply a copy so self.patterns doesn't end up empty
@@ -104,19 +100,19 @@ class ComponentFail(CTSTest):
 
         # Look for STONITH ops, depending on Env["at-boot"] we might need to change the nodes status
         stonith_pats = [
-            self.templates["Pat:Fencing_ok"] % node
+            self._cm.templates["Pat:Fencing_ok"] % node
         ]
         stonith = self.create_watch(stonith_pats, 0)
         stonith.set_watch()
 
         # set the watch for stable
         watch = self.create_watch(
-            tmp_pats, self._env["DeadTime"] + self._env["StableTime"] + self._env["StartTime"])
+            tmp_pats, self._env["dead_time"] + self._env["stable_time"] + self._env["start_time"])
 
         watch.set_watch()
 
         # kill the component
-        chosen.kill(node)
+        chosen.signal("KILL", node)
 
         self.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
@@ -125,14 +121,14 @@ class ComponentFail(CTSTest):
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
-        self._cm.cluster_stable(self._env["StartTime"])
+        self._cm.cluster_stable(self._env["start_time"])
 
         self.debug(f"Checking if {node} was shot")
         shot = stonith.look(60)
 
         if shot:
             self.debug(f"Found: {shot!r}")
-            self._okerrpatterns.append(self.templates["Pat:Fencing_start"] % node)
+            self._okerrpatterns.append(self._cm.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
                 self._cm.expected_status[node] = "down"
@@ -144,10 +140,10 @@ class ComponentFail(CTSTest):
         # check for logs indicating a graceful recovery
         matched = watch.look_for_all(allow_multiple_matches=True)
         if watch.unmatched:
-            self._logger.log(f"Patterns not found: {watch.unmatched!r}")
+            logging.log(f"Patterns not found: {watch.unmatched!r}")
 
         self.debug("Waiting for the cluster to re-stabilize with all nodes")
-        is_stable = self._cm.cluster_stable(self._env["StartTime"])
+        is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:
             return self.failure(f"Didn't find all expected {chosen.name} patterns")

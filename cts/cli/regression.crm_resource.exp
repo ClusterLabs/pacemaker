@@ -42,7 +42,7 @@ Meta-attributes applicable to primitive resources
     * Possible values: score (no default)
 
   * requires: Conditions under which the resource can be started
-    * Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the stonith-enabled cluster option is true; otherwise, "quorum".
+    * Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the fencing-enabled cluster option is true; otherwise, "quorum".
     * Possible values: "nothing", "quorum", "fencing", "unfencing"
 
   * migration-threshold: Number of failures on a node before the resource becomes ineligible to run there.
@@ -130,7 +130,7 @@ Meta-attributes applicable to primitive resources
         <content type="score"/>
       </parameter>
       <parameter name="requires" advanced="0" generated="0">
-        <longdesc lang="en">Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the stonith-enabled cluster option is true; otherwise, "quorum".</longdesc>
+        <longdesc lang="en">Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the fencing-enabled cluster option is true; otherwise, "quorum".</longdesc>
         <shortdesc lang="en">Conditions under which the resource can be started</shortdesc>
         <content type="select">
           <option value="nothing"/>
@@ -235,7 +235,7 @@ Meta-attributes applicable to primitive resources
     * Possible values: score (no default)
 
   * requires: Conditions under which the resource can be started
-    * Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the stonith-enabled cluster option is true; otherwise, "quorum".
+    * Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the fencing-enabled cluster option is true; otherwise, "quorum".
     * Possible values: "nothing", "quorum", "fencing", "unfencing"
 
   * migration-threshold: Number of failures on a node before the resource becomes ineligible to run there.
@@ -323,7 +323,7 @@ Meta-attributes applicable to primitive resources
         <content type="score"/>
       </parameter>
       <parameter name="requires" advanced="0" generated="0">
-        <longdesc lang="en">Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the stonith-enabled cluster option is true; otherwise, "quorum".</longdesc>
+        <longdesc lang="en">Conditions under which the resource can be started. "nothing" means the cluster can always start this resource. "quorum" means the cluster can start this resource only if a majority of the configured nodes are active. "fencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced. "unfencing" means the cluster can start this resource only if a majority of the configured nodes are active and any failed or unknown nodes have been fenced, and only on nodes that have been unfenced. The default is "quorum" for resources with a class of stonith; otherwise, "unfencing" if unfencing is active in the cluster; otherwise, "fencing" if the fencing-enabled cluster option is true; otherwise, "quorum".</longdesc>
         <shortdesc lang="en">Conditions under which the resource can be started</shortdesc>
         <content type="select">
           <option value="nothing"/>
@@ -482,7 +482,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_reboot_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_reboot_retries" advanced="1" generated="0">
@@ -497,7 +497,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_off_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_off_retries" advanced="1" generated="0">
@@ -512,7 +512,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_on_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_on_retries" advanced="1" generated="0">
@@ -527,7 +527,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_list_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_list_retries" advanced="1" generated="0">
@@ -542,7 +542,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_monitor_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_monitor_retries" advanced="1" generated="0">
@@ -557,7 +557,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_status_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_status_retries" advanced="1" generated="0">
@@ -610,7 +610,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'reboot' action.
       * Possible values: string (default: )
 
-    * pcmk_reboot_timeout: Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout
+    * pcmk_reboot_timeout: Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.
       * Possible values: timeout (default: )
 
@@ -622,7 +622,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'off' action.
       * Possible values: string (default: )
 
-    * pcmk_off_timeout: Specify an alternate timeout to use for 'off' actions instead of stonith-timeout
+    * pcmk_off_timeout: Specify an alternate timeout to use for 'off' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.
       * Possible values: timeout (default: )
 
@@ -634,7 +634,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'on' action.
       * Possible values: string (default: )
 
-    * pcmk_on_timeout: Specify an alternate timeout to use for 'on' actions instead of stonith-timeout
+    * pcmk_on_timeout: Specify an alternate timeout to use for 'on' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.
       * Possible values: timeout (default: )
 
@@ -646,7 +646,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'list' action.
       * Possible values: string (default: )
 
-    * pcmk_list_timeout: Specify an alternate timeout to use for 'list' actions instead of stonith-timeout
+    * pcmk_list_timeout: Specify an alternate timeout to use for 'list' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.
       * Possible values: timeout (default: )
 
@@ -658,7 +658,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'monitor' action.
       * Possible values: string (default: )
 
-    * pcmk_monitor_timeout: Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout
+    * pcmk_monitor_timeout: Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.
       * Possible values: timeout (default: )
 
@@ -670,7 +670,7 @@ Special parameters that are available for all fencing resources, regardless of t
       * Some devices do not support the standard commands or may provide additional ones. Use this to specify an alternate, device-specific, command that implements the 'status' action.
       * Possible values: string (default: )
 
-    * pcmk_status_timeout: Specify an alternate timeout to use for 'status' actions instead of stonith-timeout
+    * pcmk_status_timeout: Specify an alternate timeout to use for 'status' actions instead of fencing-timeout
       * Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.
       * Possible values: timeout (default: )
 
@@ -733,7 +733,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_reboot_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'reboot' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'reboot' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_reboot_retries" advanced="1" generated="0">
@@ -748,7 +748,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_off_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'off' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'off' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_off_retries" advanced="1" generated="0">
@@ -763,7 +763,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_on_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'on' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'on' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_on_retries" advanced="1" generated="0">
@@ -778,7 +778,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_list_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'list' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'list' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_list_retries" advanced="1" generated="0">
@@ -793,7 +793,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_monitor_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'monitor' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'monitor' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_monitor_retries" advanced="1" generated="0">
@@ -808,7 +808,7 @@ Special parameters that are available for all fencing resources, regardless of t
       </parameter>
       <parameter name="pcmk_status_timeout" advanced="1" generated="0">
         <longdesc lang="en">Some devices need much more/less time to complete than normal. Use this to specify an alternate, device-specific, timeout for 'status' actions.</longdesc>
-        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of stonith-timeout</shortdesc>
+        <shortdesc lang="en">Specify an alternate timeout to use for 'status' actions instead of fencing-timeout</shortdesc>
         <content type="timeout" default=""/>
       </parameter>
       <parameter name="pcmk_status_retries" advanced="1" generated="0">
@@ -824,7 +824,7 @@ Special parameters that are available for all fencing resources, regardless of t
 * Passed: crm_resource          - List all available fencing parameters (XML)
 =#=#=#= Begin test: Create a resource =#=#=#=
 =#=#=#= Current cib after: Create a resource =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -854,12 +854,10 @@ crm_resource: --class, --agent, and --provider can only be used with --validate 
 =#=#=#= End test: crm_resource given resource config with invalid action - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource          - crm_resource given resource config with invalid action
 =#=#=#= Begin test: Create a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -885,12 +883,10 @@ Set 'dummy' option: id=dummy-meta_attributes-is-managed set=dummy-meta_attribute
 =#=#=#= End test: Create a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - Create a resource meta attribute
 =#=#=#= Begin test: Query a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 false
 =#=#=#= Current cib after: Query a resource meta attribute =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -916,12 +912,10 @@ false
 =#=#=#= End test: Query a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - Query a resource meta attribute
 =#=#=#= Begin test: Remove a resource meta attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Remove a resource meta attribute =#=#=#=
-<cib epoch="6" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="6" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -945,9 +939,7 @@ Deleted 'dummy' option: id=dummy-meta_attributes-is-managed name=is-managed
 =#=#=#= End test: Remove a resource meta attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - Remove a resource meta attribute
 =#=#=#= Begin test: Create another resource meta attribute (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy --meta -p target-role -v Stopped --output-as=xml">
   <resource-settings>
     <primitive id="dummy">
@@ -961,9 +953,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Create another resource meta attribute (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Create another resource meta attribute (XML)
 =#=#=#= Begin test: Show why a resource is not running (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -Y -r dummy --output-as=xml">
   <reason running="false">
     <check id="dummy" remain_stopped="true"/>
@@ -973,18 +963,14 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Show why a resource is not running (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Show why a resource is not running (XML)
 =#=#=#= Begin test: Remove another resource meta attribute (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy --meta -d target-role --output-as=xml">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= End test: Remove another resource meta attribute (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Remove another resource meta attribute (XML)
 =#=#=#= Begin test: Get a non-existent attribute from a resource element (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy --get-parameter nonexistent --element --output-as=xml">
   <status code="0" message="OK">
     <errors>
@@ -995,12 +981,10 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Get a non-existent attribute from a resource element (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Get a non-existent attribute from a resource element (XML)
 =#=#=#= Begin test: Get a non-existent attribute from a resource element =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Attribute 'nonexistent' not found for 'dummy'
 =#=#=#= Current cib after: Get a non-existent attribute from a resource element =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="8" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1024,9 +1008,7 @@ Attribute 'nonexistent' not found for 'dummy'
 =#=#=#= End test: Get a non-existent attribute from a resource element - OK (0) =#=#=#=
 * Passed: crm_resource          - Get a non-existent attribute from a resource element
 =#=#=#= Begin test: Get a non-existent attribute from a resource element (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -r dummy --get-parameter nonexistent --element">
   <status code="0" message="OK">
     <errors>
@@ -1035,7 +1017,7 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
   </status>
 </pacemaker-result>
 =#=#=#= Current cib after: Get a non-existent attribute from a resource element (XML) =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="8" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1059,12 +1041,10 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Get a non-existent attribute from a resource element (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Get a non-existent attribute from a resource element (XML)
 =#=#=#= Begin test: Get an existent attribute from a resource element =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 ocf
 =#=#=#= Current cib after: Get an existent attribute from a resource element =#=#=#=
-<cib epoch="8" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="8" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1088,14 +1068,12 @@ ocf
 =#=#=#= End test: Get an existent attribute from a resource element - OK (0) =#=#=#=
 * Passed: crm_resource          - Get an existent attribute from a resource element
 =#=#=#= Begin test: Set a non-existent attribute for a resource element (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Set a non-existent attribute for a resource element (XML) =#=#=#=
-<cib epoch="9" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="9" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1119,14 +1097,12 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Set a non-existent attribute for a resource element (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Set a non-existent attribute for a resource element (XML)
 =#=#=#= Begin test: Set an existent attribute for a resource element (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy --set-parameter=description -v test_description --element --output-as=xml">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Set an existent attribute for a resource element (XML) =#=#=#=
-<cib epoch="10" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="10" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1150,14 +1126,12 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Set an existent attribute for a resource element (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Set an existent attribute for a resource element (XML)
 =#=#=#= Begin test: Delete an existent attribute for a resource element (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy -d description --element --output-as=xml">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Delete an existent attribute for a resource element (XML) =#=#=#=
-<cib epoch="11" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="11" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1181,14 +1155,12 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Delete an existent attribute for a resource element (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Delete an existent attribute for a resource element (XML)
 =#=#=#= Begin test: Delete a non-existent attribute for a resource element (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource -r dummy -d description --element --output-as=xml">
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Delete a non-existent attribute for a resource element (XML) =#=#=#=
-<cib epoch="12" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="12" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1212,12 +1184,10 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Delete a non-existent attribute for a resource element (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Delete a non-existent attribute for a resource element (XML)
 =#=#=#= Begin test: Set a non-existent attribute for a resource element =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Set attribute: name=description value=test_description
 =#=#=#= Current cib after: Set a non-existent attribute for a resource element =#=#=#=
-<cib epoch="13" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="13" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1241,12 +1211,10 @@ Set attribute: name=description value=test_description
 =#=#=#= End test: Set a non-existent attribute for a resource element - OK (0) =#=#=#=
 * Passed: crm_resource          - Set a non-existent attribute for a resource element
 =#=#=#= Begin test: Set an existent attribute for a resource element =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Set attribute: name=description value=test_description
 =#=#=#= Current cib after: Set an existent attribute for a resource element =#=#=#=
-<cib epoch="14" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="14" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1270,12 +1238,10 @@ Set attribute: name=description value=test_description
 =#=#=#= End test: Set an existent attribute for a resource element - OK (0) =#=#=#=
 * Passed: crm_resource          - Set an existent attribute for a resource element
 =#=#=#= Begin test: Delete an existent attribute for a resource element =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Deleted attribute: description
 =#=#=#= Current cib after: Delete an existent attribute for a resource element =#=#=#=
-<cib epoch="15" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="15" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1299,12 +1265,10 @@ Deleted attribute: description
 =#=#=#= End test: Delete an existent attribute for a resource element - OK (0) =#=#=#=
 * Passed: crm_resource          - Delete an existent attribute for a resource element
 =#=#=#= Begin test: Delete a non-existent attribute for a resource element =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Deleted attribute: description
 =#=#=#= Current cib after: Delete a non-existent attribute for a resource element =#=#=#=
-<cib epoch="16" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="16" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1328,12 +1292,10 @@ Deleted attribute: description
 =#=#=#= End test: Delete a non-existent attribute for a resource element - OK (0) =#=#=#=
 * Passed: crm_resource          - Delete a non-existent attribute for a resource element
 =#=#=#= Begin test: Create a resource attribute =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attributes name=delay value=10s
 =#=#=#= Current cib after: Create a resource attribute =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="17" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1360,13 +1322,11 @@ Set 'dummy' option: id=dummy-instance_attributes-delay set=dummy-instance_attrib
 =#=#=#= End test: Create a resource attribute - OK (0) =#=#=#=
 * Passed: crm_resource          - Create a resource attribute
 =#=#=#= Begin test: List the configured resources =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Full List of Resources:
   * dummy	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= Current cib after: List the configured resources =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="17" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1393,17 +1353,15 @@ Full List of Resources:
 =#=#=#= End test: List the configured resources - OK (0) =#=#=#=
 * Passed: crm_resource          - List the configured resources
 =#=#=#= Begin test: List the configured resources (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -L">
   <resources>
-    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" removed="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
   </resources>
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: List the configured resources (XML) =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="17" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1430,24 +1388,18 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: List the configured resources (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - List the configured resources (XML)
 =#=#=#= Begin test: Implicitly list the configured resources =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Full List of Resources:
   * dummy	(ocf:pacemaker:Dummy):	 Stopped
 =#=#=#= End test: Implicitly list the configured resources - OK (0) =#=#=#=
 * Passed: crm_resource          - Implicitly list the configured resources
 =#=#=#= Begin test: List IDs of instantiated resources =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 dummy
 =#=#=#= End test: List IDs of instantiated resources - OK (0) =#=#=#=
 * Passed: crm_resource          - List IDs of instantiated resources
 =#=#=#= Begin test: Show XML configuration of resource =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 dummy	(ocf:pacemaker:Dummy):	 Stopped
 Resource XML:
 <primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
@@ -1459,12 +1411,10 @@ Resource XML:
 =#=#=#= End test: Show XML configuration of resource - OK (0) =#=#=#=
 * Passed: crm_resource          - Show XML configuration of resource
 =#=#=#= Begin test: Show XML configuration of resource (XML) =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 <pacemaker-result api-version="X" request="crm_resource --output-as=xml -q -r dummy">
   <resource_config>
-    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
+    <resource id="dummy" resource_agent="ocf:pacemaker:Dummy" role="Stopped" active="false" orphaned="false" removed="false" blocked="false" maintenance="false" managed="true" failed="false" failure_ignored="false" nodes_running_on="0"/>
     <xml><![CDATA[<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy">
   <meta_attributes id="dummy-meta_attributes"/>
   <instance_attributes id="dummy-instance_attributes">
@@ -1478,13 +1428,11 @@ unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure 
 =#=#=#= End test: Show XML configuration of resource (XML) - OK (0) =#=#=#=
 * Passed: crm_resource          - Show XML configuration of resource (XML)
 =#=#=#= Begin test: Require a destination when migrating a resource that is stopped =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 crm_resource: Resource 'dummy' not moved: active in 0 locations.
 To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= Current cib after: Require a destination when migrating a resource that is stopped =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="17" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1511,13 +1459,11 @@ To prevent 'dummy' from running on a specific location, specify a node.
 =#=#=#= End test: Require a destination when migrating a resource that is stopped - Incorrect usage (64) =#=#=#=
 * Passed: crm_resource          - Require a destination when migrating a resource that is stopped
 =#=#=#= Begin test: Don't support migration to non-existent locations =#=#=#=
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 crm_resource: Node 'i.do.not.exist' not found
 Error performing operation: No such object
 =#=#=#= Current cib after: Don't support migration to non-existent locations =#=#=#=
-<cib epoch="17" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="17" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1545,7 +1491,7 @@ Error performing operation: No such object
 * Passed: crm_resource          - Don't support migration to non-existent locations
 =#=#=#= Begin test: Create a fencing resource =#=#=#=
 =#=#=#= Current cib after: Create a fencing resource =#=#=#=
-<cib epoch="18" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="18" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1599,7 +1545,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node1
 =#=#=#= Current cib after: Bring resources online =#=#=#=
-<cib epoch="18" num_updates="4" admin_epoch="0">
+<cib admin_epoch="0" epoch="18" num_updates="4">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1640,7 +1586,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Try to move a resource to its existing location =#=#=#=
 crm_resource: Error performing operation: Requested item already exists
 =#=#=#= Current cib after: Try to move a resource to its existing location =#=#=#=
-<cib epoch="18" num_updates="4" admin_epoch="0">
+<cib admin_epoch="0" epoch="18" num_updates="4">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1688,7 +1634,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Move a resource from its existing location =#=#=#=
-<cib epoch="19" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="19" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1731,7 +1677,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Clear out constraints generated by --move =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Clear out constraints generated by --move =#=#=#=
-<cib epoch="20" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="20" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1806,7 +1752,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node1
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Create two more nodes and bring them online =#=#=#=
-<cib epoch="22" num_updates="8" admin_epoch="0">
+<cib admin_epoch="0" epoch="22" num_updates="8">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1875,7 +1821,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 =#=#=#=
-<cib epoch="23" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="23" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -1955,7 +1901,7 @@ Locations:
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Ban dummy from node2 (XML) =#=#=#=
-<cib epoch="24" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="24" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2046,7 +1992,7 @@ Revised Cluster Status:
     * dummy	(ocf:pacemaker:Dummy):	 Started node3
     * Fence	(stonith:fence_true):	 Started node2
 =#=#=#= Current cib after: Relocate resources due to ban =#=#=#=
-<cib epoch="24" num_updates="2" admin_epoch="0">
+<cib admin_epoch="0" epoch="24" num_updates="2">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2118,7 +2064,7 @@ Revised Cluster Status:
   <status code="0" message="OK"/>
 </pacemaker-result>
 =#=#=#= Current cib after: Move dummy to node1 (XML) =#=#=#=
-<cib epoch="26" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="26" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2188,7 +2134,7 @@ Revised Cluster Status:
 =#=#=#= Begin test: Clear implicit constraints for dummy on node2 =#=#=#=
 Removing constraint: cli-ban-dummy-on-node2
 =#=#=#= Current cib after: Clear implicit constraints for dummy on node2 =#=#=#=
-<cib epoch="27" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="27" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2264,7 +2210,7 @@ Removing constraint: cli-ban-dummy-on-node2
 Performing update of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute =#=#=#=
-<cib epoch="29" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="29" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2302,7 +2248,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="30" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="30" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2349,7 +2295,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates =#=#=#=
-<cib epoch="31" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="31" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2391,7 +2337,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Update resource meta attribute with duplicates (force clone) =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update resource meta attribute with duplicates (force clone) =#=#=#=
-<cib epoch="32" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="32" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2437,7 +2383,7 @@ Multiple attributes match name=is-managed
 
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=false
 =#=#=#= Current cib after: Update child resource meta attribute with duplicates =#=#=#=
-<cib epoch="33" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="33" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2484,7 +2430,7 @@ Multiple attributes match name=is-managed
 A value for 'is-managed' already exists in child 'test-primitive', performing delete on that instead of 'test-clone'
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute with duplicates =#=#=#=
-<cib epoch="34" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="34" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2525,7 +2471,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 Performing delete of 'is-managed' on 'test-clone', the parent of 'test-primitive'
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource meta attribute in parent =#=#=#=
-<cib epoch="35" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="35" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2563,7 +2509,7 @@ Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-ma
 =#=#=#= Begin test: Create a resource meta attribute in the primitive =#=#=#=
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=test-primitive-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in the primitive =#=#=#=
-<cib epoch="36" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="36" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2604,7 +2550,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed set=te
 A value for 'is-managed' already exists in child 'test-primitive', performing update on that instead of 'test-clone'
 Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed value=true
 =#=#=#= Current cib after: Update existing resource meta attribute =#=#=#=
-<cib epoch="37" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="37" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2644,7 +2590,7 @@ Set 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=i
 =#=#=#= Begin test: Create a resource meta attribute in the parent =#=#=#=
 Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in the parent =#=#=#=
-<cib epoch="38" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="38" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2686,7 +2632,7 @@ Set 'test-clone' option: id=test-clone-meta_attributes-is-managed set=test-clone
 =#=#=#= Begin test: Delete resource parent meta attribute (force) =#=#=#=
 Deleted 'test-clone' option: id=test-clone-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource parent meta attribute (force) =#=#=#=
-<cib epoch="39" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="39" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2730,7 +2676,7 @@ Multiple attributes match name=is-managed
 
 Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed name=is-managed
 =#=#=#= Current cib after: Delete resource child meta attribute =#=#=#=
-<cib epoch="41" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="41" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2769,7 +2715,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 * Passed: crm_resource          - Delete resource child meta attribute
 =#=#=#= Begin test: Create the dummy-group resource group =#=#=#=
 =#=#=#= Current cib after: Create the dummy-group resource group =#=#=#=
-<cib epoch="42" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="42" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2813,7 +2759,7 @@ Deleted 'test-primitive' option: id=test-primitive-meta_attributes-is-managed na
 =#=#=#= Begin test: Create a resource meta attribute in dummy1 =#=#=#=
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attributes name=is-managed value=true
 =#=#=#= Current cib after: Create a resource meta attribute in dummy1 =#=#=#=
-<cib epoch="43" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="43" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2862,7 +2808,7 @@ Set 'dummy1' option: id=dummy1-meta_attributes-is-managed set=dummy1-meta_attrib
 Set 'dummy1' option: id=dummy1-meta_attributes-is-managed name=is-managed value=false
 Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-group-meta_attributes name=is-managed value=false
 =#=#=#= Current cib after: Create a resource meta attribute in dummy-group =#=#=#=
-<cib epoch="45" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="45" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2912,7 +2858,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 * Passed: crm_resource          - Create a resource meta attribute in dummy-group
 =#=#=#= Begin test: Delete the dummy-group resource group =#=#=#=
 =#=#=#= Current cib after: Delete the dummy-group resource group =#=#=#=
-<cib epoch="46" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="46" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2952,7 +2898,7 @@ Set 'dummy-group' option: id=dummy-group-meta_attributes-is-managed set=dummy-gr
 =#=#=#= Begin test: Specify a lifetime when moving a resource =#=#=#=
 Migration will take effect until:
 =#=#=#= Current cib after: Specify a lifetime when moving a resource =#=#=#=
-<cib epoch="48" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="48" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -2996,7 +2942,7 @@ Migration will take effect until:
 * Passed: crm_resource          - Specify a lifetime when moving a resource
 =#=#=#= Begin test: Try to move a resource previously moved with a lifetime =#=#=#=
 =#=#=#= Current cib after: Try to move a resource previously moved with a lifetime =#=#=#=
-<cib epoch="50" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="50" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3039,7 +2985,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 	This will prevent dummy from running on node1 until the constraint is removed using the clear option or by editing the CIB with an appropriate tool.
 	This will be the case even if node1 is the last node in the cluster
 =#=#=#= Current cib after: Ban dummy from node1 for a short time =#=#=#=
-<cib epoch="51" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="51" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3085,7 +3031,7 @@ WARNING: Creating rsc_location constraint 'cli-ban-dummy-on-node1' with a score 
 =#=#=#= Begin test: Remove expired constraints =#=#=#=
 Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Current cib after: Remove expired constraints =#=#=#=
-<cib epoch="52" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="52" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3125,7 +3071,7 @@ Removing constraint: cli-ban-dummy-on-node1
 =#=#=#= Begin test: Clear all implicit constraints for dummy =#=#=#=
 Removing constraint: cli-prefer-dummy
 =#=#=#= Current cib after: Clear all implicit constraints for dummy =#=#=#=
-<cib epoch="53" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="53" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3162,7 +3108,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource          - Clear all implicit constraints for dummy
 =#=#=#= Begin test: Set a node health strategy =#=#=#=
 =#=#=#= Current cib after: Set a node health strategy =#=#=#=
-<cib epoch="54" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="54" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3200,7 +3146,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_attribute         - Set a node health strategy
 =#=#=#= Begin test: Set a node health attribute =#=#=#=
 =#=#=#= Current cib after: Set a node health attribute =#=#=#=
-<cib epoch="55" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="55" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
@@ -3251,7 +3197,7 @@ Removing constraint: cli-prefer-dummy
 * Passed: crm_resource          - Show why a resource is not running on an unhealthy node (XML)
 =#=#=#= Begin test: Delete a resource =#=#=#=
 =#=#=#= Current cib after: Delete a resource =#=#=#=
-<cib epoch="56" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="56" num_updates="0">
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">

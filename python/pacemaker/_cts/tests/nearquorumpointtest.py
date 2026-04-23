@@ -1,9 +1,10 @@
 """Randomly start and stop nodes to bring the cluster close to the quorum point."""
 
 __all__ = ["NearQuorumPointTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -54,23 +55,23 @@ class NearQuorumPointTest(CTSTest):
         watchpats = []
         for node in stopset:
             if self._cm.expected_status[node] == "up":
-                watchpats.append(self.templates["Pat:We_stopped"] % node)
+                watchpats.append(self._cm.templates["Pat:We_stopped"] % node)
 
         for node in startset:
             if self._cm.expected_status[node] == "down":
-                watchpats.append(self.templates["Pat:Local_started"] % node)
+                watchpats.append(self._cm.templates["Pat:Local_started"] % node)
             else:
                 for stopping in stopset:
                     if self._cm.expected_status[stopping] == "up":
-                        watchpats.append(self.templates["Pat:They_stopped"] % (node, stopping))
+                        watchpats.append(self._cm.templates["Pat:They_stopped"] % (node, stopping))
 
         if not watchpats:
             return self.skipped()
 
         if startset:
-            watchpats.append(self.templates["Pat:DC_IDLE"])
+            watchpats.append(self._cm.templates["Pat:DC_IDLE"])
 
-        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+        watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
 
         watch.set_watch()
 
@@ -89,7 +90,7 @@ class NearQuorumPointTest(CTSTest):
             self._cm.fencing_cleanup("NearQuorumPoint", stonith)
             return self.success()
 
-        self._logger.log(f"Warn: Patterns not found: {watch.unmatched!r}")
+        logging.log(f"Warn: Patterns not found: {watch.unmatched!r}")
 
         # get the "bad" nodes
         upnodes = []
@@ -108,14 +109,14 @@ class NearQuorumPointTest(CTSTest):
 
             # Make sure they're completely down with no residule
             for node in stopset:
-                self._rsh(node, self.templates["StopCmd"])
+                self._rsh(node, self._cm.templates["StopCmd"])
 
             return self.success()
 
         if upnodes:
-            self._logger.log(f"Warn: Unstoppable nodes: {upnodes!r}")
+            logging.log(f"Warn: Unstoppable nodes: {upnodes!r}")
 
         if downnodes:
-            self._logger.log(f"Warn: Unstartable nodes: {downnodes!r}")
+            logging.log(f"Warn: Unstartable nodes: {downnodes!r}")
 
         return self.failure()

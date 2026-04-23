@@ -1,11 +1,15 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <cmdline_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_CMDLINE_INTERNAL__H
 #define PCMK__CRM_COMMON_CMDLINE_INTERNAL__H
@@ -160,28 +164,6 @@ gchar *pcmk__quote_cmdline(gchar **argv);
  */
 gchar **
 pcmk__cmdline_preproc(char *const *argv, const char *special);
-
-/*!
- * \internal
- * \brief Process extra arguments as if they were provided by the user on the
- *        command line.
- *
- * \param[in,out] context The command line option processing context.
- * \param[out]    error   A place for errors to be collected.
- * \param[in]     format  The command line to be processed, potentially with
- *                        format specifiers.
- * \param[in]     ...     Arguments to be formatted.
- *
- * \note The first item in the list of arguments must be the name of the
- *       program, exactly as if the format string were coming from the
- *       command line.  Otherwise, the first argument will be ignored.
- *
- * \return TRUE if processing succeeded, or FALSE otherwise.  If FALSE, error
- *         should be checked and displayed to the user.
- */
-G_GNUC_PRINTF(3, 4)
-gboolean
-pcmk__force_args(GOptionContext *context, GError **error, const char *format, ...);
 
 #ifdef __cplusplus
 }

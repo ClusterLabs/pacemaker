@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,23 +11,23 @@ include $(top_srcdir)/mk/common.mk
 
 headerdir=$(pkgincludedir)/crm
 
-header_HEADERS		= cib.h			\
-			  cib_compat.h		\
-			  cluster.h		\
-			  crm.h			\
-			  crm_compat.h		\
-			  lrmd.h		\
-			  lrmd_events.h		\
-			  msg_xml.h		\
-			  msg_xml_compat.h	\
-			  services.h		\
-			  services_compat.h	\
-			  stonith-ng.h
+header_HEADERS = cib.h
+header_HEADERS += cib_compat.h
+header_HEADERS += cluster.h
+header_HEADERS += crm.h
+header_HEADERS += crm_compat.h
+header_HEADERS += lrmd.h
+header_HEADERS += lrmd_events.h
+header_HEADERS += msg_xml.h
+header_HEADERS += msg_xml_compat.h
+header_HEADERS += services.h
+header_HEADERS += services_compat.h
+header_HEADERS += stonith-ng.h
 
 noinst_HEADERS		= $(wildcard *_internal.h)
 
-SUBDIRS                 = common 	\
-			  pengine 	\
-			  cib 		\
-			  fencing 	\
-			  cluster
+SUBDIRS = common
+SUBDIRS += pengine
+SUBDIRS += cib
+SUBDIRS += fencing
+SUBDIRS += cluster

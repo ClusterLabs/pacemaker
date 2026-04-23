@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 
 #  include <glib.h>                 // gboolean
 #  include <stdbool.h>              // bool
-#  include <crm/common/util.h>      // pcmk_is_set()
 #  include <crm/common/iso8601.h>
 #  include <crm/pengine/pe_types.h> // pcmk_node_t, pcmk_resource_t, etc.
 #  include <crm/pengine/complex.h>

@@ -1,5 +1,5 @@
 /*
- * Copyright 2006-2024 the Pacemaker project contributors
+ * Copyright 2006-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -38,16 +38,6 @@
 
 #include <crm/lrmd.h>
 #include <crm/cluster/internal.h>
-#include <crm/common/digest_internal.h>
-#include <crm/common/logging.h>
-#include <crm/common/logging_internal.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/options_internal.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler_internal.h>
-#include <crm/common/schemas_internal.h>
-#include <crm/common/servers_internal.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>
 #include <locale.h>
 #include <gettext.h>

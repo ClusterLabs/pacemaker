@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/fencing/internal.h>
 
 #include <glib.h>
@@ -28,14 +31,13 @@
 #include <crm/services_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"
 
 GHashTable *rsc_list = NULL;
 
-typedef struct lrmd_cmd_s {
+typedef struct {
     int timeout;
     guint interval_ms;
     int start_delay;
@@ -272,7 +274,7 @@ static const char *
 normalize_action_name(lrmd_rsc_t * rsc, const char *action)
 {
     if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_casei) &&
-        pcmk_is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
+        pcmk__is_set(pcmk_get_ra_caps(rsc->class), pcmk_ra_cap_status)) {
         return PCMK_ACTION_STATUS;
     }
     return action;
@@ -287,12 +289,12 @@ build_rsc_from_xml(xmlNode * msg)
 
     rsc = pcmk__assert_alloc(1, sizeof(lrmd_rsc_t));
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLOPT, &rsc->call_opts);
 
-    rsc->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    rsc->class = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
-    rsc->provider = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
-    rsc->type = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
+    rsc->rsc_id = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    rsc->class = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
+    rsc->provider = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
+    rsc->type = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
     rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
                                      rsc);
 
@@ -312,31 +314,29 @@ create_lrmd_cmd(xmlNode *msg, pcmk__client_t *client)
 
     cmd = pcmk__assert_alloc(1, sizeof(lrmd_cmd_t));
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLOPT, &call_options);
     cmd->call_opts = call_options;
     cmd->client_id = pcmk__str_copy(client->id);
 
-    crm_element_value_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
-    crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL,
-                         &cmd->interval_ms);
-    crm_element_value_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
-    crm_element_value_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY,
-                          &cmd->start_delay);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &cmd->call_id);
+    pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &cmd->interval_ms);
+    pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_TIMEOUT, &cmd->timeout);
+    pcmk__xe_get_int(rsc_xml, PCMK__XA_LRMD_RSC_START_DELAY, &cmd->start_delay);
     cmd->timeout_orig = cmd->timeout;
 
-    cmd->origin = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
-    cmd->action = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
-    cmd->userdata_str = crm_element_value_copy(rsc_xml,
-                                               PCMK__XA_LRMD_RSC_USERDATA_STR);
-    cmd->rsc_id = crm_element_value_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    cmd->origin = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_ORIGIN);
+    cmd->action = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
+    cmd->userdata_str = pcmk__xe_get_copy(rsc_xml,
+                                          PCMK__XA_LRMD_RSC_USERDATA_STR);
+    cmd->rsc_id = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     cmd->params = xml2list(rsc_xml);
 
     if (pcmk__str_eq(g_hash_table_lookup(cmd->params, "CRM_meta_on_fail"),
                      PCMK_VALUE_BLOCK, pcmk__str_casei)) {
-        crm_debug("Setting flag to leave pid group on timeout and "
-                  "only kill action pid for " PCMK__OP_FMT,
-                  cmd->rsc_id, cmd->action, cmd->interval_ms);
+        pcmk__debug("Setting flag to leave pid group on timeout and only kill "
+                    "action pid for " PCMK__OP_FMT,
+                    cmd->rsc_id, cmd->action, cmd->interval_ms);
         cmd->service_flags = pcmk__set_flags_as(__func__, __LINE__,
                                                 LOG_TRACE, "Action",
                                                 cmd->action, 0,
@@ -364,9 +364,9 @@ free_lrmd_cmd(lrmd_cmd_t * cmd)
     if (cmd->delay_id) {
         g_source_remove(cmd->delay_id);
     }
-    if (cmd->params) {
-        g_hash_table_destroy(cmd->params);
-    }
+
+    g_clear_pointer(&cmd->params, g_hash_table_destroy);
+
     pcmk__reset_result(&(cmd->result));
     free(cmd->origin);
     free(cmd->action);
@@ -484,10 +484,10 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     /* This should not occur. If it does, we need to investigate how something
      * like this is possible in the controller.
      */
-    crm_warn("Duplicate recurring op entry detected (" PCMK__OP_FMT
-             "), merging with previous op entry",
-             rsc->rsc_id, normalize_action_name(rsc, dup->action),
-             dup->interval_ms);
+    pcmk__warn("Duplicate recurring op entry detected (" PCMK__OP_FMT "), "
+               "merging with previous op entry",
+               rsc->rsc_id, normalize_action_name(rsc, dup->action),
+               dup->interval_ms);
 
     // Merge new action's call ID and user data into existing action
     dup->first_notify_sent = false;
@@ -495,8 +495,7 @@ merge_recurring_duplicate(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     dup->userdata_str = cmd->userdata_str;
     cmd->userdata_str = NULL;
     dup->call_id = cmd->call_id;
-    free_lrmd_cmd(cmd);
-    cmd = NULL;
+    g_clear_pointer(&cmd, free_lrmd_cmd);
 
     /* If dup is not pending, that means it has already executed at least once
      * and is waiting in the interval. In that case, stop waiting and initiate
@@ -522,7 +521,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     CRM_CHECK(cmd != NULL, return);
     CRM_CHECK(rsc != NULL, return);
 
-    crm_trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
+    pcmk__trace("Scheduling %s on %s", cmd->action, rsc->rsc_id);
 
     if (merge_recurring_duplicate(rsc, cmd)) {
         // Equivalent of cmd has already been scheduled
@@ -547,14 +546,14 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
     }
 }
 
-static xmlNode *
-create_lrmd_reply(const char *origin, int rc, int call_id)
+xmlNode *
+execd_create_reply_as(const char *origin, int rc, int call_id)
 {
     xmlNode *reply = pcmk__xe_create(NULL, PCMK__XE_LRMD_REPLY);
 
-    crm_xml_add(reply, PCMK__XA_LRMD_ORIGIN, origin);
-    crm_xml_add_int(reply, PCMK__XA_LRMD_RC, rc);
-    crm_xml_add_int(reply, PCMK__XA_LRMD_CALLID, call_id);
+    pcmk__xe_set(reply, PCMK__XA_LRMD_ORIGIN, origin);
+    pcmk__xe_set_int(reply, PCMK__XA_LRMD_RC, rc);
+    pcmk__xe_set_int(reply, PCMK__XA_LRMD_CALLID, call_id);
     return reply;
 }
 
@@ -569,16 +568,16 @@ send_client_notify(gpointer key, gpointer value, gpointer user_data)
 
     CRM_CHECK(client != NULL, return);
     if (client->name == NULL) {
-        crm_trace("Skipping notification to client without name");
+        pcmk__trace("Skipping notification to client without name");
         return;
     }
-    if (pcmk_is_set(client->flags, pcmk__client_to_proxy)) {
+    if (pcmk__is_set(client->flags, pcmk__client_to_proxy)) {
         /* We only want to notify clients of the executor IPC API. If we are
          * running as Pacemaker Remote, we may have clients proxied to other
          * IPC services in the cluster, so skip those.
          */
-        crm_trace("Skipping executor API notification to client %s",
-                  pcmk__client_name(client));
+        pcmk__trace("Skipping executor API notification to client %s",
+                    pcmk__client_name(client));
         return;
     }
 
@@ -619,7 +618,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
      * operation results, skip the notification if the result hasn't changed.
      */
     if (cmd->first_notify_sent
-        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_changes_only)
+        && pcmk__is_set(cmd->call_opts, lrmd_opt_notify_changes_only)
         && (cmd->last_notify_rc == cmd->result.exit_status)
         && (cmd->last_notify_op_status == cmd->result.execution_status)) {
         return;
@@ -631,42 +630,40 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
 
     notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
 
-    crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
-    crm_xml_add_ms(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
-                    cmd->result.execution_status);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_RSC_DELETED, cmd->rsc_deleted);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_TIMEOUT, cmd->timeout);
+    pcmk__xe_set_guint(notify, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_RSC_START_DELAY, cmd->start_delay);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_RC, cmd->result.exit_status);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_OP_STATUS,
+                     cmd->result.execution_status);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_CALLID, cmd->call_id);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_RSC_DELETED, cmd->rsc_deleted);
 
-    crm_xml_add_ll(notify, PCMK__XA_LRMD_RUN_TIME,
-                   (long long) cmd->epoch_last_run);
-    crm_xml_add_ll(notify, PCMK__XA_LRMD_RCCHANGE_TIME,
-                   (long long) cmd->epoch_rcchange);
+    pcmk__xe_set_time(notify, PCMK__XA_LRMD_RUN_TIME, cmd->epoch_last_run);
+    pcmk__xe_set_time(notify, PCMK__XA_LRMD_RCCHANGE_TIME, cmd->epoch_rcchange);
 #ifdef PCMK__TIME_USE_CGT
-    crm_xml_add_int(notify, PCMK__XA_LRMD_EXEC_TIME, exec_time);
-    crm_xml_add_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_EXEC_TIME, exec_time);
+    pcmk__xe_set_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
 #endif
 
-    crm_xml_add(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
-    crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
     if(cmd->real_action) {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->real_action);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->real_action);
     } else {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->action);
     }
-    crm_xml_add(notify, PCMK__XA_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
-    crm_xml_add(notify, PCMK__XA_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_USERDATA_STR, cmd->userdata_str);
+    pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_EXIT_REASON, cmd->result.exit_reason);
 
     if (cmd->result.action_stderr != NULL) {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
-                    cmd->result.action_stderr);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_OUTPUT,
+                     cmd->result.action_stderr);
 
     } else if (cmd->result.action_stdout != NULL) {
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_OUTPUT,
-                    cmd->result.action_stdout);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_OUTPUT,
+                     cmd->result.action_stdout);
     }
 
     if (cmd->params) {
@@ -682,7 +679,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
         }
     }
     if ((cmd->client_id != NULL)
-        && pcmk_is_set(cmd->call_opts, lrmd_opt_notify_orig_only)) {
+        && pcmk__is_set(cmd->call_opts, lrmd_opt_notify_orig_only)) {
 
         pcmk__client_t *client = pcmk__find_client_by_id(cmd->client_id);
 
@@ -696,8 +693,8 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     pcmk__xml_free(notify);
 }
 
-static void
-send_generic_notify(int rc, xmlNode * request)
+void
+execd_send_generic_notify(int rc, xmlNode *request)
 {
     if (pcmk__ipc_client_count() != 0) {
         int call_id = 0;
@@ -705,17 +702,17 @@ send_generic_notify(int rc, xmlNode * request)
         xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                                 "//" PCMK__XE_LRMD_RSC,
                                                 LOG_ERR);
-        const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-        const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
+        const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+        const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
 
-        crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
+        pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
         notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
-        crm_xml_add(notify, PCMK__XA_LRMD_ORIGIN, __func__);
-        crm_xml_add_int(notify, PCMK__XA_LRMD_RC, rc);
-        crm_xml_add_int(notify, PCMK__XA_LRMD_CALLID, call_id);
-        crm_xml_add(notify, PCMK__XA_LRMD_OP, op);
-        crm_xml_add(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_ORIGIN, __func__);
+        pcmk__xe_set_int(notify, PCMK__XA_LRMD_RC, rc);
+        pcmk__xe_set_int(notify, PCMK__XA_LRMD_CALLID, call_id);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_OP, op);
+        pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
 
         pcmk__foreach_ipc_client(send_client_notify, notify);
 
@@ -740,8 +737,9 @@ cmd_reset(lrmd_cmd_t * cmd)
 static void
 cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 {
-    crm_trace("Resource operation rsc:%s action:%s completed (%p %p)", cmd->rsc_id, cmd->action,
-              rsc ? rsc->active : NULL, cmd);
+    pcmk__trace("Resource operation rsc:%s action:%s completed (%p %p)",
+                cmd->rsc_id, cmd->action, ((rsc != NULL)? rsc->active : NULL),
+                cmd);
 
     if (rsc && (rsc->active == cmd)) {
         rsc->active = NULL;
@@ -799,8 +797,8 @@ notify_of_new_client(pcmk__client_t *new_client)
 
     data.new_client = new_client;
     data.notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
-    crm_xml_add(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
-    crm_xml_add(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
+    pcmk__xe_set(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     pcmk__xml_free(data.notify);
 }
@@ -814,7 +812,7 @@ client_disconnect_cleanup(const char *client_id)
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & rsc)) {
-        if (pcmk_all_flags_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
+        if (pcmk__is_set(rsc->call_opts, lrmd_opt_drop_recurring)) {
             /* This client is disconnecting, drop any recurring operations
              * it may have initiated on the resource */
             cancel_all_recurring(rsc, client_id);
@@ -838,8 +836,9 @@ action_complete(svc_action_t * action)
 #endif
 
     if (!cmd) {
-        crm_err("Completed executor action (%s) does not match any known operations",
-                action->id);
+        pcmk__err("Completed executor action (%s) does not match any known "
+                  "operations",
+                  action->id);
         return;
     }
 
@@ -909,11 +908,11 @@ action_complete(svc_action_t * action)
             int time_sum = time_diff_ms(NULL, &(cmd->t_first_run));
             int timeout_left = cmd->timeout_orig - time_sum;
 
-            crm_debug("%s systemd %s is now complete (elapsed=%dms, "
-                      "remaining=%dms): %s (%d)",
-                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
-                      crm_exit_str(cmd->result.exit_status),
-                      cmd->result.exit_status);
+            pcmk__debug("%s systemd %s is now complete (elapsed=%dms, "
+                        "remaining=%dms): %s (%d)",
+                        cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                        crm_exit_str(cmd->result.exit_status),
+                        cmd->result.exit_status);
             cmd_original_times(cmd);
 
             // Monitors may return "not running", but start/stop shouldn't
@@ -940,10 +939,12 @@ action_complete(svc_action_t * action)
             int time_left = time(NULL) - (cmd->epoch_rcchange + (cmd->timeout_orig/1000));
 
             if (time_left >= 0) {
-                crm_notice("Giving up on %s %s (rc=%d): monitor pending timeout "
-                           "(first pending notification=%s timeout=%ds)",
-                           cmd->rsc_id, cmd->action, cmd->result.exit_status,
-                           pcmk__trim(ctime(&cmd->epoch_rcchange)), cmd->timeout_orig);
+                pcmk__notice("Giving up on %s %s (rc=%d): monitor pending "
+                             "timeout (first pending notification=%s "
+                             "timeout=%dms)",
+                             cmd->rsc_id, cmd->action, cmd->result.exit_status,
+                             g_strchomp(ctime(&cmd->epoch_rcchange)),
+                             cmd->timeout_orig);
                 pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                                  PCMK_EXEC_TIMEOUT,
                                  "Investigate reason for timeout, and adjust "
@@ -971,21 +972,24 @@ action_complete(svc_action_t * action)
         cmd->timeout = timeout_left;
 
         if (pcmk__result_ok(&(cmd->result))) {
-            crm_debug("%s %s may still be in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                      cmd->rsc_id, cmd->real_action, time_sum, timeout_left, delay);
+            pcmk__debug("%s %s may still be in progress: re-scheduling "
+                        "(elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                        cmd->rsc_id, cmd->real_action, time_sum, timeout_left,
+                        delay);
 
         } else if (cmd->result.execution_status == PCMK_EXEC_PENDING) {
-            crm_info("%s %s is still in progress: re-scheduling (elapsed=%dms, remaining=%dms, start_delay=%dms)",
-                     cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
+            pcmk__info("%s %s is still in progress: re-scheduling "
+                       "(elapsed=%dms, remaining=%dms, start_delay=%dms)",
+                       cmd->rsc_id, cmd->action, time_sum, timeout_left, delay);
 
         } else {
-            crm_notice("%s %s failed: %s: Re-scheduling (remaining "
-                       "timeout %s) " QB_XS
-                       " exitstatus=%d elapsed=%dms start_delay=%dms)",
-                       cmd->rsc_id, cmd->action,
-                       crm_exit_str(cmd->result.exit_status),
-                       pcmk__readable_interval(timeout_left),
-                       cmd->result.exit_status, time_sum, delay);
+            pcmk__notice("%s %s failed: %s: Re-scheduling (remaining timeout "
+                         "%s) "
+                         QB_XS " exitstatus=%d elapsed=%dms start_delay=%dms)",
+                         cmd->rsc_id, cmd->action,
+                         crm_exit_str(cmd->result.exit_status),
+                         pcmk__readable_interval(timeout_left),
+                         cmd->result.exit_status, time_sum, delay);
         }
 
         cmd_reset(cmd);
@@ -998,10 +1002,10 @@ action_complete(svc_action_t * action)
         return;
 
     } else {
-        crm_notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, remaining=%dms)",
-                   cmd->rsc_id,
-                   (cmd->real_action? cmd->real_action : cmd->action),
-                   cmd->result.exit_status, time_sum, timeout_left);
+        pcmk__notice("Giving up on %s %s (rc=%d): timeout (elapsed=%dms, "
+                     "remaining=%dms)",
+                     cmd->rsc_id, pcmk__s(cmd->real_action, cmd->action),
+                     cmd->result.exit_status, time_sum, timeout_left);
         pcmk__set_result(&(cmd->result), PCMK_OCF_UNKNOWN_ERROR,
                          PCMK_EXEC_TIMEOUT,
                          "Investigate reason for timeout, and adjust "
@@ -1026,9 +1030,9 @@ finalize:
  * \param[in]     exit_reason       Human-friendly detail, if action failed
  */
 static void
-stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
-                        enum pcmk_exec_status execution_status,
-                        const char *exit_reason)
+fencing_rsc_action_complete(lrmd_cmd_t *cmd, int exit_status,
+                            enum pcmk_exec_status execution_status,
+                            const char *exit_reason)
 {
     // This can be NULL if resource was removed before command completed
     lrmd_rsc_t *rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
@@ -1115,28 +1119,14 @@ stonith_action_complete(lrmd_cmd_t *cmd, int exit_status,
     cmd_finalize(cmd, rsc);
 }
 
-static void
-lrmd_stonith_callback(stonith_t * stonith, stonith_callback_data_t * data)
-{
-    if ((data == NULL) || (data->userdata == NULL)) {
-        crm_err("Ignoring fence action result: "
-                "Invalid callback arguments (bug?)");
-    } else {
-        stonith_action_complete((lrmd_cmd_t *) data->userdata,
-                                stonith__exit_status(data),
-                                stonith__execution_status(data),
-                                stonith__exit_reason(data));
-    }
-}
-
 void
-stonith_connection_failed(void)
+execd_fencer_connection_failed(void)
 {
     GHashTableIter iter;
     lrmd_rsc_t *rsc = NULL;
 
-    crm_warn("Connection to fencer lost (any pending operations for "
-             "fence devices will be considered failed)");
+    pcmk__warn("Connection to fencer lost (any pending operations for fence "
+               "devices will be considered failed)");
 
     g_hash_table_iter_init(&iter, rsc_list);
     while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &rsc)) {
@@ -1167,9 +1157,9 @@ stonith_connection_failed(void)
              * If cmd is rsc->active, this will set rsc->active to NULL, so we
              * don't have to worry about finalizing it a second time below.
              */
-            stonith_action_complete(cmd,
-                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                    "Lost connection to fencer");
+            fencing_rsc_action_complete(cmd, CRM_EX_ERROR,
+                                        PCMK_EXEC_NOT_CONNECTED,
+                                        "Lost connection to fencer");
         }
 
         if (rsc->active != NULL) {
@@ -1177,36 +1167,36 @@ stonith_connection_failed(void)
         }
         while (rsc->pending_ops != NULL) {
             // This will free the op and remove it from rsc->pending_ops
-            stonith_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
-                                    CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
-                                    "Lost connection to fencer");
+            fencing_rsc_action_complete((lrmd_cmd_t *) rsc->pending_ops->data,
+                                        CRM_EX_ERROR, PCMK_EXEC_NOT_CONNECTED,
+                                        "Lost connection to fencer");
         }
     }
 }
 
 /*!
  * \internal
- * \brief Execute a stonith resource "start" action
+ * \brief Execute a fencing resource "start" action
  *
- * Start a stonith resource by registering it with the fencer.
- * (Stonith agents don't have a start command.)
+ * Start a fencing resource by registering it with the fencer. (Fencing agents
+ * don't have a start command.)
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in]     rsc          Stonith resource to start
- * \param[in]     cmd          Start command to execute
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in]     rsc         Fencing resource to start
+ * \param[in]     cmd         Start command to execute
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static int
-execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
-                    const lrmd_cmd_t *cmd)
+start_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc,
+                  const lrmd_cmd_t *cmd)
 {
     char *key = NULL;
     char *value = NULL;
     stonith_key_value_t *device_params = NULL;
     int rc = pcmk_ok;
 
-    // Convert command parameters to stonith API key/values
+    // Convert command parameters to fencer API key/values
     if (cmd->params) {
         GHashTableIter iter;
 
@@ -1222,9 +1212,9 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
      * resource, the executor registers the device as well. The fencer knows how
      * to handle duplicate registrations.
      */
-    rc = stonith_api->cmds->register_device(stonith_api, st_opt_sync_call,
-                                            cmd->rsc_id, rsc->provider,
-                                            rsc->type, device_params);
+    rc = fencer_api->cmds->register_device(fencer_api, st_opt_sync_call,
+                                           cmd->rsc_id, rsc->provider,
+                                           rsc->type, device_params);
 
     stonith__key_value_freeall(device_params, true, true);
     return rc;
@@ -1232,45 +1222,59 @@ execd_stonith_start(stonith_t *stonith_api, const lrmd_rsc_t *rsc,
 
 /*!
  * \internal
- * \brief Execute a stonith resource "stop" action
+ * \brief Execute a fencing resource "stop" action
  *
- * Stop a stonith resource by unregistering it with the fencer.
- * (Stonith agents don't have a stop command.)
+ * Stop a fencing resource by unregistering it with the fencer. (Fencing agents
+ * don't have a stop command.)
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in]     rsc          Stonith resource to stop
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in]     rsc         Fencing resource to stop
  *
  * \return pcmk_ok on success, -errno otherwise
  */
 static inline int
-execd_stonith_stop(stonith_t *stonith_api, const lrmd_rsc_t *rsc)
+stop_fencing_rsc(stonith_t *fencer_api, const lrmd_rsc_t *rsc)
 {
     /* @TODO Failure would indicate a problem communicating with fencer;
      * perhaps we should try reconnecting and retrying a few times?
      */
-    return stonith_api->cmds->remove_device(stonith_api, st_opt_sync_call,
-                                            rsc->rsc_id);
+    return fencer_api->cmds->remove_device(fencer_api, st_opt_sync_call,
+                                           rsc->rsc_id);
+}
+
+static void
+fencing_rsc_monitor_cb(stonith_t *stonith, stonith_callback_data_t *data)
+{
+    if ((data == NULL) || (data->userdata == NULL)) {
+        pcmk__err("Ignoring fencing resource monitor result: "
+                  "Invalid callback arguments (bug?)");
+    } else {
+        fencing_rsc_action_complete((lrmd_cmd_t *) data->userdata,
+                                    stonith__exit_status(data),
+                                    stonith__execution_status(data),
+                                    stonith__exit_reason(data));
+    }
 }
 
 /*!
  * \internal
- * \brief Initiate a stonith resource agent recurring "monitor" action
+ * \brief Initiate a fencing resource recurring "monitor" action
  *
- * \param[in,out] stonith_api  Connection to fencer
- * \param[in,out] rsc          Stonith resource to monitor
- * \param[in]     cmd          Monitor command being executed
+ * \param[in,out] fencer_api  Connection to fencer
+ * \param[in,out] rsc         Fencing resource to monitor
+ * \param[in]     cmd         Monitor command being executed
  *
  * \return pcmk_ok if monitor was successfully initiated, -errno otherwise
  */
 static inline int
-execd_stonith_monitor(stonith_t *stonith_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
+monitor_fencing_rsc(stonith_t *fencer_api, lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 {
-    int rc = stonith_api->cmds->monitor(stonith_api, 0, cmd->rsc_id,
-                                        pcmk__timeout_ms2s(cmd->timeout));
+    int rc = fencer_api->cmds->monitor(fencer_api, 0, cmd->rsc_id,
+                                       pcmk__timeout_ms2s(cmd->timeout));
 
-    rc = stonith_api->cmds->register_callback(stonith_api, rc, 0, 0, cmd,
-                                              "lrmd_stonith_callback",
-                                              lrmd_stonith_callback);
+    rc = fencer_api->cmds->register_callback(fencer_api, rc, 0, 0, cmd,
+                                             "fencing_rsc_monitor_cb",
+                                             fencing_rsc_monitor_cb);
     if (rc == TRUE) {
         rsc->active = cmd;
         rc = pcmk_ok;
@@ -1288,46 +1292,46 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     bool do_monitor = false;
 
     // Don't free; belongs to pacemaker-execd.c
-    stonith_t *stonith_api = get_stonith_connection();
+    stonith_t *fencer_api = execd_get_fencer_connection();
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR, pcmk__str_casei)
         && (cmd->interval_ms == 0)) {
         // Probes don't require a fencer connection
-        stonith_action_complete(cmd, rsc->fence_probe_result.exit_status,
-                                rsc->fence_probe_result.execution_status,
-                                rsc->fence_probe_result.exit_reason);
+        fencing_rsc_action_complete(cmd, rsc->fence_probe_result.exit_status,
+                                    rsc->fence_probe_result.execution_status,
+                                    rsc->fence_probe_result.exit_reason);
         return;
     }
 
-    if (stonith_api == NULL) {
-        stonith_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
-                                PCMK_EXEC_NOT_CONNECTED,
-                                "No connection to fencer");
+    if (fencer_api == NULL) {
+        fencing_rsc_action_complete(cmd, PCMK_OCF_UNKNOWN_ERROR,
+                                    PCMK_EXEC_NOT_CONNECTED,
+                                    "No connection to fencer");
         return;
     }
 
     if (pcmk__str_eq(cmd->action, PCMK_ACTION_START, pcmk__str_casei)) {
-        rc = execd_stonith_start(stonith_api, rsc, cmd);
+        rc = start_fencing_rsc(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             do_monitor = true;
         }
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        rc = execd_stonith_stop(stonith_api, rsc);
+        rc = stop_fencing_rsc(fencer_api, rsc);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_MONITOR,
                             pcmk__str_casei)) {
         do_monitor = true;
 
     } else {
-        stonith_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
-                                PCMK_EXEC_ERROR,
-                                "Invalid fence device action (bug?)");
+        fencing_rsc_action_complete(cmd, PCMK_OCF_UNIMPLEMENT_FEATURE,
+                                    PCMK_EXEC_ERROR,
+                                    "Invalid fence device action (bug?)");
         return;
     }
 
     if (do_monitor) {
-        rc = execd_stonith_monitor(stonith_api, rsc, cmd);
+        rc = monitor_fencing_rsc(fencer_api, rsc, cmd);
         if (rc == pcmk_ok) {
             // Don't clean up yet. We will get the result of the monitor later.
             return;
@@ -1337,9 +1341,9 @@ execute_stonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
     if (rc != -pcmk_err_generic) {
         rc_s = pcmk_strerror(rc);
     }
-    stonith_action_complete(cmd,
-                            ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
-                            stonith__legacy2status(rc), rc_s);
+    fencing_rsc_action_complete(cmd,
+                                ((rc == pcmk_rc_ok)? CRM_EX_OK : CRM_EX_ERROR),
+                                stonith__legacy2status(rc), rc_s);
 }
 
 static void
@@ -1350,8 +1354,9 @@ execute_nonstonith_action(lrmd_rsc_t *rsc, lrmd_cmd_t *cmd)
 
     pcmk__assert((rsc != NULL) && (cmd != NULL));
 
-    crm_trace("Creating action, resource:%s action:%s class:%s provider:%s agent:%s",
-              rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
+    pcmk__trace("Creating action, resource:%s action:%s class:%s provider:%s "
+                "agent:%s",
+                rsc->rsc_id, cmd->action, rsc->class, rsc->provider, rsc->type);
 
     params_copy = pcmk__str_table_dup(cmd->params);
 
@@ -1408,7 +1413,7 @@ execute_resource_action(gpointer user_data)
     CRM_CHECK(rsc != NULL, return FALSE);
 
     if (rsc->active) {
-        crm_trace("%s is still active", rsc->rsc_id);
+        pcmk__trace("%s is still active", rsc->rsc_id);
         return TRUE;
     }
 
@@ -1417,9 +1422,9 @@ execute_resource_action(gpointer user_data)
 
         cmd = first->data;
         if (cmd->delay_id) {
-            crm_trace
-                ("Command %s %s was asked to run too early, waiting for start_delay timeout of %dms",
-                 cmd->rsc_id, cmd->action, cmd->start_delay);
+            pcmk__trace("Command %s %s was asked to run too early, waiting for "
+                        "start_delay timeout of %dms",
+                        cmd->rsc_id, cmd->action, cmd->start_delay);
             return TRUE;
         }
         rsc->pending_ops = g_list_remove_link(rsc->pending_ops, first);
@@ -1432,7 +1437,7 @@ execute_resource_action(gpointer user_data)
     }
 
     if (!cmd) {
-        crm_trace("Nothing further to do for %s", rsc->rsc_id);
+        pcmk__trace("Nothing further to do for %s", rsc->rsc_id);
         return TRUE;
     }
 
@@ -1453,12 +1458,12 @@ execute_resource_action(gpointer user_data)
 }
 
 void
-free_rsc(gpointer data)
+execd_free_rsc(gpointer data)
 {
     GList *gIter = NULL;
     lrmd_rsc_t *rsc = data;
-    int is_stonith = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
-                                  pcmk__str_casei);
+    bool is_fencing_rsc = pcmk__str_eq(rsc->class, PCMK_RESOURCE_CLASS_STONITH,
+                                       pcmk__str_casei);
 
     gIter = rsc->pending_ops;
     while (gIter != NULL) {
@@ -1479,11 +1484,11 @@ free_rsc(gpointer data)
         GList *next = gIter->next;
         lrmd_cmd_t *cmd = gIter->data;
 
-        if (is_stonith) {
+        if (is_fencing_rsc) {
             cmd->result.execution_status = PCMK_EXEC_CANCELLED;
-            /* If a stonith command is in-flight, just mark it as cancelled;
-             * it is not safe to finalize/free the cmd until the stonith api
-             * says it has either completed or timed out.
+            /* If a fencing resource's recurring operation is in-flight, just
+             * mark it as cancelled. It is not safe to finalize/free the cmd
+             * until the fencer API says it has either completed or timed out.
              */
             if (rsc->active != cmd) {
                 cmd_finalize(cmd, NULL);
@@ -1512,28 +1517,30 @@ free_rsc(gpointer data)
     free(rsc);
 }
 
-static int
-process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
-                    xmlNode **reply)
+int
+execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
+                     xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     time_t now = time(NULL);
-    const char *protocol_version =
-        crm_element_value(request, PCMK__XA_LRMD_PROTOCOL_VERSION);
+    const char *protocol_version = pcmk__xe_get(request,
+                                                PCMK__XA_LRMD_PROTOCOL_VERSION);
     const char *start_state = pcmk__env_option(PCMK__ENV_NODE_START_STATE);
 
-    if (compare_version(protocol_version, LRMD_COMPATIBLE_PROTOCOL) < 0) {
-        crm_err("Cluster API version must be greater than or equal to %s, not %s",
-                LRMD_COMPATIBLE_PROTOCOL, protocol_version);
-        rc = -EPROTO;
+    if (pcmk__compare_versions(protocol_version,
+                               LRMD_COMPATIBLE_PROTOCOL) < 0) {
+        pcmk__err("Cluster API version must be greater than or equal to "
+                  LRMD_COMPATIBLE_PROTOCOL " , not %s",
+                  protocol_version);
+        rc = EPROTO;
     }
 
     if (pcmk__xe_attr_is_true(request, PCMK__XA_LRMD_IS_IPC_PROVIDER)) {
 #ifdef PCMK__COMPILE_REMOTE
         if ((client->remote != NULL)
-            && pcmk_is_set(client->flags,
-                           pcmk__client_tls_handshake_complete)) {
-            const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
+            && pcmk__is_set(client->flags,
+                            pcmk__client_tls_handshake_complete)) {
+            const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
 
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
@@ -1555,105 +1562,107 @@ process_lrmd_signon(pcmk__client_t *client, xmlNode *request, int call_id,
                 remoted_request_cib_schema_files();
             }
         } else {
-            rc = -EACCES;
+            rc = EACCES;
         }
 #else
-        rc = -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
 #endif
     }
 
-    *reply = create_lrmd_reply(__func__, rc, call_id);
-    crm_xml_add(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
-    crm_xml_add(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-    crm_xml_add_ll(*reply, PCMK__XA_UPTIME, now - start_time);
+    pcmk__assert(reply != NULL);
+
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
+    pcmk__xe_set(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
+    pcmk__xe_set(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+    pcmk__xe_set_time(*reply, PCMK__XA_UPTIME, now - start_time);
 
     if (start_state) {
-        crm_xml_add(*reply, PCMK__XA_NODE_START_STATE, start_state);
+        pcmk__xe_set(*reply, PCMK__XA_NODE_START_STATE, start_state);
     }
 
     return rc;
 }
 
-static int
-process_lrmd_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
+void
+execd_process_rsc_register(pcmk__client_t *client, uint32_t id, xmlNode *request)
 {
-    int rc = pcmk_ok;
     lrmd_rsc_t *rsc = build_rsc_from_xml(request);
     lrmd_rsc_t *dup = g_hash_table_lookup(rsc_list, rsc->rsc_id);
 
     if (dup &&
         pcmk__str_eq(rsc->class, dup->class, pcmk__str_casei) &&
-        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) && pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
+        pcmk__str_eq(rsc->provider, dup->provider, pcmk__str_casei) &&
+        pcmk__str_eq(rsc->type, dup->type, pcmk__str_casei)) {
 
-        crm_notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
-        free_rsc(rsc);
-        return rc;
+        pcmk__notice("Ignoring duplicate registration of '%s'", rsc->rsc_id);
+        execd_free_rsc(rsc);
+        return;
     }
 
     g_hash_table_replace(rsc_list, rsc->rsc_id, rsc);
-    crm_info("Cached agent information for '%s'", rsc->rsc_id);
-    return rc;
+    pcmk__info("Cached agent information for '%s'", rsc->rsc_id);
 }
 
-static xmlNode *
-process_lrmd_get_rsc_info(xmlNode *request, int call_id)
+int
+execd_process_get_rsc_info(xmlNode *request, int call_id, xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    xmlNode *reply = NULL;
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     lrmd_rsc_t *rsc = NULL;
 
     if (rsc_id == NULL) {
-        rc = -ENODEV;
+        rc = ENODEV;
     } else {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Agent information for '%s' not in cache", rsc_id);
-            rc = -ENODEV;
+            pcmk__info("Agent information for '%s' not in cache", rsc_id);
+            rc = ENODEV;
         }
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
+    CRM_LOG_ASSERT(reply != NULL);
+
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
     if (rsc) {
-        crm_xml_add(reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
-        crm_xml_add(reply, PCMK__XA_LRMD_CLASS, rsc->class);
-        crm_xml_add(reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
-        crm_xml_add(reply, PCMK__XA_LRMD_TYPE, rsc->type);
+        pcmk__xe_set(*reply, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
+        pcmk__xe_set(*reply, PCMK__XA_LRMD_CLASS, rsc->class);
+        pcmk__xe_set(*reply, PCMK__XA_LRMD_PROVIDER, rsc->provider);
+        pcmk__xe_set(*reply, PCMK__XA_LRMD_TYPE, rsc->type);
     }
-    return reply;
+
+    return rc;
 }
 
-static int
-process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
-                            xmlNode *request)
+int
+execd_process_rsc_unregister(pcmk__client_t *client, xmlNode *request)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     lrmd_rsc_t *rsc = NULL;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
-        return -ENODEV;
+        return ENODEV;
     }
 
     rsc = g_hash_table_lookup(rsc_list, rsc_id);
     if (rsc == NULL) {
-        crm_info("Ignoring unregistration of resource '%s', which is not registered",
-                 rsc_id);
-        return pcmk_ok;
+        pcmk__info("Ignoring unregistration of resource '%s', which is not "
+                   "registered", rsc_id);
+        return pcmk_rc_ok;
     }
 
     if (rsc->active) {
         /* let the caller know there are still active ops on this rsc to watch for */
-        crm_trace("Operation (%p) still in progress for unregistered resource %s",
-                  rsc->active, rsc_id);
-        rc = -EINPROGRESS;
+        pcmk__trace("Operation (%p) still in progress for unregistered "
+                    "resource %s", rsc->active, rsc_id);
+        rc = EINPROGRESS;
     }
 
     g_hash_table_remove(rsc_list, rsc_id);
@@ -1661,34 +1670,33 @@ process_lrmd_rsc_unregister(pcmk__client_t *client, uint32_t id,
     return rc;
 }
 
-static int
-process_lrmd_rsc_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
+int
+execd_process_rsc_exec(pcmk__client_t *client, xmlNode *request)
 {
     lrmd_rsc_t *rsc = NULL;
     lrmd_cmd_t *cmd = NULL;
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    int call_id;
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
 
     if (!rsc_id) {
-        return -EINVAL;
+        return EINVAL;
     }
+
     if (!(rsc = g_hash_table_lookup(rsc_list, rsc_id))) {
-        crm_info("Resource '%s' not found (%d active resources)",
-                 rsc_id, g_hash_table_size(rsc_list));
-        return -ENODEV;
+        pcmk__info("Resource '%s' not found (%d active resources)", rsc_id,
+                   g_hash_table_size(rsc_list));
+        return ENODEV;
     }
 
     cmd = create_lrmd_cmd(request, client);
-    call_id = cmd->call_id;
 
     /* Don't reference cmd after handing it off to be scheduled.
      * The cmd could get merged and freed. */
     schedule_lrmd_cmd(rsc, cmd);
 
-    return call_id;
+    return pcmk_rc_ok;
 }
 
 static int
@@ -1709,7 +1717,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
      *    never existed.
      */
     if (!rsc) {
-        return -ENODEV;
+        return ENODEV;
     }
 
     for (gIter = rsc->pending_ops; gIter != NULL; gIter = gIter->next) {
@@ -1718,7 +1726,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
         if (action_matches(cmd, action, interval_ms)) {
             cmd->result.execution_status = PCMK_EXEC_CANCELLED;
             cmd_finalize(cmd, rsc);
-            return pcmk_ok;
+            return pcmk_rc_ok;
         }
     }
 
@@ -1733,7 +1741,7 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
                 if (rsc->active != cmd) {
                     cmd_finalize(cmd, rsc);
                 }
-                return pcmk_ok;
+                return pcmk_rc_ok;
             }
         }
     } else if (services_action_cancel(rsc_id,
@@ -1743,10 +1751,10 @@ cancel_op(const char *rsc_id, const char *action, guint interval_ms)
          * this action was cancelled, which will destroy the cmd and remove
          * it from the recurring_op list. Do not do that in this function
          * if the service library says it cancelled it. */
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
-    return -EOPNOTSUPP;
+    return EOPNOTSUPP;
 }
 
 static void
@@ -1788,20 +1796,20 @@ cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id)
     g_list_free(cmd_list);
 }
 
-static int
-process_lrmd_rsc_cancel(pcmk__client_t *client, uint32_t id, xmlNode *request)
+int
+execd_process_rsc_cancel(pcmk__client_t *client, xmlNode *request)
 {
     xmlNode *rsc_xml = pcmk__xpath_find_one(request->doc,
                                             "//" PCMK__XE_LRMD_RSC,
                                             LOG_ERR);
-    const char *rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-    const char *action = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
+    const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+    const char *action = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ACTION);
     guint interval_ms = 0;
 
-    crm_element_value_ms(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
+    pcmk__xe_get_guint(rsc_xml, PCMK__XA_LRMD_RSC_INTERVAL, &interval_ms);
 
     if (!rsc_id || !action) {
-        return -EINVAL;
+        return EINVAL;
     }
 
     return cancel_op(rsc_id, action, interval_ms);
@@ -1812,25 +1820,25 @@ add_recurring_op_xml(xmlNode *reply, lrmd_rsc_t *rsc)
 {
     xmlNode *rsc_xml = pcmk__xe_create(reply, PCMK__XE_LRMD_RSC);
 
-    crm_xml_add(rsc_xml, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
+    pcmk__xe_set(rsc_xml, PCMK__XA_LRMD_RSC_ID, rsc->rsc_id);
     for (GList *item = rsc->recurring_ops; item != NULL; item = item->next) {
         lrmd_cmd_t *cmd = item->data;
         xmlNode *op_xml = pcmk__xe_create(rsc_xml, PCMK__XE_LRMD_RSC_OP);
 
-        crm_xml_add(op_xml, PCMK__XA_LRMD_RSC_ACTION,
-                    pcmk__s(cmd->real_action, cmd->action));
-        crm_xml_add_ms(op_xml, PCMK__XA_LRMD_RSC_INTERVAL, cmd->interval_ms);
-        crm_xml_add_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
+        pcmk__xe_set(op_xml, PCMK__XA_LRMD_RSC_ACTION,
+                     pcmk__s(cmd->real_action, cmd->action));
+        pcmk__xe_set_guint(op_xml, PCMK__XA_LRMD_RSC_INTERVAL,
+                           cmd->interval_ms);
+        pcmk__xe_set_int(op_xml, PCMK__XA_LRMD_TIMEOUT, cmd->timeout_orig);
     }
 }
 
-static xmlNode *
-process_lrmd_get_recurring(xmlNode *request, int call_id)
+int
+execd_process_get_recurring(xmlNode *request, int call_id, xmlNode **reply)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     const char *rsc_id = NULL;
     lrmd_rsc_t *rsc = NULL;
-    xmlNode *reply = NULL;
     xmlNode *rsc_xml = NULL;
 
     // Resource ID is optional
@@ -1839,20 +1847,22 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         rsc_xml = pcmk__xe_first_child(rsc_xml, PCMK__XE_LRMD_RSC, NULL, NULL);
     }
     if (rsc_xml) {
-        rsc_id = crm_element_value(rsc_xml, PCMK__XA_LRMD_RSC_ID);
+        rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
     }
 
     // If resource ID is specified, resource must exist
     if (rsc_id != NULL) {
         rsc = g_hash_table_lookup(rsc_list, rsc_id);
         if (rsc == NULL) {
-            crm_info("Resource '%s' not found (%d active resources)",
-                     rsc_id, g_hash_table_size(rsc_list));
-            rc = -ENODEV;
+            pcmk__info("Resource '%s' not found (%d active resources)", rsc_id,
+                       g_hash_table_size(rsc_list));
+            rc = ENODEV;
         }
     }
 
-    reply = create_lrmd_reply(__func__, rc, call_id);
+    CRM_LOG_ASSERT(reply != NULL);
+
+    *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
 
     // If resource ID is not specified, check all resources
     if (rsc_id == NULL) {
@@ -1862,149 +1872,11 @@ process_lrmd_get_recurring(xmlNode *request, int call_id)
         g_hash_table_iter_init(&iter, rsc_list);
         while (g_hash_table_iter_next(&iter, (gpointer *) &key,
                                       (gpointer *) &rsc)) {
-            add_recurring_op_xml(reply, rsc);
+            add_recurring_op_xml(*reply, rsc);
         }
     } else if (rsc) {
-        add_recurring_op_xml(reply, rsc);
-    }
-    return reply;
-}
-
-void
-process_lrmd_message(pcmk__client_t *client, uint32_t id, xmlNode *request)
-{
-    int rc = pcmk_ok;
-    int call_id = 0;
-    const char *op = crm_element_value(request, PCMK__XA_LRMD_OP);
-    int do_reply = 0;
-    int do_notify = 0;
-    xmlNode *reply = NULL;
-
-    /* Certain IPC commands may be done only by privileged users (i.e. root or
-     * hacluster), because they would otherwise provide a means of bypassing
-     * ACLs.
-     */
-    bool allowed = pcmk_is_set(client->flags, pcmk__client_privileged);
-
-    crm_trace("Processing %s operation from %s", op, client->id);
-    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &call_id);
-
-    if (pcmk__str_eq(op, CRM_OP_IPC_FWD, pcmk__str_none)) {
-#ifdef PCMK__COMPILE_REMOTE
-        if (allowed) {
-            ipc_proxy_forward_client(client, request);
-        } else {
-            rc = -EACCES;
-        }
-#else
-        rc = -EPROTONOSUPPORT;
-#endif
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)) {
-        rc = process_lrmd_signon(client, request, call_id, &reply);
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_register(client, id, request);
-            do_notify = 1;
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_INFO, pcmk__str_none)) {
-        if (allowed) {
-            reply = process_lrmd_get_rsc_info(request, call_id);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_unregister(client, id, request);
-            /* don't notify anyone about failed un-registers */
-            if (rc == pcmk_ok || rc == -EINPROGRESS) {
-                do_notify = 1;
-            }
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_exec(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_RSC_CANCEL, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_rsc_cancel(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
-        do_notify = 1;
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_CHECK, pcmk__str_none)) {
-        if (allowed) {
-            xmlNode *wrapper = pcmk__xe_first_child(request,
-                                                    PCMK__XE_LRMD_CALLDATA,
-                                                    NULL, NULL);
-            xmlNode *data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-            const char *timeout = NULL;
-
-            CRM_LOG_ASSERT(data != NULL);
-            timeout = crm_element_value(data, PCMK__XA_LRMD_WATCHDOG);
-            pcmk__valid_stonith_watchdog_timeout(timeout);
-        } else {
-            rc = -EACCES;
-        }
-    } else if (pcmk__str_eq(op, LRMD_OP_ALERT_EXEC, pcmk__str_none)) {
-        if (allowed) {
-            rc = process_lrmd_alert_exec(client, id, request);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else if (pcmk__str_eq(op, LRMD_OP_GET_RECURRING, pcmk__str_none)) {
-        if (allowed) {
-            reply = process_lrmd_get_recurring(request, call_id);
-        } else {
-            rc = -EACCES;
-        }
-        do_reply = 1;
-    } else {
-        rc = -EOPNOTSUPP;
-        do_reply = 1;
-        crm_err("Unknown IPC request '%s' from client %s",
-                op, pcmk__client_name(client));
+        add_recurring_op_xml(*reply, rsc);
     }
 
-    if (rc == -EACCES) {
-        crm_warn("Rejecting IPC request '%s' from unprivileged client %s",
-                 op, pcmk__client_name(client));
-    }
-
-    crm_debug("Processed %s operation from %s: rc=%d, reply=%d, notify=%d",
-              op, client->id, rc, do_reply, do_notify);
-
-    if (do_reply) {
-        int send_rc = pcmk_rc_ok;
-
-        if (reply == NULL) {
-            reply = create_lrmd_reply(__func__, rc, call_id);
-        }
-        send_rc = lrmd_server_send_reply(client, id, reply);
-        pcmk__xml_free(reply);
-        if (send_rc != pcmk_rc_ok) {
-            crm_warn("Reply to client %s failed: %s " QB_XS " rc=%d",
-                     pcmk__client_name(client), pcmk_rc_str(send_rc), send_rc);
-        }
-    }
-
-    if (do_notify) {
-        send_generic_notify(rc, request);
-    }
+    return rc;
 }

@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2024 the Pacemaker project contributors
+# Copyright 2003-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -22,9 +22,9 @@ MKDIR_P                 ?= mkdir -p
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
-EXTRA_DIST		= pacemaker.spec.in	\
-			  pacemaker.sysusers.in \
-			  rpmlintrc
+EXTRA_DIST = pacemaker.spec.in
+EXTRA_DIST += pacemaker.sysusers.in
+EXTRA_DIST += rpmlintrc
 
 # Extra options to pass to rpmbuild (this can be used to override the location
 # options this file normally passes, or to override macros used by the spec)
@@ -43,18 +43,22 @@ RPMDEST         	?= subtree
 
 RPM_SPEC_DIR_subtree	= $(abs_builddir)/SPECS
 RPM_SRCRPM_DIR_subtree	= $(abs_builddir)/SRPMS
-RPM_OPTS_subtree	= --define "_sourcedir $(abs_builddir)/.." 	\
-			  --define "_topdir $(abs_builddir)"
-RPM_CLEAN_subtree	= "$(abs_builddir)/BUILD"			\
-			  "$(abs_builddir)/BUILDROOT"			\
-			  "$(abs_builddir)/RPMS"			\
-			  "$(abs_builddir)/SPECS"			\
-			  "$(abs_builddir)/SRPMS"
+
+RPM_OPTS_subtree	= --define "_sourcedir $(abs_builddir)/.."
+RPM_OPTS_subtree 	+= --define "_topdir $(abs_builddir)"
+
+RPM_CLEAN_subtree	= "$(abs_builddir)/BUILD"
+RPM_CLEAN_subtree 	+= "$(abs_builddir)/BUILDROOT"
+RPM_CLEAN_subtree 	+= "$(abs_builddir)/RPMS"
+RPM_CLEAN_subtree 	+= "$(abs_builddir)/SPECS"
+RPM_CLEAN_subtree 	+= "$(abs_builddir)/SRPMS"
 
 RPM_SPEC_DIR_other	= $(RPMDEST)/SPECS
 RPM_SRCRPM_DIR_other	= $(RPMDEST)/SRPMS
-RPM_OPTS_other		= --define "_sourcedir $(abs_builddir)/.." 	\
-			  --define "_topdir $(RPMDEST)"
+
+RPM_OPTS_other		= --define "_sourcedir $(abs_builddir)/.."
+RPM_OPTS_other 		+= --define "_topdir $(RPMDEST)"
+
 RPM_CLEAN_other		= "$(RPMDEST)"
 
 RPMTYPE		= $(shell case "$(RPMDEST)" in 			\

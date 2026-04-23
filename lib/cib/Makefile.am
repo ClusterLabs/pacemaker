@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -20,7 +20,7 @@ libcib_la_SOURCES	+= cib_ops.c
 libcib_la_SOURCES	+= cib_remote.c
 libcib_la_SOURCES	+= cib_utils.c
 
-libcib_la_LDFLAGS	= -version-info 54:1:0
+libcib_la_LDFLAGS	= -version-info 55:0:1
 libcib_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
 libcib_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)

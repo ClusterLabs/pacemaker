@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,8 @@
 
 #include <crm_internal.h>
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <unistd.h>
@@ -133,6 +132,8 @@ output_config_error(void *ctx, const char *msg, ...)
     if (options.verbosity > 0) {
         out->err(out, "error: %s", buf);
     }
+
+    free(buf);
     va_end(ap);
 }
 
@@ -157,6 +158,8 @@ output_config_warning(void *ctx, const char *msg, ...)
     if (options.verbosity > 0) {
         out->err(out, "warning: %s", buf);
     }
+
+    free(buf);
     va_end(ap);
 }
 
@@ -204,7 +207,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
@@ -260,14 +263,14 @@ main(int argc, char **argv)
         const char *verbose_hint = "";
 
         if (pcmk__config_has_error) {
-            failure_type = " (with errors)";
+            failure_type = "invalid";
         } else if (pcmk__config_has_warning) {
-            failure_type = " (with warnings)";
+            failure_type = "may need attention";
         }
         if (options.verbosity == 0) {
             verbose_hint = " (-V may provide more detail)";
         }
-        out->err(out, "Configuration invalid%s%s", failure_type, verbose_hint);
+        out->err(out, "Configuration %s%s", failure_type, verbose_hint);
     }
 
     pcmk_free_scheduler(scheduler);

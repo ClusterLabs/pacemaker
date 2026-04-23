@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>         // uint64_t
 #include <sys/types.h>
@@ -45,12 +46,13 @@ bool
 pcmk__valid_ipc_header(const pcmk__ipc_header_t *header)
 {
     if (header == NULL) {
-        crm_err("IPC message without header");
+        pcmk__err("IPC message without header");
         return false;
 
     } else if (header->version > PCMK__IPC_VERSION) {
-        crm_err("Filtering incompatible v%d IPC message (only versions <= %d supported)",
-                header->version, PCMK__IPC_VERSION);
+        pcmk__err("Filtering incompatible v%d IPC message (only versions <= %d "
+                  "supported)",
+                  header->version, PCMK__IPC_VERSION);
         return false;
     }
     return true;
@@ -107,7 +109,7 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
         return EBADMSG;
     }
 
-    if (pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
+    if (pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
         full_header = (pcmk__ipc_header_t *) (void *) (*buffer)->data;
 
         /* This is the end of a multipart IPC message.  Add the payload of the
@@ -119,11 +121,11 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
         CRM_CHECK(full_header->qb.id == header->qb.id, return EBADMSG);
         g_byte_array_append(*buffer, payload, header->size);
 
-        crm_trace("Received IPC message %" PRId32 " (final part %" PRIu16 ") of %"
-                  PRId32 " bytes",
-                  header->qb.id, header->part_id, header->qb.size);
+        pcmk__trace("Received IPC message %" PRId32 " (final part %" PRIu16 ") "
+                    "of %" PRId32 " bytes",
+                    header->qb.id, header->part_id, header->qb.size);
 
-    } else if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+    } else if (pcmk__is_set(header->flags, crm_ipc_multipart)) {
         if (header->part_id == 0) {
             /* This is the first part of a multipart IPC message.  Initialize
              * the buffer with the entire message, including its header.  Do
@@ -157,9 +159,9 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
             g_byte_array_append(*buffer, payload, header->size - 1);
         }
 
-        crm_trace("Received IPC message %" PRId32 " (part %" PRIu16 ") of %"
-                  PRId32 " bytes",
-                  header->qb.id, header->part_id, header->qb.size);
+        pcmk__trace("Received IPC message %" PRId32 " (part %" PRIu16 ") "
+                    "of %" PRId32 " bytes",
+                    header->qb.id, header->part_id, header->qb.size);
 
         rc = pcmk_rc_ipc_more;
 
@@ -173,12 +175,12 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
         g_byte_array_append(*buffer, data,
                             sizeof(pcmk__ipc_header_t) + header->size);
 
-        crm_trace("Received IPC message %" PRId32 " of %" PRId32 " bytes",
-                  header->qb.id, header->qb.size);
+        pcmk__trace("Received IPC message %" PRId32 " of %" PRId32 " bytes",
+                    header->qb.id, header->qb.size);
     }
 
-    crm_trace("Text = %s", payload);
-    crm_trace("Buffer = %s", (*buffer)->data + sizeof(pcmk__ipc_header_t));
+    pcmk__trace("Text = %s", payload);
+    pcmk__trace("Buffer = %s", (*buffer)->data + sizeof(pcmk__ipc_header_t));
 
     /* The buffer's header should have a size that matches the full size of
      * the received message, not just the last chunk of it.

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
 #include <bzlib.h>
@@ -18,7 +19,6 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
 #include "crmcommon_private.h"
 
 /* Evict clients whose event queue grows this large (by default) */
@@ -62,7 +62,7 @@ pcmk__find_client(const qb_ipcs_connection_t *c)
         return g_hash_table_lookup(client_connections, c);
     }
 
-    crm_trace("No client found for %p", c);
+    pcmk__trace("No client found for %p", c);
     return NULL;
 }
 
@@ -81,7 +81,7 @@ pcmk__find_client_by_id(const char *id)
             }
         }
     }
-    crm_trace("No client found with id='%s'", pcmk__s(id, ""));
+    pcmk__trace("No client found with id='%s'", pcmk__s(id, ""));
     return NULL;
 }
 
@@ -118,11 +118,10 @@ pcmk__client_cleanup(void)
         int active = g_hash_table_size(client_connections);
 
         if (active > 0) {
-            crm_warn("Exiting with %d active IPC client%s",
-                     active, pcmk__plural_s(active));
+            pcmk__warn("Exiting with %d active IPC client%s", active,
+                       pcmk__plural_s(active));
         }
-        g_hash_table_destroy(client_connections);
-        client_connections = NULL;
+        g_clear_pointer(&client_connections, g_hash_table_destroy);
     }
 }
 
@@ -143,8 +142,8 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
         c = qb_ipcs_connection_next_get(service, last);
 
         /* There really shouldn't be anyone connected at this point */
-        crm_notice("Disconnecting client %p, pid=%d...",
-                   last, pcmk__client_pid(last));
+        pcmk__notice("Disconnecting client %p, pid=%d...", last,
+                     pcmk__client_pid(last));
         qb_ipcs_disconnect(last);
         qb_ipcs_connection_unref(last);
     }
@@ -169,8 +168,9 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         client->user = pcmk__uid2username(uid_client);
         if (client->user == NULL) {
             client->user = pcmk__str_copy("#unprivileged");
-            crm_err("Unable to enforce ACLs for user ID %d, assuming unprivileged",
-                    uid_client);
+            pcmk__err("Unable to enforce ACLs for user ID %d, assuming "
+                      "unprivileged",
+                      uid_client);
         }
         client->ipcs = c;
         pcmk__set_client_flags(client, pcmk__client_ipc);
@@ -180,12 +180,12 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
         }
     }
 
-    client->id = crm_generate_uuid();
+    client->id = pcmk__generate_uuid();
     if (key == NULL) {
         key = client->id;
     }
     if (client_connections == NULL) {
-        crm_trace("Creating IPC client table");
+        pcmk__trace("Creating IPC client table");
         client_connections = g_hash_table_new(g_direct_hash, g_direct_equal);
     }
     g_hash_table_insert(client_connections, key, client);
@@ -215,18 +215,19 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
 
     CRM_CHECK(c != NULL, return NULL);
 
-    if (pcmk_daemon_user(&uid_cluster, &gid_cluster) < 0) {
-        static bool need_log = TRUE;
+    if (pcmk__daemon_user(&uid_cluster, &gid_cluster) != pcmk_rc_ok) {
+        static bool need_log = true;
 
         if (need_log) {
-            crm_warn("Could not find user and group IDs for user %s",
-                     CRM_DAEMON_USER);
-            need_log = FALSE;
+            pcmk__warn("Could not find user and group IDs for user "
+                       CRM_DAEMON_USER);
+            need_log = false;
         }
     }
 
     if (uid_client != 0) {
-        crm_trace("Giving group %u access to new IPC connection", gid_cluster);
+        pcmk__trace("Giving group %u access to new IPC connection",
+                    gid_cluster);
         /* Passing -1 to chown(2) means don't change */
         qb_ipcs_connection_auth_set(c, -1, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
@@ -239,8 +240,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
         pcmk__set_client_flags(client, pcmk__client_privileged);
     }
 
-    crm_debug("New IPC client %s for PID %u with uid %d and gid %d",
-              client->id, client->pid, uid_client, gid_client);
+    pcmk__debug("New IPC client %s for PID %u with uid %d and gid %d",
+                client->id, client->pid, uid_client, gid_client);
     return client;
 }
 
@@ -289,13 +290,13 @@ pcmk__free_client(pcmk__client_t *c)
 
     if (client_connections) {
         if (c->ipcs) {
-            crm_trace("Destroying %p/%p (%d remaining)",
-                      c, c->ipcs, g_hash_table_size(client_connections) - 1);
+            pcmk__trace("Destroying %p/%p (%u remaining)", c, c->ipcs,
+                        (g_hash_table_size(client_connections) - 1));
             g_hash_table_remove(client_connections, c->ipcs);
 
         } else {
-            crm_trace("Destroying remote connection %p (%d remaining)",
-                      c, g_hash_table_size(client_connections) - 1);
+            pcmk__trace("Destroying remote connection %p (%u remaining)", c,
+                        (g_hash_table_size(client_connections) - 1));
             g_hash_table_remove(client_connections, c->id);
         }
     }
@@ -305,7 +306,7 @@ pcmk__free_client(pcmk__client_t *c)
     }
 
     if (c->event_queue) {
-        crm_debug("Destroying %d events", g_queue_get_length(c->event_queue));
+        pcmk__debug("Destroying %d events", g_queue_get_length(c->event_queue));
         g_queue_free_full(c->event_queue, free_event);
     }
 
@@ -352,7 +353,7 @@ pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
 
     orig_value = client->queue_max;
 
-    if (pcmk_is_set(client->flags, pcmk__client_privileged)) {
+    if (pcmk__is_set(client->flags, pcmk__client_privileged)) {
         rc = pcmk__scan_ll(qmax, &qmax_ll, 0LL);
         if (rc == pcmk_rc_ok) {
             if ((qmax_ll <= 0LL) || (qmax_ll > UINT_MAX)) {
@@ -366,14 +367,14 @@ pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
     }
 
     if (rc != pcmk_rc_ok) {
-        crm_info("Could not set IPC threshold for client %s[%u] to %s: %s",
-                  pcmk__client_name(client), client->pid,
-                  pcmk__s(qmax, "default"), pcmk_rc_str(rc));
+        pcmk__info("Could not set IPC threshold for client %s[%u] to %s: %s",
+                   pcmk__client_name(client), client->pid,
+                   pcmk__s(qmax, "default"), pcmk_rc_str(rc));
 
     } else if (client->queue_max != orig_value) {
-        crm_debug("IPC threshold for client %s[%u] is now %u (was %u)",
-                  pcmk__client_name(client), client->pid,
-                  client->queue_max, orig_value);
+        pcmk__debug("IPC threshold for client %s[%u] is now %u (was %u)",
+                    pcmk__client_name(client), client->pid, client->queue_max,
+                    orig_value);
     }
 }
 
@@ -416,7 +417,7 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
         *flags = header->flags;
     }
 
-    if (pcmk_is_set(header->flags, crm_ipc_proxied)) {
+    if (pcmk__is_set(header->flags, crm_ipc_proxied)) {
         /* Mark this client as being the endpoint of a proxy connection.
          * Proxy connections responses are sent on the event channel, to avoid
          * blocking the controller serving as proxy.
@@ -427,7 +428,7 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
     pcmk__assert(text[header->size - 1] == 0);
 
     xml = pcmk__xml_parse(text);
-    crm_log_xml_trace(xml, "[IPC received]");
+    pcmk__log_xml_trace(xml, "[IPC received]");
     return xml;
 }
 
@@ -477,27 +478,28 @@ crm_ipcs_flush_events(pcmk__client_t *c)
 
     if (c == NULL) {
         return rc;
+    }
 
-    } else if (c->event_timer) {
+    if (c->event_timer != 0) {
         /* There is already a timer, wait until it goes off */
-        crm_trace("Timer active for %p - %d", c->ipcs, c->event_timer);
+        pcmk__trace("Timer active for %p - %d", c->ipcs, c->event_timer);
         return rc;
     }
 
-    if (c->event_queue) {
+    if (c->event_queue != NULL) {
         queue_len = g_queue_get_length(c->event_queue);
     }
+
     while (sent < 100) {
         pcmk__ipc_header_t *header = NULL;
         struct iovec *event = NULL;
 
-        if (c->event_queue) {
-            // We don't pop unless send is successful
-            event = g_queue_peek_head(c->event_queue);
-        }
-        if (event == NULL) { // Queue is empty
+        if ((c->event_queue == NULL) || g_queue_is_empty(c->event_queue)) {
             break;
         }
+
+        // We don't pop unless send is successful
+        event = g_queue_peek_head(c->event_queue);
 
         /* Retry sending the event up to five times.  If we get -EAGAIN, sleep
          * a very short amount of time (too long here is bad) and try again.
@@ -512,62 +514,73 @@ crm_ipcs_flush_events(pcmk__client_t *c)
         for (unsigned int retries = 5; retries > 0; retries--) {
             qb_rc = qb_ipcs_event_sendv(c->ipcs, event, 2);
 
-            if (qb_rc < 0) {
-                if (retries == 1 || qb_rc != -EAGAIN) {
-                    rc = (int) -qb_rc;
-                    goto no_more_retries;
-                } else {
-                    pcmk__sleep_ms(5);
-                }
-            } else {
+            if (qb_rc >= 0) {
                 break;
             }
+
+            if (retries == 1 || qb_rc != -EAGAIN) {
+                rc = (int) -qb_rc;
+                goto no_more_retries;
+            }
+
+            pcmk__sleep_ms(5);
         }
 
         event = g_queue_pop_head(c->event_queue);
 
         sent++;
         header = event[0].iov_base;
-        crm_trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
-                  header->qb.id, c->ipcs, c->pid, qb_rc,
-                  (char *) (event[1].iov_base));
+
+        pcmk__trace("Event %" PRId32 " to %p[%u] (%zd bytes) sent: %.120s",
+                    header->qb.id, c->ipcs, c->pid, qb_rc,
+                    (char *) (event[1].iov_base));
         pcmk_free_ipc_event(event);
     }
 
 no_more_retries:
     queue_len -= sent;
     if (sent > 0 || queue_len) {
-        crm_trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)",
-                  sent, queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
+        pcmk__trace("Sent %u events (%u remaining) for %p[%d]: %s (%zd)", sent,
+                    queue_len, c->ipcs, c->pid, pcmk_rc_str(rc), qb_rc);
     }
 
-    if (queue_len) {
-
-        /* Allow clients to briefly fall behind on processing incoming messages,
-         * but drop completely unresponsive clients so the connection doesn't
-         * consume resources indefinitely.
-         */
-        if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
-            if ((c->queue_backlog <= 1) || (queue_len < c->queue_backlog)) {
-                /* Don't evict for a new or shrinking backlog */
-                crm_warn("Client with process ID %u has a backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
-            } else {
-                crm_err("Evicting client with process ID %u due to backlog of %u messages "
-                         QB_XS " %p", c->pid, queue_len, c->ipcs);
-                c->queue_backlog = 0;
-                qb_ipcs_disconnect(c->ipcs);
-                return rc;
-            }
-        }
-
-        c->queue_backlog = queue_len;
-        delay_next_flush(c, queue_len);
-
-    } else {
+    if (queue_len == 0) {
         /* Event queue is empty, there is no backlog */
         c->queue_backlog = 0;
+        return rc;
     }
+
+    /* Allow clients to briefly fall behind on processing incoming messages,
+     * but drop completely unresponsive clients so the connection doesn't
+     * consume resources indefinitely.
+     */
+    if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
+        /* Don't evict:
+         * - Clients with a new backlog.
+         * - Clients with a shrinking backlog (the client is processing
+         *   messages faster than the server is sending them).
+         * - Clients that are pacemaker daemons and have had any messages sent
+         *   to them in this flush call (the server is sending messages faster
+         *   than the client is processing them, but the client is not dead).
+         */
+        if ((c->queue_backlog <= 1)
+            || (queue_len < c->queue_backlog)
+            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown))) {
+            pcmk__warn("Client with process ID %u has a backlog of %u messages "
+                       QB_XS " %p", c->pid, queue_len, c->ipcs);
+
+        } else {
+            pcmk__err("Evicting client with process ID %u due to backlog of %u "
+                      "messages " QB_XS " %p",
+                      c->pid, queue_len, c->ipcs);
+            c->queue_backlog = 0;
+            qb_ipcs_disconnect(c->ipcs);
+            return rc;
+        }
+    }
+
+    c->queue_backlog = queue_len;
+    delay_next_flush(c, queue_len);
 
     return rc;
 }
@@ -708,7 +721,8 @@ id_for_server_event(pcmk__ipc_header_t *header)
 {
     static uint32_t id = 1;
 
-    if (pcmk_is_set(header->flags, crm_ipc_multipart) && (header->part_id != 0)) {
+    if (pcmk__is_set(header->flags, crm_ipc_multipart)
+        && (header->part_id != 0)) {
         return id;
     } else {
         id++;
@@ -723,8 +737,8 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     pcmk__ipc_header_t *header = iov[0].iov_base;
 
     /* _ALL_ replies to proxied connections need to be sent as events */
-    if (pcmk_is_set(c->flags, pcmk__client_proxied)
-        && !pcmk_is_set(flags, crm_ipc_server_event)) {
+    if (pcmk__is_set(c->flags, pcmk__client_proxied)
+        && !pcmk__is_set(flags, crm_ipc_server_event)) {
         /* The proxied flag lets us know this was originally meant to be a
          * response, even though we're sending it over the event channel.
          */
@@ -733,7 +747,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     }
 
     pcmk__set_ipc_flags(header->flags, "server event", flags);
-    if (pcmk_is_set(flags, crm_ipc_server_event)) {
+    if (pcmk__is_set(flags, crm_ipc_server_event)) {
         /* Server events don't use an ID, though we do set one in
          * pcmk__ipc_prepare_iov if the event is in response to a particular
          * request.  In that case, we don't want to set a new ID here that
@@ -746,14 +760,14 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
             header->qb.id = id_for_server_event(header);
         }
 
-        if (pcmk_is_set(flags, crm_ipc_server_free)) {
-            crm_trace("Sending the original to %p[%d]", c->ipcs, c->pid);
+        if (pcmk__is_set(flags, crm_ipc_server_free)) {
+            pcmk__trace("Sending the original to %p[%d]", c->ipcs, c->pid);
             add_event(c, iov);
 
         } else {
             struct iovec *iov_copy = pcmk__new_ipc_event();
 
-            crm_trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
+            pcmk__trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
             iov_copy[0].iov_base = malloc(iov[0].iov_len);
             memcpy(iov_copy[0].iov_base, iov[0].iov_base, iov[0].iov_len);
@@ -773,16 +787,19 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
         CRM_LOG_ASSERT(header->qb.id != 0);     /* Replying to a specific request */
 
-        if (pcmk_is_set(header->flags, crm_ipc_multipart_end)) {
-            part_text = crm_strdup_printf(" (final part %d) ", header->part_id);
-        } else if (pcmk_is_set(header->flags, crm_ipc_multipart)) {
+        if (pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
+            part_text = pcmk__assert_asprintf(" (final part %d) ",
+                                              header->part_id);
+        } else if (pcmk__is_set(header->flags, crm_ipc_multipart)) {
             if (header->part_id == 0) {
-                part_text = crm_strdup_printf(" (initial part %d) ", header->part_id);
+                part_text = pcmk__assert_asprintf(" (initial part %d) ",
+                                                  header->part_id);
             } else {
-                part_text = crm_strdup_printf(" (part %d) ", header->part_id);
+                part_text = pcmk__assert_asprintf(" (part %d) ",
+                                                  header->part_id);
             }
         } else {
-            part_text = crm_strdup_printf(" ");
+            part_text = pcmk__str_copy(" ");
         }
 
         qb_rc = qb_ipcs_response_sendv(c->ipcs, iov, 2);
@@ -791,20 +808,15 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
                 rc = (int) -qb_rc;
             }
 
-            crm_notice("Response %" PRId32 "%sto pid %u failed: %s "
-                       QB_XS " bytes=%" PRId32 " rc=%zd ipcs=%p",
-                       header->qb.id, part_text, c->pid, pcmk_rc_str(rc),
-                       header->qb.size, qb_rc, c->ipcs);
-
         } else {
-            crm_trace("Response %" PRId32 "%ssent, %zd bytes to %p[%u]",
-                      header->qb.id, part_text, qb_rc, c->ipcs, c->pid);
-            crm_trace("Text = %s", (char *) iov[1].iov_base);
+            pcmk__trace("Response %" PRId32 "%ssent, %zd bytes to %p[%u]",
+                        header->qb.id, part_text, qb_rc, c->ipcs, c->pid);
+            pcmk__trace("Text = %s", (char *) iov[1].iov_base);
         }
 
         free(part_text);
 
-        if (pcmk_is_set(flags, crm_ipc_server_free)) {
+        if (pcmk__is_set(flags, crm_ipc_server_free)) {
             pcmk_free_ipc_event(iov);
         }
 
@@ -812,7 +824,7 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
     }
 
     if ((rc == EPIPE) || (rc == ENOTCONN)) {
-        crm_trace("Client %p disconnected", c->ipcs);
+        pcmk__trace("Client %p disconnected", c->ipcs);
     }
 
     return rc;
@@ -844,8 +856,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
      * in processes on the Pacemaker Remote node (like cibadmin or crm_mon)
      * timing out when waiting for a reply.
      */
-    event_or_proxied = pcmk_is_set(flags, crm_ipc_server_event)
-                       || pcmk_is_set(c->flags, pcmk__client_proxied);
+    event_or_proxied = pcmk__is_set(flags, crm_ipc_server_event)
+                       || pcmk__is_set(c->flags, pcmk__client_proxied);
 
     do {
         rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
@@ -924,8 +936,8 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
 
 done:
     if ((rc != pcmk_rc_ok) && (rc != EAGAIN)) {
-        crm_notice("IPC message to pid %u failed: %s " QB_XS " rc=%d",
-                   c->pid, pcmk_rc_str(rc), rc);
+        pcmk__notice("IPC message to pid %u failed: %s " QB_XS " rc=%d", c->pid,
+                     pcmk_rc_str(rc), rc);
     }
 
     g_string_free(iov_buffer, TRUE);
@@ -939,7 +951,6 @@ done:
  * \param[in] function  Calling function
  * \param[in] line      Source file line within calling function
  * \param[in] flags     IPC flags to use when sending
- * \param[in] tag       Element name to use for acknowledgement
  * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Exit status code to add to ack
  *
@@ -950,17 +961,19 @@ done:
  */
 xmlNode *
 pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
-                        const char *tag, const char *ver, crm_exit_t status)
+                        const char *ver, crm_exit_t status)
 {
     xmlNode *ack = NULL;
 
-    if (pcmk_is_set(flags, crm_ipc_client_response)) {
-        ack = pcmk__xe_create(NULL, tag);
-        crm_xml_add(ack, PCMK_XA_FUNCTION, function);
-        crm_xml_add_int(ack, PCMK__XA_LINE, line);
-        crm_xml_add_int(ack, PCMK_XA_STATUS, (int) status);
-        crm_xml_add(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
+    if (!pcmk__is_set(flags, crm_ipc_client_response)) {
+        return NULL;
     }
+
+    ack = pcmk__xe_create(NULL, PCMK__XE_ACK);
+    pcmk__xe_set(ack, PCMK_XA_FUNCTION, function);
+    pcmk__xe_set_int(ack, PCMK__XA_LINE, line);
+    pcmk__xe_set_int(ack, PCMK_XA_STATUS, (int) status);
+    pcmk__xe_set(ack, PCMK__XA_IPC_PROTO_VERSION, ver);
     return ack;
 }
 
@@ -973,7 +986,6 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  * \param[in] c         Client to send ack to
  * \param[in] request   Request ID being replied to
  * \param[in] flags     IPC flags to use when sending
- * \param[in] tag       Element name to use for acknowledgement
  * \param[in] ver       IPC protocol version (can be NULL)
  * \param[in] status    Status code to send with acknowledgement
  *
@@ -981,20 +993,23 @@ pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
  */
 int
 pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                      uint32_t request, uint32_t flags, const char *tag,
-                      const char *ver, crm_exit_t status)
+                      uint32_t request, uint32_t flags, const char *ver,
+                      crm_exit_t status)
 {
     int rc = pcmk_rc_ok;
-    xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, tag, ver, status);
+    xmlNode *ack = pcmk__ipc_create_ack_as(function, line, flags, ver, status);
 
-    if (ack != NULL) {
-        crm_trace("Ack'ing IPC message from client %s as <%s status=%d>",
-                  pcmk__client_name(c), tag, status);
-        crm_log_xml_trace(ack, "sent-ack");
-        c->request_id = 0;
-        rc = pcmk__ipc_send_xml(c, request, ack, flags);
-        pcmk__xml_free(ack);
+    if (ack == NULL) {
+        return pcmk_rc_ok;
     }
+
+    pcmk__trace("Ack'ing IPC message from client %s as <" PCMK__XE_ACK
+                " status=%d>",
+                pcmk__client_name(c), status);
+    pcmk__log_xml_trace(ack, "sent-ack");
+    c->request_id = 0;
+    rc = pcmk__ipc_send_xml(c, request, ack, flags);
+    pcmk__xml_free(ack);
     return rc;
 }
 
@@ -1008,7 +1023,7 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
  * \param[in]  ro_cb     IPC callbacks for read-only API
  * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
  *
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  * \note There is no actual difference between the three IPC endpoints other
  *       than their names.
  */
@@ -1028,8 +1043,10 @@ void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,
                                         QB_IPC_SHM, rw_cb);
 
     if (*ipcs_ro == NULL || *ipcs_rw == NULL || *ipcs_shm == NULL) {
-        crm_err("Failed to create the CIB manager: exiting and inhibiting respawn");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(pcmk_ipc_based));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1074,20 +1091,45 @@ pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb)
  * \brief Add an IPC server to the main loop for the attribute manager API
  *
  * \param[out] ipcs  Where to store newly created IPC server
- * \param[in] cb  IPC callbacks
+ * \param[in]  cb    IPC callbacks
  *
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  */
 void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server(PCMK__VALUE_ATTRD, QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_attrd),
+                                    QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_crit("Exiting fatally because unable to serve " PCMK__SERVER_ATTRD
-                 " IPC (verify pacemaker and pacemaker_remote are not both "
-                 "enabled)");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(pcmk_ipc_attrd));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
+        crm_exit(CRM_EX_FATAL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add an IPC server to the main loop for the executor API
+ *
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
+ *
+ * \note This function exits fatally on error.
+ */
+void
+pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
+                      struct qb_ipcs_service_handlers *cb)
+{
+    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_execd),
+                                    QB_IPC_SHM, cb);
+
+    if (*ipcs == NULL) {
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(pcmk_ipc_execd));
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1099,18 +1141,20 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
  *
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  */
 void
 pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server_with_prio("stonith-ng", QB_IPC_NATIVE, cb,
-                                              QB_LOOP_HIGH);
+    *ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(pcmk_ipc_fenced),
+                                              QB_IPC_NATIVE, cb, QB_LOOP_HIGH);
 
     if (*ipcs == NULL) {
-        crm_err("Failed to create fencer: exiting and inhibiting respawn.");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(pcmk_ipc_fenced));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         crm_exit(CRM_EX_FATAL);
     }
 }
@@ -1122,17 +1166,20 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
  *
- * \note This function exits with CRM_EX_OSERR if unable to create the servers.
+ * \note This function exits with CRM_EX_OSERR on error.
  */
 void
 pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                        struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server(CRM_SYSTEM_MCP, QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_pacemakerd),
+                                    QB_IPC_NATIVE, cb);
 
     if (*ipcs == NULL) {
-        crm_err("Couldn't start pacemakerd IPC server");
-        crm_warn("Verify pacemaker and pacemaker_remote are not both enabled.");
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(pcmk_ipc_pacemakerd));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
         /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
          * if we want to prevent pacemakerd from restarting them.
          * With pacemakerd we leave the exit-code shown to e.g. systemd
@@ -1146,13 +1193,22 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
  * \internal
  * \brief Add an IPC server to the main loop for the scheduler API
  *
- * \param[in] cb  IPC callbacks
+ * \param[out] ipcs  Where to store newly created IPC server
+ * \param[in]  cb    IPC callbacks
  *
  * \return Newly created IPC server
- * \note This function exits fatally if unable to create the servers.
+ * \note This function exits fatally on error.
  */
-qb_ipcs_service_t *
-pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb)
+void
+pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
+                           struct qb_ipcs_service_handlers *cb)
 {
-    return mainloop_add_ipc_server(CRM_SYSTEM_PENGINE, QB_IPC_NATIVE, cb);
+    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_schedulerd),
+                                    QB_IPC_NATIVE, cb);
+
+    if (*ipcs == NULL) {
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(pcmk_ipc_schedulerd));
+        crm_exit(CRM_EX_FATAL);
+    }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,6 @@
 #include <stdbool.h>    // bool, false
 
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
 
 /*!
  * \internal
@@ -56,7 +55,7 @@ pcmk_resource_id(const pcmk_resource_t *rsc)
 bool
 pcmk_resource_is_managed(const pcmk_resource_t *rsc)
 {
-    return (rsc == NULL)? false : pcmk_is_set(rsc->flags, pcmk__rsc_managed);
+    return (rsc == NULL)? false : pcmk__is_set(rsc->flags, pcmk__rsc_managed);
 }
 
 /*!

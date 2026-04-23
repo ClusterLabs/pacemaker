@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,31 +9,33 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <unistd.h>
+#include <errno.h>                      // errno, EAGAIN, ETIME
+#include <netdb.h>                      // addrinfo, freeaddrinfo
+#include <netinet/in.h>                 // INET6_ADDRSTRLEN, IPPROTO_*
+#include <stdbool.h>                    // bool, true
+#include <stdlib.h>                     // NULL, free
+#include <string.h>                     // memset
+#include <sys/socket.h>                 // setsockopt, AF_INET6, bind
+#include <unistd.h>                     // close
 
-#include <crm/crm.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-#include <crm/common/remote_internal.h>
-#include <crm/common/tls_internal.h>
-#include <crm/lrmd_internal.h>
+#include <glib.h>                       // gpointer, TRUE, FALSE
+#include <gnutls/gnutls.h>              // gnutls_bye, gnutls_datum_t
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // QB_XS
 
-#include <netdb.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <arpa/inet.h>
+#include <crm/common/internal.h>
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/results.h>         // pcmk_rc_str, pcmk_rc_*
+#include <crm/common/util.h>            // crm_default_remote_port
+#include <crm/lrmd_internal.h>          // lrmd__init_remote_key
 
-#include "pacemaker-execd.h"
-
-#include <gnutls/gnutls.h>
+#include "pacemaker-execd.h"            // client_disconnect_cleanup
 
 #define LRMD_REMOTE_AUTH_TIMEOUT 10000
 
 static pcmk__tls_t *tls = NULL;
 static int ssock = -1;
-extern int lrmd_call_id;
 
 /*!
  * \internal
@@ -63,7 +65,7 @@ remoted__read_handshake_data(pcmk__client_t *client)
     client->remote->auth_timeout = 0;
 
     pcmk__set_client_flags(client, pcmk__client_tls_handshake_complete);
-    crm_notice("Remote client connection accepted");
+    pcmk__notice("Remote client connection accepted");
 
     /* Now that the handshake is done, see if any client TLS certificate is
      * close to its expiration date and log if so.  If a TLS certificate is not
@@ -85,12 +87,11 @@ remoted__read_handshake_data(pcmk__client_t *client)
 static int
 lrmd_remote_client_msg(gpointer data)
 {
-    int id = 0;
     int rc = pcmk_rc_ok;
-    xmlNode *request = NULL;
+    xmlNode *msg = NULL;
     pcmk__client_t *client = data;
 
-    if (!pcmk_is_set(client->flags, pcmk__client_tls_handshake_complete)) {
+    if (!pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
         return remoted__read_handshake_data(client);
     }
 
@@ -105,7 +106,7 @@ lrmd_remote_client_msg(gpointer data)
 
         default:
             /* Error */
-            crm_info("Error polling remote client: %s", pcmk_rc_str(rc));
+            pcmk__info("Error polling remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
@@ -120,34 +121,38 @@ lrmd_remote_client_msg(gpointer data)
 
         default:
             /* Error */
-            crm_info("Error reading from remote client: %s", pcmk_rc_str(rc));
+            pcmk__info("Error reading from remote client: %s", pcmk_rc_str(rc));
             return -1;
     }
 
-    request = pcmk__remote_message_xml(client->remote);
-    if (request == NULL) {
-        return 0;
+    msg = pcmk__remote_message_xml(client->remote);
+
+    if ((msg == NULL) || execd_invalid_msg(msg)) {
+        pcmk__debug("Unrecognizable IPC data from PID %d", client->pid);
+
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = 0,
+            .ipc_flags      = crm_ipc_flags_none,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = 0,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
+        CRM_CHECK(request.op != NULL, goto done);
+
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID,
+                         (int *) &request.ipc_id);
+        pcmk__trace("Processing remote client request %d", request.ipc_id);
+
+        execd_handle_request(&request);
     }
 
-    crm_element_value_int(request, PCMK__XA_LRMD_REMOTE_MSG_ID, &id);
-    crm_trace("Processing remote client request %d", id);
-    if (!client->name) {
-        client->name = crm_element_value_copy(request,
-                                              PCMK__XA_LRMD_CLIENTNAME);
-    }
-
-    lrmd_call_id++;
-    if (lrmd_call_id < 1) {
-        lrmd_call_id = 1;
-    }
-
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTID, client->id);
-    crm_xml_add(request, PCMK__XA_LRMD_CLIENTNAME, client->name);
-    crm_xml_add_int(request, PCMK__XA_LRMD_CALLID, lrmd_call_id);
-
-    process_lrmd_message(client, id, request);
-    pcmk__xml_free(request);
-
+done:
+    pcmk__xml_free(msg);
     return 0;
 }
 
@@ -160,8 +165,8 @@ lrmd_remote_client_destroy(gpointer user_data)
         return;
     }
 
-    crm_notice("Cleaning up after remote client %s disconnected",
-               pcmk__client_name(client));
+    pcmk__notice("Cleaning up after remote client %s disconnected",
+                 pcmk__client_name(client));
 
     ipc_proxy_remove_provider(client);
 
@@ -175,13 +180,11 @@ lrmd_remote_client_destroy(gpointer user_data)
         int csock = pcmk__tls_get_client_sock(client->remote);
 
         gnutls_bye(client->remote->tls_session, GNUTLS_SHUT_RDWR);
-        gnutls_deinit(client->remote->tls_session);
-        client->remote->tls_session = NULL;
+        g_clear_pointer(&client->remote->tls_session, gnutls_deinit);
         close(csock);
     }
 
     lrmd_client_destroy(client);
-    return;
 }
 
 static gboolean
@@ -191,14 +194,13 @@ lrmd_auth_timeout_cb(gpointer data)
 
     client->remote->auth_timeout = 0;
 
-    if (pcmk_is_set(client->flags,
-                    pcmk__client_tls_handshake_complete)) {
+    if (pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
         return FALSE;
     }
 
     mainloop_del_fd(client->remote->source);
     client->remote->source = NULL;
-    crm_err("Remote client authentication timed out");
+    pcmk__err("Remote client authentication timed out");
 
     return FALSE;
 }
@@ -238,8 +240,8 @@ lrmd_remote_listen(gpointer data)
     new_client->remote->auth_timeout = pcmk__create_timer(LRMD_REMOTE_AUTH_TIMEOUT,
                                                           lrmd_auth_timeout_cb,
                                                           new_client);
-    crm_info("Remote client pending authentication "
-             QB_XS " %p id: %s", new_client, new_client->id);
+    pcmk__info("Remote client pending authentication " QB_XS " %p id: %s",
+               new_client, new_client->id);
 
     new_client->remote->source =
         mainloop_add_fd("pacemaker-remote-client", G_PRIORITY_DEFAULT, csock,
@@ -250,14 +252,28 @@ lrmd_remote_listen(gpointer data)
 static void
 tls_server_dropped(gpointer user_data)
 {
-    crm_notice("TLS server session ended");
-    return;
+    pcmk__notice("TLS server session ended");
 }
 
 // \return 0 on success, -1 on error (gnutls_psk_server_credentials_function)
 static int
-lrmd_tls_server_key_cb(gnutls_session_t session, const char *username, gnutls_datum_t * key)
+lrmd_tls_server_key_cb(gnutls_session_t session, const char *username,
+                       gnutls_datum_t *key)
 {
+    /* First, check that the client's username is valid.  For Pacemaker
+     * Remote node connections, all clients will have the same username so
+     * we don't need to look it up anywhere.
+     */
+    if (!pcmk__str_eq(DEFAULT_REMOTE_USERNAME, username, pcmk__str_none)) {
+        pcmk__err("Expected remote username " DEFAULT_REMOTE_USERNAME ", but "
+                  "got %s", username);
+        return -1;
+    }
+
+    /* All Pacemaker Remote connections use the same key, too, so we don't
+     * need to do any lookups here either.  Just attempt to load the key from
+     * disk (or cache) and put it in the key variable.
+     */
     return (lrmd__init_remote_key(key) == pcmk_rc_ok)? 0 : -1;
 }
 
@@ -270,12 +286,12 @@ bind_and_listen(struct addrinfo *addr)
     char buffer[INET6_ADDRSTRLEN] = { 0, };
 
     pcmk__sockaddr2str(addr->ai_addr, buffer);
-    crm_trace("Attempting to bind to address %s", buffer);
+    pcmk__trace("Attempting to bind to address %s", buffer);
 
     fd = socket(addr->ai_family, addr->ai_socktype, addr->ai_protocol);
     if (fd < 0) {
         rc = errno;
-        crm_err("Listener socket creation failed: %", pcmk_rc_str(rc));
+        pcmk__err("Listener socket creation failed: %", pcmk_rc_str(rc));
         return -rc;
     }
 
@@ -284,7 +300,8 @@ bind_and_listen(struct addrinfo *addr)
     rc = setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
     if (rc < 0) {
         rc = errno;
-        crm_err("Local address reuse not allowed on %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Local address reuse not allowed on %s: %s", buffer,
+                  pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
@@ -294,7 +311,8 @@ bind_and_listen(struct addrinfo *addr)
         rc = setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, &optval, sizeof(optval));
         if (rc < 0) {
             rc = errno;
-            crm_err("Couldn't disable IPV6-only on %s: %s", buffer, pcmk_rc_str(rc));
+            pcmk__err("Couldn't disable IPV6-only on %s: %s", buffer,
+                      pcmk_rc_str(rc));
             close(fd);
             return -rc;
         }
@@ -302,14 +320,14 @@ bind_and_listen(struct addrinfo *addr)
 
     if (bind(fd, addr->ai_addr, addr->ai_addrlen) != 0) {
         rc = errno;
-        crm_err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Cannot bind to %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
 
     if (listen(fd, 10) == -1) {
         rc = errno;
-        crm_err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
+        pcmk__err("Cannot listen on %s: %s", buffer, pcmk_rc_str(rc));
         close(fd);
         return -rc;
     }
@@ -319,8 +337,8 @@ bind_and_listen(struct addrinfo *addr)
 static int
 get_address_info(const char *bind_name, int port, struct addrinfo **res)
 {
-    int rc;
-    char port_str[6]; // at most "65535"
+    int rc = pcmk_rc_ok;
+    char *port_s = pcmk__itoa(port);
     struct addrinfo hints;
 
     memset(&hints, 0, sizeof(struct addrinfo));
@@ -329,17 +347,16 @@ get_address_info(const char *bind_name, int port, struct addrinfo **res)
     hints.ai_socktype = SOCK_STREAM;
     hints.ai_protocol = IPPROTO_TCP;
 
-    snprintf(port_str, sizeof(port_str), "%d", port);
-    rc = getaddrinfo(bind_name, port_str, &hints, res);
+    rc = getaddrinfo(bind_name, port_s, &hints, res);
     rc = pcmk__gaierror2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Unable to get IP address(es) for %s: %s",
-                (bind_name? bind_name : "local node"), pcmk_rc_str(rc));
-        return rc;
+        pcmk__err("Unable to get IP address(es) for %s: %s",
+                  pcmk__s(bind_name, "local node"), pcmk_rc_str(rc));
     }
 
-    return pcmk_rc_ok;
+    free(port_s);
+    return rc;
 }
 
 int
@@ -350,7 +367,6 @@ lrmd_init_remote_tls_server(void)
     int port = crm_default_remote_port();
     struct addrinfo *res = NULL, *iter;
     const char *bind_name = pcmk__env_option(PCMK__ENV_REMOTE_ADDRESS);
-    bool use_cert = pcmk__x509_enabled();
 
     static struct mainloop_fd_callbacks remote_listen_fd_callbacks = {
         .dispatch = lrmd_remote_listen,
@@ -359,26 +375,37 @@ lrmd_init_remote_tls_server(void)
 
     CRM_CHECK(ssock == -1, return ssock);
 
-    crm_debug("Starting TLS listener on %s port %d",
-              (bind_name? bind_name : "all addresses on"), port);
+    pcmk__debug("Starting TLS listener on %s port %d",
+                pcmk__s(bind_name, "all addresses on"), port);
 
-    rc = pcmk__init_tls(&tls, true, use_cert ? GNUTLS_CRD_CERTIFICATE : GNUTLS_CRD_PSK);
+    rc = pcmk__init_tls(&tls, true, true);
     if (rc != pcmk_rc_ok) {
         return -1;
     }
 
-    if (!use_cert) {
+    if (!pcmk__x509_enabled()) {
         gnutls_datum_t psk_key = { NULL, 0 };
 
-        pcmk__tls_add_psk_callback(tls, lrmd_tls_server_key_cb);
+        /* Register the callback function that will be used to load the key
+         * when a client connects.
+         */
+        gnutls_psk_set_server_credentials_function(tls->credentials.psk_s,
+                                                   lrmd_tls_server_key_cb);
 
-        /* The key callback won't get called until the first client connection
-         * attempt. Do it once here, so we can warn the user at start-up if we can't
-         * read the key. We don't error out, though, because it's fine if the key is
-         * going to be added later.
+        /* gnutls doesn't need us to load the remote key up front.  It will use
+         * the callback we just registered to load the key for each client when
+         * it attempts to connect.  We do so here (1) to warn the user at start-up
+         * if we can't read the key, and (2) to cache the key so it's faster to
+         * authenticate each client.
+         *
+         * This also has the side effect of allowing the administrator to start
+         * the cluster without the Pacemaker Remote node key, then add it later,
+         * and have clients succeed in connecting.  I don't know why this would
+         * be useful.
          */
         if (lrmd__init_remote_key(&psk_key) != pcmk_rc_ok) {
-            crm_warn("A cluster connection will not be possible until the key is available");
+            pcmk__warn("A cluster connection will not be possible until the "
+                       "key is available");
         }
 
         gnutls_free(psk_key.data);
@@ -418,8 +445,8 @@ lrmd_init_remote_tls_server(void)
     if (ssock >= 0) {
         mainloop_add_fd("pacemaker-remote-server", G_PRIORITY_DEFAULT, ssock,
                         NULL, &remote_listen_fd_callbacks);
-        crm_debug("Started TLS listener on %s port %d",
-                  (bind_name? bind_name : "all addresses on"), port);
+        pcmk__debug("Started TLS listener on %s port %d",
+                    pcmk__s(bind_name, "all addresses on"), port);
     }
     freeaddrinfo(res);
     return ssock;
@@ -428,10 +455,7 @@ lrmd_init_remote_tls_server(void)
 void
 execd_stop_tls_server(void)
 {
-    if (tls != NULL) {
-        pcmk__free_tls(tls);
-        tls = NULL;
-    }
+    g_clear_pointer(&tls, pcmk__free_tls);
 
     if (ssock >= 0) {
         close(ssock);

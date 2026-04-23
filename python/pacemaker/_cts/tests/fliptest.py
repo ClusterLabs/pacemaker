@@ -44,7 +44,7 @@ class FlipTest(CTSTest):
             ret = self._stop(node)
             kind = "up->down"
             # Give the cluster time to recognize it's gone...
-            time.sleep(self._env["StableTime"])
+            time.sleep(self._env["stable_time"])
         elif self._cm.expected_status[node] == "down":
             self.incr("started")
             ret = self._start(node)

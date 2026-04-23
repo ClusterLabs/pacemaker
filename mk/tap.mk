@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2024 the Pacemaker project contributors
+# Copyright 2021-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -24,7 +24,7 @@ WRAPPED = abort 		\
 	  getenv		\
 	  getpid		\
 	  getgrent		\
-	  getpwnam_r		\
+	  getpwnam		\
 	  readlink		\
 	  realloc 		\
 	  setenv		\

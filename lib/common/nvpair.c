@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>         // UINT32_MAX
 #include <inttypes.h>       // PRIu32
@@ -20,7 +21,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 /*
@@ -114,8 +114,7 @@ pcmk_free_nvpairs(GSList *nvpairs)
  *
  * \param[in]  input  Input string, likely from the command line
  * \param[out] name   Everything before the first \c '=' in the input string
- * \param[out] value  Everything after the first \c '=' in the input string,
- *                    minus trailing newlines
+ * \param[out] value  Everything after the first \c '=' in the input string
  *
  * \return Standard Pacemaker return code
  *
@@ -125,6 +124,11 @@ pcmk_free_nvpairs(GSList *nvpairs)
 int
 pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 {
+    /* @COMPAT Consider rejecting leading (and possibly trailing) whitespace in
+     * value and stripping outer quotes from value (for example,
+     * using g_shell_unquote()). This would affect stonith_admin and
+     * crm_resource and would simplify remoted_spawn_pidone()'s helpers.
+     */
     gchar **nvpair = NULL;
     int rc = pcmk_rc_ok;
 
@@ -134,19 +138,15 @@ pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value)
 
     nvpair = g_strsplit(input, "=", 2);
 
-    /* Check whether nvpair is well-formed (short-circuits if input was split
-     * into fewer than 2 tokens)
-     */
-    if (pcmk__str_empty(nvpair[0]) || pcmk__str_empty(nvpair[1])) {
+    // Check whether nvpair is well-formed: two tokens and non-empty name
+    if ((g_strv_length(nvpair) != 2) || pcmk__str_empty(nvpair[0])) {
         rc = pcmk_rc_bad_nvpair;
         goto done;
     }
 
+    // name and value take ownership of the strings in nvpair
     *name = nvpair[0];
     *value = nvpair[1];
-    pcmk__trim((char *) *value);
-
-    // name and value took ownership
     nvpair[0] = NULL;
     nvpair[1] = NULL;
 
@@ -175,7 +175,8 @@ done:
 char *
 pcmk__format_nvpair(const char *name, const char *value, const char *units)
 {
-    return crm_strdup_printf("%s=\"%s%s\"", name, value, units ? units : "");
+    return pcmk__assert_asprintf("%s=\"%s%s\"", name, value,
+                                 pcmk__s(units, ""));
 }
 
 /*!
@@ -211,15 +212,15 @@ hash2smartfield(gpointer key, gpointer value, gpointer user_data)
     if (isdigit(name[0])) {
         xmlNode *tmp = pcmk__xe_create(xml_node, PCMK__XE_PARAM);
 
-        crm_xml_add(tmp, PCMK_XA_NAME, name);
-        crm_xml_add(tmp, PCMK_XA_VALUE, s_value);
+        pcmk__xe_set(tmp, PCMK_XA_NAME, name);
+        pcmk__xe_set(tmp, PCMK_XA_VALUE, s_value);
 
-    } else if (crm_element_value(xml_node, name) == NULL) {
-        crm_xml_add(xml_node, name, s_value);
-        crm_trace("dumped: %s=%s", name, s_value);
+    } else if (pcmk__xe_get(xml_node, name) == NULL) {
+        pcmk__xe_set(xml_node, name, s_value);
+        pcmk__trace("dumped: %s=%s", name, s_value);
 
     } else {
-        crm_trace("duplicate: %s=%s", name, s_value);
+        pcmk__trace("duplicate: %s=%s", name, s_value);
     }
 }
 
@@ -242,11 +243,11 @@ hash2field(gpointer key, gpointer value, gpointer user_data)
 
     xmlNode *xml_node = user_data;
 
-    if (crm_element_value(xml_node, name) == NULL) {
-        crm_xml_add(xml_node, name, s_value);
+    if (pcmk__xe_get(xml_node, name) == NULL) {
+        pcmk__xe_set(xml_node, name, s_value);
 
     } else {
-        crm_trace("duplicate: %s=%s", name, s_value);
+        pcmk__trace("duplicate: %s=%s", name, s_value);
     }
 }
 
@@ -311,13 +312,13 @@ crm_create_nvpair_xml(xmlNode *parent, const char *id, const char *name,
     nvp = pcmk__xe_create(parent, PCMK_XE_NVPAIR);
 
     if (id) {
-        crm_xml_add(nvp, PCMK_XA_ID, id);
+        pcmk__xe_set(nvp, PCMK_XA_ID, id);
     } else {
         pcmk__xe_set_id(nvp, "%s-%s",
                         pcmk__s(pcmk__xe_id(parent), PCMK_XE_NVPAIR), name);
     }
-    crm_xml_add(nvp, PCMK_XA_NAME, name);
-    crm_xml_add(nvp, PCMK_XA_VALUE, value);
+    pcmk__xe_set(nvp, PCMK_XA_NAME, name);
+    pcmk__xe_set(nvp, PCMK_XA_VALUE, value);
     return nvp;
 }
 
@@ -347,11 +348,11 @@ xml2list(const xmlNode *parent)
 
     nvpair_list = pcmk__xe_first_child(parent, PCMK__XE_ATTRIBUTES, NULL, NULL);
     if (nvpair_list == NULL) {
-        crm_trace("No attributes in %s", parent->name);
-        crm_log_xml_trace(parent, "No attributes for resource op");
+        pcmk__trace("No attributes in %s", parent->name);
+        pcmk__log_xml_trace(parent, "No attributes for resource op");
     }
 
-    crm_log_xml_trace(nvpair_list, "Unpacking");
+    pcmk__log_xml_trace(nvpair_list, "Unpacking");
 
     for (pIter = pcmk__xe_first_attr(nvpair_list); pIter != NULL;
          pIter = pIter->next) {
@@ -359,7 +360,7 @@ xml2list(const xmlNode *parent)
         const char *p_name = (const char *)pIter->name;
         const char *p_value = pcmk__xml_attr_value(pIter);
 
-        crm_trace("Added %s=%s", p_name, p_value);
+        pcmk__trace("Added %s=%s", p_name, p_value);
 
         pcmk__insert_dup(nvpair_hash, p_name, p_value);
     }
@@ -367,10 +368,10 @@ xml2list(const xmlNode *parent)
     for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK__XE_PARAM)) {
 
-        const char *key = crm_element_value(child, PCMK_XA_NAME);
-        const char *value = crm_element_value(child, PCMK_XA_VALUE);
+        const char *key = pcmk__xe_get(child, PCMK_XA_NAME);
+        const char *value = pcmk__xe_get(child, PCMK_XA_VALUE);
 
-        crm_trace("Added %s=%s", key, value);
+        pcmk__trace("Added %s=%s", key, value);
         if (key != NULL && value != NULL) {
             pcmk__insert_dup(nvpair_hash, key, value);
         }
@@ -405,8 +406,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
         return pcmk_rc_ok;
     }
 
-    name = crm_element_value(ref_nvpair, PCMK_XA_NAME);
-    value = crm_element_value(ref_nvpair, PCMK_XA_VALUE);
+    name = pcmk__xe_get(ref_nvpair, PCMK_XA_NAME);
+    value = pcmk__xe_get(ref_nvpair, PCMK_XA_VALUE);
     if ((name == NULL) || (value == NULL)) {
         return pcmk_rc_ok; // Not possible with schema validation enabled
     }
@@ -424,8 +425,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
         }
 
     } else if ((old_value == NULL) || unpack_data->overwrite) {
-        crm_trace("Setting %s=\"%s\" (was %s)",
-                  name, value, pcmk__s(old_value, "unset"));
+        pcmk__trace("Setting %s=\"%s\" (was %s)", name, value,
+                    pcmk__s(old_value, "unset"));
         pcmk__insert_dup(unpack_data->values, name, value);
     }
     return pcmk_rc_ok;
@@ -459,8 +460,9 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
         return;
     }
 
-    crm_trace("Adding name/value pairs from %s %s overwrite",
-              pcmk__xe_id(pair), (unpack_data->overwrite? "with" : "without"));
+    pcmk__trace("Adding name/value pairs from %s %s overwrite",
+                pcmk__xe_id(pair),
+                (unpack_data->overwrite? "with" : "without"));
     if (pcmk__xe_is(pair->children, PCMK__XE_ATTRIBUTES)) {
         pair = pair->children;
     }
@@ -528,7 +530,7 @@ crm_meta_name(const char *attr_name)
 
     pcmk__assert(!pcmk__str_empty(attr_name));
 
-    env_name = crm_strdup_printf(CRM_META "_%s", attr_name);
+    env_name = pcmk__assert_asprintf(CRM_META "_%s", attr_name);
     for (char *c = env_name; *c != '\0'; ++c) {
         if (*c == '-') {
             *c = '_';
@@ -631,8 +633,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
         pcmk__config_warn("Using 0 as %s score because '%s' "
                           "is not a valid score: %s",
                           pcmk__xe_id(pair_a),
-                          crm_element_value(pair_a, PCMK_XA_SCORE),
-                          pcmk_rc_str(rc));
+                          pcmk__xe_get(pair_a, PCMK_XA_SCORE), pcmk_rc_str(rc));
     }
 
     rc = pcmk__xe_get_score(pair_b, PCMK_XA_SCORE, &score_b, 0);
@@ -640,8 +641,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
         pcmk__config_warn("Using 0 as %s score because '%s' "
                           "is not a valid score: %s",
                           pcmk__xe_id(pair_b),
-                          crm_element_value(pair_b, PCMK_XA_SCORE),
-                          pcmk_rc_str(rc));
+                          pcmk__xe_get(pair_b, PCMK_XA_SCORE), pcmk_rc_str(rc));
     }
 
     if (score_a < score_b) {
@@ -704,7 +704,7 @@ pcmk__nvpair_add_xml_attr(gpointer data, gpointer user_data)
     pcmk_nvpair_t *pair = data;
     xmlNode *parent = user_data;
 
-    crm_xml_add(parent, pair->name, pair->value);
+    pcmk__xe_set(parent, pair->name, pair->value);
 }
 
 void
@@ -721,7 +721,7 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
     xmlNode *xml_node = user_data;
 
     crm_create_nvpair_xml(xml_node, name, name, s_value);
-    crm_trace("dumped: name=%s value=%s", name, s_value);
+    pcmk__trace("dumped: name=%s value=%s", name, s_value);
 }
 
 // LCOV_EXCL_STOP

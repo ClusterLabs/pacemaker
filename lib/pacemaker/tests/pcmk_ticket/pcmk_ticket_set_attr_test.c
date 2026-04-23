@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/cib/internal.h>
 #include <crm/common/unittest_internal.h>
@@ -75,8 +77,7 @@ unknown_ticket_no_attrs(void **state)
     /* Setting no attributes on a ticket that doesn't exist is a no-op */
     assert_int_equal(pcmk_ticket_set_attr(&xml, "XYZ", NULL, false), pcmk_rc_ok);
     pcmk__assert_validates(xml);
-    pcmk__xml_free(xml);
-    xml = NULL;
+    g_clear_pointer(&xml, pcmk__xml_free);
 
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
                      &xml_search, cib_xpath);
@@ -118,8 +119,8 @@ unknown_ticket_with_attrs(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"XYZ\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("123", crm_element_value(xml_search, "attrA"));
-    assert_string_equal("456", crm_element_value(xml_search, "attrB"));
+    assert_string_equal("123", pcmk__xe_get(xml_search, "attrA"));
+    assert_string_equal("456", pcmk__xe_get(xml_search, "attrB"));
 
     pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
@@ -145,7 +146,7 @@ overwrite_existing_attr(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("2", crm_element_value(xml_search, "owner"));
+    assert_string_equal("2", pcmk__xe_get(xml_search, "owner"));
 
     pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
@@ -171,8 +172,8 @@ not_granted_to_granted_without_force(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
-    assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
+    assert_string_equal("false", pcmk__xe_get(xml_search, PCMK__XA_GRANTED));
+    assert_null(pcmk__xe_get(xml_search, PCMK_XA_LAST_GRANTED));
 
     pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
@@ -198,8 +199,8 @@ not_granted_to_granted_with_force(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketA\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
-    assert_non_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
+    assert_string_equal("true", pcmk__xe_get(xml_search, PCMK__XA_GRANTED));
+    assert_non_null(pcmk__xe_get(xml_search, PCMK_XA_LAST_GRANTED));
 
     pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
@@ -225,8 +226,8 @@ granted_to_not_granted_without_force(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("true", crm_element_value(xml_search, PCMK__XA_GRANTED));
-    assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
+    assert_string_equal("true", pcmk__xe_get(xml_search, PCMK__XA_GRANTED));
+    assert_null(pcmk__xe_get(xml_search, PCMK_XA_LAST_GRANTED));
 
     pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);
@@ -252,8 +253,8 @@ granted_to_not_granted_with_force(void **state)
     cib->cmds->query(cib, "//" PCMK__XE_TICKET_STATE "[@" PCMK_XA_ID "=\"ticketB\"]",
                      &xml_search, cib_xpath);
 
-    assert_string_equal("false", crm_element_value(xml_search, PCMK__XA_GRANTED));
-    assert_null(crm_element_value(xml_search, PCMK_XA_LAST_GRANTED));
+    assert_string_equal("false", pcmk__xe_get(xml_search, PCMK__XA_GRANTED));
+    assert_null(pcmk__xe_get(xml_search, PCMK_XA_LAST_GRANTED));
 
     pcmk__xml_free(xml_search);
     g_hash_table_destroy(attrs);

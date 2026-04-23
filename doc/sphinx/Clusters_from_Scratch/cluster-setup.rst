@@ -310,4 +310,4 @@ available with your Pacemaker installation, run:
 
     [root@pcmk-1 ~]# pacemakerd --features
      Pacemaker 2.1.2-4.el9 (Build: ada5c3b36e2)
-     Supporting v3.13.0: agent-manpages cibsecrets corosync-ge-2 default-concurrent-fencing default-resource-stickiness default-sbd-sync generated-manpages monotonic nagios ncurses remote systemd
+     Supporting v3.13.0: agent-manpages cibsecrets corosync-ge-2 default-resource-stickiness default-sbd-sync generated-manpages monotonic nagios ncurses remote systemd

@@ -11,7 +11,6 @@
 
 #include <crm/common/xml.h>
 #include <crm/common/unittest_internal.h>
-#include <crm/common/lists_internal.h>
 
 #include <glib.h>
 
@@ -83,12 +82,11 @@ single_schema(void **state)
      */
     schema_node = pcmk__xe_first_child(parent, NULL, NULL, NULL);
     assert_string_equal("pacemaker-3.0",
-                        crm_element_value(schema_node, PCMK_XA_VERSION));
+                        pcmk__xe_get(schema_node, PCMK_XA_VERSION));
 
     file_node = pcmk__xe_first_child(schema_node, NULL, NULL, NULL);
     while (file_node != NULL && rngs1[i] != NULL) {
-        assert_string_equal(rngs1[i],
-                            crm_element_value(file_node, PCMK_XA_PATH));
+        assert_string_equal(rngs1[i], pcmk__xe_get(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
         file_node = pcmk__xe_next(file_node, NULL);
@@ -119,12 +117,11 @@ multiple_schemas(void **state)
      */
     schema_node = pcmk__xe_first_child(parent, NULL, NULL, NULL);
     assert_string_equal("pacemaker-2.0",
-                        crm_element_value(schema_node, PCMK_XA_VERSION));
+                        pcmk__xe_get(schema_node, PCMK_XA_VERSION));
 
     file_node = pcmk__xe_first_child(schema_node, NULL, NULL, NULL);
     while (file_node != NULL && rngs2[i] != NULL) {
-        assert_string_equal(rngs2[i],
-                            crm_element_value(file_node, PCMK_XA_PATH));
+        assert_string_equal(rngs2[i], pcmk__xe_get(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
         file_node = pcmk__xe_next(file_node, NULL);
@@ -133,14 +130,13 @@ multiple_schemas(void **state)
 
     schema_node = pcmk__xe_next(schema_node, NULL);
     assert_string_equal("pacemaker-2.1",
-                        crm_element_value(schema_node, PCMK_XA_VERSION));
+                        pcmk__xe_get(schema_node, PCMK_XA_VERSION));
 
     file_node = pcmk__xe_first_child(schema_node, NULL, NULL, NULL);
     i = 0;
 
     while (file_node != NULL && rngs3[i] != NULL) {
-        assert_string_equal(rngs3[i],
-                            crm_element_value(file_node, PCMK_XA_PATH));
+        assert_string_equal(rngs3[i], pcmk__xe_get(file_node, PCMK_XA_PATH));
         assert_int_equal(pcmk__xml_first_child(file_node)->type, XML_CDATA_SECTION_NODE);
 
         file_node = pcmk__xe_next(file_node, NULL);

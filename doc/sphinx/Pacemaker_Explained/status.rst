@@ -371,12 +371,12 @@ recorded, just enough to determine the resource's state.)
 Simple Operation History Example
 ________________________________
 
-.. topic:: A monitor operation (determines current state of the ``apcstonith`` resource)
+.. topic:: A monitor operation (determines current state of the ``apcfencing`` resource)
 
    .. code-block:: xml
 
-      <lrm_resource id="apcstonith" type="fence_apc_snmp" class="stonith">
-        <lrm_rsc_op id="apcstonith_monitor_0" operation="monitor" call-id="2"
+      <lrm_resource id="apcencing" type="fence_apc_snmp" class="stonith">
+        <lrm_rsc_op id="apcfencing_monitor_0" operation="monitor" call-id="2"
           rc-code="7" op-status="0" interval="0"
           crm-debug-origin="do_update_resource" crm_feature_set="3.0.1"
           op-digest="2e3da9274d3550dc6526fb24bfcbcba0"
@@ -386,7 +386,7 @@ ________________________________
       </lrm_resource>
 
 The above example shows the history entry for a probe (non-recurring monitor
-operation) for the ``apcstonith`` resource.
+operation) for the ``apcfencing`` resource.
 
 The cluster schedules probes for every configured resource on a node when
 the node first starts, in order to determine the resource's current state

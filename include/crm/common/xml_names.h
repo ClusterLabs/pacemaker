@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -127,6 +127,7 @@ extern "C" {
 #define PCMK_XE_LAST_UPDATE                 "last_update"
 #define PCMK_XE_LIST                        "list"
 #define PCMK_XE_LONGDESC                    "longdesc"
+#define PCMK_XE_MD5_SUM                     "md5-sum"
 #define PCMK_XE_META_ATTRIBUTES             "meta_attributes"
 #define PCMK_XE_METADATA                    "metadata"
 #define PCMK_XE_MODIFICATIONS               "modifications"
@@ -157,6 +158,7 @@ extern "C" {
 #define PCMK_XE_PACEMAKERD                  "pacemakerd"
 #define PCMK_XE_PARAMETER                   "parameter"
 #define PCMK_XE_PARAMETERS                  "parameters"
+#define PCMK_XE_PATCHSET                    "patchset"
 #define PCMK_XE_PERIOD                      "period"
 #define PCMK_XE_PODMAN                      "podman"
 #define PCMK_XE_PORT_MAPPING                "port-mapping"
@@ -168,6 +170,7 @@ extern "C" {
 #define PCMK_XE_PSEUDO_ACTION               "pseudo_action"
 #define PCMK_XE_REASON                      "reason"
 #define PCMK_XE_RECIPIENT                   "recipient"
+#define PCMK_XE_REPLACED_WITH               "replaced-with"
 #define PCMK_XE_REPLICA                     "replica"
 #define PCMK_XE_RESOURCE                    "resource"
 #define PCMK_XE_RESOURCE_AGENT              "resource-agent"
@@ -214,6 +217,7 @@ extern "C" {
 #define PCMK_XE_TIMING                      "timing"
 #define PCMK_XE_TIMINGS                     "timings"
 #define PCMK_XE_TRANSITION                  "transition"
+#define PCMK_XE_UPDATED                     "updated"
 #define PCMK_XE_UTILIZATION                 "utilization"
 #define PCMK_XE_UTILIZATIONS                "utilizations"
 #define PCMK_XE_VALIDATE                    "validate"
@@ -252,7 +256,6 @@ extern "C" {
 #define PCMK_XA_COUNT                       "count"
 #define PCMK_XA_CRM_DEBUG_ORIGIN            "crm-debug-origin"
 #define PCMK_XA_CRM_FEATURE_SET             "crm_feature_set"
-#define PCMK_XA_CRM_TIMESTAMP               "crm-timestamp"
 #define PCMK_XA_CRMD                        "crmd"
 #define PCMK_XA_DAYS                        "days"
 #define PCMK_XA_DC_UUID                     "dc-uuid"
@@ -262,6 +265,7 @@ extern "C" {
 #define PCMK_XA_DEST                        "dest"
 #define PCMK_XA_DEVICE                      "device"
 #define PCMK_XA_DEVICES                     "devices"
+#define PCMK_XA_DIGEST                      "digest"
 #define PCMK_XA_DISABLED                    "disabled"
 #define PCMK_XA_DURATION                    "duration"
 #define PCMK_XA_END                         "end"
@@ -284,6 +288,8 @@ extern "C" {
 #define PCMK_XA_FAILURE_IGNORED             "failure_ignored"
 #define PCMK_XA_FEATURE_SET                 "feature_set"
 #define PCMK_XA_FEATURES                    "features"
+#define PCMK_XA_FENCING_ENABLED             "fencing-enabled"
+#define PCMK_XA_FENCING_TIMEOUT_MS          "fencing-timeout-ms"
 #define PCMK_XA_FILE                        "file"
 #define PCMK_XA_FIRST                       "first"
 #define PCMK_XA_FIRST_ACTION                "first-action"
@@ -349,8 +355,6 @@ extern "C" {
 #define PCMK_XA_OPERATION                   "operation"
 #define PCMK_XA_OPTIONS                     "options"
 #define PCMK_XA_ORIGIN                      "origin"
-#define PCMK_XA_ORPHAN                      "orphan"
-#define PCMK_XA_ORPHANED                    "orphaned"
 #define PCMK_XA_PACEMAKERD_STATE            "pacemakerd-state"
 #define PCMK_XA_PATH                        "path"
 #define PCMK_XA_PENDING                     "pending"
@@ -372,9 +376,9 @@ extern "C" {
 #define PCMK_XA_REFERENCE                   "reference"
 #define PCMK_XA_RELOADABLE                  "reloadable"
 #define PCMK_XA_REMAIN_STOPPED              "remain_stopped"
-#define PCMK_XA_REMOTE_CLEAR_PORT           "remote-clear-port"
 #define PCMK_XA_REMOTE_NODE                 "remote_node"
 #define PCMK_XA_REMOTE_TLS_PORT             "remote-tls-port"
+#define PCMK_XA_REMOVED                     "removed"
 #define PCMK_XA_REPLICAS                    "replicas"
 #define PCMK_XA_REPLICAS_PER_HOST           "replicas-per-host"
 #define PCMK_XA_REQUEST                     "request"
@@ -408,8 +412,6 @@ extern "C" {
 #define PCMK_XA_START                       "start"
 #define PCMK_XA_STATE                       "state"
 #define PCMK_XA_STATUS                      "status"
-#define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
-#define PCMK_XA_STONITH_TIMEOUT_MS          "stonith-timeout-ms"
 #define PCMK_XA_STOP_ALL_RESOURCES          "stop-all-resources"
 #define PCMK_XA_SYMMETRIC_CLUSTER           "symmetric-cluster"
 #define PCMK_XA_SYMMETRICAL                 "symmetrical"
@@ -455,6 +457,24 @@ extern "C" {
 #define PCMK_XA_YEARDAYS                    "yeardays"
 #define PCMK_XA_YEARS                       "years"
 
+//! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
+#define PCMK_XA_ORPHAN                      "orphan"
+
+//! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_REMOVED instead
+#define PCMK_XA_ORPHANED                    "orphaned"
+
+//! \deprecated Deprecated since 3.0.2; use \c PCMK_XA_REMOTE_TLS_PORT instead
+#define PCMK_XA_REMOTE_CLEAR_PORT           "remote-clear-port"
+
+/*! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_FENCING_ENABLED
+ *              instead
+ */
+#define PCMK_XA_STONITH_ENABLED             "stonith-enabled"
+
+/*! \deprecated Deprecated since 3.0.2; look for \c PCMK_XA_FENCING_TIMEOUT_MS
+ *              instead
+ */
+#define PCMK_XA_STONITH_TIMEOUT_MS          "stonith-timeout-ms"
 
 #ifdef __cplusplus
 }

@@ -1,11 +1,12 @@
 """Create a split brain cluster and verify a resource is multiply managed."""
 
 __all__ = ["SplitBrainTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import time
 
+from pacemaker._cts import logging
 from pacemaker._cts.input import should_continue
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -39,7 +40,7 @@ class SplitBrainTest(CTSTest):
         """
         CTSTest.__init__(self, cm)
 
-        self.is_experimental = True
+        self.is_unsafe = True
         self.name = "SplitBrain"
 
         self._start = StartTest(cm)
@@ -53,7 +54,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log(f"Node {node} not in {self._env['nodes']!r} from {partition!r}")
+                logging.log(f"Node {node} not in {self._env['nodes']!r} from {partition!r}")
 
         if not other_nodes:
             return
@@ -63,7 +64,7 @@ class SplitBrainTest(CTSTest):
 
         for node in partition:
             if not self._cm.isolate_node(node, other_nodes):
-                self._logger.log(f"Could not isolate {node}")
+                logging.log(f"Could not isolate {node}")
                 return
 
     def _heal_partition(self, partition):
@@ -74,7 +75,7 @@ class SplitBrainTest(CTSTest):
             try:
                 other_nodes.remove(node)
             except ValueError:
-                self._logger.log(f"Node {node} not in {self._env['nodes']!r}")
+                logging.log(f"Node {node} not in {self._env['nodes']!r}")
 
         if len(other_nodes) == 0:
             return
@@ -117,7 +118,7 @@ class SplitBrainTest(CTSTest):
             self.debug(f"Partition[{key}]:\t{val!r}")
 
         # Disabling STONITH to reduce test complexity for now
-        self._rsh(node, "crm_attribute -V -n stonith-enabled -v false")
+        self._rsh(node, "crm_attribute -V -n fencing-enabled -v false")
 
         for val in partitions.values():
             self._isolate_partition(val)
@@ -183,8 +184,8 @@ class SplitBrainTest(CTSTest):
                 raise ValueError("Reformed cluster not stable")
 
         # Turn fencing back on
-        if self._env["DoFencing"]:
-            self._rsh(node, "crm_attribute -V -D -n stonith-enabled")
+        if self._env["fencing_enabled"]:
+            self._rsh(node, "crm_attribute -V -D -n fencing-enabled")
 
         self._cm.cluster_stable()
 
@@ -200,7 +201,8 @@ class SplitBrainTest(CTSTest):
             r"Another DC detected:",
             r"(ERROR|error).*: .*Application of an update diff failed",
             r"pacemaker-controld.*:.*not in our membership list",
-            r"CRIT:.*node.*returning after partition"
+            r"CRIT:.*node.*returning after partition",
+            self._cm.templates["Pat:Resource_active"],
         ]
 
     def is_applicable(self):

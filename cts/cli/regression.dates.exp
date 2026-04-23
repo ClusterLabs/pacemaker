@@ -29,32 +29,32 @@ iso8601: Invalid interval specified: 20191077T15/P1M
 =#=#=#= End test: Invalid period - [20191077T15/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [20191077T15/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01T25:00:00Z/P1M] =#=#=#=
-crm_time_parse_sec 	error: 25:00:00Z/P1M is not a valid ISO 8601 time specification because 25 is not a valid hour
+parse_hms 	error: 25:00:00Z/P1M is not a valid ISO 8601 time specification because 25 is not a valid hour
 iso8601: Invalid interval specified: 2019-10-01T25:00:00Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01T25:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [2019-10-01T25:00:00Z/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01T24:00:01Z/P1M] =#=#=#=
-crm_time_parse_sec 	error: 24:00:01Z/P1M is not a valid ISO 8601 time specification because 24 is not a valid hour
+parse_hms 	error: 24:00:01Z/P1M is not a valid ISO 8601 time specification because 24 is not a valid hour
 iso8601: Invalid interval specified: 2019-10-01T24:00:01Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01T24:00:01Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [2019-10-01T24:00:01Z/P1M]
 =#=#=#= Begin test: Invalid period - [PT5H/20191001T007000Z] =#=#=#=
-crm_time_parse_sec 	error: 007000Z is not a valid ISO 8601 time specification because 70 is not a valid minute
+parse_hms 	error: 007000Z is not a valid ISO 8601 time specification because 70 is not a valid minute
 iso8601: Invalid interval specified: PT5H/20191001T007000Z
 =#=#=#= End test: Invalid period - [PT5H/20191001T007000Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [PT5H/20191001T007000Z]
 =#=#=#= Begin test: Invalid period - [2019-10-01 00:00:80Z/P1M] =#=#=#=
-crm_time_parse_sec 	error: 00:00:80Z/P1M is not a valid ISO 8601 time specification because 80 is not a valid second
+parse_hms 	error: 00:00:80Z/P1M is not a valid ISO 8601 time specification because 80 is not a valid second
 iso8601: Invalid interval specified: 2019-10-01 00:00:80Z/P1M
 =#=#=#= End test: Invalid period - [2019-10-01 00:00:80Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [2019-10-01 00:00:80Z/P1M]
 =#=#=#= Begin test: Invalid period - [2019-10-01 00:00:10 +25:00/P1M] =#=#=#=
-crm_time_parse_sec 	error: 25:00/P1M is not a valid ISO 8601 time specification because 25 is not a valid hour
+parse_hms 	error: 25:00/P1M is not a valid ISO 8601 time specification because 25 is not a valid hour
 iso8601: Invalid interval specified: 2019-10-01 00:00:10 +25:00/P1M
 =#=#=#= End test: Invalid period - [2019-10-01 00:00:10 +25:00/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [2019-10-01 00:00:10 +25:00/P1M]
 =#=#=#= Begin test: Invalid period - [20191001T000010 -00:61/P1M] =#=#=#=
-crm_time_parse_sec 	error: 00:61/P1M is not a valid ISO 8601 time specification because 61 is not a valid minute
+parse_hms 	error: 00:61/P1M is not a valid ISO 8601 time specification because 61 is not a valid minute
 iso8601: Invalid interval specified: 20191001T000010 -00:61/P1M
 =#=#=#= End test: Invalid period - [20191001T000010 -00:61/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [20191001T000010 -00:61/P1M]
@@ -369,6 +369,26 @@ Duration:  3 months
 Duration ends at: 2009-04-30 00:00:00Z
 =#=#=#= End test: 2009-01-31 + 3 Months - OK (0) =#=#=#=
 * Passed: iso8601               - 2009-01-31 + 3 Months
+=#=#=#= Begin test: Test immediate plus sign in timezone parsing =#=#=#=
+Date: 1556221374
+=#=#=#= End test: Test immediate plus sign in timezone parsing - OK (0) =#=#=#=
+* Passed: iso8601               - Test immediate plus sign in timezone parsing
+=#=#=#= Begin test: Like the previous, with exotic timezone to avoid false negative =#=#=#=
+Date: 1556212974
+=#=#=#= End test: Like the previous, with exotic timezone to avoid false negative - OK (0) =#=#=#=
+* Passed: iso8601               - Like the previous, with exotic timezone to avoid false negative
+=#=#=#= Begin test: Test immediate minus sign in timezone parsing =#=#=#=
+Date: 1556235774
+=#=#=#= End test: Test immediate minus sign in timezone parsing - OK (0) =#=#=#=
+* Passed: iso8601               - Test immediate minus sign in timezone parsing
+=#=#=#= Begin test: Test plus sign with leading spaces in timezone parsing =#=#=#=
+Date: 1556221374
+=#=#=#= End test: Test plus sign with leading spaces in timezone parsing - OK (0) =#=#=#=
+* Passed: iso8601               - Test plus sign with leading spaces in timezone parsing
+=#=#=#= Begin test: Test minus sign with leading spaces in timezone parsing =#=#=#=
+Date: 1556235774
+=#=#=#= End test: Test minus sign with leading spaces in timezone parsing - OK (0) =#=#=#=
+* Passed: iso8601               - Test minus sign with leading spaces in timezone parsing
 =#=#=#= Begin test: 2009-03-31 - 1 Month =#=#=#=
 Date: 2009-03-31 00:00:00Z
 Duration: -1 months 

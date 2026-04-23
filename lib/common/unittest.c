@@ -16,7 +16,13 @@
 
 #include <libxml/parser.h>                  // xmlCleanupParser()
 
+#include "crmcommon_private.h"              // pcmk__add_logfile()
+
 // LCOV_EXCL_START
+
+static bool fake_text_init_succeeds = true;
+static bool testing_output_free = false;
+static bool testing_output_and_clear_error = false;
 
 void
 pcmk__assert_validates(xmlNode *xml)
@@ -27,8 +33,8 @@ pcmk__assert_validates(xmlNode *xml)
     gchar *err = NULL;
     gint status;
     GError *gerr = NULL;
-    char *xmllint_input = crm_strdup_printf("%s/test-xmllint.XXXXXX",
-                                            pcmk__get_tmpdir());
+    char *xmllint_input = pcmk__assert_asprintf("%s/test-xmllint.XXXXXX",
+                                                pcmk__get_tmpdir());
     int fd;
     int rc;
 
@@ -52,8 +58,8 @@ pcmk__assert_validates(xmlNode *xml)
         fail_msg("PCMK_schema_directory is not set in test environment");
     }
 
-    cmd = crm_strdup_printf("xmllint --relaxng %s/api/api-result.rng %s",
-                            schema_dir, xmllint_input);
+    cmd = pcmk__assert_asprintf("xmllint --relaxng %s/api/api-result.rng %s",
+                                schema_dir, xmllint_input);
 
     if (!g_spawn_command_line_sync(cmd, &out, &err, &status, &gerr)) {
         unlink(xmllint_input);
@@ -112,13 +118,14 @@ pcmk__xml_test_teardown_group(void **state)
 char *
 pcmk__cib_test_copy_cib(const char *in_file)
 {
-    char *in_path = crm_strdup_printf("%s/%s", getenv("PCMK_CTS_CLI_DIR"), in_file);
+    char *in_path = pcmk__assert_asprintf("%s/%s", getenv("PCMK_CTS_CLI_DIR"),
+                                          in_file);
     char *out_path = NULL;
     char *contents = NULL;
     int fd;
 
     /* Copy the CIB over to a temp location so we can modify it. */
-    out_path = crm_strdup_printf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
+    out_path = pcmk__assert_asprintf("%s/test-cib.XXXXXX", pcmk__get_tmpdir());
 
     fd = mkstemp(out_path);
     if (fd < 0) {
@@ -169,6 +176,122 @@ pcmk__test_init_logging(const char *name, const char *filename)
         pcmk__add_logfile(filename);
         set_crm_log_level(LOG_DEBUG);
     }
+}
+
+
+// Output test utilities
+
+static bool
+fake_text_init(pcmk__output_t *out)
+{
+    return fake_text_init_succeeds;
+}
+
+static void
+fake_text_free_priv(pcmk__output_t *out)
+{
+    if (testing_output_free) {
+        function_called();
+    }
+}
+
+G_GNUC_PRINTF(2, 3)
+static void
+fake_text_err(pcmk__output_t *out, const char *format, ...)
+{
+    if (testing_output_and_clear_error) {
+        function_called();
+    }
+}
+
+pcmk__output_t *
+pcmk__mk_fake_text_output(char **argv)
+{
+    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
+
+    if (retval == NULL) {
+        return NULL;
+    }
+
+    retval->fmt_name = "text";
+
+    retval->init = fake_text_init;
+    retval->free_priv = fake_text_free_priv;
+
+    retval->register_message = pcmk__register_message;
+    retval->message = pcmk__call_message;
+
+    retval->err = fake_text_err;
+
+    return retval;
+}
+
+int
+pcmk__output_test_setup_group(void **state)
+{
+    pcmk__register_format(NULL, "text", pcmk__mk_fake_text_output, NULL);
+    return 0;
+}
+
+int
+pcmk__output_test_teardown_group(void **state)
+{
+    pcmk__unregister_formats();
+    return 0;
+}
+
+void
+pcmk__set_fake_text_init_succeeds(bool value)
+{
+    fake_text_init_succeeds = value;
+}
+
+void
+pcmk__set_testing_output_free(bool value)
+{
+    testing_output_free = value;
+}
+
+void
+pcmk__set_testing_output_and_clear_error(bool value)
+{
+    testing_output_and_clear_error = value;
+}
+
+void
+pcmk__expect_fake_text_free_priv(void)
+{
+    expect_function_call(fake_text_free_priv);
+}
+
+void
+pcmk__expect_fake_text_err(void)
+{
+    expect_function_call(fake_text_err);
+}
+
+pcmk__output_t *
+pcmk__output_null_create1(char **argv)
+{
+    return NULL;
+}
+
+pcmk__output_t *
+pcmk__output_null_create2(char **argv)
+{
+    return NULL;
+}
+
+int
+pcmk__output_message_dummy1(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_ok;
+}
+
+int
+pcmk__output_message_dummy2(pcmk__output_t *out, va_list args)
+{
+    return pcmk_rc_ok;
 }
 
 // LCOV_EXCL_STOP

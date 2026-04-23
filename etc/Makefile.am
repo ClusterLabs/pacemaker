@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2024 the Pacemaker project contributors
+# Copyright 2021-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,8 +10,9 @@
 include $(top_srcdir)/mk/common.mk
 
 configdir		= @CONFIGDIR@
-CONFIGS			= crm_mon 	\
-			  pacemaker
+
+CONFIGS = crm_mon
+CONFIGS += pacemaker
 
 if !BUILD_SYSTEMD
 if BUILD_LSB

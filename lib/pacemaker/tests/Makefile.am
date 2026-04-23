@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2024 the Pacemaker project contributors
+# Copyright 2020-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -9,5 +9,5 @@
 
 include $(top_srcdir)/mk/common.mk
 
-SUBDIRS = pcmk_resource \
-	  pcmk_ticket
+SUBDIRS = pcmk_resource
+SUBDIRS += pcmk_ticket

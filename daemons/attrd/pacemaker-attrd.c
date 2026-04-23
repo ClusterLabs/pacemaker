@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <sys/param.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -20,15 +21,11 @@
 #include <fcntl.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/xml.h>
 #include <crm/cluster/internal.h>
 
-#include <crm/common/attrs_internal.h>
 #include "pacemaker-attrd.h"
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
@@ -56,7 +53,6 @@ static pcmk__supported_format_t formats[] = {
 };
 
 lrmd_t *the_lrmd = NULL;
-pcmk_cluster_t *attrd_cluster = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
 
@@ -73,8 +69,8 @@ ipc_already_running(void)
 
     rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
     if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s manager instance found: %s",
-                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
+        pcmk__debug("No existing %s instance found: %s",
+                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
         pcmk_free_ipc_api(old_instance);
         return false;
     }
@@ -126,7 +122,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
@@ -134,15 +130,15 @@ main(int argc, char **argv)
     pcmk__add_logfiles(log_files, out);
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    crm_notice("Starting Pacemaker node attribute manager%s",
-               stand_alone ? " in standalone mode" : "");
+    pcmk__notice("Starting Pacemaker node attribute manager%s",
+                 (stand_alone ? " in standalone mode" : ""));
 
     if (ipc_already_running()) {
         attrd_exit_status = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Aborting start-up because an attribute manager "
                     "instance is already active");
-        crm_crit("%s", error->message);
+        pcmk__crit("%s", error->message);
         goto done;
     }
 
@@ -161,16 +157,17 @@ main(int argc, char **argv)
                         "Could not connect to the CIB");
             goto done;
         }
-        crm_info("CIB connection active");
+        pcmk__info("CIB connection active");
     }
 
-    if (attrd_cluster_connect() != pcmk_ok) {
+    if (attrd_cluster_connect() != pcmk_rc_ok) {
         attrd_exit_status = CRM_EX_FATAL;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
                     "Could not connect to the cluster");
         goto done;
     }
-    crm_info("Cluster connection active");
+
+    pcmk__info("Cluster connection active");
 
     // Initialization that requires the cluster to be connected
     attrd_election_init();
@@ -186,24 +183,26 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    attrd_init_ipc();
-    crm_notice("Pacemaker node attribute manager successfully started and accepting connections");
+    attrd_ipc_init();
+    pcmk__notice("Pacemaker node attribute manager successfully started and "
+                 "accepting connections");
     attrd_run_mainloop();
 
   done:
     if (initialized) {
-        crm_info("Shutting down attribute manager");
+        pcmk__info("Shutting down attribute manager");
 
-        attrd_ipc_fini();
+        attrd_ipc_cleanup();
         attrd_lrmd_disconnect();
 
         if (!stand_alone) {
             attrd_cib_disconnect();
         }
 
+        attrd_free_removed_peers();
         attrd_free_waitlist();
-        pcmk_cluster_disconnect(attrd_cluster);
-        pcmk_cluster_free(attrd_cluster);
+        attrd_cluster_disconnect();
+        attrd_unregister_handlers();
         g_hash_table_destroy(attributes);
     }
 

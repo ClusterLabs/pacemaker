@@ -31,7 +31,7 @@ Simple
             <cluster_property_set id="cib-bootstrap-options">
               <nvpair id="option-1" name="symmetric-cluster" value="true"/>
               <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
-              <nvpair id="option-3" name="stonith-enabled" value="0"/>
+              <nvpair id="option-3" name="fencing-enabled" value="0"/>
             </cluster_property_set>
           </crm_config>
           <nodes>
@@ -83,7 +83,7 @@ Advanced Configuration
             <cluster_property_set id="cib-bootstrap-options">
               <nvpair id="option-1" name="symmetric-cluster" value="true"/>
               <nvpair id="option-2" name="no-quorum-policy" value="stop"/>
-              <nvpair id="option-3" name="stonith-enabled" value="true"/>
+              <nvpair id="option-3" name="fencing-enabled" value="true"/>
             </cluster_property_set>
           </crm_config>
           <nodes>
@@ -112,16 +112,16 @@ Advanced Configuration
                 </operations>
               </primitive>
             </group>
-            <clone id="STONITH">
-              <meta_attributes id="stonith-options">
-                <nvpair id="stonith-option-1" name="globally-unique" value="false"/>
+            <clone id="FENCING">
+              <meta_attributes id="fencing-options">
+                <nvpair id="fencing-option-1" name="globally-unique" value="false"/>
               </meta_attributes>
-              <primitive id="stonithclone" class="stonith" type="external/ssh">
+              <primitive id="fencingclone" class="stonith" type="external/ssh">
                 <operations>
-                  <op id="stonith-op-mon" name="monitor" interval="5s"/>
+                  <op id="fencing-op-mon" name="monitor" interval="5s"/>
                 </operations>
-                <instance_attributes id="stonith-attrs">
-                  <nvpair id="stonith-attr-1" name="hostlist" value="c001n01,c001n02"/>
+                <instance_attributes id="fencing-attrs">
+                  <nvpair id="fencing-attr-1" name="hostlist" value="c001n01,c001n02"/>
                 </instance_attributes>
               </primitive>
             </clone>

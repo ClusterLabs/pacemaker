@@ -1,4 +1,4 @@
-<transition_graph cluster-delay="60s" stonith-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
+<transition_graph cluster-delay="60s" fencing-timeout="60s" failed-stop-offset="INFINITY" failed-start-offset="INFINITY"  transition_id="1">
   <synapse id="0" priority="1000000">
     <action_set>
       <rsc_op id="43" operation="notify" operation_key="stateful:0_post_notify_start_0" on_node="alice.demo" on_node_uuid="df0d4306-9cf3-4c5c-a23a-027ac36da131">

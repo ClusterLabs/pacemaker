@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,9 +11,6 @@
 
 #include <crm_resource.h>
 #include <crm/lrmd_internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc_attrd_internal.h>
-#include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
 #include <crm/fencing/internal.h>           // stonith__agent_exists()
 #include <pacemaker-internal.h>
@@ -228,7 +225,7 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
     switch (event_type) {
         case pcmk_ipc_event_disconnect:
             if (exit_code == CRM_EX_DISCONNECT) { // Unexpected
-                crm_info("Connection to controller was terminated");
+                pcmk__info("Connection to controller was terminated");
             }
 
             *ec = exit_code;
@@ -250,7 +247,7 @@ controller_event_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
                     && g_main_loop_is_running(mainloop)) {
 
                     out->info(out, "... got reply (done)");
-                    crm_debug("Got all the replies we expected");
+                    pcmk__debug("Got all the replies we expected");
                     pcmk_disconnect_ipc(api);
 
                     *ec = CRM_EX_OK;
@@ -301,7 +298,9 @@ build_constraint_list(xmlNode *root)
         xmlNode *match = pcmk__xpath_result(xpathObj, ndx);
 
         if (match != NULL) {
-            retval = g_list_insert_sorted(retval, (gpointer) pcmk__xe_id(match),
+            // Insert a copy in case root is freed
+            retval = g_list_insert_sorted(retval,
+                                          pcmk__str_copy(pcmk__xe_id(match)),
                                           (GCompareFunc) g_strcmp0);
         }
     }
@@ -522,9 +521,10 @@ static gboolean
 timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
            GError **error)
 {
-    long long timeout_ms = crm_get_msec(optarg);
+    long long timeout_ms = 0;
 
-    if (timeout_ms < 0) {
+    if ((pcmk__parse_ms(optarg, &timeout_ms) != pcmk_rc_ok)
+        || (timeout_ms < 0)) {
         return FALSE;
     }
     options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
@@ -831,7 +831,9 @@ static GOptionEntry addl_entries[] = {
       "ID" },
     { "timeout", 'T', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, timeout_cb,
       "(Advanced) Abort if command does not finish in this time (with\n"
-      INDENT "--restart, --wait, --force-*)",
+      INDENT "--restart, --wait, --force-*). The --restart command uses a\n"
+      INDENT "two-second granularity and the --wait command uses a one-second\n"
+      INDENT "granularity, with rounding.",
       "N" },
     { "all", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.all,
       "List all options, including advanced and deprecated (with\n"
@@ -867,7 +869,7 @@ ban_or_move(pcmk__output_t *out, pcmk_resource_t *rsc, cib_t *cib_conn,
                               move_lifetime, cib_conn,
                               options.promoted_role_only, PCMK_ROLE_PROMOTED);
 
-    } else if (pcmk_is_set(rsc->flags, pcmk__rsc_promotable)) {
+    } else if (pcmk__is_set(rsc->flags, pcmk__rsc_promotable)) {
         int count = 0;
         GList *iter = NULL;
 
@@ -921,9 +923,9 @@ cleanup(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node,
         rsc = uber_parent(rsc);
     }
 
-    crm_debug("Erasing failures of %s (%s requested) on %s",
-              rsc->id, options.rsc_id,
-              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
+    pcmk__debug("Erasing failures of %s (%s requested) on %s", rsc->id,
+                options.rsc_id,
+                ((node != NULL)? pcmk__node_name(node) : "all nodes"));
     rc = cli_resource_delete(controld_api, rsc, node, options.operation,
                              options.interval_spec, true, options.force);
 
@@ -980,8 +982,7 @@ initialize_scheduler_data(pcmk_scheduler_t **scheduler, cib_t *cib_conn,
 
     rc = update_scheduler_input(out, *scheduler, cib_conn, cib_xml_orig);
     if (rc != pcmk_rc_ok) {
-        pcmk_free_scheduler(*scheduler);
-        *scheduler = NULL;
+        g_clear_pointer(scheduler, pcmk_free_scheduler);
         return rc;
     }
 
@@ -1026,7 +1027,7 @@ refresh(pcmk__output_t *out, const pcmk_node_t *node,
         return CRM_EX_OK;
     }
 
-    crm_debug("Re-checking the state of all resources on %s", log_node_name);
+    pcmk__debug("Re-checking the state of all resources on %s", log_node_name);
 
     // @FIXME We shouldn't discard rc here
     rc = pcmk__attrd_api_clear_failures(NULL, node_name, NULL, NULL, NULL, NULL,
@@ -1054,9 +1055,9 @@ refresh_resource(pcmk__output_t *out, pcmk_resource_t *rsc, pcmk_node_t *node,
         rsc = uber_parent(rsc);
     }
 
-    crm_debug("Re-checking the state of %s (%s requested) on %s",
-              rsc->id, options.rsc_id,
-              ((node != NULL)? pcmk__node_name(node) : "all nodes"));
+    pcmk__debug("Re-checking the state of %s (%s requested) on %s", rsc->id,
+                options.rsc_id,
+                ((node != NULL)? pcmk__node_name(node) : "all nodes"));
     rc = cli_resource_delete(controld_api, rsc, node, NULL, 0, false,
                              options.force);
 
@@ -1164,7 +1165,7 @@ validate_cmdline_config(void)
                      pcmk__str_none)) {
         if (!stonith__agent_exists(options.agent)) {
             g_set_error(&error, PCMK__EXITC_ERROR, CRM_EX_USAGE,
-                        _("%s is not a known stonith agent"), options.agent);
+                        _("%s is not a known fencing agent"), options.agent);
             return;
         }
 
@@ -1262,36 +1263,36 @@ handle_clear(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
                                 cib_conn, true, options.force);
     }
 
-    if (!out->is_quiet(out)) {
-        xmlNode *cib_xml = NULL;
-
-        rc = cib_conn->cmds->query(cib_conn, NULL, &cib_xml, cib_sync_call);
-        rc = pcmk_legacy2rc(rc);
-
-        if (rc != pcmk_rc_ok) {
-            g_set_error(&error, PCMK__RC_ERROR, rc,
-                        _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
-            g_list_free(before);
-            pcmk__xml_free(cib_xml);
-            return pcmk_rc2exitc(rc);
-        }
-
-        scheduler->input = cib_xml;
-        cluster_status(scheduler);
-
-        after = build_constraint_list(scheduler->input);
-        remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
-
-        for (const GList *iter = remaining; iter != NULL; iter = iter->next) {
-            const char *constraint = iter->data;
-
-            out->info(out, "Removing constraint: %s", constraint);
-        }
-
-        g_list_free(before);
-        g_list_free(after);
-        g_list_free(remaining);
+    if (out->is_quiet(out)) {
+        goto done;
     }
+
+    pcmk_reset_scheduler(scheduler);
+
+    rc = cib_conn->cmds->query(cib_conn, NULL, &scheduler->input,
+                               cib_sync_call);
+    rc = pcmk_legacy2rc(rc);
+    if (rc != pcmk_rc_ok) {
+        g_set_error(&error, PCMK__RC_ERROR, rc,
+                    _("Could not get modified CIB: %s"), pcmk_rc_str(rc));
+        goto done;
+    }
+
+    cluster_status(scheduler);
+
+    after = build_constraint_list(scheduler->input);
+    remaining = pcmk__subtract_lists(before, after, (GCompareFunc) strcmp);
+
+    for (const GList *iter = remaining; iter != NULL; iter = iter->next) {
+        const char *constraint = iter->data;
+
+        out->info(out, "Removing constraint: %s", constraint);
+    }
+
+done:
+    g_list_free_full(before, free);
+    g_list_free_full(after, free);
+    g_list_free(remaining);
 
     return pcmk_rc2exitc(rc);
 }
@@ -1427,7 +1428,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         current = NULL;
     }
 
-    crm_debug("Looking up %s in %s", options.prop_name, rsc->id);
+    pcmk__debug("Looking up %s in %s", options.prop_name, rsc->id);
 
     if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
                      pcmk__str_none)) {
@@ -1445,7 +1446,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
 
     } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
                             pcmk__str_none)) {
-        value = crm_element_value(rsc->priv->xml, options.prop_name);
+        value = pcmk__xe_get(rsc->priv->xml, options.prop_name);
         free_params = false;
 
     } else {
@@ -1614,7 +1615,6 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     char *standard = NULL;
     char *provider = NULL;
     char *type = NULL;
-    char *metadata = NULL;
     lrmd_t *lrmd_conn = NULL;
 
     rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
@@ -1629,6 +1629,8 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
+        char *metadata = NULL;
+
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn, standard,
                                            provider, type,
                                            &metadata, 0);
@@ -1637,6 +1639,7 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         if (metadata != NULL) {
             out->output_xml(out, PCMK_XE_METADATA, metadata);
             free(metadata);
+
         } else {
             /* We were given a validly formatted spec, but it doesn't necessarily
              * match up with anything that exists.  Use ENXIO as the return code
@@ -1655,7 +1658,11 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
                     options.agent_spec);
     }
 
+    free(standard);
+    free(provider);
+    free(type);
     lrmd_api_delete(lrmd_conn);
+
     return pcmk_rc2exitc(rc);
 }
 
@@ -2170,7 +2177,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
@@ -2204,7 +2211,7 @@ main(int argc, char **argv)
     }
 
     // Ensure --resource is set if it's required
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_resource)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_resource)
         && !has_cmdline_config()
         && !options.clear_expired
         && (options.rsc_id == NULL)) {
@@ -2216,7 +2223,7 @@ main(int argc, char **argv)
     }
 
     // Ensure --node is set if it's required
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_node)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_node)
         && (options.host_uname == NULL)) {
 
         exit_code = CRM_EX_USAGE;
@@ -2226,18 +2233,10 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the CIB if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_cib)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_cib)
         && !has_cmdline_config()) {
 
-        cib_conn = cib_new();
-        if ((cib_conn == NULL) || (cib_conn->cmds == NULL)) {
-            exit_code = CRM_EX_DISCONNECT;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                        _("Could not create CIB connection"));
-            goto done;
-        }
-        rc = cib__signon_attempts(cib_conn, cib_command, 5);
-        rc = pcmk_legacy2rc(rc);
+        rc = cib__create_signon(&cib_conn);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
@@ -2247,7 +2246,7 @@ main(int argc, char **argv)
     }
 
     // Populate scheduler data from CIB query if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_scheduler)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_scheduler)
         && !has_cmdline_config()) {
 
         rc = initialize_scheduler_data(&scheduler, cib_conn, out,
@@ -2259,7 +2258,7 @@ main(int argc, char **argv)
     }
 
     // Establish a connection to the controller if needed
-    if (pcmk_is_set(command_info->flags, crm_rsc_requires_controller)
+    if (pcmk__is_set(command_info->flags, crm_rsc_requires_controller)
         && (getenv("CIB_file") == NULL)) {
 
         rc = pcmk_new_ipc_api(&controld_api, pcmk_ipc_controld);
@@ -2311,13 +2310,13 @@ main(int argc, char **argv)
      * @TODO Consider stricter validation. See comment above for --node.
      * @TODO Setter macro for tracing?
      */
-    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
+    if (pcmk__is_set(command_info->flags, crm_rsc_find_match_anon_basename)) {
         find_flags |= pcmk_rsc_match_anon_basename;
     }
-    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_basename)) {
+    if (pcmk__is_set(command_info->flags, crm_rsc_find_match_basename)) {
         find_flags |= pcmk_rsc_match_basename;
     }
-    if (pcmk_is_set(command_info->flags, crm_rsc_find_match_history)) {
+    if (pcmk__is_set(command_info->flags, crm_rsc_find_match_history)) {
         find_flags |= pcmk_rsc_match_history;
     }
     if ((find_flags != 0) && (options.rsc_id != NULL)) {
@@ -2332,7 +2331,7 @@ main(int argc, char **argv)
             goto done;
         }
 
-        if (pcmk_is_set(command_info->flags, crm_rsc_rejects_clone_instance)
+        if (pcmk__is_set(command_info->flags, crm_rsc_rejects_clone_instance)
             && pcmk__is_clone(rsc->priv->parent)
             && (strchr(options.rsc_id, ':') != NULL)) {
 
@@ -2351,8 +2350,10 @@ done:
     // For CRM_EX_USAGE, error is already set satisfactorily
     if ((exit_code != CRM_EX_OK) && (exit_code != CRM_EX_USAGE)) {
         if (error != NULL) {
-            char *msg = crm_strdup_printf("%s\nError performing operation: %s",
-                                          error->message, crm_exit_str(exit_code));
+            char *msg = pcmk__assert_asprintf("%s\nError performing operation: "
+                                              "%s",
+                                              error->message,
+                                              crm_exit_str(exit_code));
             g_clear_error(&error);
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "%s", msg);
             free(msg);
@@ -2376,9 +2377,7 @@ done:
     g_free(options.agent);
     g_free(options.class);
     g_free(options.provider);
-    if (options.override_params != NULL) {
-        g_hash_table_destroy(options.override_params);
-    }
+    g_clear_pointer(&options.override_params, g_hash_table_destroy);
     g_strfreev(options.remainder);
 
     // Don't destroy options.cmdline_params here. See comment in option_cb().

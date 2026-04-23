@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,8 +27,6 @@
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
 #include <crm/cluster/internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__register_messages()
@@ -54,7 +52,7 @@ struct {
     GHashTable *params;
     int fence_level;
     int timeout ;
-    long long tolerance_ms;
+    unsigned int tolerance_ms;
     int delay;
     char *agent;
     char *confirm_host;
@@ -76,8 +74,8 @@ struct {
 };
 
 gboolean add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 gboolean set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
 
@@ -86,19 +84,19 @@ gboolean set_tag(const gchar *option_name, const gchar *optarg, gpointer data, G
 /* *INDENT-OFF* */
 static GOptionEntry defn_entries[] = {
     { "register", 'R', 0, G_OPTION_ARG_STRING, &options.register_dev,
-      "Register the named stonith device. Requires: --agent.\n"
+      "Register the named fencing device. Requires: --agent.\n"
       INDENT "Optional: --option, --env-option.",
       "DEVICE" },
     { "deregister", 'D', 0, G_OPTION_ARG_STRING, &options.unregister_dev,
-      "De-register the named stonith device.",
+      "De-register the named fencing device.",
       "DEVICE" },
     { "register-level", 'r', 0, G_OPTION_ARG_STRING, &options.register_level,
-      "Register a stonith level for the named target,\n"
+      "Register a fencing level for the named target,\n"
       INDENT "specified as one of NAME, @PATTERN, or ATTR=VALUE.\n"
       INDENT "Requires: --index and one or more --device entries.",
       "TARGET" },
     { "deregister-level", 'd', 0, G_OPTION_ARG_STRING, &options.unregister_level,
-      "Unregister a stonith level for the named target,\n"
+      "Unregister a fencing level for the named target,\n"
       INDENT "specified as for --register-level. Requires: --index",
       "TARGET" },
 
@@ -175,7 +173,7 @@ static GOptionEntry addl_entries[] = {
       "The agent to use (for example, fence_xvm;\n"
       INDENT "with --register, --metadata, --validate).",
       "AGENT" },
-    { "option", 'o', 0, G_OPTION_ARG_CALLBACK, add_stonith_params,
+    { "option", 'o', 0, G_OPTION_ARG_CALLBACK, add_fencing_params,
       "Specify a device configuration parameter as NAME=VALUE\n"
       INDENT "(may be specified multiple times; with --register,\n"
       INDENT "--validate).",
@@ -192,7 +190,7 @@ static GOptionEntry addl_entries[] = {
       INDENT "tag; useful when multiple entities might invoke\n"
       INDENT "stonith_admin (used with most commands).",
       "TAG" },
-    { "device", 'v', 0, G_OPTION_ARG_CALLBACK, add_stonith_device,
+    { "device", 'v', 0, G_OPTION_ARG_CALLBACK, add_fencing_device,
       "Device ID (with --register-level, device to associate with\n"
       INDENT "a given host and level; may be specified multiple times)"
 #if PCMK__ENABLE_CIBSECRETS
@@ -201,7 +199,7 @@ static GOptionEntry addl_entries[] = {
       ".",
       "DEVICE" },
     { "index", 'i', 0, G_OPTION_ARG_INT, &options.fence_level,
-      "The stonith level (1-9) (with --register-level,\n"
+      "The fencing level (1-9) (with --register-level,\n"
       INDENT "--deregister-level).",
       "LEVEL" },
     { "timeout", 't', 0, G_OPTION_ARG_INT, &options.timeout,
@@ -242,7 +240,7 @@ static char *name = NULL;
 
 gboolean
 add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
-    char *key = crm_strdup_printf("OCF_RESKEY_%s", optarg);
+    char *key = pcmk__assert_asprintf("OCF_RESKEY_%s", optarg);
     const char *env = getenv(key);
     gboolean retval = TRUE;
 
@@ -250,7 +248,7 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "Invalid option: -e %s", optarg);
         retval = FALSE;
     } else {
-        crm_info("Got: '%s'='%s'", optarg, env);
+        pcmk__info("Got: '%s'='%s'", optarg, env);
 
         if (options.params != NULL) {
             options.params = pcmk__strkey_table(free, free);
@@ -264,7 +262,9 @@ add_env_params(const gchar *option_name, const gchar *optarg, gpointer data, GEr
 }
 
 gboolean
-add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+add_fencing_device(const gchar *option_name, const gchar *optarg, gpointer data,
+                   GError **error)
+{
     options.devices = g_list_append(options.devices, pcmk__str_copy(optarg));
     return TRUE;
 }
@@ -272,25 +272,29 @@ add_stonith_device(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 add_tolerance(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     // pcmk__request_fencing() expects an unsigned int
-    options.tolerance_ms = crm_get_msec(optarg);
+    long long tolerance_ms = 0;
 
-    if (options.tolerance_ms < 0) {
-        crm_warn("Ignoring invalid tolerance '%s'", optarg);
-        options.tolerance_ms = 0;
+    if ((pcmk__parse_ms(optarg, &tolerance_ms) != pcmk_rc_ok)
+        || (tolerance_ms < 0)) {
+
+        // @COMPAT Treat as an error and return FALSE?
+        pcmk__warn("Ignoring invalid tolerance '%s'", optarg);
     } else {
-        options.tolerance_ms = QB_MIN(options.tolerance_ms, UINT_MAX);
+        options.tolerance_ms = (unsigned int) QB_MIN(tolerance_ms, UINT_MAX);
     }
     return TRUE;
 }
 
 gboolean
-add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+add_fencing_params(const gchar *option_name, const gchar *optarg, gpointer data,
+                   GError **error)
+{
     gchar *name = NULL;
     gchar *value = NULL;
     int rc = 0;
     gboolean retval = TRUE;
 
-    crm_info("Scanning: -o %s", optarg);
+    pcmk__info("Scanning: -o %s", optarg);
 
     rc = pcmk__scan_nvpair(optarg, &name, &value);
 
@@ -298,7 +302,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
         g_set_error(error, PCMK__RC_ERROR, rc, "Invalid option: -o %s: %s", optarg, pcmk_rc_str(rc));
         retval = FALSE;
     } else {
-        crm_info("Got: '%s'='%s'", name, value);
+        pcmk__info("Got: '%s'='%s'", name, value);
 
         if (options.params == NULL) {
             options.params = pcmk__strkey_table(free, free);
@@ -315,7 +319,7 @@ add_stonith_params(const gchar *option_name, const gchar *optarg, gpointer data,
 gboolean
 set_tag(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     free(name);
-    name = crm_strdup_printf("%s.%s", crm_system_name, optarg);
+    name = pcmk__assert_asprintf("%s.%s", crm_system_name, optarg);
     return TRUE;
 }
 
@@ -370,8 +374,7 @@ request_fencing(stonith_t *st, const char *target, const char *command,
 
         // If reason is identical to return code string, don't display it twice
         if (pcmk__str_eq(rc_str, reason, pcmk__str_none)) {
-            free(reason);
-            reason = NULL;
+            g_clear_pointer(&reason, free);
         }
 
         g_set_error(error, PCMK__RC_ERROR, rc,
@@ -431,7 +434,7 @@ main(int argc, char **argv)
     stonith__register_messages(out);
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
@@ -696,7 +699,7 @@ main(int argc, char **argv)
             break;
     }
 
-    crm_info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
+    pcmk__info("Command returned: %s (%d)", pcmk_rc_str(rc), rc);
     exit_code = pcmk_rc2exitc(rc);
 
   done:
@@ -709,18 +712,16 @@ main(int argc, char **argv)
         out->finish(out, exit_code, true, NULL);
         pcmk__output_free(out);
     }
-    pcmk__unregister_formats();
     free(name);
     g_list_free_full(options.devices, free);
 
-    if (options.params != NULL) {
-        g_hash_table_destroy(options.params);
-    }
+    g_clear_pointer(&options.params, g_hash_table_destroy);
 
     if (st != NULL) {
         st->cmds->disconnect(st);
         stonith__api_free(st);
     }
 
+    pcmk__unregister_formats();
     return exit_code;
 }

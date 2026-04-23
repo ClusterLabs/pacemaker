@@ -1,11 +1,15 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <ipc_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_IPC_INTERNAL__H
 #define PCMK__CRM_COMMON_IPC_INTERNAL__H
@@ -14,8 +18,6 @@
 #include <stdint.h>                 // uint32_t, uint64_t, UINT64_C()
 #include <sys/uio.h>                // struct iovec
 #include <sys/types.h>              // uid_t, gid_t, pid_t, size_t
-
-#include <gnutls/gnutls.h>        // gnutls_session_t
 
 #include <glib.h>                   // guint, gpointer, GQueue, ...
 #include <libxml/tree.h>            // xmlNode
@@ -26,7 +28,7 @@
 #include <crm/common/ipc.h>
 #include <crm/common/ipc_controld.h>    // pcmk_controld_api_reply
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_{api_reply,state}
-#include <crm/common/mainloop.h>    // mainloop_io_t
+#include <crm/common/remote_internal.h> // pcmk__remote_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -100,28 +102,6 @@ int pcmk__connect_ipc_retry_conrefused(pcmk_ipc_api_t *api,
  * Server-related
  */
 
-typedef struct pcmk__client_s pcmk__client_t;
-
-struct pcmk__remote_s {
-    /* Shared */
-    char *buffer;
-    size_t buffer_size;
-    size_t buffer_offset;
-    int auth_timeout;
-    int tcp_socket;
-    mainloop_io_t *source;
-    time_t uptime;
-    char *start_state;
-
-    /* CIB-only */
-    char *token;
-
-    /* TLS only */
-
-    // Must be created by pcmk__new_tls_session()
-    gnutls_session_t tls_session;
-};
-
 enum pcmk__client_flags {
     // Lower 32 bits are reserved for server (not library) use
 
@@ -160,7 +140,7 @@ enum pcmk__client_flags {
 
 #define PCMK__CLIENT_TYPE(client) ((client)->flags & UINT64_C(0xff00000000))
 
-struct pcmk__client_s {
+typedef struct {
     unsigned int pid;
 
     char *id;
@@ -185,11 +165,11 @@ struct pcmk__client_s {
 
     qb_ipcs_connection_t *ipcs; /* IPC */
 
-    struct pcmk__remote_s *remote;        /* TCP/TLS */
+    pcmk__remote_t *remote;     /* TCP/TLS */
 
     unsigned int queue_backlog; /* IPC queue length after last flush */
     unsigned int queue_max;     /* Evict client whose queue grows this big */
-};
+} pcmk__client_t;
 
 #define pcmk__set_client_flags(client, flags_to_set) do {               \
         (client)->flags = pcmk__set_flags_as(__func__, __LINE__,        \
@@ -236,15 +216,15 @@ void pcmk__drop_all_clients(qb_ipcs_service_t *s);
 void pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax);
 
 xmlNode *pcmk__ipc_create_ack_as(const char *function, int line, uint32_t flags,
-                                 const char *tag, const char *ver, crm_exit_t status);
-#define pcmk__ipc_create_ack(flags, tag, ver, st) \
-    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (tag), (ver), (st))
+                                 const char *ver, crm_exit_t status);
+#define pcmk__ipc_create_ack(flags, ver, st) \
+    pcmk__ipc_create_ack_as(__func__, __LINE__, (flags), (ver), (st))
 
 int pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
-                          uint32_t request, uint32_t flags, const char *tag,
-                          const char *ver, crm_exit_t status);
-#define pcmk__ipc_send_ack(c, req, flags, tag, ver, st) \
-    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (tag), (ver), (st))
+                          uint32_t request, uint32_t flags, const char *ver,
+                          crm_exit_t status);
+#define pcmk__ipc_send_ack(c, req, flags, ver, st) \
+    pcmk__ipc_send_ack_as(__func__, __LINE__, (c), (req), (flags), (ver), (st))
 
 int pcmk__ipc_prepare_iov(uint32_t request, const GString *message,
                           uint16_t index, struct iovec **result, ssize_t *bytes);
@@ -259,11 +239,14 @@ int pcmk__client_pid(qb_ipcs_connection_t *c);
 
 void pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                            struct qb_ipcs_service_handlers *cb);
+void pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
+                           struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                             struct qb_ipcs_service_handlers *cb);
 void pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                                 struct qb_ipcs_service_handlers *cb);
-qb_ipcs_service_t *pcmk__serve_schedulerd_ipc(struct qb_ipcs_service_handlers *cb);
+void pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
+                                struct qb_ipcs_service_handlers *cb);
 qb_ipcs_service_t *pcmk__serve_controld_ipc(struct qb_ipcs_service_handlers *cb);
 
 void pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro,

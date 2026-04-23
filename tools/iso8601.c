@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2024 the Pacemaker project contributors
+ * Copyright 2005-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,13 +8,15 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/iso8601.h>
 #include <crm/common/util.h>
 #include <unistd.h>
 
-#define SUMMARY "Display and parse ISO 8601 dates and times"
+#define SUMMARY "DEPRECATED: This tool will be removed in a future release"
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -68,7 +70,7 @@ static GOptionEntry command_entries[] = {
 
     { "date", 'd', 0, G_OPTION_ARG_CALLBACK, date_now_cb,
       "Parse an ISO 8601 date/time (for example,\n"
-      INDENT "'2019-09-24 00:30:00 +01:00' or '2019-040')",
+      INDENT "'2019-09-24 00:30:00+01:00' or '2019-040')",
       "DATE" },
 
     { "period", 'p', 0, G_OPTION_ARG_STRING, &options.period_s,
@@ -341,7 +343,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

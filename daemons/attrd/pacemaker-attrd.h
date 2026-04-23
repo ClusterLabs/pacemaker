@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,11 +11,15 @@
 #  define PACEMAKER_ATTRD__H
 
 #include <regex.h>
+#include <stdbool.h>
+#include <stdint.h>
+
 #include <glib.h>
+
 #include <crm/crm.h>
 #include <crm/cluster.h>
 #include <crm/cluster/election_internal.h>
-#include <crm/common/messages_internal.h>
+#include <crm/common/internal.h>
 #include <crm/cib/cib_types.h>
 
 /*
@@ -49,20 +53,18 @@
 #define ATTRD_SUPPORTS_MULTI_MESSAGE(x) ((x) >= 4)
 #define ATTRD_SUPPORTS_CONFIRMATION(x)  ((x) >= 5)
 
-#define attrd_send_ack(client, id, flags)                       \
-    pcmk__ipc_send_ack((client), (id), (flags), PCMK__XE_ACK,   \
-                       ATTRD_PROTOCOL_VERSION, CRM_EX_INDETERMINATE)
+#define attrd_send_ack(client, id, flags)                               \
+    pcmk__ipc_send_ack((client), (id), (flags), ATTRD_PROTOCOL_VERSION, \
+                       CRM_EX_INDETERMINATE)
 
 void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
-void attrd_set_requesting_shutdown(void);
-void attrd_clear_requesting_shutdown(void);
 void attrd_free_waitlist(void);
-bool attrd_shutting_down(bool if_requested);
+bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
-void attrd_init_ipc(void);
-void attrd_ipc_fini(void);
+void attrd_ipc_init(void);
+void attrd_ipc_cleanup(void);
 
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
@@ -114,22 +116,22 @@ void attrd_remove_voter(const pcmk__node_status_t *peer);
 void attrd_xml_add_writer(xmlNode *xml);
 
 enum attrd_attr_flags {
-    attrd_attr_none         = 0U,
+    attrd_attr_none         = 0,
 
     // At least one of attribute's values has changed since last write
-    attrd_attr_changed      = (1U << 0),
+    attrd_attr_changed      = (UINT32_C(1) << 0),
 
     // At least one of attribute's values has an unknown node XML ID
-    attrd_attr_node_unknown = (1U << 1),
+    attrd_attr_node_unknown = (UINT32_C(1) << 1),
 
     // This attribute should never be written to the CIB
-    attrd_attr_is_private   = (1U << 2),
+    attrd_attr_is_private   = (UINT32_C(1) << 2),
 
     // Ignore any configured delay for next write of this attribute
-    attrd_attr_force_write  = (1U << 3),
+    attrd_attr_force_write  = (UINT32_C(1) << 3),
 };
 
-typedef struct attribute_s {
+typedef struct {
     char *id;       // Attribute name
     char *set_type; // PCMK_XE_INSTANCE_ATTRIBUTES or PCMK_XE_UTILIZATION
     char *set_id;   // Set's XML ID to use when writing
@@ -154,12 +156,16 @@ typedef struct attribute_s {
     } while (0)
 
 enum attrd_value_flags {
-    attrd_value_none        = 0U,
-    attrd_value_remote      = (1U << 0),  // Value is for Pacemaker Remote node
-    attrd_value_from_peer   = (1U << 1),  // Value is from peer sync response
+    attrd_value_none        = 0,
+
+    //! Value is for Pacemaker Remote node
+    attrd_value_remote      = (UINT32_C(1) << 0),
+
+    //! Value is from peer sync response
+    attrd_value_from_peer   = (UINT32_C(1) << 1),
 };
 
-typedef struct attribute_value_s {
+typedef struct {
     char *nodename;     // Node that this value is for
     char *current;      // Attribute value
     char *requested;    // Value specified in pending CIB write, if any
@@ -184,7 +190,11 @@ extern GHashTable *peer_protocol_vers;
 
 #define CIB_OP_TIMEOUT_S 120
 
+void attrd_free_removed_peers(void);
+void attrd_erase_removed_peer_attributes(void);
+
 int attrd_cluster_connect(void);
+void attrd_cluster_disconnect(void);
 void attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v);
 void attrd_peer_update(const pcmk__node_status_t *peer, xmlNode *xml,
                        const char *host, bool filter);
@@ -195,10 +205,10 @@ void attrd_peer_sync_response(const pcmk__node_status_t *peer, bool peer_won,
                               xmlNode *xml);
 
 void attrd_send_protocol(const pcmk__node_status_t *peer);
-xmlNode *attrd_client_peer_remove(pcmk__request_t *request);
-xmlNode *attrd_client_clear_failure(pcmk__request_t *request);
-xmlNode *attrd_client_update(pcmk__request_t *request);
-xmlNode *attrd_client_refresh(pcmk__request_t *request);
+void attrd_client_peer_remove(pcmk__request_t *request);
+void attrd_client_clear_failure(pcmk__request_t *request);
+void attrd_client_update(pcmk__request_t *request);
+void attrd_client_refresh(pcmk__request_t *request);
 xmlNode *attrd_client_query(pcmk__request_t *request);
 gboolean attrd_send_message(const pcmk__node_status_t *node, xmlNode *data,
                             bool confirm);
@@ -214,8 +224,8 @@ char *attrd_nvpair_id(const attribute_t *attr, const char *node_state_id);
 
 enum attrd_write_options {
     attrd_write_changed         = 0,
-    attrd_write_all             = (1 << 0),
-    attrd_write_no_delay        = (1 << 1),
+    attrd_write_all             = (UINT32_C(1) << 0),
+    attrd_write_no_delay        = (UINT32_C(1) << 1),
 };
 
 void attrd_write_attributes(uint32_t options);

@@ -11,6 +11,7 @@
 #include <crm/crm.h>
 
 #include <sys/param.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -28,42 +29,10 @@
 #include <glib.h>
 #include <bzlib.h>
 
-#include <crm/common/ipc_internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/remote_internal.h>
-#include <crm/common/tls_internal.h>
 
 #include <gnutls/gnutls.h>
-
-/* Swab macros from linux/swab.h */
-#ifdef HAVE_LINUX_SWAB_H
-#  include <linux/swab.h>
-#else
-/*
- * casts are necessary for constants, because we never know how for sure
- * how U/UL/ULL map to __u16, __u32, __u64. At least not in a portable way.
- */
-#define __swab16(x) ((uint16_t)(                                      \
-        (((uint16_t)(x) & (uint16_t)0x00ffU) << 8) |                  \
-        (((uint16_t)(x) & (uint16_t)0xff00U) >> 8)))
-
-#define __swab32(x) ((uint32_t)(                                      \
-        (((uint32_t)(x) & (uint32_t)0x000000ffUL) << 24) |            \
-        (((uint32_t)(x) & (uint32_t)0x0000ff00UL) <<  8) |            \
-        (((uint32_t)(x) & (uint32_t)0x00ff0000UL) >>  8) |            \
-        (((uint32_t)(x) & (uint32_t)0xff000000UL) >> 24)))
-
-#define __swab64(x) ((uint64_t)(                                      \
-        (((uint64_t)(x) & (uint64_t)0x00000000000000ffULL) << 56) |   \
-        (((uint64_t)(x) & (uint64_t)0x000000000000ff00ULL) << 40) |   \
-        (((uint64_t)(x) & (uint64_t)0x0000000000ff0000ULL) << 24) |   \
-        (((uint64_t)(x) & (uint64_t)0x00000000ff000000ULL) <<  8) |   \
-        (((uint64_t)(x) & (uint64_t)0x000000ff00000000ULL) >>  8) |   \
-        (((uint64_t)(x) & (uint64_t)0x0000ff0000000000ULL) >> 24) |   \
-        (((uint64_t)(x) & (uint64_t)0x00ff000000000000ULL) >> 40) |   \
-        (((uint64_t)(x) & (uint64_t)0xff00000000000000ULL) >> 56)))
-#endif
 
 #define REMOTE_MSG_VERSION 1
 #define ENDIAN_LOCAL 0xBADADBBD
@@ -96,30 +65,47 @@ struct remote_header_v0 {
 static struct remote_header_v0 *
 localized_remote_header(pcmk__remote_t *remote)
 {
-    struct remote_header_v0 *header = (struct remote_header_v0 *)remote->buffer;
-    if(remote->buffer_offset < sizeof(struct remote_header_v0)) {
+    struct remote_header_v0 *header = NULL;
+
+    if ((remote == NULL) || (remote->buffer == NULL)
+        || (remote->buffer_offset < sizeof(struct remote_header_v0))) {
+
+        // Caller error or we haven't received the full header yet
         return NULL;
+    }
 
-    } else if(header->endian != ENDIAN_LOCAL) {
-        uint32_t endian = __swab32(header->endian);
+    header = (struct remote_header_v0 *) remote->buffer;
+    if (header->endian != ENDIAN_LOCAL) {
+        uint32_t endian_swapped = GUINT32_SWAP_LE_BE(header->endian);
 
-        CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
-        if(endian != ENDIAN_LOCAL) {
-            crm_err("Invalid message detected, endian mismatch: %" PRIx32
-                    " is neither %" PRIx32 " nor the swab'd %" PRIx32,
-                    ENDIAN_LOCAL, header->endian, endian);
-            return NULL;
-        }
+        CRM_CHECK(endian_swapped == ENDIAN_LOCAL,
+                  pcmk__err("Invalid message detected (endian mismatch): local "
+                            "magic number %" PRIx32 " matches neither the "
+                            "header's magic number %" PRIx32 " nor the "
+                            "byte-swapped form %" PRIx32,
+                            ENDIAN_LOCAL, header->endian, endian_swapped);
+                  return NULL);
 
-        header->id = __swab64(header->id);
-        header->flags = __swab64(header->flags);
-        header->endian = __swab32(header->endian);
+        header->endian = endian_swapped;
+        header->version = GUINT32_SWAP_LE_BE(header->version);
+        header->id = GUINT64_SWAP_LE_BE(header->id);
+        header->flags = GUINT64_SWAP_LE_BE(header->flags);
+        header->size_total = GUINT32_SWAP_LE_BE(header->size_total);
+        header->payload_offset = GUINT32_SWAP_LE_BE(header->payload_offset);
+        header->payload_compressed =
+            GUINT32_SWAP_LE_BE(header->payload_compressed);
+        header->payload_uncompressed =
+            GUINT32_SWAP_LE_BE(header->payload_uncompressed);
+    }
 
-        header->version = __swab32(header->version);
-        header->size_total = __swab32(header->size_total);
-        header->payload_offset = __swab32(header->payload_offset);
-        header->payload_compressed = __swab32(header->payload_compressed);
-        header->payload_uncompressed = __swab32(header->payload_uncompressed);
+    // Sanity checks
+    if (header->payload_offset != sizeof(struct remote_header_v0)) {
+        return NULL;
+    }
+    if ((header->payload_offset
+         + header->payload_compressed
+         + header->payload_uncompressed) != header->size_total) {
+        return NULL;
     }
 
     return header;
@@ -137,26 +123,27 @@ send_tls(gnutls_session_t session, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_trace("Sending TLS message of %zu bytes", unsent_len);
+    pcmk__trace("Sending TLS message of %zu bytes", unsent_len);
 
     while (true) {
         gnutls_rc = gnutls_record_send(session, unsent, unsent_len);
 
         if (gnutls_rc == GNUTLS_E_INTERRUPTED || gnutls_rc == GNUTLS_E_AGAIN) {
-            crm_trace("Retrying to send %zu bytes remaining", unsent_len);
+            pcmk__trace("Retrying to send %zu bytes remaining", unsent_len);
 
         } else if (gnutls_rc < 0) {
             // Caller can log as error if necessary
-            crm_info("TLS connection terminated: %s " QB_XS " rc=%zd",
-                     gnutls_strerror((int) gnutls_rc), gnutls_rc);
+            pcmk__info("TLS connection terminated: %s " QB_XS " rc=%zd",
+                       gnutls_strerror((int) gnutls_rc), gnutls_rc);
             return ECONNABORTED;
 
         } else if (gnutls_rc < unsent_len) {
-            crm_trace("Sent %zd of %zu bytes remaining", gnutls_rc, unsent_len);
+            pcmk__trace("Sent %zd of %zu bytes remaining", gnutls_rc,
+                        unsent_len);
             unsent_len -= gnutls_rc;
             unsent += gnutls_rc;
         } else {
-            crm_trace("Sent all %zd bytes remaining", gnutls_rc);
+            pcmk__trace("Sent all %zd bytes remaining", gnutls_rc);
             break;
         }
     }
@@ -174,8 +161,8 @@ send_plaintext(int sock, struct iovec *iov)
         return EINVAL;
     }
 
-    crm_debug("Sending plaintext message of %zu bytes to socket %d",
-              unsent_len, sock);
+    pcmk__debug("Sending plaintext message of %zu bytes to socket %d",
+                unsent_len, sock);
     while (true) {
         ssize_t write_rc = write(sock, unsent, unsent_len);
 
@@ -183,24 +170,25 @@ send_plaintext(int sock, struct iovec *iov)
             int rc = errno;
 
             if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
-                crm_trace("Retrying to send %zu bytes remaining to socket %d",
-                          unsent_len, sock);
+                pcmk__trace("Retrying to send %zu bytes remaining to socket %d",
+                            unsent_len, sock);
                 continue;
             }
 
             // Caller can log as error if necessary
-            crm_info("Could not send message: %s " QB_XS " rc=%d socket=%d",
-                     pcmk_rc_str(rc), rc, sock);
+            pcmk__info("Could not send message: %s " QB_XS " rc=%d socket=%d",
+                       pcmk_rc_str(rc), rc, sock);
             return rc;
 
         } else if (write_rc < unsent_len) {
-            crm_trace("Sent %zd of %zu bytes remaining", write_rc, unsent_len);
+            pcmk__trace("Sent %zd of %zu bytes remaining", write_rc,
+                        unsent_len);
             unsent += write_rc;
             unsent_len -= write_rc;
 
         } else {
-            crm_trace("Sent all %zd bytes remaining: %.100s",
-                      write_rc, (char *) (iov->iov_base));
+            pcmk__trace("Sent all %zd bytes remaining: %.100s", write_rc,
+                        (const char *) iov->iov_base);
             return pcmk_rc_ok;
         }
     }
@@ -270,8 +258,8 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
 
     rc = remote_send_iovs(remote, iov, 2);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not send remote message: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not send remote message: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
     }
 
     free(iov[0].iov_base);
@@ -292,6 +280,8 @@ xmlNode *
 pcmk__remote_message_xml(pcmk__remote_t *remote)
 {
     xmlNode *xml = NULL;
+    size_t data_size = 0;
+    const char *payload = NULL;
     struct remote_header_v0 *header = localized_remote_header(remote);
 
     if (header == NULL) {
@@ -303,10 +293,10 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         int rc = 0;
         unsigned int size_u = 1 + header->payload_uncompressed;
         char *uncompressed =
-            pcmk__assert_alloc(1, header->payload_offset + size_u);
+            pcmk__assert_alloc(header->payload_offset + size_u, sizeof(char));
 
-        crm_trace("Decompressing message data %d bytes into %d bytes",
-                 header->payload_compressed, size_u);
+        pcmk__trace("Decompressing message data %d bytes into %d bytes",
+                    header->payload_compressed, size_u);
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset, &size_u,
                                         remote->buffer + header->payload_offset,
@@ -314,14 +304,15 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         rc = pcmk__bzlib2rc(rc);
 
         if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
-            crm_warn("Couldn't decompress v%d message, we only understand v%d",
-                     header->version, REMOTE_MSG_VERSION);
+            pcmk__warn("Couldn't decompress v%d message, we only understand "
+                       "v%d",
+                       header->version, REMOTE_MSG_VERSION);
             free(uncompressed);
             return NULL;
 
         } else if (rc != pcmk_rc_ok) {
-            crm_err("Decompression failed: %s " QB_XS " rc=%d",
-                    pcmk_rc_str(rc), rc);
+            pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
             free(uncompressed);
             return NULL;
         }
@@ -339,18 +330,33 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     /* take ownership of the buffer */
     remote->buffer_offset = 0;
 
-    CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
+    data_size = (size_t) header->payload_offset + header->payload_uncompressed;
 
-    xml = pcmk__xml_parse(remote->buffer + header->payload_offset);
-    if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
-        crm_warn("Couldn't parse v%d message, we only understand v%d",
-                 header->version, REMOTE_MSG_VERSION);
+    // Ensure the buffer is as big as it should be
+    CRM_CHECK(remote->buffer_size >= data_size, return NULL);
 
-    } else if (xml == NULL) {
-        crm_err("Couldn't parse: '%.120s'", remote->buffer + header->payload_offset);
+    /* Ensure the buffer is null-terminated (see
+     * pcmk__read_available_remote_data()).
+     *
+     * Note that payload_uncompressed contains the payload size including the
+     * null byte (see pcmk__remote_send_xml()).
+     */
+    CRM_CHECK(remote->buffer[data_size] == '\0', return NULL);
+
+    payload = remote->buffer + header->payload_offset;
+
+    xml = pcmk__xml_parse(payload);
+    if (xml == NULL) {
+        if (header->version > REMOTE_MSG_VERSION) {
+            pcmk__warn("Couldn't parse v%d message, we only understand v%d",
+                       header->version, REMOTE_MSG_VERSION);
+        } else {
+            pcmk__err("Couldn't parse: '%.120s'", payload);
+        }
+
+    } else {
+        pcmk__log_xml_trace(xml, "[remote msg]");
     }
-
-    crm_log_xml_trace(xml, "[remote msg]");
     return xml;
 }
 
@@ -363,7 +369,7 @@ get_remote_socket(const pcmk__remote_t *remote)
     if (remote->tcp_socket >= 0) {
         return remote->tcp_socket;
     }
-    crm_err("Remote connection type undetermined (bug?)");
+    pcmk__err("Remote connection type undetermined (bug?)");
     return -1;
 }
 
@@ -389,7 +395,7 @@ pcmk__remote_ready(const pcmk__remote_t *remote, int timeout_ms)
 
     sock = get_remote_socket(remote);
     if (sock < 0) {
-        crm_trace("No longer connected");
+        pcmk__trace("No longer connected");
         return ENOTCONN;
     }
 
@@ -446,7 +452,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     /* automatically grow the buffer when needed */
     if(remote->buffer_size < read_len) {
         remote->buffer_size = 2 * read_len;
-        crm_trace("Expanding buffer to %zu bytes", remote->buffer_size);
+        pcmk__trace("Expanding buffer to %zu bytes", remote->buffer_size);
         remote->buffer = pcmk__realloc(remote->buffer, remote->buffer_size + 1);
     }
 
@@ -459,8 +465,8 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         } else if (read_rc == GNUTLS_E_AGAIN) {
             rc = EAGAIN;
         } else if (read_rc < 0) {
-            crm_debug("TLS receive failed: %s (%zd)",
-                      gnutls_strerror((int) read_rc), read_rc);
+            pcmk__debug("TLS receive failed: %s (%zd)",
+                        gnutls_strerror((int) read_rc), read_rc);
             rc = EIO;
         }
     } else if (remote->tcp_socket >= 0) {
@@ -471,7 +477,7 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
             rc = errno;
         }
     } else {
-        crm_err("Remote connection type undetermined (bug?)");
+        pcmk__err("Remote connection type undetermined (bug?)");
         return ESOCKTNOSUPPORT;
     }
 
@@ -480,32 +486,33 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
         remote->buffer_offset += read_rc;
         /* always null terminate buffer, the +1 to alloc always allows for this. */
         remote->buffer[remote->buffer_offset] = '\0';
-        crm_trace("Received %zd more bytes (%zu total)",
-                  read_rc, remote->buffer_offset);
+        pcmk__trace("Received %zd more bytes (%zu total)", read_rc,
+                    remote->buffer_offset);
 
     } else if (read_rc == 0) {
-        crm_debug("End of remote data encountered after %zu bytes",
-                  remote->buffer_offset);
+        pcmk__debug("End of remote data encountered after %zu bytes",
+                    remote->buffer_offset);
         return ENOTCONN;
 
     } else if ((rc == EINTR) || (rc == EAGAIN) || (rc == EWOULDBLOCK)) {
-        crm_trace("No data available for non-blocking remote read: %s (%d)",
-                  pcmk_rc_str(rc), rc);
+        pcmk__trace("No data available for non-blocking remote read: %s (%d)",
+                    pcmk_rc_str(rc), rc);
 
     } else {
-        crm_debug("Error receiving remote data after %zu bytes: %s (%d)",
-                  remote->buffer_offset, pcmk_rc_str(rc), rc);
+        pcmk__debug("Error receiving remote data after %zu bytes: %s (%d)",
+                    remote->buffer_offset, pcmk_rc_str(rc), rc);
         return ENOTCONN;
     }
 
     header = localized_remote_header(remote);
     if(header) {
         if(remote->buffer_offset < header->size_total) {
-            crm_trace("Read partial remote message (%zu of %" PRIu32 " bytes)",
-                      remote->buffer_offset, header->size_total);
+            pcmk__trace("Read partial remote message (%zu of %" PRIu32
+                        " bytes)",
+                        remote->buffer_offset, header->size_total);
         } else {
-            crm_trace("Read full remote message of %zu bytes",
-                      remote->buffer_offset);
+            pcmk__trace("Read full remote message of %zu bytes",
+                        remote->buffer_offset);
             return pcmk_rc_ok;
         }
     }
@@ -539,28 +546,30 @@ pcmk__read_remote_message(pcmk__remote_t *remote, int timeout_ms)
     remaining_timeout = timeout_ms;
     while (remaining_timeout > 0) {
 
-        crm_trace("Waiting for remote data (%d ms of %d ms timeout remaining)",
-                  remaining_timeout, timeout_ms);
+        pcmk__trace("Waiting for remote data (%d ms of %d ms timeout "
+                    "remaining)",
+                    remaining_timeout, timeout_ms);
         rc = pcmk__remote_ready(remote, remaining_timeout);
 
         if (rc == ETIME) {
-            crm_err("Timed out (%d ms) while waiting for remote data",
-                    remaining_timeout);
+            pcmk__err("Timed out (%d ms) while waiting for remote data",
+                      remaining_timeout);
             return rc;
 
         } else if (rc != pcmk_rc_ok) {
-            crm_debug("Wait for remote data aborted (will retry): %s "
-                      QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+            pcmk__debug("Wait for remote data aborted (will retry): %s "
+                        QB_XS " rc=%d",
+                        pcmk_rc_str(rc), rc);
 
         } else {
             rc = pcmk__read_available_remote_data(remote);
             if (rc == pcmk_rc_ok) {
                 return rc;
             } else if (rc == EAGAIN) {
-                crm_trace("Waiting for more remote data");
+                pcmk__trace("Waiting for more remote data");
             } else {
-                crm_debug("Could not receive remote data: %s " QB_XS " rc=%d",
-                          pcmk_rc_str(rc), rc);
+                pcmk__debug("Could not receive remote data: %s " QB_XS " rc=%d",
+                            pcmk_rc_str(rc), rc);
             }
         }
 
@@ -613,15 +622,15 @@ check_connect_finished(gpointer userdata)
                 rc = ETIMEDOUT;
             }
         }
-        crm_trace("Could not check socket %d for connection success: %s (%d)",
-                  cb_data->sock, pcmk_rc_str(rc), rc);
+        pcmk__trace("Could not check socket %d for connection success: %s (%d)",
+                    cb_data->sock, pcmk_rc_str(rc), rc);
 
     } else if (rc == 0) { // select() timeout
         if ((time(NULL) - cb_data->start) < pcmk__timeout_ms2s(cb_data->timeout_ms)) {
             return TRUE; // There is time left, so reschedule timer
         }
-        crm_debug("Timed out while waiting for socket %d connection success",
-                  cb_data->sock);
+        pcmk__debug("Timed out while waiting for socket %d connection success",
+                    cb_data->sock);
         rc = ETIMEDOUT;
 
     // select() returned number of file descriptors that are ready
@@ -635,25 +644,27 @@ check_connect_finished(gpointer userdata)
 
         if (getsockopt(cb_data->sock, SOL_SOCKET, SO_ERROR, &error, &len) < 0) {
             rc = errno;
-            crm_trace("Couldn't check socket %d for connection errors: %s (%d)",
-                      cb_data->sock, pcmk_rc_str(rc), rc);
+            pcmk__trace("Couldn't check socket %d for connection errors: %s "
+                        "(%d)",
+                        cb_data->sock, pcmk_rc_str(rc), rc);
         } else if (error != 0) {
             rc = error;
-            crm_trace("Socket %d connected with error: %s (%d)",
-                      cb_data->sock, pcmk_rc_str(rc), rc);
+            pcmk__trace("Socket %d connected with error: %s (%d)",
+                        cb_data->sock, pcmk_rc_str(rc), rc);
         } else {
             rc = pcmk_rc_ok;
         }
 
     } else { // Should not be possible
-        crm_trace("select() succeeded, but socket %d not in resulting "
-                  "read/write sets", cb_data->sock);
+        pcmk__trace("select() succeeded, but socket %d not in resulting "
+                    "read/write sets",
+                    cb_data->sock);
         rc = EAGAIN;
     }
 
   dispatch_done:
     if (rc == pcmk_rc_ok) {
-        crm_trace("Socket %d is connected", cb_data->sock);
+        pcmk__trace("Socket %d is connected", cb_data->sock);
     } else {
         close(cb_data->sock);
         cb_data->sock = -1;
@@ -696,8 +707,8 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
 
     rc = pcmk__set_nonblocking(sock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         return rc;
     }
 
@@ -711,8 +722,8 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
                 break;
 
             default:
-                crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
-                         pcmk_rc_str(rc), rc);
+                pcmk__warn("Could not connect socket: %s " QB_XS " rc=%d",
+                           pcmk_rc_str(rc), rc);
                 return rc;
         }
     }
@@ -743,8 +754,9 @@ connect_socket_retry(int sock, const struct sockaddr *addr, socklen_t addrlen,
      *       working at the moment though. (See connect(2) regarding EINPROGRESS
      *       for possible new handling needed.)
      */
-    crm_trace("Scheduling check in %dms for whether connect to fd %d finished",
-              interval, sock);
+    pcmk__trace("Scheduling check in %dms for whether connect to fd %d "
+                "finished",
+                interval, sock);
     timer = pcmk__create_timer(interval, check_connect_finished, cb_data);
     if (timer_id) {
         *timer_id = timer;
@@ -770,15 +782,15 @@ connect_socket_once(int sock, const struct sockaddr *addr, socklen_t addrlen)
 
     if (rc < 0) {
         rc = errno;
-        crm_warn("Could not connect socket: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not connect socket: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         return rc;
     }
 
     rc = pcmk__set_nonblocking(sock);
     if (rc != pcmk_rc_ok) {
-        crm_warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                 pcmk_rc_str(rc), rc);
+        pcmk__warn("Could not set socket non-blocking: %s " QB_XS " rc=%d",
+                   pcmk_rc_str(rc), rc);
         return rc;
     }
 
@@ -826,13 +838,13 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
     rc = pcmk__gaierror2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        crm_err("Unable to get IP address info for %s: %s",
-                server, pcmk_rc_str(rc));
+        pcmk__err("Unable to get IP address info for %s: %s", server,
+                  pcmk_rc_str(rc));
         goto async_cleanup;
     }
 
     if (!res || !res->ai_addr) {
-        crm_err("Unable to get IP address info for %s: no result", server);
+        pcmk__err("Unable to get IP address info for %s: no result", server);
         rc = ENOTCONN;
         goto async_cleanup;
     }
@@ -848,13 +860,14 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
         if (rp->ai_canonname) {
             server = res->ai_canonname;
         }
-        crm_debug("Got canonical name %s for %s", server, host);
+        pcmk__debug("Got canonical name %s for %s", server, host);
 
         sock = socket(rp->ai_family, SOCK_STREAM, IPPROTO_TCP);
         if (sock == -1) {
             rc = errno;
-            crm_warn("Could not create socket for remote connection to %s:%d: "
-                     "%s " QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+            pcmk__warn("Could not create socket for remote connection to "
+                       "%s:%d: %s " QB_XS " rc=%d",
+                       server, port, pcmk_rc_str(rc), rc);
             continue;
         }
 
@@ -868,7 +881,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
 
         memset(buffer, 0, PCMK__NELEM(buffer));
         pcmk__sockaddr2str(addr, buffer);
-        crm_info("Attempting remote connection to %s:%d", buffer, port);
+        pcmk__info("Attempting remote connection to %s:%d", buffer, port);
 
         if (callback) {
             if (connect_socket_retry(sock, rp->ai_addr, rp->ai_addrlen, timeout,
@@ -952,17 +965,18 @@ pcmk__accept_remote_connection(int ssock, int *csock)
     *csock = accept(ssock, (struct sockaddr *)&addr, &laddr);
     if (*csock == -1) {
         rc = errno;
-        crm_err("Could not accept remote client connection: %s "
-                QB_XS " rc=%d", pcmk_rc_str(rc), rc);
+        pcmk__err("Could not accept remote client connection: %s "
+                  QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
         return rc;
     }
     pcmk__sockaddr2str(&addr, addr_str);
-    crm_info("Accepted new remote client connection from %s", addr_str);
+    pcmk__info("Accepted new remote client connection from %s", addr_str);
 
     rc = pcmk__set_nonblocking(*csock);
     if (rc != pcmk_rc_ok) {
-        crm_err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Could not set socket non-blocking: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
         close(*csock);
         *csock = -1;
         return rc;
@@ -979,8 +993,9 @@ pcmk__accept_remote_connection(int ssock, int *csock)
                         &optval, sizeof(optval));
         if (rc < 0) {
             rc = errno;
-            crm_err("Could not set TCP timeout to %d ms on remote connection: "
-                    "%s " QB_XS " rc=%d", optval, pcmk_rc_str(rc), rc);
+            pcmk__err("Could not set TCP timeout to %d ms on remote "
+                      "connection: %s " QB_XS " rc=%d",
+                      optval, pcmk_rc_str(rc), rc);
             close(*csock);
             *csock = -1;
             return rc;
@@ -1008,9 +1023,9 @@ crm_default_remote_port(void)
             errno = 0;
             port = strtol(env, NULL, 10);
             if (errno || (port < 1) || (port > 65535)) {
-                crm_warn("Environment variable PCMK_" PCMK__ENV_REMOTE_PORT
-                         " has invalid value '%s', using %d instead",
-                         env, DEFAULT_REMOTE_PORT);
+                pcmk__warn("Environment variable PCMK_" PCMK__ENV_REMOTE_PORT
+                           " has invalid value '%s', using %d instead",
+                           env, DEFAULT_REMOTE_PORT);
                 port = DEFAULT_REMOTE_PORT;
             }
         } else {

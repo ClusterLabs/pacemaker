@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>                         // uint32_t
 #include <stdio.h>
 #include <unistd.h>
@@ -23,8 +24,6 @@
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/util.h>
 #include <crm/common/iso8601.h>
@@ -491,8 +490,9 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches) &&
-        !(pcmk_is_set(options.flags, pcmk_sim_show_scores) && args->quiet)) {
+    if (pcmk__str_eq(args->output_ty, "text", pcmk__str_null_matches)
+        && !(pcmk__is_set(options.flags, pcmk_sim_show_scores)
+             && args->quiet)) {
         pcmk__output_text_set_fancy(out, true);
     }
 
@@ -502,7 +502,7 @@ main(int argc, char **argv)
     out->quiet = args->quiet;
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

@@ -1,5 +1,5 @@
 #
-# Copyright 2022-2024 the Pacemaker project contributors
+# Copyright 2022-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,8 +12,8 @@ include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
-check_PROGRAMS = pcmk__procfs_has_pids_false_test	\
-		 pcmk__procfs_has_pids_true_test	\
-		 pcmk__procfs_pid2path_test
+check_PROGRAMS = pcmk__procfs_has_pids_false_test
+check_PROGRAMS += pcmk__procfs_has_pids_true_test
+check_PROGRAMS += pcmk__procfs_pid2path_test
 
 TESTS = $(check_PROGRAMS)

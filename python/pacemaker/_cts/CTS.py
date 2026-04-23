@@ -1,7 +1,7 @@
 """Main classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["CtsLab", "NodeStatus", "Process"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import sys
@@ -11,7 +11,7 @@ import traceback
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.input import should_continue
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.remote import RemoteFactory
 
 
@@ -46,7 +46,6 @@ class CtsLab:
         args -- A list of command line parameters, minus the program name.
         """
         self._env = EnvFactory().getInstance(args)
-        self._logger = LogFactory()
 
     def dump(self):
         """Print the current environment."""
@@ -79,13 +78,13 @@ class CtsLab:
         Returns ExitStatus.OK on success, or ExitStatus.ERROR on error.
         """
         if not scenario:
-            self._logger.log("No scenario was defined")
+            logging.log("No scenario was defined")
             return ExitStatus.ERROR
 
-        self._logger.log("Cluster nodes: ")
+        logging.log("Cluster nodes: ")
         # pylint: disable=unsubscriptable-object
         for node in self._env["nodes"]:
-            self._logger.log(f"    * {node}")
+            logging.log(f"    * {node}")
 
         if not scenario.setup():
             return ExitStatus.ERROR
@@ -96,8 +95,8 @@ class CtsLab:
         try:
             scenario.run(iterations)
         except:  # noqa: E722
-            self._logger.log(f"Exception by {sys.exc_info()[0]}")
-            self._logger.traceback(traceback)
+            logging.log(f"Exception by {sys.exc_info()[0]}")
+            logging.traceback(traceback)
 
             scenario.summarize()
             scenario.teardown()
@@ -110,7 +109,7 @@ class CtsLab:
             return ExitStatus.ERROR
 
         if scenario.stats["success"] != iterations:
-            self._logger.log("No failure count but success != requested iterations")
+            logging.log("No failure count but success != requested iterations")
             return ExitStatus.ERROR
 
         return ExitStatus.OK
@@ -162,18 +161,18 @@ class NodeStatus:
                 if anytimeouts:
                     # Fudge to wait for the system to finish coming up
                     time.sleep(30)
-                    LogFactory().debug(f"Node {node} now up")
+                    logging.debug(f"Node {node} now up")
 
                 return True
 
             time.sleep(30)
             if not anytimeouts:
-                LogFactory().debug(f"Waiting for node {node} to come up")
+                logging.debug(f"Waiting for node {node} to come up")
 
             anytimeouts = True
             timeout -= 1
 
-        LogFactory().log(f"{node} did not come up within {initial_timeout} tries")
+        logging.log(f"{node} did not come up within {initial_timeout} tries")
         if not should_continue(self._env["continue"]):
             raise ValueError(f"{node} did not come up within {initial_timeout} tries")
 
@@ -192,39 +191,52 @@ class Process:
     """A class for managing a Pacemaker daemon."""
 
     # pylint: disable=invalid-name
-    def __init__(self, cm, name, dc_only=False, pats=None, dc_pats=None,
-                 badnews_ignore=None):
+    def __init__(self, cm, name, pats=None, badnews_ignore=None):
         """
         Create a new Process instance.
 
         Arguments:
         cm              -- A ClusterManager instance
         name            -- The command being run
-        dc_only         -- Should this daemon be killed only on the DC?
         pats            -- Regexes we expect to find in log files
-        dc_pats         -- Additional DC-specific regexes we expect to find
-                           in log files
         badnews_ignore  -- Regexes for lines in the log that can be ignored
         """
         self._cm = cm
         self.badnews_ignore = badnews_ignore
-        self.dc_only = dc_only
-        self.dc_pats = dc_pats
         self.name = name
         self.pats = pats
 
         if self.badnews_ignore is None:
             self.badnews_ignore = []
 
-        if self.dc_pats is None:
-            self.dc_pats = []
-
         if self.pats is None:
             self.pats = []
 
-    def kill(self, node):
-        """Kill the instance of this process running on the given node."""
-        (rc, _) = self._cm.rsh(node, f"killall -9 {self.name}")
+    def signal(self, sig, node):
+        """Send a signal to the instance of this process running on the given node."""
+        # Using psutil would be nice but we need a shell command line.
 
+        # Word boundaries. It's not clear how portable \<, \>, \b, and \W are.
+        non_word_char = "[^_[:alnum:]]"
+        word_begin = f"(^|{non_word_char})"
+        word_end = f"($|{non_word_char})"
+
+        # Match this process, possibly running under valgrind
+        search_re = f"({word_begin}valgrind )?.*{word_begin}{self.name}{word_end}"
+
+        if sig in ["SIGKILL", "KILL", 9, "SIGTERM", "TERM", 15]:
+            (rc, _) = self._cm.rsh(node, f"pgrep --full '{search_re}'")
+            if rc == 1:
+                # No matching process, so nothing to kill/terminate
+                return
+            if rc != 0:
+                # 2 or 3: Syntax error or fatal error (like out of memory)
+                self._cm.log(f"ERROR: pgrep for {self.name} failed on node {node}")
+                return
+
+        # 0: One or more processes were successfully signaled.
+        # 1: No processes matched or none of them could be signalled.
+        # This is why we check for no matching process above.
+        (rc, _) = self._cm.rsh(node, f"pkill --signal {sig} --full '{search_re}'")
         if rc != 0:
-            self._cm.log(f"ERROR: Kill {self.name} failed on node {node}")
+            self._cm.log(f"ERROR: Sending signal {sig} to {self.name} failed on node {node}")

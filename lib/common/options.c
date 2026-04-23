@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -17,22 +18,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-
-void
-pcmk__cli_help(char cmd)
-{
-    if (cmd == 'v' || cmd == '$') {
-        printf("Pacemaker %s\n", PACEMAKER_VERSION);
-        printf("Written by Andrew Beekhof and "
-               "the Pacemaker project contributors\n");
-
-    } else if (cmd == '!') {
-        printf("Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    }
-
-    crm_exit(CRM_EX_OK);
-    while(1); // above does not return
-}
 
 
 /*
@@ -94,19 +79,6 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "scheduler bugs. A value of 0 disables polling. A positive value "
             "sets an interval in seconds, unless other units are specified "
             "(for example, \"5min\")."),
-    },
-    {
-        PCMK_OPT_FENCE_REACTION, NULL, PCMK_VALUE_SELECT,
-            PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
-        PCMK_VALUE_STOP, NULL,
-        pcmk__opt_controld,
-        N_("How a cluster node should react if notified of its own fencing"),
-        N_("A cluster node may receive notification of a \"succeeded\" "
-            "fencing that targeted it if fencing is misconfigured, or if "
-            "fabric fencing is in use that doesn't cut cluster communication. "
-            "Use \"stop\" to attempt to immediately stop Pacemaker and stay "
-            "stopped, or \"panic\" to attempt to immediately reboot the local "
-            "node, falling back to stop on failure."),
     },
     {
         PCMK_OPT_ELECTION_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
@@ -220,9 +192,9 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "check the resource's fail count against its migration-threshold.")
     },
     {
-        PCMK_OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_ENABLE_STARTUP_PROBES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether the cluster should check for active resources during "
             "start-up"),
         NULL,
@@ -238,9 +210,9 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that are part of its partition as long as the cluster thinks they "
            "can be restarted.  If true, inquorate nodes will be able to fence "
            "remote nodes regardless."),
-     },
+    },
     {
-        PCMK_OPT_STONITH_ENABLED, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK_OPT_FENCING_ENABLED, "stonith-enabled", PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
         pcmk__opt_schedulerd|pcmk__opt_advanced,
         N_("Whether nodes may be fenced as part of recovery"),
@@ -250,7 +222,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
             "potentially leading to data loss and/or service unavailability."),
     },
     {
-        PCMK_OPT_STONITH_ACTION, NULL, PCMK_VALUE_SELECT,
+        PCMK_OPT_FENCING_ACTION, "stonith-action", PCMK_VALUE_SELECT,
             PCMK_ACTION_REBOOT ", " PCMK_ACTION_OFF,
         PCMK_ACTION_REBOOT, pcmk__is_fencing_action,
         pcmk__opt_schedulerd,
@@ -258,7 +230,20 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STONITH_TIMEOUT, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_OPT_FENCING_REACTION, "fence-reaction", PCMK_VALUE_SELECT,
+            PCMK_VALUE_STOP ", " PCMK_VALUE_PANIC,
+        PCMK_VALUE_STOP, NULL,
+        pcmk__opt_controld,
+        N_("How a cluster node should react if notified of its own fencing"),
+        N_("A cluster node may receive notification of a \"succeeded\" "
+            "fencing that targeted it if fencing is misconfigured, or if "
+            "fabric fencing is in use that doesn't cut cluster communication. "
+            "Use \"stop\" to attempt to immediately stop Pacemaker and stay "
+            "stopped, or \"panic\" to attempt to immediately reboot the local "
+            "node, falling back to stop on failure."),
+    },
+    {
+        PCMK_OPT_FENCING_TIMEOUT, "stonith-timeout", PCMK_VALUE_DURATION, NULL,
         "60s", pcmk__valid_interval_spec,
         pcmk__opt_schedulerd,
         N_("How long to wait for on, off, and reboot fence actions to complete "
@@ -273,7 +258,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         N_("This is set automatically by the cluster according to whether SBD "
             "is detected to be in use. User-configured values are ignored. "
             "The value `true` is meaningful if diskless SBD is used and "
-            "`stonith-watchdog-timeout` is nonzero. In that case, if fencing "
+            "`fencing-watchdog-timeout` is nonzero. In that case, if fencing "
             "is required, watchdog-based self-fencing will be performed via "
             "SBD without requiring a fencing resource explicitly configured."),
     },
@@ -288,7 +273,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
          * calculate, and use 0 as the single default for when the option either
          * is unset or fails to validate.
          */
-        PCMK_OPT_STONITH_WATCHDOG_TIMEOUT, NULL, PCMK_VALUE_TIMEOUT, NULL,
+        PCMK_OPT_FENCING_WATCHDOG_TIMEOUT, PCMK_OPT_STONITH_WATCHDOG_TIMEOUT,
+            PCMK_VALUE_TIMEOUT, NULL,
         "0", NULL,
         pcmk__opt_controld,
         N_("How long before nodes can be assumed to be safely down when "
@@ -310,7 +296,8 @@ static const pcmk__cluster_option_t cluster_options[] = {
            "that use SBD, otherwise data corruption or loss could occur."),
     },
     {
-        PCMK_OPT_STONITH_MAX_ATTEMPTS, NULL, PCMK_VALUE_SCORE, NULL,
+        PCMK_OPT_FENCING_MAX_ATTEMPTS, "stonith-max-attempts", PCMK_VALUE_SCORE,
+            NULL,
         "10", pcmk__valid_positive_int,
         pcmk__opt_controld,
         N_("How many times fencing can fail before it will no longer be "
@@ -318,7 +305,7 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_CONCURRENT_FENCING, NULL, PCMK_VALUE_BOOLEAN, NULL,
 #if PCMK__CONCURRENT_FENCING_DEFAULT_TRUE
         PCMK_VALUE_TRUE,
 #else
@@ -418,28 +405,25 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        /* @TODO This is actually ignored if not strictly positive. We should
-         * overhaul value types in Pacemaker Explained. There are lots of
-         * inaccurate ranges (assumptions of 32-bit width, "nonnegative" when
-         * positive is required, etc.).
-         *
-         * Maybe a single integer type with the allowed range specified would be
-         * better.
-         *
-         * Drop the PCMK_VALUE_NONNEGATIVE_INTEGER constant if we do this before
-         * a release.
-         */
-        PCMK_OPT_CLUSTER_IPC_LIMIT, NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
-        "500", pcmk__valid_positive_int,
-        pcmk__opt_based,
-        N_("Maximum IPC message backlog before disconnecting a cluster daemon"),
-        N_("Raise this if log has \"Evicting client\" messages for cluster "
-            "daemon PIDs (a good value is the number of resources in the "
-            "cluster multiplied by the number of nodes)."),
+        "cluster-ipc-limit", NULL, PCMK_VALUE_NONNEGATIVE_INTEGER, NULL,
+        NULL, NULL,
+        pcmk__opt_based|pcmk__opt_deprecated,
+        N_("Ignored"),
+        NULL,
     },
 
-    // Orphans and stopping
+    // Stopping resources and removed resources
     {
+        /* This option complicates display and precedence a bit. The same effect
+         * can be achieved by placing all nodes in standby, or by creating a
+         * constraint rule that sets all resources' target roles to stopped.
+         *
+         * We decided to keep it based on user feedback that it's useful in its
+         * simplicity. Also, it is analogous to the situation with
+         * PCMK_OPT_MAINTENANCE_MODE (cluster-level),
+         * PCMK_NODE_ATTR_MAINTENANCE (node-level), and PCMK_META_MAINTENANCE
+         * (resource-level).
+         */
         PCMK_OPT_STOP_ALL_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_FALSE, pcmk__valid_boolean,
         pcmk__opt_schedulerd,
@@ -447,17 +431,19 @@ static const pcmk__cluster_option_t cluster_options[] = {
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_RESOURCES, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_STOP_REMOVED_RESOURCES, "stop-orphan-resources",
+            PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to stop resources that were removed from the "
             "configuration"),
         NULL,
     },
     {
-        PCMK_OPT_STOP_ORPHAN_ACTIONS, NULL, PCMK_VALUE_BOOLEAN, NULL,
+        PCMK__OPT_CANCEL_REMOVED_ACTIONS, "stop-orphan-actions",
+            PCMK_VALUE_BOOLEAN, NULL,
         PCMK_VALUE_TRUE, pcmk__valid_boolean,
-        pcmk__opt_schedulerd,
+        pcmk__opt_schedulerd|pcmk__opt_deprecated,
         N_("Whether to cancel recurring actions removed from the "
             "configuration"),
         NULL,
@@ -557,7 +543,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
      * long description
      */
     {
-        PCMK_STONITH_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_HOST_ARGUMENT, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_advanced,
         N_("Name of agent parameter that should be set to the fencing target"),
@@ -567,7 +553,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "supply any additional parameters."),
     },
     {
-        PCMK_STONITH_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_HOST_MAP, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("A mapping of node names to port numbers for devices that do not "
@@ -576,7 +562,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "port 1 for node1 and ports 2 and 3 for node2."),
     },
     {
-        PCMK_STONITH_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_HOST_LIST, NULL, PCMK_VALUE_STRING, NULL,
         NULL, NULL,
         pcmk__opt_none,
         N_("Nodes targeted by this device"),
@@ -585,7 +571,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
            "\"static-list\", either this or pcmk_host_map must be set."),
     },
     {
-        PCMK_STONITH_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
+        PCMK_FENCING_HOST_CHECK, NULL, PCMK_VALUE_SELECT,
             PCMK_VALUE_DYNAMIC_LIST ", " PCMK_VALUE_STATIC_LIST ", "
             PCMK_VALUE_STATUS ", " PCMK_VALUE_NONE,
         NULL, NULL,
@@ -601,7 +587,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "supports the status operation; otherwise \"none\""),
     },
     {
-        PCMK_STONITH_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
+        PCMK_FENCING_DELAY_MAX, NULL, PCMK_VALUE_DURATION, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a delay of no more than the time specified before executing "
@@ -612,7 +598,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "that the sum is kept below this maximum."),
     },
     {
-        PCMK_STONITH_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
+        PCMK_FENCING_DELAY_BASE, NULL, PCMK_VALUE_STRING, NULL,
         "0s", NULL,
         pcmk__opt_none,
         N_("Enable a base delay for fencing actions and specify base delay "
@@ -627,7 +613,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
             "\"node1:1s;node2:5\") to set a different value for each target."),
     },
     {
-        PCMK_STONITH_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
+        PCMK_FENCING_ACTION_LIMIT, NULL, PCMK_VALUE_INTEGER, NULL,
         "1", NULL,
         pcmk__opt_none,
         N_("The maximum number of actions can be performed in parallel on this "
@@ -650,7 +636,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'reboot' actions instead "
-            "of stonith-timeout"),
+            "of fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'reboot' actions."),
@@ -681,7 +667,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'off' actions instead of "
-            "stonith-timeout"),
+            "fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'off' actions."),
@@ -712,7 +698,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'on' actions instead of "
-            "stonith-timeout"),
+            "fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'on' actions."),
@@ -743,7 +729,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'list' actions instead of "
-            "stonith-timeout"),
+            "fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'list' actions."),
@@ -774,7 +760,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'monitor' actions instead "
-            "of stonith-timeout"),
+            "of fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'monitor' actions."),
@@ -805,7 +791,7 @@ static const pcmk__cluster_option_t fencing_params[] = {
         "60s", NULL,
         pcmk__opt_advanced,
         N_("Specify an alternate timeout to use for 'status' actions instead "
-            "of stonith-timeout"),
+            "of fencing-timeout"),
         N_("Some devices need much more/less time to complete than normal. "
             "Use this to specify an alternate, device-specific, timeout for "
             "'status' actions."),
@@ -922,7 +908,7 @@ static const pcmk__cluster_option_t primitive_meta[] = {
             "unfenced. "
             "The default is \"quorum\" for resources with a class of stonith; "
             "otherwise, \"unfencing\" if unfencing is active in the cluster; "
-            "otherwise, \"fencing\" if the stonith-enabled cluster option is "
+            "otherwise, \"fencing\" if the fencing-enabled cluster option is "
             "true; "
             "otherwise, \"quorum\"."),
     },
@@ -1073,49 +1059,39 @@ static const pcmk__cluster_option_t primitive_meta[] = {
  * \internal
  * \brief Get the value of a Pacemaker environment variable option
  *
- * If an environment variable option is set, with either a PCMK_ or (for
- * backward compatibility) HA_ prefix, log and return the value.
+ * If an environment variable option is set, with either a \c "PCMK_" or (for
+ * backward compatibility) \c "HA_" prefix, log and return the value.
  *
  * \param[in] option  Environment variable name (without prefix)
  *
- * \return Value of environment variable option, or NULL in case of
- *         option name too long or value not found
+ * \return Value of environment variable, or \c NULL if not set
  */
 const char *
 pcmk__env_option(const char *option)
 {
-    const char *const prefixes[] = {"PCMK_", "HA_"};
-    char env_name[NAME_MAX];
-    const char *value = NULL;
+    // @COMPAT Drop support for "HA_" options eventually
+    static const char *const prefixes[] = { "PCMK", "HA" };
 
     CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
+        char *env_name = pcmk__assert_asprintf("%s_%s", prefixes[i], option);
+        const char *value = getenv(env_name);
 
-        if (rv < 0) {
-            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
-                    strerror(errno));
-            return NULL;
-        }
-
-        if (rv >= sizeof(env_name)) {
-            crm_trace("\"%s%s\" is too long", prefixes[i], option);
-            continue;
-        }
-
-        value = getenv(env_name);
         if (value != NULL) {
-            crm_trace("Found %s = %s", env_name, value);
+            pcmk__trace("Found %s = %s", env_name, value);
+            free(env_name);
             return value;
         }
+        free(env_name);
     }
 
-    crm_trace("Nothing found for %s", option);
+    pcmk__trace("Nothing found for %s", option);
     return NULL;
 }
 
 /*!
+ * \internal
  * \brief Set or unset a Pacemaker environment variable option
  *
  * Set an environment variable option with a \c "PCMK_" prefix and optionally
@@ -1135,38 +1111,29 @@ void
 pcmk__set_env_option(const char *option, const char *value, bool compat)
 {
     // @COMPAT Drop support for "HA_" options eventually
-    const char *const prefixes[] = {"PCMK_", "HA_"};
-    char env_name[NAME_MAX];
+    static const char *const prefixes[] = { "PCMK", "HA" };
 
-    CRM_CHECK(!pcmk__str_empty(option) && (strchr(option, '=') == NULL),
-              return);
+    CRM_CHECK(!pcmk__str_empty(option), return);
 
     for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
-        int rv = snprintf(env_name, NAME_MAX, "%s%s", prefixes[i], option);
-
-        if (rv < 0) {
-            crm_err("Failed to write %s%s to buffer: %s", prefixes[i], option,
-                    strerror(errno));
-            return;
-        }
-
-        if (rv >= sizeof(env_name)) {
-            crm_trace("\"%s%s\" is too long", prefixes[i], option);
-            continue;
-        }
+        char *env_name = pcmk__assert_asprintf("%s_%s", prefixes[i], option);
+        int rc = 0;
 
         if (value != NULL) {
-            crm_trace("Setting %s to %s", env_name, value);
-            rv = setenv(env_name, value, 1);
+            pcmk__trace("Setting %s to %s", env_name, value);
+            rc = setenv(env_name, value, 1);
         } else {
-            crm_trace("Unsetting %s", env_name);
-            rv = unsetenv(env_name);
+            pcmk__trace("Unsetting %s", env_name);
+            rc = unsetenv(env_name);
         }
 
-        if (rv < 0) {
-            crm_err("Failed to %sset %s: %s", (value != NULL)? "" : "un",
-                    env_name, strerror(errno));
+        if (rc < 0) {
+            int err = errno;
+
+            pcmk__err("Failed to %sset %s: %s", ((value != NULL)? "" : "un"),
+                      env_name, strerror(err));
         }
+        free(env_name);
 
         if (!compat && (value != NULL)) {
             // For set, don't proceed to HA_<option> unless compat is enabled
@@ -1192,10 +1159,31 @@ bool
 pcmk__env_option_enabled(const char *daemon, const char *option)
 {
     const char *value = pcmk__env_option(option);
+    gchar **subsystems = NULL;
+    bool enabled = false;
 
-    return (value != NULL)
-        && (crm_is_true(value)
-            || ((daemon != NULL) && (strstr(value, daemon) != NULL)));
+    if (value == NULL) {
+        return false;
+    }
+
+    if (pcmk__parse_bool(value, &enabled) == pcmk_rc_ok) {
+        return enabled;
+    }
+
+    /* Value did not parse to a boolean, so try to parse it as a daemon list if
+     * we have a daemon name to look for
+     */
+
+    if (daemon == NULL) {
+        return false;
+    }
+
+    subsystems = g_strsplit(value, ",", 0);
+
+    enabled = pcmk__g_strv_contains(subsystems, daemon);
+
+    g_strfreev(subsystems);
+    return enabled;
 }
 
 
@@ -1229,7 +1217,7 @@ pcmk__valid_interval_spec(const char *value)
 bool
 pcmk__valid_boolean(const char *value)
 {
-    return crm_str_to_boolean(value, NULL) == 1;
+    return pcmk__parse_bool(value, NULL) == pcmk_rc_ok;
 }
 
 /*!
@@ -1379,18 +1367,18 @@ cluster_option_value(GHashTable *table, const pcmk__cluster_option_t *option)
     value = option->default_value;
 
     if (value == NULL) {
-        crm_trace("No value or default provided for cluster option '%s'",
-                  option->name);
+        pcmk__trace("No value or default provided for cluster option '%s'",
+                    option->name);
         return NULL;
     }
 
     CRM_CHECK((option->is_valid == NULL) || option->is_valid(value),
-              crm_err("Bug: default value for cluster option '%s' is invalid",
-                      option->name);
+              pcmk__err("Bug: default value for cluster option '%s' is invalid",
+                        option->name);
               return NULL);
 
-    crm_trace("Using default value '%s' for cluster option '%s'",
-              value, option->name);
+    pcmk__trace("Using default value '%s' for cluster option '%s'", value,
+                option->name);
     if (table != NULL) {
         pcmk__insert_dup(table, option->name, value);
     }
@@ -1416,7 +1404,7 @@ pcmk__cluster_option(GHashTable *options, const char *name)
             return cluster_option_value(options, option);
         }
     }
-    CRM_CHECK(FALSE, crm_err("Bug: looking for unknown option '%s'", name));
+    CRM_CHECK(FALSE, pcmk__err("Bug: looking for unknown option '%s'", name));
     return NULL;
 }
 

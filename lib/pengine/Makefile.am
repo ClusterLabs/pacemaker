@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -29,7 +29,7 @@ libpe_rules_la_LIBADD	= $(top_builddir)/lib/common/libcrmcommon.la
 libpe_rules_la_SOURCES	= rules_compat.c
 endif
 
-libpe_status_la_LDFLAGS	= -version-info 56:1:0
+libpe_status_la_LDFLAGS	= -version-info 57:0:1
 
 libpe_status_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpe_status_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
@@ -64,14 +64,17 @@ libpe_status_la_SOURCES	+= utils.c
 include $(top_srcdir)/mk/tap.mk
 
 libpe_status_test_la_SOURCES = $(libpe_status_la_SOURCES)
-libpe_status_test_la_LDFLAGS = $(libpe_status_la_LDFLAGS) 	\
-			       -rpath $(libdir) 		\
-			       $(LDFLAGS_WRAP)
+
+libpe_status_test_la_LDFLAGS = $(libpe_status_la_LDFLAGS)
+libpe_status_test_la_LDFLAGS += -rpath $(libdir)
+libpe_status_test_la_LDFLAGS += $(LDFLAGS_WRAP)
+
 # See comments on libcrmcommon_test_la in lib/common/Makefile.am regarding these flags.
-libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS) \
-			      -DPCMK__UNIT_TESTING 	\
-			      -fno-builtin 		\
-			      -fno-inline
-libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la 	\
-			      -lcmocka 						\
-			      -lm
+libpe_status_test_la_CFLAGS = $(libpe_status_la_CFLAGS)
+libpe_status_test_la_CFLAGS += -DPCMK__UNIT_TESTING
+libpe_status_test_la_CFLAGS += -fno-builtin
+libpe_status_test_la_CFLAGS += -fno-inline
+
+libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la
+libpe_status_test_la_LIBADD += -lcmocka
+libpe_status_test_la_LIBADD += -lm

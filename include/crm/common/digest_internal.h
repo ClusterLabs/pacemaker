@@ -1,11 +1,15 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <digest_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_DIGEST_INTERNAL__H
 #define PCMK__CRM_COMMON_DIGEST_INTERNAL__H
@@ -41,11 +45,12 @@ typedef struct {
     char *digest_restart_calc;      // Digest of params_restart
 } pcmk__op_digest_t;
 
-char *pcmk__digest_on_disk_cib(xmlNode *input);
-char *pcmk__digest_operation(xmlNode *input);
-char *pcmk__digest_xml(xmlNode *input, bool filter);
+char *pcmk__md5sum(const char *input);
+char *pcmk__digest_on_disk_cib(const xmlNode *input);
+char *pcmk__digest_op_params(const xmlNode *input);
+char *pcmk__digest_xml(const xmlNode *input, bool filter);
 
-bool pcmk__verify_digest(xmlNode *input, const char *expected);
+bool pcmk__verify_digest(const xmlNode *input, const char *expected);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,9 +17,6 @@
 #include <libxml/tree.h>        // xmlNode
 
 #include <pacemaker-internal.h>
-
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 
 #define SUMMARY "query and manage the Pacemaker controller"
 
@@ -103,7 +100,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 {
     if (!strcmp(option_name, "--status") || !strcmp(option_name, "-S")) {
         command = cmd_health;
-        crm_trace("Option %c => %s", 'S', optarg);
+        pcmk__trace("Option %c => %s", 'S', optarg);
     }
 
     if (!strcmp(option_name, "--pacemakerd") || !strcmp(option_name, "-P")) {
@@ -205,7 +202,7 @@ main(int argc, char **argv)
     out->quiet = args->quiet;
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

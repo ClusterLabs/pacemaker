@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,12 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <errno.h>
 #include <sys/stat.h>
+
+#include <glib.h>               // g_str_has_prefix()
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -92,7 +95,7 @@ lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
     /* @TODO Perhaps update later to use pcmk__xml_needs_escape(). Involves many
      * extra variables in the caller.
      */
-    if ((*value == NULL) && pcmk__starts_with(line, prefix)) {
+    if ((*value == NULL) && g_str_has_prefix(line, prefix)) {
         *value = pcmk__xml_escape(line + strlen(prefix), pcmk__xml_escape_text);
         return TRUE;
     }
@@ -102,7 +105,7 @@ lsb_meta_helper_get_value(const char *line, gchar **value, const char *prefix)
 int
 services__get_lsb_metadata(const char *type, char **output)
 {
-    char ra_pathname[PATH_MAX] = { 0, };
+    char *ra_pathname = NULL;
     FILE *fp = NULL;
     char buffer[1024] = { 0, };
     gchar *provides = NULL;
@@ -117,14 +120,15 @@ services__get_lsb_metadata(const char *type, char **output)
     bool in_header = FALSE;
 
     if (type[0] == '/') {
-        snprintf(ra_pathname, sizeof(ra_pathname), "%s", type);
+        ra_pathname = pcmk__str_copy(type);
     } else {
-        snprintf(ra_pathname, sizeof(ra_pathname), "%s/%s",
-                 PCMK__LSB_INIT_DIR, type);
+        ra_pathname = pcmk__assert_asprintf(PCMK__LSB_INIT_DIR "/%s", type);
     }
 
-    crm_trace("Looking into %s", ra_pathname);
+    pcmk__trace("Looking into %s", ra_pathname);
     fp = fopen(ra_pathname, "r");
+    free(ra_pathname);
+
     if (fp == NULL) {
         return -errno;
     }
@@ -133,7 +137,7 @@ services__get_lsb_metadata(const char *type, char **output)
     while (fgets(buffer, sizeof(buffer), fp)) {
 
         // Ignore lines up to and including the block delimiter
-        if (pcmk__starts_with(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
+        if (g_str_has_prefix(buffer, LSB_INITSCRIPT_INFOBEGIN_TAG)) {
             in_header = TRUE;
             continue;
         }
@@ -170,7 +174,7 @@ services__get_lsb_metadata(const char *type, char **output)
 
         /* Long description may cross multiple lines */
         if ((long_desc == NULL)  // Haven't already found long description
-            && pcmk__starts_with(buffer, DESCRIPTION)) {
+            && g_str_has_prefix(buffer, DESCRIPTION)) {
             bool processed_line = TRUE;
             GString *desc = g_string_sized_new(2048);
 
@@ -180,8 +184,8 @@ services__get_lsb_metadata(const char *type, char **output)
             // Read any continuation lines of the description
             buffer[0] = '\0';
             while (fgets(buffer, sizeof(buffer), fp)) {
-                if (pcmk__starts_with(buffer, "#  ")
-                    || pcmk__starts_with(buffer, "#\t")) {
+                if (g_str_has_prefix(buffer, "#  ")
+                    || g_str_has_prefix(buffer, "#\t")) {
                     /* '#' followed by a tab or more than one space indicates a
                      * continuation of the long description.
                      */
@@ -199,14 +203,18 @@ services__get_lsb_metadata(const char *type, char **output)
             long_desc = pcmk__xml_escape(desc->str, pcmk__xml_escape_text);
             g_string_free(desc, TRUE);
 
-            if (processed_line) {
+            if (ferror(fp) || feof(fp)) {
+                // We hit a problem or EOF in the fgets loop on the long
+                // description
+                break;
+            } else if (processed_line) {
                 // We grabbed the line into the long description
                 continue;
             }
         }
 
         // Stop if we leave the header block
-        if (pcmk__starts_with(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
+        if (g_str_has_prefix(buffer, LSB_INITSCRIPT_INFOEND_TAG)) {
             break;
         }
         if (buffer[0] != '#') {
@@ -215,16 +223,16 @@ services__get_lsb_metadata(const char *type, char **output)
     }
     fclose(fp);
 
-    *output = crm_strdup_printf(lsb_metadata_template, type,
-                                pcmk__s(long_desc, type),
-                                pcmk__s(short_desc, type),
-                                pcmk__s(provides, ""),
-                                pcmk__s(required_start, ""),
-                                pcmk__s(required_stop, ""),
-                                pcmk__s(should_start, ""),
-                                pcmk__s(should_stop, ""),
-                                pcmk__s(default_start, ""),
-                                pcmk__s(default_stop, ""));
+    *output = pcmk__assert_asprintf(lsb_metadata_template, type,
+                                    pcmk__s(long_desc, type),
+                                    pcmk__s(short_desc, type),
+                                    pcmk__s(provides, ""),
+                                    pcmk__s(required_start, ""),
+                                    pcmk__s(required_stop, ""),
+                                    pcmk__s(should_start, ""),
+                                    pcmk__s(should_stop, ""),
+                                    pcmk__s(default_start, ""),
+                                    pcmk__s(default_stop, ""));
 
     g_free(long_desc);
     g_free(short_desc);
@@ -241,7 +249,7 @@ services__get_lsb_metadata(const char *type, char **output)
 GList *
 services__list_lsb_agents(void)
 {
-    return services_os_get_directory_list(PCMK__LSB_INIT_DIR, TRUE, TRUE);
+    return services__list_dir(PCMK__LSB_INIT_DIR, true);
 }
 
 bool

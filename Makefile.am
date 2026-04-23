@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2024 the Pacemaker project contributors
+# Copyright 2003-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -12,57 +12,57 @@ include $(top_srcdir)/mk/common.mk
 # This directory must be same as in configure.ac's AC_CONFIG_MACRO_DIR
 ACLOCAL_AMFLAGS		= -I m4
 
-EXTRA_DIST		= CONTRIBUTING.md		\
-			  GNUmakefile			\
-			  INSTALL.md			\
-			  README.markdown		\
-			  autogen.sh			\
-			  m4/CC_CHECK_LDFLAGS.m4	\
-			  m4/CHECK_ENUM_VALUE.m4	\
-			  m4/REQUIRE_HEADER.m4		\
-			  m4/version.m4
+EXTRA_DIST = CONTRIBUTING.md
+EXTRA_DIST += GNUmakefile
+EXTRA_DIST += INSTALL.md
+EXTRA_DIST += README.markdown
+EXTRA_DIST += autogen.sh
+EXTRA_DIST += m4/CC_CHECK_LDFLAGS.m4
+EXTRA_DIST += m4/CHECK_ENUM_VALUE.m4
+EXTRA_DIST += m4/REQUIRE_HEADER.m4
+EXTRA_DIST += m4/version.m4
 
 DISTCLEANFILES		= config.status
 
-MAINTAINERCLEANFILES	+= aclocal.m4	\
-			  config.guess	\
-			  config.sub	\
-			  configure	\
-			  depcomp	\
-			  install-sh	\
-			  ltmain.sh	\
-			  missing 	\
-			  py-compile	\
-			  test-driver
+MAINTAINERCLEANFILES += aclocal.m4
+MAINTAINERCLEANFILES += config.guess
+MAINTAINERCLEANFILES += config.sub
+MAINTAINERCLEANFILES += configure
+MAINTAINERCLEANFILES += depcomp
+MAINTAINERCLEANFILES += install-sh
+MAINTAINERCLEANFILES += ltmain.sh
+MAINTAINERCLEANFILES += missing
+MAINTAINERCLEANFILES += py-compile
+MAINTAINERCLEANFILES += test-driver
 
 # Don't try to install files outside build directory for "make distcheck".
-AM_DISTCHECK_CONFIGURE_FLAGS	= --prefix="$$dc_install_base/usr"			\
-				  --sysconfdir="$$dc_install_base/etc"			\
-				  --with-initdir="$$dc_install_base/etc/init.d"		\
-				  --with-ocfdir="$$dc_install_base/usr/lib/ocf"		\
-				  --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
+AM_DISTCHECK_CONFIGURE_FLAGS = --prefix="$$dc_install_base/usr"
+AM_DISTCHECK_CONFIGURE_FLAGS += --sysconfdir="$$dc_install_base/etc"
+AM_DISTCHECK_CONFIGURE_FLAGS += --with-initdir="$$dc_install_base/etc/init.d"
+AM_DISTCHECK_CONFIGURE_FLAGS += --with-ocfdir="$$dc_install_base/usr/lib/ocf"
+AM_DISTCHECK_CONFIGURE_FLAGS += --with-systemdsystemunitdir="$$dc_install_base$(systemdsystemunitdir)"
 
 # Only these will get built with a plain "make"
-CORE	= include 	\
-	  lib 		\
-	  daemons 	\
-	  tools 	\
-	  xml 		\
-	  po 		\
-	  python 	\
-	  cts 		\
-	  rpm
+CORE = include
+CORE += lib
+CORE += daemons
+CORE += tools
+CORE += xml
+CORE += po
+CORE += python
+CORE += cts
+CORE += rpm
 
-SUBDIRS	= $(CORE) 	\
-	  agents 	\
-	  devel 	\
-	  doc 		\
-	  etc 		\
-	  maint 	\
-	  tests
+SUBDIRS = $(CORE)
+SUBDIRS += agents
+SUBDIRS += devel
+SUBDIRS += doc
+SUBDIRS += etc
+SUBDIRS += maint
+SUBDIRS += tests
 
-doc_DATA = README.markdown \
-	   COPYING
+doc_DATA = README.markdown
+doc_DATA += COPYING
 
 licensedir              = $(docdir)/licenses/
 dist_license_DATA	= $(wildcard licenses/*)
@@ -71,12 +71,12 @@ dist_license_DATA	= $(wildcard licenses/*)
 ## owned by root:haclient, mode 0750
 ROOT_DIRS	= $(PACEMAKER_CONFIG_DIR)
 ## owned by hacluster:haclient, mode 0750
-DAEMON_R_DIRS	= $(CRM_CONFIG_DIR)	\
-		  $(CRM_CORE_DIR)	\
-		  $(CRM_BLACKBOX_DIR)
+DAEMON_R_DIRS = $(CRM_CONFIG_DIR)
+DAEMON_R_DIRS += $(CRM_CORE_DIR)
+DAEMON_R_DIRS += $(CRM_BLACKBOX_DIR)
 ## owned by hacluster:haclient, mode 0770
-DAEMON_RW_DIRS	= $(CRM_BUNDLE_DIR)	\
-		  $(CRM_LOG_DIR)
+DAEMON_RW_DIRS = $(CRM_BUNDLE_DIR)
+DAEMON_RW_DIRS += $(CRM_LOG_DIR)
 
 .PHONY: core
 core:

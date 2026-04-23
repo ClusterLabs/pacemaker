@@ -1,8 +1,9 @@
 """Fail a random resource and verify its fail count increases."""
 
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -50,7 +51,7 @@ class ResourceRecover(CTSTest):
         # List all resources active on the node (skip test if none)
         resourcelist = self._cm.active_resources(node)
         if not resourcelist:
-            self._logger.log(f"No active resources on {node}")
+            logging.log(f"No active resources on {node}")
             return self.skipped()
 
         # Choose one resource at random
@@ -65,17 +66,17 @@ class ResourceRecover(CTSTest):
 
         # Log patterns to watch for (failure, plus restart if managed)
         pats = [
-            self.templates["Pat:CloneOpFail"] % (self._action, rsc.id, rsc.clone_id)
+            self._cm.templates["Pat:CloneOpFail"] % (self._action, rsc.id, rsc.clone_id)
         ]
 
         if rsc.managed:
-            pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._rid))
+            pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._rid))
 
             if rsc.unique:
-                pats.append(self.templates["Pat:RscOpOK"] % ("start", self._rid))
+                pats.append(self._cm.templates["Pat:RscOpOK"] % ("start", self._rid))
             else:
                 # Anonymous clones may get restarted with a different clone number
-                pats.append(self.templates["Pat:RscOpOK"] % ("start", ".*"))
+                pats.append(self._cm.templates["Pat:RscOpOK"] % ("start", ".*"))
 
         # Fail resource. (Ideally, we'd fail it twice, to ensure the fail count
         # is incrementing properly, but it might restart on a different node.
@@ -113,14 +114,14 @@ class ResourceRecover(CTSTest):
         if rc != 0 or len(lines) != 1:
             lines = [line.strip() for line in lines]
             s = " // ".join(lines)
-            self._logger.log(f"crm_failcount on {node} failed ({rc}): {s}")
+            logging.log(f"crm_failcount on {node} failed ({rc}): {s}")
             return -1
 
         try:
             failcount = int(lines[0])
         except (IndexError, ValueError):
             s = " ".join(lines)
-            self._logger.log(f"crm_failcount output on {node} unparseable: {s}")
+            logging.log(f"crm_failcount output on {node} unparseable: {s}")
             return -1
 
         return failcount
@@ -134,7 +135,7 @@ class ResourceRecover(CTSTest):
 
         self._rsh(node, f"crm_resource -V -F -r {self._rid} -H {node} &>/dev/null")
 
-        with Timer(self._logger, self.name, "recover"):
+        with Timer(self.name, "recover"):
             watch.look_for_all()
 
         self._cm.cluster_stable()
@@ -166,6 +167,6 @@ class ResourceRecover(CTSTest):
             f"Updating failcount for {self._rid}",
             fr"schedulerd.*: Recover\s+({self._rid}|{self._rid_alt})\s+\(.*\)",
             r"Unknown operation: fail",
-            self.templates["Pat:RscOpOK"] % (self._action, self._rid),
+            self._cm.templates["Pat:RscOpOK"] % (self._action, self._rid),
             f"(ERROR|error).*: Action {self._rid}_{self._action}_{self._interval} .* initiated outside of a transition",
         ]

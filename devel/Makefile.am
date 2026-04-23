@@ -1,5 +1,5 @@
 #
-# Copyright 2020-2025 the Pacemaker project contributors
+# Copyright 2020-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -10,69 +10,8 @@
 include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/release.mk
 
-# Coccinelle is a tool that takes special patch-like files (called semantic patches) and
-# applies them throughout a source tree.  This is useful when refactoring, changing APIs,
-# catching dangerous or incorrect code, and other similar tasks.  It's not especially
-# easy to write a semantic patch but most users should only be concerned about running
-# the target and inspecting the results.
-#
-# Documentation (including examples, which are the most useful):
-#     https://coccinelle.gitlabpages.inria.fr/website/docs/
-#
-# Run the "make cocci" target to just output what would be done, or "make cocci-inplace"
-# to apply the changes to the source tree.
-#
-# COCCI_FILES may be set on the command line, if you want to test just a single file
-# while it's under development.  Otherwise, it is a list of all the files that are ready
-# to be run.
-#
-# ref-passed-variables-inited.cocci seems to be returning some false positives around
-# GHashTableIters, so it is disabled for the moment.
-COCCI_FILES ?=	coccinelle/string-any-of.cocci			\
-		coccinelle/string-empty.cocci			\
-		coccinelle/string-null-matches.cocci		\
-		coccinelle/use-func.cocci
-
-
-dist_noinst_SCRIPTS	= coccinelle/test/testrunner.sh
-EXTRA_DIST		= README 						\
-			  gdbhelpers 						\
-			  $(COCCI_FILES)					\
-			  coccinelle/ref-passed-variables-inited.cocci		\
-			  coccinelle/rename-fn.cocci				\
-			  coccinelle/test/ref-passed-variables-inited.input.c 	\
-			  coccinelle/test/ref-passed-variables-inited.output
-
-# Any file in this list is allowed to use any of the pcmk__ internal functions.
-# Coccinelle can use any transformation that depends on "internal" to rewrite
-# code to use the internal functions.
-MAY_USE_INTERNAL_FILES = $(shell find .. -path "../lib/*.c" -o -path "../lib/*private.h" -o -path "../tools/*.c" -o -path "../daemons/*.c" -o -path '../include/pcmki/*h' -o -name '*internal.h')
-
-# And then any file in this list is public API, which may not use internal
-# functions.  Thus, only those transformations that do not depend on "internal"
-# may be applied.
-OTHER_FILES = $(shell find ../include -name '*h' -a \! -name '*internal.h' -a \! -path '../include/pcmki/*')
-
-.PHONY: cocci
-cocci:
-	-for cf in $(COCCI_FILES); do \
-		for f in $(MAY_USE_INTERNAL_FILES); do \
-			spatch $(_SPATCH_FLAGS) -D internal --very-quiet --local-includes --preprocess --sp-file $$cf $$f; \
-		done ; \
-		for f in $(OTHER_FILES); do \
-			spatch $(_SPATCH_FLAGS) --very-quiet --local-includes --preprocess --sp-file $$cf $$f; \
-		done ; \
-	done
-
-.PHONY: cocci-inplace
-cocci-inplace:
-	$(MAKE) $(AM_MAKEFLAGS) _SPATCH_FLAGS=--in-place cocci
-
-.PHONY: cocci-test
-cocci-test:
-	for f in coccinelle/test/*.c; do \
-		coccinelle/test/testrunner.sh $$f; \
-	done
+EXTRA_DIST = README
+EXTRA_DIST += gdbhelpers
 
 #
 # Static analysis
@@ -88,6 +27,7 @@ clang:
 	OUT=$$(cd $(top_builddir)					\
 		&& scan-build $(CLANG_checkers:%=-enable-checker %)	\
 		$(MAKE) $(AM_MAKEFLAGS) CFLAGS="-std=c99 $(CFLAGS)"	\
+		-j $(shell nproc --ignore=1) 				\
 		clean all 2>&1);					\
 	REPORT=$$(echo "$$OUT"						\
 		| sed -n -e "s/.*'scan-view \(.*\)'.*/\1/p");		\
@@ -185,6 +125,7 @@ cppcheck:
 		--include=/usr/include/qb/qblog.h 		\
 		--output-file=$(CPPCHECK_OUT)			\
 		--max-configs=30 --inline-suppr -q		\
+		-j $(shell nproc --ignore=1) 			\
 		--library=posix --library=gnu --library=gtk	\
 		$(GLIB_INCL_DEF_CFLAGS) -D__GNUC__ 		\
 		$(foreach dir,$(CPPCHECK_DIRS),$(top_srcdir)/$(dir))

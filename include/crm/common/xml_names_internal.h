@@ -1,11 +1,15 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <xml_names_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_XML_NAMES_INTERNAL__H
 #define PCMK__CRM_COMMON_XML_NAMES_INTERNAL__H
@@ -80,7 +84,6 @@ extern "C" {
 #define PCMK__XE_TRANSITION_GRAPH       "transition_graph"
 #define PCMK__XE_TRIGGER                "trigger"
 #define PCMK__XE_XPATH_QUERY            "xpath-query"
-#define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
 /* @COMPAT Deprecate somehow. It's undocumented and behaves the same as
  * PCMK__XE_CIB in places where it's recognized.
@@ -89,6 +92,9 @@ extern "C" {
 
 // @COMPAT Deprecated since 2.1.8
 #define PCMK__XE_FAILED                 "failed"
+
+// @COMPAT Deprecated since 3.0.2. Remove with cib_xpath_address.
+#define PCMK__XE_XPATH_QUERY_PATH       "xpath-query-path"
 
 
 /*
@@ -147,9 +153,9 @@ extern "C" {
 #define PCMK__XA_CRM_SYS_TO             "crm_sys_to"
 #define PCMK__XA_CRM_TASK               "crm_task"
 #define PCMK__XA_CRM_TGRAPH_IN          "crm-tgraph-in"
+#define PCMK__XA_CRM_TIMESTAMP          "crm-timestamp"
 #define PCMK__XA_CRM_USER               "crm_user"
 #define PCMK__XA_DC_LEAVING             "dc-leaving"
-#define PCMK__XA_DIGEST                 "digest"
 #define PCMK__XA_ELECTION_AGE_SEC       "election-age-sec"
 #define PCMK__XA_ELECTION_AGE_NANO_SEC  "election-age-nano-sec"
 #define PCMK__XA_ELECTION_ID            "election-id"

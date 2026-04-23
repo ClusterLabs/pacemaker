@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2025 the Pacemaker project contributors
+ * Copyright 2018-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,14 +23,12 @@
 #include <libxml/xmlstring.h>           // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
 
+#include <crm/common/internal.h>
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
-#include <crm/common/logging.h>         // LOG_NEVER
 #include <crm/common/mainloop.h>        // mainloop_io_t
-#include <crm/common/output_internal.h> // pcmk__output_t
 #include <crm/common/results.h>         // crm_exit_t
 #include <crm/common/rules.h>           // pcmk_rule_input_t
-#include <crm/common/xml_internal.h>    // enum pcmk__xml_flags
 
 #ifdef __cplusplus
 extern "C" {
@@ -59,7 +57,7 @@ extern "C" {
  * * If \c force is \c false, we mark the attribute as deleted but leave it in
  *   place until we commit changes.
  */
-typedef struct pcmk__deleted_xml_s {
+typedef struct {
     gchar *path;        //!< XPath expression identifying the deleted node
     int position;       //!< Position of the deleted node among its siblings
 } pcmk__deleted_xml_t;
@@ -68,7 +66,7 @@ typedef struct pcmk__deleted_xml_s {
  * \internal
  * \brief Private data for an XML node
  */
-typedef struct xml_node_private_s {
+typedef struct {
     uint32_t check;         //!< Magic number for checking integrity
     uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
     xmlNode *match;         //!< Pointer to matching node (defined by caller)
@@ -78,7 +76,7 @@ typedef struct xml_node_private_s {
  * \internal
  * \brief Private data for an XML document
  */
-typedef struct xml_doc_private_s {
+typedef struct {
     uint32_t check;         //!< Magic number for checking integrity
     uint32_t flags;         //!< Group of <tt>enum pcmk__xml_flags</tt>
     char *acl_user;         //!< User affected by \c acls (for logging)
@@ -102,13 +100,13 @@ typedef struct xml_doc_private_s {
 
 #define pcmk__set_xml_flags(xml_priv, flags_to_set) do {                    \
         (xml_priv)->flags = pcmk__set_flags_as(__func__, __LINE__,          \
-            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            PCMK__LOG_NEVER, "XML", "XML node", (xml_priv)->flags,          \
             (flags_to_set), #flags_to_set);                                 \
     } while (0)
 
 #define pcmk__clear_xml_flags(xml_priv, flags_to_clear) do {                \
         (xml_priv)->flags = pcmk__clear_flags_as(__func__, __LINE__,        \
-            LOG_NEVER, "XML", "XML node", (xml_priv)->flags,                \
+            PCMK__LOG_NEVER, "XML", "XML node", (xml_priv)->flags,          \
             (flags_to_clear), #flags_to_clear);                             \
     } while (0)
 
@@ -146,13 +144,14 @@ G_GNUC_INTERNAL
 void pcmk__free_acls(GList *acls);
 
 G_GNUC_INTERNAL
-void pcmk__unpack_acl(xmlNode *source, xmlNode *target, const char *user);
+void pcmk__unpack_acls(xmlDoc *source, xml_doc_private_t *target,
+                       const char *user);
 
 G_GNUC_INTERNAL
 bool pcmk__is_user_in_group(const char *user, const char *group);
 
 G_GNUC_INTERNAL
-void pcmk__apply_acl(xmlNode *xml);
+void pcmk__apply_acls(xmlDoc *doc);
 
 G_GNUC_INTERNAL
 void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
@@ -225,7 +224,7 @@ void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
 #define PCMK__CONTROLD_API_MINOR "0"
 
 // IPC behavior that varies by daemon
-typedef struct pcmk__ipc_methods_s {
+typedef struct {
     /*!
      * \internal
      * \brief Allocate any private data needed by daemon IPC
@@ -304,7 +303,7 @@ struct pcmk_ipc_api_s {
     pcmk__ipc_methods_t *cmds;      // Behavior that varies by daemon
 };
 
-typedef struct pcmk__ipc_header_s {
+typedef struct {
     struct qb_ipc_response_header qb;
     uint32_t size;
     uint32_t flags;
@@ -351,6 +350,9 @@ pcmk__ipc_methods_t *pcmk__schedulerd_api_methods(void);
 
 //! XML has been moved
 #define PCMK__XML_PREFIX_MOVED "+~"
+
+G_GNUC_INTERNAL
+int pcmk__add_logfile(const char *filename);
 
 /*
  * Output
@@ -434,12 +436,6 @@ int pcmk__evaluate_rsc_expression(const xmlNode *expr,
 G_GNUC_INTERNAL
 int pcmk__evaluate_op_expression(const xmlNode *expr,
                                  const pcmk_rule_input_t *rule_input);
-
-
-/*
- * Utils
- */
-#define PCMK__PW_BUFFER_LEN 500
 
 
 /*

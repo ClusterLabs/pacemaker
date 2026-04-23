@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
@@ -67,14 +68,14 @@ find_library_function(void **handle, const char *lib, const char *fn)
     if (*handle == NULL) {
         *handle = dlopen(lib, RTLD_LAZY);
         if ((*handle) == NULL) {
-            crm_err("Could not open %s: %s", lib, dlerror());
+            pcmk__err("Could not open %s: %s", lib, dlerror());
             return NULL;
         }
     }
 
     a_function = dlsym(*handle, fn);
     if (a_function == NULL) {
-        crm_err("Could not find %s in %s: %s", fn, lib, dlerror());
+        pcmk__err("Could not find %s in %s: %s", fn, lib, dlerror());
     }
 
     return a_function;
@@ -141,7 +142,7 @@ stonith__list_lha_agents(stonith_key_value_t **devices)
     }
 
     for (entry = type_list; entry != NULL && *entry; ++entry) {
-        crm_trace("Added: %s", *entry);
+        pcmk__trace("Added: %s", *entry);
         *devices = stonith__key_value_add(*devices, NULL, *entry);
         count++;
     }
@@ -169,7 +170,7 @@ stonith_plugin(int priority, const char *format, ...)
     va_end(ap);
     pcmk__assert(len > 0);
 
-    do_crm_log_alias(priority, __FILE__, __func__, __LINE__, "%s", string);
+    do_crm_log(priority, "%s", string);
 
     free(string);
     errno = err;
@@ -221,21 +222,21 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
             meta_longdesc = pcmk__str_copy(st_info_fn(stonith_obj,
                                                       ST_DEVICEDESCR));
             if (meta_longdesc == NULL) {
-                crm_warn("no long description in %s's metadata.", agent);
+                pcmk__warn("No long description in %s's metadata", agent);
                 meta_longdesc = pcmk__str_copy(no_parameter_info);
             }
 
             meta_shortdesc = pcmk__str_copy(st_info_fn(stonith_obj,
                                                        ST_DEVICEID));
             if (meta_shortdesc == NULL) {
-                crm_warn("no short description in %s's metadata.", agent);
+                pcmk__warn("No short description in %s's metadata", agent);
                 meta_shortdesc = pcmk__str_copy(no_parameter_info);
             }
 
             meta_param = pcmk__str_copy(st_info_fn(stonith_obj,
                                                    ST_CONF_XML));
             if (meta_param == NULL) {
-                crm_warn("no list of parameters in %s's metadata.", agent);
+                pcmk__warn("No list of parameters in %s's metadata", agent);
                 meta_param = pcmk__str_copy(no_parameter_info);
             }
 
@@ -243,7 +244,7 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
 
         } else {
             errno = EINVAL;
-            crm_perror(LOG_ERR, "Agent %s not found", agent);
+            pcmk__err("Agent %s not found", agent);
             return -EINVAL;
         }
 
@@ -256,18 +257,18 @@ stonith__lha_metadata(const char *agent, int timeout, char **output)
                                                   pcmk__xml_escape_text);
         }
 
-        /* @TODO This needs a string that's parsable by crm_get_msec(). In
+        /* @TODO This needs a string that's parsable by pcmk__parse_ms(). In
          * general, pcmk__readable_interval() doesn't provide that. It works
          * here because PCMK_DEFAULT_ACTION_TIMEOUT_MS is 20000 -> "20s".
          */
         timeout_str = pcmk__readable_interval(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
-        buffer = crm_strdup_printf(META_TEMPLATE, agent,
-                                   ((meta_longdesc_esc != NULL) ?
-                                    meta_longdesc_esc : meta_longdesc),
-                                   ((meta_shortdesc_esc != NULL) ?
-                                    meta_shortdesc_esc : meta_shortdesc),
-                                   meta_param, timeout_str, timeout_str,
-                                   timeout_str);
+        buffer = pcmk__assert_asprintf(META_TEMPLATE, agent,
+                                       pcmk__s(meta_longdesc_esc,
+                                               meta_longdesc),
+                                       pcmk__s(meta_shortdesc_esc,
+                                               meta_shortdesc),
+                                       meta_param, timeout_str, timeout_str,
+                                       timeout_str);
 
         g_free(meta_longdesc_esc);
         g_free(meta_shortdesc_esc);
@@ -304,6 +305,6 @@ stonith__lha_validate(stonith_t *st, int call_options, const char *target,
                       char **output, char **error_output)
 {
     errno = EOPNOTSUPP;
-    crm_perror(LOG_ERR, "Cannot validate Linux-HA fence agents");
+    pcmk__err("Cannot validate Linux-HA fence agents");
     return -EOPNOTSUPP;
 }

@@ -8,11 +8,13 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+
 #include <crm/common/mainloop.h>
-#include <crm/common/results.h>
 #include <crm/common/output.h>
-#include <crm/common/output_internal.h>
-#include <crm/stonith-ng.h>
+#include <crm/common/results.h>
+#include <crm/stonith-ng.h>         // stonith_t, stonith_history_t, etc.
 #include <crm/fencing/internal.h>   // stonith__*
 
 #include <glib.h>
@@ -43,8 +45,10 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
 {
     const char *node = NULL;
     const char *pattern = NULL;
-    const char *name = NULL;
-    char *value = NULL;
+
+    gchar **name_value = NULL;
+    const gchar *name = NULL;
+    const gchar *value = NULL;
     int rc = pcmk_rc_ok;
     char *target_copy = NULL;
 
@@ -56,12 +60,15 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
     target_copy = pcmk__str_copy(target);
 
     /* Determine if targeting by attribute, node name pattern or node name */
-    value = strchr(target_copy, '=');
-    if (value != NULL)  {
-        name = target_copy;
-        *value++ = '\0';
-    } else if (*target_copy == '@') {
-        pattern = target_copy + 1;
+    name_value = g_strsplit(target, "=", 2);
+
+    if (g_strv_length(name_value) == 2) {
+        name = name_value[0];
+        value = name_value[1];
+
+    } else if (*target == '@') {
+        pattern = target + 1;
+
     } else {
         node = target_copy;
     }
@@ -82,7 +89,7 @@ handle_level(stonith_t *st, const char *target, int fence_level, GList *devices,
                                          name, value, fence_level);
     }
 
-    free(target_copy);
+    g_strfreev(name_value);
     return pcmk_legacy2rc(rc);
 }
 

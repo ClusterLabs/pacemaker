@@ -2,7 +2,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
         <nvpair id="options-concurrent-fencing" name="concurrent-fencing" value="false"/>
       </cluster_property_set>

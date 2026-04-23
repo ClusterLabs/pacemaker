@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,16 +7,19 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <history_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_HISTORY_INTERNAL__H
 #define PCMK__CRM_COMMON_HISTORY_INTERNAL__H
 
 #include <stdio.h>                  // NULL
 #include <libxml/tree.h>            // xmlNode
 
-#include <crm/common/xml.h>         // crm_element_value()
-#include <crm/common/internal.h>    // pcmk__str_empty()
+#include <crm/common/strings_internal.h>        // pcmk__str_empty()
 #include <crm/common/xml_element_internal.h>    // pcmk__xe_id()
-#include <crm/common/xml_names_internal.h>  // PCMK__XA_OPERATION_KEY
+#include <crm/common/xml_names_internal.h>      // PCMK__XA_OPERATION_KEY
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,7 +43,7 @@ pcmk__xe_history_key(const xmlNode *xml)
          * instead. Checking for that allows us to process old saved CIBs,
          * including some regression tests.
          */
-        const char *key = crm_element_value(xml, PCMK__XA_OPERATION_KEY);
+        const char *key = pcmk__xe_get(xml, PCMK__XA_OPERATION_KEY);
 
         return pcmk__str_empty(key)? pcmk__xe_id(xml) : key;
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2024 the Pacemaker project contributors
+ * Copyright 2011-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,11 +9,11 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 
 #include <crm/common/xml.h>
 #include <crm/common/scheduler.h>
-#include <crm/common/scheduler_internal.h>
 
 #define OCF_RESKEY_PREFIX "OCF_RESKEY_"
 #define LRM_TARGET_ENV OCF_RESKEY_PREFIX CRM_META "_" PCMK__META_ON_NODE
@@ -38,18 +38,22 @@ const char *
 pcmk__node_attr_target(const char *name)
 {
     if (name == NULL || pcmk__strcase_any_of(name, "auto", "localhost", NULL)) {
-        char buf[128] = OCF_RESKEY_PREFIX;
-        size_t offset = sizeof(OCF_RESKEY_PREFIX) - 1;
+        char *buf = NULL;
         char *target_var = crm_meta_name(PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
         char *phys_var = crm_meta_name(PCMK__META_PHYSICAL_HOST);
         const char *target = NULL;
         const char *host_physical = NULL;
 
-        snprintf(buf + offset, sizeof(buf) - offset, "%s", target_var);
+        buf = pcmk__assert_asprintf(OCF_RESKEY_PREFIX "%s", target_var);
         target = getenv(buf);
+        free(buf);
 
-        snprintf(buf + offset, sizeof(buf) - offset, "%s", phys_var);
+        buf = pcmk__assert_asprintf(OCF_RESKEY_PREFIX "%s", phys_var);
         host_physical = getenv(buf);
+        free(buf);
+
+        free(target_var);
+        free(phys_var);
 
         // It is important to use the name by which the scheduler knows us
         if (host_physical
@@ -63,8 +67,6 @@ pcmk__node_attr_target(const char *name)
                 name = host_pcmk;
             }
         }
-        free(target_var);
-        free(phys_var);
 
         // TODO? Call pcmk__cluster_local_node_name() if name == NULL
         // (currently would require linkage against libcrmcluster)
@@ -93,7 +95,7 @@ pcmk_promotion_score_name(const char *rsc_id)
             return NULL;
         }
     }
-    return crm_strdup_printf("master-%s", rsc_id);
+    return pcmk__assert_asprintf("master-%s", rsc_id);
 }
 
 /*!
@@ -130,8 +132,8 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
     if (!pcmk__is_guest_or_bundle_node(node)
         || !pcmk__str_eq(target, PCMK_VALUE_HOST, pcmk__str_casei)) {
         value = g_hash_table_lookup(node->priv->attrs, name);
-        crm_trace("%s='%s' on %s",
-                  name, pcmk__s(value, ""), pcmk__node_name(node));
+        pcmk__trace("%s='%s' on %s", name, pcmk__s(value, ""),
+                    pcmk__node_name(node));
         return value;
     }
 
@@ -145,9 +147,9 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
         case pcmk__rsc_node_assigned:
             host = container->priv->assigned_node;
             if (host == NULL) {
-                crm_trace("Skipping %s lookup for %s because "
-                          "its container %s is unassigned",
-                          name, pcmk__node_name(node), container->id);
+                pcmk__trace("Skipping %s lookup for %s because its container "
+                            "%s is unassigned",
+                            name, pcmk__node_name(node), container->id);
                 return NULL;
             }
             node_type_s = "assigned";
@@ -158,9 +160,9 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
                 host = container->priv->active_nodes->data;
             }
             if (host == NULL) {
-                crm_trace("Skipping %s lookup for %s because "
-                          "its container %s is inactive",
-                          name, pcmk__node_name(node), container->id);
+                pcmk__trace("Skipping %s lookup for %s because its container "
+                            "%s is inactive",
+                            name, pcmk__node_name(node), container->id);
                 return NULL;
             }
             node_type_s = "current";
@@ -173,8 +175,8 @@ pcmk__node_attr(const pcmk_node_t *node, const char *name, const char *target,
     }
 
     value = g_hash_table_lookup(host->priv->attrs, name);
-    crm_trace("%s='%s' for %s on %s container host %s",
-              name, pcmk__s(value, ""), pcmk__node_name(node), node_type_s,
-              pcmk__node_name(host));
+    pcmk__trace("%s='%s' for %s on %s container host %s", name,
+                pcmk__s(value, ""), pcmk__node_name(node), node_type_s,
+                pcmk__node_name(host));
     return value;
 }

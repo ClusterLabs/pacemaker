@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,11 +10,11 @@
 #include <crm_internal.h>
 
 #include <glib.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #include <crm/crm.h>
 #include <crm/services.h>
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/mainloop.h>
 
 #include <crm/pengine/status.h>
@@ -81,8 +81,8 @@ param_key_val_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 
     if (key != NULL && val != NULL) {
         options.params = lrmd_key_value_add(options.params, key, val);
-        pcmk__str_update(&key, NULL);
-        pcmk__str_update(&val, NULL);
+        g_clear_pointer(&key, free);
+        g_clear_pointer(&val, free);
     }
 
     return TRUE;
@@ -160,8 +160,6 @@ static GOptionEntry api_call_entries[] = {
 static GMainLoop *mainloop = NULL;
 static lrmd_t *lrmd_conn = NULL;
 
-static char event_buf_v0[1024];
-
 static crm_exit_t
 test_exit(crm_exit_t exit_code)
 {
@@ -171,17 +169,8 @@ test_exit(crm_exit_t exit_code)
 
 #define print_result(fmt, args...)  \
     if (!options.quiet) {           \
-        printf(fmt "\n" , ##args);  \
+        printf(fmt "\n", ##args);   \
     }
-
-#define report_event(event)                                             \
-    snprintf(event_buf_v0, sizeof(event_buf_v0), "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s op_status:%s", \
-             lrmd_event_type2str(event->type),                          \
-             event->rsc_id,                                             \
-             event->op_type ? event->op_type : "none",                  \
-             crm_exit_str((crm_exit_t) event->rc),                      \
-             pcmk_exec_status_str(event->op_status));                   \
-    crm_info("%s", event_buf_v0);
 
 static void
 test_shutdown(int nsig)
@@ -193,12 +182,20 @@ test_shutdown(int nsig)
 static void
 read_events(lrmd_event_data_t * event)
 {
-    report_event(event);
-    if (options.listen) {
-        if (pcmk__str_eq(options.listen, event_buf_v0, pcmk__str_casei)) {
-            print_result("LISTEN EVENT SUCCESSFUL");
-            test_exit(CRM_EX_OK);
-        }
+    char buf[1024] = { '\0', };
+
+    pcmk__assert(snprintf(buf, sizeof(buf),
+                          "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s "
+                          "op_status:%s",
+                          lrmd_event_type2str(event->type), event->rsc_id,
+                          pcmk__s(event->op_type, "none"),
+                          crm_exit_str((crm_exit_t) event->rc),
+                          pcmk_exec_status_str(event->op_status)) >= 0);
+    pcmk__info("%s", buf);
+
+    if (options.listen && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
+        print_result("LISTEN EVENT SUCCESSFUL");
+        test_exit(CRM_EX_OK);
     }
 
     if (exec_call_id && (event->call_id == exec_call_id)) {
@@ -235,13 +232,13 @@ connection_events(lrmd_event_data_t * event)
     }
 
     if (!rc) {
-        crm_info("Executor client connection established");
+        pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
     } else {
         sleep(1);
         try_connect();
-        crm_notice("Executor client connection failed");
+        pcmk__notice("Executor client connection failed");
     }
 }
 
@@ -469,7 +466,7 @@ generate_params(void)
     // Calculate cluster status
     scheduler = pcmk_new_scheduler();
     if (scheduler == NULL) {
-        crm_crit("Could not allocate scheduler data");
+        pcmk__crit("Could not allocate scheduler data");
         return ENOMEM;
     }
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_no_counts);
@@ -483,7 +480,7 @@ generate_params(void)
                                       pcmk_rsc_match_history
                                       |pcmk_rsc_match_basename);
     if (rsc == NULL) {
-        crm_err("Resource does not exist in config");
+        pcmk__err("Resource does not exist in config");
         pcmk_free_scheduler(scheduler);
         return EINVAL;
     }
@@ -610,7 +607,7 @@ main(int argc, char **argv)
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
-    crm_info("Starting");
+    pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
 

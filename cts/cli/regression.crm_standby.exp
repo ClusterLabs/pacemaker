@@ -4,7 +4,7 @@ scope=status name=standby value=off
 * Passed: crm_standby           - Default standby value
 =#=#=#= Begin test: Set standby status =#=#=#=
 =#=#=#= Current cib after: Set standby status =#=#=#=
-<cib epoch="3" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="3" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes>
@@ -28,7 +28,7 @@ scope=nodes name=standby value=true
 =#=#=#= Begin test: Delete standby value =#=#=#=
 Deleted nodes attribute: id=nodes-node1-standby name=standby
 =#=#=#= Current cib after: Delete standby value =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes>

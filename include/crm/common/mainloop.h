@@ -44,6 +44,10 @@ typedef struct mainloop_child_s mainloop_child_t;
 // NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct mainloop_timer_s mainloop_timer_t;
 
+//! \deprecated This has been for internal use only since its creation.
+typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *p, int core,
+                                               int signo, int exitcode);
+
 void mainloop_cleanup(void);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
@@ -167,18 +171,13 @@ void mainloop_del_fd(mainloop_io_t * client);
  * Create a new tracked process
  * To track a process group, use -pid
  */
-void mainloop_child_add(pid_t pid,
-                        int timeout,
-                        const char *desc,
+void mainloop_child_add(pid_t pid, int timeout, const char *desc,
                         void *userdata,
-                        void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
+                        pcmk__mainloop_child_exit_fn_t exit_fn);
 
-void mainloop_child_add_with_flags(pid_t pid,
-                        int timeout,
-                        const char *desc,
-                        void *userdata,
-                        enum mainloop_child_flags,
-                        void (*callback) (mainloop_child_t * p, pid_t pid, int core, int signo, int exitcode));
+void mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
+                                   void *userdata, enum mainloop_child_flags,
+                                   pcmk__mainloop_child_exit_fn_t exit_fn);
 
 void *mainloop_child_userdata(mainloop_child_t * child);
 int mainloop_child_timeout(mainloop_child_t * child);

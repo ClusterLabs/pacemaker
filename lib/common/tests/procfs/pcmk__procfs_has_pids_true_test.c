@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2026 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,8 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
 
 #include <crm/common/unittest_internal.h>
 
@@ -20,21 +22,21 @@
 static void
 has_pids(void **state)
 {
-    char path[PATH_MAX];
-
-    snprintf(path, PATH_MAX, "/proc/%u/exe", getpid());
+    char *exe_path = pcmk__assert_asprintf("/proc/%lld/exe",
+                                           (long long) getpid());
 
     // Set readlink() errno and link contents (for /proc/PID/exe)
     pcmk__mock_readlink = true;
 
-    expect_string(__wrap_readlink, path, path);
-    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX - 1);
+    expect_string(__wrap_readlink, path, exe_path);
+    expect_uint_value(__wrap_readlink, bufsize, PATH_MAX);
     will_return(__wrap_readlink, 0);
     will_return(__wrap_readlink, "/ok");
 
     assert_true(pcmk__procfs_has_pids());
 
     pcmk__mock_readlink = false;
+    free(exe_path);
 }
 
 PCMK__UNIT_TEST(NULL, NULL, cmocka_unit_test(has_pids))

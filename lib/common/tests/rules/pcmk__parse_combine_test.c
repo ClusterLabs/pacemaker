@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 
-#include <crm/common/rules_internal.h>
 #include <crm/common/unittest_internal.h>
 
 static void

@@ -1,8 +1,9 @@
 """Test classes for the `pacemaker._cts` package."""
 
-__copyright__ = "Copyright 2023-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2025 the Pacemaker project contributors"
 __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)"
 
+from pacemaker._cts.tests.cibsecret import CibsecretTest
 from pacemaker._cts.tests.componentfail import ComponentFail
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.fliptest import FlipTest
@@ -52,6 +53,7 @@ def test_list(cm, audits):
     # Also note that there are other tests that are excluded from this
     # list for various reasons.
     enabled_test_classes = [
+        CibsecretTest,
         FlipTest,
         RestartTest,
         StonithdTest,

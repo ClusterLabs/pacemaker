@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,30 +8,34 @@
  */
 
 #include <crm_internal.h>
+
+#include <errno.h>                      // errno, ECONNREFUSED, EEXIST
+#include <signal.h>                     // SIGHUP, SIGINT, SIGQUIT
+#include <stdarg.h>                     // va_list
+#include <stdbool.h>                    // true, false, bool
+#include <stdlib.h>                     // setenv
+#include <string.h>                     // strerror, strsignal
+#include <sys/resource.h>               // rlimit, RLIMIT_*
+#include <sys/stat.h>                   // mkdir
+#include <sys/types.h>                  // gid_t, uid_t
+#include <syslog.h>                     // LOG_INFO
+#include <unistd.h>                     // chown, geteuid, sleep
+
+#include <qb/qblog.h>                   // QB_XS
+
+#include <crm_config.h>                 // SUPPORT_COROSYNC, BUILD_VERSION
+#include <crm/common/ipc.h>             // pcmk_ipc_is_connected
+#include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_api_shutdown
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/options.h>         // PCMK_VALUE_*
+#include <crm/common/results.h>         // crm_exit_t, CRM_EX_*, pcmk_rc_*
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                    // CRM_FEATURE_SET, crm_system_name
+
 #include "pacemakerd.h"
-
 #if SUPPORT_COROSYNC
-#include "pcmkd_corosync.h"
+#include "pcmkd_corosync.h"                 // cluster_{dis,}connect_cfg
 #endif
-
-#include <pwd.h>
-#include <errno.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdbool.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/time.h>
-#include <sys/resource.h>
-
-#include <crm/crm.h>  /* indirectly: CRM_EX_* */
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/ipc_pacemakerd.h>
-#include <crm/common/output_internal.h>
-#include <crm/cluster/internal.h>
-#include <crm/cluster.h>
 
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
@@ -125,7 +129,7 @@ static GOptionEntry entries[] = {
 static void
 pcmk_ignore(int nsig)
 {
-    crm_info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
+    pcmk__info("Ignoring signal %s (%d)", strsignal(nsig), nsig);
 }
 
 static void
@@ -140,8 +144,9 @@ pacemakerd_chown(const char *path, uid_t uid, gid_t gid)
     int rc = chown(path, uid, gid);
 
     if (rc < 0) {
-        crm_warn("Cannot change the ownership of %s to user %s and gid %d: %s",
-                 path, CRM_DAEMON_USER, gid, pcmk_rc_str(errno));
+        pcmk__warn("Cannot change the ownership of %s to user " CRM_DAEMON_USER
+                   " and gid %d: %s",
+                   path, gid, pcmk_rc_str(errno));
     }
 }
 
@@ -161,16 +166,16 @@ create_pcmk_dirs(void)
         NULL
     };
 
-    if (pcmk_daemon_user(&pcmk_uid, &pcmk_gid) < 0) {
-        crm_err("Cluster user %s does not exist, aborting Pacemaker startup",
-                CRM_DAEMON_USER);
+    if (pcmk__daemon_user(&pcmk_uid, &pcmk_gid) != pcmk_rc_ok) {
+        pcmk__err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
+                  "Pacemaker startup");
         crm_exit(CRM_EX_NOUSER);
     }
 
     // Used by some resource agents
     if ((mkdir(CRM_STATE_DIR, 0750) < 0) && (errno != EEXIST)) {
-        crm_warn("Could not create directory " CRM_STATE_DIR ": %s",
-                 pcmk_rc_str(errno));
+        pcmk__warn("Could not create directory " CRM_STATE_DIR ": %s",
+                   pcmk_rc_str(errno));
     } else {
         pacemakerd_chown(CRM_STATE_DIR, pcmk_uid, pcmk_gid);
     }
@@ -179,8 +184,8 @@ create_pcmk_dirs(void)
         int rc = pcmk__build_path(dirs[i], 0750);
 
         if (rc != pcmk_rc_ok) {
-            crm_warn("Could not create directory %s: %s",
-                     dirs[i], pcmk_rc_str(rc));
+            pcmk__warn("Could not create directory %s: %s", dirs[i],
+                       pcmk_rc_str(rc));
         } else {
             pacemakerd_chown(dirs[i], pcmk_uid, pcmk_gid);
         }
@@ -194,16 +199,16 @@ remove_core_file_limit(void)
 
     // Get current limits
     if (getrlimit(RLIMIT_CORE, &cores) < 0) {
-        crm_notice("Unable to check system core file limits "
-                   "(consider ensuring the size is unlimited): %s",
-                   strerror(errno));
+        pcmk__notice("Unable to check system core file limits (consider "
+                     "ensuring the size is unlimited): %s",
+                     strerror(errno));
         return;
     }
 
     // Check whether core dumps are disabled
     if (cores.rlim_max == 0) {
         if (geteuid() != 0) { // Yes, and there's nothing we can do about it
-            crm_notice("Core dumps are disabled (consider enabling them)");
+            pcmk__notice("Core dumps are disabled (consider enabling them)");
             return;
         }
         cores.rlim_max = RLIM_INFINITY; // Yes, but we're root, so enable them
@@ -213,18 +218,18 @@ remove_core_file_limit(void)
     if (cores.rlim_cur != cores.rlim_max) {
         cores.rlim_cur = cores.rlim_max;
         if (setrlimit(RLIMIT_CORE, &cores) < 0) {
-            crm_notice("Unable to raise system limit on core file size "
-                       "(consider doing so manually): %s",
-                       strerror(errno));
+            pcmk__notice("Unable to raise system limit on core file size "
+                         "(consider doing so manually): %s",
+                         strerror(errno));
             return;
         }
     }
 
     if (cores.rlim_cur == RLIM_INFINITY) {
-        crm_trace("Core file size is unlimited");
+        pcmk__trace("Core file size is unlimited");
     } else {
-        crm_trace("Core file size is limited to %llu bytes",
-                  (unsigned long long) cores.rlim_cur);
+        pcmk__trace("Core file size is limited to %llu bytes",
+                    (unsigned long long) cores.rlim_cur);
     }
 }
 
@@ -263,6 +268,74 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static int
+handle_old_instance(gboolean shutdown)
+{
+    pcmk_ipc_api_t *old_instance = NULL;
+    bool old_instance_connected = false;
+
+    int rc = pcmk_rc_ok;
+
+    pcmk__debug("Checking for existing Pacemaker instance");
+
+    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
+    if (old_instance == NULL) {
+        out->err(out, "Could not check for existing pacemakerd: %s", pcmk_rc_str(rc));
+        return rc;
+    }
+
+    pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
+    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
+    if (rc != pcmk_rc_ok) {
+        pcmk__debug("No existing %s instance found: %s",
+                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
+        rc = pcmk_rc_ok;
+    }
+
+    old_instance_connected = pcmk_ipc_is_connected(old_instance);
+
+    if (shutdown) {
+        if (old_instance_connected) {
+            rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
+            pcmk_dispatch_ipc(old_instance);
+
+            if (rc != pcmk_rc_ok) {
+                goto done;
+            }
+
+            /* We get the ACK immediately, and the response right after that,
+             * but it might take a while for pacemakerd to get around to
+             * shutting down.  Wait for that to happen (with 30-minute timeout).
+             */
+            for (int i = 0; i < 900; i++) {
+                if (!pcmk_ipc_is_connected(old_instance)) {
+                    rc = pcmk_rc_ok;
+                    goto done;
+                }
+
+                sleep(2);
+            }
+
+            rc = ETIMEDOUT;
+            goto done;
+
+        } else {
+            out->err(out, "Could not request shutdown "
+                     "of existing Pacemaker instance: %s", pcmk_rc_str(rc));
+            rc = ECONNREFUSED;
+            goto done;
+        }
+
+    } else if (old_instance_connected) {
+        pcmk__err("Aborting start-up because active Pacemaker instance found");
+        rc = pcmk_rc_already;
+    }
+
+done:
+    pcmk_free_ipc_api(old_instance);
+    return rc;
+}
+
 int
 main(int argc, char **argv)
 {
@@ -275,11 +348,6 @@ main(int argc, char **argv)
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
     gchar **processed_args = pcmk__cmdline_preproc(argv, "p");
     GOptionContext *context = build_arg_context(args, &output_group);
-
-    bool old_instance_connected = false;
-
-    pcmk_ipc_api_t *old_instance = NULL;
-    qb_ipcs_service_t *ipcs = NULL;
 
     subdaemon_check_progress = time(NULL);
 
@@ -312,7 +380,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 
@@ -322,75 +390,21 @@ main(int argc, char **argv)
         crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     }
 
-    crm_debug("Checking for existing Pacemaker instance");
-
-    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_pacemakerd);
-    if (old_instance == NULL) {
-        out->err(out, "Could not check for existing pacemakerd: %s", pcmk_rc_str(rc));
+    rc = handle_old_instance(options.shutdown);
+    if ((rc == pcmk_rc_ok) && options.shutdown) {
+        goto done;
+    } else if (rc == pcmk_rc_already) {
+        exit_code = CRM_EX_FATAL;
+        goto done;
+    } else if (rc != pcmk_rc_ok) {
         exit_code = pcmk_rc2exitc(rc);
         goto done;
     }
 
-    pcmk_register_ipc_callback(old_instance, pacemakerd_event_cb, NULL);
-    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
-    if (rc != pcmk_rc_ok) {
-        crm_debug("No existing %s instance found: %s",
-                  pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
-    }
-    old_instance_connected = pcmk_ipc_is_connected(old_instance);
-
-    if (options.shutdown) {
-        if (old_instance_connected) {
-            rc = pcmk_pacemakerd_api_shutdown(old_instance, crm_system_name);
-            pcmk_dispatch_ipc(old_instance);
-
-            exit_code = pcmk_rc2exitc(rc);
-
-            if (exit_code != CRM_EX_OK) {
-                pcmk_free_ipc_api(old_instance);
-                goto done;
-            }
-
-            /* We get the ACK immediately, and the response right after that,
-             * but it might take a while for pacemakerd to get around to
-             * shutting down.  Wait for that to happen (with 30-minute timeout).
-             */
-            for (int i = 0; i < 900; i++) {
-                if (!pcmk_ipc_is_connected(old_instance)) {
-                    exit_code = CRM_EX_OK;
-                    pcmk_free_ipc_api(old_instance);
-                    goto done;
-                }
-
-                sleep(2);
-            }
-
-            exit_code = CRM_EX_TIMEOUT;
-            pcmk_free_ipc_api(old_instance);
-            goto done;
-
-        } else {
-            out->err(out, "Could not request shutdown "
-                     "of existing Pacemaker instance: %s", pcmk_rc_str(rc));
-            pcmk_free_ipc_api(old_instance);
-            exit_code = CRM_EX_DISCONNECT;
-            goto done;
-        }
-
-    } else if (old_instance_connected) {
-        pcmk_free_ipc_api(old_instance);
-        crm_err("Aborting start-up because active Pacemaker instance found");
-        exit_code = CRM_EX_FATAL;
-        goto done;
-    }
-
-    pcmk_free_ipc_api(old_instance);
-
     /* Don't allow any accidental output after this point. */
     if (out != NULL) {
         out->finish(out, exit_code, true, NULL);
-        pcmk__output_free(out);
-        out = NULL;
+        g_clear_pointer(&out, pcmk__output_free);
     }
 
 #if SUPPORT_COROSYNC
@@ -409,13 +423,13 @@ main(int argc, char **argv)
         }
     }
 
-    crm_notice("Starting Pacemaker %s " QB_XS " build=%s features:%s",
-               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
+    pcmk__notice("Starting Pacemaker " PACEMAKER_VERSION " "
+                 QB_XS " build=" BUILD_VERSION " features:" CRM_FEATURES);
     mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
     create_pcmk_dirs();
-    pcmk__serve_pacemakerd_ipc(&ipcs, &pacemakerd_ipc_callbacks);
+    pacemakerd_ipc_init();
 
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
@@ -426,7 +440,7 @@ main(int argc, char **argv)
 #endif
 
     if (pcmk__locate_sbd() > 0) {
-        running_with_sbd = TRUE;
+        running_with_sbd = true;
     }
 
     switch (find_and_track_existing_processes()) {
@@ -444,27 +458,24 @@ main(int argc, char **argv)
     mainloop_add_signal(SIGINT, pcmk_shutdown);
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
-        crm_notice("Waiting for startup-trigger from SBD.");
+        pcmk__notice("Waiting for startup-trigger from SBD");
         pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
         startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
     } else {
         if (running_with_sbd) {
-            crm_warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
-                     "by your SBD version) improve reliability of "
-                     "interworking between SBD & pacemaker.");
+            pcmk__warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "
+                       "by your SBD version) improve reliability of "
+                       "interworking between SBD & pacemaker.");
         }
         pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
         init_children_processes(NULL);
     }
 
-    crm_notice("Pacemaker daemon successfully started and accepting connections");
+    pcmk__notice("Pacemaker daemon successfully started and accepting "
+                 "connections");
     g_main_loop_run(mainloop);
-
-    if (ipcs) {
-        crm_trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
-    }
+    pacemakerd_ipc_cleanup();
+    pacemakerd_unregister_handlers();
 
     g_main_loop_unref(mainloop);
 #if SUPPORT_COROSYNC

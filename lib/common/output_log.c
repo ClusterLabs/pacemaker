@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,15 +8,15 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/cmdline_internal.h>
 
 #include <ctype.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef struct private_data_s {
+typedef struct {
     /* gathered in log_begin_list */
     GQueue/*<char*>*/ *prefixes;
     uint8_t log_level;
@@ -74,8 +74,7 @@ log_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     g_queue_free(priv->prefixes);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool
@@ -119,20 +118,16 @@ log_reset(pcmk__output_t *out) {
 }
 
 static void
-log_version(pcmk__output_t *out, bool extended) {
+log_version(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
 
-    if (extended) {
-        logger(priv, "Pacemaker %s (Build: %s): %s",
-               PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    } else {
-        logger(priv, "Pacemaker " PACEMAKER_VERSION);
-        logger(priv, "Written by Andrew Beekhof and "
-                     "the Pacemaker project contributors");
-    }
+    logger(priv, "Pacemaker " PACEMAKER_VERSION);
+    logger(priv,
+           "Written by Andrew Beekhof and the Pacemaker project contributors");
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -196,46 +191,39 @@ log_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
 
 G_GNUC_PRINTF(3, 4)
 static void
-log_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
-    int len = 0;
+log_list_item(pcmk__output_t *out, const char *name, const char *format, ...)
+{
+    gsize old_len = 0;
     va_list ap;
     private_data_t *priv = NULL;
-    char prefix[LINE_MAX] = { 0 };
-    int offset = 0;
-    char* buffer = NULL;
+    GString *buffer = g_string_sized_new(128);
 
-    pcmk__assert((out != NULL) && (out->priv != NULL));
+    pcmk__assert((out != NULL) && (out->priv != NULL) && (format != NULL));
     priv = out->priv;
 
-    for (GList* gIter = priv->prefixes->head; gIter; gIter = gIter->next) {
-        if (strcmp(prefix, "") != 0) {
-            offset += snprintf(prefix + offset, LINE_MAX - offset, ": %s", (char *)gIter->data);
-        } else {
-            offset = snprintf(prefix, LINE_MAX, "%s", (char *)gIter->data);
-        }
+    // Message format: [<prefix1>[: <prefix2>...]: ]][<name>: ]<body>
+
+    for (const GList *iter = priv->prefixes->head; iter != NULL;
+         iter = iter->next) {
+
+        pcmk__g_strcat(buffer, (const char *) iter->data, ": ", NULL);
     }
 
+    if (!pcmk__str_empty(name)) {
+        pcmk__g_strcat(buffer, name, ": ", NULL);
+    }
+
+    old_len = buffer->len;
     va_start(ap, format);
-    len = vasprintf(&buffer, format, ap);
-    pcmk__assert(len >= 0);
+    g_string_append_vprintf(buffer, format, ap);
     va_end(ap);
 
-    if (strcmp(buffer, "") != 0) { /* We don't want empty messages */
-        if ((name != NULL) && (strcmp(name, "") != 0)) {
-            if (strcmp(prefix, "") != 0) {
-                logger(priv, "%s: %s: %s", prefix, name, buffer);
-            } else {
-                logger(priv, "%s: %s", name, buffer);
-            }
-        } else {
-            if (strcmp(prefix, "") != 0) {
-                logger(priv, "%s: %s", prefix, buffer);
-            } else {
-                logger(priv, "%s", buffer);
-            }
-        }
+    if (buffer->len > old_len) {
+        // Don't log a message with an empty body
+        logger(priv, "%s", buffer->str);
     }
-    free(buffer);
+
+    g_string_free(buffer, TRUE);
 }
 
 static void

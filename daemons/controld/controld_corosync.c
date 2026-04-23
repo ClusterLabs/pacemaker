@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -44,21 +44,21 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        crm_err("Could not parse message content: %.100s", data);
+        pcmk__err("Could not parse message content: %.100s", data);
         free(data);
         return;
     }
 
-    crm_xml_add(xml, PCMK__XA_SRC, from);
+    pcmk__xe_set(xml, PCMK__XA_SRC, from);
 
     peer = pcmk__get_node(0, from, NULL, pcmk__node_search_cluster_member);
-    if (!pcmk_is_set(peer->processes, crm_proc_cpg)) {
+    if (!pcmk__is_set(peer->processes, crm_proc_cpg)) {
         /* If we can still talk to our peer process on that node, then it must
          * be part of the corosync membership
          */
-        crm_warn("Receiving messages from a node we think is dead: "
-                 "%s[%" PRIu32 "]",
-                 peer->name, peer->cluster_layer_id);
+        pcmk__warn("Receiving messages from a node we think is dead: "
+                   "%s[%" PRIu32 "]",
+                   peer->name, peer->cluster_layer_id);
         crm_update_peer_proc(__func__, peer, crm_proc_cpg, PCMK_VALUE_ONLINE);
     }
 
@@ -78,8 +78,8 @@ crmd_quorum_callback(unsigned long long seq, gboolean quorate)
 static void
 crmd_cs_destroy(gpointer user_data)
 {
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
-        crm_crit("Lost connection to cluster layer, shutting down");
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HA_DISCONNECTED)) {
+        pcmk__crit("Lost connection to cluster layer, shutting down");
         crmd_exit(CRM_EX_DISCONNECT);
     }
 }

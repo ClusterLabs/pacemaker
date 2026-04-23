@@ -1,11 +1,15 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <nvpair_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 #define PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
@@ -23,7 +27,7 @@ extern "C" {
 #endif
 
 // Data needed to sort XML blocks of name/value pairs
-typedef struct unpack_data_s {
+typedef struct {
     GHashTable *values;             // Where to put name/value pairs
     const char *first_id;           // Block with this XML ID should sort first
     pcmk_rule_input_t rule_input;   // Data used to evaluate rules
@@ -43,6 +47,10 @@ gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
                              gpointer user_data);
 
 void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
+
+int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
+char *pcmk__format_nvpair(const char *name, const char *value,
+                          const char *units);
 
 /*!
  * \internal

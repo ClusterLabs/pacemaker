@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 #define FIRST_ID "foo"
 

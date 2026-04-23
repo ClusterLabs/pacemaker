@@ -26,33 +26,11 @@ if os.path.exists("@abs_top_srcdir@/python"):
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
-from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.corosync import Corosync, localname
+from pacemaker._cts.environment import set_cts_path
 from pacemaker._cts.process import killall, exit_if_proc_running
 from pacemaker._cts.test import Test, Tests
-
-TEST_DIR = sys.path[0]
-
-
-def update_path():
-    """Set the PATH environment variable appropriately for the tests."""
-    new_path = os.environ['PATH']
-    if os.path.exists(f"{TEST_DIR}/cts-fencing.in"):
-        # pylint: disable=protected-access
-        print(f"Running tests from the source tree: {BuildOptions._BUILD_DIR} ({TEST_DIR})")
-        # For pacemaker-fenced and cts-fence-helper
-        new_path = f"{BuildOptions._BUILD_DIR}/daemons/fenced:{new_path}"
-        new_path = f"{BuildOptions._BUILD_DIR}/tools:{new_path}"  # For stonith_admin
-        new_path = f"{BuildOptions._BUILD_DIR}/cts/support:{new_path}"  # For cts-support
-
-    else:
-        print(f"Running tests from the install tree: {BuildOptions.DAEMON_DIR} (not {TEST_DIR})")
-        # For pacemaker-fenced, cts-fence-helper, and cts-support
-        new_path = f"{BuildOptions.DAEMON_DIR}:{new_path}"
-
-    print(f'Using PATH="{new_path}"')
-    os.environ['PATH'] = new_path
 
 
 class FenceTest(Test):
@@ -532,21 +510,28 @@ class FenceTests(Tests):
                      args='--output-as=xml -R true1 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=1')
         test.add_cmd("stonith_admin",
                      args='--output-as=xml -R false1 -a fence_dummy -o mode=fail -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=1')
-        # Resulting "random" delay will always be 1 since (rand() % (delay_max - delay_base)) is always 0 here
+
+        # Resulting "random" delay will be either 1 or 2 seconds
         test.add_cmd("stonith_admin",
                      args='--output-as=xml -R true2 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=1 -o pcmk_delay_max=2')
+
+        # Resulting delay will be 1 second (capped by pcmk_delay_max)
         test.add_cmd("stonith_admin",
-                     args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
+                     args='--output-as=xml -R true3 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3" -o pcmk_delay_base=2 -o pcmk_delay_max=1')
+
+        test.add_cmd("stonith_admin",
+                     args='--output-as=xml -R true4 -a fence_dummy -o mode=pass -o "pcmk_host_list=node1 node2 node3"')
 
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v true1")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 1 -v false1")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true2")
         test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true3")
+        test.add_cmd("stonith_admin", args="--output-as=xml -r node3 -i 2 -v true4")
 
         test.add_cmd("stonith_admin", args="--output-as=xml -F node3 --delay 1")
 
         # Total fencing timeout takes all fencing delays into account
-        test.add_log_pattern("Total timeout set to 582s")
+        test.add_log_pattern("Total timeout set to 727s")
 
         # Fencing timeout for the first device takes the requested fencing delay
         # and pcmk_delay_base into account
@@ -565,9 +550,15 @@ class FenceTests(Tests):
         # Fencing timeout takes pcmk_delay_max into account
         test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true2 .*146s.*",
                              regex=True)
-        test.add_log_pattern("Delaying 'off' action targeting node3 using true2 for 1s | timeout=120s requested_delay=0s base=1s max=2s")
+        test.add_log_pattern(r"Delaying 'off' action targeting node3 using true2 for [12]s "
+                             "| timeout=120s requested_delay=0s base=1s max=2s",
+                             regex=True)
+        test.add_log_pattern(r"Requesting that .* perform 'off' action targeting node3 using true3 .*145s.*",
+                             regex=True)
+        test.add_log_pattern("Delaying 'off' action targeting node3 using true3 for 1s "
+                             "| timeout=120s requested_delay=0s base=1s max=1s")
 
-        test.add_log_pattern("Delaying 'off' action targeting node3 using true3",
+        test.add_log_pattern("Delaying 'off' action targeting node3 using true4",
                              negative=True)
 
     def build_unfence_tests(self):
@@ -866,7 +857,7 @@ def build_options():
 
 def main():
     """Run fencing regression tests as specified by arguments."""
-    update_path()
+    set_cts_path()
 
     # Ensure all command output is in portable locale for comparison
     os.environ['LC_ALL'] = "C"
@@ -923,3 +914,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# vim: set filetype=python:

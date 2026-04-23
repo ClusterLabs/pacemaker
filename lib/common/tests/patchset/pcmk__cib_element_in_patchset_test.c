@@ -9,9 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/common/unittest_internal.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 
 #define ORIG_CIB                                                            \
     "<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH "=\"0\""                        \

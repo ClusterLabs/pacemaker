@@ -2,7 +2,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair name="stonith-enabled" value="false" id="cib-bootstrap-options-stonith-enabled"/>
+        <nvpair name="fencing-enabled" value="false" id="cib-bootstrap-options-fencing-enabled"/>
         <nvpair name="no-quorum-policy" value="ignore" id="cib-bootstrap-options-no-quorum-policy"/>
         <nvpair name="dc-version" value="1.1.12-ad083a8" id="cib-bootstrap-options-dc-version"/>
         <nvpair name="cluster-infrastructure" value="corosync" id="cib-bootstrap-options-cluster-infrastructure"/>

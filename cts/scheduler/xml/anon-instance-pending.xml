@@ -47,7 +47,7 @@
           </operations>
         </primitive>
       </clone>
-      <!-- clone4 tests four started, one stop pending, one orphan started -->
+      <!-- clone4 tests four started, one stop pending, one removed instance started -->
       <clone id="clone4">
         <primitive id="clone4rsc" class="ocf" provider="pacemaker" type="Dummy">
           <operations>

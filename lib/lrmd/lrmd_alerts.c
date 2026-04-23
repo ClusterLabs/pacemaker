@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2024 the Pacemaker project contributors
+ * Copyright 2015-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,13 +10,13 @@
 #include <crm_internal.h>
 
 #include <glib.h>
+#include <stdbool.h>
 #include <unistd.h>
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/services.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/alerts_internal.h>
 #include <crm/lrmd_internal.h>
 
 #include <crm/pengine/status.h>
@@ -30,7 +30,7 @@ alert_key2param(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
     if (value == NULL) {
         value = "";
     }
-    crm_trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
+    pcmk__trace("Setting alert key %s = '%s'", pcmk__alert_keys[name], value);
     return lrmd_key_value_add(head, pcmk__alert_keys[name], value);
 }
 
@@ -49,7 +49,7 @@ static lrmd_key_value_t *
 alert_key2param_ms(lrmd_key_value_t *head, enum pcmk__alert_keys_e name,
                    guint value)
 {
-    char *value_s = crm_strdup_printf("%u", value);
+    char *value_s = pcmk__assert_asprintf("%u", value);
 
     head = alert_key2param(head, name, value_s);
     free(value_s);
@@ -62,8 +62,8 @@ set_ev_kv(gpointer key, gpointer value, gpointer user_data)
     lrmd_key_value_t **head = (lrmd_key_value_t **) user_data;
 
     if (value) {
-        crm_trace("Setting environment variable %s='%s'",
-                  (char*)key, (char*)value);
+        pcmk__trace("Setting environment variable %s='%s'", (const char*) key,
+                    (const char *) value);
         *head = lrmd_key_value_add(*head, key, value);
     }
 }
@@ -75,33 +75,6 @@ alert_envvar2params(lrmd_key_value_t *head, const pcmk__alert_t *entry)
         g_hash_table_foreach(entry->envvars, set_ev_kv, &head);
     }
     return head;
-}
-
-/*
- * We could use g_strv_contains() instead of this function,
- * but that has only been available since glib 2.43.2.
- */
-static gboolean
-is_target_alert(char **list, const char *value)
-{
-    int target_list_num = 0;
-    gboolean rc = FALSE;
-
-    CRM_CHECK(value != NULL, return FALSE);
-
-    if (list == NULL) {
-        return TRUE;
-    }
-
-    target_list_num = g_strv_length(list);
-
-    for (int cnt = 0; cnt < target_list_num; cnt++) {
-        if (strcmp(list[cnt], value) == 0) {
-            rc = TRUE;
-            break;
-        }
-    }
-    return rc;
 }
 
 /*!
@@ -123,89 +96,95 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
                 enum pcmk__alert_flags kind, const char *attr_name,
                 lrmd_key_value_t *params)
 {
-    bool any_success = FALSE, any_failure = FALSE;
+    bool any_success = false;
+    bool any_failure = false;
     const char *kind_s = pcmk__alert_flag2text(kind);
-    pcmk__time_hr_t *now = NULL;
-    char timestamp_epoch[20];
-    char timestamp_usec[7];
-    time_t epoch = 0;
+
+    struct timespec now_tv = { 0, };
+    crm_time_t *now_dt = NULL;
+    int now_usec = 0;
+
+    qb_util_timespec_from_epoch_get(&now_tv);
+    now_dt = pcmk__copy_timet(now_tv.tv_sec);
+    now_usec = now_tv.tv_nsec / QB_TIME_NS_IN_USEC;
 
     params = alert_key2param(params, PCMK__alert_key_kind, kind_s);
     params = alert_key2param(params, PCMK__alert_key_version,
                              PACEMAKER_VERSION);
 
-    for (const GList *iter = alert_list;
-         iter != NULL; iter = g_list_next(iter)) {
-        const pcmk__alert_t *entry = (pcmk__alert_t *) (iter->data);
+    for (const GList *iter = alert_list; iter != NULL; iter = iter->next) {
+        const pcmk__alert_t *entry = iter->data;
         lrmd_key_value_t *copy_params = NULL;
-        lrmd_key_value_t *head = NULL;
-        int rc;
+        char *str = NULL;
+        int rc = pcmk_ok;
 
-        if (!pcmk_is_set(entry->flags, kind)) {
-            crm_trace("Filtering unwanted %s alert to %s via %s",
-                      kind_s, entry->recipient, entry->id);
+        if (!pcmk__is_set(entry->flags, kind)) {
+            pcmk__trace("Filtering unwanted %s alert to %s via %s", kind_s,
+                        entry->recipient, entry->id);
             continue;
         }
 
-        if ((kind == pcmk__alert_attribute)
-            && !is_target_alert(entry->select_attribute_name, attr_name)) {
+        if (kind == pcmk__alert_attribute) {
+            if (attr_name == NULL) {
+                CRM_LOG_ASSERT(attr_name != NULL);
+                continue;
+            }
 
-            crm_trace("Filtering unwanted attribute '%s' alert to %s via %s",
-                      attr_name, entry->recipient, entry->id);
-            continue;
+            if ((entry->select_attribute_name != NULL)
+                && !pcmk__g_strv_contains(entry->select_attribute_name,
+                                          attr_name)) {
+
+                pcmk__trace("Filtering unwanted attribute '%s' alert to %s via "
+                            "%s", attr_name, entry->recipient, entry->id);
+                continue;
+            }
         }
 
-        if (now == NULL) {
-            now = pcmk__time_hr_now(&epoch);
-        }
-        crm_info("Sending %s alert via %s to %s",
-                 kind_s, entry->id, entry->recipient);
+        pcmk__info("Sending %s alert via %s to %s", kind_s, entry->id,
+                   entry->recipient);
 
         /* Make a copy of the parameters, because each alert will be unique */
-        for (head = params; head != NULL; head = head->next) {
-            copy_params = lrmd_key_value_add(copy_params, head->key, head->value);
+        for (const lrmd_key_value_t *param = params; param != NULL;
+             param = param->next) {
+
+            copy_params = lrmd_key_value_add(copy_params, param->key,
+                                             param->value);
         }
 
         copy_params = alert_key2param(copy_params, PCMK__alert_key_recipient,
                                       entry->recipient);
 
-        if (now) {
-            char *timestamp = pcmk__time_format_hr(entry->tstamp_format, now);
-
-            if (timestamp) {
-                copy_params = alert_key2param(copy_params,
-                                              PCMK__alert_key_timestamp,
-                                              timestamp);
-                free(timestamp);
-            }
-
-            snprintf(timestamp_epoch, sizeof(timestamp_epoch), "%lld",
-                     (long long) epoch);
+        str = pcmk__time_format_hr(entry->tstamp_format, now_dt, now_usec);
+        if (str != NULL) {
             copy_params = alert_key2param(copy_params,
-                                          PCMK__alert_key_timestamp_epoch,
-                                          timestamp_epoch);
-            snprintf(timestamp_usec, sizeof(timestamp_usec), "%06d", now->useconds);
-            copy_params = alert_key2param(copy_params,
-                                          PCMK__alert_key_timestamp_usec,
-                                          timestamp_usec);
+                                          PCMK__alert_key_timestamp, str);
+            free(str);
         }
+
+        str = pcmk__assert_asprintf("%lld", (long long) now_tv.tv_sec);
+        copy_params = alert_key2param(copy_params,
+                                      PCMK__alert_key_timestamp_epoch, str);
+        free(str);
+
+        str = pcmk__assert_asprintf("%06d", now_usec);
+        copy_params = alert_key2param(copy_params,
+                                      PCMK__alert_key_timestamp_usec, str);
+        free(str);
 
         copy_params = alert_envvar2params(copy_params, entry);
 
         rc = lrmd->cmds->exec_alert(lrmd, entry->id, entry->path,
                                     entry->timeout, copy_params);
         if (rc < 0) {
-            crm_err("Could not execute alert %s: %s " QB_XS " rc=%d",
-                    entry->id, pcmk_strerror(rc), rc);
-            any_failure = TRUE;
+            pcmk__err("Could not execute alert %s: %s " QB_XS " rc=%d",
+                      entry->id, pcmk_strerror(rc), rc);
+            any_failure = true;
         } else {
-            any_success = TRUE;
+            any_success = true;
         }
     }
 
-    if (now) {
-        free(now);
-    }
+    crm_time_free(now_dt);
 
     if (any_failure) {
         return (any_success? -1 : -2);

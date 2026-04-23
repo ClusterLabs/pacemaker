@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -61,7 +61,7 @@ node_has_attr(const char *node, const char *name, const char *value)
                    "[@" PCMK_XA_NAME "='", name, "' "
                    "and @" PCMK_XA_VALUE "='", value, "']", NULL);
 
-    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, LOG_NEVER);
+    match = pcmk__xpath_find_one(local_cib->doc, xpath->str, PCMK__LOG_NEVER);
 
     g_string_free(xpath, TRUE);
     return (match != NULL);
@@ -77,12 +77,12 @@ remove_topology_level(xmlNode *match)
     CRM_CHECK(match != NULL, return);
 
     key = stonith_level_key(match, fenced_target_by_unknown);
-    crm_element_value_int(match, PCMK_XA_INDEX, &index);
+    pcmk__xe_get_int(match, PCMK_XA_INDEX, &index);
 
     data = pcmk__xe_create(NULL, PCMK_XE_FENCING_LEVEL);
-    crm_xml_add(data, PCMK__XA_ST_ORIGIN, __func__);
-    crm_xml_add(data, PCMK_XA_TARGET, key);
-    crm_xml_add_int(data, PCMK_XA_INDEX, index);
+    pcmk__xe_set(data, PCMK__XA_ST_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK_XA_TARGET, key);
+    pcmk__xe_set_int(data, PCMK_XA_INDEX, index);
 
     fenced_unregister_level(data, NULL);
 
@@ -131,7 +131,7 @@ fencing_topology_init(void)
     xmlXPathObject *xpathObj = NULL;
     const char *xpath = "//" PCMK_XE_FENCING_LEVEL;
 
-    crm_trace("Full topology refresh");
+    pcmk__trace("Full topology refresh");
     free_topology_list();
     init_topology_list();
 
@@ -144,31 +144,54 @@ fencing_topology_init(void)
 
 #define XPATH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
                                "[@" PCMK_XA_NAME "='"   \
-                                    PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
+                                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT "']"
 
-static void
-update_stonith_watchdog_timeout_ms(xmlNode *cib)
+/* @COMPAT The "stonith-watchdog-timeout" option has been a deprecated alias
+ * for "fencing-watchdog-timeout" since 3.0.2. Make sure it still works as a
+ * fallback until it's dropped in a future release.
+ */
+#define XPATH_STONITH_WATCHDOG_TIMEOUT "//" PCMK_XE_NVPAIR      \
+                                       "[@" PCMK_XA_NAME "='"   \
+                                            PCMK_OPT_STONITH_WATCHDOG_TIMEOUT "']"
+
+static long long
+get_fencing_watchdog_timeout(xmlNode *cib)
 {
-    long long timeout_ms = 0;
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
+    int rc = pcmk_rc_ok;
+    long long timeout_ms = 0;
 
     // @TODO An XPath search can't handle multiple instances or rules
     stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
                                                 XPATH_WATCHDOG_TIMEOUT,
-                                                LOG_NEVER);
-    if (stonith_watchdog_xml) {
-        value = crm_element_value(stonith_watchdog_xml, PCMK_XA_VALUE);
-    }
-    if (value) {
-        timeout_ms = crm_get_msec(value);
+                                                PCMK__LOG_NEVER);
+
+    /* @COMPAT The "stonith-watchdog-timeout" option has been a deprecated alias
+     * for "fencing-watchdog-timeout" since 3.0.2. Make sure it still works as a
+     * fallback until it's dropped in a future release.
+     */
+    if (stonith_watchdog_xml == NULL) {
+        stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
+                                                    XPATH_STONITH_WATCHDOG_TIMEOUT,
+                                                    PCMK__LOG_NEVER);
     }
 
-    if (timeout_ms < 0) {
-        timeout_ms = pcmk__auto_stonith_watchdog_timeout();
+    if (stonith_watchdog_xml == NULL) {
+        return 0;
     }
 
-    stonith_watchdog_timeout_ms = timeout_ms;
+    value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
+    if (value == NULL) {
+        return 0;
+    }
+
+    rc = pcmk__parse_ms(value, &timeout_ms);
+    if ((rc == pcmk_rc_ok) && (timeout_ms >= 0)) {
+        return timeout_ms;
+    }
+
+    return pcmk__auto_fencing_watchdog_timeout();
 }
 
 /*!
@@ -187,7 +210,7 @@ mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    if (pcmk_is_set(device->flags, fenced_df_cib_registered)) {
+    if (pcmk__is_set(device->flags, fenced_df_cib_registered)) {
         fenced_device_set_flags(device, fenced_df_dirty);
     }
 }
@@ -210,7 +233,7 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
 {
     fenced_device_t *device = value;
 
-    return pcmk_is_set(device->flags, fenced_df_dirty);
+    return pcmk__is_set(device->flags, fenced_df_dirty);
 }
 
 /*!
@@ -220,10 +243,10 @@ device_is_dirty(gpointer key, gpointer value, gpointer user_data)
 static void
 cib_devices_update(void)
 {
-    crm_info("Updating devices to version %s.%s.%s",
-             crm_element_value(local_cib, PCMK_XA_ADMIN_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_EPOCH),
-             crm_element_value(local_cib, PCMK_XA_NUM_UPDATES));
+    pcmk__info("Updating devices to version %s.%s.%s",
+               pcmk__xe_get(local_cib, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(local_cib, PCMK_XA_EPOCH),
+               pcmk__xe_get(local_cib, PCMK_XA_NUM_UPDATES));
 
     fenced_foreach_device(mark_dirty_if_cib_registered, NULL);
 
@@ -249,8 +272,8 @@ update_cib_stonith_devices(const xmlNode *patchset)
                                                       NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
         const char *primitive_xpath = NULL;
 
         if (pcmk__str_eq(op, PCMK_VALUE_MOVE, pcmk__str_null_matches)
@@ -278,7 +301,7 @@ update_cib_stonith_devices(const xmlNode *patchset)
 
             CRM_LOG_ASSERT(end_quote != NULL);
             if (end_quote == NULL) {
-                crm_err("Bug: Malformed item in Pacemaker-generated patchset");
+                pcmk__err("Bug: Malformed item in Pacemaker-generated patchset");
                 continue;
             }
 
@@ -306,24 +329,24 @@ update_cib_stonith_devices(const xmlNode *patchset)
 
             const char *shortpath = strrchr(xpath, '/');
 
-            reason = crm_strdup_printf("%s %s", op, shortpath + 1);
+            reason = pcmk__assert_asprintf("%s %s", op, shortpath + 1);
             break;
         }
     }
 
     if (reason != NULL) {
-        crm_info("Updating device list from CIB: %s", reason);
+        pcmk__info("Updating device list from CIB: %s", reason);
         cib_devices_update();
         free(reason);
     } else {
-        crm_trace("No updates for device list found in CIB");
+        pcmk__trace("No updates for device list found in CIB");
     }
 }
 
 static void
 watchdog_device_update(void)
 {
-    if (stonith_watchdog_timeout_ms > 0) {
+    if (fencing_watchdog_timeout_ms > 0) {
         if (!fenced_has_watchdog_device()
             && (stonith_watchdog_targets == NULL)) {
             /* getting here watchdog-fencing enabled, no device there yet
@@ -337,7 +360,7 @@ watchdog_device_update(void)
                     st_namespace_internal,
                     STONITH_WATCHDOG_AGENT,
                     NULL, /* fenced_device_register() will add our
-                             own name as PCMK_STONITH_HOST_LIST param
+                             own name as PCMK_FENCING_HOST_LIST param
                              so we can skip that here
                            */
                     NULL);
@@ -345,8 +368,8 @@ watchdog_device_update(void)
             pcmk__xml_free(xml);
             if (rc != pcmk_rc_ok) {
                 exit_code = CRM_EX_FATAL;
-                crm_crit("Cannot register watchdog pseudo fence agent: %s",
-                         pcmk_rc_str(rc));
+                pcmk__crit("Cannot register watchdog pseudo fence agent: %s",
+                           pcmk_rc_str(rc));
                 stonith_shutdown(0);
             }
         }
@@ -368,14 +391,14 @@ fenced_query_cib(void)
 {
     int rc = pcmk_ok;
 
-    crm_trace("Re-requesting full CIB");
+    pcmk__trace("Re-requesting full CIB");
     rc = cib_api->cmds->query(cib_api, NULL, &local_cib, cib_sync_call);
     rc = pcmk_legacy2rc(rc);
     if (rc == pcmk_rc_ok) {
         pcmk__assert(local_cib != NULL);
     } else {
-        crm_err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
-                pcmk_rc_str(rc), rc);
+        pcmk__err("Couldn't retrieve the CIB: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
     }
     return rc;
 }
@@ -394,19 +417,19 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
     CRM_CHECK(patchset != NULL, return);
 
-    crm_element_value_int(patchset, PCMK_XA_FORMAT, &format);
+    pcmk__xe_get_int(patchset, PCMK_XA_FORMAT, &format);
     if (format != 2) {
-        crm_warn("Unknown patch format: %d", format);
+        pcmk__warn("Unknown patch format: %d", format);
         return;
     }
 
-    xml_patch_versions(patchset, add, del);
+    pcmk__xml_patchset_versions(patchset, del, add);
 
     for (xmlNode *change = pcmk__xe_first_child(patchset, NULL, NULL, NULL);
          change != NULL; change = pcmk__xe_next(change, NULL)) {
 
-        const char *op = crm_element_value(change, PCMK_XA_OPERATION);
-        const char *xpath = crm_element_value(change, PCMK_XA_PATH);
+        const char *op = pcmk__xe_get(change, PCMK_XA_OPERATION);
+        const char *xpath = pcmk__xe_get(change, PCMK_XA_PATH);
 
         if (op == NULL) {
             continue;
@@ -414,16 +437,16 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
         if (strstr(xpath, "/" PCMK_XE_FENCING_LEVEL) != NULL) {
             // Change to a specific entry
-            crm_trace("Handling %s operation %d.%d.%d for %s",
-                      op, add[0], add[1], add[2], xpath);
+            pcmk__trace("Handling %s operation %d.%d.%d for %s", op,
+                        add[0], add[1], add[2], xpath);
 
             if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
                 /* We have only path and ID, which is not enough info to remove
                  * a specific entry. Re-initialize the whole topology.
                  */
-                crm_info("Re-initializing fencing topology after %s operation "
-                         "%d.%d.%d for %s",
-                         op, add[0], add[1], add[2], xpath);
+                pcmk__info("Re-initializing fencing topology after %s "
+                           "operation %d.%d.%d for %s",
+                           op, add[0], add[1], add[2], xpath);
                 fencing_topology_init();
                 return;
             }
@@ -446,9 +469,9 @@ update_fencing_topology(const char *event, xmlNode *msg)
 
         if (strstr(xpath, "/" PCMK_XE_FENCING_TOPOLOGY) != NULL) {
             // Change to the topology in general
-            crm_info("Re-initializing fencing topology after top-level "
-                     "%s operation %d.%d.%d for %s",
-                     op, add[0], add[1], add[2], xpath);
+            pcmk__info("Re-initializing fencing topology after top-level %s "
+                       "operation %d.%d.%d for %s",
+                       op, add[0], add[1], add[2], xpath);
             fencing_topology_init();
             return;
         }
@@ -460,15 +483,15 @@ update_fencing_topology(const char *event, xmlNode *msg)
                                 NULL)) {
 
             // Topology was created or entire configuration section was deleted
-            crm_info("Re-initializing fencing topology after top-level "
-                     "%s operation %d.%d.%d for %s",
-                     op, add[0], add[1], add[2], xpath);
+            pcmk__info("Re-initializing fencing topology after top-level %s "
+                       "operation %d.%d.%d for %s",
+                       op, add[0], add[1], add[2], xpath);
             fencing_topology_init();
             return;
         }
 
-        crm_trace("Nothing for us in %s operation %d.%d.%d for %s",
-                  op, add[0], add[1], add[2], xpath);
+        pcmk__trace("Nothing for us in %s operation %d.%d.%d for %s", op,
+                    add[0], add[1], add[2], xpath);
     }
 }
 
@@ -476,15 +499,15 @@ static void
 update_cib_cache_cb(const char *event, xmlNode * msg)
 {
     xmlNode *patchset = NULL;
-    long long timeout_ms_saved = stonith_watchdog_timeout_ms;
+    long long timeout_ms_saved = fencing_watchdog_timeout_ms;
     bool need_full_refresh = false;
 
     if(!have_cib_devices) {
-        crm_trace("Skipping updates until we get a full dump");
+        pcmk__trace("Skipping updates until we get a full dump");
         return;
 
     } else if(msg == NULL) {
-        crm_trace("Missing %s update", event);
+        pcmk__trace("Missing %s update", event);
         return;
     }
 
@@ -495,7 +518,7 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
         int rc = pcmk_ok;
         xmlNode *wrapper = NULL;
 
-        crm_element_value_int(msg, PCMK__XA_CIB_RC, &rc);
+        pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         if (rc != pcmk_ok) {
             return;
         }
@@ -514,16 +537,16 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
                  * old diff.
                  */
                 break;
-            case -pcmk_err_diff_resync:
             case -pcmk_err_diff_failed:
-                crm_notice("[%s] Patch aborted: %s (%d)", event, pcmk_strerror(rc), rc);
-                pcmk__xml_free(local_cib);
-                local_cib = NULL;
+                pcmk__notice("[%s] Patch aborted: %s (%d)", event,
+                             pcmk_strerror(rc), rc);
+                g_clear_pointer(&local_cib, pcmk__xml_free);
                 break;
             default:
-                crm_warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc), rc);
-                pcmk__xml_free(local_cib);
-                local_cib = NULL;
+                pcmk__warn("[%s] ABORTED: %s (%d)", event, pcmk_strerror(rc),
+                           rc);
+                g_clear_pointer(&local_cib, pcmk__xml_free);
+                break;
         }
     }
 
@@ -535,9 +558,9 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
     }
 
     pcmk__refresh_node_caches_from_cib(local_cib);
-    update_stonith_watchdog_timeout_ms(local_cib);
+    fencing_watchdog_timeout_ms = get_fencing_watchdog_timeout(local_cib);
 
-    if (timeout_ms_saved != stonith_watchdog_timeout_ms) {
+    if (timeout_ms_saved != fencing_watchdog_timeout_ms) {
         need_full_refresh = true;
     }
 
@@ -556,12 +579,12 @@ update_cib_cache_cb(const char *event, xmlNode * msg)
 static void
 init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
-    crm_info("Updating device list from CIB");
+    pcmk__info("Updating device list from CIB");
     have_cib_devices = TRUE;
     local_cib = pcmk__xml_copy(NULL, output);
 
     pcmk__refresh_node_caches_from_cib(local_cib);
-    update_stonith_watchdog_timeout_ms(local_cib);
+    fencing_watchdog_timeout_ms = get_fencing_watchdog_timeout(local_cib);
 
     fencing_topology_init();
     cib_devices_update();
@@ -572,10 +595,10 @@ static void
 cib_connection_destroy(gpointer user_data)
 {
     if (stonith_shutdown_flag) {
-        crm_info("Connection to the CIB manager closed");
+        pcmk__info("Connection to the CIB manager closed");
         return;
     } else {
-        crm_crit("Lost connection to the CIB manager, shutting down");
+        pcmk__crit("Lost connection to the CIB manager, shutting down");
     }
     if (cib_api) {
         cib_api->cmds->signoff(cib_api);
@@ -595,8 +618,8 @@ fenced_cib_cleanup(void)
                                            update_cib_cache_cb);
         cib__clean_up_connection(&cib_api);
     }
-    pcmk__xml_free(local_cib);
-    local_cib = NULL;
+
+    g_clear_pointer(&local_cib, pcmk__xml_free);
 }
 
 void
@@ -606,7 +629,7 @@ setup_cib(void)
 
     cib_api = cib_new();
     if (cib_api == NULL) {
-        crm_err("No connection to the CIB manager");
+        pcmk__err("No connection to the CIB manager");
         return;
     }
 
@@ -616,7 +639,8 @@ setup_cib(void)
     } while (rc == -ENOTCONN && ++retries < 5);
 
     if (rc != pcmk_ok) {
-        crm_err("Could not connect to the CIB manager: %s (%d)", pcmk_strerror(rc), rc);
+        pcmk__err("Could not connect to the CIB manager: %s (%d)",
+                  pcmk_strerror(rc), rc);
         return;
     }
 
@@ -624,7 +648,7 @@ setup_cib(void)
                                             PCMK__VALUE_CIB_DIFF_NOTIFY,
                                             update_cib_cache_cb);
     if (rc != pcmk_ok) {
-        crm_err("Could not set CIB notification callback");
+        pcmk__err("Could not set CIB notification callback");
         return;
     }
 
@@ -632,5 +656,5 @@ setup_cib(void)
     cib_api->cmds->register_callback(cib_api, rc, 120, FALSE, NULL,
                                      "init_cib_cache_cb", init_cib_cache_cb);
     cib_api->cmds->set_connection_dnotify(cib_api, cib_connection_destroy);
-    crm_info("Watching for fencing topology changes");
+    pcmk__info("Watching for fencing topology changes");
 }
