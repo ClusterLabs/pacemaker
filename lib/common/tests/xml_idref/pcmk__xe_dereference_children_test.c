@@ -56,17 +56,19 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     // Ensure returned list has exactly the expected child IDs
     if (table == NULL) {
         assert_null(list);
-    } else {
-        while (list != NULL) {
-            const char *value = pcmk__xe_get((xmlNode *) list->data,
-                                             "testattr");
-
-            assert_true(g_hash_table_remove(table, value));
-            list = list->next;
-        }
-        assert_int_equal(g_hash_table_size(table), 0);
+        goto done;
     }
 
+    while (list != NULL) {
+        const char *value = pcmk__xe_get((xmlNode *) list->data, "testattr");
+
+        assert_true(g_hash_table_remove(table, value));
+        list = list->next;
+    }
+
+    assert_int_equal(g_hash_table_size(table), 0);
+
+done:
     g_list_free(list);
     g_clear_pointer(&table, g_hash_table_destroy);
     pcmk__xml_free(xml);
