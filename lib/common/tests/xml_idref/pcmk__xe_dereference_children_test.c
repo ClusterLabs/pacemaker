@@ -14,10 +14,11 @@
 #include <crm/common/unittest_internal.h>
 
 static void
-assert_deref_one(const xmlNode *xml, const char *element_name,
+assert_deref_one(const xmlNode *xml, xmlDoc *doc, const char *element_name,
                  GList *expected_ids)
 {
-    GList *resolved_nodes = pcmk__xe_dereference_children(xml, element_name);
+    GList *resolved_nodes = pcmk__xe_dereference_children(xml, element_name,
+                                                          doc);
     GList *resolved_ids = NULL;
 
     for (const GList *iter = resolved_nodes; iter != NULL; iter = iter->next) {
@@ -60,7 +61,8 @@ static void
 assert_deref(const char *xml_string, const char *element_name, ...)
 {
     xmlNode *xml = NULL;
-    const xmlNode *child = NULL;
+    xmlNode *child = NULL;
+    xmlDoc *doc = NULL;
     GList *expected_ids = NULL;
     va_list ap;
 
@@ -68,6 +70,7 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     if (xml_string != NULL) {
         xml = pcmk__xml_parse(xml_string);
         assert_non_null(xml);
+        doc = xml->doc;
     }
 
     // Create a list of all expected child IDs
@@ -83,10 +86,16 @@ assert_deref(const char *xml_string, const char *element_name, ...)
 
     // Call tested function on "test" child
     child = pcmk__xe_first_child(xml, "test", NULL, NULL);
+    assert_deref_one(child, doc, element_name, expected_ids);
 
-    assert_deref_one(child, element_name, expected_ids);
+    /* Call tested function on a copy of child in a different document,
+     * searching in the original document
+     */
+    child = pcmk__xml_copy(NULL, child);
+    assert_deref_one(child, doc, element_name, expected_ids);
 
     g_list_free(expected_ids);
+    pcmk__xml_free(child);
     pcmk__xml_free(xml);
 }
 
