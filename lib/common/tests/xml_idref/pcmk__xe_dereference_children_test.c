@@ -27,8 +27,10 @@ static void
 assert_deref(const char *xml_string, const char *element_name, ...)
 {
     xmlNode *xml = NULL;
-    GList *list = NULL;
-    GHashTable *table = NULL;
+    const xmlNode *child = NULL;
+    GList *expected_ids = NULL;
+    GList *resolved_nodes = NULL;
+    GList *resolved_ids = NULL;
     va_list ap;
 
     // Parse given XML
@@ -37,40 +39,45 @@ assert_deref(const char *xml_string, const char *element_name, ...)
         assert_non_null(xml);
     }
 
-    // Create a hash table with all expected child IDs
+    // Create a list of all expected child IDs
     va_start(ap, element_name);
     for (const char *value = va_arg(ap, const char *);
          value != NULL; value = va_arg(ap, const char *)) {
-        if (table == NULL) {
-            table = pcmk__strkey_table(NULL, NULL);
-        }
-        g_hash_table_add(table, (gpointer) value);
+
+        expected_ids = g_list_prepend(expected_ids, (void *) value);
     }
     va_end(ap);
 
     // Call tested function on "test" child
-    list = pcmk__xe_dereference_children(pcmk__xe_first_child(xml, "test",
-                                                              NULL, NULL),
-                                         element_name);
+    child = pcmk__xe_first_child(xml, "test", NULL, NULL);
+    resolved_nodes = pcmk__xe_dereference_children(child, element_name);
 
-    // Ensure returned list has exactly the expected child IDs
-    if (table == NULL) {
-        assert_null(list);
-        goto done;
-    }
-
-    for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        xmlNode *data = iter->data;
+    for (const GList *iter = resolved_nodes; iter != NULL; iter = iter->next) {
+        const xmlNode *data = iter->data;
         const char *value = pcmk__xe_get(data, "testattr");
 
-        assert_true(g_hash_table_remove(table, value));
+        resolved_ids = g_list_prepend(resolved_ids, (void *) value);
     }
 
-    assert_int_equal(g_hash_table_size(table), 0);
+    // Ensure returned list has exactly the expected child IDs
+    expected_ids = g_list_sort(expected_ids, (GCompareFunc) g_strcmp0);
+    resolved_ids = g_list_sort(resolved_ids, (GCompareFunc) g_strcmp0);
 
-done:
-    g_list_free(list);
-    g_clear_pointer(&table, g_hash_table_destroy);
+    assert_int_equal(g_list_length(expected_ids), g_list_length(resolved_ids));
+
+    for (const GList *e_iter = expected_ids, *r_iter = resolved_ids;
+         (e_iter != NULL) && (r_iter != NULL);
+         e_iter = e_iter->next, r_iter = r_iter->next) {
+
+        const char *e_value = e_iter->data;
+        const char *r_value = r_iter->data;
+
+        assert_string_equal(e_value, r_value);
+    }
+
+    g_list_free(expected_ids);
+    g_list_free(resolved_nodes);
+    g_list_free(resolved_ids);
     pcmk__xml_free(xml);
 }
 
