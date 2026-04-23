@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -397,7 +397,7 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
     const char *name = NULL;
     const char *value = NULL;
     const char *old_value = NULL;
-    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, nvpair->doc);
 
     if (ref_nvpair == NULL) {
         /* Not possible with schema validation enabled (error already
