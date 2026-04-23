@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2024 the Pacemaker project contributors
+ * Copyright 2013-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <sched.h>
+#include <stdbool.h>
 #include <sys/ioctl.h>
 #include <sys/reboot.h>
 
@@ -19,6 +20,9 @@
 #include <ctype.h>
 #include <dirent.h>
 #include <signal.h>
+
+#include <glib.h>           // g_str_has_prefix()
+#include <qb/qbdefs.h>      // QB_MIN(), QB_MAX()
 
 static pid_t sbd_pid = 0;
 
@@ -32,22 +36,23 @@ static void
 panic_local_nonroot(pid_t ppid)
 {
     if (ppid > 1) { // pacemakerd is still our parent
-        crm_emerg("Escalating panic to " PCMK__SERVER_PACEMAKERD "[%lld]",
-                  (long long) ppid);
+        pcmk__emerg("Escalating panic to " PCMK__SERVER_PACEMAKERD "[%lld]",
+                    (long long) ppid);
     } else { // Signal (non-parent) pacemakerd if possible
         ppid = pcmk__procfs_pid_of(PCMK__SERVER_PACEMAKERD);
         if (ppid > 0) {
             union sigval signal_value;
 
-            crm_emerg("Signaling " PCMK__SERVER_PACEMAKERD "[%lld] to panic",
-                      (long long) ppid);
+            pcmk__emerg("Signaling " PCMK__SERVER_PACEMAKERD "[%lld] to panic",
+                        (long long) ppid);
             memset(&signal_value, 0, sizeof(signal_value));
             if (sigqueue(ppid, SIGQUIT, signal_value) < 0) {
-                crm_emerg("Exiting after signal failure: %s", strerror(errno));
+                pcmk__emerg("Exiting after signal failure: %s",
+                            strerror(errno));
             }
         } else {
-            crm_emerg("Exiting with no known " PCMK__SERVER_PACEMAKERD
-                      "process");
+            pcmk__emerg("Exiting with no known " PCMK__SERVER_PACEMAKERD
+                        "process");
         }
     }
     crm_exit(CRM_EX_PANIC);
@@ -69,7 +74,9 @@ panic_local(void)
         return;
     }
 
-    if (pcmk__starts_with(full_panic_action, "sync-")) {
+    if ((full_panic_action != NULL)
+        && g_str_has_prefix(full_panic_action, "sync-")) {
+
         panic_action += sizeof("sync-") - 1;
         sync();
     }
@@ -89,9 +96,10 @@ panic_local(void)
         reboot_cmd = RB_POWEROFF;
 #endif
     } else {
-        crm_warn("Using default '" PCMK_VALUE_REBOOT "' for local option PCMK_"
-                 PCMK__ENV_PANIC_ACTION " because '%s' is not a valid value",
-                 full_panic_action);
+        pcmk__warn("Using default '" PCMK_VALUE_REBOOT "' for local option "
+                   "PCMK_" PCMK__ENV_PANIC_ACTION " because '%s' is not a "
+                   "valid value",
+                   full_panic_action);
         pcmk__sysrq_trigger('b');
     }
 
@@ -99,7 +107,7 @@ panic_local(void)
     reboot(reboot_cmd);
 
     // Even reboot failed, nothing left to do but exit
-    crm_emerg("Exiting after reboot failed: %s", strerror(errno));
+    pcmk__emerg("Exiting after reboot failed: %s", strerror(errno));
     if (getppid() > 1) { // pacemakerd is parent process
         crm_exit(CRM_EX_PANIC);
     } else { // This is pacemakerd, or an orphaned subdaemon
@@ -120,7 +128,7 @@ panic_sbd(void)
     memset(&signal_value, 0, sizeof(signal_value));
     /* TODO: Arrange for a slightly less brutal option? */
     if(sigqueue(sbd_pid, SIGKILL, signal_value) < 0) {
-        crm_emerg("Panicking directly because couldn't signal sbd");
+        pcmk__emerg("Panicking directly because couldn't signal sbd");
         panic_local();
     }
 
@@ -146,15 +154,17 @@ void
 pcmk__panic(const char *reason)
 {
     if (pcmk__locate_sbd() > 1) {
-        crm_emerg("Signaling sbd[%lld] to panic the system: %s",
-                  (long long) sbd_pid, reason);
+        pcmk__emerg("Signaling sbd[%lld] to panic the system: %s",
+                    (long long) sbd_pid, reason);
         panic_sbd();
 
     } else {
-        crm_emerg("Panicking the system directly: %s", reason);
+        pcmk__emerg("Panicking the system directly: %s", reason);
         panic_local();
     }
 }
+
+#define PIDFILE PCMK__RUN_DIR "/sbd.pid"
 
 /*!
  * \internal
@@ -163,43 +173,66 @@ pcmk__panic(const char *reason)
 pid_t
 pcmk__locate_sbd(void)
 {
-    const char *pidfile = PCMK__RUN_DIR "/sbd.pid";
-    int rc;
+    gchar *contents = NULL;
+    long long pid_read = 0;
 
-    if(sbd_pid > 1) {
+    if (sbd_pid > 1) {
         return sbd_pid;
     }
 
-    /* Read the pid file */
-    rc = pcmk__pidfile_matches(pidfile, 0, SBIN_DIR "/sbd", &sbd_pid);
-    if (rc == pcmk_rc_ok) {
-        crm_trace("SBD detected at pid %lld (via PID file %s)",
-                  (long long) sbd_pid, pidfile);
-    } else {
-        /* Fall back to /proc for systems that support it */
-        sbd_pid = pcmk__procfs_pid_of("sbd");
+    if (g_file_get_contents(PIDFILE, &contents, NULL, NULL)
+        && (pcmk__scan_ll(contents, &pid_read, 0) == pcmk_rc_ok)
+        && (pcmk__pid_active((pid_t) pid_read,
+                             SBIN_DIR "/sbd") != ESRCH)) {
 
+        /* If the pcmk__pid_active() return code is neither pcmk__rc_ok nor
+         * ESRCH, then we couldn't determine whether the PID belongs to
+         * SBIN_DIR "/sbd". In that case, we assume that it does.
+         *
+         * @TODO Make sure that's what we want to do.
+         */
+        pcmk__trace("SBD detected at pid %lld (via PID file " PIDFILE ")",
+                    pid_read);
+        sbd_pid = (pid_t) pid_read;
+
+    } else {
+        unlink(PIDFILE);
+
+        // Fall back to /proc for systems that support it
+        sbd_pid = pcmk__procfs_pid_of("sbd");
         if (sbd_pid != 0) {
-            crm_trace("SBD detected at pid %lld (via procfs)",
-                      (long long) sbd_pid);
+            pcmk__trace("SBD detected at pid %lld (via procfs)",
+                        (long long) sbd_pid);
         }
     }
 
-    if(sbd_pid < 0) {
+    if (sbd_pid <= 0) {
         sbd_pid = 0;
-        crm_trace("SBD not detected");
+        pcmk__trace("SBD not detected");
     }
-
+    g_free(contents);
     return sbd_pid;
 }
 
+// 0 <= return value <= LONG_MAX
 long
 pcmk__get_sbd_watchdog_timeout(void)
 {
-    static long sbd_timeout = -2;
+    static long sbd_timeout = -1;
 
-    if (sbd_timeout == -2) {
-        sbd_timeout = crm_get_msec(getenv("SBD_WATCHDOG_TIMEOUT"));
+    if (sbd_timeout == -1) {
+        const char *timeout = getenv("SBD_WATCHDOG_TIMEOUT");
+        long long timeout_ms = 0;
+
+        if ((timeout != NULL)
+            && (pcmk__parse_ms(timeout, &timeout_ms) == pcmk_rc_ok)
+            && (timeout_ms >= 0)) {
+
+            sbd_timeout = (long) QB_MIN(timeout_ms, LONG_MAX);
+
+        } else {
+            sbd_timeout = 0;
+        }
     }
     return sbd_timeout;
 }
@@ -207,59 +240,68 @@ pcmk__get_sbd_watchdog_timeout(void)
 bool
 pcmk__get_sbd_sync_resource_startup(void)
 {
-    static int sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
+    static bool sync_resource_startup = PCMK__SBD_SYNC_DEFAULT;
     static bool checked_sync_resource_startup = false;
 
     if (!checked_sync_resource_startup) {
         const char *sync_env = getenv("SBD_SYNC_RESOURCE_STARTUP");
 
         if (sync_env == NULL) {
-            crm_trace("Defaulting to %sstart-up synchronization with sbd",
-                      (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
+            pcmk__trace("Defaulting to %sstart-up synchronization with sbd",
+                        (PCMK__SBD_SYNC_DEFAULT? "" : "no "));
 
-        } else if (crm_str_to_boolean(sync_env, &sync_resource_startup) < 0) {
-            crm_warn("Defaulting to %sstart-up synchronization with sbd "
-                     "because environment value '%s' is invalid",
-                     (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
+        } else if (pcmk__parse_bool(sync_env,
+                                    &sync_resource_startup) != pcmk_rc_ok) {
+            pcmk__warn("Defaulting to %sstart-up synchronization with sbd "
+                       "because environment value '%s' is invalid",
+                       (PCMK__SBD_SYNC_DEFAULT? "" : "no "), sync_env);
         }
         checked_sync_resource_startup = true;
     }
-    return sync_resource_startup != 0;
+    return sync_resource_startup;
 }
 
+// 0 <= return value <= min(LONG_MAX, (2 * SBD timeout))
 long
-pcmk__auto_stonith_watchdog_timeout(void)
+pcmk__auto_fencing_watchdog_timeout(void)
 {
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
+    long long st_timeout = 2 * (long long) sbd_timeout;
 
-    return (sbd_timeout <= 0)? 0 : (2 * sbd_timeout);
+    return (long) QB_MIN(st_timeout, LONG_MAX);
 }
 
 bool
-pcmk__valid_stonith_watchdog_timeout(const char *value)
+pcmk__valid_fencing_watchdog_timeout(const char *value)
 {
     /* @COMPAT At a compatibility break, accept either negative values or a
      * specific string like "auto" (but not both) to mean "auto-calculate the
      * timeout." Reject other values that aren't parsable as timeouts.
      */
-    long st_timeout = value? crm_get_msec(value) : 0;
+    long long st_timeout = 0;
+
+    if ((value != NULL) && (pcmk__parse_ms(value, &st_timeout) == pcmk_rc_ok)) {
+        st_timeout = QB_MIN(st_timeout, LONG_MAX);
+    }
 
     if (st_timeout < 0) {
-        st_timeout = pcmk__auto_stonith_watchdog_timeout();
-        crm_debug("Using calculated value %ld for "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " (%s)",
-                  st_timeout, value);
+        st_timeout = pcmk__auto_fencing_watchdog_timeout();
+
+        // At this point, 0 <= sbd_timeout <= st_timeout
+        pcmk__debug("Using calculated value %lld for "
+                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " (%s)",
+                    st_timeout, value);
     }
 
     if (st_timeout == 0) {
-        crm_debug("Watchdog may be enabled but "
-                  PCMK_OPT_STONITH_WATCHDOG_TIMEOUT " is disabled (%s)",
-                  value? value : "default");
+        pcmk__debug("Watchdog may be enabled but "
+                    PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " is disabled (%s)",
+                    pcmk__s(value, "default"));
 
     } else if (pcmk__locate_sbd() == 0) {
-        crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
-                  " configured (%s) but SBD not active",
-                  pcmk__s(value, "auto"));
+        pcmk__emerg("Shutting down: " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
+                    " configured (%s) but SBD not active",
+                    pcmk__s(value, "auto"));
         crm_exit(CRM_EX_FATAL);
         return false;
 
@@ -267,15 +309,18 @@ pcmk__valid_stonith_watchdog_timeout(const char *value)
         long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
 
         if (st_timeout < sbd_timeout) {
-            crm_emerg("Shutting down: " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
-                      " (%s) too short (must be >%ldms)",
-                      value, sbd_timeout);
+            /* Passed-in value for PCMK_OPT_FENCING_WATCHDOG_TIMEOUT was
+             * parsable, positive, and less than the SBD_WATCHDOG_TIMEOUT
+             */
+            pcmk__emerg("Shutting down: " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
+                        " (%s) too short (must be >%ldms)",
+                        value, sbd_timeout);
             crm_exit(CRM_EX_FATAL);
             return false;
         }
-        crm_info("Watchdog configured with " PCMK_OPT_STONITH_WATCHDOG_TIMEOUT
-                 " %s and SBD timeout %ldms",
-                 value, sbd_timeout);
+        pcmk__info("Watchdog configured with " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
+                   " %s and SBD timeout %ldms",
+                   value, sbd_timeout);
     }
     return true;
 }

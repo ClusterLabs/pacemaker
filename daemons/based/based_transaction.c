@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,8 +9,17 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <libxml/tree.h>
+#include <errno.h>                  // EOPNOTSUPP
+#include <stdbool.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // free
+
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__s, pcmk__xe_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
 
 #include "pacemaker-based.h"
 
@@ -29,11 +38,11 @@ char *
 based_transaction_source_str(const pcmk__client_t *client, const char *origin)
 {
     if (client != NULL) {
-        return crm_strdup_printf("client %s (%s)%s%s",
-                                 pcmk__client_name(client),
-                                 pcmk__s(client->id, "unidentified"),
-                                 ((origin != NULL)? " on " : ""),
-                                 pcmk__s(origin, ""));
+        return pcmk__assert_asprintf("client %s (%s)%s%s",
+                                     pcmk__client_name(client),
+                                     pcmk__s(client->id, "unidentified"),
+                                     ((origin != NULL)? " on " : ""),
+                                     pcmk__s(origin, ""));
     } else {
         return pcmk__str_copy(pcmk__s(origin, "unknown source"));
     }
@@ -52,8 +61,8 @@ based_transaction_source_str(const pcmk__client_t *client, const char *origin)
  * \return Standard Pacemaker return code
  */
 static int
-process_transaction_requests(xmlNodePtr transaction,
-                             const pcmk__client_t *client, const char *source)
+process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
+                             const char *source)
 {
     for (xmlNode *request = pcmk__xe_first_child(transaction,
                                                  PCMK__XE_CIB_COMMAND, NULL,
@@ -61,13 +70,13 @@ process_transaction_requests(xmlNodePtr transaction,
          request != NULL;
          request = pcmk__xe_next(request, PCMK__XE_CIB_COMMAND)) {
 
-        const char *op = crm_element_value(request, PCMK__XA_CIB_OP);
-        const char *host = crm_element_value(request, PCMK__XA_CIB_HOST);
+        const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
+        const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
         const cib__operation_t *operation = NULL;
         int rc = cib__get_operation(op, &operation);
 
         if (rc == pcmk_rc_ok) {
-            if (!pcmk_is_set(operation->flags, cib__op_attr_transaction)
+            if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)
                 || (host != NULL)) {
 
                 rc = EOPNOTSUPP;
@@ -75,22 +84,21 @@ process_transaction_requests(xmlNodePtr transaction,
                 /* Commit-transaction is a privileged operation. If we reached
                  * this point, the request came from a privileged connection.
                  */
-                rc = cib_process_request(request, TRUE, client);
-                rc = pcmk_legacy2rc(rc);
+                rc = based_process_request(request, true, client);
             }
         }
 
         if (rc != pcmk_rc_ok) {
-            crm_err("Aborting CIB transaction for %s due to failed %s request: "
-                    "%s",
-                    source, op, pcmk_rc_str(rc));
-            crm_log_xml_info(request, "Failed request");
+            pcmk__err("Aborting CIB transaction for %s due to failed %s "
+                      "request: %s",
+                      source, op, pcmk_rc_str(rc));
+            pcmk__log_xml_info(request, "Failed request");
             return rc;
         }
 
-        crm_trace("Applied %s request to transaction working CIB for %s",
-                  op, source);
-        crm_log_xml_trace(request, "Successful request");
+        pcmk__trace("Applied %s request to transaction working CIB for %s", op,
+                    source);
+        pcmk__log_xml_trace(request, "Successful request");
     }
 
     return pcmk_rc_ok;
@@ -108,17 +116,17 @@ process_transaction_requests(xmlNodePtr transaction,
  * \return Standard Pacemaker return code
  *
  * \note This function is expected to be called only by
- *       \p cib_process_commit_transaction().
+ *       \p based_process_commit_transact().
  * \note \p result_cib is expected to be a copy of the current CIB as created by
  *       \p cib_perform_op().
  * \note The caller is responsible for activating and syncing \p result_cib on
  *       success, and for freeing it on failure.
  */
 int
-based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
-                         const char *origin, xmlNodePtr *result_cib)
+based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+                         const char *origin, xmlNode **result_cib)
 {
-    xmlNodePtr saved_cib = the_cib;
+    xmlNode *saved_cib = the_cib;
     int rc = pcmk_rc_ok;
     char *source = NULL;
 
@@ -138,15 +146,15 @@ based_commit_transaction(xmlNodePtr transaction, const pcmk__client_t *client,
               *result_cib = pcmk__xml_copy(NULL, the_cib));
 
     source = based_transaction_source_str(client, origin);
-    crm_trace("Committing transaction for %s to working CIB", source);
+    pcmk__trace("Committing transaction for %s to working CIB", source);
 
     // Apply all changes to a working copy of the CIB
     the_cib = *result_cib;
 
     rc = process_transaction_requests(transaction, client, origin);
 
-    crm_trace("Transaction commit %s for %s",
-              ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
+    pcmk__trace("Transaction commit %s for %s",
+                ((rc == pcmk_rc_ok)? "succeeded" : "failed"), source);
 
     /* Some request types (for example, erase) may have freed the_cib (the
      * working copy) and pointed it at a new XML object. In that case, it

@@ -1,5 +1,5 @@
 [=synopsis]
-cibadmin <command> [options]
+cibadmin [<command>] [options]
 
 /query and edit the Pacemaker configuration/
 .SH OPTIONS

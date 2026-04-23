@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2023 the Pacemaker project contributors
+# Copyright 2003-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,5 +16,5 @@ if BUILD_LHA_SUPPORT
 sbin_SCRIPTS 	+= fence_legacy
 endif
 
-CLEANFILES = $(man7_MANS) \
-	     $(man8_MANS)
+CLEANFILES = $(man7_MANS)
+CLEANFILES += $(man8_MANS)

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,15 +7,21 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <clone_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_CLONE_INTERNAL__H
 #define PCMK__CRM_COMMON_CLONE_INTERNAL__H
 
 #include <stdio.h>                          // NULL
 #include <stdbool.h>                        // bool
+#include <stdint.h>                         // UINT32_C
+
+#include <crm/common/flags_internal.h>      // pcmk__is_set()
 #include <crm/common/scheduler_types.h>     // pcmk_resource_t
 #include <crm/common/resources.h>           // pcmk_rsc_unique,
 #include <crm/common/resources_internal.h>  // pcmk__rsc_variant_clone etc.
-#include <crm/common/util.h>                // pcmk_is_set
 
 #ifdef __cplusplus
 extern "C" {
@@ -23,14 +29,14 @@ extern "C" {
 
 // Clone resource flags (used in variant data)
 enum pcmk__clone_flags {
-    // Whether instances should be started sequentially
-    pcmk__clone_ordered                 = (1 << 0),
+    //! Whether instances should be started sequentially
+    pcmk__clone_ordered                 = (UINT32_C(1) << 0),
 
-    // Whether promotion scores have been added
-    pcmk__clone_promotion_added         = (1 << 1),
+    //! Whether promotion scores have been added
+    pcmk__clone_promotion_added         = (UINT32_C(1) << 1),
 
-    // Whether promotion constraints have been added
-    pcmk__clone_promotion_constrained   = (1 << 2),
+    //! Whether promotion constraints have been added
+    pcmk__clone_promotion_constrained   = (UINT32_C(1) << 2),
 };
 
 /*!
@@ -60,7 +66,7 @@ pcmk__is_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && pcmk_is_set(rsc->flags, pcmk__rsc_unique);
+    return pcmk__is_clone(rsc) && pcmk__is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 /*!
@@ -74,7 +80,7 @@ pcmk__is_unique_clone(const pcmk_resource_t *rsc)
 static inline bool
 pcmk__is_anonymous_clone(const pcmk_resource_t *rsc)
 {
-    return pcmk__is_clone(rsc) && !pcmk_is_set(rsc->flags, pcmk__rsc_unique);
+    return pcmk__is_clone(rsc) && !pcmk__is_set(rsc->flags, pcmk__rsc_unique);
 }
 
 #ifdef __cplusplus

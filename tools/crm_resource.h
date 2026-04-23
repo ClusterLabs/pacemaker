@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,23 +12,19 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <crm/crm.h>
-
-#include <crm/services.h>
+#include <crm/cib.h>
+#include <crm/common/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/mainloop.h>
-#include <crm/common/output_internal.h>
-#include <crm/common/scheduler_internal.h>
-
-#include <crm/cib.h>
-#include <crm/common/attrs_internal.h>
+#include <crm/crm.h>
 #include <crm/pengine/status.h>
 #include <crm/pengine/internal.h>
+#include <crm/services.h>
 #include <pacemaker-internal.h>
 
 #define ATTR_SET_ELEMENT "attr_set_element"
 
-typedef struct node_info_s {
+typedef struct {
     const char *node_name;
     bool promoted;
 } node_info_t;
@@ -44,14 +40,14 @@ typedef struct {
 } attr_update_data_t;
 
 enum resource_check_flags {
-    rsc_remain_stopped  = (1 << 0),
-    rsc_unpromotable    = (1 << 1),
-    rsc_unmanaged       = (1 << 2),
-    rsc_locked          = (1 << 3),
-    rsc_node_health     = (1 << 4),
+    rsc_remain_stopped  = (UINT32_C(1) << 0),
+    rsc_unpromotable    = (UINT32_C(1) << 1),
+    rsc_unmanaged       = (UINT32_C(1) << 2),
+    rsc_locked          = (UINT32_C(1) << 3),
+    rsc_node_health     = (UINT32_C(1) << 4),
 };
 
-typedef struct resource_checks_s {
+typedef struct {
     pcmk_resource_t *rsc;   // Resource being checked
     uint32_t flags;         // Group of enum resource_check_flags
     const char *lock_node;  // Node that resource is shutdown-locked to, if any
@@ -63,15 +59,15 @@ resource_checks_t *cli_check_resource(pcmk_resource_t *rsc, char *role_s,
 /* ban */
 int cli_resource_prefer(pcmk__output_t *out, const char *rsc_id, const char *host,
                         const char *move_lifetime, cib_t *cib_conn,
-                        gboolean promoted_role_only, const char *promoted_role);
+                        bool promoted_role_only, const char *promoted_role);
 int cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
                      const char *move_lifetime, cib_t *cib_conn,
-                     gboolean promoted_role_only, const char *promoted_role);
+                     bool promoted_role_only, const char *promoted_role);
 int cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes,
-                       cib_t *cib_conn, bool clear_ban_constraints,
-                       gboolean force);
+                       cib_t *cib_conn, bool clear_ban_constraints, bool force);
 int cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn,
-                                   const char *rsc, const char *node, gboolean promoted_role_only);
+                                   const char *rsc, const char *node,
+                                   bool promoted_role_only);
 
 /* print */
 void cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out);
@@ -97,8 +93,8 @@ int cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          const pcmk_node_t *node, const char *move_lifetime,
-                         guint timeout_ms, cib_t *cib,
-                         gboolean promoted_role_only, gboolean force);
+                         guint timeout_ms, cib_t *cib, bool promoted_role_only,
+                         bool force);
 int cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
                       const pcmk_node_t *node, const char *move_lifetime,
                       cib_t *cib, bool promoted_role_only, bool force);
@@ -108,7 +104,7 @@ crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc
                                             GHashTable *params, GHashTable *override_hash,
                                             guint timeout_ms,
                                             int resource_verbose,
-                                            gboolean force, int check_level);
+                                            bool force, int check_level);
 crm_exit_t cli_resource_execute(pcmk_resource_t *rsc,
                                 const char *requested_name,
                                 const char *rsc_action,
@@ -121,15 +117,15 @@ int cli_resource_update_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
-                                  const char *attr_value, gboolean recursive,
+                                  const char *attr_value, bool recursive,
                                   cib_t *cib, xmlNode *cib_xml_orig,
-                                  gboolean force);
+                                  bool force);
 int cli_resource_delete_attribute(pcmk_resource_t *rsc,
                                   const char *requested_name,
                                   const char *attr_set, const char *attr_set_type,
                                   const char *attr_id, const char *attr_name,
                                   cib_t *cib, xmlNode *cib_xml_orig,
-                                  gboolean force);
+                                  bool force);
 
 int update_scheduler_input(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
                            cib_t *cib, xmlNode **cib_xml_orig);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,6 @@ extern "C" {
  * \ingroup core
  */
 
-bool xml_acl_enabled(const xmlNode *xml);
 void xml_acl_disable(xmlNode *xml);
 bool xml_acl_denied(const xmlNode *xml);
 bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml,
@@ -34,5 +33,9 @@ bool pcmk_acl_required(const char *user);
 #ifdef __cplusplus
 }
 #endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/acl_compat.h>
+#endif  // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #endif // PCMK__CRM_COMMON_ACL__H

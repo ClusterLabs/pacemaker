@@ -38,9 +38,9 @@ if os.path.exists("@abs_top_srcdir@/python"):
 if os.path.exists("@abs_top_builddir@/python") and "@abs_top_builddir@" != "@abs_top_srcdir@":
     sys.path.insert(0, "@abs_top_builddir@/python")
 
+from pacemaker._cts.environment import set_cts_path
 from pacemaker._cts.errors import XmlValidationError
 from pacemaker._cts.validate import validate
-from pacemaker.buildoptions import BuildOptions
 from pacemaker.exitstatus import ExitStatus
 
 # Individual tool tests are split out, but can also be accessed as a group with "tools"
@@ -193,9 +193,9 @@ def reset_shadow_cib_version():
     """Set various version numbers in a shadow CIB file back to 0."""
     with fileinput.input(files=[shadow_path()], inplace=True) as f:
         for line in f:
-            line = re.sub('epoch="[0-9]*"', 'epoch="1"', line)
-            line = re.sub('num_updates="[0-9]*"', 'num_updates="0"', line)
-            line = re.sub('admin_epoch="[0-9]*"', 'admin_epoch="0"', line)
+            line = re.sub(r'\badmin_epoch="[0-9]*"', 'admin_epoch="0"', line)
+            line = re.sub(r'\bepoch="[0-9]*"', 'epoch="1"', line)
+            line = re.sub(r'\bnum_updates="[0-9]*"', 'num_updates="0"', line)
             print(line, end='')
 
 
@@ -253,7 +253,8 @@ def sanitize_output(s):
         (r'@crm_feature_set=[0-9.]+, ', r''),
         (r'\(crm_time_parse_duration@.*\.c:[0-9]+\)', r'crm_time_parse_duration'),
         (r'\(crm_time_parse_period@.*\.c:[0-9]+\)', r'crm_time_parse_period'),
-        (r'\(crm_time_parse_sec@.*\.c:[0-9]+\)', r'crm_time_parse_sec'),
+        (r'\(parse_hms@.*\.c:[0-9]+\)', r'parse_hms'),
+        (re.escape(cts_cli_data), r'CTS_CLI_DATA'),
         (r' default="[^"]*"', r' default=""'),
         (r' end="[0-9][-+: 0-9]*Z*"', r' end=""'),
         (r'last_change time=".*"', r'last_change time=""'),
@@ -262,6 +263,7 @@ def sanitize_output(s):
         (r'\(parse_date@.*\.c:[0-9]+\)', r'parse_date'),
         (r'\((pcmk__.*)@.*\.c:[0-9]+\)', r'\1'),
         (r'.*Relax-NG validity error : ', r''),
+        (r'request=".*cibadmin', r'request="cibadmin'),
         (r'request=".*(crm_?[a-zA-Z0-9]+) ', r'request="\1 '),
         (r'request=".*iso8601', r'request="iso8601'),
         (r' start="[0-9][-+: 0-9]*Z*"', r' start=""'),
@@ -273,16 +275,18 @@ def sanitize_output(s):
         (r'(@validate-with=pacemaker-)[0-9.]+,', r'\1X,'),
         (r' version="[^"]*"', r' version=""'),
         (r'\(version .*\)', r'(version)'),
-        (r'-x .*cli/(.*)\.xml', r'-x \1.xml'),
-        (r'--xml-file .*cli/(.*)\.xml', r'--xml-file \1.xml'),
     ]
 
     new_output = []
 
     for line in s:
-        # @TODO Add a way to suppress this message within cibadmin, and then drop
-        # the handling here.
-        if line.startswith("The supplied command can provide skewed result"):
+        # @COMPAT Update when this warning becomes an error. We may need
+        # to restrict the access_render tests to being run as root, and
+        # skip them by default otherwise. This error/warning occurs when
+        # running cibadmin --show-access as a non-privileged user.
+        # However, cts-cli should produce the same output whether the
+        # user is privileged or not.
+        if line.startswith("Warning: cibadmin is being run as user"):
             continue
 
         for (pattern, repl) in replacements:
@@ -436,7 +440,13 @@ class Test:
         elif rc < 0:
             # This is a negative number, which is a signal.
             rc = abs(rc)
-            rc_str = signal.strsignal(rc)
+
+            # @COMPAT signal.strsignal was added in Python 3.8. Drop this
+            # workaround when we require Python 3.8 or later.
+            try:
+                rc_str = signal.strsignal(rc)
+            except AttributeError:
+                rc_str = signal.Signals(rc).name
         else:
             # This is a non-negative number.  We don't have to do anything to the
             # number itself, but we do need to get the error string.
@@ -450,7 +460,7 @@ class Test:
 
     def _log_test_failed(self, app, rc):
         """Log a message when a test fails."""
-        self._output.append(f"* Failed (rc={rc:.3d}): {app:<23} - {self.desc}")
+        self._output.append(f"* Failed (rc={rc:03d}): {app:<23} - {self.desc}")
 
     def _log_test_passed(self, app):
         """Log a message when a test passes."""
@@ -1148,6 +1158,16 @@ class DatesRegressionTest(RegressionTest):
                  "iso8601 -d '2009-01-31 00:00:00Z' -D P2M -E '2009-03-31 00:00:00Z'"),
             Test("2009-01-31 + 3 Months",
                  "iso8601 -d '2009-01-31 00:00:00Z' -D P3M -E '2009-04-30 00:00:00Z'"),
+            Test("Test immediate plus sign in timezone parsing",
+                 "iso8601 -d '2019-04-25T21:42:54+0200' -S"),
+            Test("Like the previous, with exotic timezone to avoid false negative",
+                 "iso8601 -d '2019-04-25T21:42:54+0420' -S"),
+            Test("Test immediate minus sign in timezone parsing",
+                 "iso8601 -d '2019-04-25T21:42:54-0200' -S"),
+            Test("Test plus sign with leading spaces in timezone parsing",
+                 "iso8601 -d '2019-04-25T21:42:54 +0200' -S"),
+            Test("Test minus sign with leading spaces in timezone parsing",
+                 "iso8601 -d '2019-04-25T21:42:54 -0200' -S"),
             make_test_group("2009-03-31 - 1 Month",
                             "iso8601 -d '2009-03-31 01:00:00 +01:00' -D P-1M -E '2009-02-28 00:00:00Z'"),
             make_test_group("2038-01-01 + 3 Months",
@@ -1239,24 +1259,21 @@ class CibadminRegressionTest(RegressionTest):
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
         basic_tests = [
-            Test("Validate CIB", "cibadmin -Q", update_cib=True),
-            # FIXME: The calculated digest is different in certain build environments
-            # for unknown reasons.  When this is figured out, remove the part that gets
-            # rid of the hash.
-            Test("Digest calculation", "cibadmin -Q | cibadmin -5 -p 2>&1 | sed -e 's/Digest:.*/Digest:/'"),
-            Test("Require --force for CIB erasure", "cibadmin -E",
-                 expected_rc=ExitStatus.UNSAFE, update_cib=True),
-            Test("Allow CIB erasure with --force", "cibadmin -E --force"),
+            make_test_group("Validate CIB", "cibadmin -Q", update_cib=True),
+            make_test_group("Digest calculation", "cibadmin -5 -p 2>&1 < $(crm_shadow --file)"),
+            make_test_group("Require --force for CIB erasure", "cibadmin -E",
+                            expected_rc=ExitStatus.UNSAFE, update_cib=True),
+            make_test_group("Allow CIB erasure with --force", "cibadmin -E --force"),
+
             # Verify the output after erasure
-            Test("Query CIB", "cibadmin -Q",
-                 setup=delete_shadow_resource_defaults,
-                 update_cib=True),
+            make_test_group("Query CIB", "cibadmin -Q",
+                            setup=delete_shadow_resource_defaults, update_cib=True),
         ]
 
         # Add some stuff to the empty CIB so we know that erasing it did something.
         basic_tests_setup = [
             """cibadmin -C -o nodes --xml-text '<node id="node1" uname="node1"/>'""",
-            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
+            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/></cluster_property_set>'""",
             """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
         ]
 
@@ -1400,7 +1417,7 @@ class CrmAttributeRegressionTest(RegressionTest):
                  "crm_attribute --query -n cpu -N node1 -z"),
             # This update will fail because it has version numbers
             Test("Replace operation should fail",
-                 """cibadmin -Q | sed -e 's/epoch="[^"]*"/epoch="1"/' | cibadmin -R -p""",
+                 """cibadmin -Q | sed -e 's/ epoch="[^"]*"/ epoch="1"/' | cibadmin -R -p""",
                  expected_rc=ExitStatus.OLD),
         ]
 
@@ -1822,7 +1839,7 @@ class CrmTicketRegressionTest(RegressionTest):
         ]
 
         basic_tests_setup = [
-            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/></cluster_property_set>'""",
+            """cibadmin -C -o crm_config --xml-text '<cluster_property_set id="cib-bootstrap-options"><nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/></cluster_property_set>'""",
             """cibadmin -C -o resources --xml-text '<primitive class="ocf" id="dummy" provider="heartbeat" type="Dummy" />'"""
         ]
 
@@ -2329,7 +2346,7 @@ class CrmSimulateRegressionTest(RegressionTest):
 
         no_version_cib = good_cib.replace('validate-with="pacemaker-1.2" ', "")
 
-        no_version_bad_cib = bad_version_cib.replace('epoch="3"', 'epoch="30"').replace("start", "break")
+        no_version_bad_cib = re.sub(r'\bepoch="3"', 'epoch="30"', bad_version_cib).replace("start", "break")
 
         basic_tests = [
             Test("Show allocation scores with crm_simulate",
@@ -2385,10 +2402,88 @@ class CrmDiffRegressionTest(RegressionTest):
     @property
     def tests(self):
         """A list of Test instances to be run as part of this regression test."""
+
+        old_file = f"{cts_cli_data}/crm_diff_old.xml"
+        new_file = f"{cts_cli_data}/crm_diff_new.xml"
+        patch_file = f"{cts_cli_data}/crm_diff_patchset.xml"
+        cib_patch_file = f"{cts_cli_data}/crm_diff_patchset_cib.xml"
+
+        # Enclose the strings in quotes now rather than in the command lines
+        with open(f"{cts_cli_data}/crm_diff_old.xml", "r", encoding="utf-8") as file:
+            old_str = f"'{file.read()}'"
+        with open(f"{cts_cli_data}/crm_diff_new.xml", "r", encoding="utf-8") as file:
+            new_str = f"'{file.read()}'"
+
         return [
-            Test("Create an XML patchset",
-                 f"crm_diff -o {cts_cli_data}/crm_diff_old.xml -n {cts_cli_data}/crm_diff_new.xml",
-                 expected_rc=ExitStatus.ERROR)
+            make_test_group("Create an XML patchset from files",
+                            f"crm_diff -o {old_file} -n {new_file}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset from strings",
+                            f"crm_diff -O {old_str} -N {new_str}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset from old file, new string",
+                            f"crm_diff -o {old_file} -N {new_str}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset from old string, new file",
+                            f"crm_diff -O {old_str} -n {new_file}",
+                            expected_rc=ExitStatus.ERROR),
+
+            make_test_group("Create an XML patchset as CIB",
+                            f"crm_diff -o {old_file} -n {new_file} --cib",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset with no versions",
+                            f"crm_diff -o {old_file} -n {new_file} --no-version",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Create an XML patchset as CIB, with no versions",
+                            f"crm_diff -o {old_file} -n {new_file} --cib --no-version",
+                            expected_rc=ExitStatus.USAGE),
+
+            # Patch must be a file (cannot be a string).
+            #
+            # patch_file was generated using the following command:
+            #
+            #     # crm_diff -o {old_file} -n {new_file}
+            #
+            make_test_group("Apply an XML patchset to a file",
+                            f"crm_diff -o {old_file} -p {patch_file}"),
+            make_test_group("Apply an XML patchset to a string",
+                            f"crm_diff -O {old_str} -p {patch_file}"),
+
+            make_test_group("Apply an XML patchset as CIB",
+                            f"crm_diff -o {old_file} -p {patch_file} --cib"),
+            make_test_group("Apply an XML patchset with no versions",
+                            f"crm_diff -o {old_file} -p {patch_file} --no-version"),
+            make_test_group("Apply an XML patchset as CIB, with no versions",
+                            f"crm_diff -o {old_file} -p {patch_file} --cib --no-version",
+                            expected_rc=ExitStatus.USAGE),
+
+            # cib_patch_file was generated using the following command:
+            #
+            #     # crm_diff -o {old_file} -n {new_file} --cib
+            #
+            # Thus a digest was added to the patchset, and attribute position
+            # changes were ignored.
+            #
+            # @FIXME Currently these all fail due to digest mismatch. The issue
+            # goes back to at least Pacemaker 1.1.24. However, note that they
+            # fail with a generic error code, not a digest error code.
+            #
+            # It seems reasonable that a patchset generated by crm_diff should
+            # possible to apply to the old XML using crm_diff.
+            make_test_group("Apply an XML patchset generated as CIB",
+                            f"crm_diff -o {old_file} -p {cib_patch_file}",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Apply an XML patchset generated as CIB, as CIB",
+                            f"crm_diff -o {old_file} -p {cib_patch_file} --cib",
+                            expected_rc=ExitStatus.ERROR),
+            make_test_group("Apply an XML patchset generated as CIB, with no versions",
+                            f"crm_diff -o {old_file} -p {cib_patch_file} --no-version",
+                            expected_rc=ExitStatus.ERROR),
+
+            # @TODO We could add tests where the old and new CIBs have the same
+            # version info. In that case, at the time of writing, generating a
+            # patchset with --cib and then trying to apply it will result in
+            # ExitStatus.OLD.
         ]
 
 
@@ -2609,7 +2704,7 @@ class AclsRegressionTest(RegressionTest):
   </acl_role>
   <acl_role id="observer">
     <acl_permission id="observer-read-1" kind="read" xpath="/cib"/>
-    <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='stonith-enabled']"/>
+    <acl_permission id="observer-write-1" kind="write" xpath="//nvpair[@name='fencing-enabled']"/>
     <acl_permission id="observer-write-2" kind="write" xpath="//nvpair[@name='target-role']"/>
   </acl_role>
   <acl_role id="admin">
@@ -2660,8 +2755,8 @@ class AclsRegressionTest(RegressionTest):
             Test("unknownguy: Set enable-acl",
                  "crm_attribute -n enable-acl -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
-            Test("unknownguy: Set stonith-enabled",
-                 "crm_attribute -n stonith-enabled -v false",
+            Test("unknownguy: Set fencing-enabled",
+                 "crm_attribute -n fencing-enabled -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
             Test("unknownguy: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
@@ -2675,8 +2770,8 @@ class AclsRegressionTest(RegressionTest):
             Test("l33t-haxor: Set enable-acl",
                  "crm_attribute -n enable-acl -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
-            Test("l33t-haxor: Set stonith-enabled",
-                 "crm_attribute -n stonith-enabled -v false",
+            Test("l33t-haxor: Set fencing-enabled",
+                 "crm_attribute -n fencing-enabled -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
             Test("l33t-haxor: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
@@ -2688,15 +2783,15 @@ class AclsRegressionTest(RegressionTest):
             Test("niceguy: Set enable-acl",
                  "crm_attribute -n enable-acl -v false",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
-            Test("niceguy: Set stonith-enabled",
-                 "crm_attribute -n stonith-enabled -v false",
+            Test("niceguy: Set fencing-enabled",
+                 "crm_attribute -n fencing-enabled -v false",
                  update_cib=True),
             Test("niceguy: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
                  expected_rc=ExitStatus.INSUFFICIENT_PRIV),
             Test("root: Query configuration", "cibadmin -Q",
                  env={"CIB_user": "root"}),
-            Test("root: Set stonith-enabled", "crm_attribute -n stonith-enabled -v true",
+            Test("root: Set fencing-enabled", "crm_attribute -n fencing-enabled -v true",
                  update_cib=True, env={"CIB_user": "root"}),
             Test("root: Create a resource",
                  """cibadmin -C -o resources --xml-text '<primitive id="dummy" class="ocf" provider="pacemaker" type="Dummy"/>'""",
@@ -2945,7 +3040,7 @@ class UpgradeRegressionTest(RegressionTest):
 """
 
         basic_tests = [
-            Test("Set stonith-enabled=false", "crm_attribute -n stonith-enabled -v false",
+            Test("Set fencing-enabled=false", "crm_attribute -n fencing-enabled -v false",
                  update_cib=True),
             Test("Configure the initial resource", "cibadmin -M -o resources -p",
                  update_cib=True, stdin=resource_cib),
@@ -2980,7 +3075,7 @@ class RulesRegressionTest(RegressionTest):
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes/>
@@ -3141,7 +3236,7 @@ def build_options():
                                      description="Command line tool regression tests",
                                      epilog=f"Default tests: {' '.join(default_tests)}\n"
                                      "Other tests: agents (must be run in an installed environment)")
-    parser.add_argument("-j", "--jobs", metavar="JOBS", default=cpu_count() - 1, type=int,
+    parser.add_argument("-j", "--jobs", default=cpu_count() - 1, type=int,
                         help="The number of tests to run simultaneously")
     parser.add_argument("-p", "--path", metavar="DIR", action="append",
                         help="Look for executables in DIR (may be specified multiple times)")
@@ -3179,35 +3274,6 @@ def setup_environment(valgrind):
     # defined but empty by default
     if "PCMK_trace_functions" not in os.environ:
         os.environ["PCMK_trace_functions"] = ""
-
-
-def path_prepend(p):
-    """Add another directory to the front of $PATH."""
-    old = os.environ["PATH"]
-    os.environ["PATH"] = f"{p}:{old}"
-
-
-def setup_path(opts_path):
-    """Set the PATH environment variable appropriately for the tests."""
-    srcdir = os.path.dirname(test_home)
-
-    # Add any search paths given on the command line
-    for p in opts_path:
-        path_prepend(p)
-
-    if os.path.exists(f"{srcdir}/tools/crm_simulate"):
-        print(f"Using local binaries from: {srcdir}")
-
-        path_prepend(f"{srcdir}/tools")
-
-        for daemon in ["based", "controld", "fenced", "schedulerd"]:
-            path_prepend(f"{srcdir}/daemons/{daemon}")
-
-        print(f"Using local schemas from: {srcdir}/xml")
-        os.environ["PCMK_schema_directory"] = f"{srcdir}/xml"
-    else:
-        path_prepend(BuildOptions.DAEMON_DIR)
-        os.environ["PCMK_schema_directory"] = BuildOptions.SCHEMA_DIR
 
 
 def _run_one(valgrind, r):
@@ -3344,7 +3410,7 @@ def main():
     opts = build_options()
 
     setup_environment(opts.valgrind)
-    setup_path(opts.path)
+    set_cts_path(extra=opts.path)
 
     # Filter the list of all regression test classes to include only those that
     # were requested on the command line.  If empty, this defaults to default_tests.
@@ -3371,4 +3437,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# vim: set filetype=python expandtab tabstop=4 softtabstop=4 shiftwidth=4 textwidth=120:
+# vim: set filetype=python:

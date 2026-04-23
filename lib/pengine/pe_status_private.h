@@ -1,5 +1,5 @@
 /*
- * Copyright 2018-2024 the Pacemaker project contributors
+ * Copyright 2018-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <glib.h>                 // G_GNUC_INTERNAL, GSList, GList, etc.
 #include <libxml/tree.h>          // xmlNode
 
-#include <crm/common/digest_internal.h>     // pcmk__op_digest_t
+#include <crm/common/internal.h>            // pcmk__op_digest_t
 #include <crm/common/scheduler_types.h>     // pcmk_action_t, etc.
 
 #ifdef __cplusplus
@@ -29,7 +29,7 @@ extern "C" {
 #define G_GNUC_INTERNAL
 #endif
 
-typedef struct notify_data_s {
+typedef struct {
     GSList *keys;               // Environment variable name/value pairs
 
     const char *action;

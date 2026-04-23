@@ -17,7 +17,6 @@
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include "crmcommon_private.h"
 
 /*!
@@ -118,8 +117,9 @@ pcmk__xpath_match_element(xmlNode *match)
                 // Probably an attribute; return parent element instead
                 return match->parent;
             }
-            crm_err("Cannot get element from XPath expression match of type %s",
-                    pcmk__xml_element_type_text(match->type));
+            pcmk__err("Cannot get element from XPath expression match of type "
+                      "%s",
+                      pcmk__xml_element_type_text(match->type));
             return NULL;
     }
 }
@@ -182,7 +182,7 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
         xmlNode *result = pcmk__xpath_result(xpath_obj, i);
 
         if (result != NULL) {
-            (*fn)(result, user_data);
+            fn(result, user_data);
         }
     }
     xmlXPathFreeObject(xpath_obj);
@@ -221,7 +221,7 @@ pcmk__xpath_find_one(xmlDoc *doc, const char *path, uint8_t level)
         goto done;
     }
 
-    if (level >= LOG_NEVER) {
+    if (level >= PCMK__LOG_NEVER) {
         // For no matches or multiple matches, the rest is just logging
         goto done;
     }
@@ -332,21 +332,21 @@ pcmk__xpath_node_id(const char *xpath, const char *node)
         return retval;
     }
 
-    patt = crm_strdup_printf("/%s[@" PCMK_XA_ID "=", node);
-    start = strstr(xpath, patt);
+    patt = pcmk__assert_asprintf("/%s[@" PCMK_XA_ID "=", node);
 
-    if (!start) {
-        free(patt);
-        return retval;
+    start = strstr(xpath, patt);
+    if (start == NULL) {
+        goto done;
     }
 
     start += strlen(patt);
     start++;
 
-    end = strstr(start, "\'");
+    end = strchr(start, '\'');
     pcmk__assert(end != NULL);
     retval = strndup(start, end-start);
 
+done:
     free(patt);
     return retval;
 }
@@ -357,7 +357,7 @@ output_attr_child(xmlNode *child, void *userdata)
     pcmk__output_t *out = userdata;
 
     out->info(out, "  Value: %s \t(id=%s)",
-              crm_element_value(child, PCMK_XA_VALUE),
+              pcmk__xe_get(child, PCMK_XA_VALUE),
               pcmk__s(pcmk__xe_id(child), "<none>"));
     return pcmk_rc_ok;
 }
@@ -407,7 +407,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
     CRM_CHECK(xpathObj != NULL, return NULL);
 
     if (index >= max) {
-        crm_err("Requested index %d of only %d items", index, max);
+        pcmk__err("Requested index %d of only %d items", index, max);
         return NULL;
 
     } else if(xpathObj->nodesetval->nodeTab[index] == NULL) {
@@ -435,7 +435,7 @@ getXpathResult(xmlXPathObjectPtr xpathObj, int index)
                && (match->parent->type == XML_ELEMENT_NODE)) {
                 return match->parent;
            }
-           crm_warn("Unsupported XPath match type %d (bug?)", match->type);
+           pcmk__warn("Unsupported XPath match type %d (bug?)", match->type);
            return NULL;
     }
 }
@@ -519,7 +519,7 @@ crm_foreach_xpath_result(xmlNode *xml, const char *xpath,
             CRM_LOG_ASSERT(result != NULL);
 
             if (result != NULL) {
-                (*helper)(result, user_data);
+                helper(result, user_data);
             }
         }
     }
@@ -544,14 +544,14 @@ get_xpath_object(const char *xpath, xmlNode * xml_obj, int error_level)
     max = pcmk__xpath_num_results(xpathObj);
 
     if (max == 0) {
-        if (error_level < LOG_NEVER) {
+        if (error_level < PCMK__LOG_NEVER) {
             do_crm_log(error_level, "No match for %s in %s",
                        xpath, pcmk__s(nodePath, "unknown path"));
             crm_log_xml_explicit(xml_obj, "Unexpected Input");
         }
 
     } else if (max > 1) {
-        if (error_level < LOG_NEVER) {
+        if (error_level < PCMK__LOG_NEVER) {
             int lpc = 0;
 
             do_crm_log(error_level, "Too many matches for %s in %s",

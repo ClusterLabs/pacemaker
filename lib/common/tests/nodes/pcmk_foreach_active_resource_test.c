@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>      // NULL
 #include <glib.h>       // GList, TRUE, FALSE
 
@@ -36,7 +37,7 @@ static pcmk_resource_t rsc3 = {
 static bool
 fn(pcmk_resource_t *rsc, void *user_data)
 {
-    char *expected_id = crm_strdup_printf("rsc%d", counter);
+    char *expected_id = pcmk__assert_asprintf("rsc%d", counter);
 
     assert_string_equal(rsc->id, expected_id);
     free(expected_id);

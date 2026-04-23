@@ -5,7 +5,7 @@
         <nvpair id="cib-bootstrap-options-dc-version" name="dc-version" value="1.1.1-c23bbc5262b26f5ad89812b7af9af3785a9a4e81"/>
         <nvpair id="cib-bootstrap-options-cluster-infrastructure" name="cluster-infrastructure" value="corosync"/>
         <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
-        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="true"/>
+        <nvpair id="cib-bootstrap-options-fencing-enabled" name="fencing-enabled" value="true"/>
         <nvpair id="cib-bootstrap-options-placement-strategy" name="placement-strategy" value="utilization"/>
         <nvpair id="cib-bootstrap-options-last-lrm-refresh" name="last-lrm-refresh" value="1268150032"/>
       </cluster_property_set>

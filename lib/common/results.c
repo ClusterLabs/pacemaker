@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -130,8 +130,8 @@ log_assertion_as(const char *file, const char *function, int line,
     if (!pcmk__is_daemon) {
         crm_enable_stderr(TRUE); // Make sure command-line user sees message
     }
-    crm_err("%s: Triggered fatal assertion at %s:%d : %s",
-            function, file, line, assert_condition);
+    pcmk__err("%s: Triggered fatal assertion at %s:%d : %s", function, file,
+              line, assert_condition);
 }
 
 /* coverity[+kill] */
@@ -181,8 +181,8 @@ fail_assert_as(const char *file, const char *function, int line,
     pid = fork();
     switch (pid) {
         case -1: // Fork failed
-            crm_warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
-                     ": %s", function, file, line, assert_condition);
+            pcmk__warn("%s: Cannot dump core for non-fatal assertion at %s:%d "
+                       ": %s", function, file, line, assert_condition);
             break;
 
         case 0: // Child process: just abort to dump core
@@ -190,8 +190,9 @@ fail_assert_as(const char *file, const char *function, int line,
             break;
 
         default: // Parent process: wait for child
-            crm_err("%s: Forked child [%d] to record non-fatal assertion at "
-                    "%s:%d : %s", function, pid, file, line, assert_condition);
+            pcmk__err("%s: Forked child [%d] to record non-fatal assertion at "
+                      "%s:%d : %s",
+                      function, pid, file, line, assert_condition);
             crm_write_blackbox(SIGTRAP, NULL);
             do {
                 if (waitpid(pid, &status, 0) == pid) {
@@ -200,11 +201,12 @@ fail_assert_as(const char *file, const char *function, int line,
             } while (errno == EINTR);
             if (errno == ECHILD) {
                 // crm_mon ignores SIGCHLD
-                crm_trace("Cannot wait on forked child [%d] "
-                          "(SIGCHLD is probably ignored)", pid);
+                pcmk__trace("Cannot wait on forked child [%lld] (SIGCHLD is "
+                            "probably ignored)",
+                            (long long) pid);
             } else {
-                crm_err("Cannot wait on forked child [%d]: %s",
-                        pid, pcmk_rc_str(errno));
+                pcmk__err("Cannot wait on forked child [%lld]: %s",
+                          (long long) pid, pcmk_rc_str(errno));
             }
             break;
     }
@@ -432,6 +434,14 @@ static const struct pcmk__rc_info {
     },
     { "pcmk_rc_ipc_more",
       "More IPC message fragments to send",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_cs_internal",
+      "Internal corosync error",
+      -pcmk_err_generic,
+    },
+    { "pcmk_rc_digest_mismatch",
+      "Digest does not match expected value",
       -pcmk_err_generic,
     },
 };
@@ -849,6 +859,7 @@ pcmk_rc2exitc(int rc)
         case EOVERFLOW:
         case pcmk_rc_underflow:
         case pcmk_rc_compression:
+        case pcmk_rc_cs_internal:
             return CRM_EX_SOFTWARE;
 
         case EBADMSG:
@@ -935,6 +946,9 @@ pcmk_rc2exitc(int rc)
 
         case pcmk_rc_no_dc:
             return CRM_EX_NO_DC;
+
+        case pcmk_rc_digest_mismatch:
+            return CRM_EX_DIGEST;
 
         default:
             return CRM_EX_ERROR;
@@ -1054,6 +1068,107 @@ pcmk__bzlib2rc(int bz2)
     }
 }
 
+/*!
+ * \internal
+ * \brief Map a corosync return code to the most similar Pacemaker return code
+ *
+ * \param[in] cs  corosync return code
+ *
+ * \return Most similar Pacemaker return code
+ */
+int
+pcmk__corosync2rc(int cs)
+{
+#if SUPPORT_COROSYNC
+    switch (cs) {
+        case CS_OK:
+            return pcmk_rc_ok;
+
+        /* These are all-purpose internal error occurred codes. */
+        case CS_ERR_LIBRARY:
+        case CS_ERR_FAILED_OPERATION:
+            return pcmk_rc_cs_internal;
+
+        /* None of these are returned by corosync >= 2.0.0 so it's not worth
+         * defining standard Pacemaker return codes to match.
+         */
+        case CS_ERR_VERSION:
+        case CS_ERR_BAD_FLAGS:
+            return pcmk_rc_error;
+
+        /* This is only returned by corosync when qb_trie_create fails, which
+         * only happens when malloc fails, therefore...
+         */
+        case CS_ERR_INIT:
+        case CS_ERR_NO_MEMORY:
+            return ENOMEM;
+
+        case CS_ERR_TIMEOUT:
+            return ETIMEDOUT;
+
+        case CS_ERR_TRY_AGAIN:
+            return EAGAIN;
+
+        case CS_ERR_INVALID_PARAM:
+            return EINVAL;
+
+        case CS_ERR_BAD_HANDLE:
+            return EBADF;
+
+        case CS_ERR_BUSY:
+            return EBUSY;
+
+        case CS_ERR_ACCESS:
+            return EACCES;
+
+        case CS_ERR_NOT_EXIST:
+        case CS_ERR_NAME_NOT_FOUND:
+            return ENOENT;
+
+        case CS_ERR_NAME_TOO_LONG:
+            return ENAMETOOLONG;
+
+        case CS_ERR_EXIST:
+            return EEXIST;
+
+        case CS_ERR_NO_SPACE:
+            return ENOSPC;
+
+        case CS_ERR_INTERRUPT:
+            return EINTR;
+
+        case CS_ERR_NO_RESOURCES:
+            return EMFILE;
+
+        case CS_ERR_NOT_SUPPORTED:
+            return ENOTSUP;
+
+        case CS_ERR_BAD_OPERATION:
+            return EOPNOTSUPP;
+
+        case CS_ERR_MESSAGE_ERROR:
+            return EBADMSG;
+
+        /* These are still handled by corosync, but I can't find any evidence
+         * that they are returned anywhere.  At one point, certain libqb error
+         * codes were converted into these errors but I don't see that happening
+         * anymore.  Thus, just turn them into the default as well.
+         */
+        case CS_ERR_QUEUE_FULL:
+        case CS_ERR_QUEUE_NOT_AVAILABLE:
+            return pcmk_rc_error;
+
+        case CS_ERR_TOO_BIG:
+            return EFBIG;
+
+        case CS_ERR_NO_SECTIONS:
+            return ENODATA;
+    }
+#endif
+
+    return pcmk_rc_error;
+}
+
 crm_exit_t
 crm_exit(crm_exit_t exit_status)
 {
@@ -1064,9 +1179,9 @@ crm_exit(crm_exit_t exit_status)
         exit_status = CRM_EX_ERROR;
     }
 
-    crm_info("Exiting %s " QB_XS " with status %d (%s: %s)",
-             pcmk__s(crm_system_name, "process"), exit_status,
-             crm_exit_name(exit_status), crm_exit_str(exit_status));
+    pcmk__info("Exiting %s " QB_XS " with status %d (%s: %s)",
+               pcmk__s(crm_system_name, "process"), exit_status,
+               crm_exit_name(exit_status), crm_exit_str(exit_status));
     pcmk_common_cleanup();
     exit(exit_status);
 }
@@ -1180,14 +1295,9 @@ pcmk__reset_result(pcmk__action_result_t *result)
         return;
     }
 
-    free(result->exit_reason);
-    result->exit_reason = NULL;
-
-    free(result->action_stdout);
-    result->action_stdout = NULL;
-
-    free(result->action_stderr);
-    result->action_stderr = NULL;
+    g_clear_pointer(&result->exit_reason, free);
+    g_clear_pointer(&result->action_stdout, free);
+    g_clear_pointer(&result->action_stderr, free);
 }
 
 /*!

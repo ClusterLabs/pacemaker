@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,8 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <tls_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_TLS_INTERNAL__H
 #define PCMK__CRM_COMMON_TLS_INTERNAL__H
+
+#include <stdbool.h>
 
 #include <gnutls/gnutls.h>  // gnutls_session_t, gnutls_dh_params_t, etc.
 
@@ -50,18 +56,30 @@ void pcmk__free_tls(pcmk__tls_t *tls);
  * \internal
  * \brief Initialize a new TLS object
  *
- * Unlike \p pcmk__new_tls_session, this function is used for creating the
- * global environment for TLS connections.
+ * This function initializes \p tls as an environment for TLS connections. This
+ * is in contrast to \c pcmk__new_tls_session(), which initializes a single
+ * session within that environment.
  *
- * \param[in,out] tls       The object to be allocated and initialized
- * \param[in]     server    Is this a server or not?
- * \param[in]     cred_type What type of gnutls credentials are in use?
- *                          (GNUTLS_CRD_* constants)
+ * X.509 certificates are used if configured via environment variables.
+ * Otherwise, we fall back to either pre-shared keys (PSK) or anonymous
+ * authentication, depending on the value of \p have_psk.
  *
- * \returns Standard Pacemaker return code
+ * \param[out] tls       Where to store new TLS object
+ * \param[in]  server    Current process is a server if \c true or a client if
+ *                       \c false
+ * \param[in]  have_psk  If X.509 certificates are not enabled, then use
+ *                       \c GNUTLS_CRD_PSK (pre-shared keys) if this is \c true
+ *                       or \c GNUTLS_CRD_ANON (anonymous authentication) if
+ *                       this is \c false
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note CIB remote clients and the CIB manager's remote listener are the only
+ *       things that use anonymous authentication when X.509 is disabled. Task
+ *       T961 is open to implement PSK for those. The only other callers are
+ *       executor clients and listeners, which already use PSK.
  */
-int pcmk__init_tls(pcmk__tls_t **tls, bool server,
-                   gnutls_credentials_type_t cred_type);
+int pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk);
 
 /*!
  * \internal
@@ -84,39 +102,42 @@ int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
  * \internal
  * \brief Initialize a new TLS session
  *
- * \param[in] tls         A TLS environment object
- * \param[in] csock       Connected socket for TLS session
+ * \param[in] tls    TLS environment object
+ * \param[in] csock  Connected TCP socket for TLS session
  *
  * \return Pointer to newly created session object, or NULL on error
  */
 gnutls_session_t pcmk__new_tls_session(pcmk__tls_t *tls, int csock);
 
+/*!
+ * \internal
+ * \brief Get the socket file descriptor for a remote connection's TLS session
+ *
+ * \param[in] remote  Remote connection
+ *
+ * \return Socket file descriptor for \p remote
+ *
+ * \note The remote connection's \c tls_session must have already been
+ *       initialized using \c pcmk__new_tls_session().
+ */
 int pcmk__tls_get_client_sock(const pcmk__remote_t *remote);
 
 /*!
  * \internal
- * \brief Add the client PSK key to the TLS environment
+ * \brief Add a PSK key to the initialized TLS environment
  *
- * This function must be called for all TLS clients that are using PSK for
- * authentication.
+ * TLS clients that are using PSK for authentication must call this function
+ * to add a key before the TLS session is established (that is, before
+ * calling \c pcmk__new_tls_session()).
  *
- * \param[in,out] tls The TLS environment
- * \param[in]     key The client's PSK key
+ * \param[in,out] tls      The TLS environment
+ * \param[in]     username The username \p key is valid for
+ * \param[in]     key      The client's PSK key
+ * \param[in]     raw      \p key is raw (or binary) data if \c true, and
+ *                         a plain text hex string if \c false
  */
-void pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key);
-
-/*!
- * \internal
- * \brief Register the server's PSK credential fetching callback
- *
- * This function must be called for all TLS servers that are using PSK for
- * authentication.
- *
- * \param[in,out] tls The TLS environment
- * \param[in]     cb  The server's PSK credential fetching callback
- */
-void pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                                gnutls_psk_server_credentials_function *cb);
+void pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                                  gnutls_datum_t *key, bool raw);
 
 /*!
  * \internal
@@ -146,9 +167,8 @@ void pcmk__tls_check_cert_expiration(gnutls_session_t session);
  *
  * \param[in,out] remote       Newly established remote connection
  * \param[in]     timeout_sec  Abort handshake if not completed within this time
- * \param[out]    gnutls_rc    If this is non-NULL, it will be set to the GnuTLS
- *                             rc (for logging) if this function returns EPROTO,
- *                             otherwise GNUTLS_E_SUCCESS
+ * \param[out]    gnutls_rc    Set to the gnutls error code if this function
+ *                             returns \c EPROTO, otherwise \c GNUTLS_E_SUCCESS
  *
  * \return Standard Pacemaker return code
  */
@@ -160,9 +180,8 @@ int pcmk__tls_client_handshake(pcmk__remote_t *remote, int timeout_sec,
  * \brief Make a single attempt to perform the client TLS handshake
  *
  * \param[in,out] remote       Newly established remote connection
- * \param[out]    gnutls_rc    If this is non-NULL, it will be set to the GnuTLS
- *                             rc (for logging) if this function returns EPROTO,
- *                             otherwise GNUTLS_E_SUCCESS
+ * \param[out]    gnutls_rc    Set to the gnutls error code if this function
+ *                             returns \c EPROTO, otherwise \c GNUTLS_E_SUCCESS
  *
  * \return Standard Pacemaker return code
  */
@@ -176,6 +195,45 @@ int pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc);
  *         etc/sysconfig/pacemaker.in), otherwise false
  */
 bool pcmk__x509_enabled(void);
+
+/*!
+ * \internal
+ * \brief Copy an authentication key
+ *
+ * \param[out] dest    Where to copy the authentication key
+ * \param[in]  source  The authentication key to copy
+ */
+void pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source);
+
+/*!
+ * \internal
+ * \brief Attempt to load an authentication key from disk
+ *
+ * \param[in]  location  The file path to read from
+ * \param[out] dest      Where to store the authentication key
+ * \param[in]  raw       \p key is raw (or binary) data if \c true, and
+ *                       a plain text hex string if \c false
+ *
+ * \return Standard Pacemaker return code
+ */
+int pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw);
+
+/*!
+ * \internal
+ * \brief Check whether a PSK credentials file is useable
+ *
+ * This function checks that a PSK credentials file exists and has the
+ * correct ownership and permissions
+ *
+ * \param[in]  location    The file path to check
+ * \param[out] file_exists \c true if \p location exists and is a regular
+ *                         file
+ *
+ * \return \c true if the credentials file exists, is owned by the current
+ *         effective user, and is not accessible by the group or world;
+ *         \c false otherwise
+ */
+bool pcmk__cred_file_useable(const char *location, bool *file_exists);
 
 #ifdef __cplusplus
 }

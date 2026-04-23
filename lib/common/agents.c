@@ -9,9 +9,12 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <strings.h>
+
+#include <glib.h>		// g_str_has_prefix()
 
 #include <crm/crm.h>
 #include <crm/common/util.h>
@@ -92,63 +95,84 @@ crm_generate_ra_key(const char *standard, const char *provider,
         return NULL;
     }
 
-    return crm_strdup_printf("%s%s%s:%s",
-                             standard,
-                             (prov_empty ? "" : ":"), (prov_empty ? "" : provider),
-                             type);
+    return pcmk__assert_asprintf("%s%s%s:%s",
+                                 standard,
+                                 (prov_empty ? "" : ":"),
+                                 (prov_empty ? "" : provider),
+                                 type);
 }
 
 /*!
  * \brief Parse a "standard[:provider]:type" agent specification
  *
  * \param[in]  spec      Agent specification
- * \param[out] standard  Newly allocated memory containing agent standard (or NULL)
- * \param[out] provider  Newly allocated memory containing agent provider (or NULL)
- * \param[put] type      Newly allocated memory containing agent type (or NULL)
+ * \param[out] standard  Where to store agent standard (may not be \c NULL)
+ * \param[out] provider  Where to store agent provider if the standard supports
+ *                       one (may not be \c NULL)
+ * \param[put] type      Where to store agent type (may not be \c NULL)
  *
- * \return pcmk_ok if the string could be parsed, -EINVAL otherwise
+ * \return \c pcmk_ok if the string could be parsed, \c -EINVAL otherwise
  *
  * \note It is acceptable for the type to contain a ':' if the standard supports
  *       that. For example, systemd supports the form "systemd:UNIT@A:B".
- * \note It is the caller's responsibility to free the returned values.
+ * \note On success, the caller is responsible for freeing \p *standard,
+ *       \p *provider, and \p *type using \c free(). On failure, all of these
+ *       are left unchanged.
  */
 int
 crm_parse_agent_spec(const char *spec, char **standard, char **provider,
                      char **type)
 {
-    const char *colon = NULL;
+    gchar **parts = NULL;
+    int rc = pcmk_ok;
 
-    CRM_CHECK(spec && standard && provider && type, return -EINVAL);
-    *standard = NULL;
-    *provider = NULL;
-    *type = NULL;
+    CRM_CHECK((spec != NULL) && (standard != NULL) && (provider != NULL)
+              && (type != NULL), return -EINVAL);
 
-    colon = strchr(spec, ':');
-    if ((colon == NULL) || (colon == spec)) {
-        return -EINVAL;
+    parts = g_strsplit(spec, ":", 3);
+
+    if (pcmk__str_empty(parts[0])) {
+        // Empty standard
+        rc = -EINVAL;
+        goto done;
     }
 
-    *standard = strndup(spec, colon - spec);
-    spec = colon + 1;
-
-    if (pcmk_is_set(pcmk_get_ra_caps(*standard), pcmk_ra_cap_provider)) {
-        colon = strchr(spec, ':');
-        if ((colon == NULL) || (colon == spec)) {
-            free(*standard);
-            return -EINVAL;
+    if (pcmk__is_set(pcmk_get_ra_caps(parts[0]), pcmk_ra_cap_provider)) {
+        if (pcmk__str_empty(parts[1]) || pcmk__str_empty(parts[2])) {
+            // Empty provider or type
+            rc = -EINVAL;
+            goto done;
         }
-        *provider = strndup(spec, colon - spec);
-        spec = colon + 1;
+
+        *standard = pcmk__str_copy(parts[0]);
+        *provider = pcmk__str_copy(parts[1]);
+        *type = pcmk__str_copy(parts[2]);
+
+    } else {
+        if (pcmk__str_empty(parts[1])) {
+            // Empty type
+            rc = -EINVAL;
+            goto done;
+        }
+
+        *standard = pcmk__str_copy(parts[0]);
+
+        if (parts[2] == NULL) {
+            // Common case: type does not contain a colon
+            *type = pcmk__str_copy(parts[1]);
+
+        } else {
+            // Accommodate "systemd:UNIT@A:B", for example
+            gchar *joined = g_strjoinv(":", parts + 1);
+
+            *type = pcmk__str_copy(joined);
+            g_free(joined);
+        }
     }
 
-    if (*spec == '\0') {
-        free(*standard);
-        free(*provider);
-        return -EINVAL;
-    }
-
-    *type = strdup(spec);
-    return pcmk_ok;
+done:
+    g_strfreev(parts);
+    return rc;
 }
 
 /*!
@@ -168,21 +192,37 @@ pcmk_stonith_param(const char *param)
     if (param == NULL) {
         return false;
     }
-    if (pcmk__str_any_of(param, PCMK_STONITH_PROVIDES,
-                         PCMK_STONITH_STONITH_TIMEOUT, NULL)) {
+
+    /* @COMPAT Pacemaker does not handle PCMK__FENCING_STONITH_TIMEOUT specially
+     * as a resource parameter, so pcmk_stonith_param() should not return true
+     * for it. It is unclear from the commit history why we returned true for it
+     * in the first place.
+     *
+     * However, when the feature set is less than 3.16.0,
+     * calculate_secure_digest() filters out these special fencing parameters
+     * when calculating the digest. There's no good reason why a user should
+     * have configured this as a fence resource parameter in the first place.
+     *
+     * But out of an abundance of caution, we should wait to drop
+     * PCMK__FENCING_STONITH_TIMEOUT from this function until we no longer
+     * support rolling upgrades from below Pacemaker 2.1.5.
+     */
+    if (pcmk__str_any_of(param, PCMK_FENCING_PROVIDES,
+                         PCMK__FENCING_STONITH_TIMEOUT, NULL)) {
         return true;
     }
-    if (!pcmk__starts_with(param, "pcmk_")) { // Short-circuit common case
+
+    if (!g_str_has_prefix(param, "pcmk_")) { // Short-circuit common case
         return false;
     }
     if (pcmk__str_any_of(param,
-                         PCMK_STONITH_ACTION_LIMIT,
-                         PCMK_STONITH_DELAY_BASE,
-                         PCMK_STONITH_DELAY_MAX,
-                         PCMK_STONITH_HOST_ARGUMENT,
-                         PCMK_STONITH_HOST_CHECK,
-                         PCMK_STONITH_HOST_LIST,
-                         PCMK_STONITH_HOST_MAP,
+                         PCMK_FENCING_ACTION_LIMIT,
+                         PCMK_FENCING_DELAY_BASE,
+                         PCMK_FENCING_DELAY_MAX,
+                         PCMK_FENCING_HOST_ARGUMENT,
+                         PCMK_FENCING_HOST_CHECK,
+                         PCMK_FENCING_HOST_LIST,
+                         PCMK_FENCING_HOST_MAP,
                          NULL)) {
         return true;
     }

@@ -8,7 +8,7 @@ __all__ = [
     "RandomTests",
     "Sequence",
 ]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
@@ -181,17 +181,6 @@ class Scenario:
         self.stats[name] += 1
 
     def run(self, iterations):
-        """Run all tests in the scenario the given number of times."""
-        self._cm.oprofile_start()
-
-        try:
-            self._run_loop(iterations)
-            self._cm.oprofile_stop()
-        except:  # noqa: E722
-            self._cm.oprofile_stop()
-            raise
-
-    def _run_loop(self, iterations):
         """Run all the tests the given number of times."""
         raise NotImplementedError
 
@@ -228,7 +217,6 @@ class Scenario:
             ret = False
 
         stoptime = time.time()
-        self._cm.oprofile_save(testcount)
 
         elapsed_time = stoptime - starttime
         test_time = stoptime - test.get_timer()
@@ -263,19 +251,19 @@ class Scenario:
         self._cm.log("Overall Results:%r" % self.stats)
         self._cm.log("****************")
 
-        stat_filter = {
-            "calls": 0,
-            "failure": 0,
-            "skipped": 0,
-            "auditfail": 0,
-        }
+        stat_summary = {}
+        summary_keys = ["calls", "failure", "skipped", "auditfail"]
 
         self._cm.log("Test Summary")
         for test in self.tests:
-            for key in stat_filter:
-                stat_filter[key] = test.stats[key]
+            if test.name not in stat_summary:
+                stat_summary[test.name] = {key: 0 for key in summary_keys}
 
-            self._cm.log(f"{f'Test {test.name}':<25} {stat_filter!r}")
+            for key in summary_keys:
+                stat_summary[test.name][key] += test.stats[key]
+
+        for (name, summary) in stat_summary.items():
+            self._cm.log(f"{f'Test {name}':<25} {summary!r}")
 
         self._cm.debug("Detailed Results")
         for test in self.tests:
@@ -314,19 +302,20 @@ class Scenario:
             if self._bad_news:
                 match = self._bad_news.look(0)
 
-            if match:
-                add_err = True
-
-                for ignore in ignorelist:
-                    if add_err and re.search(ignore, match):
-                        add_err = False
-
-                if add_err:
-                    self._cm.log(f"BadNews: {match}")
-                    self.incr("BadNews")
-                    errcount += 1
-            else:
+            if not match:
                 break
+
+            add_err = True
+
+            for ignore in ignorelist:
+                if add_err and re.search(ignore, match):
+                    add_err = False
+                    break
+
+            if add_err:
+                self._cm.log(f"BadNews: {match}")
+                self.incr("BadNews")
+                errcount += 1
         else:
             print("Big problems")
             if not should_continue(self._cm.env):
@@ -344,7 +333,7 @@ class Scenario:
 class AllOnce(Scenario):
     """Every Test Once."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         testcount = 1
 
         for test in self.tests:
@@ -355,7 +344,7 @@ class AllOnce(Scenario):
 class RandomTests(Scenario):
     """Random Test Execution."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         testcount = 1
 
         while testcount <= iterations:
@@ -367,7 +356,7 @@ class RandomTests(Scenario):
 class Sequence(Scenario):
     """Named Tests in Sequence."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         testcount = 1
 
         while testcount <= iterations:
@@ -379,7 +368,7 @@ class Sequence(Scenario):
 class Boot(Scenario):
     """Start the Cluster."""
 
-    def _run_loop(self, iterations):
+    def run(self, iterations):
         return
 
 

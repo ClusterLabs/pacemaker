@@ -3,7 +3,7 @@
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair name="last-lrm-refresh" id="nvpair.id21849" value="1171856040"/>
-        <nvpair name="stonith-enabled" id="nvpair.id21868" value="False"/>
+        <nvpair name="fencing-enabled" id="nvpair.id21868" value="False"/>
         <nvpair id="nvpair.id21877" name="no-quorum-policy" value="ignore"/>
       </cluster_property_set>
     </crm_config>

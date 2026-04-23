@@ -1,13 +1,14 @@
 """Restart the cluster and verify resources remain running."""
 
 __all__ = ["Reattach"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
 import time
 
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts import logging
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
@@ -143,15 +144,15 @@ class Reattach(CTSTest):
         self._set_unmanaged(node)
 
         if not managed.look_for_all():
-            self._logger.log(f"Patterns not found: {managed.unmatched!r}")
+            logging.log(f"Patterns not found: {managed.unmatched!r}")
             return self.failure("Resource management not disabled")
 
         pats = [
-            self.templates["Pat:RscOpOK"] % ("start", ".*"),
-            self.templates["Pat:RscOpOK"] % ("stop", ".*"),
-            self.templates["Pat:RscOpOK"] % ("promote", ".*"),
-            self.templates["Pat:RscOpOK"] % ("demote", ".*"),
-            self.templates["Pat:RscOpOK"] % ("migrate", ".*")
+            self._cm.templates["Pat:RscOpOK"] % ("start", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("stop", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("promote", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("demote", ".*"),
+            self._cm.templates["Pat:RscOpOK"] % ("migrate", ".*")
         ]
 
         watch = self.create_watch(pats, 60, "ShutdownActivity")
@@ -192,7 +193,7 @@ class Reattach(CTSTest):
 
                 if r.rclass == "stonith":
                     self.debug(f"Ignoring start actions for {r.id}")
-                    ignore.append(self.templates["Pat:RscOpOK"] % ("start", r.id))
+                    ignore.append(self._cm.templates["Pat:RscOpOK"] % ("start", r.id))
 
         if self.local_badnews("ResourceActivity:", watch, ignore):
             return self.failure("Resources stopped or started after resource management was re-enabled")

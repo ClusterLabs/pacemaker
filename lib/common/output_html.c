@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,7 @@
 
 #include <ctype.h>
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -18,7 +19,6 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <libxml/xmlstring.h>               // xmlChar
 
-#include <crm/common/cmdline_internal.h>
 #include <crm/common/xml.h>
 
 static const char *stylesheet_default =
@@ -39,9 +39,12 @@ static const char *stylesheet_default =
 
     "." PCMK__VALUE_WARNING " { color: red; font-weight: bold }";
 
+/* @TODO stylesheet_link, title, and extra_headers should be set
+ * per-output-object and should be freed before exit
+ */
 static gboolean cgi_output = FALSE;
-static char *stylesheet_link = NULL;
-static char *title = NULL;
+static gchar *stylesheet_link = NULL;
+static gchar *title = NULL;
 static GSList *extra_headers = NULL;
 
 GOptionEntry pcmk__html_output_entries[] = {
@@ -66,7 +69,7 @@ GOptionEntry pcmk__html_output_entries[] = {
  * assume an XML private_data_s.  Keeping them laid out the same means this
  * still works.
  */
-typedef struct private_data_s {
+typedef struct {
     /* Begin members that must match the XML version */
     xmlNode *root;
     GQueue *parent_q;
@@ -91,8 +94,7 @@ html_free_priv(pcmk__output_t *out) {
      */
     g_queue_free(priv->parent_q);
     g_slist_free_full(priv->errors, free);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool
@@ -118,7 +120,7 @@ html_init(pcmk__output_t *out) {
     priv->root = pcmk__xe_create(NULL, "html");
     xmlCreateIntSubset(priv->root->doc, (const xmlChar *) "html", NULL, NULL);
 
-    crm_xml_add(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
+    pcmk__xe_set(priv->root, PCMK_XA_LANG, PCMK__VALUE_EN);
     g_queue_push_tail(priv->parent_q, priv->root);
     priv->errors = NULL;
 
@@ -172,7 +174,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
     }
 
     charset_node = pcmk__xe_create(head_node, PCMK__XE_META);
-    crm_xml_add(charset_node, "charset", "utf-8");
+    pcmk__xe_set(charset_node, "charset", "utf-8");
 
     /* Add any extra header nodes the caller might have created. */
     for (GSList *iter = extra_headers; iter != NULL; iter = iter->next) {
@@ -231,7 +233,7 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 
     pcmk__assert(out != NULL);
 
-    rc_buf = crm_strdup_printf("Return code: %d", exit_status);
+    rc_buf = pcmk__assert_asprintf("Return code: %d", exit_status);
 
     pcmk__output_create_xml_text_node(out, "h2", "Command Output");
     pcmk__output_create_html_node(out, PCMK__XE_DIV, NULL, NULL, rc_buf);
@@ -251,7 +253,8 @@ html_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 static void
-html_version(pcmk__output_t *out, bool extended) {
+html_version(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 
     pcmk__output_create_xml_text_node(out, "h2", "Version Information");
@@ -300,7 +303,7 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
     pcmk__assert(out != NULL);
 
     node = pcmk__output_create_html_node(out, "pre", NULL, NULL, buf);
-    crm_xml_add(node, PCMK_XA_LANG, "xml");
+    pcmk__xe_set(node, PCMK_XA_LANG, "xml");
 }
 
 G_GNUC_PRINTF(4, 5)
@@ -365,7 +368,7 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
     free(buf);
 
     if (name != NULL) {
-        crm_xml_add(item_node, PCMK_XA_CLASS, name);
+        pcmk__xe_set(item_node, PCMK_XA_CLASS, name);
     }
 }
 
@@ -459,11 +462,11 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
     node = pcmk__output_create_xml_text_node(out, element_name, text);
 
     if (class_name != NULL) {
-        crm_xml_add(node, PCMK_XA_CLASS, class_name);
+        pcmk__xe_set(node, PCMK_XA_CLASS, class_name);
     }
 
     if (id != NULL) {
-        crm_xml_add(node, PCMK_XA_ID, id);
+        pcmk__xe_set(node, PCMK_XA_ID, id);
     }
 
     return node;
@@ -496,6 +499,13 @@ pcmk__html_create(xmlNode *parent, const char *name, const char *id,
 }
 
 void
+pcmk__html_set_title(const char *name)
+{
+    g_free(title);
+    title = g_strdup(name);
+}
+
+void
 pcmk__html_add_header(const char *name, ...) {
     htmlNodePtr header_node;
     va_list ap;
@@ -512,7 +522,7 @@ pcmk__html_add_header(const char *name, ...) {
         }
 
         value = va_arg(ap, char *);
-        crm_xml_add(header_node, key, value);
+        pcmk__xe_set(header_node, key, value);
     }
 
     extra_headers = g_slist_append(extra_headers, header_node);

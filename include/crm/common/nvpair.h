@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,8 +10,7 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR__H
 #define PCMK__CRM_COMMON_NVPAIR__H
 
-#include <sys/time.h>     // struct timeval
-#include <glib.h>         // gpointer, gboolean, guint, GHashTable
+#include <glib.h>         // gpointer, GHashTable
 #include <libxml/tree.h>  // xmlNode
 
 #include <crm/crm.h>
@@ -29,6 +28,7 @@ extern "C" {
  * \ingroup core
  */
 
+//! \deprecated Use \c pcmk_nvpair_t instead of <tt>struct pcmk_nvpair_s</tt>
 typedef struct pcmk_nvpair_s {
     char *name;
     char *value;

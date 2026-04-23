@@ -158,10 +158,10 @@ Final Cluster Configuration
      cluster-infrastructure: corosync
      cluster-name: mycluster
      dc-version: 2.1.2-4.el9-ada5c3b36e2
+     fencing-enabled: true
      have-watchdog: false
      last-lrm-refresh: 1658896047
      no-quorum-policy: freeze
-     stonith-enabled: true
 
     Tags:
      No tags defined
@@ -198,9 +198,9 @@ Cluster Options
      cluster-infrastructure: corosync
      cluster-name: mycluster
      dc-version: 2.1.2-4.el9-ada5c3b36e2
+     fencing-enabled: true
      have-watchdog: false
      no-quorum-policy: freeze
-     stonith-enabled: true
 
 The output shows cluster-wide configuration options, as well as some baseline-
 level state information. The output includes:
@@ -213,7 +213,7 @@ level state information. The output includes:
   determine what actions are needed when events occur
 * ``have-watchdog`` - whether watchdog integration is enabled; set
   automatically when SBD is enabled
-* ``stonith-enabled`` - whether nodes may be fenced as part of recovery
+* ``fencing-enabled`` - whether nodes may be fenced as part of recovery
 
 .. NOTE::
 

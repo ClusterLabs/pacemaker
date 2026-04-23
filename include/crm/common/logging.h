@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,8 +13,10 @@
 #include <stdio.h>
 #include <stdint.h>             // uint8_t, uint32_t
 #include <glib.h>
-#include <qb/qblog.h>
+#include <qb/qblog.h>           // LOG_TRACE, qb_*
 #include <libxml/tree.h>
+
+#include <crm/common/results.h>     // crm_abort
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,11 +34,6 @@ extern "C" {
  * syslog(3) uses int for priorities, but libqb's struct qb_log_callsite uses
  * uint8_t, so make sure they fit in the latter.
  */
-
-// Define something even less desired than debug
-#ifndef LOG_TRACE
-#define LOG_TRACE   (LOG_DEBUG+1)
-#endif
 
 // Print message to stdout instead of logging it
 #ifndef LOG_STDOUT
@@ -99,18 +96,6 @@ void pcmk_log_xml_as(const char *file, const char *function, uint32_t line,
                      uint32_t tags, uint8_t level, const char *text,
                      const xmlNode *xml);
 
-/*
- * Throughout the macros below, note the leading, pre-comma, space in the
- * various ' , ##args' occurrences to aid portability across versions of 'gcc'.
- * https://gcc.gnu.org/onlinedocs/cpp/Variadic-Macros.html#Variadic-Macros
- */
-#if defined(__clang__)
-#define CRM_TRACE_INIT_DATA(name)
-#else
-#include <assert.h> // required by QB_LOG_INIT_DATA() macro
-#define CRM_TRACE_INIT_DATA(name) QB_LOG_INIT_DATA(name)
-#endif
-
 /*!
  * \internal
  * \brief Clip log_level to \p uint8_t range
@@ -146,21 +131,8 @@ pcmk__clip_log_level(int level)
  * \param[in] fmt    printf-style format string literal for message
  * \param[in] args   Any arguments needed by format string
  */
-#define do_crm_log(level, fmt, args...) do {                                \
-        uint8_t _level = pcmk__clip_log_level(level);                       \
-                                                                            \
-        switch (_level) {                                                   \
-            case LOG_STDOUT:                                                \
-                printf(fmt "\n" , ##args);                                  \
-                break;                                                      \
-            case LOG_NEVER:                                                 \
-                break;                                                      \
-            default:                                                        \
-                qb_log_from_external_source(__func__, __FILE__, fmt,        \
-                                            _level, __LINE__, 0 , ##args);  \
-                break;                                                      \
-        }                                                                   \
-    } while (0)
+#define do_crm_log(level, fmt, args...) \
+        do_crm_log_alias(level, __FILE__, __func__, __LINE__, fmt, ##args)
 
 /*!
  * \brief Log a message that is likely to be filtered out
@@ -185,7 +157,7 @@ pcmk__clip_log_level(int level)
                 }                                                           \
                 if (crm_is_callsite_active(trace_cs, _level, 0)) {          \
                     qb_log_from_external_source(__func__, __FILE__, fmt,    \
-                                                _level, __LINE__, 0 ,       \
+                                                _level, __LINE__, 0,        \
                                                 ##args);                    \
                 }                                                           \
             }                                                               \
@@ -270,50 +242,14 @@ pcmk__clip_log_level(int level)
                                                                             \
         switch (_level) {                                                   \
             case LOG_STDOUT:                                                \
-                printf(fmt "\n" , ##args);                                  \
+                printf(fmt "\n", ##args);                                   \
                 break;                                                      \
             case LOG_NEVER:                                                 \
                 break;                                                      \
             default:                                                        \
                 qb_log_from_external_source(function, file, fmt, _level,    \
-                                            line, 0 , ##args);              \
+                                            line, 0, ##args);               \
                 break;                                                      \
-        }                                                                   \
-    } while (0)
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-/*!
- * \brief Send a system error message to both the log and stderr
- *
- * \param[in] level  Priority at which to log the message
- * \param[in] fmt    printf-style format string for message
- * \param[in] args   Any arguments needed by format string
- *
- * \deprecated One of the other logging functions should be used with
- *             pcmk_strerror() instead.
- * \note This is a macro, and \p level may be evaluated more than once.
- * \note Because crm_perror() adds the system error message and error number
- *       onto the end of fmt, that information will become extended information
- *       if QB_XS is used inside fmt and will not show up in syslog.
- */
-#define crm_perror(level, fmt, args...) do {                                \
-        uint8_t _level = pcmk__clip_log_level(level);                       \
-                                                                            \
-        switch (_level) {                                                   \
-            case LOG_NEVER:                                                 \
-                break;                                                      \
-            default: {                                                      \
-                const char *err = strerror(errno);                          \
-                if (_level <= crm_log_level) {                              \
-                    fprintf(stderr, fmt ": %s (%d)\n" , ##args, err,        \
-                            errno);                                         \
-                }                                                           \
-                /* Pass original level arg since do_crm_log() also declares \
-                 * _level                                                   \
-                 */                                                         \
-                do_crm_log((level), fmt ": %s (%d)" , ##args, err, errno);  \
-            }                                                               \
-            break;                                                          \
         }                                                                   \
     } while (0)
 
@@ -346,38 +282,11 @@ pcmk__clip_log_level(int level)
                                            converted_tag)) {                \
                     qb_log_from_external_source(__func__, __FILE__, fmt,    \
                                                 _level, __LINE__,           \
-                                                converted_tag , ##args);    \
+                                                converted_tag, ##args);     \
                 }                                                           \
             }                                                               \
         }                                                                   \
     } while (0)
-
-#define crm_emerg(fmt, args...)   qb_log(LOG_EMERG,       fmt , ##args)
-#define crm_crit(fmt, args...)    qb_logt(LOG_CRIT,    0, fmt , ##args)
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_err(fmt, args...)     qb_logt(LOG_ERR,     0, fmt , ##args)
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_warn(fmt, args...)    qb_logt(LOG_WARNING, 0, fmt , ##args)
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_notice(fmt, args...)  qb_logt(LOG_NOTICE,  0, fmt , ##args)
-
-#define crm_info(fmt, args...)    qb_logt(LOG_INFO,    0, fmt , ##args)
-                                                //
-// NOTE: sbd (as of at least 1.5.2) uses this
-#define crm_debug(fmt, args...)   do_crm_log_unlikely(LOG_DEBUG, fmt , ##args)
-
-#define crm_trace(fmt, args...)   do_crm_log_unlikely(LOG_TRACE, fmt , ##args)
-
-#define crm_log_xml_crit(xml, text)    do_crm_log_xml(LOG_CRIT,    text, xml)
-#define crm_log_xml_err(xml, text)     do_crm_log_xml(LOG_ERR,     text, xml)
-#define crm_log_xml_warn(xml, text)    do_crm_log_xml(LOG_WARNING, text, xml)
-#define crm_log_xml_notice(xml, text)  do_crm_log_xml(LOG_NOTICE,  text, xml)
-#define crm_log_xml_info(xml, text)    do_crm_log_xml(LOG_INFO,    text, xml)
-#define crm_log_xml_debug(xml, text)   do_crm_log_xml(LOG_DEBUG,   text, xml)
-#define crm_log_xml_trace(xml, text)   do_crm_log_xml(LOG_TRACE,   text, xml)
 
 #define crm_log_xml_explicit(xml, text)  do {                   \
         static struct qb_log_callsite *digest_cs = NULL;        \

@@ -434,7 +434,7 @@ output.
 For a simpler configuration, the ``minimal`` role allows read access to the
 entire ``crm_config`` section, which contains cluster properties. It would be
 possible to allow read access to specific properties instead (such as
-``stonith-enabled``, ``dc-uuid``, ``have-quorum``, and ``cluster-name``) to
+``fencing-enabled``, ``dc-uuid``, ``have-quorum``, and ``cluster-name``) to
 restrict access further while still allowing status output, but cluster
 properties are unlikely to be considered sensitive.
 

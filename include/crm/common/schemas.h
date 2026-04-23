@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #ifndef PCMK__CRM_COMMON_SCHEMAS__H
 #define PCMK__CRM_COMMON_SCHEMAS__H
 
-#include <stdbool.h>        // bool
 #include <libxml/tree.h>    // xmlNode
 
 #ifdef __cplusplus

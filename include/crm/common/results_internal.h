@@ -1,11 +1,15 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <results_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_RESULTS_INTERNAL__H
 #define PCMK__CRM_COMMON_RESULTS_INTERNAL__H
@@ -32,23 +36,6 @@ _Noreturn void pcmk__abort_as(const char *file, const char *function, int line,
             pcmk__abort_as(__FILE__, __func__, __LINE__, #expr);    \
         }                                                           \
     } while(0)
-
-/*!
- * \internal
- * \brief Abort without dumping core if a pointer is \c NULL
- *
- * This is intended to check for memory allocation failure, rather than for null
- * pointers in general.
- *
- * \param[in] ptr  Pointer to check
- */
-#define pcmk__mem_assert(ptr) do {                                          \
-        if ((ptr) == NULL) {                                                \
-            crm_abort(__FILE__, __func__, __LINE__, "Out of memory", FALSE, \
-                      TRUE);                                                \
-            crm_exit(CRM_EX_OSERR);                                         \
-        }                                                                   \
-    } while (0)
 
 /* Error domains for use with g_set_error */
 
@@ -101,6 +88,7 @@ void pcmk__copy_result(const pcmk__action_result_t *src,
 
 int pcmk__gaierror2rc(int gai);
 int pcmk__bzlib2rc(int bz2);
+int pcmk__corosync2rc(int cs);
 
 /*!
  * \internal

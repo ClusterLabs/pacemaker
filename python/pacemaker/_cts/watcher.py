@@ -1,7 +1,7 @@
 """Log searching classes for Pacemaker's Cluster Test Suite (CTS)."""
 
 __all__ = ["LogKind", "LogWatcher"]
-__copyright__ = "Copyright 2014-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from enum import Enum, auto, unique
@@ -11,40 +11,8 @@ import threading
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.errors import OutputNotFoundError
-from pacemaker._cts.logging import LogFactory
+from pacemaker._cts import logging
 from pacemaker._cts.remote import RemoteFactory
-
-# dateutil >=2.7.0 provides isoparser, but we support older versions
-try:
-    from dateutil.parser import isoparser
-except ImportError:
-    import datetime
-    import subprocess
-    # pylint: disable=ungrouped-imports
-    from pacemaker._cts.process import pipe_communicate
-
-    # pylint: disable=invalid-name
-    class isoparser():
-        """Mimic isoparser.isoparse when not available."""
-
-        def isoparse(self, timestamp):
-            """Mimic isoparser.isoparse when not available."""
-            with subprocess.Popen(["iso8601", "--output-as", "xml", "-d", timestamp],
-                                  stdout=subprocess.PIPE) as result:
-
-                output = pipe_communicate(result)
-                if result.returncode != 0:
-                    raise RuntimeError("Unable to run iso8601 command")
-                match = re.search(r".*<date>\s*(\d+)-(\d+)-(\d+) (\d+):(\d+):(\d+)Z",
-                                  output)
-                if match is None:
-                    raise RuntimeError("Unable to parse iso8601 command output")
-                return datetime.datetime(int(match.group(1)),
-                                         int(match.group(2)),
-                                         int(match.group(3)),
-                                         int(match.group(4)),
-                                         int(match.group(5)),
-                                         int(match.group(6)))
 
 
 CTS_SUPPORT_BIN = f"{BuildOptions.DAEMON_DIR}/cts-support"
@@ -81,7 +49,6 @@ class SearchObj:
         """
         self.filename = filename
         self.limit = None
-        self.logger = LogFactory()
         self.name = name
         self.offset = "EOF"
         self.rsh = RemoteFactory().getInstance()
@@ -106,12 +73,12 @@ class SearchObj:
     def log(self, args):
         """Log a message."""
         message = f"lw: {self}: {args}"
-        self.logger.log(message)
+        logging.log(message)
 
     def debug(self, args):
         """Log a debug message."""
         message = f"lw: {self}: {args}"
-        self.logger.debug(message)
+        logging.debug(message)
 
     def harvest_async(self, delegate=None):
         """
@@ -243,7 +210,6 @@ class JournalObj(SearchObj):
         name     -- A unique name to use when logging about this watch
         """
         SearchObj.__init__(self, "journal", host, name)
-        self._parser = isoparser()
 
     def _msg_after_limit(self, msg):
         """
@@ -262,9 +228,9 @@ class JournalObj(SearchObj):
         if not match:
             return False
 
-        msg_timestamp = match.group(0)
-        msg_dt = self._parser.isoparse(msg_timestamp)
-        return msg_dt > self.limit
+        # Seconds and microseconds since epoch
+        msg_timestamp = float(match.group(0))
+        return msg_timestamp > self.limit
 
     def _split_msgs_by_limit(self, msgs):
         """
@@ -333,7 +299,7 @@ class JournalObj(SearchObj):
 
         # Use --lines to prevent journalctl from overflowing the Popen input
         # buffer
-        command = "journalctl --quiet --output=short-iso --show-cursor"
+        command = "journalctl --quiet --output=short-unix --show-cursor"
         if self.offset == "EOF":
             command += " --lines 0"
         else:
@@ -356,14 +322,12 @@ class JournalObj(SearchObj):
         if self.limit:
             return
 
-        # --iso-8601=seconds yields YYYY-MM-DDTHH:MM:SSZ, where Z is timezone
-        # as offset from UTC
-
+        # Seconds and nanoseconds since epoch
         # pylint: disable=not-callable
-        (rc, lines) = self.rsh(self.host, "date --iso-8601=seconds", verbose=0)
+        (rc, lines) = self.rsh(self.host, "date +%s.%N", verbose=0)
 
         if rc == 0 and len(lines) == 1:
-            self.limit = self._parser.isoparse(lines[0].strip())
+            self.limit = float(lines[0].strip())
             self.debug(f"Set limit to: {self.limit}")
         else:
             self.debug(f"Unable to set limit for {self.host} because date returned "
@@ -410,7 +374,6 @@ class LogWatcher:
         self._cache_lock = threading.Lock()
         self._file_list = []
         self._line_cache = []
-        self._logger = LogFactory()
         self._timeout = int(timeout)
 
         #  Validate our arguments.  Better sooner than later ;-)
@@ -430,7 +393,7 @@ class LogWatcher:
     def _debug(self, args):
         """Log a debug message."""
         message = f"lw: {self.name}: {args}"
-        self._logger.debug(message)
+        logging.debug(message)
 
     def set_watch(self):
         """Mark the place to start watching the log from."""
@@ -463,7 +426,7 @@ class LogWatcher:
         # pylint: disable=unused-argument
 
         # TODO: Probably need a lock for updating self._line_cache
-        self._logger.debug(f"{self.name}: Got {len(out)} lines from {pid} (total {len(self._line_cache)})")
+        logging.debug(f"{self.name}: Got {len(out)} lines from {pid} (total {len(self._line_cache)})")
 
         if out:
             with self._cache_lock:
@@ -490,7 +453,7 @@ class LogWatcher:
         for t in pending:
             t.join(60.0)
             if t.is_alive():
-                self._logger.log(f"{self.name}: Aborting after 20s waiting for {t!r} logging commands")
+                logging.log(f"{self.name}: Aborting after 20s waiting for {t!r} logging commands")
                 return
 
     def end(self):

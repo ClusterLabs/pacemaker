@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,20 +10,18 @@
 #include <crm_internal.h>
 
 #include <inttypes.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/common/cmdline_internal.h>
-#include <crm/common/output_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/common/ipc_controld.h>
-#include <crm/common/attrs_internal.h>
 
 #include <pacemaker-internal.h>
 
@@ -157,7 +155,7 @@ static int
 node_id_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -192,7 +190,7 @@ simple_node_list_xml(pcmk__output_t *out, va_list args)
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
-        char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+        char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
         pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                      PCMK_XA_ID, id_s,
@@ -224,7 +222,7 @@ node_name_xml(pcmk__output_t *out, va_list args) {
     uint32_t node_id = va_arg(args, uint32_t);
     const char *node_name = va_arg(args, const char *);
 
-    char *id_s = crm_strdup_printf("%" PRIu32, node_id);
+    char *id_s = pcmk__assert_asprintf("%" PRIu32, node_id);
 
     pcmk__output_create_xml_node(out, PCMK_XE_NODE_INFO,
                                  PCMK_XA_NODEID, id_s,
@@ -245,8 +243,11 @@ partition_list_default(pcmk__output_t *out, va_list args)
 
     for (GList *node_iter = nodes; node_iter != NULL; node_iter = node_iter->next) {
         pcmk_controld_api_node_t *node = node_iter->data;
-        if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
-            pcmk__add_separated_word(&buffer, 128, pcmk__s(node->uname, ""), " ");
+
+        if (pcmk__str_eq(node->state, "member", pcmk__str_none)
+            && !pcmk__str_empty(node->uname)) {
+
+            pcmk__add_word(&buffer, 128, node->uname);
         }
     }
 
@@ -271,7 +272,7 @@ partition_list_xml(pcmk__output_t *out, va_list args)
         pcmk_controld_api_node_t *node = node_iter->data;
 
         if (pcmk__str_eq(node->state, "member", pcmk__str_none)) {
-            char *id_s = crm_strdup_printf("%" PRIu32, node->id);
+            char *id_s = pcmk__assert_asprintf("%" PRIu32, node->id);
 
             pcmk__output_create_xml_node(out, PCMK_XE_NODE,
                                          PCMK_XA_ID, id_s,
@@ -547,9 +548,9 @@ remove_from_section(cib_t *cib, const char *element, const char *section,
     int rc = pcmk_rc_ok;
     xmlNode *xml = pcmk__xe_create(NULL, element);
 
-    crm_xml_add(xml, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(xml, PCMK_XA_UNAME, node_name);
     if (node_id > 0) {
-        crm_xml_add_ll(xml, PCMK_XA_ID, node_id);
+        pcmk__xe_set_ll(xml, PCMK_XA_ID, (long long) node_id);
     }
 
     rc = cib->cmds->remove(cib, section, xml, cib_transaction);
@@ -575,16 +576,12 @@ purge_node_from_cib(const char *node_name, long node_id)
     cib_t *cib = NULL;
 
     // Connect to CIB and start a transaction
-    cib = cib_new();
-    if (cib == NULL) {
-        return ENOTCONN;
-    }
-    rc = cib__signon_attempts(cib, cib_command, 5);
-    if (rc == pcmk_ok) {
+    rc = cib__create_signon(&cib);
+    if (rc == pcmk_rc_ok) {
         rc = cib->cmds->init_transaction(cib);
-    }
-    if (rc != pcmk_ok) {
         rc = pcmk_legacy2rc(rc);
+    }
+    if (rc != pcmk_rc_ok) {
         cib__clean_up_connection(&cib);
         return rc;
     }
@@ -603,8 +600,8 @@ purge_node_from_cib(const char *node_name, long node_id)
     cib__clean_up_connection(&cib);
 
     if ((rc == pcmk_rc_ok) && (commit_rc == pcmk_ok)) {
-        crm_debug("Purged node %s (%ld) from CIB",
-                  pcmk__s(node_name, "by ID"), node_id);
+        pcmk__debug("Purged node %s (%ld) from CIB",
+                    pcmk__s(node_name, "by ID"), node_id);
     }
     return rc;
 }
@@ -689,15 +686,18 @@ purge_node_from_fencer(const char *node_name, long node_id)
     cmd = pcmk__new_request(pcmk_ipc_fenced, crm_system_name, NULL,
                             PCMK__VALUE_STONITH_NG, CRM_OP_RM_NODE_CACHE, NULL);
     if (node_id > 0) {
-        crm_xml_add_ll(cmd, PCMK_XA_ID, node_id);
+        pcmk__xe_set_ll(cmd, PCMK_XA_ID, (long long) node_id);
     }
-    crm_xml_add(cmd, PCMK_XA_UNAME, node_name);
+    pcmk__xe_set(cmd, PCMK_XA_UNAME, node_name);
 
+    /* We don't care about the reply here, so there's no need to check if we
+     * got an ACK in response.
+     */
     rc = crm_ipc_send(conn, cmd, 0, 0, NULL);
     if (rc >= 0) {
         rc = pcmk_rc_ok;
-        crm_debug("Purged node %s (%ld) from fencer",
-                  pcmk__s(node_name, "by ID"), node_id);
+        pcmk__debug("Purged node %s (%ld) from fencer",
+                    pcmk__s(node_name, "by ID"), node_id);
     } else {
         rc = pcmk_legacy2rc(rc);
         fprintf(stderr, "Could not purge node %s from fencer: %s\n",
@@ -796,7 +796,7 @@ main(int argc, char **argv)
     pcmk__cli_init_logging("crm_node", args->verbosity);
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    if (rc != pcmk_rc_ok) {
+    if ((rc != pcmk_rc_ok) || (out == NULL)) {
         exit_code = pcmk_rc2exitc(rc);
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Error creating output format %s: %s", args->output_ty,
@@ -805,7 +805,7 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
-        out->version(out, false);
+        out->version(out);
         goto done;
     }
 

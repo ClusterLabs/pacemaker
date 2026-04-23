@@ -90,3 +90,5 @@ if [ -z "$OCF_RESOURCE_INSTANCE" ]; then
 fi
 
 crm_attribute -n master-$OCF_RESOURCE_INSTANCE $options
+
+# vim: set filetype=sh:

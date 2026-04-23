@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2024 the Pacemaker project contributors
+# Copyright 2003-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,14 +11,15 @@ include $(top_srcdir)/mk/common.mk
 
 MAINTAINERCLEANFILES += config.h.in
 
-noinst_HEADERS	        = config.h 		\
-			  crm_internal.h	\
-			  doxygen.h		\
-			  pacemaker-internal.h	\
-			  portability.h 	\
-			  gettext.h
-pkginclude_HEADERS	= crm_config.h 		\
-			  pacemaker.h
+noinst_HEADERS = config.h
+noinst_HEADERS += crm_internal.h
+noinst_HEADERS += doxygen.h
+noinst_HEADERS += pacemaker-internal.h
+noinst_HEADERS += portability.h
+noinst_HEADERS += gettext.h
+
+pkginclude_HEADERS = crm_config.h
+pkginclude_HEADERS += pacemaker.h
 
 SUBDIRS                 =  crm pcmki
 

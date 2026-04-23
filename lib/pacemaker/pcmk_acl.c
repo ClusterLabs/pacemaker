@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <crm/common/internal.h>
 
 #include <pacemaker-internal.h>
@@ -221,8 +220,8 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return pcmk_rc_already;
     }
 
-    validation = crm_element_value(xmlDocGetRootElement(cib_doc),
-                                   PCMK_XA_VALIDATE_WITH);
+    validation = pcmk__xe_get(xmlDocGetRootElement(cib_doc),
+                              PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(PCMK__COMPAT_ACL_2_MIN_INCL,
                                   validation) > 0) {
@@ -234,13 +233,13 @@ pcmk__acl_annotate_permissions(const char *cred, const xmlDoc *cib_doc,
         return EINVAL;
     }
 
-    pcmk__enable_acl(target, target, cred);
+    pcmk__enable_acls(target->doc, target->doc, cred);
 
     ret = annotate_with_siblings(target);
 
     if (ret == pcmk_rc_ok) {
-        char *content = crm_strdup_printf("ACLs as evaluated for user %s",
-                                          cred);
+        char *content = pcmk__assert_asprintf("ACLs as evaluated for user %s",
+                                              cred);
 
         comment = pcmk__xc_create(target->doc, content);
         xmlAddPrevSibling(xmlDocGetRootElement(target->doc), comment);
@@ -334,7 +333,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
 
     xslt = xsltParseStylesheetDoc(xslt_doc);  /* acquires xslt_doc! */
     if (xslt == NULL) {
-        crm_crit("Problem in parsing %s", sfile);
+        pcmk__crit("Problem in parsing %s", sfile);
         rc = EINVAL;
         goto done;
     }
@@ -364,8 +363,7 @@ pcmk__acl_evaled_render(xmlDoc *annotated_doc, enum pcmk__acl_render_how how,
     res = xsltApplyStylesheetUser(xslt, annotated_doc, NULL,
                                   NULL, NULL, xslt_ctxt);
 
-    pcmk__xml_free_doc(annotated_doc);
-    annotated_doc = NULL;
+    g_clear_pointer(&annotated_doc, pcmk__xml_free_doc);
     xsltFreeTransformContext(xslt_ctxt);
     xslt_ctxt = NULL;
 

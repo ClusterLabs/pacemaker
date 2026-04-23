@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #ifndef PCMK__PACEMAKER_INTERNAL__H
 #define PCMK__PACEMAKER_INTERNAL__H
+
+#define PCMK__INCLUDED_PACEMAKER_INTERNAL_H
 
 #include <pcmki/pcmki_acl.h>
 #include <pcmki/pcmki_agents.h>
@@ -25,5 +27,7 @@
 #include <pcmki/pcmki_ticket.h>
 #include <pcmki/pcmki_transition.h>
 #include <pcmki/pcmki_verify.h>
+
+#undef PCMK__INCLUDED_PACEMAKER_INTERNAL_H
 
 #endif // PCMK__PACEMAKER_INTERNAL__H

@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -110,6 +110,8 @@ enum pcmk_rc_e {
     /* When adding new values, use consecutively lower numbers, update the array
      * in lib/common/results.c, and test with crm_error.
      */
+    pcmk_rc_digest_mismatch     = -1043,
+    pcmk_rc_cs_internal         = -1042,
     pcmk_rc_ipc_more            = -1041,
     pcmk_rc_no_dc               = -1040,
     pcmk_rc_compression         = -1039,
@@ -225,8 +227,10 @@ enum ocf_exitcode {
  *
  * We try to overlap with the above conventions when practical.
  *
- * NOTE: When new exit codes are added here, remember to also update
- * python/pacemaker/exitstatus.py.
+ * \note When new exit codes are added here, remember to also update
+ *       python/pacemaker/exitstatus.py.
+ *
+ * \deprecated Use \c crm_exit_t instead of <tt>enum crm_exit_e</tt>.
  */
 typedef enum crm_exit_e {
     // Common convention

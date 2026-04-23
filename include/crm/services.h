@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2024 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,19 +8,18 @@
  */
 
 #ifndef PCMK__CRM_SERVICES__H
-#  define PCMK__CRM_SERVICES__H
+#define PCMK__CRM_SERVICES__H
 
+#include <stdbool.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <string.h>
+#include <sys/types.h>
 
-#  include <glib.h>
-#  include <stdio.h>
-#  include <stdint.h>
-#  include <string.h>
-#  include <stdbool.h>
-#  include <sys/types.h>
+#include <glib.h>
 
-#  include <crm_config.h>       // OCF_ROOT_DIR
-#  include <crm/common/agents.h>
-#  include <crm/common/results.h>
+#include <crm/common/agents.h>
+#include <crm/common/results.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -35,9 +34,9 @@ extern "C" {
  */
 
 /* TODO: Autodetect these two ?*/
-#  ifndef SYSTEMCTL
-#    define SYSTEMCTL "/bin/systemctl"
-#  endif
+#ifndef SYSTEMCTL
+#define SYSTEMCTL "/bin/systemctl"
+#endif
 
 /* This is the string passed in the OCF_EXIT_REASON_PREFIX environment variable.
  * The stderr output that occurs after this prefix is encountered is considered
@@ -91,6 +90,8 @@ typedef struct svc_action_private_s svc_action_private_t;
  *       resource agents, services_alert_create() for alert agents, or
  *       services_action_create_generic() for generic executables). Similarly,
  *       do not use sizeof() on this struct.
+ *
+ * \deprecated Use \c svc_action_t instead of <tt>struct svc_action_s</tt>.
  */
 /*
  * NOTE: Internally, services__create_resource_action() is preferable to
@@ -158,20 +159,6 @@ typedef struct svc_action_s {
     //! This field should be treated as internal to Pacemaker
     svc_action_private_t *opaque;
 } svc_action_t;
-
-/*!
- * \brief Get a list of files or directories in a given path
- *
- * \param[in] root       Full path to a directory to read
- * \param[in] files      Return list of files if TRUE or directories if FALSE
- * \param[in] executable If TRUE and files is TRUE, only return executable files
- *
- * \return List of what was found as char * items.
- * \note The caller is responsibile for freeing the result with
- *       g_list_free_full(list, free).
- */
-GList *get_directory_list(const char *root, gboolean files,
-                          gboolean executable);
 
 /*!
  * \brief Get a list of providers

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 the Pacemaker project contributors
+ * Copyright 2022-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,75 +9,41 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <crm/common/unittest_internal.h>
-#include <crm/common/output_internal.h>
 
 static int
-default_message_fn(pcmk__output_t *out, va_list args) {
+default_message_fn(pcmk__output_t *out, va_list args)
+{
     function_called();
     return pcmk_rc_ok;
 }
 
 static int
-failed_message_fn(pcmk__output_t *out, va_list args) {
+failed_message_fn(pcmk__output_t *out, va_list args)
+{
     function_called();
     return pcmk_rc_no_output;
 }
 
 static int
-message_fn_1(pcmk__output_t *out, va_list args) {
+message_fn_1(pcmk__output_t *out, va_list args)
+{
     function_called();
     return pcmk_rc_ok;
 }
 
 static int
-message_fn_2(pcmk__output_t *out, va_list args) {
+message_fn_2(pcmk__output_t *out, va_list args)
+{
     function_called();
     return pcmk_rc_ok;
 }
 
-static bool
-fake_text_init(pcmk__output_t *out) {
-    return true;
-}
-
 static void
-fake_text_free_priv(pcmk__output_t *out) {
-    /* This function intentionally left blank */
-}
-
-static pcmk__output_t *
-mk_fake_text_output(char **argv) {
-    pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
-
-    if (retval == NULL) {
-        return NULL;
-    }
-
-    retval->fmt_name = "text";
-    retval->init = fake_text_init;
-    retval->free_priv = fake_text_free_priv;
-
-    retval->register_message = pcmk__register_message;
-    retval->message = pcmk__call_message;
-
-    return retval;
-}
-
-static int
-setup(void **state) {
-    pcmk__register_format(NULL, "text", mk_fake_text_output, NULL);
-    return 0;
-}
-
-static int
-teardown(void **state) {
-    pcmk__unregister_formats();
-    return 0;
-}
-
-static void
-no_such_message(void **state) {
+no_such_message(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__output_new(&out, "text", NULL, NULL);
@@ -90,7 +56,8 @@ no_such_message(void **state) {
 }
 
 static void
-message_return_value(void **state) {
+message_return_value(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -114,7 +81,8 @@ message_return_value(void **state) {
 }
 
 static void
-wrong_format(void **state) {
+wrong_format(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -131,7 +99,8 @@ wrong_format(void **state) {
 }
 
 static void
-default_called(void **state) {
+default_called(void **state)
+{
     pcmk__output_t *out = NULL;
 
     pcmk__message_entry_t entries[] = {
@@ -149,8 +118,8 @@ default_called(void **state) {
     pcmk__output_free(out);
 }
 
-PCMK__UNIT_TEST(NULL, NULL,
-                cmocka_unit_test_setup_teardown(no_such_message, setup, teardown),
-                cmocka_unit_test_setup_teardown(message_return_value, setup, teardown),
-                cmocka_unit_test_setup_teardown(wrong_format, setup, teardown),
-                cmocka_unit_test_setup_teardown(default_called, setup, teardown))
+PCMK__UNIT_TEST(pcmk__output_test_setup_group, pcmk__output_test_teardown_group,
+                cmocka_unit_test(no_such_message),
+                cmocka_unit_test(message_return_value),
+                cmocka_unit_test(wrong_format),
+                cmocka_unit_test(default_called))

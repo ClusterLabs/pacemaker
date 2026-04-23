@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_SERVICES_COMPAT__H
 #define PCMK__CRM_SERVICES_COMPAT__H
 
+#include <glib.h>               // GList, gboolean
+
 #include <crm/common/results.h> // enum ocf_exitcode, PCMK_OCF_OK, etc.
 
 #ifdef __cplusplus
@@ -49,6 +51,10 @@ services_ocf_exitcode_str(enum ocf_exitcode code)
             return "unknown";
     }
 }
+
+//! \deprecated Do not use
+GList *get_directory_list(const char *root, gboolean files,
+                          gboolean executable);
 
 #  ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2016-2025 the Pacemaker project contributors
+ * Copyright 2016-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,8 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <glib.h>
 #include <libxml/tree.h>                // xmlNode
 
@@ -16,8 +18,6 @@
 #include <crm/services.h>
 #include <crm/services_internal.h>
 #include <crm/common/ipc.h>
-#include <crm/common/ipc_internal.h>
-#include <crm/common/alerts_internal.h>
 #include <crm/common/xml.h>
 
 #include "pacemaker-execd.h"
@@ -79,57 +79,53 @@ alert_complete(svc_action_t *action)
     if (action->status != PCMK_EXEC_DONE) {
         const char *reason = services__exit_reason(action);
 
-        crm_notice("Could not send alert: %s%s%s%s " QB_XS " client=%s",
-                   pcmk_exec_status_str(action->status),
-                   (reason == NULL)? "" : " (",
-                   (reason == NULL)? "" : reason,
-                   (reason == NULL)? "" : ")",
-                   cb_data->client_id);
+        pcmk__notice("Could not send alert: %s%s%s%s " QB_XS " client=%s",
+                     pcmk_exec_status_str(action->status),
+                     (reason != NULL)? " (" : "", pcmk__s(reason, ""),
+                     (reason != NULL)? ")" : "", cb_data->client_id);
 
     } else if (action->rc != 0) {
-        crm_notice("Alert [%d] completed but exited with status %d "
-                   QB_XS " client=%s",
-                   action->pid, action->rc, cb_data->client_id);
+        pcmk__notice("Alert [%d] completed but exited with status %d "
+                     QB_XS " client=%s",
+                     action->pid, action->rc, cb_data->client_id);
 
     } else {
-        crm_debug("Alert [%d] completed " QB_XS " client=%s",
-                  action->pid, cb_data->client_id);
+        pcmk__debug("Alert [%d] completed " QB_XS " client=%s", action->pid,
+                    cb_data->client_id);
     }
 
     free(cb_data->client_id);
-    free(action->cb_data);
-    action->cb_data = NULL;
+    g_clear_pointer(&action->cb_data, free);
 }
 
 int
-process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
+execd_process_alert_exec(pcmk__client_t *client, xmlNode *request)
 {
     static int alert_sequence_no = 0;
 
     xmlNode *alert_xml = pcmk__xpath_find_one(request->doc,
                                               "//" PCMK__XE_LRMD_ALERT,
                                               LOG_ERR);
-    const char *alert_id = crm_element_value(alert_xml, PCMK__XA_LRMD_ALERT_ID);
-    const char *alert_path = crm_element_value(alert_xml,
-                                               PCMK__XA_LRMD_ALERT_PATH);
+    const char *alert_id = pcmk__xe_get(alert_xml, PCMK__XA_LRMD_ALERT_ID);
+    const char *alert_path = pcmk__xe_get(alert_xml, PCMK__XA_LRMD_ALERT_PATH);
     svc_action_t *action = NULL;
     int alert_timeout = 0;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     GHashTable *params = NULL;
     struct alert_cb_s *cb_data = NULL;
 
     if ((alert_id == NULL) || (alert_path == NULL) ||
         (client == NULL) || (client->id == NULL)) { /* hint static analyzer */
-        rc = -EINVAL;
+        rc = EINVAL;
         goto err;
     }
     if (draining_alerts) {
-        return pcmk_ok;
+        return pcmk_rc_ok;
     }
 
-    crm_element_value_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
+    pcmk__xe_get_int(alert_xml, PCMK__XA_LRMD_TIMEOUT, &alert_timeout);
 
-    crm_info("Executing alert %s for %s", alert_id, client->id);
+    pcmk__info("Executing alert %s for %s", alert_id, client->id);
 
     params = xml2list(alert_xml);
     pcmk__add_alert_key_int(params, PCMK__alert_key_node_sequence,
@@ -139,17 +135,18 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
 
     cb_data->client_id = pcmk__str_copy(client->id);
 
-    crm_element_value_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
+    pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &(cb_data->call_id));
 
     action = services_alert_create(alert_id, alert_path, alert_timeout, params,
                                    alert_sequence_no, cb_data);
     if (action->rc != PCMK_OCF_UNKNOWN) {
-        rc = -E2BIG;
+        rc = E2BIG;
         goto err;
     }
 
     rc = services_action_user(action, CRM_DAEMON_USER);
     if (rc < 0) {
+        rc = pcmk_legacy2rc(rc);
         goto err;
     }
 
@@ -157,7 +154,7 @@ process_lrmd_alert_exec(pcmk__client_t *client, uint32_t id, xmlNode *request)
     if (services_alert_async(action, alert_complete) == FALSE) {
         services_action_free(action);
     }
-    return pcmk_ok;
+    return pcmk_rc_ok;
 
 err:
     if (cb_data) {
@@ -175,8 +172,8 @@ drain_check(guint remaining_timeout_ms)
         guint count = g_hash_table_size(inflight_alerts);
 
         if (count > 0) {
-            crm_trace("%d alerts pending (%.3fs timeout remaining)",
-                      count, remaining_timeout_ms / 1000.0);
+            pcmk__trace("%d alerts pending (%.3fs timeout remaining)",
+                        count, (remaining_timeout_ms / 1000.0));
             return TRUE;
         }
     }
@@ -189,11 +186,10 @@ lrmd_drain_alerts(GMainLoop *mloop)
     if (inflight_alerts != NULL) {
         guint timer_ms = max_inflight_timeout() + 5000;
 
-        crm_trace("Draining in-flight alerts (timeout %.3fs)",
-                  timer_ms / 1000.0);
+        pcmk__trace("Draining in-flight alerts (timeout %.3fs)",
+                    (timer_ms / 1000.0));
         draining_alerts = TRUE;
         pcmk_drain_main_loop(mloop, timer_ms, drain_check);
-        g_hash_table_destroy(inflight_alerts);
-        inflight_alerts = NULL;
+        g_clear_pointer(&inflight_alerts, g_hash_table_destroy);
     }
 }

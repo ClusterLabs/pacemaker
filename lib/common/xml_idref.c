@@ -48,7 +48,7 @@ pcmk__add_idref(GHashTable *table, const char *id, const char *referrer)
         }
     }
     idref->refs = g_list_append(idref->refs, pcmk__str_copy(referrer));
-    crm_trace("Added ID %s referrer %s", id, referrer);
+    pcmk__trace("Added ID %s referrer %s", id, referrer);
 }
 
 /*!
@@ -92,7 +92,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
         return NULL;
     }
 
-    ref = crm_element_value(xml, PCMK_XA_ID_REF);
+    ref = pcmk__xe_get(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
         return xml;
     }
@@ -101,7 +101,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
         search = xml;
     }
 
-    xpath = crm_strdup_printf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
+    xpath = pcmk__assert_asprintf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
     result = pcmk__xpath_find_one(search->doc, xpath, LOG_DEBUG);
     if (result == NULL) {
         // Not possible with schema validation enabled

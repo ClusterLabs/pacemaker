@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -26,7 +26,7 @@ extern "C" {
  * \ingroup cib
  */
 
-// Use compare_version() for doing comparisons
+// Use pcmk__compare_versions() for doing comparisons
 #  define CIB_FEATURE_SET "2.0"
 
 /* Core functions */
@@ -39,7 +39,6 @@ cib_t *cib_file_new(const char *filename);
 cib_t *cib_remote_new(const char *server, const char *user, const char *passwd, int port,
                       gboolean encrypted);
 
-cib_t *cib_new_no_shadow(void);
 char *get_shadow_file(const char *name);
 cib_t *cib_shadow_new(const char *name);
 
@@ -53,7 +52,7 @@ void cib_dump_pending_callbacks(void);
 int num_cib_op_callbacks(void);
 void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
-#define CIB_LIBRARY "libcib.so.54"
+#define CIB_LIBRARY "libcib.so.55"
 
 #ifdef __cplusplus
 }

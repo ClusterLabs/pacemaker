@@ -10,12 +10,11 @@
 #ifndef PCMK__CRM_COMMON_XML_COMPAT__H
 #define PCMK__CRM_COMMON_XML_COMPAT__H
 
+#include <stdbool.h>                // bool
+
 #include <glib.h>               // gboolean
 #include <libxml/tree.h>        // xmlNode
 #include <libxml/xpath.h>           // xmlXPathObject
-
-#include <crm/common/nvpair.h>  // crm_xml_add()
-#include <crm/common/xml_names.h>   // PCMK_XE_CLONE
 
 #ifdef __cplusplus
 extern "C" {
@@ -123,6 +122,13 @@ void xml_calculate_changes(xmlNode *old_xml, xmlNode *new_xml);
 
 //! \deprecated Do not use
 void xml_calculate_significant_changes(xmlNode *old_xml, xmlNode *new_xml);
+
+//! \deprecated Do not use
+bool xml_patch_versions(const xmlNode *patchset, int add[3], int del[3]);
+
+//! \deprecated Do not use
+void patchset_process_digest(xmlNode *patch, const xmlNode *source,
+                             const xmlNode *target, bool with_digest);
 
 #ifdef __cplusplus
 }

@@ -4,7 +4,7 @@
       <cluster_property_set id="cib-bootstrap-options">
         <nvpair id="nvpair.id21844" name="cluster-delay" value="120s"/>
         <nvpair id="nvpair.id21872" name="no-quorum-policy" value="stop"/>
-        <nvpair id="nvpair.id21881" name="stonith-enabled" value="true"/>
+        <nvpair id="nvpair.id21881" name="fencing-enabled" value="true"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

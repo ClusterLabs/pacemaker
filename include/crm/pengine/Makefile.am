@@ -1,5 +1,5 @@
 #
-# Copyright 2006-2024 the Pacemaker project contributors
+# Copyright 2006-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,14 +11,15 @@ include $(top_srcdir)/mk/common.mk
 
 headerdir=$(pkgincludedir)/crm/pengine
 
-noinst_HEADERS		= internal.h 			\
-			  $(wildcard *_internal.h)
-header_HEADERS		= common.h 		\
-			  common_compat.h 	\
-			  complex.h 		\
-			  pe_types.h 		\
-			  rules.h 		\
-			  status.h 		\
-			  pe_types_compat.h	\
-			  rules_compat.h	\
-			  status_compat.h
+noinst_HEADERS = internal.h
+noinst_HEADERS += $(wildcard *_internal.h)
+
+header_HEADERS = common.h
+header_HEADERS += common_compat.h
+header_HEADERS += complex.h
+header_HEADERS += pe_types.h
+header_HEADERS += rules.h
+header_HEADERS += status.h
+header_HEADERS += pe_types_compat.h
+header_HEADERS += rules_compat.h
+header_HEADERS += status_compat.h

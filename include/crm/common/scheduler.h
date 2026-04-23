@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #ifndef PCMK__CRM_COMMON_SCHEDULER__H
 #define PCMK__CRM_COMMON_SCHEDULER__H
 
+#include <stdbool.h>
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode
 #include <glib.h>                       // guint, GList, GHashTable

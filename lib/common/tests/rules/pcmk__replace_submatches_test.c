@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,6 @@
 
 #include <regex.h>  // regmatch_t
 
-#include <crm/common/rules_internal.h>
 #include <crm/common/unittest_internal.h>
 
 // An example matched string with submatches
@@ -33,7 +32,7 @@ assert_submatch(const char *string, const char *reference)
         assert_null(expanded);
         assert_null(reference);
     } else {
-        assert_int_equal(strcmp(expanded, reference), 0);
+        assert_string_equal(expanded, reference);
     }
     free(expanded);
 }

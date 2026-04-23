@@ -10,9 +10,13 @@
 #ifndef PCMK__CRM_COMMON_IPC__H
 #define PCMK__CRM_COMMON_IPC__H
 
+#include <stdbool.h>
 #include <stdint.h>
 #include <sys/uio.h>
+
 #include <qb/qbipcc.h>
+
+#include <crm/common/results.h>     // crm_exit_t
 #include <crm/common/xml.h>
 
 #ifdef __cplusplus

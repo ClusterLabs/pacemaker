@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,14 +22,12 @@ static void
 deliver_fn1(cpg_handle_t handle, const struct cpg_name *group_name,
             uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    return;
 }
 
 static void
 deliver_fn2(cpg_handle_t handle, const struct cpg_name *group_name,
             uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
-    return;
 }
 
 static void

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>             // uint32_t
 #include <errno.h>              // EINVAL
 #include <glib.h>               // gboolean, FALSE, etc.
@@ -104,13 +105,8 @@ pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
 
     // Do not reset local_node_name or out
 
-    crm_time_free(scheduler->priv->now);
-    scheduler->priv->now = NULL;
-
-    if (scheduler->priv->options != NULL) {
-        g_hash_table_destroy(scheduler->priv->options);
-        scheduler->priv->options = NULL;
-    }
+    g_clear_pointer(&scheduler->priv->now, crm_time_free);
+    g_clear_pointer(&scheduler->priv->options, g_hash_table_destroy);
 
     scheduler->priv->fence_action = NULL;
     scheduler->priv->fence_timeout_ms = 0U;
@@ -124,30 +120,18 @@ pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
     g_list_free_full(scheduler->priv->resources, pcmk__free_resource);
     scheduler->priv->resources = NULL;
 
-    if (scheduler->priv->templates != NULL) {
-        g_hash_table_destroy(scheduler->priv->templates);
-        scheduler->priv->templates = NULL;
-    }
-    if (scheduler->priv->tags != NULL) {
-        g_hash_table_destroy(scheduler->priv->tags);
-        scheduler->priv->tags = NULL;
-    }
+    g_clear_pointer(&scheduler->priv->templates, g_hash_table_destroy);
+    g_clear_pointer(&scheduler->priv->tags, g_hash_table_destroy);
 
     g_list_free_full(scheduler->priv->actions, pcmk__free_action);
     scheduler->priv->actions = NULL;
 
-    if (scheduler->priv->singletons != NULL) {
-        g_hash_table_destroy(scheduler->priv->singletons);
-        scheduler->priv->singletons = NULL;
-    }
-
-    pcmk__xml_free(scheduler->priv->failed);
-    scheduler->priv->failed = NULL;
+    g_clear_pointer(&scheduler->priv->singletons, g_hash_table_destroy);
+    g_clear_pointer(&scheduler->priv->failed, pcmk__xml_free);
 
     pcmk__free_param_checks(scheduler);
 
-    g_list_free(scheduler->priv->stop_needed);
-    scheduler->priv->stop_needed = NULL;
+    g_clear_pointer(&scheduler->priv->stop_needed, g_list_free);
 
     g_list_free_full(scheduler->priv->location_constraints,
                      pcmk__free_location);
@@ -160,23 +144,18 @@ pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
                      pcmk__free_action_relation);
     scheduler->priv->ordering_constraints = NULL;
 
-    if (scheduler->priv->ticket_constraints != NULL) {
-        g_hash_table_destroy(scheduler->priv->ticket_constraints);
-        scheduler->priv->ticket_constraints = NULL;
-    }
+    g_clear_pointer(&scheduler->priv->ticket_constraints, g_hash_table_destroy);
 
     scheduler->priv->ninstances = 0;
     scheduler->priv->blocked_resources = 0;
     scheduler->priv->disabled_resources = 0;
     scheduler->priv->recheck_by = 0;
 
-    pcmk__xml_free(scheduler->priv->graph);
-    scheduler->priv->graph = NULL;
+    g_clear_pointer(&scheduler->priv->graph, pcmk__xml_free);
 
     scheduler->priv->synapse_count = 0;
 
-    pcmk__xml_free(scheduler->input);
-    scheduler->input = NULL;
+    g_clear_pointer(&scheduler->input, pcmk__xml_free);
 
     pcmk__set_scheduler_defaults(scheduler);
 
@@ -266,7 +245,7 @@ pcmk_has_quorum(const pcmk_scheduler_t *scheduler)
     if (scheduler == NULL) {
         return false;
     }
-    return pcmk_is_set(scheduler->flags, pcmk__sched_quorate);
+    return pcmk__is_set(scheduler->flags, pcmk__sched_quorate);
 }
 
 /*!
@@ -303,7 +282,7 @@ pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
         return time(NULL);
     }
     if (scheduler->priv->now == NULL) {
-        crm_trace("Scheduler 'now' set to current time");
+        pcmk__trace("Scheduler 'now' set to current time");
         scheduler->priv->now = crm_time_new(NULL);
     }
     return crm_time_get_seconds_since_epoch(scheduler->priv->now);
@@ -326,10 +305,11 @@ pcmk__update_recheck_time(time_t recheck, pcmk_scheduler_t *scheduler,
     if ((recheck > pcmk__scheduler_epoch_time(scheduler))
         && ((scheduler->priv->recheck_by == 0)
             || (scheduler->priv->recheck_by > recheck))) {
+
         scheduler->priv->recheck_by = recheck;
-        crm_debug("Updated next scheduler recheck to %s for %s",
-                  pcmk__trim(ctime(&recheck)),
-                  pcmk__s(reason, "some reason"));
+        pcmk__debug("Updated next scheduler recheck to %s for %s",
+                    g_strchomp(ctime(&recheck)),
+                    pcmk__s(reason, "some reason"));
     }
 }
 
@@ -364,8 +344,8 @@ pcmk__add_param_check(const xmlNode *rsc_history, pcmk_resource_t *rsc,
 
     CRM_CHECK((rsc_history != NULL) && (rsc != NULL) && (node != NULL), return);
 
-    crm_trace("Deferring checks of %s until after assignment",
-              pcmk__xe_id(rsc_history));
+    pcmk__trace("Deferring checks of %s until after assignment",
+                pcmk__xe_id(rsc_history));
     param_check = pcmk__assert_alloc(1, sizeof(struct param_check));
     param_check->rsc_history = rsc_history;
     param_check->rsc = rsc;
@@ -409,8 +389,10 @@ pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
 void
 pcmk__free_param_checks(pcmk_scheduler_t *scheduler)
 {
-    if ((scheduler != NULL) && (scheduler->priv->param_check != NULL)) {
-        g_list_free_full(scheduler->priv->param_check, free);
-        scheduler->priv->param_check = NULL;
+    if (scheduler == NULL) {
+        return;
     }
+
+    g_list_free_full(scheduler->priv->param_check, free);
+    scheduler->priv->param_check = NULL;
 }

@@ -1197,7 +1197,7 @@ monitor, start, or stop resources during this time.
 
       <crm_config>
          <cluster_property_set id="cib-bootstrap-options">
-           <nvpair id="bootstrap-stonith-enabled" name="stonith-enabled" value="1"/>
+           <nvpair id="bootstrap-fencing-enabled" name="fencing-enabled" value="1"/>
          </cluster_property_set>
          <cluster_property_set id="normal-set" score="10">
            <nvpair id="normal-maintenance-mode" name="maintenance-mode" value="false"/>

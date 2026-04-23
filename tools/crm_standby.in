@@ -156,3 +156,5 @@ if [ $lifetime -eq 0 ]; then
 fi
 
 crm_attribute $options
+
+# vim: set filetype=sh:

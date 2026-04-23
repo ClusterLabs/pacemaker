@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2023 the Pacemaker project contributors
+# Copyright 2004-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -13,50 +13,45 @@ if BUILD_SYSTEMD
 systemdsystemunit_DATA	= crm_mon.service
 endif
 
-noinst_HEADERS		= crm_mon.h 		\
-			  crm_resource.h
+noinst_HEADERS = crm_mon.h
+noinst_HEADERS += crm_resource.h
 
 pcmkdir			= $(datadir)/$(PACKAGE)
-pcmk_DATA		= report.common 	\
-			  report.collector
+pcmk_DATA = report.common
+pcmk_DATA += report.collector
 
-sbin_SCRIPTS		= crm_report 	\
-			  crm_standby 	\
-			  crm_master 	\
-			  crm_failcount
+sbin_SCRIPTS = crm_report
+sbin_SCRIPTS += crm_standby
+sbin_SCRIPTS += crm_master
+sbin_SCRIPTS += crm_failcount
+
+noinst_SCRIPTS		= pcmk_simtimes
+
+EXTRA_DIST = $(wildcard *.inc)
+EXTRA_DIST += fix-manpages
+
+sbin_PROGRAMS = attrd_updater
+sbin_PROGRAMS += cibadmin
+sbin_PROGRAMS += crmadmin
+sbin_PROGRAMS += crm_simulate
+sbin_PROGRAMS += crm_attribute
+sbin_PROGRAMS += crm_diff
+sbin_PROGRAMS += crm_error
+sbin_PROGRAMS += crm_mon
+sbin_PROGRAMS += crm_node
+sbin_PROGRAMS += crm_resource
+sbin_PROGRAMS += crm_rule
+sbin_PROGRAMS += crm_shadow
+sbin_PROGRAMS += crm_verify
+sbin_PROGRAMS += crm_ticket
+sbin_PROGRAMS += iso8601
+sbin_PROGRAMS += stonith_admin
+
 if BUILD_CIBSECRETS
-sbin_SCRIPTS		+= cibsecret
+sbin_PROGRAMS 		+= cibsecret
 endif
-noinst_SCRIPTS		= cluster-clean		\
-			  cluster-helper	\
-			  pcmk_simtimes
-
-EXTRA_DIST		= $(wildcard *.inc) 	\
-			  fix-manpages
-
-sbin_PROGRAMS		= attrd_updater \
-			  cibadmin 	\
-			  crmadmin 	\
-			  crm_simulate 	\
-			  crm_attribute \
-			  crm_diff 	\
-			  crm_error 	\
-			  crm_mon 	\
-			  crm_node 	\
-			  crm_resource 	\
-			  crm_rule 	\
-			  crm_shadow 	\
-			  crm_verify 	\
-			  crm_ticket 	\
-			  iso8601 	\
-			  stonith_admin
 
 ## SOURCES
-
-# A few tools are just thin wrappers around crm_attribute.
-# This makes their help get updated when crm_attribute changes
-# (see mk/common.mk).
-MAN8DEPS		= crm_attribute
 
 crmadmin_SOURCES	= crmadmin.c
 crmadmin_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
@@ -72,6 +67,13 @@ cibadmin_SOURCES	= cibadmin.c
 cibadmin_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 cibadmin_LDADD += $(top_builddir)/lib/cib/libcib.la
 cibadmin_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+
+if BUILD_CIBSECRETS
+cibsecret_SOURCES	= cibsecret.c
+cibsecret_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
+cibsecret_LDADD += $(top_builddir)/lib/cib/libcib.la
+cibsecret_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
+endif
 
 crm_shadow_SOURCES	= crm_shadow.c
 crm_shadow_LDADD = $(top_builddir)/lib/cib/libcib.la
@@ -110,10 +112,10 @@ crm_attribute_LDADD	= $(top_builddir)/lib/pacemaker/libpacemaker.la
 crm_attribute_LDADD += $(top_builddir)/lib/cib/libcib.la
 crm_attribute_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 
-crm_resource_SOURCES	= crm_resource.c		\
-			  crm_resource_ban.c		\
-			  crm_resource_print.c		\
-			  crm_resource_runtime.c
+crm_resource_SOURCES = crm_resource.c
+crm_resource_SOURCES += crm_resource_ban.c
+crm_resource_SOURCES += crm_resource_print.c
+crm_resource_SOURCES += crm_resource_runtime.c
 crm_resource_LDADD = $(top_builddir)/lib/pacemaker/libpacemaker.la
 crm_resource_LDADD += $(top_builddir)/lib/pengine/libpe_status.la
 crm_resource_LDADD += $(top_builddir)/lib/cib/libcib.la

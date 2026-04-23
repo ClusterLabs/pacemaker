@@ -10,13 +10,14 @@
 #ifndef CRMD_FSA__H
 #  define CRMD_FSA__H
 
+#  include <inttypes.h>                          // UINT64_C, PRIx64
 #  include <crm/crm.h>
 #  include <crm/cib.h>
 #  include <crm/common/xml.h>
 #  include <crm/common/mainloop.h>
 #  include <crm/cluster.h>
 #  include <crm/cluster/election_internal.h>
-#  include <crm/common/ipc_internal.h>
+#  include <crm/common/internal.h>
 
 /*! States the controller can be in */
 enum crmd_fsa_state {
@@ -54,23 +55,16 @@ enum crmd_fsa_state {
     S_TERMINATE,                /* We are going to shutdown, this is the equiv of
                                  * "Sending TERM signal to all processes" in Linux
                                  * and in worst case scenarios could be considered
-                                 * a self STONITH
+                                 * self-fencing
                                  */
     S_TRANSITION_ENGINE,        /* Attempt to make the calculated next stable
                                  * state of the cluster a reality
                                  */
 
-    S_HALT,                     /* Freeze - don't do anything
-                                 * Something bad happened that needs the admin to fix
-                                 * Wait for I_ELECTION
-                                 */
-
-    /*  ----------- Last input found in table is above ---------- */
-    S_ILLEGAL                   /* This is an illegal FSA state */
-        /* (must be last) */
+    S_MAX = S_TRANSITION_ENGINE,    /* Max enum value; update if adding new
+                                     * values
+                                     */
 };
-
-#  define MAXSTATE S_ILLEGAL
 
 /*
       Once we start and do some basic sanity checks, we go into the
@@ -134,7 +128,6 @@ enum crmd_fsa_state {
  *======================================*/
 enum crmd_fsa_input {
     I_NULL,                     /* Nothing happened */
-    I_CIB_UPDATE,               /* An update to the CIB occurred */
     I_DC_TIMEOUT,               /* We have lost communication with the DC */
     I_ELECTION,                 /* Someone started an election */
     I_PE_CALC,                  /* The scheduler needs to be invoked */
@@ -156,13 +149,7 @@ enum crmd_fsa_input {
     I_NOT_DC,                   /* We are not and were not the DC before or after
                                  * the current operation or state
                                  */
-    I_RECOVERED,                /* The recovery process completed successfully */
-    I_RELEASE_FAIL,             /* We could not give up DC status for some reason
-                                 */
     I_RELEASE_SUCCESS,          /* We are no longer the DC */
-    I_RESTART,                  /* The current set of actions needs to be
-                                 * restarted
-                                 */
     I_TE_SUCCESS,               /* Some non-resource, non-cluster-layer action
                                  * is required of us, e.g. ping
                                  */
@@ -182,19 +169,10 @@ enum crmd_fsa_input {
     I_WAIT_FOR_EVENT,           /* we may be waiting for an async task to "happen"
                                  * and until it does, we can't do anything else
                                  */
-    I_DC_HEARTBEAT,             /* The DC is telling us that it is alive and well */
-
     I_PENDING,
-    I_HALT,
 
-    /*  ------------ Last input found in table is above ----------- */
-    I_ILLEGAL                   /* This is an illegal value for an FSA input */
-        /* (must be last) */
+    I_MAX = I_PENDING,          // Max enum value; update if adding new values
 };
-
-#  define MAXINPUT  I_ILLEGAL
-
-#  define I_MESSAGE I_ROUTER
 
 /*======================================
  *
@@ -209,143 +187,178 @@ enum crmd_fsa_input {
  *
  *======================================*/
 
-         /* Don't do anything */
-#  define A_NOTHING                 0x0000000000000000ULL
+/* Don't do anything */
+#define A_NOTHING                   (UINT64_C(0))
 
 /* -- Startup actions -- */
-        /* Hook to perform any actions (other than connecting to other daemons)
-         * that might be needed as part of the startup.
-         */
-#  define A_STARTUP                 0x0000000000000001ULL
-        /* Hook to perform any actions that might be needed as part
-         * after startup is successful.
-         */
-#  define A_STARTED                 0x0000000000000002ULL
-        /* Connect to cluster layer */
-#  define A_HA_CONNECT              0x0000000000000004ULL
-#  define A_HA_DISCONNECT           0x0000000000000008ULL
 
-#  define A_INTEGRATE_TIMER_START   0x0000000000000010ULL
-#  define A_INTEGRATE_TIMER_STOP    0x0000000000000020ULL
-#  define A_FINALIZE_TIMER_START    0x0000000000000040ULL
-#  define A_FINALIZE_TIMER_STOP     0x0000000000000080ULL
+/* Hook to perform any actions (other than connecting to other daemons) that
+ * might be needed as part of the startup.
+ */
+#define A_STARTUP                   (UINT64_C(1) << 0)
+
+/* Hook to perform any actions that might be needed as part after startup is
+ * successful.
+ */
+#define A_STARTED                   (UINT64_C(1) << 1)
+
+/* Connect to cluster layer */
+#define A_HA_CONNECT                (UINT64_C(1) << 2)
+
+#define A_HA_DISCONNECT             (UINT64_C(1) << 3)
+
+#define A_INTEGRATE_TIMER_START     (UINT64_C(1) << 4)
+#define A_INTEGRATE_TIMER_STOP      (UINT64_C(1) << 5)
+#define A_FINALIZE_TIMER_START      (UINT64_C(1) << 6)
+#define A_FINALIZE_TIMER_STOP       (UINT64_C(1) << 7)
 
 /* -- Election actions -- */
-#  define A_DC_TIMER_START          0x0000000000000100ULL
-#  define A_DC_TIMER_STOP           0x0000000000000200ULL
-#  define A_ELECTION_COUNT          0x0000000000000400ULL
-#  define A_ELECTION_VOTE           0x0000000000000800ULL
 
-#  define A_ELECTION_START          0x0000000000001000ULL
+#define A_DC_TIMER_START            (UINT64_C(1) << 8)
+#define A_DC_TIMER_STOP             (UINT64_C(1) << 9)
+#define A_ELECTION_COUNT            (UINT64_C(1) << 10)
+#define A_ELECTION_VOTE             (UINT64_C(1) << 11)
+
+/* @TODO The handler for A_ELECTION_START is identical to the handler for
+ * A_ELECTION_VOTE. The only difference is the priority within
+ * s_crmd_fsa_actions(). Determine whether it's safe to drop this and replace it
+ * with A_ELECTION_VOTE, or whether we rely on this difference in priority for
+ * I_ERROR and I_NOT_DC.
+ */
+#define A_ELECTION_START            (UINT64_C(1) << 12)
 
 /* -- Message processing -- */
-        /* Process the queue of requests */
-#  define A_MSG_PROCESS             0x0000000000002000ULL
-        /* Send the message to the correct recipient */
-#  define A_MSG_ROUTE               0x0000000000004000ULL
 
-        /* Send a welcome message to new node(s) */
-#  define A_DC_JOIN_OFFER_ONE       0x0000000000008000ULL
+/* Send the message to the correct recipient */
+#define A_MSG_ROUTE                 (UINT64_C(1) << 14)
+
+/* Send a welcome message to new node(s) */
+#define A_DC_JOIN_OFFER_ONE         (UINT64_C(1) << 15)
 
 /* -- Server Join protocol actions -- */
-        /* Send a welcome message to all nodes */
-#  define A_DC_JOIN_OFFER_ALL       0x0000000000010000ULL
-        /* Process the remote node's ack of our join message */
-#  define A_DC_JOIN_PROCESS_REQ     0x0000000000020000ULL
-        /* Send out the results of the Join phase */
-#  define A_DC_JOIN_FINALIZE        0x0000000000040000ULL
-        /* Send out the results of the Join phase */
-#  define A_DC_JOIN_PROCESS_ACK     0x0000000000080000ULL
+
+/* Send a welcome message to all nodes */
+#define A_DC_JOIN_OFFER_ALL         (UINT64_C(1) << 16)
+
+/* Process the remote node's ack of our join message */
+#define A_DC_JOIN_PROCESS_REQ       (UINT64_C(1) << 17)
+
+/* Send out the results of the Join phase */
+#define A_DC_JOIN_FINALIZE          (UINT64_C(1) << 18)
+
+/* Send out the results of the Join phase */
+#define A_DC_JOIN_PROCESS_ACK       (UINT64_C(1) << 19)
 
 /* -- Client Join protocol actions -- */
-#  define A_CL_JOIN_QUERY           0x0000000000100000ULL
-#  define A_CL_JOIN_ANNOUNCE        0x0000000000200000ULL
-        /* Request membership to the DC list */
-#  define A_CL_JOIN_REQUEST         0x0000000000400000ULL
-        /* Did the DC accept or reject the request */
-#  define A_CL_JOIN_RESULT          0x0000000000800000ULL
+
+/* Broadcast a join announce message, requesting a join offer from the DC if
+ * there is one in our cluster layer membership
+ */
+#define A_CL_JOIN_QUERY             (UINT64_C(1) << 20)
+
+/* @TODO The handler for A_CL_JOIN_ANNOUNCE is almost identical to the handler
+ * for A_CL_JOIN_QUERY. The only differences are:
+ * - the priority within s_crmd_fsa_actions()
+ * - whether we sleep(1) to wait for a DC to join our membership
+ * - whether we send an announcement from states other than S_PENDING
+ *
+ * Determine whether it's safe to drop this and replace it with A_CL_JOIN_QUERY
+ * (or vice-versa), or whether we rely on these differences somehow.
+ */
+#define A_CL_JOIN_ANNOUNCE          (UINT64_C(1) << 21)
+
+/* Send the DC a join request in response to a join offer */
+#define A_CL_JOIN_REQUEST           (UINT64_C(1) << 22)
+
+/* Did the DC accept or reject the request */
+#define A_CL_JOIN_RESULT            (UINT64_C(1) << 23)
 
 /* -- Recovery, DC start/stop -- */
-        /* Something bad happened, try to recover */
-#  define A_RECOVER                 0x0000000001000000ULL
-        /* Hook to perform any actions (apart from starting, the TE, scheduler,
-         * and gathering the latest CIB) that might be necessary before
-         * giving up the responsibilities of being the DC.
-         */
-#  define A_DC_RELEASE              0x0000000002000000ULL
-        /* */
-#  define A_DC_RELEASED             0x0000000004000000ULL
-        /* Hook to perform any actions (apart from starting, the TE, scheduler,
-         * and gathering the latest CIB) that might be necessary before
-         * taking over the responsibilities of being the DC.
-         */
-#  define A_DC_TAKEOVER             0x0000000008000000ULL
+
+/* Something bad happened, try to recover */
+#define A_RECOVER                   (UINT64_C(1) << 24)
+
+/* Hook to perform any actions (apart from starting, the TE, scheduler, and
+ * gathering the latest CIB) that might be necessary before giving up the
+ * responsibilities of being the DC.
+ */
+#define A_DC_RELEASE                (UINT64_C(1) << 25)
+
+#define A_DC_RELEASED               (UINT64_C(1) << 26)
+
+/* Hook to perform any actions (apart from starting, the TE, scheduler, and
+ * gathering the latest CIB) that might be necessary before taking over the
+ * responsibilities of being the DC.
+ */
+#define A_DC_TAKEOVER               (UINT64_C(1) << 27)
 
 /* -- Shutdown actions -- */
-#  define A_SHUTDOWN                0x0000000010000000ULL
-#  define A_STOP                    0x0000000020000000ULL
-#  define A_EXIT_0                  0x0000000040000000ULL
-#  define A_EXIT_1                  0x0000000080000000ULL
 
-#  define A_SHUTDOWN_REQ            0x0000000100000000ULL
-#  define A_ELECTION_CHECK          0x0000000200000000ULL
-#  define A_DC_JOIN_FINAL           0x0000000400000000ULL
+#define A_SHUTDOWN                  (UINT64_C(1) << 28)
+#define A_STOP                      (UINT64_C(1) << 29)
+#define A_EXIT_0                    (UINT64_C(1) << 30)
+#define A_EXIT_1                    (UINT64_C(1) << 31)
+
+#define A_SHUTDOWN_REQ              (UINT64_C(1) << 32)
+#define A_ELECTION_CHECK            (UINT64_C(1) << 33)
+#define A_DC_JOIN_FINAL             (UINT64_C(1) << 34)
 
 /* -- CIB actions -- */
-#  define A_CIB_START               0x0000020000000000ULL
-#  define A_CIB_STOP                0x0000040000000000ULL
+
+#define A_CIB_START                 (UINT64_C(1) << 41)
+#define A_CIB_STOP                  (UINT64_C(1) << 42)
 
 /* -- Transition Engine actions -- */
-        /* Attempt to reach the newly calculated cluster state. This is
-         * only called once per transition (except if it is asked to
-         * stop the transition or start a new one).
-         * Once given a cluster state to reach, the TE will determine
-         * tasks that can be performed in parallel, execute them, wait
-         * for replies and then determine the next set until the new
-         * state is reached or no further tasks can be taken.
-         */
-#  define A_TE_INVOKE               0x0000100000000000ULL
-#  define A_TE_START                0x0000200000000000ULL
-#  define A_TE_STOP                 0x0000400000000000ULL
-#  define A_TE_CANCEL               0x0000800000000000ULL
-#  define A_TE_HALT                 0x0001000000000000ULL
+
+/* Attempt to reach the newly calculated cluster state. This is only called
+ * once per transition (except if it is asked to stop the transition or start
+ * a new one). Once given a cluster state to reach, the TE will determine
+ * tasks that can be performed in parallel, execute them, wait for replies and
+ * then determine the next set until the new state is reached or no further
+ * tasks can be taken.
+ */
+#define A_TE_INVOKE                 (UINT64_C(1) << 44)
+
+#define A_TE_START                  (UINT64_C(1) << 45)
+#define A_TE_STOP                   (UINT64_C(1) << 46)
+#define A_TE_CANCEL                 (UINT64_C(1) << 47)
+#define A_TE_HALT                   (UINT64_C(1) << 48)
 
 /* -- Scheduler actions -- */
-        /* Calculate the next state for the cluster.  This is only
-         * invoked once per needed calculation.
-         */
-#  define A_PE_INVOKE               0x0002000000000000ULL
-#  define A_PE_START                0x0004000000000000ULL
-#  define A_PE_STOP                 0x0008000000000000ULL
+
+/* Calculate the next state for the cluster. This is only invoked once per
+ * needed calculation.
+ */
+#define A_PE_INVOKE                 (UINT64_C(1) << 49)
+#define A_PE_START                  (UINT64_C(1) << 50)
+#define A_PE_STOP                   (UINT64_C(1) << 51)
+
 /* -- Misc actions -- */
-        /* Add a system generate "block" so that resources arent moved
-         * to or are activly moved away from the affected node.  This
-         * way we can return quickly even if busy with other things.
-         */
-#  define A_NODE_BLOCK              0x0010000000000000ULL
-        /* Update our information in the local CIB */
-#  define A_UPDATE_NODESTATUS       0x0020000000000000ULL
-#  define A_READCONFIG              0x0080000000000000ULL
+
+#define A_READCONFIG                (UINT64_C(1) << 55)
 
 /* -- LRM Actions -- */
-        // Connect to the local executor
-#  define A_LRM_CONNECT             0x0100000000000000ULL
-        // Disconnect from the local executor
-#  define A_LRM_DISCONNECT          0x0200000000000000ULL
-#  define A_LRM_INVOKE              0x0400000000000000ULL
+
+/* Connect to the local executor */
+#define A_LRM_CONNECT               (UINT64_C(1) << 56)
+
+/* Disconnect from the local executor */
+#define A_LRM_DISCONNECT            (UINT64_C(1) << 57)
 
 /* -- Logging actions -- */
-#  define A_LOG                     0x1000000000000000ULL
-#  define A_ERROR                   0x2000000000000000ULL
-#  define A_WARN                    0x4000000000000000ULL
 
-#  define O_EXIT                (A_SHUTDOWN|A_STOP|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
-#  define O_RELEASE             (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
-#  define O_PE_RESTART          (A_PE_START|A_PE_STOP)
-#  define O_TE_RESTART          (A_TE_START|A_TE_STOP)
-#  define O_CIB_RESTART         (A_CIB_START|A_CIB_STOP)
-#  define O_LRM_RECONNECT       (A_LRM_CONNECT|A_LRM_DISCONNECT)
-#  define O_DC_TIMER_RESTART    (A_DC_TIMER_STOP|A_DC_TIMER_START)
+#define A_LOG                       (UINT64_C(1) << 60)
+#define A_ERROR                     (UINT64_C(1) << 61)
+#define A_WARN                      (UINT64_C(1) << 62)
+
+#define O_EXIT                      (A_SHUTDOWN|A_STOP|A_LRM_DISCONNECT|A_HA_DISCONNECT|A_EXIT_0|A_CIB_STOP)
+#define O_RELEASE                   (A_DC_TIMER_STOP|A_DC_RELEASE|A_PE_STOP|A_TE_STOP|A_DC_RELEASED)
+#define O_PE_RESTART                (A_PE_START|A_PE_STOP)
+#define O_TE_RESTART                (A_TE_START|A_TE_STOP)
+#define O_CIB_RESTART               (A_CIB_START|A_CIB_STOP)
+#define O_LRM_RECONNECT             (A_LRM_CONNECT|A_LRM_DISCONNECT)
+#define O_DC_TIMER_RESTART          (A_DC_TIMER_STOP|A_DC_TIMER_START)
+
 /*======================================
  *
  * "register" contents
@@ -355,62 +368,56 @@ enum crmd_fsa_input {
  * These also count as inputs for synthesizing I_*
  *
  *======================================*/
-#  define R_THE_DC          0x00000001ULL
-                                        /* Are we the DC? */
-#  define R_STARTING        0x00000002ULL
-                                        /* Are we starting up? */
-#  define R_SHUTDOWN        0x00000004ULL
-                                        /* Are we trying to shut down? */
-#  define R_STAYDOWN        0x00000008ULL
-                                        /* Should we restart? */
 
-#  define R_JOIN_OK         0x00000010ULL   /* Have we completed the join process */
-#  define R_READ_CONFIG     0x00000040ULL
-#  define R_INVOKE_PE       0x00000080ULL   // Should the scheduler be invoked?
+// Are we the DC?
+#define R_THE_DC          (UINT64_C(1) << 0)
 
-#  define R_CIB_CONNECTED   0x00000100ULL
-                                        /* Is the CIB connected? */
-#  define R_PE_CONNECTED    0x00000200ULL   // Is the scheduler connected?
-#  define R_TE_CONNECTED    0x00000400ULL
-                                        /* Is the Transition Engine connected? */
-#  define R_LRM_CONNECTED   0x00000800ULL   // Is the executor connected?
+// Are we trying to shut down?
+#define R_SHUTDOWN        (UINT64_C(1) << 2)
 
-#  define R_CIB_REQUIRED    0x00001000ULL
-                                        /* Is the CIB required? */
-#  define R_PE_REQUIRED     0x00002000ULL   // Is the scheduler required?
-#  define R_TE_REQUIRED     0x00004000ULL
-                                        /* Is the Transition Engine required? */
-#  define R_ST_REQUIRED     0x00008000ULL
-                                        /* Is the Stonith daemon required? */
+// Should we restart?
+#define R_STAYDOWN        (UINT64_C(1) << 3)
 
-#  define R_CIB_DONE        0x00010000ULL
-                                        /* Have we calculated the CIB? */
-#  define R_HAVE_CIB        0x00020000ULL   /* Do we have an up-to-date CIB */
+// Has the configuration been read?
+#define R_READ_CONFIG     (UINT64_C(1) << 6)
 
-#  define R_MEMBERSHIP      0x00100000ULL   /* Have we got cluster layer data yet */
+// Is the CIB connected?
+#define R_CIB_CONNECTED   (UINT64_C(1) << 8)
+
+// Is the scheduler connected?
+#define R_PE_CONNECTED    (UINT64_C(1) << 9)
+
+// Is the Transition Engine connected?
+#define R_TE_CONNECTED    (UINT64_C(1) << 10)
+
+// Is the executor connected?
+#define R_LRM_CONNECTED   (UINT64_C(1) << 11)
+
+// Is the scheduler required?
+#define R_PE_REQUIRED     (UINT64_C(1) << 13)
+
+// Is the fencer daemon required?
+#define R_ST_REQUIRED     (UINT64_C(1) << 15)
+
+// Do we have an up-to-date CIB?
+#define R_HAVE_CIB        (UINT64_C(1) << 17)
+
+// Have we received cluster layer data yet?
+#define R_MEMBERSHIP      (UINT64_C(1) << 20)
 
 // Ever received membership-layer data
-#  define R_PEER_DATA       0x00200000ULL
+#define R_PEER_DATA       (UINT64_C(1) << 21)
 
-#  define R_HA_DISCONNECTED 0x00400000ULL      /* did we sign out of our own accord */
+// Did we sign out of our own accord?
+#define R_HA_DISCONNECTED (UINT64_C(1) << 22)
 
-#  define R_REQ_PEND        0x01000000ULL
-                                        /* Are there Requests waiting for
-                                           processing? */
-#  define R_PE_PEND         0x02000000ULL   // Are we awaiting reply from scheduler?
-#  define R_TE_PEND         0x04000000ULL
-                                        /* Has the TE been invoked and we're
-                                           awaiting completion? */
-#  define R_RESP_PEND       0x08000000ULL
-                                        /* Do we have clients waiting on a
-                                           response? if so perhaps we shouldn't
-                                           stop yet */
+/* Have we sent a stop action to all resources in preparation for
+ * shutting down?
+ */
+#define R_SENT_RSC_STOP   (UINT64_C(1) << 29)
 
-#  define R_SENT_RSC_STOP   0x20000000ULL /* Have we sent a stop action to all
-                                         * resources in preparation for
-                                         * shutting down */
-
-#  define R_IN_RECOVERY     0x80000000ULL
+// Are we in recovery mode?
+#define R_IN_RECOVERY     (UINT64_C(1) << 31)
 
 #define CRM_DIRECT_NACK_RC (99) // Deprecated (see PCMK_EXEC_INVALID)
 
@@ -420,29 +427,24 @@ enum crmd_fsa_cause {
     C_IPC_MESSAGE,
     C_HA_MESSAGE,
     C_CRMD_STATUS_CALLBACK,
-    C_LRM_OP_CALLBACK,
     C_TIMER_POPPED,
     C_SHUTDOWN,
     C_FSA_INTERNAL,
 };
 
-enum fsa_data_type {
-    fsa_dt_none,
-    fsa_dt_ha_msg,
-    fsa_dt_xml,
-    fsa_dt_lrm,
-};
+typedef struct {
+    xmlNode *msg;
+    xmlNode *xml;
+} ha_msg_input_t;
 
-typedef struct fsa_data_s fsa_data_t;
-struct fsa_data_s {
-    int id;
+typedef struct {
+    unsigned long long id;          // Debug only
     enum crmd_fsa_input fsa_input;
     enum crmd_fsa_cause fsa_cause;
     uint64_t actions;
     const char *origin;
-    void *data;
-    enum fsa_data_type data_type;
-};
+    ha_msg_input_t *data;
+} fsa_data_t;
 
 #define controld_set_fsa_input_flags(flags_to_set) do {                 \
         controld_globals.fsa_input_register                             \
@@ -496,8 +498,8 @@ void controld_destroy_fsa_trigger(void);
 
 void free_max_generation(void);
 
-#  define AM_I_DC pcmk_is_set(controld_globals.fsa_input_register, R_THE_DC)
-#  define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
+#define AM_I_DC pcmk__is_set(controld_globals.fsa_input_register, R_THE_DC)
+#define controld_trigger_fsa() controld_trigger_fsa_as(__func__, __LINE__)
 
 void controld_trigger_fsa_as(const char *fn, int line);
 
@@ -510,11 +512,6 @@ void do_read_config(long long action, enum crmd_fsa_cause cause,
 void do_pe_invoke(long long action, enum crmd_fsa_cause cause,
                   enum crmd_fsa_state cur_state,
                   enum crmd_fsa_input current_input, fsa_data_t *msg_data);
-
-/* A_LOG */
-void do_log(long long action, enum crmd_fsa_cause cause,
-            enum crmd_fsa_state cur_state,
-            enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
 /* A_STARTUP */
 void do_startup(long long action, enum crmd_fsa_cause cause,
@@ -561,7 +558,7 @@ void do_recover(long long action, enum crmd_fsa_cause cause,
                 enum crmd_fsa_state cur_state,
                 enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
-/* A_ELECTION_VOTE */
+/* A_ELECTION_VOTE, A_ELECTION_START */
 void do_election_vote(long long action, enum crmd_fsa_cause cause,
                       enum crmd_fsa_state cur_state,
                       enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
@@ -587,7 +584,7 @@ void do_dc_takeover(long long action, enum crmd_fsa_cause cause,
                     enum crmd_fsa_state cur_state,
                     enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
-/* A_DC_RELEASE */
+/* A_DC_RELEASE, A_DC_RELEASED */
 void do_dc_release(long long action, enum crmd_fsa_cause cause,
                    enum crmd_fsa_state cur_state,
                    enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
@@ -640,11 +637,6 @@ void do_cl_join_finalize_respond(long long action, enum crmd_fsa_cause cause,
                                  enum crmd_fsa_state cur_state,
                                  enum crmd_fsa_input current_input,
                                  fsa_data_t *msg_data);
-
-/* A_LRM_INVOKE */
-void do_lrm_invoke(long long action, enum crmd_fsa_cause cause,
-                   enum crmd_fsa_state cur_state,
-                   enum crmd_fsa_input cur_input, fsa_data_t *msg_data);
 
 /* A_TE_INVOKE, A_TE_CANCEL */
 void do_te_invoke(long long action, enum crmd_fsa_cause cause,

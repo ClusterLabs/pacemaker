@@ -13,7 +13,7 @@
 #include <crm_internal.h>       // pcmk__output_t, etc.
 
 #include <stdint.h>             // uint32_t, uint64_t
-#include <glib.h>               // GList, GMainLoop
+#include <glib.h>               // GMainLoop, GQueue, guint, etc.
 #include <crm/cib.h>            // cib_t
 #include <pacemaker-internal.h> // pcmk__graph_t
 #include <controld_fsa.h>       // enum crmd_fsa_state
@@ -35,7 +35,7 @@ typedef struct {
     uint64_t fsa_input_register;
 
     // FSA message queue
-    GList *fsa_message_queue;
+    GQueue *fsa_message_queue;
 
 
     /* CIB */
@@ -110,26 +110,41 @@ extern controld_globals_t controld_globals;
 
 /*!
  * \internal
+ * \brief Get number of messages in the controller FSA message queue
+ *
+ * \return Length of the queue, or 0 if the queue is \c NULL
+ */
+static inline guint
+controld_fsa_message_queue_length(void)
+{
+    if (controld_globals.fsa_message_queue == NULL) {
+        return 0;
+    }
+    return controld_globals.fsa_message_queue->length;
+}
+
+/*!
+ * \internal
  * \brief Bit flags to store various controller state and configuration info
  */
 enum controld_flags {
     //! The DC left in a membership change that is being processed
-    controld_dc_left                = (1 << 0),
+    controld_dc_left                = (UINT32_C(1) << 0),
 
     //! The FSA is stalled waiting for further input
-    controld_fsa_is_stalled         = (1 << 1),
+    controld_fsa_is_stalled         = (UINT32_C(1) << 1),
 
     //! The local node has been in a quorate partition at some point
-    controld_ever_had_quorum        = (1 << 2),
+    controld_ever_had_quorum        = (UINT32_C(1) << 2),
 
     //! The local node is currently in a quorate partition
-    controld_has_quorum             = (1 << 3),
+    controld_has_quorum             = (UINT32_C(1) << 3),
 
     //! Panic the local node if it loses quorum
-    controld_no_quorum_panic        = (1 << 4),
+    controld_no_quorum_panic        = (UINT32_C(1) << 4),
 
     //! Lock resources to the local node when it shuts down cleanly
-    controld_shutdown_lock_enabled  = (1 << 5),
+    controld_shutdown_lock_enabled  = (UINT32_C(1) << 5),
 };
 
 #  define controld_set_global_flags(flags_to_set) do {                      \

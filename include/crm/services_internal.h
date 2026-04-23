@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_SERVICES_INTERNAL__H
 #define PCMK__CRM_SERVICES_INTERNAL__H
 
-#include <crm/common/results_internal.h>    // pcmk__action_result_t
+#include <crm/common/internal.h>            // pcmk__action_result_t
 #include <crm/services.h>                   // svc_action_t
 
 #ifdef __cplusplus

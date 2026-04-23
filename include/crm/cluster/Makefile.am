@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2024 the Pacemaker project contributors
+# Copyright 2012-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,6 +11,6 @@ include $(top_srcdir)/mk/common.mk
 
 headerdir=$(pkgincludedir)/crm/cluster
 
-noinst_HEADERS		= internal.h 			\
-			  $(wildcard *_internal.h)
+noinst_HEADERS = internal.h
+noinst_HEADERS += $(wildcard *_internal.h)
 header_HEADERS		= compat.h

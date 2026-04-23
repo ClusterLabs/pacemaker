@@ -1,5 +1,5 @@
 #
-# Copyright 2004-2024 the Pacemaker project contributors
+# Copyright 2004-2025 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -16,7 +16,7 @@ noinst_HEADERS  = libpacemaker_private.h
 ## libraries
 lib_LTLIBRARIES	= libpacemaker.la
 
-libpacemaker_la_LDFLAGS	= -version-info 30:1:0
+libpacemaker_la_LDFLAGS	= -version-info 31:0:1
 
 libpacemaker_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libpacemaker_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)

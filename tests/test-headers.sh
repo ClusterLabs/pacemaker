@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Copyright 2022-2024 the Pacemaker project contributors
+# Copyright 2022-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -33,6 +33,8 @@ do
     PROTECT="PCMK__$(echo "$NAME" | tr '[:lower:]/\-\.' '[:upper:]___' | sed 's/_H$/__H/')"
 
     cat >"$TESTFILE" <<EOF
+#define PCMK__INCLUDED_PACEMAKER_INTERNAL_H
+#define PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
 #include <$NAME>
 #ifndef $PROTECT
 #error no $PROTECT header protector in file $i

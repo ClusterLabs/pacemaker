@@ -17,7 +17,7 @@
 #include <crm/common/results.h>
 #include <crm/fencing/internal.h>
 #include <crm/pengine/internal.h>
-#include <crm/stonith-ng.h> // stonith__register_messages()
+#include <crm/stonith-ng.h>         // stonith_t
 #include <pacemaker.h>
 #include <pacemaker-internal.h>
 
@@ -95,7 +95,7 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
         return rc;
     }
 
-    /* get the stonith-history if there is evidence we need it */
+    // Get the fencing history if there is evidence that we need it
     if (fence_history != pcmk__fence_history_none) {
         history_rc = pcmk__get_fencing_history(stonith, &stonith_history,
                                                fence_history);
@@ -108,8 +108,8 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     /* Unpack constraints if any section will need them
      * (tickets may be referenced in constraints but not granted yet,
      * and bans need negative location constraints) */
-    if (pcmk_is_set(show, pcmk_section_bans)
-        || pcmk_is_set(show, pcmk_section_tickets)) {
+    if (pcmk__is_set(show, pcmk_section_bans)
+        || pcmk__is_set(show, pcmk_section_tickets)) {
         pcmk__unpack_constraints(scheduler);
     }
 
@@ -130,7 +130,6 @@ pcmk__output_cluster_status(pcmk_scheduler_t *scheduler, stonith_t *stonith,
     g_list_free_full(resources, free);
 
     stonith__history_free(stonith_history);
-    stonith_history = NULL;
     return rc;
 }
 
@@ -261,7 +260,8 @@ pcmk__status(pcmk__output_t *out, cib_t *cib,
     pcmk__mem_assert(scheduler);
     scheduler->priv->out = out;
 
-    if ((cib->variant == cib_native) && pcmk_is_set(show, pcmk_section_times)) {
+    if ((cib->variant == cib_native)
+        && pcmk__is_set(show, pcmk_section_times)) {
         // Currently used only in the times section
         pcmk__query_node_name(out, 0, &(scheduler->priv->local_node_name), 0);
     }

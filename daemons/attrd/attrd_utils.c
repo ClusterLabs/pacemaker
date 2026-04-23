@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,6 @@
 #include <sys/types.h>
 
 #include <crm/crm.h>
-#include <crm/common/ipc_internal.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
 
@@ -25,7 +24,6 @@
 
 cib_t *the_cib = NULL;
 
-static bool requesting_shutdown = false;
 static bool shutting_down = false;
 static GMainLoop *mloop = NULL;
 
@@ -36,43 +34,15 @@ GHashTable *peer_protocol_vers = NULL;
 
 /*!
  * \internal
- * \brief  Set requesting_shutdown state
- */
-void
-attrd_set_requesting_shutdown(void)
-{
-    requesting_shutdown = true;
-}
-
-/*!
- * \internal
- * \brief  Clear requesting_shutdown state
- */
-void
-attrd_clear_requesting_shutdown(void)
-{
-    requesting_shutdown = false;
-}
-
-/*!
- * \internal
  * \brief Check whether local attribute manager is shutting down
  *
- * \param[in] if_requested  If \c true, also consider presence of
- *                          \c PCMK__NODE_ATTR_SHUTDOWN attribute
- *
- * \return \c true if local attribute manager has begun shutdown sequence
- *         or (if \p if_requested is \c true) whether local node has a nonzero
- *         \c PCMK__NODE_ATTR_SHUTDOWN attribute set, otherwise \c false
- * \note Most callers should pass \c false for \p if_requested, because the
- *       attribute manager needs to continue performing while the controller is
- *       shutting down, and even needs to be eligible for election in case all
- *       nodes are shutting down.
+ * \return \c true if local attribute manager has begun shutdown sequence,
+ *         otherwise \c false
  */
 bool
-attrd_shutting_down(bool if_requested)
+attrd_shutting_down(void)
 {
-    return shutting_down || (if_requested && requesting_shutdown);
+    return shutting_down;
 }
 
 /*!
@@ -98,10 +68,7 @@ attrd_shutdown(int nsig)
     attrd_free_waitlist();
     attrd_free_confirmations();
 
-    if (peer_protocol_vers != NULL) {
-        g_hash_table_destroy(peer_protocol_vers);
-        peer_protocol_vers = NULL;
-    }
+    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
 
     if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
         /* If there's no main loop active, just exit. This should be possible
@@ -211,13 +178,14 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
     if (rsc == NULL) {
         pattern = pcmk__str_copy(ATTRD_RE_CLEAR_ALL);
     } else if (op == NULL) {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_ONE, rsc);
+        pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
     } else {
-        pattern = crm_strdup_printf(ATTRD_RE_CLEAR_OP, rsc, op, interval_ms);
+        pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_OP, rsc, op,
+                                        interval_ms);
     }
 
     /* Compile pattern into regular expression */
-    crm_trace("Clearing attributes matching %s", pattern);
+    pcmk__trace("Clearing attributes matching %s", pattern);
     rc = regcomp(regex, pattern, REG_EXTENDED|REG_NOSUB);
     free(pattern);
 
@@ -299,8 +267,8 @@ attrd_update_minimum_protocol_ver(const char *host, const char *value)
         /* If the protocol version is a new minimum, record it as such. */
         if (minimum_protocol_version == -1 || ver < minimum_protocol_version) {
             minimum_protocol_version = ver;
-            crm_trace("Set minimum attrd protocol version to %d",
-                      minimum_protocol_version);
+            pcmk__trace("Set minimum attrd protocol version to %d",
+                        minimum_protocol_version);
         }
     }
 }

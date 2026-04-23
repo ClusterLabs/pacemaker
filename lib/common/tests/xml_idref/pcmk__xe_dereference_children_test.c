@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,6 @@
 #include <glib.h>   // GList, GHashTable, etc.
 
 #include <crm/common/unittest_internal.h>
-#include <crm/common/xml_internal.h>
 
 /*!
  * \internal
@@ -59,8 +58,8 @@ assert_deref(const char *xml_string, const char *element_name, ...)
         assert_null(list);
     } else {
         while (list != NULL) {
-            const char *value = crm_element_value((xmlNode *) list->data,
-                                                  "testattr");
+            const char *value = pcmk__xe_get((xmlNode *) list->data,
+                                             "testattr");
 
             assert_true(g_hash_table_remove(table, value));
             list = list->next;
@@ -69,9 +68,7 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     }
 
     g_list_free(list);
-    if (table != NULL) {
-        g_hash_table_destroy(table);
-    }
+    g_clear_pointer(&table, g_hash_table_destroy);
     pcmk__xml_free(xml);
 }
 

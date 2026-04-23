@@ -9,6 +9,9 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
+#include <glib.h>           // g_str_has_prefix()
 #include <libxml/tree.h>    // xmlNode
 #include <libxml/xpath.h>   // xmlXPathObject, etc.
 
@@ -21,6 +24,8 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     crm_time_t *now = NULL;
     crm_time_t *later = NULL;
     crm_time_t *duration = NULL;
+    const uint32_t duration_flags = crm_time_log_date|crm_time_log_timeofday;
+    const uint32_t time_flags = duration_flags|crm_time_log_with_timezone;
 
     if (move_lifetime == NULL) {
         return NULL;
@@ -45,12 +50,10 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
         return NULL;
     }
 
-    crm_time_log(LOG_INFO, "now     ", now,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_INFO, "later   ", later,
-                 crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
-    crm_time_log(LOG_INFO, "duration", duration, crm_time_log_date | crm_time_log_timeofday);
-    later_s = crm_time_as_string(later, crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone);
+    pcmk__time_log(LOG_INFO, "now     ", now, time_flags);
+    pcmk__time_log(LOG_INFO, "later   ", later, time_flags);
+    pcmk__time_log(LOG_INFO, "duration", duration, duration_flags);
+    later_s = crm_time_as_string(later, time_flags);
     out->info(out, "Migration will take effect until: %s", later_s);
 
     crm_time_free(duration);
@@ -63,7 +66,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
 int
 cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
                  const char *move_lifetime, cib_t *cib_conn,
-                 gboolean promoted_role_only, const char *promoted_role)
+                 bool promoted_role_only, const char *promoted_role)
 {
     char *later_s = NULL;
     int rc = pcmk_rc_ok;
@@ -91,39 +94,39 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
               pcmk__xe_id(location), rsc_id, host, rsc_id,
               (promoted_role_only? "being promoted" : "running"), host, host);
 
-    crm_xml_add(location, PCMK_XA_RSC, rsc_id);
+    pcmk__xe_set(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
+        pcmk__xe_set(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
+        pcmk__xe_set(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
     }
 
     if (later_s == NULL) {
         /* Short form */
-        crm_xml_add(location, PCMK_XE_NODE, host);
-        crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
+        pcmk__xe_set(location, PCMK_XE_NODE, host);
+        pcmk__xe_set(location, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
 
     } else {
         xmlNode *rule = pcmk__xe_create(location, PCMK_XE_RULE);
         xmlNode *expr = pcmk__xe_create(rule, PCMK_XE_EXPRESSION);
 
         pcmk__xe_set_id(rule, "cli-ban-%s-on-%s-rule", rsc_id, host);
-        crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
-        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
+        pcmk__xe_set(rule, PCMK_XA_SCORE, PCMK_VALUE_MINUS_INFINITY);
+        pcmk__xe_set(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
 
         pcmk__xe_set_id(expr, "cli-ban-%s-on-%s-expr", rsc_id, host);
-        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
-        crm_xml_add(expr, PCMK_XA_VALUE, host);
-        crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
+        pcmk__xe_set(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
+        pcmk__xe_set(expr, PCMK_XA_VALUE, host);
+        pcmk__xe_set(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
         expr = pcmk__xe_create(rule, PCMK_XE_DATE_EXPRESSION);
         pcmk__xe_set_id(expr, "cli-ban-%s-on-%s-lifetime", rsc_id, host);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
-        crm_xml_add(expr, PCMK_XA_END, later_s);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
+        pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
-    crm_log_xml_notice(fragment, "Modify");
+    pcmk__log_xml_notice(fragment, "Modify");
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
@@ -150,7 +153,7 @@ cli_resource_ban(pcmk__output_t *out, const char *rsc_id, const char *host,
 int
 cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
                     const char *move_lifetime, cib_t *cib_conn,
-                    gboolean promoted_role_only, const char *promoted_role)
+                    bool promoted_role_only, const char *promoted_role)
 {
     char *later_s = parse_cli_lifetime(out, move_lifetime);
     int rc = pcmk_rc_ok;
@@ -171,39 +174,39 @@ cli_resource_prefer(pcmk__output_t *out,const char *rsc_id, const char *host,
     location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     pcmk__xe_set_id(location, "cli-prefer-%s", rsc_id);
 
-    crm_xml_add(location, PCMK_XA_RSC, rsc_id);
+    pcmk__xe_set(location, PCMK_XA_RSC, rsc_id);
     if(promoted_role_only) {
-        crm_xml_add(location, PCMK_XA_ROLE, promoted_role);
+        pcmk__xe_set(location, PCMK_XA_ROLE, promoted_role);
     } else {
-        crm_xml_add(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
+        pcmk__xe_set(location, PCMK_XA_ROLE, PCMK_ROLE_STARTED);
     }
 
     if (later_s == NULL) {
         /* Short form */
-        crm_xml_add(location, PCMK_XE_NODE, host);
-        crm_xml_add(location, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
+        pcmk__xe_set(location, PCMK_XE_NODE, host);
+        pcmk__xe_set(location, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
 
     } else {
         xmlNode *rule = pcmk__xe_create(location, PCMK_XE_RULE);
         xmlNode *expr = pcmk__xe_create(rule, PCMK_XE_EXPRESSION);
 
         pcmk__xe_set_id(rule, "cli-prefer-rule-%s", rsc_id);
-        crm_xml_add(rule, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
-        crm_xml_add(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
+        pcmk__xe_set(rule, PCMK_XA_SCORE, PCMK_VALUE_INFINITY);
+        pcmk__xe_set(rule, PCMK_XA_BOOLEAN_OP, PCMK_VALUE_AND);
 
         pcmk__xe_set_id(expr, "cli-prefer-expr-%s", rsc_id);
-        crm_xml_add(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
-        crm_xml_add(expr, PCMK_XA_VALUE, host);
-        crm_xml_add(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
+        pcmk__xe_set(expr, PCMK_XA_ATTRIBUTE, CRM_ATTR_UNAME);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_EQ);
+        pcmk__xe_set(expr, PCMK_XA_VALUE, host);
+        pcmk__xe_set(expr, PCMK_XA_TYPE, PCMK_VALUE_STRING);
 
         expr = pcmk__xe_create(rule, PCMK_XE_DATE_EXPRESSION);
         pcmk__xe_set_id(expr, "cli-prefer-lifetime-end-%s", rsc_id);
-        crm_xml_add(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
-        crm_xml_add(expr, PCMK_XA_END, later_s);
+        pcmk__xe_set(expr, PCMK_XA_OPERATION, PCMK_VALUE_LT);
+        pcmk__xe_set(expr, PCMK_XA_END, later_s);
     }
 
-    crm_log_xml_info(fragment, "Modify");
+    pcmk__log_xml_info(fragment, "Modify");
     rc = cib_conn->cmds->modify(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     rc = pcmk_legacy2rc(rc);
@@ -263,7 +266,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host,
         "and @" PCMK_XA_VALUE "='%s']"                              \
     "]"
 
-    xpath_string = crm_strdup_printf(XPATH_FMT, rsc_id, rsc_id, host);
+    xpath_string = pcmk__assert_asprintf(XPATH_FMT, rsc_id, rsc_id, host);
 
     rc = cib_conn->cmds->remove(cib_conn, xpath_string, NULL,
                                 cib_xpath|cib_sync_call);
@@ -280,7 +283,7 @@ resource_clear_node_in_expr(const char *rsc_id, const char *host,
 // \return Standard Pacemaker return code
 static int
 resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * cib_conn,
-                                bool clear_ban_constraints, gboolean force)
+                                bool clear_ban_constraints, bool force)
 {
     int rc = pcmk_rc_ok;
     xmlNode *fragment = NULL;
@@ -288,18 +291,18 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 
     fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
 
-    if (clear_ban_constraints == TRUE) {
+    if (clear_ban_constraints) {
         location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
         pcmk__xe_set_id(location, "cli-ban-%s-on-%s", rsc_id, host);
     }
 
     location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
     pcmk__xe_set_id(location, "cli-prefer-%s", rsc_id);
-    if (force == FALSE) {
-        crm_xml_add(location, PCMK_XE_NODE, host);
+    if (!force) {
+        pcmk__xe_set(location, PCMK_XE_NODE, host);
     }
 
-    crm_log_xml_info(fragment, "Delete");
+    pcmk__log_xml_info(fragment, "Delete");
     rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                 cib_sync_call);
     if (rc == -ENXIO) {
@@ -315,7 +318,7 @@ resource_clear_node_in_location(const char *rsc_id, const char *host, cib_t * ci
 // \return Standard Pacemaker return code
 int
 cli_resource_clear(const char *rsc_id, const char *host, GList *allnodes, cib_t * cib_conn,
-                   bool clear_ban_constraints, gboolean force)
+                   bool clear_ban_constraints, bool force)
 {
     int rc = pcmk_rc_ok;
 
@@ -361,7 +364,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
                          bool promoted_role_only)
 {
     const char *cons_id = pcmk__xe_id(constraint_node);
-    const char *cons_rsc = crm_element_value(constraint_node, PCMK_XA_RSC);
+    const char *cons_rsc = pcmk__xe_get(constraint_node, PCMK_XA_RSC);
     GString *rsc_role_substr = NULL;
     const char *promoted_role_rule = "@" PCMK_XA_ROLE "='" PCMK_ROLE_PROMOTED
                                      "' or @" PCMK_XA_ROLE "='"
@@ -370,8 +373,11 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     pcmk__assert(buf != NULL);
     g_string_truncate(buf, 0);
 
-    if (!pcmk__starts_with(cons_id, "cli-ban-")
-        && !pcmk__starts_with(cons_id, "cli-prefer-")) {
+    if (cons_id == NULL) {
+        return;
+    }
+    if (!g_str_has_prefix(cons_id, "cli-ban-")
+        && !g_str_has_prefix(cons_id, "cli-prefer-")) {
         return;
     }
 
@@ -423,7 +429,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
     }
 
     g_string_append(buf, "//" PCMK_XE_DATE_EXPRESSION "[@" PCMK_XA_ID "='");
-    if (pcmk__starts_with(cons_id, "cli-ban-")) {
+    if (g_str_has_prefix(cons_id, "cli-ban-")) {
         pcmk__g_strcat(buf, cons_id, "-lifetime']", NULL);
 
     } else {    // starts with "cli-prefer-"
@@ -439,7 +445,7 @@ build_clear_xpath_string(GString *buf, const xmlNode *constraint_node,
 // \return Standard Pacemaker return code
 int
 cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
-                               const char *node, gboolean promoted_role_only)
+                               const char *node, bool promoted_role_only)
 {
     GString *buf = NULL;
     xmlXPathObject *xpathObj = NULL;
@@ -484,9 +490,9 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
          */
         rc = pcmk__xe_get_datetime(date_expr_node, PCMK_XA_END, &end);
         if (rc != pcmk_rc_ok) {
-            crm_trace("Date expression %s has invalid " PCMK_XA_END ": %s",
-                      pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
-                      pcmk_rc_str(rc));
+            pcmk__trace("Date expression %s has invalid " PCMK_XA_END ": %s",
+                        pcmk__s(pcmk__xe_id(date_expr_node), "without ID"),
+                        pcmk_rc_str(rc));
             continue; // Treat as unexpired
         }
 
@@ -497,7 +503,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
             fragment = pcmk__xe_create(NULL, PCMK_XE_CONSTRAINTS);
             location = pcmk__xe_create(fragment, PCMK_XE_RSC_LOCATION);
             pcmk__xe_set_id(location, "%s", pcmk__xe_id(constraint_node));
-            crm_log_xml_info(fragment, "Delete");
+            pcmk__log_xml_info(fragment, "Delete");
 
             rc = cib_conn->cmds->remove(cib_conn, PCMK_XE_CONSTRAINTS, fragment,
                                         cib_sync_call);

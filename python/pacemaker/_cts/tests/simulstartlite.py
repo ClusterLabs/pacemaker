@@ -1,9 +1,10 @@
 """Simultaneously start stopped nodes."""
 
 __all__ = ["SimulStartLite"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -48,20 +49,20 @@ class SimulStartLite(CTSTest):
         self.set_timer()
         while len(node_list) > 0:
             # Repeat until all nodes come up
-            uppat = self.templates["Pat:NonDC_started"]
+            uppat = self._cm.templates["Pat:NonDC_started"]
             if self._cm.upcount() == 0:
-                uppat = self.templates["Pat:Local_started"]
+                uppat = self._cm.templates["Pat:Local_started"]
 
             watchpats = [
-                self.templates["Pat:DC_IDLE"]
+                self._cm.templates["Pat:DC_IDLE"]
             ]
             for node in node_list:
                 watchpats.extend([uppat % node,
-                                  self.templates["Pat:InfraUp"] % node,
-                                  self.templates["Pat:PacemakerUp"] % node])
+                                  self._cm.templates["Pat:InfraUp"] % node,
+                                  self._cm.templates["Pat:PacemakerUp"] % node])
 
             #   Start all the nodes - at about the same time...
-            watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+            watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
             watch.set_watch()
 
             stonith = self._cm.prepare_fencing_watcher()
@@ -78,7 +79,7 @@ class SimulStartLite(CTSTest):
 
             # Remove node_list messages from watch.unmatched
             for node in node_list:
-                self._logger.debug(f"Dealing with stonith operations for {node_list}")
+                logging.debug(f"Dealing with stonith operations for {node_list}")
                 if watch.unmatched:
                     try:
                         watch.unmatched.remove(uppat % node)
@@ -86,18 +87,18 @@ class SimulStartLite(CTSTest):
                         self.debug(f"Already matched: {uppat % node}")
 
                     try:
-                        watch.unmatched.remove(self.templates["Pat:InfraUp"] % node)
+                        watch.unmatched.remove(self._cm.templates["Pat:InfraUp"] % node)
                     except ValueError:
-                        self.debug(f"Already matched: {self.templates['Pat:InfraUp'] % node}")
+                        self.debug(f"Already matched: {self._cm.templates['Pat:InfraUp'] % node}")
 
                     try:
-                        watch.unmatched.remove(self.templates["Pat:PacemakerUp"] % node)
+                        watch.unmatched.remove(self._cm.templates["Pat:PacemakerUp"] % node)
                     except ValueError:
-                        self.debug(f"Already matched: {self.templates['Pat:PacemakerUp'] % node}")
+                        self.debug(f"Already matched: {self._cm.templates['Pat:PacemakerUp'] % node}")
 
             if watch.unmatched:
                 for regex in watch.unmatched:
-                    self._logger.log(f"Warn: Startup pattern not found: {regex}")
+                    logging.log(f"Warn: Startup pattern not found: {regex}")
 
             if not self._cm.cluster_stable():
                 return self.failure("Cluster did not stabilize")

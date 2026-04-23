@@ -1,15 +1,15 @@
 =#=#=#= Begin test: Try to set unrecognized validate-with =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to set unrecognized validate-with - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to set unrecognized validate-with
 =#=#=#= Begin test: Try to remove validate-with attribute =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to remove validate-with attribute - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to remove validate-with attribute
 =#=#=#= Begin test: Try to use rsc_order first-action value disallowed by schema =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use rsc_order first-action value disallowed by schema =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -26,9 +26,9 @@ Call failed: Update does not conform to the configured schema
 =#=#=#= End test: Try to use rsc_order first-action value disallowed by schema - Invalid configuration (78) =#=#=#=
 * Passed: cibadmin              - Try to use rsc_order first-action value disallowed by schema
 =#=#=#= Begin test: Try to use configuration legal only with schema after configured one =#=#=#=
-Call failed: Update does not conform to the configured schema
+cibadmin: CIB API call failed: Update does not conform to the configured schema
 =#=#=#= Current cib after: Try to use configuration legal only with schema after configured one =#=#=#=
-<cib epoch="4" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="4" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -49,7 +49,7 @@ Call failed: Update does not conform to the configured schema
 * Passed: cibadmin              - Disable schema validation
 =#=#=#= Begin test: Set invalid rsc_order first-action value (schema validation disabled) =#=#=#=
 =#=#=#= Current cib after: Set invalid rsc_order first-action value (schema validation disabled) =#=#=#=
-<cib epoch="5" num_updates="0" admin_epoch="0">
+<cib admin_epoch="0" epoch="5" num_updates="0">
   <configuration>
     <crm_config/>
     <nodes/>
@@ -67,14 +67,10 @@ Call failed: Update does not conform to the configured schema
 * Passed: cibadmin              - Set invalid rsc_order first-action value (schema validation disabled)
 =#=#=#= Begin test: Run crm_simulate with invalid rsc_order first-action (schema validation disabled) =#=#=#=
 Schema validation of configuration is disabled (support for validate-with set to "none" is deprecated and will be removed in a future release)
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 invert_action 	warning: Unknown action 'break' specified in order constraint
 invert_action 	warning: Unknown action 'break' specified in order constraint
-unpack_resources 	error: Resource start-up disabled since no STONITH resources have been defined
-unpack_resources 	error: Either configure some or disable STONITH with the stonith-enabled option
-unpack_resources 	error: NOTE: Clusters with shared data need STONITH to ensure data integrity
+unpack_resources 	error: Resource start-up disabled since no fencing resources have been defined. Either configure some or disable fencing with the fencing-enabled option. NOTE: Clusters with shared data need fencing to ensure data integrity.
 Current cluster status:
   * Full List of Resources:
     * dummy1	(ocf:pacemaker:Dummy):	 Stopped

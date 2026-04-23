@@ -1,11 +1,14 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+#ifndef PCMK__INCLUDED_PACEMAKER_INTERNAL_H
+#error "Include <pacemaker-internal.h> instead of <pcmki/pcmki_transition.h> directly"
+#endif
 
 #ifndef PCMK__PCMKI_PCMKI_TRANSITION__H
 #define PCMK__PCMKI_PCMKI_TRANSITION__H
@@ -13,6 +16,7 @@
 #include <stdbool.h>                    // bool
 #include <stdint.h>                     // uint32_t
 #include <sys/types.h>                  // time_t
+
 #include <glib.h>                       // guint, GList, GHashTable
 #include <libxml/tree.h>                // xmlNode
 
@@ -34,10 +38,10 @@ enum pcmk__graph_action_type {
 };
 
 enum pcmk__synapse_flags {
-    pcmk__synapse_ready       = (1 << 0),
-    pcmk__synapse_failed      = (1 << 1),
-    pcmk__synapse_executed    = (1 << 2),
-    pcmk__synapse_confirmed   = (1 << 3),
+    pcmk__synapse_ready       = (UINT32_C(1) << 0),
+    pcmk__synapse_failed      = (UINT32_C(1) << 1),
+    pcmk__synapse_executed    = (UINT32_C(1) << 2),
+    pcmk__synapse_confirmed   = (UINT32_C(1) << 3),
 };
 
 typedef struct {
@@ -65,10 +69,14 @@ typedef struct {
     } while (0)
 
 enum pcmk__graph_action_flags {
-    pcmk__graph_action_sent_update   = (1 << 0),     /* sent to the CIB */
-    pcmk__graph_action_executed      = (1 << 1),     /* sent to the CRM */
-    pcmk__graph_action_confirmed     = (1 << 2),
-    pcmk__graph_action_failed        = (1 << 3),
+    //! Sent to the CIB
+    pcmk__graph_action_sent_update   = (UINT32_C(1) << 0),
+
+    //! Sent to the CRM
+    pcmk__graph_action_executed      = (UINT32_C(1) << 1),
+
+    pcmk__graph_action_confirmed     = (UINT32_C(1) << 2),
+    pcmk__graph_action_failed        = (UINT32_C(1) << 3),
 };
 
 typedef struct {
@@ -123,7 +131,7 @@ typedef struct {
 
     int batch_limit;
     guint network_delay;
-    guint stonith_timeout;
+    guint fencing_timeout;
 
     int fired;
     int pending;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,9 +7,14 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <acl_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_ACL_INTERNAL__H
 #define PCMK__CRM_COMMON_ACL_INTERNAL__H
 
+#include <stdbool.h>
 #include <string.h>         // strcmp()
 #include <libxml/tree.h>    // xmlNode
 
@@ -31,7 +36,7 @@ pcmk__is_privileged(const char *user)
     return user && (!strcmp(user, CRM_DAEMON_USER) || !strcmp(user, "root"));
 }
 
-void pcmk__enable_acl(xmlNode *acl_source, xmlNode *target, const char *user);
+void pcmk__enable_acls(xmlDoc *source, xmlDoc *target, const char *user);
 
 bool pcmk__check_acl(xmlNode *xml, const char *attr_name,
                      enum pcmk__xml_flags mode);

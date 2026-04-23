@@ -92,6 +92,8 @@
 # when starting Pacemaker manually. However, it can be set directly as an
 # environment variable on the command line.
 #
+# This accepts the same values as PCMK_debug.
+#
 # Default: PCMK_stderr="no"
 
 # PCMK_trace_functions (Advanced Use Only)
@@ -259,7 +261,7 @@
 # PCMK_key_file
 #
 # The location of a file containing the private key for the matching PCMK_cert_file,
-# in PEM format. This file must be readble by Pacemaker daemons (that is, it
+# in PEM format. This file must be readable by Pacemaker daemons (that is, it
 # must allow read permissions to either the @CRM_DAEMON_USER@ user or the
 # @CRM_DAEMON_GROUP@ group). If set, along with PCMK_ca_file and PCMK_cert_file,
 # X509 authentication will be enabled for Pacemaker Remote and remote CIB
@@ -274,8 +276,6 @@
 # file must be readable by Pacemaker daemons (that is, it must allow read
 # permissions to either the @CRM_DAEMON_USER@ user or the @CRM_DAEMON_GROUP@
 # group), and its contents must be identical on all nodes.
-#
-# This is an alternative to using X509 certificates.
 #
 # Default: PCMK_authkey_location="@PACEMAKER_CONFIG_DIR@/authkey"
 
@@ -424,5 +424,11 @@
 # is specified because pacemaker-execd can lower privileges when executing
 # commands, which would otherwise leave a bunch of unremovable files in /tmp.
 #
+# These options will also be passed to the callgrind tool if it's enabled.
+# However, callgrind does not support all the same options as valgrind (in
+# particular, it does not support "--leak-check=").  If you need that option
+# or any other valgrind-specific options, add those here and make sure to set
+# PCMK_callgrind_enabled="no".
+#
 # Default: VALGRIND_OPTS=""
-VALGRIND_OPTS="--leak-check=full --trace-children=no --vgdb=no --num-callers=25 --log-file=@PCMK__PERSISTENT_DATA_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"
+VALGRIND_OPTS="--trace-children=no --vgdb=no --num-callers=25 --log-file=@PCMK__PERSISTENT_DATA_DIR@/valgrind-%p --suppressions=@datadir@/pacemaker/tests/valgrind-pcmk.suppressions --gen-suppressions=all"

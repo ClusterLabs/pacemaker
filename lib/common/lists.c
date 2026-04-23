@@ -8,7 +8,6 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/lists_internal.h>
 
 GList*
 pcmk__subtract_lists(GList *from, const GList *items, GCompareFunc cmp)

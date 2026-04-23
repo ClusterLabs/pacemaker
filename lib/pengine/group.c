@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,11 +16,9 @@
 #include <crm/pengine/internal.h>
 #include <crm/common/xml.h>
 #include <crm/common/output.h>
-#include <crm/common/strings_internal.h>
-#include <crm/common/xml_internal.h>
 #include <pe_status_private.h>
 
-typedef struct group_variant_data_s {
+typedef struct {
     pcmk_resource_t *last_child;    // Last group member
     uint32_t flags;                 // Group of enum pcmk__group_flags
 } group_variant_data_t;
@@ -62,7 +60,7 @@ pe__group_flag_is_set(const pcmk_resource_t *group, uint32_t flags)
 
     CRM_CHECK(pcmk__is_group(group), return false);
     group_data = group->priv->variant_opaque;
-    return pcmk_all_flags_set(group_data->flags, flags);
+    return pcmk__all_flags_set(group_data->flags, flags);
 }
 
 /*!
@@ -78,14 +76,12 @@ static void
 set_group_flag(pcmk_resource_t *group, const char *option, uint32_t flag,
                uint32_t wo_bit)
 {
-    const char *value_s = NULL;
-    int value = 0;
+    const char *value_s = g_hash_table_lookup(group->priv->meta, option);
+    bool value = false;
 
-    value_s = g_hash_table_lookup(group->priv->meta, option);
-
-    // We don't actually need the null check but it speeds up the common case
-    if ((value_s == NULL) || (crm_str_to_boolean(value_s, &value) < 0)
-        || (value != 0)) {
+    if ((value_s == NULL) || (pcmk__parse_bool(value_s, &value) != pcmk_rc_ok)
+        || value) {
+        // Set flag if value is unset, invalid, or true
         group_variant_data_t *group_data = group->priv->variant_opaque;
 
         group_data->flags |= flag;
@@ -132,10 +128,10 @@ group_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
         pcmk__add_separated_word(&attrs, 64, "disabled", ", ");
     }
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_maintenance)) {
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)) {
         pcmk__add_separated_word(&attrs, 64, "maintenance", ", ");
 
-    } else if (!pcmk_is_set(rsc->flags, pcmk__rsc_managed)) {
+    } else if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
         pcmk__add_separated_word(&attrs, 64, "unmanaged", ", ");
     }
 
@@ -154,14 +150,16 @@ group_header(pcmk__output_t *out, int *rc, const pcmk_resource_t *rsc,
 }
 
 static bool
-skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child,
-               gboolean parent_passes, GList *only_rsc, uint32_t show_opts)
+skip_child_rsc(pcmk_resource_t *rsc, pcmk_resource_t *child, bool parent_passes,
+               GList *only_rsc, uint32_t show_opts)
 {
-    bool star_list = pcmk__list_of_1(only_rsc) &&
-                     pcmk__str_eq("*", g_list_first(only_rsc)->data, pcmk__str_none);
-    bool child_filtered = child->priv->fns->is_filtered(child, only_rsc, false);
-    bool child_active = child->priv->fns->active(child, false);
-    bool show_inactive = pcmk_is_set(show_opts, pcmk_show_inactive_rscs);
+    const bool star_list = pcmk__list_of_1(only_rsc)
+                           && pcmk__str_eq("*", g_list_first(only_rsc)->data,
+                                           pcmk__str_none);
+    const bool child_filtered = child->priv->fns->is_filtered(child, only_rsc,
+                                                              false);
+    const bool child_active = child->priv->fns->active(child, false);
+    const bool show_inactive = pcmk__is_set(show_opts, pcmk_show_inactive_rscs);
 
     /* If the resource is in only_rsc by name (so, ignoring "*") then allow
      * it regardless of if it's active or not.
@@ -200,7 +198,7 @@ group_unpack(pcmk_resource_t *rsc)
     set_group_flag(rsc, "collocated", pcmk__group_colocated,
                    pcmk__wo_group_coloc);
 
-    clone_id = crm_element_value(rsc->priv->xml, PCMK__META_CLONE);
+    clone_id = pcmk__xe_get(rsc->priv->xml, PCMK__META_CLONE);
 
     for (xml_native_rsc = pcmk__xe_first_child(xml_obj, PCMK_XE_PRIMITIVE,
                                                NULL, NULL);
@@ -209,7 +207,7 @@ group_unpack(pcmk_resource_t *rsc)
 
         pcmk_resource_t *new_rsc = NULL;
 
-        crm_xml_add(xml_native_rsc, PCMK__META_CLONE, clone_id);
+        pcmk__xe_set(xml_native_rsc, PCMK__META_CLONE, clone_id);
         if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                 rsc->priv->scheduler) != pcmk_rc_ok) {
             continue;
@@ -222,8 +220,7 @@ group_unpack(pcmk_resource_t *rsc)
 
     if (rsc->priv->children == NULL) {
         // Not possible with schema validation enabled
-        free(group_data);
-        rsc->priv->variant_opaque = NULL;
+        g_clear_pointer(&rsc->priv->variant_opaque, free);
         pcmk__config_err("Group %s has no members", rsc->id);
         return FALSE;
     }
@@ -271,8 +268,11 @@ pe__group_xml(pcmk__output_t *out, va_list args)
 
     int rc = pcmk_rc_no_output;
 
-    gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    bool parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                           pcmk__str_star_matches)
+                         || ((strchr(rsc->id, ':') != NULL)
+                             && pcmk__str_in_list(rsc->id, only_rsc,
+                                                  pcmk__str_star_matches));
 
     desc = pe__resource_description(rsc, show_opts);
 
@@ -333,11 +333,15 @@ pe__group_default(pcmk__output_t *out, va_list args)
     const char *desc = NULL;
     int rc = pcmk_rc_no_output;
 
-    gboolean parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches) ||
-                             (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches));
+    bool parent_passes = pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                                           pcmk__str_star_matches)
+                         || ((strchr(rsc->id, ':') != NULL)
+                             && pcmk__str_in_list(rsc->id, only_rsc,
+                                                  pcmk__str_star_matches));
 
-    bool active = rsc->priv->fns->active(rsc, true);
-    bool partially_active = rsc->priv->fns->active(rsc, false);
+    const bool active = rsc->priv->fns->active(rsc, true);
+    const bool partially_active = rsc->priv->fns->active(rsc, false);
+    const bool count_inactive = !active && partially_active;
 
     desc = pe__resource_description(rsc, show_opts);
 
@@ -345,12 +349,14 @@ pe__group_default(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    if (pcmk_is_set(show_opts, pcmk_show_brief)) {
+    if (pcmk__is_set(show_opts, pcmk_show_brief)) {
         GList *rscs = pe__filter_rsc_list(rsc->priv->children, only_rsc);
 
         if (rscs != NULL) {
-            group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
+            group_header(out, &rc, rsc,
+                         (count_inactive? inactive_resources(rsc) : 0),
+                         pcmk__is_set(show_opts, pcmk_show_inactive_rscs),
+                         desc);
             pe__rscs_brief_output(out, rscs, show_opts | pcmk_show_inactive_rscs);
 
             rc = pcmk_rc_ok;
@@ -366,8 +372,10 @@ pe__group_default(pcmk__output_t *out, va_list args)
                 continue;
             }
 
-            group_header(out, &rc, rsc, !active && partially_active ? inactive_resources(rsc) : 0,
-                         pcmk_is_set(show_opts, pcmk_show_inactive_rscs), desc);
+            group_header(out, &rc, rsc,
+                         (count_inactive? inactive_resources(rsc) : 0),
+                         pcmk__is_set(show_opts, pcmk_show_inactive_rscs),
+                         desc);
             out->message(out, (const char *) child_rsc->priv->xml->name,
                          show_opts, child_rsc, only_node, only_rsc);
         }
@@ -426,32 +434,36 @@ bool
 pe__group_is_filtered(const pcmk_resource_t *rsc, const GList *only_rsc,
                       bool check_parent)
 {
-    bool passes = false;
+    if (check_parent) {
+        const pcmk_resource_t *parent = pe__const_top_resource(rsc, false);
 
-    if (check_parent
-        && pcmk__str_in_list(rsc_printable_id(pe__const_top_resource(rsc,
-                                                                     false)),
-                             only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-    } else if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-    } else if (strstr(rsc->id, ":") != NULL && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
-        passes = true;
-    } else {
-        for (const GList *iter = rsc->priv->children;
-             iter != NULL; iter = iter->next) {
-
-            const pcmk_resource_t *child_rsc = iter->data;
-
-            if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc,
-                                                   false)) {
-                passes = true;
-                break;
-            }
+        if (pcmk__str_in_list(rsc_printable_id(parent), only_rsc,
+                              pcmk__str_star_matches)) {
+            return false;
         }
     }
 
-    return !passes;
+    if (pcmk__str_in_list(rsc_printable_id(rsc), only_rsc,
+                          pcmk__str_star_matches)) {
+        return false;
+    }
+
+    if ((strchr(rsc->id, ':') != NULL)
+        && pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches)) {
+        return false;
+    }
+
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child_rsc = iter->data;
+
+        if (!child_rsc->priv->fns->is_filtered(child_rsc, only_rsc, false)) {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 /*!

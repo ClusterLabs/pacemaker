@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2024 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>
+#include <stdbool.h>
 
 #include <crm/crm.h>
 #include <crm/common/iso8601.h>
@@ -51,9 +52,7 @@ free_recurring_op(gpointer value)
     free(op->rsc_id);
     free(op->op_type);
     free(op->op_key);
-    if (op->params) {
-        g_hash_table_destroy(op->params);
-    }
+    g_clear_pointer(&op->params, g_hash_table_destroy);
     free(op);
 }
 
@@ -64,9 +63,9 @@ fail_pending_op(gpointer key, gpointer value, gpointer user_data)
     lrm_state_t *lrm_state = user_data;
     active_op_t *op = value;
 
-    crm_trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
-              op->rsc_id, op->op_type, op->interval_ms,
-              lrm_state->node_name, (char*)key, op->user_data);
+    pcmk__trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
+                op->rsc_id, op->op_type, op->interval_ms,
+                lrm_state->node_name, (const char *) key, op->user_data);
 
     event.type = lrmd_event_exec_complete;
     event.rsc_id = op->rsc_id;
@@ -108,7 +107,7 @@ lrm_state_create(const char *node_name)
     lrm_state_t *state = NULL;
 
     if (!node_name) {
-        crm_err("No node name given for lrm state object");
+        pcmk__err("No node name given for lrm state object");
         return NULL;
     }
 
@@ -173,8 +172,6 @@ remote_proxy_disconnect_by_node(const char * node_name)
             mainloop_del_ipc_client(proxy->source);
         }
     }
-
-    return;
 }
 
 static void
@@ -193,33 +190,18 @@ internal_lrm_state_destroy(gpointer data)
      */
     remote_proxy_disconnect_by_node(lrm_state->node_name);
 
-    crm_trace("Destroying proxy table %s with %u members",
-              lrm_state->node_name, g_hash_table_size(proxy_table));
+    pcmk__trace("Destroying proxy table %s with %u members",
+                lrm_state->node_name, g_hash_table_size(proxy_table));
     // Just in case there's still any leftovers in proxy_table
     g_hash_table_foreach_remove(proxy_table, remote_proxy_remove_by_node, (char *) lrm_state->node_name);
     remote_ra_cleanup(lrm_state);
     lrmd_api_delete(lrm_state->conn);
 
-    if (lrm_state->rsc_info_cache) {
-        crm_trace("Destroying rsc info cache with %u members",
-                  g_hash_table_size(lrm_state->rsc_info_cache));
-        g_hash_table_destroy(lrm_state->rsc_info_cache);
-    }
-    if (lrm_state->resource_history) {
-        crm_trace("Destroying history op cache with %u members",
-                  g_hash_table_size(lrm_state->resource_history));
-        g_hash_table_destroy(lrm_state->resource_history);
-    }
-    if (lrm_state->deletion_ops) {
-        crm_trace("Destroying deletion op cache with %u members",
-                  g_hash_table_size(lrm_state->deletion_ops));
-        g_hash_table_destroy(lrm_state->deletion_ops);
-    }
-    if (lrm_state->active_ops != NULL) {
-        crm_trace("Destroying pending op cache with %u members",
-                  g_hash_table_size(lrm_state->active_ops));
-        g_hash_table_destroy(lrm_state->active_ops);
-    }
+    g_clear_pointer(&lrm_state->rsc_info_cache, g_hash_table_destroy);
+    g_clear_pointer(&lrm_state->resource_history, g_hash_table_destroy);
+    g_clear_pointer(&lrm_state->deletion_ops, g_hash_table_destroy);
+    g_clear_pointer(&lrm_state->active_ops, g_hash_table_destroy);
+
     metadata_cache_free(lrm_state->metadata_cache);
 
     free((char *)lrm_state->node_name);
@@ -230,23 +212,23 @@ void
 lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
 {
     if (lrm_state->resource_history) {
-        crm_trace("Resetting resource history cache with %u members",
-                  g_hash_table_size(lrm_state->resource_history));
+        pcmk__trace("Resetting resource history cache with %u members",
+                    g_hash_table_size(lrm_state->resource_history));
         g_hash_table_remove_all(lrm_state->resource_history);
     }
     if (lrm_state->deletion_ops) {
-        crm_trace("Resetting deletion operations cache with %u members",
-                  g_hash_table_size(lrm_state->deletion_ops));
+        pcmk__trace("Resetting deletion operations cache with %u members",
+                    g_hash_table_size(lrm_state->deletion_ops));
         g_hash_table_remove_all(lrm_state->deletion_ops);
     }
     if (lrm_state->active_ops != NULL) {
-        crm_trace("Resetting active operations cache with %u members",
-                  g_hash_table_size(lrm_state->active_ops));
+        pcmk__trace("Resetting active operations cache with %u members",
+                    g_hash_table_size(lrm_state->active_ops));
         g_hash_table_remove_all(lrm_state->active_ops);
     }
     if (lrm_state->rsc_info_cache) {
-        crm_trace("Resetting resource information cache with %u members",
-                  g_hash_table_size(lrm_state->rsc_info_cache));
+        pcmk__trace("Resetting resource information cache with %u members",
+                    g_hash_table_size(lrm_state->rsc_info_cache));
         g_hash_table_remove_all(lrm_state->rsc_info_cache);
     }
     if (reset_metadata) {
@@ -254,41 +236,22 @@ lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata)
     }
 }
 
-gboolean
+void
 lrm_state_init_local(void)
 {
-    if (lrm_state_table) {
-        return TRUE;
+    if (lrm_state_table != NULL) {
+        return;
     }
 
     lrm_state_table = pcmk__strikey_table(NULL, internal_lrm_state_destroy);
-    if (!lrm_state_table) {
-        return FALSE;
-    }
-
     proxy_table = pcmk__strikey_table(NULL, remote_proxy_free);
-    if (!proxy_table) {
-        g_hash_table_destroy(lrm_state_table);
-        lrm_state_table = NULL;
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 void
 lrm_state_destroy_all(void)
 {
-    if (lrm_state_table) {
-        crm_trace("Destroying state table with %u members",
-                  g_hash_table_size(lrm_state_table));
-        g_hash_table_destroy(lrm_state_table); lrm_state_table = NULL;
-    }
-    if(proxy_table) {
-        crm_trace("Destroying proxy table with %u members",
-                  g_hash_table_size(proxy_table));
-        g_hash_table_destroy(proxy_table); proxy_table = NULL;
-    }
+    g_clear_pointer(&lrm_state_table, g_hash_table_destroy);
+    g_clear_pointer(&proxy_table, g_hash_table_destroy);
 }
 
 /*!
@@ -334,21 +297,22 @@ lrm_state_get_list(void)
 void
 lrm_state_disconnect_only(lrm_state_t * lrm_state)
 {
-    int removed = 0;
+    guint removed = 0;
 
     if (!lrm_state->conn) {
         return;
     }
-    crm_trace("Disconnecting %s", lrm_state->node_name);
+    pcmk__trace("Disconnecting %s", lrm_state->node_name);
 
     remote_proxy_disconnect_by_node(lrm_state->node_name);
 
     ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
 
-    if (!pcmk_is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->active_ops,
                                               fail_pending_op, lrm_state);
-        crm_trace("Synthesized %d operation failures for %s", removed, lrm_state->node_name);
+        pcmk__trace("Synthesized %u operation failures for %s", removed,
+                    lrm_state->node_name);
     }
 }
 
@@ -440,10 +404,11 @@ crmd_proxy_send(const char *session, xmlNode *msg)
     if (!proxy) {
         return;
     }
-    crm_log_xml_trace(msg, "to-proxy");
+    pcmk__log_xml_trace(msg, "to-proxy");
     lrm_state = controld_get_executor_state(proxy->node_name, false);
     if (lrm_state) {
-        crm_trace("Sending event to %.8s on %s", proxy->session_id, proxy->node_name);
+        pcmk__trace("Sending event to %.8s on %s", proxy->session_id,
+                    proxy->node_name);
         remote_proxy_relay_event(proxy, msg);
     }
 }
@@ -451,9 +416,9 @@ crmd_proxy_send(const char *session, xmlNode *msg)
 static void
 crmd_proxy_dispatch(const char *session, xmlNode *msg)
 {
-    crm_trace("Processing proxied IPC message from session %s", session);
-    crm_log_xml_trace(msg, "controller[inbound]");
-    crm_xml_add(msg, PCMK__XA_CRM_SYS_FROM, session);
+    pcmk__trace("Processing proxied IPC message from session %s", session);
+    pcmk__log_xml_trace(msg, "controller[inbound]");
+    pcmk__xe_set(msg, PCMK__XA_CRM_SYS_FROM, session);
     if (controld_authorize_ipc_message(msg, NULL, session)) {
         route_message(C_IPC_MESSAGE, msg);
     }
@@ -464,10 +429,11 @@ static void
 remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
 {
     if (rc != pcmk_ok) {
-        crm_err("Query resulted in an error: %s", pcmk_strerror(rc));
+        pcmk__err("Query resulted in an error: %s", pcmk_strerror(rc));
 
         if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            crm_err("The cluster is mis-configured - shutting down and staying down");
+            pcmk__err("The cluster is mis-configured - shutting down and "
+                      "staying down");
         }
 
     } else {
@@ -478,7 +444,7 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
             .now = now,
         };
 
-        crm_debug("Call %d : Parsing CIB options", call_id);
+        pcmk__debug("Call %d : Parsing CIB options", call_id);
         pcmk_unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
                                   PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
                                   config_hash, NULL);
@@ -495,19 +461,19 @@ static void
 crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 {
     lrm_state_t *lrm_state = userdata;
-    const char *session = crm_element_value(msg, PCMK__XA_LRMD_IPC_SESSION);
+    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    const char *op = crm_element_value(msg, PCMK__XA_LRMD_IPC_OP);
+    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
-        const char *channel = crm_element_value(msg, PCMK__XA_LRMD_IPC_SERVER);
+        const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
 
         proxy = crmd_remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
         if (!remote_ra_controlling_guest(lrm_state)) {
             if (proxy != NULL) {
                 cib_t *cib_conn = controld_globals.cib_conn;
 
-                /* Look up PCMK_OPT_STONITH_WATCHDOG_TIMEOUT and send to the
+                /* Look up PCMK_OPT_FENCING_WATCHDOG_TIMEOUT and send to the
                  * remote peer for validation
                  */
                 int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
@@ -519,30 +485,32 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
                                                        NULL);
             }
         } else {
-            crm_debug("Skipping remote_config_check for guest-nodes");
+            pcmk__debug("Skipping remote_config_check for guest-nodes");
         }
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
         char *now_s = NULL;
 
-        crm_notice("%s requested shutdown of its remote connection",
-                   lrm_state->node_name);
+        pcmk__notice("%s requested shutdown of its remote connection",
+                     lrm_state->node_name);
 
         if (!remote_ra_is_in_maintenance(lrm_state)) {
             now_s = pcmk__ttoa(time(NULL));
             update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
-                         NULL, TRUE);
+                         true);
             free(now_s);
 
             remote_proxy_ack_shutdown(lrmd);
 
-            crm_warn("Reconnection attempts to %s may result in failures that must be cleared",
-                    lrm_state->node_name);
+            pcmk__warn("Reconnection attempts to %s may result in failures "
+                       "that must be cleared",
+                       lrm_state->node_name);
         } else {
             remote_proxy_nack_shutdown(lrmd);
 
-            crm_notice("Remote resource for %s is not managed so no ordered shutdown happening",
-                    lrm_state->node_name);
+            pcmk__notice("Remote resource for %s is not managed so no ordered "
+                         "shutdown happening",
+                         lrm_state->node_name);
         }
         return;
 
@@ -558,7 +526,7 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         CRM_CHECK(request != NULL, return);
         CRM_CHECK(lrm_state->node_name, return);
-        crm_xml_add(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
+        pcmk__xe_set(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
         pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
                               lrm_state->node_name);
 
@@ -567,14 +535,14 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
          * the name, so we don't return info for ourselves instead of the
          * Pacemaker Remote node.
          */
-        if (pcmk__str_eq(crm_element_value(request, PCMK__XA_CRM_TASK),
+        if (pcmk__str_eq(pcmk__xe_get(request, PCMK__XA_CRM_TASK),
                          CRM_OP_NODE_INFO, pcmk__str_none)) {
             int node_id = 0;
 
-            crm_element_value_int(request, PCMK_XA_ID, &node_id);
+            pcmk__xe_get_int(request, PCMK_XA_ID, &node_id);
             if ((node_id <= 0)
-                && (crm_element_value(request, PCMK_XA_UNAME) == NULL)) {
-                crm_xml_add(request, PCMK_XA_UNAME, lrm_state->node_name);
+                && (pcmk__xe_get(request, PCMK_XA_UNAME) == NULL)) {
+                pcmk__xe_set(request, PCMK_XA_UNAME, lrm_state->node_name);
             }
         }
 
@@ -582,17 +550,18 @@ crmd_remote_proxy_cb(lrmd_t *lrmd, void *userdata, xmlNode *msg)
 
         rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Couldn't parse controller flags from remote request: %s",
-                     pcmk_rc_str(rc));
+            pcmk__warn("Couldn't parse controller flags from remote request: "
+                       "%s",
+                       pcmk_rc_str(rc));
         }
-        if (pcmk_is_set(flags, crm_ipc_client_response)) {
+        if (pcmk__is_set(flags, crm_ipc_client_response)) {
             int msg_id = 0;
             xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
 
-            crm_xml_add(op_reply, PCMK_XA_FUNCTION, __func__);
-            crm_xml_add_int(op_reply, PCMK__XA_LINE, __LINE__);
+            pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
+            pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
 
-            crm_element_value_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+            pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
             remote_proxy_relay_response(proxy, op_reply, msg_id);
 
             pcmk__xml_free(op_reply);
@@ -616,8 +585,9 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
 
         rc = lrmd__new(&api, lrm_state->node_name, server, port);
         if (rc != pcmk_rc_ok) {
-            crm_warn("Pacemaker Remote connection to %s:%s failed: %s "
-                     QB_XS " rc=%d", server, port, pcmk_rc_str(rc), rc);
+            pcmk__warn("Pacemaker Remote connection to %s:%s failed: %s "
+                       QB_XS " rc=%d",
+                       server, port, pcmk_rc_str(rc), rc);
 
             return rc;
         }
@@ -626,8 +596,8 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
         lrmd_internal_set_proxy_callback(api, lrm_state, crmd_remote_proxy_cb);
     }
 
-    crm_trace("Initiating remote connection to %s:%d with timeout %dms",
-              server, port, timeout_ms);
+    pcmk__trace("Initiating remote connection to %s:%d with timeout %dms",
+                server, port, timeout_ms);
     rc = ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn,
                                                            lrm_state->node_name,
                                                            timeout_ms);
@@ -681,7 +651,9 @@ lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
     }
 
     /* Figure out a way to make this async?
-     * NOTICE: Currently it's synced and directly acknowledged in do_lrm_invoke(). */
+     * NOTICE: Currently it's synced and directly acknowledged in
+     * controld_invoke_execd().
+     */
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         return remote_ra_cancel(lrm_state, rsc_id, action, interval_ms);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,6 +8,9 @@
  */
 
 #include <crm_internal.h>
+
+#include <stdbool.h>
+#include <glib.h>
 
 #include <crm/common/util.h>
 #include <crm/common/xml.h>
@@ -23,6 +26,12 @@ GHashTable *
 pcmk__output_formatters(void) {
     return formatters;
 }
+
+void
+pcmk__set_output_formatters(GHashTable *value)
+{
+    formatters = value;
+}
 // LCOV_EXCL_STOP
 #endif
 
@@ -34,10 +43,7 @@ pcmk__output_free(pcmk__output_t *out) {
 
     out->free_priv(out);
 
-    if (out->messages != NULL) {
-        g_hash_table_destroy(out->messages);
-    }
-
+    g_clear_pointer(&out->messages, g_hash_table_destroy);
     g_free(out->request);
     free(out);
 }
@@ -85,14 +91,23 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
         return ENOMEM;
     }
 
-    if (pcmk__str_eq(filename, "-", pcmk__str_null_matches)) {
+    /* Static analysis can't figure out that passing pcmk__str_null_matches
+     * to pcmk__str_eq means filename can't be NULL in the else block, so
+     * we'll just take care of that here.
+     */
+    if (filename == NULL) {
+        filename = "-";
+    }
+
+    if (pcmk__str_eq(filename, "-", pcmk__str_none)) {
         (*out)->dest = stdout;
     } else {
         (*out)->dest = fopen(filename, "w");
         if ((*out)->dest == NULL) {
-            pcmk__output_free(*out);
-            *out = NULL;
-            return errno;
+            int rc = errno;
+
+            g_clear_pointer(out, pcmk__output_free);
+            return rc;
         }
     }
 
@@ -100,7 +115,7 @@ pcmk__bare_output_new(pcmk__output_t **out, const char *fmt_name,
     (*out)->messages = pcmk__strkey_table(free, NULL);
 
     if ((*out)->init(*out) == false) {
-        pcmk__output_free(*out);
+        g_clear_pointer(out, pcmk__output_free);
         return ENOMEM;
     }
 
@@ -165,11 +180,9 @@ pcmk__register_formats(GOptionGroup *group,
 }
 
 void
-pcmk__unregister_formats(void) {
-    if (formatters != NULL) {
-        g_hash_table_destroy(formatters);
-        formatters = NULL;
-    }
+pcmk__unregister_formats(void)
+{
+    g_clear_pointer(&formatters, g_hash_table_destroy);
 }
 
 int
@@ -182,8 +195,8 @@ pcmk__call_message(pcmk__output_t *out, const char *message_id, ...) {
 
     fn = g_hash_table_lookup(out->messages, message_id);
     if (fn == NULL) {
-        crm_debug("Called unknown output message '%s' for format '%s'",
-                  message_id, out->fmt_name);
+        pcmk__debug("Called unknown output message '%s' for format '%s'",
+                    message_id, out->fmt_name);
         return EINVAL;
     }
 
@@ -253,10 +266,7 @@ pcmk__xml_output_new(pcmk__output_t **out, xmlNodePtr *xml) {
         return EINVAL;
     }
 
-    if (*xml != NULL) {
-        pcmk__xml_free(*xml);
-        *xml = NULL;
-    }
+    g_clear_pointer(xml, pcmk__xml_free);
     pcmk__register_formats(NULL, xml_format);
     return pcmk__output_new(out, "xml", NULL, NULL);
 }
@@ -302,8 +312,8 @@ pcmk__log_output_new(pcmk__output_t **out)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(out, "log", NULL, (char **) argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
-        crm_err("Can't log certain messages due to internal error: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Can't log certain messages due to internal error: %s",
+                  pcmk_rc_str(rc));
         return rc;
     }
     return pcmk_rc_ok;
@@ -331,8 +341,8 @@ pcmk__text_output_new(pcmk__output_t **out, const char *filename)
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(out, "text", filename, (char **) argv);
     if ((rc != pcmk_rc_ok) || (*out == NULL)) {
-        crm_err("Can't create text output object to internal error: %s",
-                pcmk_rc_str(rc));
+        pcmk__err("Can't create text output object to internal error: %s",
+                  pcmk_rc_str(rc));
         return rc;
     }
     return pcmk_rc_ok;

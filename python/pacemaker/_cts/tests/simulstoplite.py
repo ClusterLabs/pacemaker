@@ -1,9 +1,10 @@
 """Simultaneously stop running nodes."""
 
 __all__ = ["SimulStopLite"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -47,13 +48,13 @@ class SimulStopLite(CTSTest):
         for node in self._env["nodes"]:
             if self._cm.expected_status[node] == "up":
                 self.incr("WasStarted")
-                watchpats.append(self.templates["Pat:We_stopped"] % node)
+                watchpats.append(self._cm.templates["Pat:We_stopped"] % node)
 
         if len(watchpats) == 0:
             return self.success()
 
         # Stop all the nodes - at about the same time...
-        watch = self.create_watch(watchpats, self._env["DeadTime"] + 10)
+        watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
 
         watch.set_watch()
         self.set_timer()
@@ -64,7 +65,7 @@ class SimulStopLite(CTSTest):
         if watch.look_for_all():
             # Make sure they're completely down with no residule
             for node in self._env["nodes"]:
-                self._rsh(node, self.templates["StopCmd"])
+                self._rsh(node, self._cm.templates["StopCmd"])
 
             return self.success()
 
@@ -78,7 +79,7 @@ class SimulStopLite(CTSTest):
         if did_fail:
             return self.failure(f"Active nodes exist: {up_nodes}")
 
-        self._logger.log(f"Warn: All nodes stopped but CTS didn't detect: {watch.unmatched}")
+        logging.log(f"Warn: All nodes stopped but CTS didn't detect: {watch.unmatched}")
         return self.failure(f"Missing log message: {watch.unmatched}")
 
     def is_applicable(self):

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #define PCMK__CRM_COMMON_NODES__H
 
 #include <stdbool.h>                    // bool
-#include <glib.h>                       // gboolean, GList, GHashTable
+#include <glib.h>                       // gboolean, GList
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_scheduler_t

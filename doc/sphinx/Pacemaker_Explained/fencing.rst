@@ -279,11 +279,12 @@ for ``pacemaker-fenced``.
      - :ref:`integer <integer>`
      - 1
      - The maximum number of actions that can be performed in parallel on this
-       device. A value of -1 means unlimited. Node fencing actions initiated by
-       the cluster (as opposed to an administrator running the
+       device. A value of -1 means unlimited. For node fencing actions initiated
+       by the cluster (as opposed to an administrator running the
        ``stonith_admin`` tool or the fencer running recurring device monitors
-       and ``status`` and ``list`` commands) are additionally subject to the
-       ``concurrent-fencing`` cluster property.
+       and ``status`` and ``list`` commands), this applies only if the
+       deprecated ``concurrent-fencing`` cluster property is set to true (the
+       default).
    * - .. _pcmk_host_argument:
 
        .. index::
@@ -317,7 +318,7 @@ for ``pacemaker-fenced``.
      - :ref:`timeout <timeout>`
      - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
-       for ``reboot`` actions instead of the value of ``stonith-timeout``. Some
+       for ``reboot`` actions instead of the value of ``fencing-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
        specify an alternate, device-specific timeout.
    * - .. _pcmk_reboot_retries:
@@ -355,7 +356,7 @@ for ``pacemaker-fenced``.
      - :ref:`timeout <timeout>`
      - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
-       for ``off`` actions instead of the value of ``stonith-timeout``. Some
+       for ``off`` actions instead of the value of ``fencing-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
        specify an alternate, device-specific timeout.
    * - .. _pcmk_off_retries:
@@ -393,7 +394,7 @@ for ``pacemaker-fenced``.
      - :ref:`timeout <timeout>`
      - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
-       for ``list`` actions instead of the value of ``stonith-timeout``. Some
+       for ``list`` actions instead of the value of ``fencing-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
        specify an alternate, device-specific timeout.
    * - .. _pcmk_list_retries:
@@ -431,7 +432,7 @@ for ``pacemaker-fenced``.
      - :ref:`timeout <timeout>`
      - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
-       for ``monitor`` actions instead of the value of ``stonith-timeout``. Some
+       for ``monitor`` actions instead of the value of ``fencing-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
        specify an alternate, device-specific timeout.
    * - .. _pcmk_monitor_retries:
@@ -469,7 +470,7 @@ for ``pacemaker-fenced``.
      - :ref:`timeout <timeout>`
      - 60s
      - *Advanced use only.* Specify an alternate timeout (in seconds) to use
-       for ``status`` actions instead of the value of ``stonith-timeout``. Some
+       for ``status`` actions instead of the value of ``fencing-timeout``. Some
        devices need much more or less time to complete than normal. Use this to
        specify an alternate, device-specific timeout.
    * - .. _pcmk_status_retries:
@@ -531,7 +532,7 @@ Fencing and Quorum
 ##################
 
 In general, a cluster partition may execute fencing only if the partition has
-quorum, and the ``stonith-enabled`` cluster property is set to true. However,
+quorum, and the ``fencing-enabled`` cluster property is set to true. However,
 there are exceptions:
 
 * The requirements apply only to fencing initiated by Pacemaker. If an
@@ -563,7 +564,7 @@ Fencing may be initiated in one of several ways:
   which might or might not be configurable by the user.
 
 * The cluster may initiate fencing itself. In this case, the
-  ``stonith-timeout`` cluster property (defaulting to 1 minute) will be used as
+  ``fencing-timeout`` cluster property (defaulting to 1 minute) will be used as
   the fence operation timeout.
 
 However fencing is initiated, the initiator contacts Pacemaker's fencer
@@ -577,7 +578,7 @@ used as the timeout for each of these queries.
 
 Once a fencing device has been selected, the fencer will check whether any
 action-specific timeout has been configured for the device, to use instead of
-the fence operation timeout. For example, if ``stonith-timeout`` is 60 seconds,
+the fence operation timeout. For example, if ``fencing-timeout`` is 60 seconds,
 but the fencing device has ``pcmk_reboot_timeout`` configured as 90 seconds,
 then a timeout of 90 seconds will be used for reboot actions using that device.
 
@@ -625,15 +626,6 @@ However, this may be acceptable under certain conditions:
 
 * The depended-on resource should not be disabled during production operation.
 
-* The ``concurrent-fencing`` cluster property should be set to ``true``.
-  Otherwise, if both the node running the depended-on resource and some node
-  targeted by the dependent fence device need to be fenced, the fencing of the
-  node running the depended-on resource might be ordered first, making the
-  second fencing impossible and blocking further recovery. With concurrent
-  fencing, the dependent fence device might fail at first due to the
-  depended-on resource being unavailable, but it will be retried and eventually
-  succeed once the resource is brought back up.
-
 Even under those conditions, there is one unlikely problem scenario. The DC
 always schedules fencing of itself after any other fencing needed, to avoid
 unnecessary repeated DC elections. If the dependent fence device targets the
@@ -672,7 +664,7 @@ Pacemaker command-line tools, this is how you could configure a fence device.
 
       # stonith_admin --metadata --agent $AGENT_NAME
 
-#. Create a file called ``stonith.xml`` containing a primitive resource
+#. Create a file called ``fencing.xml`` containing a primitive resource
    with a class of ``stonith``, a type equal to the agent name obtained earlier,
    and a parameter for each of the values returned in the previous step.
 
@@ -692,15 +684,15 @@ Pacemaker command-line tools, this is how you could configure a fence device.
 
    .. code-block:: none
 
-      # cibadmin --create --scope resources --xml-file stonith.xml
+      # cibadmin --create --scope resources --xml-file fencing.xml
 
-#. Set ``stonith-enabled`` to true:
+#. Set ``fencing-enabled`` to true:
 
    .. code-block:: none
 
-      # crm_attribute --type crm_config --name stonith-enabled --update true
+      # crm_attribute --type crm_config --name fencing-enabled --update true
 
-#. Once the stonith resource is running, you can test it by executing the
+#. Once the fencing resource is running, you can test it by executing the
    following, replacing ``$NODE_NAME`` with the name of the node to fence
    (although you might want to stop the cluster on that machine first):
 
@@ -972,7 +964,7 @@ the username ``testuser`` and the password ``abc123``.
       Chassis Power is on
 
 #. Based on that, we might create a fencing resource configuration like this in
-   ``stonith.xml`` (or any file name, just use the same name with ``cibadmin``
+   ``fencing.xml`` (or any file name, just use the same name with ``cibadmin``
    later):
 
    .. code-block:: xml
@@ -1015,13 +1007,13 @@ the username ``testuser`` and the password ``abc123``.
 
    .. code-block:: none
 
-      # cibadmin --create --scope resources --xml-file stonith.xml
+      # cibadmin --create --scope resources --xml-file fencing.xml
 
-#. Set ``stonith-enabled`` to true (this only has to be done once):
+#. Set ``fencing-enabled`` to true (this only has to be done once):
 
    .. code-block:: none
 
-      # crm_attribute --type crm_config --name stonith-enabled --update true
+      # crm_attribute --type crm_config --name fencing-enabled --update true
 
 #. Since our cluster is still in testing, we can reboot ``pcmk-1`` without
    bothering anyone, so we'll test our fencing configuration by running this
@@ -1257,7 +1249,7 @@ cancelled.
 Remapping Reboots
 #################
 
-When the cluster needs to reboot a node, whether because ``stonith-action`` is
+When the cluster needs to reboot a node, whether because ``fencing-action`` is
 ``reboot`` or because a reboot was requested externally (such as by
 ``stonith_admin --reboot``), it will remap that to other commands in two cases:
 

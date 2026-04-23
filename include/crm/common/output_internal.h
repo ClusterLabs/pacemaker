@@ -1,11 +1,15 @@
 /*
- * Copyright 2019-2024 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <output_internal.h> directly"
+#endif
 
 #ifndef PCMK__CRM_COMMON_OUTPUT_INTERNAL__H
 #define PCMK__CRM_COMMON_OUTPUT_INTERNAL__H
@@ -88,7 +92,7 @@ typedef int (*pcmk__message_fn_t)(pcmk__output_t *out, va_list args);
  * override previous ones.  Thus, any default entry must come before any
  * format-specific entries for the same message_id.
  */
-typedef struct pcmk__message_entry_s {
+typedef struct {
     /*!
      * \brief The message to be handled.
      *
@@ -119,7 +123,7 @@ typedef struct pcmk__message_entry_s {
  * \brief This structure contains everything needed to add support for a
  *        single output formatter to a command line program.
  */
-typedef struct pcmk__supported_format_s {
+typedef struct {
     /*!
      * \brief The name of this output formatter, which should match the
      *        fmt_name parameter in some ::pcmk__output_t structure.
@@ -342,10 +346,9 @@ struct pcmk__output_s {
      * \brief Format version information.  This is useful for the --version
      *        argument of command line tools.
      *
-     * \param[in,out] out      The output functions structure.
-     * \param[in]     extended Add additional version information.
+     * \param[in,out] out  The output functions structure.
      */
-    void (*version) (pcmk__output_t *out, bool extended);
+    void (*version)(pcmk__output_t *out);
 
     /*!
      * \internal
@@ -867,6 +870,8 @@ pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, con
 xmlNode *pcmk__html_create(xmlNode *parent, const char *name, const char *id,
                            const char *class_name);
 
+void pcmk__html_set_title(const char *name);
+
 /*!
  * \internal
  * \brief Add an HTML tag to the <head> section.
@@ -992,6 +997,9 @@ pcmk__output_select_rc(int old_rc, int new_rc)
  * inspect the internal formatters hash table.
  */
 GHashTable *pcmk__output_formatters(void);
+
+// Add this one so that we can restore a saved table
+void pcmk__set_output_formatters(GHashTable *value);
 #endif
 
 #define PCMK__OUTPUT_SPACER_IF(out_obj, cond)   \

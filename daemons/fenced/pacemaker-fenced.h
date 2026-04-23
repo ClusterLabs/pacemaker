@@ -1,10 +1,11 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
+#include <stdbool.h>
 #include <stdint.h>                 // uint32_t, uint64_t
 #include <libxml/tree.h>            // xmlNode
 
@@ -133,7 +134,7 @@ typedef struct {
     char *namespace;
 
     /*! list of actions that must execute on the target node. Used for unfencing */
-    GString *on_target_actions;
+    gchar **on_target_actions;
     GList *targets;
     time_t targets_age;
 
@@ -160,7 +161,7 @@ enum st_remap_phase {
     st_phase_max = 3
 };
 
-typedef struct remote_fencing_op_s {
+typedef struct {
     /* @TODO Abstract the overlap with async_command_t (some members have
      * different names for the same thing), which should allow reducing
      * duplication in some functions
@@ -280,7 +281,7 @@ enum fenced_target_by {
  * This structure is used for the topology table entries.
  * Topology levels start from 1, so levels[0] is unused and always NULL.
  */
-typedef struct stonith_topology_s {
+typedef struct {
     enum fenced_target_by kind; // How target was specified
 
     /*! Node name regex or attribute name=value for which topology applies */
@@ -308,9 +309,6 @@ void free_stonith_remote_op_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
 void fenced_unregister_handlers(void);
-
-void stonith_command(pcmk__client_t *client, uint32_t id, uint32_t flags,
-                            xmlNode *op_request, const char *remote_peer);
 
 int fenced_device_register(const xmlNode *dev, bool from_cib);
 
@@ -377,6 +375,14 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
+void fenced_ipc_init(void);
+void fenced_ipc_cleanup(void);
+
+int fenced_cluster_connect(void);
+void fenced_cluster_disconnect(void);
+
+void fenced_handle_request(pcmk__request_t *request);
+
 /*!
  * \internal
  * \brief Get the device flag to use with a given action when searching devices
@@ -396,8 +402,9 @@ fenced_support_flag(const char *action)
 }
 
 extern GHashTable *topology;
-extern long long stonith_watchdog_timeout_ms;
+extern long long fencing_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern crm_exit_t exit_code;
 extern gboolean stonith_shutdown_flag;
+extern pcmk_cluster_t *fenced_cluster;

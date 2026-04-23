@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -48,8 +48,7 @@ bad_arguments(void **state)
 
     assert_int_equal(pcmk_ticket_get_attr(&xml, NULL, "attrA", NULL), EINVAL);
     pcmk__assert_validates(xml);
-    pcmk__xml_free(xml);
-    xml = NULL;
+    g_clear_pointer(&xml, pcmk__xml_free);
 
     assert_int_equal(pcmk_ticket_get_attr(&xml, "ticketA", NULL, NULL), EINVAL);
     pcmk__assert_validates(xml);
@@ -67,8 +66,7 @@ unknown_ticket(void **state)
      */
     assert_int_equal(pcmk_ticket_get_attr(&xml, "XYZ", "attrA", NULL), ENXIO);
     pcmk__assert_validates(xml);
-    pcmk__xml_free(xml);
-    xml = NULL;
+    g_clear_pointer(&xml, pcmk__xml_free);
 
     assert_int_equal(pcmk_ticket_get_attr(&xml, "ticketA", "XYZ", NULL), ENXIO);
     pcmk__assert_validates(xml);
@@ -92,7 +90,7 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
 
     node = pcmk__xpath_result(xpath_obj, 0);
     assert_non_null(node);
-    assert_string_equal(crm_element_value(node, PCMK_XA_ID), ticket_id);
+    assert_string_equal(pcmk__xe_get(node, PCMK_XA_ID), ticket_id);
     xmlXPathFreeObject(xpath_obj);
 
     /* Verify that it has an <attribute> child whose name and value are what
@@ -106,8 +104,8 @@ verify_results(xmlNode *xml, const char *ticket_id, const char *attr_name,
 
     node = pcmk__xpath_result(xpath_obj, 0);
     assert_non_null(node);
-    assert_string_equal(crm_element_value(node, PCMK_XA_NAME), attr_name);
-    assert_string_equal(crm_element_value(node, PCMK_XA_VALUE), attr_value);
+    assert_string_equal(pcmk__xe_get(node, PCMK_XA_NAME), attr_name);
+    assert_string_equal(pcmk__xe_get(node, PCMK_XA_VALUE), attr_value);
 
     xmlXPathFreeObject(xpath_obj);
 }

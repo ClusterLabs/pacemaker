@@ -2,7 +2,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="crm_config">
-        <nvpair id="nvpair.id21850" name="stonith-enabled" value="false"/>
+        <nvpair id="nvpair.id21850" name="fencing-enabled" value="false"/>
       </cluster_property_set>
     </crm_config>
     <nodes>

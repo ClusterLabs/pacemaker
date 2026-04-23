@@ -342,6 +342,83 @@ the header code. For example:
 
 
 .. index::
+   pair: C; includes
+
+Includes
+########
+
+Includes should be listed in the following order:
+
+* ``<crm_internal.h>`` must always come first.
+
+* System includes, such as ``<stdbool.h>``, ``<sys/types.h>``, etc.
+
+* Other libraries, such as ``<glib.h>``, ``<libxml/tree.h>``, etc.
+
+* Pacemaker libraries, such as ``<crm/common/results.h>``, ``<pacemaker-internal.h>``,
+  etc.
+
+* Local includes, which are basically anything that would use double quotes
+  instead of brackets as part of the ``#include`` line.
+
+Within each block, list headers alphabetically unless there is a reason not to
+do so.  Put a blank line between each block of includes.
+
+Each include should have a comment listing what symbols from that header are
+being used.  Exceptions to this are:
+
+* Includes that are completely obvious (for example, ``<stdbool.h>`` obviously
+  exports the ``true``, ``false``, and ``bool`` symbols).
+
+* Includes that we use a large number of symbols from (for example, a source
+  file might use a lot of symbols from GLib, all of which are namespaced to
+  start with ``g_`` and are therefore obvious).
+
+* Anything that comes from an internal Pacemaker header since most source
+  files will use a large number of internal symbols.
+
+Symbols can sometimes be included from multiple headers.  This is especially
+the case with fundamental C symbols like ``NULL`` or ``size_t`` which the
+standard defines in several headers.  In this case, use your best judgement
+and try to follow what other files in the same library or tool are doing.
+
+In general, a source file should have a complete list of includes that cover
+every symbol it uses.  The exceptions to this rule are:
+
+* The ``*_internal.h`` includes can be omitted in favor of ``<crm_internal.h>``.
+
+* The ``pcmki/*.h`` includes can be omitted in favor of
+  ``<pacemaker-internal.h>``.
+
+* The ``crm/common/xml_*.h`` includes can be omitted in favor of
+  ``<crm/common/xml.h>``.
+
+A good place to start is with the ``include-what-you-use`` tool.  This can be
+run like so:
+
+.. code-block:: none
+
+   $ cd daemons/attrd
+   $ make -k CC=include-what-you-use CFLAGS="-I /usr/lib/clang/20/include -Xiwyu --error_always" attrd_messages.o
+
+This will generate a report of which headers should be added and removed, as
+well as the complete include list.  This list is typically not fit to be used
+without addressing several common problems:
+
+* The above order will not be followed.
+
+* Pacemaker headers are commonly listed using double quotes instead of
+  brackets.
+
+* Lots of internal headers are typically listed instead of just the higher
+  level file.
+
+* The wrong headers are sometimes listed for a symbol.  For instance,
+  ``LOG_INFO`` and the other log level symbols are sometimes listed as
+  coming from ``<syslog.h>`` instead of ``<qb/qblog.h>``.
+
+
+.. index::
    pair: C; whitespace
 
 Line Formatting
@@ -531,21 +608,38 @@ Memory Management
 Structures
 ##########
 
-Changes to structures defined in public API headers (adding or removing
-members, or changing member types) are generally not possible without breaking
-API compatibility. However, there are exceptions:
+* Use an anonymous structure in a ``typedef`` unless the structure name is
+  needed elsewhere. For example:
 
-* Public API structures can be designed such that they can be allocated only
-  via API functions, not declared directly or allocated with standard memory
-  functions using ``sizeof``.
+  .. code-block:: c
 
-  * This can be enforced simply by documentating the limitation, in which case
-    new ``struct`` members can be added to the end of the structure without
-    breaking compatibility.
+     // Do this
+     typedef struct {
+         char *name;
+         char *value;
+     } object_t;
 
-  * Alternatively, the structure definition can be kept in an internal header,
-    with only a pointer type definition kept in a public header, in which case
-    the structure definition can be changed however needed.
+     // Not this
+     typedef struct object_s {
+         char *name;
+         char *value;
+     } object_t;
+
+* Changes to structures defined in public API headers (adding or removing
+  members, or changing member types) are generally not possible without
+  breaking API compatibility. However, there are exceptions:
+
+  * Public API structures can be designed such that they can be allocated only
+    via API functions, not declared directly or allocated with standard memory
+    functions using ``sizeof``.
+
+    * This can be enforced simply by documentating the limitation, in which case
+      new ``struct`` members can be added to the end of the structure without
+      breaking compatibility.
+
+    * Alternatively, the structure definition can be kept in an internal header,
+      with only a pointer type definition kept in a public header, in which case
+      the structure definition can be changed however needed.
 
 
 .. index::

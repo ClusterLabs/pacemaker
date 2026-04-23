@@ -2,7 +2,7 @@
   <configuration>
     <crm_config>
       <cluster_property_set id="cib-bootstrap-options">
-        <nvpair name="stonith-enabled" id="nvpair.id21846" value="false"/>
+        <nvpair name="fencing-enabled" id="nvpair.id21846" value="false"/>
         <nvpair name="last-lrm-refresh" id="nvpair.id21855" value="1192999094"/>
       </cluster_property_set>
     </crm_config>

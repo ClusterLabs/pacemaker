@@ -291,3 +291,5 @@ if [ "$command" = "--query" ]; then
 else
 	clear_failcount "$target" "$resource" "$operation" "$interval"
 fi
+
+# vim: set filetype=sh:

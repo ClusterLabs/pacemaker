@@ -1,5 +1,5 @@
 #
-# Copyright 2021-2024 the Pacemaker project contributors
+# Copyright 2021-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -17,8 +17,8 @@ dist_halib_SCRIPTS	= cts-support
 ctsdir		=	$(datadir)/$(PACKAGE)/tests/cts
 cts_DATA	=	pacemaker-cts-dummyd@.service
 dist_cts_DATA	=	cts.conf
-cts_SCRIPTS	= fence_dummy		\
-		  LSBDummy		\
-		  pacemaker-cts-dummyd
+cts_SCRIPTS = fence_dummy
+cts_SCRIPTS += LSBDummy
+cts_SCRIPTS += pacemaker-cts-dummyd
 
 PYCHECKFILES ?= cts-support fence_dummy pacemaker-cts-dummyd

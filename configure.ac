@@ -1088,18 +1088,6 @@ AC_DEFINE_UNQUOTED(XMLLINT_PATH, "$XMLLINT_PATH", xmllint command)
 
 REQUIRE_LIB([xslt], [xsltApplyStylesheet])
 
-AC_MSG_CHECKING([whether __progname and __progname_full are available])
-AC_LINK_IFELSE([AC_LANG_PROGRAM([[extern char *__progname, *__progname_full;]],
-                                [[__progname = "foo";
-                                  __progname_full = "foo bar";]])],
-               [
-                   have_progname="yes"
-                   AC_DEFINE(HAVE_PROGNAME, 1,
-                             [Define to 1 if processes can change their name])
-               ],
-               [have_progname="no"])
-AC_MSG_RESULT([$have_progname])
-
 dnl ========================================================================
 dnl Headers
 dnl ========================================================================
@@ -1111,7 +1099,6 @@ dnl ========================================================================
 cc_temp_flags "$CFLAGS $WERROR"
 
 # Optional headers (inclusion of these should be conditional in C code)
-AC_CHECK_HEADERS([linux/swab.h])
 AC_CHECK_HEADERS([sys/signalfd.h])
 AC_CHECK_HEADERS([uuid/uuid.h])
 AC_CHECK_HEADERS([security/pam_appl.h pam/pam_appl.h])
@@ -1219,8 +1206,6 @@ REQUIRE_FUNC([strnlen])
 REQUIRE_FUNC([unsetenv])
 REQUIRE_FUNC([uuid_unparse])
 REQUIRE_FUNC([vasprintf])
-
-AC_CHECK_FUNCS([strchrnul])
 
 AC_CHECK_FUNCS([fopen64])
 AM_CONDITIONAL([WRAPPABLE_FOPEN64], [test x"$ac_cv_func_fopen64" = x"yes"])
@@ -1990,7 +1975,6 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [agents/stonith/fence_legacy],
                   [agents/stonith/fence_watchdog],
                   [cts/cluster_test],
-                  [cts/cts],
                   [cts/cts-attrd],
                   [cts/cts-cli],
                   [cts/cts-exec],
@@ -2006,13 +1990,10 @@ CONFIG_FILES_EXEC([agents/ocf/ClusterMon],
                   [cts/support/pacemaker-cts-dummyd],
                   [doc/abi-check],
                   [maint/bumplibs],
-                  [tools/cluster-clean],
-                  [tools/cluster-helper],
                   [tools/crm_failcount],
                   [tools/crm_master],
                   [tools/crm_report],
                   [tools/crm_standby],
-                  [tools/cibsecret],
                   [tools/pcmk_simtimes],
                   [xml/rng-helper])
 

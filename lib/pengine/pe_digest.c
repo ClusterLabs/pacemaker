@@ -14,11 +14,8 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
-
-extern bool pcmk__is_daemon;
 
 /*!
  * \internal
@@ -47,36 +44,21 @@ pe__free_digests(gpointer ptr)
     }
 }
 
-// Return true if XML attribute name is not substring of a given string
+// Return true if XML attribute name is an element of a given gchar ** array
 static bool
-attr_not_in_string(xmlAttrPtr a, void *user_data)
+attr_in_strv(xmlAttrPtr a, void *user_data)
 {
-    bool filter = false;
-    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
+    const char *name = (const char *) a->name;
+    gchar **strv = user_data;
 
-    if (strstr((const char *) user_data, name) == NULL) {
-        crm_trace("Filtering %s (not found in '%s')",
-                  (const char *) a->name, (const char *) user_data);
-        filter = true;
-    }
-    free(name);
-    return filter;
+    return pcmk__g_strv_contains(strv, name);
 }
 
-// Return true if XML attribute name is substring of a given string
+// Return true if XML attribute name is not an element of a given gchar ** array
 static bool
-attr_in_string(xmlAttrPtr a, void *user_data)
+attr_not_in_strv(xmlAttrPtr a, void *user_data)
 {
-    bool filter = false;
-    char *name = crm_strdup_printf(" %s ", (const char *) a->name);
-
-    if (strstr((const char *) user_data, name) != NULL) {
-        crm_trace("Filtering %s (found in '%s')",
-                  (const char *) a->name, (const char *) user_data);
-        filter = true;
-    }
-    free(name);
-    return filter;
+    return !attr_in_strv(a, user_data);
 }
 
 /*!
@@ -161,7 +143,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 
     pcmk__filter_op_for_digest(data->params_all);
 
-    data->digest_all_calc = pcmk__digest_operation(data->params_all);
+    data->digest_all_calc = pcmk__digest_op_params(data->params_all);
 }
 
 // Return true if XML attribute name is a Pacemaker-defined fencing parameter
@@ -187,14 +169,18 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                         GHashTable *params, const xmlNode *xml_op,
                         const char *op_version, GHashTable *overrides)
 {
-    const char *class = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    /* @COMPAT CRM_FEATURE_SET was bumped to 3.16.0 in Pacemaker 2.1.5. When we
+     * no longer support rolling upgrades from 2.1.4 and below, we can drop the
+     * old_version code.
+     */
+    const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     const char *secure_list = NULL;
-    bool old_version = (compare_version(op_version, "3.16.0") < 0);
+    bool old_version = (pcmk__compare_versions(op_version, "3.16.0") < 0);
 
     if (xml_op == NULL) {
         secure_list = " passwd password user ";
     } else {
-        secure_list = crm_element_value(xml_op, PCMK__XA_OP_SECURE_PARAMS);
+        secure_list = pcmk__xe_get(xml_op, PCMK__XA_OP_SECURE_PARAMS);
     }
 
     if (old_version) {
@@ -211,16 +197,20 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
     }
 
     if (secure_list != NULL) {
-        pcmk__xe_remove_matching_attrs(data->params_secure, false,
-                                       attr_in_string, (void *) secure_list);
+        gchar **secure_params = g_strsplit(secure_list, " ", 0);
+
+        pcmk__xe_remove_matching_attrs(data->params_secure, false, attr_in_strv,
+                                       secure_params);
+        g_strfreev(secure_params);
     }
+
     if (old_version
-        && pcmk_is_set(pcmk_get_ra_caps(class),
-                       pcmk_ra_cap_fence_params)) {
-        /* For stonith resources, Pacemaker adds special parameters,
-         * but these are not listed in fence agent meta-data, so with older
-         * versions of DC, the controller will not hash them. That means we have
-         * to filter them out before calculating our hash for comparison.
+        && pcmk__is_set(pcmk_get_ra_caps(class),
+                        pcmk_ra_cap_fence_params)) {
+        /* For fencing resources, Pacemaker adds special parameters, but these
+         * are not listed in fence agent meta-data, so with older versions of
+         * DC, the controller will not hash them. That means we have to filter
+         * them out before calculating our hash for comparison.
          */
         pcmk__xe_remove_matching_attrs(data->params_secure, false,
                                        is_fence_param, NULL);
@@ -238,7 +228,7 @@ calculate_secure_digest(pcmk__op_digest_t *data, const pcmk_resource_t *rsc,
                              CRM_META "_" PCMK_META_TIMEOUT);
     }
 
-    data->digest_secure_calc = pcmk__digest_operation(data->params_secure);
+    data->digest_secure_calc = pcmk__digest_op_params(data->params_secure);
 }
 
 /*!
@@ -264,7 +254,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     }
 
     // And the history must have a restart digest to compare against
-    if (crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST) == NULL) {
+    if (pcmk__xe_get(xml_op, PCMK__XA_OP_RESTART_DIGEST) == NULL) {
         return;
     }
 
@@ -272,13 +262,16 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
     data->params_restart = pcmk__xml_copy(NULL, data->params_all);
 
     // Then filter out reloadable parameters, if any
-    value = crm_element_value(xml_op, PCMK__XA_OP_FORCE_RESTART);
+    value = pcmk__xe_get(xml_op, PCMK__XA_OP_FORCE_RESTART);
     if (value != NULL) {
+        gchar **restart_params = g_strsplit(value, " ", 0);
+
         pcmk__xe_remove_matching_attrs(data->params_restart, false,
-                                       attr_not_in_string, (void *) value);
+                                       attr_not_in_strv, restart_params);
+        g_strfreev(restart_params);
     }
 
-    data->digest_restart_calc = pcmk__digest_operation(data->params_restart);
+    data->digest_restart_calc = pcmk__digest_op_params(data->params_restart);
 }
 
 /*!
@@ -320,12 +313,11 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
     data->rc = pcmk__digest_match;
 
     if (xml_op != NULL) {
-        op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
+        op_version = pcmk__xe_get(xml_op, PCMK_XA_CRM_FEATURE_SET);
     }
 
     if ((op_version == NULL) && (scheduler->input != NULL)) {
-        op_version = crm_element_value(scheduler->input,
-                                       PCMK_XA_CRM_FEATURE_SET);
+        op_version = pcmk__xe_get(scheduler->input, PCMK_XA_CRM_FEATURE_SET);
     }
 
     if (op_version == NULL) {
@@ -395,20 +387,20 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     guint interval_ms = 0;
 
     const char *op_version;
-    const char *task = crm_element_value(xml_op, PCMK_XA_OPERATION);
+    const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
     const char *digest_all;
     const char *digest_restart;
 
     pcmk__assert(node != NULL);
 
-    op_version = crm_element_value(xml_op, PCMK_XA_CRM_FEATURE_SET);
-    digest_all = crm_element_value(xml_op, PCMK__XA_OP_DIGEST);
-    digest_restart = crm_element_value(xml_op, PCMK__XA_OP_RESTART_DIGEST);
+    op_version = pcmk__xe_get(xml_op, PCMK_XA_CRM_FEATURE_SET);
+    digest_all = pcmk__xe_get(xml_op, PCMK__XA_OP_DIGEST);
+    digest_restart = pcmk__xe_get(xml_op, PCMK__XA_OP_RESTART_DIGEST);
 
-    crm_element_value_ms(xml_op, PCMK_META_INTERVAL, &interval_ms);
+    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
-                             pcmk_is_set(scheduler->flags,
-                                         pcmk__sched_sanitized),
+                             pcmk__is_set(scheduler->flags,
+                                          pcmk__sched_sanitized),
                              scheduler);
 
     if (!pcmk__str_eq(data->digest_restart_calc, digest_restart,
@@ -420,7 +412,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                        pcmk__readable_interval(interval_ms), task, rsc->id,
                        pcmk__node_name(node), data->digest_restart_calc,
                        pcmk__s(digest_restart, "missing"), op_version,
-                       crm_element_value(xml_op, PCMK__XA_TRANSITION_MAGIC));
+                       pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
         data->rc = pcmk__digest_restart;
 
     } else if (digest_all == NULL) {
@@ -445,8 +437,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            interval_ms, task, rsc->id, pcmk__node_name(node),
                            pcmk__s(digest_all, "missing"),
                            data->digest_all_calc, op_version,
-                           crm_element_value(xml_op,
-                                             PCMK__XA_TRANSITION_MAGIC));
+                           pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
 
         } else {
             pcmk__rsc_info(rsc,
@@ -457,8 +448,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                            data->digest_all_calc,
                            (interval_ms > 0)? "reschedule" : "reload",
                            op_version,
-                           crm_element_value(xml_op,
-                                             PCMK__XA_TRANSITION_MAGIC));
+                           pcmk__xe_get(xml_op, PCMK__XA_TRANSITION_MAGIC));
             data->rc = pcmk__digest_mismatch;
         }
 
@@ -489,7 +479,7 @@ static inline char *
 create_unfencing_summary(const char *rsc_id, const char *agent_type,
                          const char *param_digest)
 {
-    return crm_strdup_printf("%s:%s:%s", rsc_id, agent_type, param_digest);
+    return pcmk__assert_asprintf("%s:%s:%s", rsc_id, agent_type, param_digest);
 }
 
 /*!
@@ -522,8 +512,8 @@ unfencing_digest_matches(const char *rsc_id, const char *agent,
          * so there is no risk of collision using strstr().
          */
         matches = (strstr(node_summary, search_secure) != NULL);
-        crm_trace("Calculated unfencing digest '%s' %sfound in '%s'",
-                  search_secure, matches? "" : "not ", node_summary);
+        pcmk__trace("Calculated unfencing digest '%s' %sfound in '%s'",
+                    search_secure, (matches? "" : "not "), node_summary);
         free(search_secure);
     }
     return matches;
@@ -589,7 +579,7 @@ pe__compare_fencing_digest(pcmk_resource_t *rsc, const char *agent,
 
     // Parameters don't match
     data->rc = pcmk__digest_mismatch;
-    if (pcmk_is_set(scheduler->flags, pcmk__sched_sanitized)
+    if (pcmk__is_set(scheduler->flags, pcmk__sched_sanitized)
         && (data->digest_secure_calc != NULL)) {
 
         if (scheduler->priv->out != NULL) {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,16 +7,33 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <io_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_IO_INTERNAL__H
 #define PCMK__CRM_COMMON_IO_INTERNAL__H
 
 #include <fcntl.h>              // open()
 #include <stdbool.h>            // bool
+#include <stdio.h>              // freopen()
 #include <unistd.h>             // uid_t, gid_t
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/* Define compression parameters for IPC messages
+ *
+ * Compression costs a LOT, so we don't want to do it unless we're hitting
+ * message limits. Currently, we use 128KB as the threshold, because higher
+ * values don't play well with the heartbeat stack. With an earlier limit of
+ * 10KB, compressing 184 of 1071 messages accounted for 23% of the total CPU
+ * used by the cib.
+ */
+#define PCMK__BZ2_BLOCKS    4
+#define PCMK__BZ2_WORK      20
+#define PCMK__BZ2_THRESHOLD (128 * 1024)
 
 int pcmk__real_path(const char *path, char **resolved_path);
 
@@ -39,21 +56,33 @@ int pcmk__write_sync(int fd, const char *contents);
 int pcmk__set_nonblocking(int fd);
 const char *pcmk__get_tmpdir(void);
 
-void pcmk__close_fds_in_child(bool);
+void pcmk__close_fds_in_child(void);
 
 /*!
  * \internal
- * \brief Open /dev/null to consume next available file descriptor
+ * \brief Reopen the standard streams using \c /dev/null
  *
- * Open /dev/null, disregarding the result. This is intended when daemonizing to
- * be able to null stdin, stdout, and stderr.
- *
- * \param[in] flags  O_RDONLY (stdin) or O_WRONLY (stdout and stderr)
+ * This is intended for use when daemonizing, to null \c stdin, \c stdout,
+ * and \c stderr. Failures are ignored.
  */
 static inline void
-pcmk__open_devnull(int flags)
+pcmk__null_std_streams(void)
 {
-    (void) open("/dev/null", flags);
+    /* The "(void) !" is to suppress an obnoxious gcc warning. At least on some
+     * systems, freopen() has the attribute __warn_unused_result__. "(void)"
+     * alone does not suppress the warning. This policy is controversial but
+     * intentional and longstanding.
+     *
+     * https://stackoverflow.com/questions/40576003/ignoring-warning-wunused-result
+     * https://gcc.gnu.org/bugzilla/show_bug.cgi?id=66425#c34
+     *
+     * @TODO Consider replacing our uses of fork() with g_subprocess_*() or
+     * g_spawn_*(). These interfaces have arguments for redirecting standard
+     * streams to /dev/null.
+     */
+    (void) !freopen("/dev/null", "r", stdin);
+    (void) !freopen("/dev/null", "w", stdout);
+    (void) !freopen("/dev/null", "w", stderr);
 }
 
 #ifdef __cplusplus

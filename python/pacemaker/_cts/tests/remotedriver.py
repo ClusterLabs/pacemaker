@@ -1,7 +1,7 @@
 """Base classes for CTS tests."""
 
 __all__ = ["RemoteDriver"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import os
@@ -9,6 +9,8 @@ import time
 import subprocess
 import tempfile
 
+from pacemaker._cts import logging
+from pacemaker._cts.CTS import Process
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
@@ -69,7 +71,7 @@ class RemoteDriver(CTSTest):
         self.failed = True
 
         # Always log the failure.
-        self._logger.log(msg)
+        logging.log(msg)
 
         # Use first failure as test status, as it's likely to be most useful.
         if not self.fail_string:
@@ -204,11 +206,11 @@ class RemoteDriver(CTSTest):
 
     def _freeze_pcmk_remote(self, node):
         """Simulate a Pacemaker Remote daemon failure."""
-        self._rsh(node, "killall -STOP pacemaker-remoted")
+        Process(self._cm, "pacemaker-remoted").signal("STOP", node)
 
     def _resume_pcmk_remote(self, node):
         """Simulate the Pacemaker Remote daemon recovering."""
-        self._rsh(node, "killall -CONT pacemaker-remoted")
+        Process(self._cm, "pacemaker-remoted").signal("CONT", node)
 
     def _start_metal(self, node):
         """
@@ -246,13 +248,13 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         pats.extend([
-            self.templates["Pat:RscOpOK"] % ("start", self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscOpOK"] % ("start", self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ])
 
         self._add_connection_rsc(node)
 
-        with Timer(self._logger, self.name, "remoteMetalInit"):
+        with Timer(self.name, "remoteMetalInit"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -264,9 +266,9 @@ class RemoteDriver(CTSTest):
             return
 
         pats = [
-            self.templates["Pat:RscOpOK"] % ("migrate_to", self._remote_node),
-            self.templates["Pat:RscOpOK"] % ("migrate_from", self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscOpOK"] % ("migrate_to", self._remote_node),
+            self._cm.templates["Pat:RscOpOK"] % ("migrate_from", self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ]
 
         watch = self.create_watch(pats, 120)
@@ -277,7 +279,7 @@ class RemoteDriver(CTSTest):
             self.fail("failed to move remote node connection resource")
             return
 
-        with Timer(self._logger, self.name, "remoteMetalMigrate"):
+        with Timer(self.name, "remoteMetalMigrate"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -293,9 +295,9 @@ class RemoteDriver(CTSTest):
             return
 
         watchpats = [
-            self.templates["Pat:RscRemoteOpOK"] % ("stop", self._remote_rsc, self._remote_node),
-            self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscRemoteOpOK"] % ("stop", self._remote_rsc, self._remote_node),
+            self._cm.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ]
 
         watch = self.create_watch(watchpats, 120)
@@ -305,7 +307,7 @@ class RemoteDriver(CTSTest):
 
         self._rsh(node, "rm -f /var/run/resource-agents/Dummy*")
 
-        with Timer(self._logger, self.name, "remoteRscFail"):
+        with Timer(self.name, "remoteRscFail"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -322,8 +324,8 @@ class RemoteDriver(CTSTest):
             return
 
         watchpats = [
-            self.templates["Pat:Fencing_ok"] % self._remote_node,
-            self.templates["Pat:NodeFenced"] % self._remote_node
+            self._cm.templates["Pat:Fencing_ok"] % self._remote_node,
+            self._cm.templates["Pat:NodeFenced"] % self._remote_node
         ]
 
         watch = self.create_watch(watchpats, 120)
@@ -335,7 +337,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("Waiting for remote node to be fenced.")
 
-        with Timer(self._logger, self.name, "remoteMetalFence"):
+        with Timer(self.name, "remoteMetalFence"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -350,10 +352,10 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(pats, 240)
         watch.set_watch()
 
-        pats.append(self.templates["Pat:RscOpOK"] % ("start", self._remote_node))
+        pats.append(self._cm.templates["Pat:RscOpOK"] % ("start", self._remote_node))
 
         if self._remote_rsc_added:
-            pats.append(self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node))
+            pats.append(self._cm.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node))
 
         # start the remote node again watch it integrate back into cluster.
         self._start_pcmk_remote(node)
@@ -363,7 +365,7 @@ class RemoteDriver(CTSTest):
 
         self.debug("Waiting for remote node to rejoin cluster after being fenced.")
 
-        with Timer(self._logger, self.name, "remoteMetalRestart"):
+        with Timer(self.name, "remoteMetalRestart"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -380,8 +382,8 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         pats.extend([
-            self.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
-            self.templates["Pat:DC_IDLE"]
+            self._cm.templates["Pat:RscRemoteOpOK"] % ("start", self._remote_rsc, self._remote_node),
+            self._cm.templates["Pat:DC_IDLE"]
         ])
 
         # Add a resource that must live on remote-node
@@ -393,7 +395,7 @@ class RemoteDriver(CTSTest):
             self.fail("Failed to place remote resource on remote node.")
             return
 
-        with Timer(self._logger, self.name, "remoteMetalRsc"):
+        with Timer(self.name, "remoteMetalRsc"):
             watch.look_for_all()
 
         if watch.unmatched:
@@ -438,12 +440,12 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         if self._remote_rsc_added:
-            pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._remote_rsc))
+            pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._remote_rsc))
 
         if self._remote_node_added:
-            pats.append(self.templates["Pat:RscOpOK"] % ("stop", self._remote_node))
+            pats.append(self._cm.templates["Pat:RscOpOK"] % ("stop", self._remote_node))
 
-        with Timer(self._logger, self.name, "remoteMetalCleanup"):
+        with Timer(self.name, "remoteMetalCleanup"):
             self._resume_pcmk_remote(node)
 
             if self._remote_rsc_added:

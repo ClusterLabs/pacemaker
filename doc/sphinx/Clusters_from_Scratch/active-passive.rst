@@ -79,7 +79,7 @@ If you want to list all resource agents available on the system, run ``pcs
 resource list``. We'll skip that here.
 
 Now, verify that the IP resource has been added, and display the cluster's
-status to see that it is now active. Note: There should be a stonith device by
+status to see that it is now active. Note: There should be a fencing device by
 now, but it's okay if it doesn't look like the one below.
 
 .. code-block:: console

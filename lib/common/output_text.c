@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,22 +8,22 @@
  */
 
 #include <crm_internal.h>
-#include <crm/common/cmdline_internal.h>
 
 #include <stdarg.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <glib.h>
 #include <termios.h>
 
 #include "crmcommon_private.h"
 
-typedef struct text_list_data_s {
+typedef struct {
     unsigned int len;
     char *singular_noun;
     char *plural_noun;
 } text_list_data_t;
 
-typedef struct private_data_s {
+typedef struct {
     GQueue *parent_q;
     bool fancy;
 } private_data_t;
@@ -48,8 +48,7 @@ text_free_priv(pcmk__output_t *out) {
     priv = out->priv;
 
     g_queue_free_full(priv->parent_q, free_list_data);
-    free(priv);
-    out->priv = NULL;
+    g_clear_pointer(&out->priv, free);
 }
 
 static bool
@@ -119,17 +118,14 @@ text_subprocess_output(pcmk__output_t *out, int exit_status,
 }
 
 static void
-text_version(pcmk__output_t *out, bool extended)
+text_version(pcmk__output_t *out)
 {
     pcmk__assert((out != NULL) && (out->dest != NULL));
 
-    if (extended) {
-        fprintf(out->dest, "Pacemaker %s (Build: %s): %s\n", PACEMAKER_VERSION, BUILD_VERSION, CRM_FEATURES);
-    } else {
-        fprintf(out->dest, "Pacemaker %s\n", PACEMAKER_VERSION);
-        fprintf(out->dest, "Written by Andrew Beekhof and "
-                           "the Pacemaker project contributors\n");
-    }
+    fprintf(out->dest,
+            "Pacemaker " PACEMAKER_VERSION "\n"
+            "Written by Andrew Beekhof and the Pacemaker project "
+            "contributors\n");
 }
 
 G_GNUC_PRINTF(2, 3)
@@ -476,23 +472,19 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
     if (rc == 0) {
         fprintf(stderr, "%s: ", prompt);
 
-        if (*dest != NULL) {
-            free(*dest);
-            *dest = NULL;
-        }
+        g_clear_pointer(dest, free);
 
 #if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
 #else
-        *dest = pcmk__assert_alloc(1, 1024);
+        *dest = pcmk__assert_alloc(1024, sizeof(char));
         rc = scanf("%1023s", *dest);
 #endif
         fprintf(stderr, "\n");
     }
 
     if (rc < 1) {
-        free(*dest);
-        *dest = NULL;
+        g_clear_pointer(dest, free);
     }
 
     if (orig_c_lflag != 0) {

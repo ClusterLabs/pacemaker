@@ -1,5 +1,5 @@
 #
-# Copyright 2018-2024 the Pacemaker project contributors
+# Copyright 2018-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -28,34 +28,34 @@ pacemaker_controld_LDADD += $(top_builddir)/lib/services/libcrmservice.la
 pacemaker_controld_LDADD += $(top_builddir)/lib/common/libcrmcommon.la
 pacemaker_controld_LDADD += $(CLUSTERLIBS)
 
-pacemaker_controld_SOURCES = pacemaker-controld.c	\
-			     controld_alerts.c		\
-			     controld_attrd.c		\
-			     controld_callbacks.c	\
-			     controld_cib.c		\
-			     controld_control.c		\
-			     controld_corosync.c	\
-			     controld_election.c	\
-			     controld_execd.c		\
-			     controld_execd_state.c	\
-			     controld_fencing.c		\
-			     controld_fsa.c		\
-			     controld_join_client.c	\
-			     controld_join_dc.c		\
-			     controld_matrix.c		\
-			     controld_membership.c	\
-			     controld_messages.c	\
-			     controld_metadata.c	\
-			     controld_remote_ra.c	\
-			     controld_schedulerd.c	\
-			     controld_te_actions.c	\
-			     controld_te_callbacks.c	\
-			     controld_te_events.c	\
-			     controld_te_utils.c	\
-			     controld_throttle.c	\
-			     controld_timers.c		\
-			     controld_transition.c	\
-			     controld_utils.c
+pacemaker_controld_SOURCES = pacemaker-controld.c
+pacemaker_controld_SOURCES += controld_alerts.c
+pacemaker_controld_SOURCES += controld_attrd.c
+pacemaker_controld_SOURCES += controld_callbacks.c
+pacemaker_controld_SOURCES += controld_cib.c
+pacemaker_controld_SOURCES += controld_control.c
+pacemaker_controld_SOURCES += controld_corosync.c
+pacemaker_controld_SOURCES += controld_election.c
+pacemaker_controld_SOURCES += controld_execd.c
+pacemaker_controld_SOURCES += controld_execd_state.c
+pacemaker_controld_SOURCES += controld_fencing.c
+pacemaker_controld_SOURCES += controld_fsa.c
+pacemaker_controld_SOURCES += controld_join_client.c
+pacemaker_controld_SOURCES += controld_join_dc.c
+pacemaker_controld_SOURCES += controld_matrix.c
+pacemaker_controld_SOURCES += controld_membership.c
+pacemaker_controld_SOURCES += controld_messages.c
+pacemaker_controld_SOURCES += controld_metadata.c
+pacemaker_controld_SOURCES += controld_remote_ra.c
+pacemaker_controld_SOURCES += controld_schedulerd.c
+pacemaker_controld_SOURCES += controld_te_actions.c
+pacemaker_controld_SOURCES += controld_te_callbacks.c
+pacemaker_controld_SOURCES += controld_te_events.c
+pacemaker_controld_SOURCES += controld_te_utils.c
+pacemaker_controld_SOURCES += controld_throttle.c
+pacemaker_controld_SOURCES += controld_timers.c
+pacemaker_controld_SOURCES += controld_transition.c
+pacemaker_controld_SOURCES += controld_utils.c
 
 if BUILD_XML_HELP
 man7_MANS 	= pacemaker-controld.7

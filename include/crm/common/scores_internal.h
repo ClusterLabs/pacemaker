@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -7,12 +7,20 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_COMMON_INTERNAL_H
+#error "Include <crm/common/internal.h> instead of <scores_internal.h> directly"
+#endif
+
 #ifndef PCMK__CRM_COMMON_SCORES_INTERNAL__H
 #define PCMK__CRM_COMMON_SCORES_INTERNAL__H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int pcmk__score_red;
+extern int pcmk__score_green;
+extern int pcmk__score_yellow;
 
 int pcmk__add_scores(int score1, int score2);
 

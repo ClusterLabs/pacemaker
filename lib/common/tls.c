@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,14 +9,27 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <gnutls/gnutls.h>
-#include <gnutls/x509.h>
-#include <stdlib.h>
+#include <ctype.h>                  // isxdigit
+#include <errno.h>                  // EAGAIN, ENODATA, EPROTO, EINVAL, ETIME
+#include <pwd.h>                    // getpwuid
+#include <signal.h>                 // signal, SIGPIPE, SIG_IGN
+#include <stdbool.h>                // bool
+#include <stdlib.h>                 // NULL, getenv, free
+#include <string.h>                 // memcpy, strdup, strlen
+#include <sys/stat.h>               // S_ISREG, stat
+#include <syslog.h>                 // LOG_WARNING
+#include <time.h>                   // time, time_t
+#include <unistd.h>                 // geteuid
 
-#include <glib.h>           // gpointer, GPOINTER_TO_INT(), GINT_TO_POINTER()
+#include <glib.h>                   // g_clear_pointer, g_file_get_contents
+#include <gnutls/gnutls.h>          // gnutls_*, GNUTLS_E_SUCCESS
+#include <gnutls/x509.h>            // gnutls_x509_*
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/common/tls_internal.h>
+#include <crm/common/internal.h>
+#include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
 
 static char *
 get_gnutls_priorities(gnutls_credentials_type_t cred_type)
@@ -28,9 +41,9 @@ get_gnutls_priorities(gnutls_credentials_type_t cred_type)
     }
 
     if (cred_type == GNUTLS_CRD_ANON) {
-        return crm_strdup_printf("%s:+ANON-DH", prio_base);
+        return pcmk__assert_asprintf("%s:+ANON-DH", prio_base);
     } else if (cred_type == GNUTLS_CRD_PSK) {
-        return crm_strdup_printf("%s:+DHE-PSK:+PSK", prio_base);
+        return pcmk__assert_asprintf("%s:+DHE-PSK:+PSK", prio_base);
     } else {
         return strdup(prio_base);
     }
@@ -67,7 +80,7 @@ tls_load_x509_data(pcmk__tls_t *tls)
                                                 tls->ca_file,
                                                 GNUTLS_X509_FMT_PEM);
     if (rc <= 0) {
-        crm_err("Failed to set X509 CA file: %s", gnutls_strerror(rc));
+        pcmk__err("Failed to set X509 CA file: %s", gnutls_strerror(rc));
         return ENODATA;
     }
 
@@ -79,8 +92,7 @@ tls_load_x509_data(pcmk__tls_t *tls)
                                                   tls->crl_file,
                                                   GNUTLS_X509_FMT_PEM);
         if (rc < 0) {
-            crm_err("Failed to set X509 CRL file: %s",
-                    gnutls_strerror(rc));
+            pcmk__err("Failed to set X509 CRL file: %s", gnutls_strerror(rc));
             return ENODATA;
         }
     }
@@ -93,56 +105,17 @@ tls_load_x509_data(pcmk__tls_t *tls)
                                                GNUTLS_X509_FMT_PEM, NULL,
                                                GNUTLS_PKCS_PLAIN);
     if (rc < 0) {
-        crm_err("Failed to set X509 cert/key pair: %s",
-                gnutls_strerror(rc));
+        pcmk__err("Failed to set X509 cert/key pair: %s", gnutls_strerror(rc));
         return ENODATA;
     }
 
     return pcmk_rc_ok;
 }
 
-/*!
- * \internal
- * \brief Verify a peer's certificate
- *
- * \return 0 if the certificate is trusted and the gnutls handshake should
- *         continue, -1 otherwise
- */
-static int
-verify_peer_cert(gnutls_session_t session)
-{
-    int rc;
-    int type;
-    unsigned int status;
-    gnutls_datum_t out;
-
-    /* NULL = no hostname comparison will be performed */
-    rc = gnutls_certificate_verify_peers3(session, NULL, &status);
-
-    /* Success means it was able to perform the verification.  We still have
-     * to check status to see whether the cert is valid or not.
-     */
-    if (rc != GNUTLS_E_SUCCESS) {
-        crm_err("Failed to verify peer certificate: %s", gnutls_strerror(rc));
-        return -1;
-    }
-
-    if (status == 0) {
-        /* The certificate is trusted. */
-        return 0;
-    }
-
-    type = gnutls_certificate_type_get(session);
-    gnutls_certificate_verification_status_print(status, type, &out, 0);
-    crm_err("Peer certificate invalid: %s", out.data);
-    gnutls_free(out.data);
-    return GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR;
-}
-
 static void
 _gnutls_log_func(int level, const char *msg)
 {
-    crm_trace("%s", msg);
+    pcmk__trace("%s", msg);
 }
 
 void
@@ -174,13 +147,10 @@ pcmk__free_tls(pcmk__tls_t *tls)
     }
 
     free(tls);
-    tls = NULL;
-
-    gnutls_global_deinit();
 }
 
 int
-pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_type)
+pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk)
 {
     int rc = pcmk_rc_ok;
 
@@ -192,30 +162,34 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
 
     signal(SIGPIPE, SIG_IGN);
 
-    /* gnutls_global_init is safe to call multiple times, but we have to call
-     * gnutls_global_deinit the same number of times for that function to do
-     * anything.
-     *
-     * FIXME: When we can use gnutls >= 3.3.0, we don't have to call
-     * gnutls_global_init anymore.
-     */
-    gnutls_global_init();
     gnutls_global_set_log_level(8);
     gnutls_global_set_log_function(_gnutls_log_func);
 
     if (server) {
         rc = pcmk__init_tls_dh(&(*tls)->dh_params);
         if (rc != pcmk_rc_ok) {
-            pcmk__free_tls(*tls);
-            *tls = NULL;
+            g_clear_pointer(tls, pcmk__free_tls);
             return rc;
         }
     }
 
-    (*tls)->cred_type = cred_type;
+    if (pcmk__x509_enabled()) {
+        (*tls)->cred_type = GNUTLS_CRD_CERTIFICATE;
+
+    } else if (have_psk) {
+        (*tls)->cred_type = GNUTLS_CRD_PSK;
+
+    } else {
+        (*tls)->cred_type = GNUTLS_CRD_ANON;
+    }
+
     (*tls)->server = server;
 
-    if (cred_type == GNUTLS_CRD_ANON) {
+    if ((*tls)->cred_type == GNUTLS_CRD_ANON) {
+        pcmk__warn("Using anonymous authentication.  This is insecure and will "
+                   "be removed in a future release.  Use X509 certificates or PSK "
+                   "instead.");
+
         if (server) {
             gnutls_anon_allocate_server_credentials(&(*tls)->credentials.anon_s);
             gnutls_anon_set_server_dh_params((*tls)->credentials.anon_s,
@@ -223,7 +197,8 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
         } else {
             gnutls_anon_allocate_client_credentials(&(*tls)->credentials.anon_c);
         }
-    } else if (cred_type == GNUTLS_CRD_CERTIFICATE) {
+
+    } else if ((*tls)->cred_type == GNUTLS_CRD_CERTIFICATE) {
         /* Try the PCMK_ version of each environment variable first, and if
          * it's not set then try the CIB_ version.
          */
@@ -257,11 +232,10 @@ pcmk__init_tls(pcmk__tls_t **tls, bool server, gnutls_credentials_type_t cred_ty
 
         rc = tls_load_x509_data(*tls);
         if (rc != pcmk_rc_ok) {
-            pcmk__free_tls(*tls);
-            *tls = NULL;
+            g_clear_pointer(tls, pcmk__free_tls);
             return rc;
         }
-    } else if (cred_type == GNUTLS_CRD_PSK) {
+    } else {    // GNUTLS_CRD_PSK
         if (server) {
             gnutls_psk_allocate_server_credentials(&(*tls)->credentials.psk_s);
             gnutls_psk_set_server_dh_params((*tls)->credentials.psk_s,
@@ -298,8 +272,8 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
         dh_bits = dh_max_bits;
     }
 
-    crm_info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
-             dh_bits);
+    pcmk__info("Generating Diffie-Hellman parameters with %u-bit prime for TLS",
+               dh_bits);
     rc = gnutls_dh_params_generate2(*dh_params, dh_bits);
     if (rc != GNUTLS_E_SUCCESS) {
         goto error;
@@ -308,8 +282,9 @@ pcmk__init_tls_dh(gnutls_dh_params_t *dh_params)
     return pcmk_rc_ok;
 
 error:
-    crm_err("Could not initialize Diffie-Hellman parameters for TLS: %s "
-            QB_XS " rc=%d", gnutls_strerror(rc), rc);
+    pcmk__err("Could not initialize Diffie-Hellman parameters for TLS: %s "
+              QB_XS " rc=%d",
+              gnutls_strerror(rc), rc);
     return EPROTO;
 }
 
@@ -349,8 +324,7 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
         goto error;
     }
 
-    gnutls_transport_set_ptr(session,
-                             (gnutls_transport_ptr_t) GINT_TO_POINTER(csock));
+    gnutls_transport_set_int(session, csock);
 
     /* gnutls does not make this easy */
     if (tls->cred_type == GNUTLS_CRD_ANON && tls->server) {
@@ -364,7 +338,7 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
     } else if (tls->cred_type == GNUTLS_CRD_PSK) {
         rc = gnutls_credentials_set(session, tls->cred_type, tls->credentials.psk_c);
     } else {
-        crm_err("Unknown credential type: %d", tls->cred_type);
+        pcmk__err("Unknown credential type: %d", tls->cred_type);
         rc = EINVAL;
         goto error;
     }
@@ -381,21 +355,18 @@ pcmk__new_tls_session(pcmk__tls_t *tls, int csock)
             gnutls_certificate_server_set_request(session, GNUTLS_CERT_REQUIRE);
         }
 
-        /* Register a function to verify the peer's certificate.
-         *
-         * FIXME: When we can require gnutls >= 3.4.6, remove verify_peer_cert
-         * and use gnutls_session_set_verify_cert instead.
-         */
-        gnutls_certificate_set_verify_function(tls->credentials.cert, verify_peer_cert);
+        // Register a function to verify the peer's certificate
+        gnutls_session_set_verify_cert(session, NULL, 0);
     }
 
     return session;
 
 error:
-    crm_err("Could not initialize %s TLS %s session: %s " QB_XS " rc=%d priority='%s'",
-            tls_cred_str(tls->cred_type),
-            (conn_type == GNUTLS_SERVER)? "server" : "client",
-            gnutls_strerror(rc), rc, prio);
+    pcmk__err("Could not initialize %s TLS %s session: %s "
+              QB_XS " rc=%d priority='%s'",
+              tls_cred_str(tls->cred_type),
+              ((conn_type == GNUTLS_SERVER)? "server" : "client"),
+              gnutls_strerror(rc), rc, prio);
     free(prio);
     if (session != NULL) {
         gnutls_deinit(session);
@@ -403,26 +374,12 @@ error:
     return NULL;
 }
 
-/*!
- * \internal
- * \brief Get the socket file descriptor for a remote connection's TLS session
- *
- * \param[in] remote  Remote connection
- *
- * \return Socket file descriptor for \p remote
- *
- * \note The remote connection's \c tls_session must have already been
- *       initialized using \c pcmk__new_tls_session().
- */
 int
 pcmk__tls_get_client_sock(const pcmk__remote_t *remote)
 {
-    gpointer sock_ptr = NULL;
-
     pcmk__assert((remote != NULL) && (remote->tls_session != NULL));
 
-    sock_ptr = (gpointer) gnutls_transport_get_ptr(remote->tls_session);
-    return GPOINTER_TO_INT(sock_ptr);
+    return gnutls_transport_get_int(remote->tls_session);
 }
 
 int
@@ -442,27 +399,28 @@ pcmk__read_handshake_data(const pcmk__client_t *client)
          * invoked again once the client sends more.
          */
         return EAGAIN;
+    } else if (rc == GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR) {
+        int type = gnutls_certificate_type_get(client->remote->tls_session);
+        unsigned int status = gnutls_session_get_verify_cert_status(client->remote->tls_session);
+        gnutls_datum_t out;
+
+        gnutls_certificate_verification_status_print(status, type, &out, 0);
+        pcmk__err("Certificate verification failed: %s", out.data);
+        gnutls_free(out.data);
     } else if (rc != GNUTLS_E_SUCCESS) {
-        crm_err("TLS handshake with remote client failed: %s "
-                QB_XS " rc=%d", gnutls_strerror(rc), rc);
+        pcmk__err("TLS handshake with remote client failed: %s " QB_XS " rc=%d",
+                  gnutls_strerror(rc), rc);
         return EPROTO;
     }
     return pcmk_rc_ok;
 }
 
 void
-pcmk__tls_add_psk_key(pcmk__tls_t *tls, gnutls_datum_t *key)
+pcmk__tls_client_add_psk_key(pcmk__tls_t *tls, const char *username,
+                             gnutls_datum_t *key, bool raw)
 {
-    gnutls_psk_set_client_credentials(tls->credentials.psk_c,
-                                      DEFAULT_REMOTE_USERNAME, key,
-                                      GNUTLS_PSK_KEY_RAW);
-}
-
-void
-pcmk__tls_add_psk_callback(pcmk__tls_t *tls,
-                           gnutls_psk_server_credentials_function *cb)
-{
-    gnutls_psk_set_server_credentials_function(tls->credentials.psk_s, cb);
+    gnutls_psk_set_client_credentials(tls->credentials.psk_c, username, key,
+                                      raw ? GNUTLS_PSK_KEY_RAW : GNUTLS_PSK_KEY_HEX);
 }
 
 void
@@ -497,8 +455,8 @@ pcmk__tls_check_cert_expiration(gnutls_session_t session)
         if (expiry - now <= 60 * 60 * 24 * 30) {
             crm_time_t *expiry_t = pcmk__copy_timet(expiry);
 
-            crm_time_log(LOG_WARNING, "TLS certificate will expire on",
-                         expiry_t, crm_time_log_date | crm_time_log_timeofday);
+            pcmk__time_log(LOG_WARNING, "TLS certificate will expire on",
+                           expiry_t, crm_time_log_date|crm_time_log_timeofday);
             crm_time_free(expiry_t);
         }
     }
@@ -511,9 +469,8 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
 {
     int rc = pcmk_rc_ok;
 
-    if (gnutls_rc != NULL) {
-        *gnutls_rc = GNUTLS_E_SUCCESS;
-    }
+    pcmk__assert(gnutls_rc != NULL);
+    *gnutls_rc = GNUTLS_E_SUCCESS;
 
     rc = gnutls_handshake(remote->tls_session);
 
@@ -527,11 +484,22 @@ pcmk__tls_client_try_handshake(pcmk__remote_t *remote, int *gnutls_rc)
             rc = EAGAIN;
             break;
 
-        default:
-            if (gnutls_rc != NULL) {
-                *gnutls_rc = rc;
-            }
+        case GNUTLS_E_CERTIFICATE_VERIFICATION_ERROR: {
+            int type = gnutls_certificate_type_get(remote->tls_session);
+            unsigned int status = gnutls_session_get_verify_cert_status(remote->tls_session);
+            gnutls_datum_t out;
 
+            gnutls_certificate_verification_status_print(status, type, &out, 0);
+            pcmk__err("Certificate verification failed: %s", out.data);
+            gnutls_free(out.data);
+
+            *gnutls_rc = rc;
+            rc = EPROTO;
+            break;
+        }
+
+        default:
+            *gnutls_rc = rc;
             rc = EPROTO;
             break;
     }
@@ -570,4 +538,98 @@ pcmk__x509_enabled(void)
             !pcmk__str_empty(getenv("CIB_ca_file"))) &&
            (!pcmk__str_empty(pcmk__env_option(PCMK__ENV_KEY_FILE)) ||
             !pcmk__str_empty(getenv("CIB_key_file")));
+}
+
+void
+pcmk__copy_key(gnutls_datum_t *dest, const gnutls_datum_t *source)
+{
+    pcmk__assert((dest != NULL) && (source != NULL) && (source->data != NULL));
+
+    dest->data = gnutls_malloc(source->size);
+    pcmk__mem_assert(dest->data);
+
+    memcpy(dest->data, source->data, source->size);
+    dest->size = source->size;
+}
+
+int
+pcmk__load_key(const char *location, gnutls_datum_t *key, bool raw)
+{
+    gchar *contents = NULL;
+    gsize len = 0;
+    int rc = pcmk_rc_ok;
+
+    pcmk__assert((location != NULL) && (key != NULL));
+
+    if (!g_file_get_contents(location, &contents, &len, NULL)) {
+        return ENOKEY;
+    }
+
+    if (!raw) {
+        /* This is a plain text key.  gnutls expects only hex characters, so
+         * remove any whitespace and check that the characters are valid.
+         */
+        contents = g_strstrip(contents);
+
+        for (const char *c = contents; *c != '\0'; c++) {
+            if (!isxdigit(*c)) {
+                pcmk__err("Key file %s contains characters besides hex digits",
+                          location);
+                rc = ENOKEY;
+                goto done;
+            }
+        }
+
+        len = strlen(contents);
+    }
+
+    key->size = len;
+    key->data = gnutls_malloc(key->size);
+    pcmk__mem_assert(key->data);
+    memcpy(key->data, contents, key->size);
+
+done:
+    g_free(contents);
+    return rc;
+}
+
+bool
+pcmk__cred_file_useable(const char *location, bool *file_exists)
+{
+    int rc = pcmk_rc_ok;
+    struct stat sb;
+    uid_t euid;
+
+    pcmk__assert((location != NULL) && (file_exists != NULL));
+
+    rc = stat(location, &sb);
+    if ((rc != 0) || !S_ISREG(sb.st_mode)) {
+        *file_exists = false;
+        return false;
+    }
+
+    *file_exists = true;
+
+    euid = geteuid();
+    if (sb.st_uid != euid) {
+        struct passwd *pwent = getpwuid(euid);
+
+        if (pwent == NULL) {
+            pcmk__err("Refusing to use PSK credentials file %s because it is "
+                      "not owned by UID %lld", (long long) euid);
+        } else {
+            pcmk__err("Refusing to use PSK credentials file %s because it is "
+                      "not owned by %s", location, pwent->pw_name);
+        }
+
+        return false;
+    }
+
+    if ((sb.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+        pcmk__err("Refusing to use PSK credentials file %s because it has "
+                  "group and/or other permissions set", location);
+        return false;
+    }
+
+    return true;
 }

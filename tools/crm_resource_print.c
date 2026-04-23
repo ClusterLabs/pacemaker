@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,10 +9,10 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include <crm_resource.h>
-#include <crm/common/lists_internal.h>
 #include <crm/common/output.h>
 #include <crm/common/results.h>
 
@@ -22,7 +22,7 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 {
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) userdata;
     pcmk__output_t *out = scheduler->priv->out;
-    const char *id = crm_element_value(xml_obj, PCMK_XA_ID);
+    const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
 
     if (id == NULL) {
         return pcmk_rc_ok;
@@ -34,12 +34,12 @@ print_constraint(xmlNode *xml_obj, void *userdata)
 
     out->info(out, "Constraint %s %s %s %s %s %s %s",
               xml_obj->name,
-              cons_string(crm_element_value(xml_obj, PCMK_XA_ID)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_SCORE)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_RSC_ROLE)),
-              cons_string(crm_element_value(xml_obj, PCMK_XA_WITH_RSC_ROLE)));
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_ID)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_RSC)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_SCORE)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_RSC_ROLE)),
+              cons_string(pcmk__xe_get(xml_obj, PCMK_XA_WITH_RSC_ROLE)));
 
     return pcmk_rc_ok;
 }
@@ -56,14 +56,14 @@ void
 cli_resource_print_cts(pcmk_resource_t *rsc, pcmk__output_t *out)
 {
     const char *host = NULL;
-    bool needs_quorum = TRUE;
-    const char *rtype = crm_element_value(rsc->priv->xml, PCMK_XA_TYPE);
-    const char *rprov = crm_element_value(rsc->priv->xml, PCMK_XA_PROVIDER);
-    const char *rclass = crm_element_value(rsc->priv->xml, PCMK_XA_CLASS);
+    bool needs_quorum = true;
+    const char *rtype = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
+    const char *rprov = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
+    const char *rclass = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
     pcmk_node_t *node = pcmk__current_node(rsc);
 
-    if (pcmk_is_set(rsc->flags, pcmk__rsc_fence_device)) {
-        needs_quorum = FALSE;
+    if (pcmk__is_set(rsc->flags, pcmk__rsc_fence_device)) {
+        needs_quorum = false;
     } else {
         // @TODO check requires in resource meta-data and rsc_defaults
     }
@@ -104,6 +104,7 @@ cli_resource_print_operations(const char *rsc_id, const char *host_uname,
     }
 
     out->end_list(out);
+    g_list_free_full(ops, (GDestroyNotify) pcmk__xml_free);
     return rc;
 }
 
@@ -357,7 +358,7 @@ override_xml(pcmk__output_t *out, va_list args) {
                                                    NULL);
 
     if (rsc_name != NULL) {
-        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
+        pcmk__xe_set(node, PCMK_XA_RSC, rsc_name);
     }
 
     return pcmk_rc_ok;
@@ -453,10 +454,10 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
                                           NULL);
 
     if (rsc_name) {
-        crm_xml_add(node, PCMK_XA_RSC, rsc_name);
+        pcmk__xe_set(node, PCMK_XA_RSC, rsc_name);
     }
 
-    crm_xml_add(node, PCMK_XA_PROVIDER, provider);
+    pcmk__xe_set(node, PCMK_XA_PROVIDER, provider);
 
     if (overrides) {
         GHashTableIter iter;
@@ -508,27 +509,27 @@ resource_check_list_default(pcmk__output_t *out, va_list args) {
 
     out->begin_list(out, NULL, NULL, "Resource Checks");
 
-    if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
+    if (pcmk__is_set(checks->flags, rsc_remain_stopped)) {
         out->list_item(out, "check", "Configuration specifies '%s' should remain stopped",
                        parent->id);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
+    if (pcmk__is_set(checks->flags, rsc_unpromotable)) {
         out->list_item(out, "check", "Configuration specifies '%s' should not be promoted",
                        parent->id);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
+    if (pcmk__is_set(checks->flags, rsc_unmanaged)) {
         out->list_item(out, "check", "Configuration prevents cluster from stopping or starting unmanaged '%s'",
                        parent->id);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_locked)) {
+    if (pcmk__is_set(checks->flags, rsc_locked)) {
         out->list_item(out, "check", "'%s' is locked to node %s due to shutdown",
                        parent->id, checks->lock_node);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_node_health)) {
+    if (pcmk__is_set(checks->flags, rsc_node_health)) {
         out->list_item(out, "check",
                        "'%s' cannot run on unhealthy nodes due to "
                        PCMK_OPT_NODE_HEALTH_STRATEGY "='%s'",
@@ -552,24 +553,24 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
                                                    PCMK_XA_ID, parent->id,
                                                    NULL);
 
-    if (pcmk_is_set(checks->flags, rsc_remain_stopped)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_REMAIN_STOPPED, true);
+    if (pcmk__is_set(checks->flags, rsc_remain_stopped)) {
+        pcmk__xe_set_bool(node, PCMK_XA_REMAIN_STOPPED, true);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unpromotable)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_PROMOTABLE, false);
+    if (pcmk__is_set(checks->flags, rsc_unpromotable)) {
+        pcmk__xe_set_bool(node, PCMK_XA_PROMOTABLE, false);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_unmanaged)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_UNMANAGED, true);
+    if (pcmk__is_set(checks->flags, rsc_unmanaged)) {
+        pcmk__xe_set_bool(node, PCMK_XA_UNMANAGED, true);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_locked)) {
-        crm_xml_add(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
+    if (pcmk__is_set(checks->flags, rsc_locked)) {
+        pcmk__xe_set(node, PCMK_XA_LOCKED_TO_HYPHEN, checks->lock_node);
     }
 
-    if (pcmk_is_set(checks->flags, rsc_node_health)) {
-        pcmk__xe_set_bool_attr(node, PCMK_XA_UNHEALTHY, true);
+    if (pcmk__is_set(checks->flags, rsc_node_health)) {
+        pcmk__xe_set_bool(node, PCMK_XA_UNHEALTHY, true);
     }
 
     return pcmk_rc_ok;
@@ -637,7 +638,7 @@ resource_search_list_xml(pcmk__output_t *out, va_list args)
                                                                 ni->node_name);
 
         if (ni->promoted) {
-            crm_xml_add(sub_node, PCMK_XA_STATE, "promoted");
+            pcmk__xe_set(sub_node, PCMK_XA_STATE, "promoted");
         }
     }
 
@@ -674,8 +675,7 @@ resource_reasons_list_default(pcmk__output_t *out, va_list args)
             }
 
             cli_resource_check(out, rsc, NULL);
-            g_list_free(hosts);
-            hosts = NULL;
+            g_clear_pointer(&hosts, g_list_free);
         }
 
     } else if ((rsc != NULL) && (host_uname != NULL)) {
@@ -762,15 +762,14 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
 
             cli_resource_check(out, rsc, NULL);
             pcmk__output_xml_pop_parent(out);
-            g_list_free(hosts);
-            hosts = NULL;
+            g_clear_pointer(&hosts, g_list_free);
         }
 
         pcmk__output_xml_pop_parent(out);
 
     } else if ((rsc != NULL) && (host_uname != NULL)) {
         if (resource_is_running_on(rsc, host_uname)) {
-            crm_xml_add(xml_node, PCMK_XA_RUNNING_ON, host_uname);
+            pcmk__xe_set(xml_node, PCMK_XA_RUNNING_ON, host_uname);
         }
 
         cli_resource_check(out, rsc, node);
@@ -819,7 +818,7 @@ resource_reasons_list_xml(pcmk__output_t *out, va_list args)
         GList *hosts = NULL;
 
         rsc->priv->fns->location(rsc, &hosts, pcmk__rsc_node_current);
-        crm_xml_add(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
+        pcmk__xe_set(xml_node, PCMK_XA_RUNNING, pcmk__btoa(hosts != NULL));
         cli_resource_check(out, rsc, NULL);
         g_list_free(hosts);
     }

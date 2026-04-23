@@ -247,7 +247,7 @@ holds. So the decision was made to place them in an easy-to-find location.
      - If set to a TCP port number, the CIB manager will listen for remote
        connections on this port, to allow for CIB administration from hosts not
        in the cluster. No encryption is used, so this should be used only on a
-       protected network.
+       protected network. *(deprecated since 3.0.2)*
    * - .. _cib_last_written:
 
        .. index::
@@ -440,28 +440,6 @@ values, by running the ``man pacemaker-schedulerd`` and
      - false
      - Whether all resources should be disallowed from running (can be useful
        during maintenance or troubleshooting)
-   * - .. _stop_orphan_resources:
-
-       .. index::
-          pair: cluster option; stop-orphan-resources
-
-       stop-orphan-resources
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether resources that have been deleted from the configuration should
-       be stopped. This value takes precedence over
-       :ref:`is-managed <is_managed>` (that is, even unmanaged resources will
-       be stopped when orphaned if this value is ``true``).
-   * - .. _stop_orphan_actions:
-
-       .. index::
-          pair: cluster option; stop-orphan-actions
-
-       stop-orphan-actions
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether recurring :ref:`operations <operation>` that have been deleted
-       from the configuration should be cancelled
    * - .. _start_failure_is_fatal:
 
        .. index::
@@ -474,16 +452,6 @@ values, by running the ``man pacemaker-schedulerd`` and
        further start attempts on that node. If ``false``, the cluster will
        decide whether the node is still eligible based on the resource's
        current failure count and ``migration-threshold``.
-   * - .. _enable_startup_probes:
-
-       .. index::
-          pair: cluster option; enable-startup-probes
-
-       enable-startup-probes
-     - :ref:`boolean <boolean>`
-     - true
-     - Whether the cluster should check the pre-existing state of resources
-       when the cluster starts
    * - .. _maintenance_mode:
 
        .. index::
@@ -499,12 +467,12 @@ values, by running the ``man pacemaker-schedulerd`` and
        :ref:`is-managed <is_managed>` and :ref:`maintenance <rsc_maintenance>`
        resource meta-attributes, and :ref:`enabled <op_enabled>` operation
        meta-attribute.
-   * - .. _stonith_enabled:
+   * - .. _fencing_enabled:
 
        .. index::
-          pair: cluster option; stonith-enabled
+          pair: cluster option; fencing-enabled
 
-       stonith-enabled
+       fencing-enabled
      - :ref:`boolean <boolean>`
      - true
      - Whether the cluster is allowed to fence nodes (for example, failed nodes
@@ -522,32 +490,32 @@ values, by running the ``man pacemaker-schedulerd`` and
        This option applies only to fencing scheduled by the cluster, not to
        requests initiated externally (such as with the ``stonith_admin``
        command-line tool).
-   * - .. _stonith_action:
+   * - .. _fencing_action:
 
        .. index::
-          pair: cluster option; stonith-action
+          pair: cluster option; fencing-action
 
-       stonith-action
+       fencing-action
      - :ref:`enumeration <enumeration>`
      - reboot
      - Action the cluster should send to the fence agent when a node must be
        fenced. Allowed values are ``reboot`` and ``off``.
-   * - .. _stonith_timeout:
+   * - .. _fencing_timeout:
 
        .. index::
-          pair: cluster option; stonith-timeout
+          pair: cluster option; fencing-timeout
 
-       stonith-timeout
+       fencing-timeout
      - :ref:`duration <duration>`
      - 60s
      - How long to wait for ``on``, ``off``, and ``reboot`` fence actions to
        complete by default.
-   * - .. _stonith_max_attempts:
+   * - .. _fencing_max_attempts:
 
        .. index::
-          pair: cluster option; stonith-max-attempts
+          pair: cluster option; fencing-max-attempts
 
-       stonith-max-attempts
+       fencing-max-attempts
      - :ref:`score <score>`
      - 10
      - How many times fencing can fail for a target before the cluster will no
@@ -565,16 +533,16 @@ values, by running the ``man pacemaker-schedulerd`` and
        cluster according to whether SBD is detected to be in use.
        User-configured values are ignored. The value `true` is meaningful if
        diskless SBD is used and
-       :ref:`stonith-watchdog-timeout <stonith_watchdog_timeout>` is nonzero. In
+       :ref:`fencing-watchdog-timeout <fencing_watchdog_timeout>` is nonzero. In
        that case, if fencing is required, watchdog-based self-fencing will be
        performed via SBD without requiring a fencing resource explicitly
        configured.
-   * - .. _stonith_watchdog_timeout:
+   * - .. _fencing_watchdog_timeout:
 
        .. index::
-          pair: cluster option; stonith-watchdog-timeout
+          pair: cluster option; fencing-watchdog-timeout
 
-       stonith-watchdog-timeout
+       fencing-watchdog-timeout
      - :ref:`timeout <timeout>`
      - 0
      - If nonzero, and the cluster detects ``have-watchdog`` as ``true``, then
@@ -601,26 +569,12 @@ values, by running the ``man pacemaker-schedulerd`` and
        true for the local value or SBD is not active. When this is set to a
        negative value, ``SBD_WATCHDOG_TIMEOUT`` must be set to the same value
        on all nodes that use SBD, otherwise data corruption or loss could occur.
-
-   * - .. _concurrent-fencing:
-
-       .. index::
-          pair: cluster option; concurrent-fencing
-
-       concurrent-fencing
-     - :ref:`boolean <boolean>`
-     - false
-     - Whether the cluster is allowed to initiate multiple fence actions
-       concurrently. Fence actions initiated externally, such as via the
-       ``stonith_admin`` tool or an application such as DLM, or by the fencer
-       itself such as recurring device monitors and ``status`` and ``list``
-       commands, are not limited by this option.
-   * - .. _fence_reaction:
+   * - .. _fencing_reaction:
 
        .. index::
-          pair: cluster option; fence-reaction
+          pair: cluster option; fencing-reaction
 
-       fence-reaction
+       fencing-reaction
      - :ref:`enumeration <enumeration>`
      - stop
      - How should a cluster node react if notified of its own fencing? A
@@ -685,19 +639,6 @@ values, by running the ``man pacemaker-schedulerd`` and
      - How long to wait for a response from other nodes when electing a DC. The
        ideal value will depend on the speed and load of your network and
        cluster nodes.
-   * - .. _cluster_ipc_limit:
-
-       .. index::
-          pair: cluster option; cluster-ipc-limit
-
-       cluster-ipc-limit
-     - :ref:`nonnegative integer <nonnegative_integer>`
-     - 500
-     - The maximum IPC message backlog before one cluster daemon will
-       disconnect another. This is of use in large clusters, for which a good
-       value is the number of resources in the cluster multiplied by the number
-       of nodes. The default of 500 is also the minimum. Raise this if you see
-       "Evicting client" log messages for cluster daemon process IDs.
    * - .. _pe_error_series_max:
 
        .. index::
@@ -822,7 +763,7 @@ values, by running the ``man pacemaker-schedulerd`` and
        * :ref:`Rules <rules>` using ``date_spec`` are guaranteed to be checked
          only this often.
        * If :ref:`fencing <fencing>` fails enough to reach
-         :ref:`stonith-max-attempts <stonith_max_attempts>`, attempts will
+         :ref:`fencing-max-attempts <fencing_max_attempts>`, attempts will
          begin again after at most this time.
        * It serves as a fail-safe in case of certain scheduler bugs. If the
          scheduler incorrectly determines only some of the actions needed to

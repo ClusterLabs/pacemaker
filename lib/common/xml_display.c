@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,11 +9,12 @@
 
 #include <crm_internal.h>
 
+#include <stdbool.h>
+
 #include <libxml/tree.h>
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/common/xml_internal.h>  // PCMK__XML_LOG_BASE, etc.
 #include "crmcommon_private.h"
 
 static int show_xml_node(pcmk__output_t *out, GString *buffer,
@@ -59,8 +60,9 @@ static int
 show_xml_comment(pcmk__output_t *out, const xmlNode *data, int depth,
                  uint32_t options)
 {
-    if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
-        int width = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
+    if (pcmk__is_set(options, pcmk__xml_fmt_open)) {
+        int width =
+            pcmk__is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
 
         return out->info(out, "%*s<!--%s-->",
                          width, "", (const char *) data->content);
@@ -91,11 +93,11 @@ static int
 show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
                  const xmlNode *data, int depth, uint32_t options)
 {
-    int spaces = pcmk_is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
+    int spaces = pcmk__is_set(options, pcmk__xml_fmt_pretty)? (2 * depth) : 0;
     int rc = pcmk_rc_no_output;
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_open)) {
-        const char *hidden = crm_element_value(data, PCMK__XA_HIDDEN);
+    if (pcmk__is_set(options, pcmk__xml_fmt_open)) {
+        const char *hidden = pcmk__xe_get(data, PCMK__XA_HIDDEN);
 
         g_string_truncate(buffer, 0);
 
@@ -109,29 +111,31 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             xml_node_private_t *nodepriv = attr->_private;
             const char *p_name = (const char *) attr->name;
             const char *p_value = pcmk__xml_attr_value(attr);
-            gchar *p_copy = NULL;
+            gchar *p_value_disp = NULL;
 
-            if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
+            if ((nodepriv == NULL)
+                || pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
             }
 
-            if ((hidden != NULL) && (p_name[0] != '\0')
-                && (strstr(hidden, p_name) != NULL)) {
+            if ((hidden != NULL) && !pcmk__str_empty(p_name)) {
+                gchar **hidden_names = g_strsplit(hidden, ",", 0);
 
-                p_value = "*****";
-
-            } else {
-                p_copy = pcmk__xml_escape(p_value, true);
-                p_value = p_copy;
+                if (pcmk__g_strv_contains(hidden_names, p_name)) {
+                    p_value = "*****";
+                }
+                g_strfreev(hidden_names);
             }
 
+            p_value_disp = pcmk__xml_escape(p_value, pcmk__xml_escape_attr);
+
             pcmk__g_strcat(buffer, " ", p_name, "=\"",
-                           pcmk__s(p_value, "<null>"), "\"", NULL);
-            g_free(p_copy);
+                           pcmk__s(p_value_disp, "<null>"), "\"", NULL);
+            g_free(p_value_disp);
         }
 
         if ((data->children != NULL)
-            && pcmk_is_set(options, pcmk__xml_fmt_children)) {
+            && pcmk__is_set(options, pcmk__xml_fmt_children)) {
             g_string_append_c(buffer, '>');
 
         } else {
@@ -147,7 +151,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         return rc;
     }
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_children)) {
+    if (pcmk__is_set(options, pcmk__xml_fmt_children)) {
         for (const xmlNode *child = pcmk__xml_first_child(data); child != NULL;
              child = pcmk__xml_next(child)) {
 
@@ -159,7 +163,7 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
         }
     }
 
-    if (pcmk_is_set(options, pcmk__xml_fmt_close)) {
+    if (pcmk__is_set(options, pcmk__xml_fmt_close)) {
         int temp_rc = out->info(out, "%s%s%*s</%s>",
                                 pcmk__s(prefix, ""),
                                 pcmk__str_empty(prefix)? "" : " ",
@@ -265,7 +269,11 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
     int rc = pcmk_rc_no_output;
     int temp_rc = pcmk_rc_no_output;
 
-    if (pcmk_all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
+    if (nodepriv == NULL) {
+        return pcmk_rc_no_output;
+    }
+
+    if (pcmk__all_flags_set(nodepriv->flags, pcmk__xf_dirty|pcmk__xf_created)) {
         // Newly created
         return pcmk__xml_show(out, PCMK__XML_PREFIX_CREATED, data, depth,
                               options
@@ -274,13 +282,13 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
                               |pcmk__xml_fmt_close);
     }
 
-    if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
+    if (pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
         // Modified or moved
-        bool pretty = pcmk_is_set(options, pcmk__xml_fmt_pretty);
+        bool pretty = pcmk__is_set(options, pcmk__xml_fmt_pretty);
         int spaces = pretty? (2 * depth) : 0;
         const char *prefix = PCMK__XML_PREFIX_MODIFIED;
 
-        if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
+        if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
             prefix = PCMK__XML_PREFIX_MOVED;
         }
 
@@ -295,23 +303,23 @@ show_xml_changes_recursive(pcmk__output_t *out, const xmlNode *data, int depth,
 
             nodepriv = attr->_private;
 
-            if (pcmk_is_set(nodepriv->flags, pcmk__xf_deleted)) {
+            if (pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 const char *value = pcmk__xml_attr_value(attr);
 
                 temp_rc = out->info(out, "%s %*s @%s=%s",
                                     PCMK__XML_PREFIX_DELETED, spaces, "", name,
                                     value);
 
-            } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_dirty)) {
+            } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
                 const char *value = pcmk__xml_attr_value(attr);
 
-                if (pcmk_is_set(nodepriv->flags, pcmk__xf_created)) {
+                if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
                     prefix = PCMK__XML_PREFIX_CREATED;
 
-                } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_modified)) {
+                } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_modified)) {
                     prefix = PCMK__XML_PREFIX_MODIFIED;
 
-                } else if (pcmk_is_set(nodepriv->flags, pcmk__xf_moved)) {
+                } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_moved)) {
                     prefix = PCMK__XML_PREFIX_MOVED;
 
                 } else {
@@ -368,7 +376,7 @@ pcmk__xml_show_changes(pcmk__output_t *out, const xmlNode *xml)
     pcmk__assert((out != NULL) && (xml != NULL) && (xml->doc != NULL));
 
     docpriv = xml->doc->_private;
-    if (!pcmk_is_set(docpriv->flags, pcmk__xf_dirty)) {
+    if (!pcmk__is_set(docpriv->flags, pcmk__xf_dirty)) {
         return rc;
     }
 

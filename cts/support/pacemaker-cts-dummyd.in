@@ -60,3 +60,5 @@ if __name__ == "__main__":
     # This isn't a "proper" daemon, but that would be overkill for testing purposes
     while True:
         time.sleep(600.0)
+
+# vim: set filetype=python:
