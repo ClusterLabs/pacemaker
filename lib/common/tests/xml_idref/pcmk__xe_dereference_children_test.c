@@ -13,6 +13,39 @@
 
 #include <crm/common/unittest_internal.h>
 
+static void
+assert_deref_one(const xmlNode *xml, const char *element_name,
+                 GList *expected_ids)
+{
+    GList *resolved_nodes = pcmk__xe_dereference_children(xml, element_name);
+    GList *resolved_ids = NULL;
+
+    for (const GList *iter = resolved_nodes; iter != NULL; iter = iter->next) {
+        const xmlNode *data = iter->data;
+        const char *value = pcmk__xe_get(data, "testattr");
+
+        resolved_ids = g_list_prepend(resolved_ids, (void *) value);
+    }
+
+    // Ensure returned list has exactly the expected child IDs
+    resolved_ids = g_list_sort(resolved_ids, (GCompareFunc) g_strcmp0);
+
+    assert_int_equal(g_list_length(expected_ids), g_list_length(resolved_ids));
+
+    for (const GList *e_iter = expected_ids, *r_iter = resolved_ids;
+         (e_iter != NULL) && (r_iter != NULL);
+         e_iter = e_iter->next, r_iter = r_iter->next) {
+
+        const char *e_value = e_iter->data;
+        const char *r_value = r_iter->data;
+
+        assert_string_equal(e_value, r_value);
+    }
+
+    g_list_free(resolved_nodes);
+    g_list_free(resolved_ids);
+}
+
 /*!
  * \internal
  * \brief Test an invocation of pcmk__xe_dereference_children()
@@ -29,8 +62,6 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     xmlNode *xml = NULL;
     const xmlNode *child = NULL;
     GList *expected_ids = NULL;
-    GList *resolved_nodes = NULL;
-    GList *resolved_ids = NULL;
     va_list ap;
 
     // Parse given XML
@@ -48,36 +79,14 @@ assert_deref(const char *xml_string, const char *element_name, ...)
     }
     va_end(ap);
 
+    expected_ids = g_list_sort(expected_ids, (GCompareFunc) g_strcmp0);
+
     // Call tested function on "test" child
     child = pcmk__xe_first_child(xml, "test", NULL, NULL);
-    resolved_nodes = pcmk__xe_dereference_children(child, element_name);
 
-    for (const GList *iter = resolved_nodes; iter != NULL; iter = iter->next) {
-        const xmlNode *data = iter->data;
-        const char *value = pcmk__xe_get(data, "testattr");
-
-        resolved_ids = g_list_prepend(resolved_ids, (void *) value);
-    }
-
-    // Ensure returned list has exactly the expected child IDs
-    expected_ids = g_list_sort(expected_ids, (GCompareFunc) g_strcmp0);
-    resolved_ids = g_list_sort(resolved_ids, (GCompareFunc) g_strcmp0);
-
-    assert_int_equal(g_list_length(expected_ids), g_list_length(resolved_ids));
-
-    for (const GList *e_iter = expected_ids, *r_iter = resolved_ids;
-         (e_iter != NULL) && (r_iter != NULL);
-         e_iter = e_iter->next, r_iter = r_iter->next) {
-
-        const char *e_value = e_iter->data;
-        const char *r_value = r_iter->data;
-
-        assert_string_equal(e_value, r_value);
-    }
+    assert_deref_one(child, element_name, expected_ids);
 
     g_list_free(expected_ids);
-    g_list_free(resolved_nodes);
-    g_list_free(resolved_ids);
     pcmk__xml_free(xml);
 }
 
