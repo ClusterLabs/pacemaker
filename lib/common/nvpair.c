@@ -487,8 +487,13 @@ pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                           const pcmk_rule_input_t *rule_input,
                           GHashTable *values, crm_time_t *next_change)
 {
-    GList *blocks = pcmk__xe_dereference_children(xml, element_name);
+    GList *blocks = NULL;
 
+    if (xml == NULL) {
+        return;
+    }
+
+    blocks = pcmk__xe_dereference_children(xml, element_name, xml->doc);
     if (blocks != NULL) {
         pcmk__nvpair_unpack_t data = {
             .values = values,

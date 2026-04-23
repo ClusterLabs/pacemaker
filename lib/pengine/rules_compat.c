@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,8 +78,13 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = pcmk__xe_dereference_children(xml_obj, set_name);
+    GList *pairs = NULL;
 
+    if (xml_obj == NULL) {
+        return;
+    }
+
+    pairs = pcmk__xe_dereference_children(xml_obj, set_name, xml_obj->doc);
     if (pairs) {
         pcmk__nvpair_unpack_t data = {
             .values = hash,

@@ -114,12 +114,14 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
  *
  * \param[in] xml           XML element to get list for
  * \param[in] element_name  If not NULL, list only children of this element type
+ * \param[in] doc           XML document to use for resolving references
  *
  * \return Unordered list of XML elements corresponding to child elements of
  *         \p xml with any ID references resolved to the referenced elements
  */
 GList *
-pcmk__xe_dereference_children(const xmlNode *xml, const char *element_name)
+pcmk__xe_dereference_children(const xmlNode *xml, const char *element_name,
+                              xmlDoc *doc)
 {
     GList *result = NULL;
 
@@ -129,7 +131,7 @@ pcmk__xe_dereference_children(const xmlNode *xml, const char *element_name)
     for (xmlNode *child = pcmk__xe_first_child(xml, element_name, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, element_name)) {
 
-        xmlNode *resolved = pcmk__xe_resolve_idref(child, child->doc);
+        xmlNode *resolved = pcmk__xe_resolve_idref(child, doc);
 
         if (resolved == NULL) {
             continue; // Not possible with schema validation enabled
