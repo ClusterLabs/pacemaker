@@ -160,6 +160,40 @@ with_idref(void **state)
     assert_deref(XML_WITH_IDREF, "nonexistent", NULL);
 }
 
+// There may be no valid use case for this, but it should work
+#define XML_WITH_DUPLICATE_IDREF                            \
+    "<xml>\n"                                               \
+    "  <other id='other1' testattr='othervalue1' />\n"      \
+    "  <child id='child2' testattr='childvalue2' />\n"      \
+    "  <test>\n"                                            \
+    "    <!-- comment -->\n"                                \
+    "    <other id-ref='other1'/>\n"                        \
+    "    <child id='child1' testattr='childvalue1' />\n"    \
+    "    <other id-ref='other1'/>\n"                        \
+    "    <other id='other2' testattr='othervalue2' />\n"    \
+    "    <child id-ref='child2' />\n"                       \
+    "    <child id='child3' testattr='childvalue3' />\n"    \
+    "    <other id='other3' testattr='othervalue3' />\n"    \
+    "  </test>\n"                                           \
+    "</xml>\n"
+
+static void
+with_duplicate_idref(void **state)
+{
+    assert_deref(XML_WITH_DUPLICATE_IDREF, NULL,
+                 "othervalue1", "othervalue1", "othervalue2", "othervalue3",
+                 "childvalue1", "childvalue2", "childvalue3", NULL);
+
+    assert_deref(XML_WITH_DUPLICATE_IDREF, "other",
+                 "othervalue1", "othervalue1", "othervalue2", "othervalue3",
+                 NULL);
+
+    assert_deref(XML_WITH_DUPLICATE_IDREF, "child",
+                 "childvalue1", "childvalue2", "childvalue3", NULL);
+
+    assert_deref(XML_WITH_DUPLICATE_IDREF, "nonexistent", NULL);
+}
+
 #define XML_WITH_BROKEN_IDREF                               \
     "<xml>\n"                                               \
     "  <test>\n"                                            \
@@ -194,4 +228,5 @@ PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(null_for_no_children),
                 cmocka_unit_test(without_idref),
                 cmocka_unit_test(with_idref),
+                cmocka_unit_test(with_duplicate_idref),
                 cmocka_unit_test(with_broken_idref))
