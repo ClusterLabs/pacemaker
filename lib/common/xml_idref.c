@@ -75,7 +75,6 @@ pcmk__free_idref(gpointer data)
  *
  * \param[in] xml  Element whose \c PCMK_XA_ID_REF attribute to check
  * \param[in] doc  Document to search for node with matching \c PCMK_XA_ID
- *                 (\c NULL to use \p xml->doc)
  *
  * \return If \p xml has a \c PCMK_XA_ID_REF attribute, node in \p doc whose
  *         \c PCMK_XA_ID attribute matches; otherwise, \p xml
@@ -87,17 +86,13 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
     const char *ref = NULL;
     xmlNode *result = NULL;
 
-    if (xml == NULL) {
+    if ((xml == NULL) || (doc == NULL)) {
         return NULL;
     }
 
     ref = pcmk__xe_get(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
         return xml;
-    }
-
-    if (doc == NULL) {
-        doc = xml->doc;
     }
 
     xpath = pcmk__assert_asprintf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
@@ -134,7 +129,7 @@ pcmk__xe_dereference_children(const xmlNode *xml, const char *element_name)
     for (xmlNode *child = pcmk__xe_first_child(xml, element_name, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, element_name)) {
 
-        xmlNode *resolved = pcmk__xe_resolve_idref(child, NULL);
+        xmlNode *resolved = pcmk__xe_resolve_idref(child, child->doc);
 
         if (resolved == NULL) {
             continue; // Not possible with schema validation enabled
