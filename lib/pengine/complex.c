@@ -111,13 +111,21 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
     GHashTable *table = user_data;
 
     CRM_CHECK((key != NULL) && (table != NULL), return);
+
+    if (value == NULL) {
+        return;
+    }
+
     if (pcmk__str_eq((const char *) value, "#default", pcmk__str_casei)) {
         // @COMPAT Deprecated since 2.1.8
         pcmk__config_warn("Support for setting meta-attributes (such as %s) to "
                           "the explicit value '#default' is deprecated and "
                           "will be removed in a future release",
                           (const char *) key);
-    } else if ((value != NULL) && (g_hash_table_lookup(table, key) == NULL)) {
+        return;
+    }
+
+    if (!g_hash_table_contains(table, key)) {
         pcmk__insert_dup(table, (const char *) key, (const char *) value);
     }
 }
@@ -157,7 +165,7 @@ expand_parents_fixed_nvpairs(const pcmk_resource_t *rsc,
  * \param[in,out] scheduler  Scheduler data
  */
 void
-get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
+get_meta_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     const pcmk_rule_input_t rule_input = {
@@ -167,13 +175,15 @@ get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t * rsc,
         .rsc_agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE)
     };
 
-    for (xmlAttrPtr a = pcmk__xe_first_attr(rsc->priv->xml);
-         a != NULL; a = a->next) {
+    for (const xmlAttr *attr = pcmk__xe_first_attr(rsc->priv->xml);
+         attr != NULL; attr = attr->next) {
 
-        if (a->children != NULL) {
-            dup_attr((gpointer) a->name, (gpointer) a->children->content,
-                     meta_hash);
+        if (attr->children == NULL) {
+            continue;
         }
+
+        dup_attr((void *) attr->name, (void *) attr->children->content,
+                 meta_hash);
     }
 
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_META_ATTRIBUTES,
