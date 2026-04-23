@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -54,6 +54,7 @@ invalid_args(void **state)
     xmlNode *xml = pcmk__xml_parse("<xml/>");
 
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
 
     pcmk__assert_asserts(pcmk__unpack_nvpair_block(NULL, NULL));
     pcmk__assert_asserts(pcmk__unpack_nvpair_block(NULL, &unpack_data));
@@ -80,7 +81,10 @@ with_rules(void **state) {
     xmlNode *xml = NULL;
 
     xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_1 XML_PASSING_RULE "</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 2);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
@@ -88,7 +92,10 @@ with_rules(void **state) {
     pcmk__xml_free(xml);
 
     xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_2 XML_FAILING_RULE "</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 2);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
@@ -111,7 +118,10 @@ without_overwrite(void **state)
     xmlNode *xml = NULL;
 
     xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_1 "</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 2);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
@@ -119,7 +129,10 @@ without_overwrite(void **state)
     pcmk__xml_free(xml);
 
     xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_2 "</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 3);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
@@ -141,7 +154,10 @@ with_overwrite(void **state)
     xmlNode *xml = NULL;
 
     xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_1 "</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 2);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
@@ -149,7 +165,10 @@ with_overwrite(void **state)
     pcmk__xml_free(xml);
 
     xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_2 "</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 3);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "2");
@@ -170,7 +189,10 @@ attributes_child(void **state)
     xmlNode *xml = pcmk__xml_parse("<xml>\n<" PCMK__XE_ATTRIBUTES ">\n"
                                    XML_NVPAIRS_1
                                    "</" PCMK__XE_ATTRIBUTES ">\n</xml>\n");
+
     assert_non_null(xml);
+    unpack_data.doc = xml->doc;
+
     pcmk__unpack_nvpair_block(xml, &unpack_data);
     assert_int_equal(g_hash_table_size(unpack_data.values), 2);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
