@@ -59,11 +59,11 @@ assert_deref(const char *xml_string, const char *element_name, ...)
         goto done;
     }
 
-    while (list != NULL) {
-        const char *value = pcmk__xe_get((xmlNode *) list->data, "testattr");
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
+        xmlNode *data = iter->data;
+        const char *value = pcmk__xe_get(data, "testattr");
 
         assert_true(g_hash_table_remove(table, value));
-        list = list->next;
     }
 
     assert_int_equal(g_hash_table_size(table), 0);
