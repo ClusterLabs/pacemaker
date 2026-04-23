@@ -168,12 +168,10 @@ void
 get_meta_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    const pcmk_rule_input_t rule_input = {
-        .now = scheduler->priv->now,
-        .rsc_standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS),
-        .rsc_provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER),
-        .rsc_agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE)
-    };
+    pcmk_rule_input_t rule_input = { NULL, };
+
+    CRM_CHECK((meta_hash != NULL) && (rsc != NULL) && (scheduler != NULL),
+              return);
 
     for (const xmlAttr *attr = pcmk__xe_first_attr(rsc->priv->xml);
          attr != NULL; attr = attr->next) {
@@ -185,6 +183,11 @@ get_meta_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
         dup_attr((void *) attr->name, (void *) attr->children->content,
                  meta_hash);
     }
+
+    rule_input.now = scheduler->priv->now;
+    rule_input.rsc_standard = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
+    rule_input.rsc_provider = pcmk__xe_get(rsc->priv->xml, PCMK_XA_PROVIDER);
+    rule_input.rsc_agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 
     pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_META_ATTRIBUTES,
                                &rule_input, meta_hash, NULL, scheduler);
