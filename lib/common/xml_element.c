@@ -1553,7 +1553,7 @@ pcmk__xe_attr_is_true(const xmlNode *node, const char *name)
 xmlNode *
 expand_idref(xmlNode *input, xmlNode *top)
 {
-    return pcmk__xe_resolve_idref(input, top);
+    return pcmk__xe_resolve_idref(input, ((top != NULL)? top->doc : NULL));
 }
 
 const char *

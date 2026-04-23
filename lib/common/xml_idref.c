@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -73,16 +73,15 @@ pcmk__free_idref(gpointer data)
  * \internal
  * \brief Get the XML element whose \c PCMK_XA_ID matches an \c PCMK_XA_ID_REF
  *
- * \param[in] xml     Element whose \c PCMK_XA_ID_REF attribute to check
- * \param[in] search  Node whose document to search for node with matching
- *                    \c PCMK_XA_ID (\c NULL to use \p xml)
+ * \param[in] xml  Element whose \c PCMK_XA_ID_REF attribute to check
+ * \param[in] doc  Document to search for node with matching \c PCMK_XA_ID
+ *                 (\c NULL to use \p xml->doc)
  *
- * \return If \p xml has a \c PCMK_XA_ID_REF attribute, node in
- *         <tt>search</tt>'s document whose \c PCMK_XA_ID attribute matches;
- *         otherwise, \p xml
+ * \return If \p xml has a \c PCMK_XA_ID_REF attribute, node in \p doc whose
+ *         \c PCMK_XA_ID attribute matches; otherwise, \p xml
  */
 xmlNode *
-pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
+pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
 {
     char *xpath = NULL;
     const char *ref = NULL;
@@ -97,12 +96,12 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlNode *search)
         return xml;
     }
 
-    if (search == NULL) {
-        search = xml;
+    if (doc == NULL) {
+        doc = xml->doc;
     }
 
     xpath = pcmk__assert_asprintf("//%s[@" PCMK_XA_ID "='%s']", xml->name, ref);
-    result = pcmk__xpath_find_one(search->doc, xpath, LOG_DEBUG);
+    result = pcmk__xpath_find_one(doc, xpath, LOG_DEBUG);
     if (result == NULL) {
         // Not possible with schema validation enabled
         pcmk__config_err("Ignoring invalid %s configuration: "
