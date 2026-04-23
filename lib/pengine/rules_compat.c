@@ -95,6 +95,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
         return;
     }
 
+    data.doc = xml_obj->doc;
     map_rule_input(&(data.rule_input), rule_data);
 
     pairs = g_list_sort_with_data(pairs, pcmk__cmp_nvpair_blocks, &data);

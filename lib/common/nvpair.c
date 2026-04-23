@@ -504,6 +504,7 @@ pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
         return;
     }
 
+    data.doc = xml->doc;
     if (rule_input != NULL) {
         data.rule_input = *rule_input;
     }
