@@ -444,7 +444,6 @@ generate_params(void)
     xmlNode *cib_xml_copy = NULL;
     pcmk_resource_t *rsc = NULL;
     GHashTable *params = NULL;
-    GHashTable *meta = NULL;
     GHashTableIter iter;
     char *key = NULL;
     char *value = NULL;
@@ -496,9 +495,7 @@ generate_params(void)
     }
 
     // Add resource meta-attributes to options.params
-    meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, NULL, scheduler);
-    g_hash_table_iter_init(&iter, meta);
+    g_hash_table_iter_init(&iter, rsc->priv->meta);
     while (g_hash_table_iter_next(&iter, (gpointer *) &key,
                                   (gpointer *) &value)) {
         char *crm_name = crm_meta_name(key);
@@ -506,7 +503,6 @@ generate_params(void)
         options.params = lrmd_key_value_add(options.params, crm_name, value);
         free(crm_name);
     }
-    g_hash_table_destroy(meta);
 
     pcmk_free_scheduler(scheduler);
     return rc;

@@ -1439,10 +1439,8 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
 
     } else if (pcmk__str_eq(options.attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_none)) {
-        params = pcmk__strkey_table(free, free);
-        get_meta_attributes(params, rsc, NULL, scheduler);
-
-        value = g_hash_table_lookup(params, options.prop_name);
+        value = g_hash_table_lookup(rsc->priv->meta, options.prop_name);
+        free_params = false;
 
     } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
                             pcmk__str_none)) {
