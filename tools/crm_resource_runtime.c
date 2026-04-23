@@ -1328,7 +1328,7 @@ generate_resource_params(pcmk_resource_t *rsc)
     while (g_hash_table_iter_next(&iter, (void *) &key, (void *) &value)) {
         char *crm_name = crm_meta_name(key);
 
-        g_hash_table_insert(combined, crm_name, strdup(value));
+        g_hash_table_insert(combined, crm_name, pcmk__str_copy(value));
     }
 
     return combined;
