@@ -41,6 +41,42 @@
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp2-3' "          \
         PCMK_XA_NAME "='name3' " PCMK_XA_VALUE "='2' />"
 
+#define assert_unpack_nvpair_block(xml_str, unpack_data, size, value1,      \
+                                   value2, value3)                          \
+    do {                                                                    \
+        const char *found = NULL;                                           \
+        xmlNode *xml = pcmk__xml_parse(xml_str);                            \
+                                                                            \
+        assert_non_null(xml);                                               \
+        (unpack_data)->doc = xml->doc;                                      \
+                                                                            \
+        pcmk__unpack_nvpair_block(xml, unpack_data);                        \
+        assert_int_equal(g_hash_table_size((unpack_data)->values), size);   \
+                                                                            \
+        found = g_hash_table_lookup((unpack_data)->values, "name1");        \
+        if ((value1) == NULL) {                                             \
+            assert_null(found);                                             \
+        } else {                                                            \
+            assert_string_equal(found, value1);                             \
+        }                                                                   \
+                                                                            \
+        found = g_hash_table_lookup((unpack_data)->values, "name2");        \
+        if ((value2) == NULL) {                                             \
+            assert_null(found);                                             \
+        } else {                                                            \
+            assert_string_equal(found, value2);                             \
+        }                                                                   \
+                                                                            \
+        found = g_hash_table_lookup((unpack_data)->values, "name3");        \
+        if ((value3) == NULL) {                                             \
+            assert_null(found);                                             \
+        } else {                                                            \
+            assert_string_equal(found, value3);                             \
+        }                                                                   \
+                                                                            \
+        pcmk__xml_free(xml);                                                \
+    } while (0)
+
 static void
 invalid_args(void **state)
 {
@@ -78,30 +114,11 @@ with_rules(void **state) {
         },
     };
 
-    xmlNode *xml = NULL;
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_1 XML_PASSING_RULE "</xml>",
+                               &unpack_data, 2, "1", "1", NULL);
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_2 XML_FAILING_RULE "</xml>",
+                               &unpack_data, 2, "1", "1", NULL);
 
-    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_1 XML_PASSING_RULE "</xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 2);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-    pcmk__xml_free(xml);
-
-    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_2 XML_FAILING_RULE "</xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 2);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-
-    pcmk__xml_free(xml);
     crm_time_free(now);
     g_hash_table_destroy(unpack_data.values);
 }
@@ -114,30 +131,10 @@ without_overwrite(void **state)
         .overwrite = false,
     };
 
-    xmlNode *xml = NULL;
-
-    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_1 "</xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 2);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-    pcmk__xml_free(xml);
-
-    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_2 "</xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 3);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name3"), "2");
-    pcmk__xml_free(xml);
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_1 "</xml>", &unpack_data, 2,
+                               "1", "1", NULL);
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_2 "</xml>", &unpack_data, 3,
+                               "1", "1", "2");
 
     g_hash_table_destroy(unpack_data.values);
 }
@@ -150,30 +147,10 @@ with_overwrite(void **state)
         .overwrite = true,
     };
 
-    xmlNode *xml = NULL;
-
-    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_1 "</xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 2);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-    pcmk__xml_free(xml);
-
-    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_2 "</xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 3);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "2");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "2");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name3"), "2");
-    pcmk__xml_free(xml);
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_1 "</xml>", &unpack_data, 2,
+                               "1", "1", NULL);
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_2 "</xml>", &unpack_data, 3,
+                               "2", "2", "2");
 
     g_hash_table_destroy(unpack_data.values);
 }
@@ -185,18 +162,12 @@ attributes_child(void **state)
         .values = pcmk__strkey_table(free, free),
     };
 
-    xmlNode *xml = pcmk__xml_parse("<xml><" PCMK__XE_ATTRIBUTES ">"
-                                   XML_NVPAIRS_1
-                                   "</" PCMK__XE_ATTRIBUTES "></xml>");
-
-    assert_non_null(xml);
-    unpack_data.doc = xml->doc;
-
-    pcmk__unpack_nvpair_block(xml, &unpack_data);
-    assert_int_equal(g_hash_table_size(unpack_data.values), 2);
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
-    assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-    pcmk__xml_free(xml);
+    assert_unpack_nvpair_block("<xml>"
+                                   "<" PCMK__XE_ATTRIBUTES ">"
+                                       XML_NVPAIRS_1
+                                   "</" PCMK__XE_ATTRIBUTES ">"
+                               "</xml>",
+                               &unpack_data, 2, "1", "1", NULL);
 
     g_hash_table_destroy(unpack_data.values);
 }
