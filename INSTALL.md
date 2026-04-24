@@ -45,7 +45,7 @@ Also:
 | encrypted remote CIB admin                      |                | pam-devel               | pam-devel               | libpam0g-dev            |
 | interactive crm_mon                             |                | ncurses-devel           | ncurses-devel           | ncurses-dev             |
 | systemd support                                 |                | systemd-devel           | systemd-devel           | libsystemd-dev          |
-| systemd resource support                | 1.5.12 or later| dbus-devel              | dbus-devel              | libdbus-1-dev           |
+| systemd resource support                        | 1.5.12 or later| dbus-devel              | dbus-devel              | libdbus-1-dev           |
 | Linux-HA style fencing agents                   |                | cluster-glue-libs-devel | libglue-devel           | cluster-glue-dev        |
 | documentation                                   |                | help2man                | help2man                | help2man                |
 | documentation                                   |                | docbook-style-xsl       | docbook-xsl-stylesheets | docbook-xsl             |
