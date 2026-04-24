@@ -1,3 +1,369 @@
+# Pacemaker-3.0.2 (23 Apr 2026)
+* 1806 commits with 607 files changed, 38242 insertions(+), 30786 deletions(-)
+
+## Features added since Pacemaker-3.0.1
+
+* **agents:** New `allow_fencing_disabled` param for controld RA
+* **daemons,libcib:** Add support for PSK authentication for remote CIB ops.
+* **fencer:** Improve validation of `pcmk_host_map`
+* **libcib, tools:** Empty CIB contains `admin_epoch` before epoch
+* **libcib:** `{add,del}_notify_callback` support only `cib_diff_notify`
+* **libcrmcommon:** Be more lenient in evicting IPC clients.
+* **libcrmcommon:** Deprecate anonymous authentication.
+* **libcrmcommon:** Require version info when applying CIB patches
+* **libcrmcommon:** `xml_apply_patchset` doesn't return `diff_resync` err
+* **schemas:** New `fencing-enabled` attribute in `crm_mon` schema
+* **schemas:** New `fencing-timeout-ms` attribute in `crm_mon` schema
+* **tools:** Change exit codes for failure to create `cib_t` object
+* **tools:** `cibadmin` ignores `--node-path` for non-XPath-query command
+* **tools:** `cibadmin` now errors if unable to compute md5 sum
+* **tools:** Default `cibadmin` command is now `--query`
+* **tools:** Deprecate `cibadmin --show-access` as non-privileged user
+* **tools:** Deprecate current input source precedence in `cibadmin`
+* **tools:** Deprecate `iso8601` command line tool
+* **tools:** Don't require `--force` for non-privileged `cibadmin` ACLs
+* **tools:** Drop "Digest: " from `cibadmin --md5-sum` stderr
+* **tools:** Drop cluster-clean script
+* **tools:** Drop cluster-helper script
+* **tools:** Use formatted output in `cibadmin`
+* **tools:** Use formatted output in `crm_diff`
+* **various:** New `fencing-enabled` in `crm_mon/pcmk_status` output
+* **various:** New `fencing-timeout-ms` in `crm_mon/pcmk_status` output
+
+## Deprecated/removed command line options since Pacemaker-3.0.1
+
+* **tools:** Deprecate `cibadmin -e/--node-path` option
+* **tools:** Deprecate `cibadmin -N/--node` option
+* **tools:** Drop `cibadmin --extended-version/-!` option
+* **tools:** Drop `crm_attribute --attr-id` option
+* **tools:** Drop `crm_attribute --attr-value/--delete-attr` options
+* **tools:** Drop `crm_attribute --inhibit-policy-engine/-i` option
+* **tools:** Deprecate `crm_diff --stdin`
+* **tools:** Deprecate `crm_mon --pid-file/-p` option
+* **tools:** Drop `crm_report -T/--cts` and `--cts-log` options
+
+## Cluster property changes since Pacemaker-3.0.1
+
+* **libcrmcommon:** Deprecate `cancel-removed-actions`
+* **libcrmcommon:** Deprecate `cluster-ipc-limit cluster`
+* **libcrmcommon:** Deprecate `enable-startup-probes`
+* **libcrmcommon:** Deprecate `remote-clear-port`
+* **libcrmcommon:** Deprecate `stop-removed-resources`
+* **libcrmcommon:** Rename `stop-removed-actions` to `cancel-removed-actions`
+* **libcrmcommon:** New `fencing-action` cluster property
+* **libcrmcommon:** New `fencing-enabled` cluster property
+* **libcrmcommon:** New `fencing-max-attempts` cluster property
+* **libcrmcommon:** New `fencing-reaction` cluster property
+* **libcrmcommon:** New `fencing-timeout` cluster property
+* **libcrmcommon:** New `fencing-watchdog-timeout` cluster property
+* **libcrmcommon:** New `stop-removed-actions` cluster property
+* **libcrmcommon:** New `stop-removed-resources` cluster property
+
+## Fixes since Pacemaker-3.0.1
+
+* **libcrmcommon:** `xml_acl_filtered_copy()` returns false for NULL source
+                    *(regression introduced in 3.0.1)*
+* **libcib:** Fix setting origin attributes in CIB updates
+              *(regression introduced in 2.1.6)*
+* **agents:** Error check calling `attrd_updater` in HealthCPU.
+* **agents:** Error check calling `attrd_updater` in HealthIOWait.
+* **agents:** Error check calling `attrd_updater` in HealthSMART.
+* **agents:** Error out if CPU I/O wait time isn't available.
+* **agents:** Error out if CPU idleness isn't available.
+* **agents:** Use case-insensitive property matching in controld RA
+* **based:** Return correct code from `write_cib_async()`
+* **build, libcrmservice:** initdir must be a single directory
+* **build:** Add a configure test for how strftime handles bare percents.
+* **build:** Add a configure test for if strftime supports field width.
+* **build:** Add CMocka required includes
+* **build:** Handle CMocka deprecations
+* **controller, fencer:** Ignore negative/unparsable `pcmk_monitor_timeout`
+* **controller:** Ask attribute manager to purge fenced nodes' attributes
+* **controller:** Avoid crash due to GSource double-free
+* **controller:** don't need to erase node attributes for remote nodes
+* **controller:** Don't purge transient attributes on node loss
+* **controller:** NULL-check `lrm_state` before dereferencing it
+* **cts-cli:** Avoid AttributeError when printing signal
+* **cts-cli:** Fix line removal in `access_render` test
+* **cts:** Consolidate tests in cts-lab result output
+* **cts:** Don't try to `shlex.split(None)` for fencing params.
+* **cts:** Fix a bug checking the return type of `RemoteExec.__call__`.
+* **cts:** Fix Corosync CFG pattern
+* **cts:** Fix the BadNews message that the ResyncCIB test ignores.
+* **cts:** Fix the BadNews messages that the SplitBrain test ignores.
+* **cts:** If corosync was started with systemd, stop it with systemd.
+* **cts:** Leave valgrind results around if they're not empty.
+* **cts:** Make `cts-lab --seed` work again
+* **cts:** Make cts-lab valgrind-aware
+* **cts:** Remove the dummy resource at the end of the Cibsecret test.
+* **cts:** Start corosync using systemd if available
+* **cts:** Test whether the Cibsecret test is applicable.
+* **cts:** Use correct path for cts-support in source directory
+* **cts:** Use correct permissions when installing the dummy service file.
+* **daemons,libcib:** Fix memory leaks in IPC code.
+* **daemons:** Add a return to `do_pe_invoke_callback.`
+* **daemons:** Add `SUPPORT_COROSYNC` guards to attrd.
+* **daemons:** Call `pcmk_cluster_disconnect` at the end of fenced.
+* **daemons:** Clean up XML memory in IPC dispatch functions.
+* **daemons:** Correct result error string on unknown IPC messages.
+* **daemons:** Delay creating an xmlNode in `handle_register_request.`
+* **daemons:** Don't add repeated `I_PE_CALC` messages to the fsa queue.
+* **daemons:** Don't log the unresponsive message for a daemon we killed
+* **daemons:** Don't NACK an invalid remote message.
+* **daemons:** Don't return a NACK if execd gets an unknown message.
+* **daemons:** Fix a segfault displaying fencer metadata.
+* **daemons:** Fix a typo if no existing attrd is found.
+* **daemons:** Fix typos in IPC doxygen blocks.
+* **daemons:** Fix user/group checking in based.
+* **daemons:** Get rid of some logged warnings in execd.
+* **daemons:** Only log a message if we're falling back.
+* **daemons:** Return `CRM_EX_PROTOCOL` when ACKing an unknown request.
+* **daemons:** Set `ipc_flags` in `lrmd_remote_client_msg` to 0.
+* **daemons:** Use `crm_ipc_client_response` in `lrmd_remote_client_msg.`
+* **daemons:** When checking for duplicate messages, we might be prepending.
+* **executor:** Fix the typos in the logs.
+* **fencer:** Disable watchdog-based self-fencing if `fencing-watchdog-timeout` is unset
+* **fencer:** Drop support for escaped characters in `pcmk_host_map`
+* **fencer:** Fix fence delay range off-by-one
+* **fencer:** Fix ISO 8601 interval parsing in `pcmk_delay_base`
+* **fencer:** Make the deprecated `stonith-watchdog-timeout` option work again
+* **fencer:** Prevent unsigned int overflow in `get_action_timeout()`
+* **libcib, tools:** Resolve cibadmin TODO re: ACL rendering and input
+* **libcib:** Avoid memory leak when processing CIB upgrade
+* **libcib:** Don't convert `-pcmk_err_diff_resync` to `pcmk_ok`
+* **libcib:** Explicitly handle receiving a NACK from based.
+* **libcib:** Explicitly handle receiving a NACK from fenced.
+* **libcib:** Fix `cib__signon_retry()` return code
+* **libcrmcommon, libpacemaker:** Don't assign const char * to char *
+* **libcrmcommon:** Allow empty string values in `pcmk__scan_nvpair()`
+* **libcrmcommon:** Avoid integer overflow in `seconds_to_hms()`
+* **libcrmcommon:** Avoid overflow in `crm_time_add_months()`
+* **libcrmcommon:** Avoid overflow when negating `INT_MIN`
+* **libcrmcommon:** Create a log file if it doesn't exist.
+* **libcrmcommon:** Don't delete unchanged attributes when applying patch
+* **libcrmcommon:** Don't log on error in `pcmk__ipc_send_iov.`
+* **libcrmcommon:** Don't require version info when applying CIB patches
+* **libcrmcommon:** Ensure stonith watchdog timeout is in long range
+* **libcrmcommon:** Fix a glib logging build error.
+* **libcrmcommon:** Fix a segfault in `internal_ipc_get_reply.`
+* **libcrmcommon:** Fix integer overflow of alert timeouts
+* **libcrmcommon:** Fix underflow in `crm_time_add_days()`
+* **libcrmcommon:** Handle NULL `PCMK_XA_FORMAT` and `PCMK_XA_DIGEST`
+* **libcrmcommon:** Ignore empty time spec
+* **libcrmcommon:** Improve validation of `PCMK_logfile_mode`
+* **libcrmcommon:** Increase poll() timeout to 5s for liveness checks on sub-daemons
+* **libcrmcommon:** Keep trailing newlines in `pcmk__scan_nvpair()`
+* **libcrmcommon:** Loop on EAGAIN in `mainloop_gio_callback.`
+* **libcrmcommon:** Make `parse_acl_entry()` non-recursive
+* **libcrmcommon:** Match correctly in `PCMK_debug`, stderr, blackbox
+* **libcrmcommon:** Parse iso8601 strings according to spec.
+* **libcrmcommon:** `pcmk__quote_cmdline()` returns valid shell string
+* **libcrmcommon:** Properly return errno from `pcmk__bare_output_new.`
+* **libcrmcommon:** Return a value for md5sum of empty input.
+* **libcrmcommon:** Show deprecated option aliases in outputs
+* **libcrmcommon:** Standardize remote environment variable parsing
+* **libcrmservice:** Correctly check the return value of stat.
+* **libcrmservice:** Fix memory leaks when listing directory contents
+* **libcrmservice:** List only the requested directory contents
+* **liblrmd:** Check that `pcmk__init_tls` doesn't set `native->tls` to NULL.
+* **liblrmd:** Don't assert if `queue_time` is < 0.
+* **liblrmd:** Explicitly handle receiving a NACK from execd.
+* **libpacemaker, tools:** Avoid mem leak in `crm_simulate/pcmk_simulate()`
+* **libpacemaker:** Correctly check node types in `pcmk__list_nodes()`
+* **libpacemaker:** Do not retry on ECONNREFUSED in tools.
+* **libpacemaker:** Fix a memory leak in `inject_action.`
+* **libpacemaker:** Fix a segfault in `order_resource_actions_after.`
+* **libpacemaker:** If `process_rsc_history` exits early, free the list.
+* **libpe:** Free elements of `rsc->priv->ticket_constraints`...
+* **libpe:** If `pe__clone_default` exits early, free the lists.
+* **libpe_status:** Use first operations child when expanding template
+* **libraries:** Ensure includes are outside extern in public headers
+* **libservices:** Deal with fgets errors in `services__get_lsb_metadata.`
+* **pacemaker-attrd:** Drop "requesting shutdown" code
+* **pacemaker-attrd:** Wipe CIB along with memory
+* **pacemakerd:** Correctly detect ping requests from sbd
+* **pacemakerd:** Match correctly in `PCMK_{valgrind,callgrind}_enabled`
+* **scheduler:** promoted state with promoted state with attribute
+* **sysconfig:** Remove `--leak-check=full` from default `VALGRIND_OPTS.`
+* **tools:** Avoid memory leak in `crm_resource --clear`
+* **tools:** Be stricter about `crm_diff --cib/--no-version`
+* **tools:** `cibadmin --xpath --delete-all` deletes all matches again
+* **tools:** `cibadmin` renders ACLs only when output is cib element
+* **tools:** `cibsecret` should work with `CIB_file` set.
+* **tools:** Don't wait on certain "pending" monitor actions.
+* **tools:** Fix CIB validation in `crm_mon`
+* **tools:** Fix memory leaks when printing `crm_verify` warnings/errors.
+* **tools:** Free memory in `crm_resource.c:handle_metadata()`
+* **tools:** Free the list at the end of `cli_resource_print_operations.`
+* **tools:** Handle large timeouts correctly in `crm_resource --wait`
+* **tools:** Improve some cibadmin error messages
+* **various:** Always NULL-check return value of `pcmk__find_client()`
+* **various:** Use const for a few string pointer variables
+
+## Public API changes since Pacemaker-3.0.1
+
+* **agents:** Deprecate `allow_stonith_disabled` param for controld RA
+* **libcib:** Convert the `cib_call_options` enum to use `UINT32_C`.
+* **libcib:** Deprecate `cib_force_diff`
+* **libcib:** Deprecate `cib_inhibit_notify`
+* **libcib:** Deprecate `cib_new_no_shadow()`
+* **libcib:** Deprecate `cib_xpath_address`
+* **libcib:** Deprecate struct `cib_api_operations_s`
+* **libcib:** Deprecate struct `cib_s`
+* **libcrmcommon:** Add `pcmk_rc_cs_internal` error code.
+* **libcrmcommon:** Add `pcmk_rc_digest_mismatch` error code.
+* **libcrmcommon:** Convert deprecated macros to use `UINT32_C`.
+* **libcrmcommon:** Convert the `pcmk_ra_caps` enum to use `UINT32_C`.
+* **libcrmcommon:** Convert the `pcmk_section_e` enum to use `UINT32_C`.
+* **libcrmcommon:** Convert the `pcmk_show_opt_e` enum to use `UINT32_C`.
+* **libcrmcommon:** Convert the `pe_find` enum to use `UINT32_C`.
+* **libcrmcommon:** Deprecate `compare_version()`
+* **libcrmcommon:** Deprecate `CRM_BZ2_BLOCKS`
+* **libcrmcommon:** Deprecate `CRM_BZ2_THRESHOLD`
+* **libcrmcommon:** Deprecate `CRM_BZ2_WORK`
+* **libcrmcommon:** Deprecate `crm_copy_xml_element()`
+* **libcrmcommon:** Deprecate `crm_crit()`
+* **libcrmcommon:** Deprecate `crm_debug()`
+* **libcrmcommon:** Deprecate `crm_element_value()`
+* **libcrmcommon:** Deprecate `crm_element_value_copy()`
+* **libcrmcommon:** Deprecate `crm_element_value_epoch()`
+* **libcrmcommon:** Deprecate `crm_element_value_int()`
+* **libcrmcommon:** Deprecate `crm_element_value_ll()`
+* **libcrmcommon:** Deprecate `crm_element_value_ms()`
+* **libcrmcommon:** Deprecate `crm_element_value_timeval()`
+* **libcrmcommon:** Deprecate `crm_emerg()`
+* **libcrmcommon:** Deprecate `crm_err()`
+* **libcrmcommon:** Deprecate `crm_generate_uuid()`
+* **libcrmcommon:** Deprecate `crm_get_msec()`
+* **libcrmcommon:** Deprecate `crm_info()`
+* **libcrmcommon:** Deprecate `crm_is_true()`
+* **libcrmcommon:** Deprecate `crm_log_xml_crit()`
+* **libcrmcommon:** Deprecate `crm_log_xml_debug()`
+* **libcrmcommon:** Deprecate `crm_log_xml_err()`
+* **libcrmcommon:** Deprecate `crm_log_xml_info()`
+* **libcrmcommon:** Deprecate `crm_log_xml_notice()`
+* **libcrmcommon:** Deprecate `crm_log_xml_trace()`
+* **libcrmcommon:** Deprecate `crm_log_xml_warn()`
+* **libcrmcommon:** Deprecate `crm_md5sum()`
+* **libcrmcommon:** Deprecate `crm_notice()`
+* **libcrmcommon:** Deprecate `crm_perror()`
+* **libcrmcommon:** Deprecate `crm_strdup_printf()`
+* **libcrmcommon:** Deprecate `crm_str_to_boolean()`
+* **libcrmcommon:** Deprecate `crm_time_check()`
+* **libcrmcommon:** Deprecate `crm_time_days_in_month()`
+* **libcrmcommon:** Deprecate `crm_time_get_isoweek()`
+* **libcrmcommon:** Deprecate `crm_time_get_timezone()`
+* **libcrmcommon:** Deprecate `crm_time_january1_weekday()`
+* **libcrmcommon:** Deprecate `crm_time_leapyear()`
+* **libcrmcommon:** Deprecate `crm_time_log()`
+* **libcrmcommon:** Deprecate `crm_time_log_alias()`
+* **libcrmcommon:** Deprecate `crm_time_set()`
+* **libcrmcommon:** Deprecate `crm_time_set_timet()`
+* **libcrmcommon:** Deprecate `crm_time_weeks_in_year()`
+* **libcrmcommon:** Deprecate `crm_trace()`
+* **libcrmcommon:** Deprecate `CRM_TRACE_INIT_DATA()`
+* **libcrmcommon:** Deprecate `crm_user_lookup()`
+* **libcrmcommon:** Deprecate `crm_warn()`
+* **libcrmcommon:** Deprecate `crm_xml_add()`
+* **libcrmcommon:** Deprecate `crm_xml_add_int()`
+* **libcrmcommon:** Deprecate `crm_xml_add_ll()`
+* **libcrmcommon:** Deprecate `crm_xml_add_ms()`
+* **libcrmcommon:** Deprecate `crm_xml_add_timeval()`
+* **libcrmcommon:** Deprecate enum `crm_exit_e`
+* **libcrmcommon:** Deprecate `patchset_process_digest()`
+* **libcrmcommon:** Deprecate `pcmk_all_flags_set()`
+* **libcrmcommon:** Deprecate `pcmk_any_flags_set()`
+* **libcrmcommon:** Deprecate `pcmk_daemon_user()`
+* **libcrmcommon:** Deprecate `PCMK_FENCING_HOST_ARGUMENT`
+* **libcrmcommon:** Deprecate `PCMK_FENCING_HOST_CHECK`
+* **libcrmcommon:** Deprecate `pcmk_is_set()`
+* **libcrmcommon:** Deprecate `PCMK_OPT_CLUSTER_IPC_LIMIT` string constant
+* **libcrmcommon:** Deprecate `PCMK_OPT_CONCURRENT_FENCING` constant
+* **libcrmcommon:** Deprecate `PCMK_OPT_ENABLE_STARTUP_PROBES` constant
+* **libcrmcommon:** Deprecate `PCMK_OPT_FENCE_REACTION`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STONITH_ACTION`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STONITH_ENABLED`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STONITH_MAX_ATTEMPTS`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STONITH_TIMEOUT`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STONITH_WATCHDOG_TIMEOUT`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STOP_ORPHAN_ACTIONS`
+* **libcrmcommon:** Deprecate `PCMK_OPT_STOP_ORPHAN_RESOURCES`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_ACTION_LIMIT`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_DELAY_BASE`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_DELAY_MAX`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_HOST_LIST`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_HOST_MAP`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_PROVIDES`
+* **libcrmcommon:** Deprecate `PCMK_STONITH_STONITH_TIMEOUT`
+* **libcrmcommon:** Deprecate `PCMK_XA_CRM_TIMESTAMP` string constant
+* **libcrmcommon:** Deprecate `PCMK_XA_ORPHAN`
+* **libcrmcommon:** Deprecate `PCMK_XA_ORPHANED`
+* **libcrmcommon:** Deprecate `PCMK_XA_STONITH_ENABLED`
+* **libcrmcommon:** Deprecate `PCMK_XA_STONITH_TIMEOUT_MS`
+* **libcrmcommon:** Deprecate `save_xml_to_file()`
+* **libcrmcommon:** Deprecate struct `crm_time_period_s`
+* **libcrmcommon:** Deprecate struct `crm_time_s`
+* **libcrmcommon:** Deprecate struct `pcmk_nvpair_s`
+* **libcrmcommon:** Deprecate struct `pcmk_rule_input`
+* **libcrmcommon:** Deprecate `xml_acl_enabled()`
+* **libcrmcommon:** Deprecate `xml_patch_versions()`
+* **libcrmcommon:** Drop `PCMK_OPT_CANCEL_REMOVED_ACTIONS` constant
+* **libcrmcommon:** Drop `PCMK_OPT_STOP_REMOVED_ACTIONS`
+* **libcrmcommon:** Drop `PCMK_OPT_STOP_REMOVED_RESOURCES` constant
+* **libcrmcommon:** Move deprecated `PCMK_OPT_STONITH_TIMEOUT` back to options.h
+* **libcrmcommon:** New `PCMK_FENCING_ACTION_LIMIT` string constant
+* **libcrmcommon:** New `PCMK_FENCING_DELAY_BASE` string constant
+* **libcrmcommon:** New `PCMK_FENCING_DELAY_MAX` string constant
+* **libcrmcommon:** New `PCMK_FENCING_HOST_ARGUMENT` string constant
+* **libcrmcommon:** New `PCMK_FENCING_HOST_CHECK` string constant
+* **libcrmcommon:** New `PCMK_FENCING_HOST_LIST` string constant
+* **libcrmcommon:** New `PCMK_FENCING_HOST_MAP` string constant
+* **libcrmcommon:** New `PCMK_FENCING_PROVIDES` string constant
+* **libcrmcommon:** New `PCMK_OPT_CANCEL_REMOVED_ACTIONS` string constant
+* **libcrmcommon:** New `PCMK_OPT_FENCING_ACTION` string constant
+* **libcrmcommon:** New `PCMK_OPT_FENCING_ENABLED` string constant
+* **libcrmcommon:** New `PCMK_OPT_FENCING_MAX_ATTEMPTS` string constant
+* **libcrmcommon:** New `PCMK_OPT_FENCING_REACTION` string constant
+* **libcrmcommon:** New `PCMK_OPT_FENCING_TIMEOUT` string constant
+* **libcrmcommon:** New `PCMK_OPT_FENCING_WATCHDOG_TIMEOUT` string constant
+* **libcrmcommon:** New `PCMK_OPT_STOP_REMOVED_ACTIONS` string constant
+* **libcrmcommon:** New `PCMK_OPT_STOP_REMOVED_RESOURCES` string constant
+* **libcrmcommon:** New `PCMK_XA_DIGEST` string constant
+* **libcrmcommon:** New `PCMK_XA_FENCING_ENABLED` string constant
+* **libcrmcommon:** New `PCMK_XA_FENCING_TIMEOUT_MS` string constant
+* **libcrmcommon:** New `PCMK_XA_REMOVED` string constant
+* **libcrmcommon:** New `PCMK_XE_MD5_SUM` string constant
+* **libcrmcommon:** New `PCMK_XE_PATCHSET` string constant
+* **libcrmcommon:** New `PCMK_XE_REPLACED_WITH` string constant
+* **libcrmcommon:** New `PCMK_XE_UPDATED` string constant
+* **libcrmcommon:** `patchset_process_digest()` const source/target args
+* **libcrmcommon:** `xml_apply_patchset()` patchset argument is now const
+* **libcrmcommon:** `xml_create_patchset()` source argument is now const
+* **libcrmservice:** Change `services_action_user()` not-found return code
+* **libcrmservice:** Deprecate `get_directory_list()`
+* **libcrmservice:** Deprecate struct `svc_action_s`
+* **liblrmd:** Convert the `lrmd_call_options` enum to use `UINT32_C`.
+* **liblrmd:** Deprecate struct `lrmd_api_operations_s`
+* **liblrmd:** Deprecate struct `lrmd_event_data_s`
+* **liblrmd:** Deprecate struct `lrmd_key_value_s`
+* **liblrmd:** Deprecate struct `lrmd_list_s`
+* **liblrmd:** Deprecate struct `lrmd_op_info_s`
+* **liblrmd:** Deprecate struct `lrmd_rsc_info_s`
+* **liblrmd:** Deprecate struct `lrmd_s`
+* **libpacemaker:** Convert the `pcmk_rc_disp_flags` enum to use `UINT32_C`.
+* **libpacemaker:** Convert the `pcmk_sim_flags` enum to use `UINT32_C`.
+* **libstonithd:** Convert the `stonith_call_options` enum to use `UINT32_C`.
+* **libstonithd:** Deprecate `stonith_t`
+* **schemas:** Add a schema for `cibadmin`
+* **schemas:** Add a schema for `cibsecret`.
+* **schemas:** Add a schema for `crm_diff`
+* **schemas:** Deprecate `orphan` attribute in `crm_mon` and `crm_simulate`
+* **schemas:** Deprecate `orphaned` attribute
+* **schemas:** Deprecate `stonith-enabled` in `crm_mon` output
+* **schemas:** Deprecate `stonith-timeout-ms` in `crm_mon` output
+* **schemas:** resource XML element has new "removed" attribute
+* **schemas:** `resource_history` XML element has new "removed" attribute
+
 # Pacemaker-3.0.1 (07 Aug 2025)
 * 775 commits with 283 files changed, 11592 insertions(+), 7745 deletions(-)
 
