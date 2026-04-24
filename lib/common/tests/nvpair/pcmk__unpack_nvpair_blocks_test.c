@@ -71,7 +71,7 @@ null_xml(void **state)
 
     // This mainly tests that it doesn't crash
     pcmk__unpack_nvpair_blocks(NULL, PCMK_XE_INSTANCE_ATTRIBUTES, "id1",
-                               &rule_input, values, next_change);
+                               &rule_input, values, next_change, NULL);
     assert_int_equal(g_hash_table_size(values), 0);
     g_hash_table_destroy(values);
     crm_time_free(now);
@@ -92,7 +92,7 @@ null_table(void **state)
     pcmk__assert_asserts(pcmk__unpack_nvpair_blocks(xml,
                                                     PCMK_XE_INSTANCE_ATTRIBUTES,
                                                     "id1", &rule_input, NULL,
-                                                    next_change));
+                                                    next_change, xml->doc));
     pcmk__xml_free(xml);
     crm_time_free(next_change);
     crm_time_free(now);
@@ -111,7 +111,7 @@ rule_passes(void **state)
 
     assert_non_null(xml);
     pcmk__unpack_nvpair_blocks(xml, NULL, "id1", &rule_input, values,
-                               next_change);
+                               next_change, xml->doc);
     assert_int_equal(g_hash_table_size(values), 3);
     assert_string_equal(g_hash_table_lookup(values, "name1"), "1");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "1");
@@ -139,7 +139,7 @@ rule_fails(void **state)
 
     assert_non_null(xml);
     pcmk__unpack_nvpair_blocks(xml, NULL, "id1", &rule_input, values,
-                               next_change);
+                               next_change, xml->doc);
     assert_int_equal(g_hash_table_size(values), 3);
     assert_string_equal(g_hash_table_lookup(values, "name1"), "3");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "3");
@@ -170,7 +170,7 @@ element_name(void **state)
      */
 
     pcmk__unpack_nvpair_blocks(xml, PCMK_XE_META_ATTRIBUTES, NULL, &rule_input,
-                               values, NULL);
+                               values, NULL, xml->doc);
     assert_int_equal(g_hash_table_size(values), 2);
     assert_string_equal(g_hash_table_lookup(values, "name1"), "1");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "1");
@@ -178,7 +178,7 @@ element_name(void **state)
     g_hash_table_remove_all(values);
 
     pcmk__unpack_nvpair_blocks(xml, PCMK_XE_INSTANCE_ATTRIBUTES, NULL,
-                               &rule_input, values, NULL);
+                               &rule_input, values, NULL, xml->doc);
     assert_int_equal(g_hash_table_size(values), 3);
     assert_string_equal(g_hash_table_lookup(values, "name1"), "3");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "3");
@@ -199,7 +199,7 @@ first_id(void **state)
 
     // This also tests that NULL rule_input is handled without problems
 
-    pcmk__unpack_nvpair_blocks(xml, NULL, "ia2", NULL, values, NULL);
+    pcmk__unpack_nvpair_blocks(xml, NULL, "ia2", NULL, values, NULL, xml->doc);
     assert_int_equal(g_hash_table_size(values), 3);
     assert_string_equal(g_hash_table_lookup(values, "name1"), "2");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "2");

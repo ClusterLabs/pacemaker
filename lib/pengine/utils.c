@@ -711,7 +711,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
 
     next_change = crm_time_new_undefined();
     pcmk__unpack_nvpair_blocks(xml_obj, set_name, always_first, rule_input,
-                               hash, next_change);
+                               hash, next_change, xml_obj->doc);
 
     if (crm_time_is_defined(next_change)) {
         time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
