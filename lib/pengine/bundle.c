@@ -357,48 +357,47 @@ static int
 create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                    pcmk__bundle_replica_t *replica)
 {
-    if(data->ip_range_start) {
-        char *id = NULL;
-        xmlNode *xml_ip = NULL;
-        xmlNode *xml_obj = NULL;
+    char *id = NULL;
+    xmlNode *xml_ip = NULL;
+    xmlNode *xml_obj = NULL;
+    int rc = pcmk_rc_ok;
 
-        id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
-        pcmk__xml_sanitize_id(id);
-        xml_ip = create_resource(id, "heartbeat", "IPaddr2");
-        free(id);
-
-        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
-        pcmk__xe_set_id(xml_obj, "%s-attributes-%d",
-                        data->prefix, replica->offset);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
-        if(data->host_network) {
-            crm_create_nvpair_xml(xml_obj, NULL, "nic", data->host_network);
-        }
-
-        if(data->host_netmask) {
-            crm_create_nvpair_xml(xml_obj, NULL,
-                                  "cidr_netmask", data->host_netmask);
-
-        } else {
-            crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
-        }
-
-        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
-        crm_create_op_xml(xml_obj, pcmk__xe_id(xml_ip), PCMK_ACTION_MONITOR,
-                          "60s", NULL);
-
-        // TODO: Other ops? Timeouts and intervals from underlying resource?
-
-        if (pe__unpack_resource(xml_ip, &replica->ip, parent,
-                                parent->priv->scheduler) != pcmk_rc_ok) {
-            return pcmk_rc_unpack_error;
-        }
-
-        parent->priv->children = g_list_append(parent->priv->children,
-                                               replica->ip);
+    if (data->ip_range_start == NULL) {
+        goto done;
     }
-    return pcmk_rc_ok;
+
+    id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
+    pcmk__xml_sanitize_id(id);
+    xml_ip = create_resource(id, "heartbeat", "IPaddr2");
+
+    xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
+
+    crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
+
+    if (data->host_network != NULL) {
+        crm_create_nvpair_xml(xml_obj, NULL, "nic", data->host_network);
+    }
+
+    crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask",
+                          pcmk__s(data->host_netmask, "32"));
+
+    xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
+    crm_create_op_xml(xml_obj, id, PCMK_ACTION_MONITOR, "60s", NULL);
+
+    // TODO: Other ops? Timeouts and intervals from underlying resource?
+
+    if (pe__unpack_resource(xml_ip, &replica->ip, parent,
+                            parent->priv->scheduler) != pcmk_rc_ok) {
+        rc = pcmk_rc_unpack_error;
+        goto done;
+    }
+
+    parent->priv->children = g_list_append(parent->priv->children, replica->ip);
+
+done:
+    free(id);
+    return rc;
 }
 
 static const char*
