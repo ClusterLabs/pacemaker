@@ -572,7 +572,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     config_hash = pcmk__strkey_table(free, free);
     pcmk__unpack_nvpair_blocks(crmconfig, PCMK_XE_CLUSTER_PROPERTY_SET,
                                PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                               config_hash, NULL);
+                               config_hash, NULL, crmconfig->doc);
 
     // Validate all options, and use defaults if not already present in hash
     pcmk__validate_cluster_options(config_hash);

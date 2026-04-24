@@ -482,12 +482,14 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
  * \param[out] values        Where to store extracted name/value pairs
  * \param[out] next_change   If not NULL, set to when evaluation will next
  *                           change, if sooner than its current value
+ * \param[in]  doc           XML document to use for resolving IDREFs
  */
 void
 pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                            const char *first_id,
                            const pcmk_rule_input_t *rule_input,
-                           GHashTable *values, crm_time_t *next_change)
+                           GHashTable *values, crm_time_t *next_change,
+                           xmlDoc *doc)
 {
     GList *blocks = NULL;
     pcmk__nvpair_unpack_t data = {
@@ -506,7 +508,7 @@ pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
         return;
     }
 
-    data.doc = xml->doc;
+    data.doc = doc;
     if (rule_input != NULL) {
         data.rule_input = *rule_input;
     }
@@ -736,8 +738,12 @@ pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                           const pcmk_rule_input_t *rule_input,
                           GHashTable *values, crm_time_t *next_change)
 {
+    if (xml == NULL) {
+        return;
+    }
+
     pcmk__unpack_nvpair_blocks(xml, element_name, first_id, rule_input, values,
-                               next_change);
+                               next_change, xml->doc);
 }
 
 // LCOV_EXCL_STOP

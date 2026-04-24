@@ -145,7 +145,7 @@ read_config(GHashTable *options, xmlNode *current_cib)
 
     pcmk__unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
                                PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                               options, NULL);
+                               options, NULL, config->doc);
     crm_time_free(now);
 }
 
