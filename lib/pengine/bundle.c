@@ -627,6 +627,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
 {
     GHashTableIter gIter;
     pcmk_node_t *node = NULL;
+    pcmk_node_t *copy = NULL;
     xmlNode *xml_remote = NULL;
     char *id = NULL;
     char *port_s = NULL;
@@ -728,13 +729,11 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                         (void *) replica->node->priv->id,
                         pe__copy_node(replica->node));
 
-    {
-        pcmk_node_t *copy = pe__copy_node(replica->node);
+    copy = pe__copy_node(replica->node);
+    copy->assign->score = -PCMK_SCORE_INFINITY;
 
-        copy->assign->score = -PCMK_SCORE_INFINITY;
-        g_hash_table_insert(replica->child->priv->parent->priv->allowed_nodes,
-                            (void *) replica->node->priv->id, copy);
-    }
+    g_hash_table_insert(replica->child->priv->parent->priv->allowed_nodes,
+                        (void *) replica->node->priv->id, copy);
 
     if (pe__unpack_resource(xml_remote, &replica->remote, parent,
                             scheduler) != pcmk_rc_ok) {
