@@ -501,8 +501,8 @@ pe__create_node(const char *id, const char *uname, const char *type, int score,
 
     pcmk__trace("Creating node for entry %s/%s", uname, id);
     new_node->assign->score = score;
-    new_node->priv->id = id;
-    new_node->priv->name = uname;
+    new_node->priv->id = pcmk__str_copy(id);
+    new_node->priv->name = pcmk__str_copy(uname);
     new_node->priv->flags = pcmk__node_probes_allowed;
     new_node->details->online = false;
     new_node->details->shutdown = false;
