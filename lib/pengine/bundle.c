@@ -686,8 +686,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
     node = pcmk_find_node(scheduler, uname);
 
     if (node == NULL) {
-        node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                              -PCMK_SCORE_INFINITY, scheduler);
+        node = pe__create_node(uname, uname, PCMK_VALUE_REMOTE,
+                               -PCMK_SCORE_INFINITY, scheduler);
 
     } else {
         node->assign->score = -PCMK_SCORE_INFINITY;
@@ -757,7 +757,7 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
     replica->remote->priv->launcher = replica->container;
 
     /* A bundle's #kind is closer to "container" (guest node) than the "remote"
-     * set by pe_create_node()
+     * set by pe__create_node()
      */
     pcmk__insert_dup(replica->node->priv->attrs, CRM_ATTR_KIND, "container");
 
