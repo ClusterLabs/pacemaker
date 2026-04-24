@@ -492,34 +492,20 @@ pe__create_node(const char *id, const char *uname, const char *type, int score,
         return NULL;
     }
 
-    new_node = calloc(1, sizeof(pcmk_node_t));
-    if (new_node == NULL) {
-        pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
-                        uname);
-        return NULL;
-    }
-
-    new_node->assign = calloc(1, sizeof(struct pcmk__node_assignment));
-    new_node->details = calloc(1, sizeof(struct pcmk__node_details));
-    new_node->priv = calloc(1, sizeof(pcmk__node_private_t));
-    if ((new_node->assign == NULL) || (new_node->details == NULL)
-        || (new_node->priv == NULL)) {
-        free(new_node->assign);
-        free(new_node->details);
-        free(new_node->priv);
-        free(new_node);
-        pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
-                        uname);
-        return NULL;
-    }
+    new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
+    new_node->assign = pcmk__assert_alloc(1,
+                                          sizeof(struct pcmk__node_assignment));
+    new_node->details = pcmk__assert_alloc(1,
+                                           sizeof(struct pcmk__node_details));
+    new_node->priv = pcmk__assert_alloc(1, sizeof(pcmk__node_private_t));
 
     pcmk__trace("Creating node for entry %s/%s", uname, id);
     new_node->assign->score = score;
     new_node->priv->id = id;
     new_node->priv->name = uname;
     new_node->priv->flags = pcmk__node_probes_allowed;
-    new_node->details->online = FALSE;
-    new_node->details->shutdown = FALSE;
+    new_node->details->online = false;
+    new_node->details->shutdown = false;
     new_node->details->running_rsc = NULL;
     new_node->priv->scheduler = scheduler;
     new_node->priv->variant = variant;
@@ -530,6 +516,7 @@ pe__create_node(const char *id, const char *uname, const char *type, int score,
     if (pcmk__is_pacemaker_remote_node(new_node)) {
         pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "remote");
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_remote_nodes);
+
     } else {
         pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "cluster");
     }
