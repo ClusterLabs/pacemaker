@@ -397,7 +397,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
     const char *name = NULL;
     const char *value = NULL;
     const char *old_value = NULL;
-    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, nvpair->doc);
+    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair,
+                                                       unpack_data->doc);
 
     if (ref_nvpair == NULL) {
         /* Not possible with schema validation enabled (error already
