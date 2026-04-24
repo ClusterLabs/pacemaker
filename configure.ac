@@ -2028,6 +2028,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
+                doc/man/Makefile                                    \
                 doc/sphinx/Makefile                                 \
                 etc/Makefile                                        \
                 etc/init.d/pacemaker                                \

@@ -1,5 +1,5 @@
 #
-# Copyright 2003-2025 the Pacemaker project contributors
+# Copyright 2003-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -25,7 +25,7 @@ dist_mib_DATA	= PCMK-MIB.txt
 
 noinst_SCRIPTS		= abi-check
 
-SUBDIRS		= sphinx
+SUBDIRS		= man sphinx
 
 EXTRA_DIST	= clusterlabs-logo-55x55.png
 
@@ -58,7 +58,7 @@ global-clean:
 
 # Man pages as HTML
 
-MANPAGE_DIRS = ../agents ../daemons ../tools
+MANPAGE_DIRS = ../agents ../daemons man ../tools
 
 %.8.html: %.8
 	groff -mandoc `man -w ./$<` -T html > $@
