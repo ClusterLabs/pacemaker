@@ -625,149 +625,155 @@ static int
 create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                        pcmk__bundle_replica_t *replica)
 {
-    if (replica->child && valid_network(data)) {
-        GHashTableIter gIter;
-        pcmk_node_t *node = NULL;
-        xmlNode *xml_remote = NULL;
-        char *id = pcmk__assert_asprintf("%s-%d", data->prefix,
-                                         replica->offset);
-        char *port_s = NULL;
-        const char *uname = NULL;
-        const char *connect_name = NULL;
-        pcmk_scheduler_t *scheduler = parent->priv->scheduler;
+    GHashTableIter gIter;
+    pcmk_node_t *node = NULL;
+    xmlNode *xml_remote = NULL;
+    char *id = NULL;
+    char *port_s = NULL;
+    const char *uname = NULL;
+    const char *connect_name = NULL;
+    pcmk_scheduler_t *scheduler = parent->priv->scheduler;
 
-        if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
-            free(id);
-            // The biggest hammer we have
-            id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
-                                       replica->child->id, replica->offset);
-            //@TODO return error instead of asserting?
-            pcmk__assert(pe_find_resource(scheduler->priv->resources,
-                                          id) == NULL);
-        }
+    if ((replica->child == NULL) || !valid_network(data)) {
+        return pcmk_rc_ok;
+    }
 
-        /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
-         * connection does not have its own IP is a magic string that we use to
-         * support nested remotes (i.e. a bundle running on a remote node).
-         */
-        connect_name = (replica->ipaddr? replica->ipaddr : "#uname");
+    id = pcmk__assert_asprintf("%s-%d", data->prefix, replica->offset);
 
-        if (data->control_port == NULL) {
-            port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
-        }
+    if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
+        free(id);
 
-        /* This sets replica->container as replica->remote's container, which is
-         * similar to what happens with guest nodes. This is how the scheduler
-         * knows that the bundle node is fenced by recovering the container, and
-         * that remote should be ordered relative to the container.
-         */
-        xml_remote = pe_create_remote_xml(NULL, id, replica->container->id,
-                                          NULL, NULL, NULL,
-                                          connect_name, (data->control_port?
-                                          data->control_port : port_s));
-        free(port_s);
+        // The biggest hammer we have
+        id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
+                                   replica->child->id, replica->offset);
 
-        /* Abandon our created ID, and pull the copy from the XML, because we
-         * need something that will get freed during scheduler data cleanup to
-         * use as the node ID and uname.
-         */
-        g_clear_pointer(&id, free);
-        uname = pcmk__xe_id(xml_remote);
+        // @TODO return error instead of asserting?
+        pcmk__assert(pe_find_resource(scheduler->priv->resources, id) == NULL);
+    }
 
-        /* Ensure a node has been created for the guest (it may have already
-         * been, if it has a permanent node attribute), and ensure its weight is
-         * -INFINITY so no other resources can run on it.
-         */
-        node = pcmk_find_node(scheduler, uname);
-        if (node == NULL) {
-            node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  -PCMK_SCORE_INFINITY, scheduler);
-        } else {
+    /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
+     * connection does not have its own IP is a magic string that we use to
+     * support nested remotes (i.e. a bundle running on a remote node).
+     */
+    connect_name = pcmk__s(replica->ipaddr, "#uname");
+
+    if (data->control_port == NULL) {
+        port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
+    }
+
+    /* This sets replica->container as replica->remote's container, which is
+     * similar to what happens with guest nodes. This is how the scheduler knows
+     * that the bundle node is fenced by recovering the container, and that
+     * remote should be ordered relative to the container.
+     */
+    xml_remote = pe_create_remote_xml(NULL, id, replica->container->id, NULL,
+                                      NULL, NULL, connect_name,
+                                      pcmk__s(data->control_port, port_s));
+    free(port_s);
+
+    /* Abandon our created ID, and pull the copy from the XML, because we need
+     * something that will get freed during scheduler data cleanup to use as the
+     * node ID and uname.
+     */
+    g_clear_pointer(&id, free);
+    uname = pcmk__xe_id(xml_remote);
+
+    /* Ensure a node has been created for the guest (it may have already been,
+     * if it has a permanent node attribute), and ensure its weight is -INFINITY
+     * so no other resources can run on it.
+     */
+    node = pcmk_find_node(scheduler, uname);
+
+    if (node == NULL) {
+        node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
+                              -PCMK_SCORE_INFINITY, scheduler);
+
+    } else {
+        node->assign->score = -PCMK_SCORE_INFINITY;
+    }
+
+    node->assign->probe_mode = pcmk__probe_never;
+
+    /* unpack_remote_nodes() ensures that each remote node and guest node has a
+     * pcmk_node_t entry. Ideally, it would do the same for bundle nodes.
+     * Unfortunately, a bundle has to be mostly unpacked before it's obvious
+     * what nodes will be needed, so we do it just above.
+     *
+     * Worse, that means that the node may have been utilized while unpacking
+     * other resources, without our weight correction. The most likely place for
+     * this to happen is when pe__unpack_resource() calls resource_location() to
+     * set a default score in symmetric clusters. This adds a node *copy* to
+     * each resource's allowed nodes, and these copies will have the wrong
+     * weight.
+     *
+     * As a hacky workaround, fix those copies here.
+     *
+     * @TODO Possible alternative: ensure bundles are unpacked before other
+     * resources, so the weight is correct before any copies are made.
+     */
+    g_list_foreach(scheduler->priv->resources, (GFunc) disallow_node,
+                   (void *) uname);
+
+    replica->node = pe__copy_node(node);
+    replica->node->assign->score = 500;
+    replica->node->assign->probe_mode = pcmk__probe_exclusive;
+
+    // Ensure the node shows up as allowed and with the correct discovery set
+    g_clear_pointer(&replica->child->priv->allowed_nodes, g_hash_table_destroy);
+
+    replica->child->priv->allowed_nodes =
+        pcmk__strkey_table(NULL, pcmk__free_node_copy);
+
+    g_hash_table_insert(replica->child->priv->allowed_nodes,
+                        (void *) replica->node->priv->id,
+                        pe__copy_node(replica->node));
+
+    {
+        pcmk_node_t *copy = pe__copy_node(replica->node);
+
+        copy->assign->score = -PCMK_SCORE_INFINITY;
+        g_hash_table_insert(replica->child->priv->parent->priv->allowed_nodes,
+                            (void *) replica->node->priv->id, copy);
+    }
+
+    if (pe__unpack_resource(xml_remote, &replica->remote, parent,
+                            scheduler) != pcmk_rc_ok) {
+        return pcmk_rc_unpack_error;
+    }
+
+    // Make Coverity happy
+    pcmk__assert(replica->remote != NULL);
+
+    g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
+    while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
+        if (pcmk__is_pacemaker_remote_node(node)) {
+            // Remote resources can only run on 'normal' cluster node
             node->assign->score = -PCMK_SCORE_INFINITY;
         }
-        node->assign->probe_mode = pcmk__probe_never;
-
-        /* unpack_remote_nodes() ensures that each remote node and guest node
-         * has a pcmk_node_t entry. Ideally, it would do the same for bundle
-         * nodes. Unfortunately, a bundle has to be mostly unpacked before it's
-         * obvious what nodes will be needed, so we do it just above.
-         *
-         * Worse, that means that the node may have been utilized while
-         * unpacking other resources, without our weight correction. The most
-         * likely place for this to happen is when pe__unpack_resource() calls
-         * resource_location() to set a default score in symmetric clusters.
-         * This adds a node *copy* to each resource's allowed nodes, and these
-         * copies will have the wrong weight.
-         *
-         * As a hacky workaround, fix those copies here.
-         *
-         * @TODO Possible alternative: ensure bundles are unpacked before other
-         * resources, so the weight is correct before any copies are made.
-         */
-        g_list_foreach(scheduler->priv->resources,
-                       (GFunc) disallow_node, (gpointer) uname);
-
-        replica->node = pe__copy_node(node);
-        replica->node->assign->score = 500;
-        replica->node->assign->probe_mode = pcmk__probe_exclusive;
-
-        /* Ensure the node shows up as allowed and with the correct discovery set */
-        g_clear_pointer(&replica->child->priv->allowed_nodes,
-                        g_hash_table_destroy);
-        replica->child->priv->allowed_nodes =
-            pcmk__strkey_table(NULL, pcmk__free_node_copy);
-        g_hash_table_insert(replica->child->priv->allowed_nodes,
-                            (gpointer) replica->node->priv->id,
-                            pe__copy_node(replica->node));
-
-        {
-            const pcmk_resource_t *parent = replica->child->priv->parent;
-            pcmk_node_t *copy = pe__copy_node(replica->node);
-
-            copy->assign->score = -PCMK_SCORE_INFINITY;
-            g_hash_table_insert(parent->priv->allowed_nodes,
-                                (gpointer) replica->node->priv->id, copy);
-        }
-        if (pe__unpack_resource(xml_remote, &replica->remote, parent,
-                                scheduler) != pcmk_rc_ok) {
-            return pcmk_rc_unpack_error;
-        }
-
-        // Make Coverity happy
-        pcmk__assert(replica->remote != NULL);
-
-        g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
-        while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
-            if (pcmk__is_pacemaker_remote_node(node)) {
-                /* Remote resources can only run on 'normal' cluster node */
-                node->assign->score = -PCMK_SCORE_INFINITY;
-            }
-        }
-
-        replica->node->priv->remote = replica->remote;
-
-        // Ensure pcmk__is_guest_or_bundle_node() functions correctly
-        replica->remote->priv->launcher = replica->container;
-
-        /* A bundle's #kind is closer to "container" (guest node) than the
-         * "remote" set by pe_create_node().
-         */
-        pcmk__insert_dup(replica->node->priv->attrs,
-                         CRM_ATTR_KIND, "container");
-
-        /* One effect of this is that unpack_launcher() will add
-         * replica->remote to replica->container's launched resources, which
-         * will make pe__resource_contains_guest_node() true for
-         * replica->container.
-         *
-         * replica->child does NOT get added to replica->container's launched
-         * resources. The only noticeable effect if it did would be for its
-         * fail count to be taken into account when checking
-         * replica->container's migration threshold.
-         */
-        parent->priv->children = g_list_append(parent->priv->children,
-                                               replica->remote);
     }
+
+    replica->node->priv->remote = replica->remote;
+
+    // Ensure pcmk__is_guest_or_bundle_node() functions correctly
+    replica->remote->priv->launcher = replica->container;
+
+    /* A bundle's #kind is closer to "container" (guest node) than the "remote"
+     * set by pe_create_node()
+     */
+    pcmk__insert_dup(replica->node->priv->attrs, CRM_ATTR_KIND, "container");
+
+    /* One effect of this is that unpack_launcher() will add replica->remote to
+     * replica->container's launched resources, which will make
+     * pe__resource_contains_guest_node() true for replica->container.
+     *
+     * replica->child does NOT get added to replica->container's launched
+     * resources. The only noticeable effect if it did would be for its fail
+     * count to be taken into account when checking replica->container's
+     * migration threshold.
+     */
+    parent->priv->children = g_list_append(parent->priv->children,
+                                           replica->remote);
+
     return pcmk_rc_ok;
 }
 
