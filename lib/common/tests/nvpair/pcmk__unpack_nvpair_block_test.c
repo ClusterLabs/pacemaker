@@ -41,6 +41,10 @@
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp2-3' "          \
         PCMK_XA_NAME "='name3' " PCMK_XA_VALUE "='2' />"
 
+#define XML_NVPAIRS_IDREF                                   \
+    "<" PCMK_XE_NVPAIR " " PCMK_XA_ID_REF "='nvp1-1' />"    \
+    "<" PCMK_XE_NVPAIR " " PCMK_XA_ID_REF "='nvp2-2' />"
+
 #define assert_unpack_nvpair_block(xml_str, unpack_data, size, value1,      \
                                    value2, value3)                          \
     do {                                                                    \
@@ -48,7 +52,10 @@
         xmlNode *xml = pcmk__xml_parse(xml_str);                            \
                                                                             \
         assert_non_null(xml);                                               \
-        (unpack_data)->doc = xml->doc;                                      \
+                                                                            \
+        if ((unpack_data)->doc == NULL) {                                   \
+            (unpack_data)->doc = xml->doc;                                  \
+        }                                                                   \
                                                                             \
         pcmk__unpack_nvpair_block(xml, unpack_data);                        \
         assert_int_equal(g_hash_table_size((unpack_data)->values), size);   \
@@ -105,7 +112,8 @@ invalid_args(void **state)
 }
 
 static void
-with_rules(void **state) {
+with_rules(void **state)
+{
     crm_time_t *now = crm_time_new("2024-01-01 15:00:00");
     pcmk__nvpair_unpack_t unpack_data = {
         .values = pcmk__strkey_table(free, free),
@@ -172,9 +180,30 @@ attributes_child(void **state)
     g_hash_table_destroy(unpack_data.values);
 }
 
+static void
+with_idref(void **state)
+{
+    pcmk__nvpair_unpack_t unpack_data = {
+        .values = pcmk__strkey_table(free, free),
+    };
+
+    xmlNode *ref_source = pcmk__xml_parse("<xml>"
+                                              XML_NVPAIRS_1 XML_NVPAIRS_2
+                                          "</xml>");
+
+    assert_non_null(ref_source);
+    unpack_data.doc = ref_source->doc;
+
+    assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_IDREF "</xml>", &unpack_data,
+                               2, "1", "2", NULL);
+
+    pcmk__xml_free(ref_source);
+}
+
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
                 cmocka_unit_test(invalid_args),
                 cmocka_unit_test(with_rules),
                 cmocka_unit_test(without_overwrite),
                 cmocka_unit_test(with_overwrite),
-                cmocka_unit_test(attributes_child))
+                cmocka_unit_test(attributes_child),
+                cmocka_unit_test(with_idref))
