@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2023 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,9 +23,13 @@ nodes_equal(void **state)
 {
     assert_int_equal(pe__cmp_node_name(NULL, NULL), 0);
 
-    node1.priv->name = "node10";
-    node2.priv->name = "node10";
+    node1.priv->name = pcmk__str_copy("node10");
+    node2.priv->name = pcmk__str_copy("node10");
+
     assert_int_equal(pe__cmp_node_name(&node1, &node2), 0);
+
+    free(node1.priv->name);
+    free(node2.priv->name);
 }
 
 static void
@@ -34,9 +38,13 @@ node1_first(void **state)
     assert_int_equal(pe__cmp_node_name(NULL, &node2), -1);
 
     // The heavy testing is done in pcmk__numeric_strcasecmp()'s unit tests
-    node1.priv->name = "node9";
-    node2.priv->name = "node10";
+    node1.priv->name = pcmk__str_copy("node9");
+    node2.priv->name = pcmk__str_copy("node10");
+
     assert_int_equal(pe__cmp_node_name(&node1, &node2), -1);
+
+    free(node1.priv->name);
+    free(node2.priv->name);
 }
 
 static void
@@ -44,9 +52,13 @@ node2_first(void **state)
 {
     assert_int_equal(pe__cmp_node_name(&node1, NULL), 1);
 
-    node1.priv->name = "node10";
-    node2.priv->name = "node9";
+    node1.priv->name = pcmk__str_copy("node10");
+    node2.priv->name = pcmk__str_copy("node9");
+
     assert_int_equal(pe__cmp_node_name(&node1, &node2), 1);
+
+    free(node1.priv->name);
+    free(node2.priv->name);
 }
 
 PCMK__UNIT_TEST(NULL, NULL,

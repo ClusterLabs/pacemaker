@@ -22,8 +22,12 @@ empty_list(void **state)
 static void
 non_null_list(void **state)
 {
-    struct pcmk__node_private node1_priv = { .name = "cluster1" };
-    struct pcmk__node_private node2_priv = { .name = "cluster2" };
+    struct pcmk__node_private node1_priv = {
+        .name = pcmk__str_copy("cluster1"),
+    };
+    struct pcmk__node_private node2_priv = {
+        .name = pcmk__str_copy("cluster2"),
+    };
     pcmk_node_t node1 = { .priv = &node1_priv };
     pcmk_node_t node2 = { .priv = &node2_priv };
     GList *nodes = NULL;
@@ -37,6 +41,8 @@ non_null_list(void **state)
     assert_ptr_equal(&node2, pcmk__find_node_in_list(nodes, "CLUSTER2"));
     assert_null(pcmk__find_node_in_list(nodes, "xyz"));
 
+    free(node1_priv.name);
+    free(node2_priv.name);
     g_list_free(nodes);
 }
 
