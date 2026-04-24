@@ -421,27 +421,20 @@ create_container_resource(pcmk_resource_t *parent,
     char *id = NULL;
     xmlNode *xml_container = NULL;
     xmlNode *xml_obj = NULL;
-
-    // Agent-specific
-    const char *hostname_opt = NULL;
-    const char *env_opt = NULL;
     const char *agent_str = NULL;
-
     GString *buffer = NULL;
     GString *dbuffer = NULL;
 
-    // Where syntax differences are drop-in replacements, set them now
     switch (data->agent_type) {
         case PE__CONTAINER_AGENT_DOCKER:
         case PE__CONTAINER_AGENT_PODMAN:
-            hostname_opt = "-h ";
-            env_opt = "-e ";
             break;
-        default:    // PE__CONTAINER_AGENT_UNKNOWN
+
+        default:
             return pcmk_rc_unpack_error;
     }
-    agent_str = container_agent_str(data->agent_type);
 
+    agent_str = container_agent_str(data->agent_type);
     buffer = g_string_sized_new(4096);
 
     id = pcmk__assert_asprintf("%s-%s-%d", data->prefix, agent_str,
@@ -468,21 +461,22 @@ create_container_resource(pcmk_resource_t *parent,
      * they bind to.
      */
     if (data->ip_range_start != NULL) {
-        g_string_append_printf(buffer, " %s%s-%d", hostname_opt, data->prefix,
+        g_string_append_printf(buffer, " -h %s-%d", data->prefix,
                                replica->offset);
     }
-    pcmk__g_strcat(buffer, " ", env_opt, "PCMK_stderr=1", NULL);
+
+    g_string_append(buffer, " -e PCMK_stderr=1");
 
     if (data->container_network != NULL) {
         pcmk__g_strcat(buffer, " --net=", data->container_network, NULL);
     }
 
     if (data->control_port != NULL) {
-        pcmk__g_strcat(buffer, " ", env_opt, "PCMK_" PCMK__ENV_REMOTE_PORT "=",
+        pcmk__g_strcat(buffer, " -e PCMK_" PCMK__ENV_REMOTE_PORT "=",
                        data->control_port, NULL);
     } else {
-        g_string_append_printf(buffer, " %sPCMK_" PCMK__ENV_REMOTE_PORT "=%d",
-                               env_opt, DEFAULT_REMOTE_PORT);
+        g_string_append_printf(buffer, " -e PCMK_" PCMK__ENV_REMOTE_PORT "=%d",
+                               DEFAULT_REMOTE_PORT);
     }
 
     for (GList *iter = data->mounts; iter != NULL; iter = iter->next) {
@@ -495,44 +489,29 @@ create_container_resource(pcmk_resource_t *parent,
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
-        switch (data->agent_type) {
-            case PE__CONTAINER_AGENT_DOCKER:
-            case PE__CONTAINER_AGENT_PODMAN:
-                pcmk__g_strcat(buffer,
-                               " -v ", pcmk__s(source, mount->source),
-                               ":", mount->target, NULL);
+        pcmk__g_strcat(buffer, " -v ", pcmk__s(source, mount->source), ":",
+                       mount->target, NULL);
 
-                if (mount->options != NULL) {
-                    pcmk__g_strcat(buffer, ":", mount->options, NULL);
-                }
-                break;
-            default:
-                break;
+        if (mount->options != NULL) {
+            pcmk__g_strcat(buffer, ":", mount->options, NULL);
         }
+
         free(source);
     }
 
     for (GList *iter = data->ports; iter != NULL; iter = iter->next) {
         pe__bundle_port_t *port = (pe__bundle_port_t *) iter->data;
 
-        switch (data->agent_type) {
-            case PE__CONTAINER_AGENT_DOCKER:
-            case PE__CONTAINER_AGENT_PODMAN:
-                if (replica->ipaddr != NULL) {
-                    pcmk__g_strcat(buffer,
-                                   " -p ", replica->ipaddr, ":", port->source,
-                                   ":", port->target, NULL);
+        if (replica->ipaddr != NULL) {
+            pcmk__g_strcat(buffer, " -p ", replica->ipaddr, ":", port->source,
+                           ":", port->target, NULL);
 
-                } else if (!pcmk__str_eq(data->container_network,
-                                         PCMK_VALUE_HOST, pcmk__str_none)) {
-                    // No need to do port mapping if net == host
-                    pcmk__g_strcat(buffer,
-                                   " -p ", port->source, ":", port->target,
-                                   NULL);
-                }
-                break;
-            default:
-                break;
+        } else if (!pcmk__str_eq(data->container_network, PCMK_VALUE_HOST,
+                                 pcmk__str_none)) {
+
+            // No need to do port mapping if net == host
+            pcmk__g_strcat(buffer, " -p ", port->source, ":", port->target,
+                           NULL);
         }
     }
 
