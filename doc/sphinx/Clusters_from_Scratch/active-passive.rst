@@ -11,8 +11,9 @@ Our first resource will be a floating IP address that the cluster can bring up
 on either node. Regardless of where any cluster service(s) are running, end
 users need to be able to communicate with them at a consistent address. Here,
 we will use ``192.168.122.120`` as the floating IP address, give it the
-imaginative name ``ClusterIP``, and tell the cluster to check whether it is
-still running every 30 seconds.
+imaginative name ``ClusterIP``, assign the IP address to the physical device
+``enp1s0``, and tell the cluster to check whether it is still running every 30
+seconds.
 
 .. WARNING::
 
@@ -22,8 +23,8 @@ still running every 30 seconds.
 
 .. code-block:: console
 
-    [root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \ 
-        ip=192.168.122.120 cidr_netmask=24 op monitor interval=30s
+    [root@pcmk-1 ~]# pcs resource create ClusterIP ocf:heartbeat:IPaddr2 \
+        ip=192.168.122.120 cidr_netmask=24 nic=enp1s0 op monitor interval=30s
 
 Another important piece of information here is ``ocf:heartbeat:IPaddr2``.
 This tells Pacemaker three things about the resource you want to add:
@@ -87,10 +88,10 @@ now, but it's okay if it doesn't look like the one below.
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:37:28 2022
-      * Last change:  Wed Jul 27 00:37:14 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 15:19:53 2026 on pcmk-1
+      * Last change:  Tue Feb 24 15:19:16 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 2 resource instances configured
 
@@ -115,7 +116,7 @@ address has been added.
     1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
     1: lo    inet6 ::1/128 scope host \       valid_lft forever preferred_lft forever
     2: enp1s0    inet 192.168.122.102/24 brd 192.168.122.255 scope global noprefixroute enp1s0\       valid_lft forever preferred_lft forever
-    2: enp1s0    inet 192.168.122.120/24 brd 192.168.122.255 scope global secondary enp1s0\       valid_lft forever preferred_lft forever
+    2: enp1s0    inet 192.168.122.120/24 scope global enp1s0\       valid_lft forever preferred_lft forever
     2: enp1s0    inet6 fe80::5054:ff:fe95:209/64 scope link noprefixroute \       valid_lft forever preferred_lft forever
 
 Perform a Failover
@@ -150,7 +151,6 @@ Verify that ``pacemaker`` and ``corosync`` are no longer running:
 
     [root@pcmk-2 ~]# pcs status
     Error: error running crm_mon, is pacemaker running?
-      Could not connect to pacemakerd: Connection refused
       crm_mon: Connection to cluster failed: Connection refused
 
 Go to the other node, and check the cluster status.
@@ -160,10 +160,10 @@ Go to the other node, and check the cluster status.
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:43:51 2022
-      * Last change:  Wed Jul 27 00:43:14 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 15:23:32 2026 on pcmk-2
+      * Last change:  Tue Feb 24 15:19:16 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 2 resource instances configured
 
@@ -251,10 +251,10 @@ gets going on the node, but it eventually will look like the below.)
     [root@pcmk-1 ~]# pcs status
     Cluster name: mycluster
     Cluster Summary:
-      * Stack: corosync
-      * Current DC: pcmk-1 (version 2.1.2-4.el9-ada5c3b36e2) - partition with quorum
-      * Last updated: Wed Jul 27 00:45:17 2022
-      * Last change:  Wed Jul 27 00:45:01 2022 by root via cibadmin on pcmk-1
+      * Stack: corosync (Pacemaker is running)
+      * Current DC: pcmk-1 (version 3.0.1-3.el10-6a90427) - partition with quorum
+      * Last updated: Tue Feb 24 15:27:35 2026 on pcmk-2
+      * Last change:  Tue Feb 24 15:19:16 2026 by root via root on pcmk-1
       * 2 nodes configured
       * 2 resource instances configured
 
