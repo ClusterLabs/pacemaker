@@ -14,32 +14,32 @@
 #include <crm/common/unittest_internal.h>
 
 #define XML_PASSING_RULE                                    \
-    "<" PCMK_XE_RULE " " PCMK_XA_ID "='rp' >\n"             \
+    "<" PCMK_XE_RULE " " PCMK_XA_ID "='rp' >"               \
       "<" PCMK_XE_DATE_EXPRESSION " " PCMK_XA_ID "='ep' "   \
           PCMK_XA_OPERATION "='" PCMK_VALUE_GT "' "         \
-          PCMK_XA_START "='1950-01-01 00:00:00' />\n"       \
-    "</" PCMK_XE_RULE ">\n"
+          PCMK_XA_START "='1950-01-01 00:00:00' />"         \
+    "</" PCMK_XE_RULE ">"
 
 #define XML_FAILING_RULE                                    \
-    "<" PCMK_XE_RULE " " PCMK_XA_ID "='rf' >\n"             \
+    "<" PCMK_XE_RULE " " PCMK_XA_ID "='rf' >"               \
       "<" PCMK_XE_DATE_EXPRESSION " " PCMK_XA_ID "='ef' "   \
           PCMK_XA_OPERATION "='" PCMK_VALUE_LT "' "         \
-          PCMK_XA_END "='1950-01-01 00:00:00' />\n"         \
-    "</" PCMK_XE_RULE ">\n"
+          PCMK_XA_END "='1950-01-01 00:00:00' />"           \
+    "</" PCMK_XE_RULE ">"
 
 #define XML_NVPAIRS_1                                       \
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp1-1' "          \
-        PCMK_XA_NAME "='name1' " PCMK_XA_VALUE "='1' />\n"  \
+        PCMK_XA_NAME "='name1' " PCMK_XA_VALUE "='1' />"    \
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp1-2' "          \
-        PCMK_XA_NAME "='name2' " PCMK_XA_VALUE "='1' />\n"
+        PCMK_XA_NAME "='name2' " PCMK_XA_VALUE "='1' />"
 
 #define XML_NVPAIRS_2                                       \
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp2-1' "          \
-        PCMK_XA_NAME "='name1' " PCMK_XA_VALUE "='2' />\n"  \
+        PCMK_XA_NAME "='name1' " PCMK_XA_VALUE "='2' />"    \
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp2-2' "          \
-        PCMK_XA_NAME "='name2' " PCMK_XA_VALUE "='2' />\n"  \
+        PCMK_XA_NAME "='name2' " PCMK_XA_VALUE "='2' />"    \
     "<" PCMK_XE_NVPAIR " " PCMK_XA_ID "='nvp2-3' "          \
-        PCMK_XA_NAME "='name3' " PCMK_XA_VALUE "='2' />\n"
+        PCMK_XA_NAME "='name3' " PCMK_XA_VALUE "='2' />"
 
 static void
 invalid_args(void **state)
@@ -80,7 +80,7 @@ with_rules(void **state) {
 
     xmlNode *xml = NULL;
 
-    xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_1 XML_PASSING_RULE "</xml>\n");
+    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_1 XML_PASSING_RULE "</xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
@@ -91,7 +91,7 @@ with_rules(void **state) {
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
     pcmk__xml_free(xml);
 
-    xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_2 XML_FAILING_RULE "</xml>\n");
+    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_2 XML_FAILING_RULE "</xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
@@ -100,7 +100,6 @@ with_rules(void **state) {
     assert_int_equal(g_hash_table_size(unpack_data.values), 2);
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name1"), "1");
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
-    assert_null(g_hash_table_lookup(unpack_data.values, "name3"));
 
     pcmk__xml_free(xml);
     crm_time_free(now);
@@ -117,7 +116,7 @@ without_overwrite(void **state)
 
     xmlNode *xml = NULL;
 
-    xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_1 "</xml>\n");
+    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_1 "</xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
@@ -128,7 +127,7 @@ without_overwrite(void **state)
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
     pcmk__xml_free(xml);
 
-    xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_2 "</xml>\n");
+    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_2 "</xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
@@ -153,7 +152,7 @@ with_overwrite(void **state)
 
     xmlNode *xml = NULL;
 
-    xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_1 "</xml>\n");
+    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_1 "</xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
@@ -164,7 +163,7 @@ with_overwrite(void **state)
     assert_string_equal(g_hash_table_lookup(unpack_data.values, "name2"), "1");
     pcmk__xml_free(xml);
 
-    xml = pcmk__xml_parse("<xml>\n" XML_NVPAIRS_2 "</xml>\n");
+    xml = pcmk__xml_parse("<xml>" XML_NVPAIRS_2 "</xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
@@ -186,9 +185,9 @@ attributes_child(void **state)
         .values = pcmk__strkey_table(free, free),
     };
 
-    xmlNode *xml = pcmk__xml_parse("<xml>\n<" PCMK__XE_ATTRIBUTES ">\n"
+    xmlNode *xml = pcmk__xml_parse("<xml><" PCMK__XE_ATTRIBUTES ">"
                                    XML_NVPAIRS_1
-                                   "</" PCMK__XE_ATTRIBUTES ">\n</xml>\n");
+                                   "</" PCMK__XE_ATTRIBUTES "></xml>");
 
     assert_non_null(xml);
     unpack_data.doc = xml->doc;
