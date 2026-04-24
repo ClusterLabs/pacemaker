@@ -12,7 +12,7 @@ from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.input import should_continue
 from pacemaker._cts import logging
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 
 
 class CtsLab:
@@ -60,9 +60,9 @@ class CtsLab:
     def __getitem__(self, key):
         """Return the given environment key, or raise KeyError if it does not exist."""
         # Throughout this file, pylint has trouble understanding that EnvFactory
-        # and RemoteFactory are singleton instances that can be treated as callable
-        # and subscriptable objects.  Various warnings are disabled because of this.
-        # See also a comment about self._rsh in environment.py.
+        # is a singleton instance that can be treated as a callable and subscriptable
+        # object.  Various warnings are disabled because of this.  See also a comment
+        # about self._rsh in environment.py.
         # pylint: disable=unsubscriptable-object
         return self._env[key]
 
@@ -133,14 +133,12 @@ class NodeStatus:
 
     def _node_booted(self, node):
         """Return True if the given node is booted (responds to pings)."""
-        # pylint: disable=not-callable
-        (rc, _) = RemoteFactory().getInstance()("localhost", f"ping -nq -c1 -w1 {node}", verbose=0)
+        (rc, _) = RemoteExec().call("localhost", f"ping -nq -c1 -w1 {node}", verbose=0)
         return rc == 0
 
     def _sshd_up(self, node):
         """Return true if sshd responds on the given node."""
-        # pylint: disable=not-callable
-        (rc, _) = RemoteFactory().getInstance()(node, "true", verbose=0)
+        (rc, _) = RemoteExec().call(node, "true", verbose=0)
         return rc == 0
 
     def wait_for_node(self, node, timeout=300):
@@ -225,7 +223,7 @@ class Process:
         search_re = f"({word_begin}valgrind )?.*{word_begin}{self.name}{word_end}"
 
         if sig in ["SIGKILL", "KILL", 9, "SIGTERM", "TERM", 15]:
-            (rc, _) = self._cm.rsh(node, f"pgrep --full '{search_re}'")
+            (rc, _) = self._cm.rsh.call(node, f"pgrep --full '{search_re}'")
             if rc == 1:
                 # No matching process, so nothing to kill/terminate
                 return
@@ -237,6 +235,6 @@ class Process:
         # 0: One or more processes were successfully signaled.
         # 1: No processes matched or none of them could be signalled.
         # This is why we check for no matching process above.
-        (rc, _) = self._cm.rsh(node, f"pkill --signal {sig} --full '{search_re}'")
+        (rc, _) = self._cm.rsh.call(node, f"pkill --signal {sig} --full '{search_re}'")
         if rc != 0:
             self._cm.log(f"ERROR: Sending signal {sig} to {self.name} failed on node {node}")
