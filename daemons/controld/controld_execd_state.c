@@ -426,35 +426,39 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 }
 
 static void
-remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data)
+remote_config_check(xmlNode *msg, int call_id, int rc, xmlNode *output,
+                    void *user_data)
 {
+    lrmd_t *lrmd = user_data;
+    GHashTable *config_hash = NULL;
+    crm_time_t *now = NULL;
+    pcmk_rule_input_t rule_input = { NULL, };
+
     if (rc != pcmk_ok) {
         pcmk__err("Query resulted in an error: %s", pcmk_strerror(rc));
 
-        if (rc == -EACCES || rc == -pcmk_err_schema_validation) {
-            pcmk__err("The cluster is mis-configured - shutting down and "
+        if ((rc == -EACCES) || (rc == -pcmk_err_schema_validation)) {
+            pcmk__err("The cluster is misconfigured - shutting down and "
                       "staying down");
         }
 
-    } else {
-        lrmd_t * lrmd = (lrmd_t *)user_data;
-        crm_time_t *now = crm_time_new(NULL);
-        GHashTable *config_hash = pcmk__strkey_table(free, free);
-        pcmk_rule_input_t rule_input = {
-            .now = now,
-        };
-
-        pcmk__debug("Call %d : Parsing CIB options", call_id);
-        pcmk__unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                   PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
-                                   &rule_input, config_hash, NULL);
-
-        /* Now send it to the remote peer */
-        lrmd__validate_remote_settings(lrmd, config_hash);
-
-        g_hash_table_destroy(config_hash);
-        crm_time_free(now);
+        return;
     }
+
+    config_hash = pcmk__strkey_table(free, free);
+    now = crm_time_new(NULL);
+    rule_input.now = now;
+
+    pcmk__debug("Call %d : Parsing CIB options", call_id);
+    pcmk__unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
+                               PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                               config_hash, NULL);
+
+    // Now send it to the remote peer
+    lrmd__validate_remote_settings(lrmd, config_hash);
+
+    g_hash_table_destroy(config_hash);
+    crm_time_free(now);
 }
 
 static void
