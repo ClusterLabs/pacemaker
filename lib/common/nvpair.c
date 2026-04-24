@@ -516,28 +516,6 @@ pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
     g_list_free(blocks);
 }
 
-/*!
- * \brief Unpack nvpair blocks contained by an XML element into a hash table,
- *        evaluated for any rules
- *
- * \param[in]  xml           XML element containing blocks of nvpair elements
- * \param[in]  element_name  If not NULL, only unpack blocks of this element
- * \param[in]  first_id      If not NULL, process block with this ID first
- * \param[in]  rule_input    Values used to evaluate rule criteria
- * \param[out] values        Where to store extracted name/value pairs
- * \param[out] next_change   If not NULL, set to when evaluation will next
- *                           change, if sooner than its current value
- */
-void
-pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
-                          const char *first_id,
-                          const pcmk_rule_input_t *rule_input,
-                          GHashTable *values, crm_time_t *next_change)
-{
-    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, rule_input, values,
-                               next_change);
-}
-
 // Meta-attribute handling
 
 /*!
@@ -750,6 +728,16 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 
     crm_create_nvpair_xml(xml_node, name, name, s_value);
     pcmk__trace("dumped: name=%s value=%s", name, s_value);
+}
+
+void
+pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                          const char *first_id,
+                          const pcmk_rule_input_t *rule_input,
+                          GHashTable *values, crm_time_t *next_change)
+{
+    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, rule_input, values,
+                               next_change);
 }
 
 // LCOV_EXCL_STOP
