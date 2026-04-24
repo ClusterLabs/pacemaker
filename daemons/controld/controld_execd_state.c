@@ -445,9 +445,9 @@ remote_config_check(xmlNode * msg, int call_id, int rc, xmlNode * output, void *
         };
 
         pcmk__debug("Call %d : Parsing CIB options", call_id);
-        pcmk_unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
-                                  PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                                  config_hash, NULL);
+        pcmk__unpack_nvpair_blocks(output, PCMK_XE_CLUSTER_PROPERTY_SET,
+                                   PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS,
+                                   &rule_input, config_hash, NULL);
 
         /* Now send it to the remote peer */
         lrmd__validate_remote_settings(lrmd, config_hash);

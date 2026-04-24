@@ -143,9 +143,9 @@ read_config(GHashTable *options, xmlNode *current_cib)
     now = crm_time_new(NULL);
     rule_input.now = now;
 
-    pcmk_unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
-                              PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
-                              options, NULL);
+    pcmk__unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
+                               PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
+                               options, NULL);
     crm_time_free(now);
 }
 

@@ -49,6 +49,11 @@ gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
 
 void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
 
+void pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                                const char *first_id,
+                                const pcmk_rule_input_t *rule_input,
+                                GHashTable *values, crm_time_t *next_change);
+
 int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
