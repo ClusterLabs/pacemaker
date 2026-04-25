@@ -94,8 +94,6 @@ typedef struct {
     char *peer_version;
 } lrmd_private_t;
 
-static int process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native);
-
 static lrmd_list_t *
 lrmd_list_add(lrmd_list_t * head, const char *value)
 {
@@ -358,6 +356,72 @@ report_async_connection_result(lrmd_t *lrmd, int rc)
         event.connection_rc = rc;
         native->callback(&event);
     }
+}
+
+static void
+handle_ack(const xmlNode *reply)
+{
+    int status = 0;
+
+    pcmk__log_xml_err(reply, "Bad reply");
+
+    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+    pcmk__err("Received error response from executor: %s", crm_exit_str(status));
+}
+
+static int
+process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
+{
+    int rc = pcmk_rc_ok;
+    const char *version = pcmk__xe_get(reply, PCMK__XA_LRMD_PROTOCOL_VERSION);
+    const char *msg_type = pcmk__xe_get(reply, PCMK__XA_LRMD_OP);
+    const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
+    const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
+
+    /* The only reason we can receive an ACK here is because execd didn't
+     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake{,_async},
+     * and the status code will always indicate some sort of error.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
+        handle_ack(reply);
+        return EPROTO;
+    }
+
+    pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
+    rc = pcmk_legacy2rc(rc);
+
+    /* The remote executor may add its uptime to the XML reply, which is useful
+     * in handling transient attributes when the connection to the remote node
+     * unexpectedly drops.  If no parameter is given, just default to -1.
+     */
+    native->remote->uptime = -1;
+    pcmk__xe_get_time(reply, PCMK__XA_UPTIME, &native->remote->uptime);
+
+    if (start_state) {
+        native->remote->start_state = strdup(start_state);
+    }
+
+    if (rc == EPROTO) {
+        pcmk__err("Executor protocol version mismatch between client "
+                  "(" LRMD_PROTOCOL_VERSION ") and server (%s)",
+                  version);
+        pcmk__log_xml_err(reply, "Protocol Error");
+    } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+        pcmk__err("Invalid registration message: %s", msg_type);
+        pcmk__log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else if (tmp_ticket == NULL) {
+        pcmk__err("No registration token provided");
+        pcmk__log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else {
+        pcmk__trace("Obtained registration token: %s", tmp_ticket);
+        native->token = strdup(tmp_ticket);
+        native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
 }
 
 static void
@@ -855,17 +919,6 @@ lrmd_api_is_connected(lrmd_t * lrmd)
     }
 }
 
-static void
-handle_ack(const xmlNode *reply)
-{
-    int status = 0;
-
-    pcmk__log_xml_err(reply, "Bad reply");
-
-    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
-    pcmk__err("Received error response from executor: %s", crm_exit_str(status));
-}
-
 /*!
  * \internal
  * \brief Send a prepared API command to the executor
@@ -1017,61 +1070,6 @@ lrmd_handshake_hello_msg(const char *name, bool is_proxy)
     }
 
     return hello;
-}
-
-static int
-process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
-{
-    int rc = pcmk_rc_ok;
-    const char *version = pcmk__xe_get(reply, PCMK__XA_LRMD_PROTOCOL_VERSION);
-    const char *msg_type = pcmk__xe_get(reply, PCMK__XA_LRMD_OP);
-    const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
-    const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
-
-    /* The only reason we can receive an ACK here is because execd didn't
-     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake{,_async},
-     * and the status code will always indicate some sort of error.
-     */
-    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
-        handle_ack(reply);
-        return EPROTO;
-    }
-
-    pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
-    rc = pcmk_legacy2rc(rc);
-
-    /* The remote executor may add its uptime to the XML reply, which is useful
-     * in handling transient attributes when the connection to the remote node
-     * unexpectedly drops.  If no parameter is given, just default to -1.
-     */
-    native->remote->uptime = -1;
-    pcmk__xe_get_time(reply, PCMK__XA_UPTIME, &native->remote->uptime);
-
-    if (start_state) {
-        native->remote->start_state = strdup(start_state);
-    }
-
-    if (rc == EPROTO) {
-        pcmk__err("Executor protocol version mismatch between client "
-                  "(" LRMD_PROTOCOL_VERSION ") and server (%s)",
-                  version);
-        pcmk__log_xml_err(reply, "Protocol Error");
-    } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-        pcmk__err("Invalid registration message: %s", msg_type);
-        pcmk__log_xml_err(reply, "Bad reply");
-        rc = EPROTO;
-    } else if (tmp_ticket == NULL) {
-        pcmk__err("No registration token provided");
-        pcmk__log_xml_err(reply, "Bad reply");
-        rc = EPROTO;
-    } else {
-        pcmk__trace("Obtained registration token: %s", tmp_ticket);
-        native->token = strdup(tmp_ticket);
-        native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
-        rc = pcmk_rc_ok;
-    }
-
-    return rc;
 }
 
 static int
