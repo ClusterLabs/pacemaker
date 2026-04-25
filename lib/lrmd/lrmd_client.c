@@ -1060,37 +1060,6 @@ lrmd_handshake_hello_msg(const char *name, bool is_proxy)
 }
 
 static int
-lrmd_handshake(lrmd_t * lrmd, const char *name)
-{
-    int rc = pcmk_rc_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *reply = NULL;
-    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
-
-    rc = lrmd_send_xml(lrmd, hello, -1, &reply);
-
-    if (rc < 0) {
-        pcmk__debug("Couldn't complete registration with the executor API: %s",
-                    pcmk_strerror(rc));
-        rc = ECOMM;
-    } else if (reply == NULL) {
-        pcmk__err("Did not receive registration reply");
-        rc = EPROTO;
-    } else {
-        rc = process_lrmd_handshake_reply(reply, native);
-    }
-
-    pcmk__xml_free(reply);
-    pcmk__xml_free(hello);
-
-    if (rc != pcmk_rc_ok) {
-        lrmd->cmds->disconnect(lrmd);
-    }
-
-    return rc;
-}
-
-static int
 lrmd_handshake_async(lrmd_t * lrmd, const char *name)
 {
     int rc = pcmk_rc_ok;
@@ -1557,6 +1526,37 @@ lrmd_tls_connect(lrmd_t * lrmd, int *fd)
     } else {
         rc = add_tls_to_mainloop(lrmd, false);
     }
+    return rc;
+}
+
+static int
+lrmd_handshake(lrmd_t *lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *reply = NULL;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
+
+    rc = lrmd_send_xml(lrmd, hello, -1, &reply);
+
+    if (rc < 0) {
+        pcmk__debug("Couldn't complete registration with the executor API: %s",
+                    pcmk_strerror(rc));
+        rc = ECOMM;
+    } else if (reply == NULL) {
+        pcmk__err("Did not receive registration reply");
+        rc = EPROTO;
+    } else {
+        rc = process_lrmd_handshake_reply(reply, native);
+    }
+
+    pcmk__xml_free(reply);
+    pcmk__xml_free(hello);
+
+    if (rc != pcmk_rc_ok) {
+        lrmd->cmds->disconnect(lrmd);
+    }
+
     return rc;
 }
 
