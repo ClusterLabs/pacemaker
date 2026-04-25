@@ -63,6 +63,9 @@ void lrmd__register_messages(pcmk__output_t *out);
 
 int lrmd__init_remote_key(gnutls_datum_t *key);
 
+void lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
+                              void (*cb)(lrmd_t *, void *, xmlNode *));
+
 #ifdef __cplusplus
 }
 #endif

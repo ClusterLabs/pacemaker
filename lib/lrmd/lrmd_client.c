@@ -50,7 +50,6 @@ static int lrmd_api_is_connected(lrmd_t * lrmd);
 /* IPC proxy functions */
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
-void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
 // GnuTLS client handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
@@ -1878,12 +1877,13 @@ lrmd_api_set_callback(lrmd_t * lrmd, lrmd_event_callback callback)
 }
 
 void
-lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg))
+lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
+                         void (*cb)(lrmd_t *, void *, xmlNode *))
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    native->proxy_callback = callback;
-    native->proxy_callback_userdata = userdata;
+    native->proxy_callback = cb;
+    native->proxy_callback_userdata = user_data;
 }
 
 void
