@@ -214,7 +214,6 @@ register_if_fencing_device(gpointer data, gpointer user_data)
 
     agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 
-    get_meta_attributes(rsc->priv->meta, rsc, NULL, scheduler);
     rsc_provides = g_hash_table_lookup(rsc->priv->meta,
                                        PCMK_FENCING_PROVIDES);
 

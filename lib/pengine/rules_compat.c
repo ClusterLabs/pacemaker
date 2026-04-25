@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -78,22 +78,29 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 const char *always_first, gboolean overwrite,
                 crm_time_t *next_change)
 {
-    GList *pairs = pcmk__xe_dereference_children(xml_obj, set_name);
+    GList *pairs = NULL;
+    pcmk__nvpair_unpack_t data = {
+        .values = hash,
+        .first_id = always_first,
+        .overwrite = overwrite,
+        .next_change = next_change,
+    };
 
-    if (pairs) {
-        pcmk__nvpair_unpack_t data = {
-            .values = hash,
-            .first_id = always_first,
-            .overwrite = overwrite,
-            .next_change = next_change,
-        };
-
-        map_rule_input(&(data.rule_input), rule_data);
-
-        pairs = g_list_sort_with_data(pairs, pcmk__cmp_nvpair_blocks, &data);
-        g_list_foreach(pairs, pcmk__unpack_nvpair_block, &data);
-        g_list_free(pairs);
+    if (xml_obj == NULL) {
+        return;
     }
+
+    pairs = pcmk__xe_dereference_children(xml_obj, set_name, xml_obj->doc);
+    if (pairs == NULL) {
+        return;
+    }
+
+    data.doc = xml_obj->doc;
+    map_rule_input(&(data.rule_input), rule_data);
+
+    pairs = g_list_sort_with_data(pairs, pcmk__cmp_nvpair_blocks, &data);
+    g_list_foreach(pairs, pcmk__unpack_nvpair_block, &data);
+    g_list_free(pairs);
 }
 
 void

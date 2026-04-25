@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,8 +10,11 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 #define PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 
-#include <glib.h>               // GSList, gpointer
+#include <glib.h>               // GHashTable, gpointer, GSList
 #include <libxml/tree.h>        // xmlNode
+
+#include <crm/common/iso8601.h> // crm_time_t
+#include <crm/common/rules.h>   // pcmk_rule_input_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -37,6 +40,12 @@ void pcmk_nvpairs2xml_attrs(GSList *list, xmlNode *xml);
 
 //! \deprecated Do not use
 void hash2nvpair(gpointer key, gpointer value, gpointer user_data);
+
+//! \deprecated Do not use
+void pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                               const char *first_id,
+                               const pcmk_rule_input_t *rule_input,
+                               GHashTable *values, crm_time_t *next_change);
 
 #ifdef __cplusplus
 }

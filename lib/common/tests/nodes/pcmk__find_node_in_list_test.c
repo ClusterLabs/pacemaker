@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,30 +22,27 @@ empty_list(void **state)
 static void
 non_null_list(void **state)
 {
+    struct pcmk__node_private node1_priv = {
+        .name = pcmk__str_copy("cluster1"),
+    };
+    struct pcmk__node_private node2_priv = {
+        .name = pcmk__str_copy("cluster2"),
+    };
+    pcmk_node_t node1 = { .priv = &node1_priv };
+    pcmk_node_t node2 = { .priv = &node2_priv };
     GList *nodes = NULL;
 
-    pcmk_node_t *a = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
-    pcmk_node_t *b = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
+    nodes = g_list_prepend(nodes, &node1);
+    nodes = g_list_prepend(nodes, &node2);
 
-    a->priv = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
-    b->priv = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
-
-    a->priv->name = "cluster1";
-    b->priv->name = "cluster2";
-
-    nodes = g_list_append(nodes, a);
-    nodes = g_list_append(nodes, b);
-
-    assert_ptr_equal(a, pcmk__find_node_in_list(nodes, "cluster1"));
+    assert_ptr_equal(&node1, pcmk__find_node_in_list(nodes, "cluster1"));
     assert_null(pcmk__find_node_in_list(nodes, "cluster10"));
     assert_null(pcmk__find_node_in_list(nodes, "nodecluster1"));
-    assert_ptr_equal(b, pcmk__find_node_in_list(nodes, "CLUSTER2"));
+    assert_ptr_equal(&node2, pcmk__find_node_in_list(nodes, "CLUSTER2"));
     assert_null(pcmk__find_node_in_list(nodes, "xyz"));
 
-    free(a->priv);
-    free(a);
-    free(b->priv);
-    free(b);
+    free(node1_priv.name);
+    free(node2_priv.name);
     g_list_free(nodes);
 }
 

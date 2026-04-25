@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -34,14 +34,14 @@ extern "C" {
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now);
 
-//! \deprecated Use pcmk_unpack_nvpair_blocks() instead
+//! \deprecated Do not use
 void pe_unpack_nvpairs(xmlNode *top, const xmlNode *xml_obj,
                        const char *set_name, GHashTable *node_hash,
                        GHashTable *hash, const char *always_first,
                        gboolean overwrite, crm_time_t *now,
                        crm_time_t *next_change);
 
-//! \deprecated Use pcmk_unpack_nvpair_blocks() instead
+//! \deprecated Do not use
 void pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                      const pe_rule_eval_data_t *rule_data, GHashTable *hash,
                      const char *always_first, gboolean overwrite,

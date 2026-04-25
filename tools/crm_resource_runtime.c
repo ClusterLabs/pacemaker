@@ -40,7 +40,7 @@
 #include <crm/common/strings.h>             // pcmk_parse_interval_spec
 #include <crm/common/xml.h>                 // PCMK_XA_ID, PCMK_XE_*
 #include <crm/crm.h>                        // CRM_FEATURE_SET, crm_system_name
-#include <crm/pengine/complex.h>            // get_meta_attributes, uber_parent
+#include <crm/pengine/complex.h>            // uber_parent
 #include <crm/pengine/internal.h>           // clone_strip, pe__const_top_resource
 #include <crm/pengine/status.h>             // cluster_status, pe_find_resource
 #include <crm/services.h>                   // resources_find_service_class
@@ -1309,7 +1309,6 @@ static GHashTable *
 generate_resource_params(pcmk_resource_t *rsc)
 {
     GHashTable *params = NULL;
-    GHashTable *meta = NULL;
     GHashTable *combined = NULL;
     GHashTableIter iter;
     char *key = NULL;
@@ -1325,16 +1324,11 @@ generate_resource_params(pcmk_resource_t *rsc)
         }
     }
 
-    meta = pcmk__strkey_table(free, free);
-    get_meta_attributes(meta, rsc, NULL, rsc->priv->scheduler);
-    if (meta != NULL) {
-        g_hash_table_iter_init(&iter, meta);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
-            char *crm_name = crm_meta_name(key);
+    g_hash_table_iter_init(&iter, rsc->priv->meta);
+    while (g_hash_table_iter_next(&iter, (void *) &key, (void *) &value)) {
+        char *crm_name = crm_meta_name(key);
 
-            g_hash_table_insert(combined, crm_name, strdup(value));
-        }
-        g_hash_table_destroy(meta);
+        g_hash_table_insert(combined, crm_name, pcmk__str_copy(value));
     }
 
     return combined;

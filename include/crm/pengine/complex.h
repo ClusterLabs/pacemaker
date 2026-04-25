@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@ extern "C" {
 
 GHashTable *pe_rsc_params(pcmk_resource_t *rsc, const pcmk_node_t *node,
                           pcmk_scheduler_t *scheduler);
-void get_meta_attributes(GHashTable * meta_hash, pcmk_resource_t *rsc,
+void get_meta_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                          pcmk_node_t *node, pcmk_scheduler_t *scheduler);
 void get_rsc_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                         const pcmk_node_t *node, pcmk_scheduler_t *scheduler);

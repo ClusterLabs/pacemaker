@@ -357,48 +357,48 @@ static int
 create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                    pcmk__bundle_replica_t *replica)
 {
-    if(data->ip_range_start) {
-        char *id = NULL;
-        xmlNode *xml_ip = NULL;
-        xmlNode *xml_obj = NULL;
+    char *id = NULL;
+    xmlNode *xml_ip = NULL;
+    xmlNode *xml_obj = NULL;
+    int rc = pcmk_rc_ok;
 
-        id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
-        pcmk__xml_sanitize_id(id);
-        xml_ip = create_resource(id, "heartbeat", "IPaddr2");
-        free(id);
-
-        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
-        pcmk__xe_set_id(xml_obj, "%s-attributes-%d",
-                        data->prefix, replica->offset);
-
-        crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
-        if(data->host_network) {
-            crm_create_nvpair_xml(xml_obj, NULL, "nic", data->host_network);
-        }
-
-        if(data->host_netmask) {
-            crm_create_nvpair_xml(xml_obj, NULL,
-                                  "cidr_netmask", data->host_netmask);
-
-        } else {
-            crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask", "32");
-        }
-
-        xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
-        crm_create_op_xml(xml_obj, pcmk__xe_id(xml_ip), PCMK_ACTION_MONITOR,
-                          "60s", NULL);
-
-        // TODO: Other ops? Timeouts and intervals from underlying resource?
-
-        if (pe__unpack_resource(xml_ip, &replica->ip, parent,
-                                parent->priv->scheduler) != pcmk_rc_ok) {
-            return pcmk_rc_unpack_error;
-        }
-
-        parent->priv->children = g_list_append(parent->priv->children,
-                                               replica->ip);
+    if (data->ip_range_start == NULL) {
+        goto done;
     }
-    return pcmk_rc_ok;
+
+    id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
+    pcmk__xml_sanitize_id(id);
+    xml_ip = create_resource(id, "heartbeat", "IPaddr2");
+
+    xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
+
+    crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
+
+    if (data->host_network != NULL) {
+        crm_create_nvpair_xml(xml_obj, NULL, "nic", data->host_network);
+    }
+
+    crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask",
+                          pcmk__s(data->host_netmask, "32"));
+
+    xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
+    crm_create_op_xml(xml_obj, id, PCMK_ACTION_MONITOR, "60s", NULL);
+
+    // TODO: Other ops? Timeouts and intervals from underlying resource?
+
+    if (pe__unpack_resource(xml_ip, &replica->ip, parent,
+                            parent->priv->scheduler) != pcmk_rc_ok) {
+        rc = pcmk_rc_unpack_error;
+        goto done;
+    }
+
+    parent->priv->children = g_list_append(parent->priv->children, replica->ip);
+
+done:
+    free(id);
+    pcmk__xml_free(xml_ip);
+    return rc;
 }
 
 static const char*
@@ -421,34 +421,28 @@ create_container_resource(pcmk_resource_t *parent,
     char *id = NULL;
     xmlNode *xml_container = NULL;
     xmlNode *xml_obj = NULL;
-
-    // Agent-specific
-    const char *hostname_opt = NULL;
-    const char *env_opt = NULL;
     const char *agent_str = NULL;
-
     GString *buffer = NULL;
     GString *dbuffer = NULL;
+    int rc = pcmk_rc_ok;
 
-    // Where syntax differences are drop-in replacements, set them now
     switch (data->agent_type) {
         case PE__CONTAINER_AGENT_DOCKER:
         case PE__CONTAINER_AGENT_PODMAN:
-            hostname_opt = "-h ";
-            env_opt = "-e ";
             break;
-        default:    // PE__CONTAINER_AGENT_UNKNOWN
-            return pcmk_rc_unpack_error;
-    }
-    agent_str = container_agent_str(data->agent_type);
 
+        default:
+            rc = pcmk_rc_unpack_error;
+            goto done;
+    }
+
+    agent_str = container_agent_str(data->agent_type);
     buffer = g_string_sized_new(4096);
 
     id = pcmk__assert_asprintf("%s-%s-%d", data->prefix, agent_str,
                                replica->offset);
     pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
-    free(id);
 
     xml_obj = pcmk__xe_create(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
     pcmk__xe_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
@@ -468,21 +462,22 @@ create_container_resource(pcmk_resource_t *parent,
      * they bind to.
      */
     if (data->ip_range_start != NULL) {
-        g_string_append_printf(buffer, " %s%s-%d", hostname_opt, data->prefix,
+        g_string_append_printf(buffer, " -h %s-%d", data->prefix,
                                replica->offset);
     }
-    pcmk__g_strcat(buffer, " ", env_opt, "PCMK_stderr=1", NULL);
+
+    g_string_append(buffer, " -e PCMK_stderr=1");
 
     if (data->container_network != NULL) {
         pcmk__g_strcat(buffer, " --net=", data->container_network, NULL);
     }
 
     if (data->control_port != NULL) {
-        pcmk__g_strcat(buffer, " ", env_opt, "PCMK_" PCMK__ENV_REMOTE_PORT "=",
+        pcmk__g_strcat(buffer, " -e PCMK_" PCMK__ENV_REMOTE_PORT "=",
                        data->control_port, NULL);
     } else {
-        g_string_append_printf(buffer, " %sPCMK_" PCMK__ENV_REMOTE_PORT "=%d",
-                               env_opt, DEFAULT_REMOTE_PORT);
+        g_string_append_printf(buffer, " -e PCMK_" PCMK__ENV_REMOTE_PORT "=%d",
+                               DEFAULT_REMOTE_PORT);
     }
 
     for (GList *iter = data->mounts; iter != NULL; iter = iter->next) {
@@ -495,44 +490,29 @@ create_container_resource(pcmk_resource_t *parent,
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
-        switch (data->agent_type) {
-            case PE__CONTAINER_AGENT_DOCKER:
-            case PE__CONTAINER_AGENT_PODMAN:
-                pcmk__g_strcat(buffer,
-                               " -v ", pcmk__s(source, mount->source),
-                               ":", mount->target, NULL);
+        pcmk__g_strcat(buffer, " -v ", pcmk__s(source, mount->source), ":",
+                       mount->target, NULL);
 
-                if (mount->options != NULL) {
-                    pcmk__g_strcat(buffer, ":", mount->options, NULL);
-                }
-                break;
-            default:
-                break;
+        if (mount->options != NULL) {
+            pcmk__g_strcat(buffer, ":", mount->options, NULL);
         }
+
         free(source);
     }
 
     for (GList *iter = data->ports; iter != NULL; iter = iter->next) {
         pe__bundle_port_t *port = (pe__bundle_port_t *) iter->data;
 
-        switch (data->agent_type) {
-            case PE__CONTAINER_AGENT_DOCKER:
-            case PE__CONTAINER_AGENT_PODMAN:
-                if (replica->ipaddr != NULL) {
-                    pcmk__g_strcat(buffer,
-                                   " -p ", replica->ipaddr, ":", port->source,
-                                   ":", port->target, NULL);
+        if (replica->ipaddr != NULL) {
+            pcmk__g_strcat(buffer, " -p ", replica->ipaddr, ":", port->source,
+                           ":", port->target, NULL);
 
-                } else if (!pcmk__str_eq(data->container_network,
-                                         PCMK_VALUE_HOST, pcmk__str_none)) {
-                    // No need to do port mapping if net == host
-                    pcmk__g_strcat(buffer,
-                                   " -p ", port->source, ":", port->target,
-                                   NULL);
-                }
-                break;
-            default:
-                break;
+        } else if (!pcmk__str_eq(data->container_network, PCMK_VALUE_HOST,
+                                 pcmk__str_none)) {
+
+            // No need to do port mapping if net == host
+            pcmk__g_strcat(buffer, " -p ", port->source, ":", port->target,
+                           NULL);
         }
     }
 
@@ -615,13 +595,19 @@ create_container_resource(pcmk_resource_t *parent,
     // TODO: Other ops? Timeouts and intervals from underlying resource?
     if (pe__unpack_resource(xml_container, &replica->container, parent,
                             parent->priv->scheduler) != pcmk_rc_ok) {
-        return pcmk_rc_unpack_error;
+
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
+
     pcmk__set_rsc_flags(replica->container, pcmk__rsc_replica_container);
     parent->priv->children = g_list_append(parent->priv->children,
                                            replica->container);
 
-    return pcmk_rc_ok;
+done:
+    free(id);
+    pcmk__xml_free(xml_container);
+    return rc;
 }
 
 /*!
@@ -647,150 +633,164 @@ static int
 create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                        pcmk__bundle_replica_t *replica)
 {
-    if (replica->child && valid_network(data)) {
-        GHashTableIter gIter;
-        pcmk_node_t *node = NULL;
-        xmlNode *xml_remote = NULL;
-        char *id = pcmk__assert_asprintf("%s-%d", data->prefix,
-                                         replica->offset);
-        char *port_s = NULL;
-        const char *uname = NULL;
-        const char *connect_name = NULL;
-        pcmk_scheduler_t *scheduler = parent->priv->scheduler;
+    GHashTableIter gIter;
+    pcmk_node_t *node = NULL;
+    pcmk_node_t *copy = NULL;
+    xmlNode *xml_remote = NULL;
+    char *id = NULL;
+    const char *uname = NULL;
+    const char *connect_name = NULL;
+    pcmk_scheduler_t *scheduler = parent->priv->scheduler;
+    int rc = pcmk_rc_ok;
 
-        if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
-            free(id);
-            // The biggest hammer we have
-            id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
-                                       replica->child->id, replica->offset);
-            //@TODO return error instead of asserting?
-            pcmk__assert(pe_find_resource(scheduler->priv->resources,
-                                          id) == NULL);
-        }
+    if ((replica->child == NULL) || !valid_network(data)) {
+        goto done;
+    }
 
-        /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
-         * connection does not have its own IP is a magic string that we use to
-         * support nested remotes (i.e. a bundle running on a remote node).
-         */
-        connect_name = (replica->ipaddr? replica->ipaddr : "#uname");
+    id = pcmk__assert_asprintf("%s-%d", data->prefix, replica->offset);
 
-        if (data->control_port == NULL) {
-            port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
-        }
+    if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
+        free(id);
 
-        /* This sets replica->container as replica->remote's container, which is
-         * similar to what happens with guest nodes. This is how the scheduler
-         * knows that the bundle node is fenced by recovering the container, and
-         * that remote should be ordered relative to the container.
-         */
+        // The biggest hammer we have
+        id = pcmk__assert_asprintf("pcmk-internal-%s-remote-%d",
+                                   replica->child->id, replica->offset);
+
+        // @TODO return error instead of asserting?
+        pcmk__assert(pe_find_resource(scheduler->priv->resources, id) == NULL);
+    }
+
+    /* REMOTE_CONTAINER_HACK: Using "#uname" as the server name when the
+     * connection does not have its own IP is a magic string that we use to
+     * support nested remotes (i.e. a bundle running on a remote node).
+     */
+    connect_name = pcmk__s(replica->ipaddr, "#uname");
+
+    /* This sets replica->container as replica->remote's container, which is
+     * similar to what happens with guest nodes. This is how the scheduler knows
+     * that the bundle node is fenced by recovering the container, and that
+     * remote should be ordered relative to the container.
+     */
+    if (data->control_port != NULL) {
         xml_remote = pe_create_remote_xml(NULL, id, replica->container->id,
-                                          NULL, NULL, NULL,
-                                          connect_name, (data->control_port?
-                                          data->control_port : port_s));
+                                          NULL, NULL, NULL, connect_name,
+                                          data->control_port);
+
+    } else {
+        char *port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
+
+        xml_remote = pe_create_remote_xml(NULL, id, replica->container->id,
+                                          NULL, NULL, NULL, connect_name,
+                                          port_s);
         free(port_s);
+    }
 
-        /* Abandon our created ID, and pull the copy from the XML, because we
-         * need something that will get freed during scheduler data cleanup to
-         * use as the node ID and uname.
-         */
-        g_clear_pointer(&id, free);
-        uname = pcmk__xe_id(xml_remote);
+    /* Abandon our created ID, and pull the copy from the XML, because we need
+     * something that will get freed during scheduler data cleanup to use as the
+     * node ID and uname.
+     */
+    uname = pcmk__xe_id(xml_remote);
 
-        /* Ensure a node has been created for the guest (it may have already
-         * been, if it has a permanent node attribute), and ensure its weight is
-         * -INFINITY so no other resources can run on it.
-         */
-        node = pcmk_find_node(scheduler, uname);
-        if (node == NULL) {
-            node = pe_create_node(uname, uname, PCMK_VALUE_REMOTE,
-                                  -PCMK_SCORE_INFINITY, scheduler);
-        } else {
+    /* Ensure a node has been created for the guest (it may have already been,
+     * if it has a permanent node attribute), and ensure its weight is -INFINITY
+     * so no other resources can run on it.
+     */
+    node = pcmk_find_node(scheduler, uname);
+
+    if (node == NULL) {
+        node = pe__create_node(uname, uname, PCMK_VALUE_REMOTE,
+                               -PCMK_SCORE_INFINITY, scheduler);
+
+    } else {
+        node->assign->score = -PCMK_SCORE_INFINITY;
+    }
+
+    node->assign->probe_mode = pcmk__probe_never;
+
+    /* unpack_remote_nodes() ensures that each remote node and guest node has a
+     * pcmk_node_t entry. Ideally, it would do the same for bundle nodes.
+     * Unfortunately, a bundle has to be mostly unpacked before it's obvious
+     * what nodes will be needed, so we do it just above.
+     *
+     * Worse, that means that the node may have been utilized while unpacking
+     * other resources, without our weight correction. The most likely place for
+     * this to happen is when pe__unpack_resource() calls resource_location() to
+     * set a default score in symmetric clusters. This adds a node *copy* to
+     * each resource's allowed nodes, and these copies will have the wrong
+     * weight.
+     *
+     * As a hacky workaround, fix those copies here.
+     *
+     * @TODO Possible alternative: ensure bundles are unpacked before other
+     * resources, so the weight is correct before any copies are made.
+     */
+    g_list_foreach(scheduler->priv->resources, (GFunc) disallow_node,
+                   (void *) uname);
+
+    replica->node = pe__copy_node(node);
+    replica->node->assign->score = 500;
+    replica->node->assign->probe_mode = pcmk__probe_exclusive;
+
+    // Ensure the node shows up as allowed and with the correct discovery set
+    g_clear_pointer(&replica->child->priv->allowed_nodes, g_hash_table_destroy);
+
+    replica->child->priv->allowed_nodes =
+        pcmk__strkey_table(NULL, pcmk__free_node_copy);
+
+    g_hash_table_insert(replica->child->priv->allowed_nodes,
+                        (void *) replica->node->priv->id,
+                        pe__copy_node(replica->node));
+
+    copy = pe__copy_node(replica->node);
+    copy->assign->score = -PCMK_SCORE_INFINITY;
+
+    g_hash_table_insert(replica->child->priv->parent->priv->allowed_nodes,
+                        (void *) replica->node->priv->id, copy);
+
+    if (pe__unpack_resource(xml_remote, &replica->remote, parent,
+                            scheduler) != pcmk_rc_ok) {
+
+        rc = pcmk_rc_unpack_error;
+        goto done;
+    }
+
+    // Make Coverity happy
+    pcmk__assert(replica->remote != NULL);
+
+    g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
+    while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
+        if (pcmk__is_pacemaker_remote_node(node)) {
+            // Remote resources can only run on 'normal' cluster node
             node->assign->score = -PCMK_SCORE_INFINITY;
         }
-        node->assign->probe_mode = pcmk__probe_never;
-
-        /* unpack_remote_nodes() ensures that each remote node and guest node
-         * has a pcmk_node_t entry. Ideally, it would do the same for bundle
-         * nodes. Unfortunately, a bundle has to be mostly unpacked before it's
-         * obvious what nodes will be needed, so we do it just above.
-         *
-         * Worse, that means that the node may have been utilized while
-         * unpacking other resources, without our weight correction. The most
-         * likely place for this to happen is when pe__unpack_resource() calls
-         * resource_location() to set a default score in symmetric clusters.
-         * This adds a node *copy* to each resource's allowed nodes, and these
-         * copies will have the wrong weight.
-         *
-         * As a hacky workaround, fix those copies here.
-         *
-         * @TODO Possible alternative: ensure bundles are unpacked before other
-         * resources, so the weight is correct before any copies are made.
-         */
-        g_list_foreach(scheduler->priv->resources,
-                       (GFunc) disallow_node, (gpointer) uname);
-
-        replica->node = pe__copy_node(node);
-        replica->node->assign->score = 500;
-        replica->node->assign->probe_mode = pcmk__probe_exclusive;
-
-        /* Ensure the node shows up as allowed and with the correct discovery set */
-        g_clear_pointer(&replica->child->priv->allowed_nodes,
-                        g_hash_table_destroy);
-        replica->child->priv->allowed_nodes =
-            pcmk__strkey_table(NULL, pcmk__free_node_copy);
-        g_hash_table_insert(replica->child->priv->allowed_nodes,
-                            (gpointer) replica->node->priv->id,
-                            pe__copy_node(replica->node));
-
-        {
-            const pcmk_resource_t *parent = replica->child->priv->parent;
-            pcmk_node_t *copy = pe__copy_node(replica->node);
-
-            copy->assign->score = -PCMK_SCORE_INFINITY;
-            g_hash_table_insert(parent->priv->allowed_nodes,
-                                (gpointer) replica->node->priv->id, copy);
-        }
-        if (pe__unpack_resource(xml_remote, &replica->remote, parent,
-                                scheduler) != pcmk_rc_ok) {
-            return pcmk_rc_unpack_error;
-        }
-
-        // Make Coverity happy
-        pcmk__assert(replica->remote != NULL);
-
-        g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
-        while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
-            if (pcmk__is_pacemaker_remote_node(node)) {
-                /* Remote resources can only run on 'normal' cluster node */
-                node->assign->score = -PCMK_SCORE_INFINITY;
-            }
-        }
-
-        replica->node->priv->remote = replica->remote;
-
-        // Ensure pcmk__is_guest_or_bundle_node() functions correctly
-        replica->remote->priv->launcher = replica->container;
-
-        /* A bundle's #kind is closer to "container" (guest node) than the
-         * "remote" set by pe_create_node().
-         */
-        pcmk__insert_dup(replica->node->priv->attrs,
-                         CRM_ATTR_KIND, "container");
-
-        /* One effect of this is that unpack_launcher() will add
-         * replica->remote to replica->container's launched resources, which
-         * will make pe__resource_contains_guest_node() true for
-         * replica->container.
-         *
-         * replica->child does NOT get added to replica->container's launched
-         * resources. The only noticeable effect if it did would be for its
-         * fail count to be taken into account when checking
-         * replica->container's migration threshold.
-         */
-        parent->priv->children = g_list_append(parent->priv->children,
-                                               replica->remote);
     }
-    return pcmk_rc_ok;
+
+    replica->node->priv->remote = replica->remote;
+
+    // Ensure pcmk__is_guest_or_bundle_node() functions correctly
+    replica->remote->priv->launcher = replica->container;
+
+    /* A bundle's #kind is closer to "container" (guest node) than the "remote"
+     * set by pe__create_node()
+     */
+    pcmk__insert_dup(replica->node->priv->attrs, CRM_ATTR_KIND, "container");
+
+    /* One effect of this is that unpack_launcher() will add replica->remote to
+     * replica->container's launched resources, which will make
+     * pe__resource_contains_guest_node() true for replica->container.
+     *
+     * replica->child does NOT get added to replica->container's launched
+     * resources. The only noticeable effect if it did would be for its fail
+     * count to be taken into account when checking replica->container's
+     * migration threshold.
+     */
+    parent->priv->children = g_list_append(parent->priv->children,
+                                           replica->remote);
+
+done:
+    free(id);
+    pcmk__xml_free(xml_remote);
+    return rc;
 }
 
 static int
@@ -1165,9 +1165,12 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         GList *childIter = NULL;
         pe__bundle_port_t *port = NULL;
         GString *buffer = NULL;
+        int rc = pe__unpack_resource(xml_resource, &bundle_data->child, rsc,
+                                     rsc->priv->scheduler);
 
-        if (pe__unpack_resource(xml_resource, &(bundle_data->child), rsc,
-                                rsc->priv->scheduler) != pcmk_rc_ok) {
+        pcmk__xml_free(xml_resource);
+
+        if (rc != pcmk_rc_ok) {
             return FALSE;
         }
 
@@ -1848,18 +1851,10 @@ free_bundle_replica(pcmk__bundle_replica_t *replica)
 
     g_clear_pointer(&replica->node, pcmk__free_node_copy);
 
-    if (replica->ip) {
-        g_clear_pointer(&replica->ip->priv->xml, pcmk__xml_free);
-        pcmk__free_resource(replica->ip);
-    }
-    if (replica->container) {
-        g_clear_pointer(&replica->container->priv->xml, pcmk__xml_free);
-        pcmk__free_resource(replica->container);
-    }
-    if (replica->remote) {
-        g_clear_pointer(&replica->remote->priv->xml, pcmk__xml_free);
-        pcmk__free_resource(replica->remote);
-    }
+    pcmk__free_resource(replica->ip);
+    pcmk__free_resource(replica->container);
+    pcmk__free_resource(replica->remote);
+
     free(replica->ipaddr);
     free(replica);
 }
@@ -1890,10 +1885,7 @@ pe__free_bundle(pcmk_resource_t *rsc)
     g_list_free_full(bundle_data->ports, (GDestroyNotify)port_free);
     g_list_free(rsc->priv->children);
 
-    if(bundle_data->child) {
-        g_clear_pointer(&bundle_data->child->priv->xml, pcmk__xml_free);
-        pcmk__free_resource(bundle_data->child);
-    }
+    pcmk__free_resource(bundle_data->child);
 
     common_free(rsc);
 }

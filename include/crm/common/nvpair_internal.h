@@ -30,6 +30,7 @@ extern "C" {
 typedef struct {
     GHashTable *values;             // Where to put name/value pairs
     const char *first_id;           // Block with this XML ID should sort first
+    xmlDoc *doc;                    // XML document to use for resolving IDREFs
     pcmk_rule_input_t rule_input;   // Data used to evaluate rules
 
     /* Whether each block's values should overwrite any existing ones
@@ -47,6 +48,12 @@ gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
                              gpointer user_data);
 
 void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
+
+void pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                                const char *first_id,
+                                const pcmk_rule_input_t *rule_input,
+                                GHashTable *values, crm_time_t *next_change,
+                                xmlDoc *doc);
 
 int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
 char *pcmk__format_nvpair(const char *name, const char *value,

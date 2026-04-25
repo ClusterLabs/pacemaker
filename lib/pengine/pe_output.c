@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -396,12 +396,8 @@ is_mixed_version(pcmk_scheduler_t *scheduler)
 static void
 formatted_xml_buf(const pcmk_resource_t *rsc, GString *xml_buf, bool raw)
 {
-    if (raw && (rsc->priv->orig_xml != NULL)) {
-        pcmk__xml_string(rsc->priv->orig_xml, pcmk__xml_fmt_pretty, xml_buf,
-                         0);
-    } else {
-        pcmk__xml_string(rsc->priv->xml, pcmk__xml_fmt_pretty, xml_buf, 0);
-    }
+    pcmk__xml_string((raw? rsc->priv->orig_xml : rsc->priv->orig_xml),
+                     pcmk__xml_fmt_pretty, xml_buf, 0);
 }
 
 #define XPATH_DC_VERSION "//" PCMK_XE_NVPAIR    \

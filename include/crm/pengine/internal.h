@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -293,8 +293,9 @@ int pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, unsigned int opt
 void pe_fence_node(pcmk_scheduler_t *scheduler, pcmk_node_t *node,
                    const char *reason, bool priority_delay);
 
-pcmk_node_t *pe_create_node(const char *id, const char *uname, const char *type,
-                            int score, pcmk_scheduler_t *scheduler);
+pcmk_node_t *pe__create_node(const char *id, const char *uname,
+                             const char *type, int score,
+                             pcmk_scheduler_t *scheduler);
 
 int pe__common_output_text(pcmk__output_t *out, const pcmk_resource_t *rsc,
                            const char *name, const pcmk_node_t *node,

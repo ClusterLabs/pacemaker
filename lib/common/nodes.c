@@ -25,29 +25,31 @@ void
 pcmk__free_node(gpointer user_data)
 {
     pcmk_node_t *node = user_data;
-    const bool is_remote = pcmk__is_pacemaker_remote_node(node);
 
     if (node == NULL) {
-        return;
-    }
-    if (node->details == NULL) {
-        free(node);
         return;
     }
 
     /* This may be called after freeing resources, which means that we can't
      * use node->private->name for Pacemaker Remote nodes.
      */
-    pcmk__trace("Freeing node %s",
-                (is_remote? "(guest or remote)" : pcmk__node_name(node)));
+    pcmk__trace("Freeing node %s", pcmk__node_name(node));
 
-    g_clear_pointer(&node->priv->attrs, g_hash_table_destroy);
-    g_clear_pointer(&node->priv->utilization, g_hash_table_destroy);
-    g_clear_pointer(&node->priv->digest_cache, g_hash_table_destroy);
-    g_list_free(node->details->running_rsc);
-    g_list_free(node->priv->assigned_resources);
-    free(node->priv);
-    free(node->details);
+    if (node->details != NULL) {
+        g_list_free(node->details->running_rsc);
+        free(node->details);
+    }
+
+    if (node->priv != NULL) {
+        free(node->priv->id);
+        free(node->priv->name);
+        g_clear_pointer(&node->priv->attrs, g_hash_table_destroy);
+        g_clear_pointer(&node->priv->utilization, g_hash_table_destroy);
+        g_clear_pointer(&node->priv->digest_cache, g_hash_table_destroy);
+        g_list_free(node->priv->assigned_resources);
+        free(node->priv);
+    }
+
     free(node->assign);
     free(node);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -178,8 +178,8 @@ cluster_status(pcmk_scheduler_t * scheduler)
                            scheduler->priv->local_node_name) == NULL)) {
         pcmk__info("Creating a fake local node for %s",
                    scheduler->priv->local_node_name);
-        pe_create_node(scheduler->priv->local_node_name,
-                       scheduler->priv->local_node_name, NULL, 0, scheduler);
+        pe__create_node(scheduler->priv->local_node_name,
+                        scheduler->priv->local_node_name, NULL, 0, scheduler);
     }
 
     pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_status);

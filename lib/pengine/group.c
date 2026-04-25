@@ -207,7 +207,12 @@ group_unpack(pcmk_resource_t *rsc)
 
         pcmk_resource_t *new_rsc = NULL;
 
+        /* If clone_id is non-NULL, then the group XML (with its children) is a
+         * copy created while unpacking a clone. So setting the PCMK__META_CLONE
+         * attribute here does not affect the original CIB XML.
+         */
         pcmk__xe_set(xml_native_rsc, PCMK__META_CLONE, clone_id);
+
         if (pe__unpack_resource(xml_native_rsc, &new_rsc, rsc,
                                 rsc->priv->scheduler) != pcmk_rc_ok) {
             continue;
@@ -391,21 +396,8 @@ group_free(pcmk_resource_t * rsc)
 {
     CRM_CHECK(rsc != NULL, return);
 
-    pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
-
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
-
-        pcmk__assert(child_rsc != NULL);
-        pcmk__rsc_trace(child_rsc, "Freeing child %s", child_rsc->id);
-        pcmk__free_resource(child_rsc);
-    }
-
-    pcmk__rsc_trace(rsc, "Freeing child list");
-    g_list_free(rsc->priv->children);
-
+    pcmk__rsc_trace(rsc, "Freeing group %s, starting with child list", rsc->id);
+    g_list_free_full(rsc->priv->children, pcmk__free_resource);
     common_free(rsc);
 }
 
