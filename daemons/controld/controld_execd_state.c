@@ -14,13 +14,12 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/lrmd_internal.h>
+#include <crm/lrmd_internal.h>          // lrmd__*
 
 #include <pacemaker-internal.h>
 #include <pacemaker-controld.h>
 
 static GHashTable *lrm_state_table = NULL;
-void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
 
 static void
 free_rsc_info(gpointer value)
@@ -337,8 +336,7 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
         }
         lrm_state->conn = api;
         api->cmds->set_callback(api, remote_lrm_op_callback);
-        lrmd_internal_set_proxy_callback(api, lrm_state,
-                                         controld_remote_proxy_cb);
+        lrmd__proxy_set_callback(api, lrm_state, controld_remote_proxy_cb);
     }
 
     pcmk__trace("Initiating remote connection to %s:%d with timeout %dms",
