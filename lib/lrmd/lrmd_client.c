@@ -1111,45 +1111,6 @@ lrmd_handshake_async(lrmd_t * lrmd, const char *name)
     return rc;
 }
 
-static int
-lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
-{
-    int rc = pcmk_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    struct ipc_client_callbacks lrmd_callbacks = {
-        .dispatch = lrmd_ipc_dispatch,
-        .destroy = lrmd_ipc_connection_destroy
-    };
-
-    pcmk__info("Connecting to executor");
-
-    if (fd) {
-        /* No mainloop */
-        native->ipc = crm_ipc_new(CRM_SYSTEM_LRMD, 0);
-        if (native->ipc != NULL) {
-            rc = pcmk__connect_generic_ipc(native->ipc);
-            if (rc == pcmk_rc_ok) {
-                rc = pcmk__ipc_fd(native->ipc, fd);
-            }
-            if (rc != pcmk_rc_ok) {
-                pcmk__err("Connection to executor failed: %s", pcmk_rc_str(rc));
-                rc = -ENOTCONN;
-            }
-        }
-    } else {
-        native->source = mainloop_add_ipc_client(CRM_SYSTEM_LRMD, G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
-        native->ipc = mainloop_get_ipc_client(native->source);
-    }
-
-    if (native->ipc == NULL) {
-        pcmk__debug("Could not connect to the executor API");
-        rc = -ENOTCONN;
-    }
-
-    return rc;
-}
-
 /*!
  * \internal
  * \brief Initialize the Pacemaker Remote authentication key
@@ -1472,6 +1433,45 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
         return rc;
     }
     native->async_timer = timer_id;
+    return rc;
+}
+
+static int
+lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
+{
+    int rc = pcmk_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    struct ipc_client_callbacks lrmd_callbacks = {
+        .dispatch = lrmd_ipc_dispatch,
+        .destroy = lrmd_ipc_connection_destroy
+    };
+
+    pcmk__info("Connecting to executor");
+
+    if (fd) {
+        /* No mainloop */
+        native->ipc = crm_ipc_new(CRM_SYSTEM_LRMD, 0);
+        if (native->ipc != NULL) {
+            rc = pcmk__connect_generic_ipc(native->ipc);
+            if (rc == pcmk_rc_ok) {
+                rc = pcmk__ipc_fd(native->ipc, fd);
+            }
+            if (rc != pcmk_rc_ok) {
+                pcmk__err("Connection to executor failed: %s", pcmk_rc_str(rc));
+                rc = -ENOTCONN;
+            }
+        }
+    } else {
+        native->source = mainloop_add_ipc_client(CRM_SYSTEM_LRMD, G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
+        native->ipc = mainloop_get_ipc_client(native->source);
+    }
+
+    if (native->ipc == NULL) {
+        pcmk__debug("Could not connect to the executor API");
+        rc = -ENOTCONN;
+    }
+
     return rc;
 }
 
