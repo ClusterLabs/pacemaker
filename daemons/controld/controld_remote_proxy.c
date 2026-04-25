@@ -14,7 +14,6 @@
 #include <stddef.h>                     // NULL
 #include <stdint.h>                     // uint32_t
 #include <stdlib.h>                     // free
-#include <string.h>                     // strdup
 #include <sys/types.h>                  // ssize_t
 #include <time.h>                       // time
 
@@ -193,8 +192,8 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
 
     proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));
 
-    proxy->node_name = strdup(node_name);
-    proxy->session_id = strdup(session_id);
+    proxy->node_name = pcmk__str_copy(node_name);
+    proxy->session_id = pcmk__str_copy(session_id);
     proxy->lrm = lrmd;
 
     if ((pcmk__parse_server(crm_system_name) == pcmk_ipc_controld)
