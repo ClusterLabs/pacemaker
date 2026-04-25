@@ -19,18 +19,6 @@
 #include <crm/common/mainloop.h>    // mainloop_io_t
 #include <crm/lrmd.h>               // lrmd_t
 
-typedef struct {
-    char *node_name;
-    char *session_id;
-
-    bool is_local;
-
-    crm_ipc_t *ipc;
-    mainloop_io_t *source;
-    uint32_t last_request_id;
-    lrmd_t *lrm;
-} controld_remote_proxy_t;
-
 void controld_remote_proxy_table_init(void);
 void controld_remote_proxy_table_free(void);
 
