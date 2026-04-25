@@ -50,7 +50,6 @@ static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 // GnuTLS client handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
-static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
 static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
@@ -487,6 +486,34 @@ remote_executor_connected(lrmd_t *lrmd)
     lrmd_private_t *native = lrmd->lrmd_private;
 
     return (native->remote->tls_session != NULL);
+}
+
+static void
+lrmd_tls_disconnect(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->remote->tls_session) {
+        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
+    }
+
+    if (native->async_timer) {
+        g_source_remove(native->async_timer);
+        native->async_timer = 0;
+    }
+
+    if (native->source != NULL) {
+        /* Attached to mainloop */
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
+
+    } else if (native->sock >= 0) {
+        close(native->sock);
+        native->sock = -1;
+    }
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
 }
 
 /*!
@@ -1609,34 +1636,6 @@ lrmd_ipc_disconnect(lrmd_t * lrmd)
         crm_ipc_close(ipc);
         crm_ipc_destroy(ipc);
     }
-}
-
-static void
-lrmd_tls_disconnect(lrmd_t * lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->remote->tls_session) {
-        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
-    }
-
-    if (native->async_timer) {
-        g_source_remove(native->async_timer);
-        native->async_timer = 0;
-    }
-
-    if (native->source != NULL) {
-        /* Attached to mainloop */
-        g_clear_pointer(&native->source, mainloop_del_ipc_client);
-
-    } else if (native->sock >= 0) {
-        close(native->sock);
-        native->sock = -1;
-    }
-
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
 }
 
 static int
