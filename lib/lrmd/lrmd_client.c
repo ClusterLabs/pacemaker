@@ -347,14 +347,6 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     return 0;
 }
 
-static bool
-remote_executor_connected(lrmd_t * lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    return (native->remote->tls_session != NULL);
-}
-
 static void
 handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
 {
@@ -411,6 +403,14 @@ process_pending_notifies(gpointer userdata)
     g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
     native->pending_notify = NULL;
     return G_SOURCE_CONTINUE;
+}
+
+static bool
+remote_executor_connected(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    return (native->remote->tls_session != NULL);
 }
 
 /*!
