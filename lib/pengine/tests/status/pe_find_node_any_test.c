@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2024 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,8 @@
 #include <crm/pengine/internal.h>
 
 static void
-empty_list(void **state) {
+empty_list(void **state)
+{
     assert_null(pe_find_node_any(NULL, NULL, NULL));
     assert_null(pe_find_node_any(NULL, NULL, "cluster1"));
     assert_null(pe_find_node_any(NULL, "id1", NULL));
@@ -21,29 +22,22 @@ empty_list(void **state) {
 }
 
 static void
-non_null_list(void **state) {
+non_null_list(void **state)
+{
+    struct pcmk__node_private node1_priv = { .id = "id1", .name = "cluster1" };
+    struct pcmk__node_private node2_priv = { .id = "id2", .name = "cluster2" };
+    pcmk_node_t node1 = { .priv = &node1_priv };
+    pcmk_node_t node2 = { .priv = &node2_priv };
     GList *nodes = NULL;
 
-    pcmk_node_t *a = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
-    pcmk_node_t *b = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
+    nodes = g_list_prepend(nodes, &node1);
+    nodes = g_list_prepend(nodes, &node2);
 
-    a->priv = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
-    b->priv = pcmk__assert_alloc(1, sizeof(struct pcmk__node_private));
+    assert_ptr_equal(&node1, pe_find_node_any(nodes, "xyz", "cluster1"));
+    assert_ptr_equal(&node1, pe_find_node_any(nodes, NULL, "cluster1"));
 
-    a->priv->name = "cluster1";
-    a->priv->id = "id1";
-
-    b->priv->name = "cluster2";
-    b->priv->id = "id2";
-
-    nodes = g_list_append(nodes, a);
-    nodes = g_list_append(nodes, b);
-
-    assert_ptr_equal(b, pe_find_node_any(nodes, "id2", NULL));
-    assert_ptr_equal(b, pe_find_node_any(nodes, "ID2", NULL));
-
-    assert_ptr_equal(a, pe_find_node_any(nodes, "xyz", "cluster1"));
-    assert_ptr_equal(a, pe_find_node_any(nodes, NULL, "cluster1"));
+    assert_ptr_equal(&node2, pe_find_node_any(nodes, "id2", NULL));
+    assert_ptr_equal(&node2, pe_find_node_any(nodes, "ID2", NULL));
 
     assert_null(pe_find_node_any(nodes, "id10", NULL));
     assert_null(pe_find_node_any(nodes, "nodeid1", NULL));
@@ -52,10 +46,6 @@ non_null_list(void **state) {
     assert_null(pe_find_node_any(nodes, "id3", "cluster3"));
     assert_null(pe_find_node_any(nodes, NULL, NULL));
 
-    free(a->priv);
-    free(a);
-    free(b->priv);
-    free(b);
     g_list_free(nodes);
 }
 
