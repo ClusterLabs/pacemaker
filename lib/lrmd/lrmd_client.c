@@ -922,23 +922,6 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
     return rc;
 }
 
-static int
-lrmd_api_is_connected(lrmd_t * lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    switch (native->type) {
-        case pcmk__client_ipc:
-            return crm_ipc_connected(native->ipc);
-        case pcmk__client_tls:
-            return remote_executor_connected(lrmd);
-        default:
-            pcmk__err("Unsupported executor connection type (bug?): %d",
-                      native->type);
-            return 0;
-    }
-}
-
 /*!
  * \internal
  * \brief Send a prepared API command to the executor
@@ -1617,8 +1600,25 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
     return rc;
 }
 
+static int
+lrmd_api_is_connected(lrmd_t * lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    switch (native->type) {
+        case pcmk__client_ipc:
+            return crm_ipc_connected(native->ipc);
+        case pcmk__client_tls:
+            return remote_executor_connected(lrmd);
+        default:
+            pcmk__err("Unsupported executor connection type (bug?): %d",
+                      native->type);
+            return 0;
+    }
+}
+
 static void
-lrmd_ipc_disconnect(lrmd_t * lrmd)
+lrmd_ipc_disconnect(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
