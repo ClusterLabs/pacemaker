@@ -1019,21 +1019,6 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     return rc;
 }
 
-static int
-lrmd_api_poke_connection(lrmd_t * lrmd)
-{
-    int rc;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
-                           (native->type == pcmk__client_ipc));
-    pcmk__xml_free(data);
-
-    return rc < 0 ? rc : pcmk_ok;
-}
-
 // \return Standard Pacemaker return code
 int
 lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
@@ -1615,6 +1600,21 @@ lrmd_api_is_connected(lrmd_t * lrmd)
                       native->type);
             return 0;
     }
+}
+
+static int
+lrmd_api_poke_connection(lrmd_t *lrmd)
+{
+    int rc;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
+                           (native->type == pcmk__client_ipc));
+    pcmk__xml_free(data);
+
+    return rc < 0 ? rc : pcmk_ok;
 }
 
 static void
