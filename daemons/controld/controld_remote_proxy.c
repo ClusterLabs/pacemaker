@@ -33,7 +33,7 @@
 #include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
 #include <crm/crm.h>                    // crm_system_name
 #include <crm/lrmd.h>                   // lrmd_t
-#include <crm/lrmd_internal.h>          // lrmd__validate_remote_settings
+#include <crm/lrmd_internal.h>          // lrmd__*
 
 #include "pacemaker-controld.h"         // remote_proxy_*
 
@@ -49,7 +49,6 @@ typedef struct {
     lrmd_t *lrm;
 } remote_proxy_t;
 
-int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 static GHashTable *proxy_table = NULL;
 
 static void
@@ -93,7 +92,7 @@ remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
     wrapper = pcmk__xe_create(response, PCMK__XE_LRMD_IPC_MSG);
     pcmk__xml_copy(wrapper, msg);
 
-    lrmd_internal_proxy_send(proxy->lrm, response);
+    lrmd__proxy_send(proxy->lrm, response);
     pcmk__xml_free(response);
 }
 
@@ -111,7 +110,7 @@ remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
     pcmk__xml_copy(wrapper, msg);
 
     crm_log_xml_explicit(event, "EventForProxy");
-    lrmd_internal_proxy_send(proxy->lrm, event);
+    lrmd__proxy_send(proxy->lrm, event);
     pcmk__xml_free(event);
 }
 
@@ -153,7 +152,7 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
     xmlNode *msg = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP, LRMD_IPC_OP_DESTROY);
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, session_id);
-    lrmd_internal_proxy_send(lrmd, msg);
+    lrmd__proxy_send(lrmd, msg);
     pcmk__xml_free(msg);
 }
 
@@ -285,7 +284,7 @@ remote_proxy_ack_shutdown(lrmd_t *lrmd, bool ack)
 
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_OP,
                  (ack? LRMD_IPC_OP_SHUTDOWN_ACK : LRMD_IPC_OP_SHUTDOWN_NACK));
-    lrmd_internal_proxy_send(lrmd, msg);
+    lrmd__proxy_send(lrmd, msg);
     pcmk__xml_free(msg);
 }
 
