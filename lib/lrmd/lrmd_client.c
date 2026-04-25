@@ -45,7 +45,6 @@
 #define MAX_TLS_RECV_WAIT 10000
 
 static int lrmd_api_disconnect(lrmd_t * lrmd);
-static int lrmd_api_is_connected(lrmd_t * lrmd);
 
 /* IPC proxy functions */
 static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
@@ -526,7 +525,7 @@ lrmd_dispatch(lrmd_t * lrmd)
                       private->type);
     }
 
-    if (lrmd_api_is_connected(lrmd) == FALSE) {
+    if (!lrmd->cmds->is_connected(lrmd)) {
         pcmk__err("Connection closed");
         return FALSE;
     }
@@ -884,7 +883,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
 
-    if (!lrmd_api_is_connected(lrmd)) {
+    if (!lrmd->cmds->is_connected(lrmd)) {
         return -ENOTCONN;
     }
 
@@ -944,7 +943,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     }
 
   done:
-    if (lrmd_api_is_connected(lrmd) == FALSE) {
+    if (!lrmd->cmds->is_connected(lrmd)) {
         pcmk__err("Executor disconnected");
     }
 
