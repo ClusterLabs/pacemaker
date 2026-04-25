@@ -44,8 +44,6 @@
 
 #define MAX_TLS_RECV_WAIT 10000
 
-static int lrmd_api_disconnect(lrmd_t * lrmd);
-
 /* IPC proxy functions */
 static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 
@@ -1088,7 +1086,7 @@ lrmd_handshake(lrmd_t * lrmd, const char *name)
     pcmk__xml_free(hello);
 
     if (rc != pcmk_rc_ok) {
-        lrmd_api_disconnect(lrmd);
+        lrmd->cmds->disconnect(lrmd);
     }
 
     return rc;
@@ -1106,7 +1104,7 @@ lrmd_handshake_async(lrmd_t * lrmd, const char *name)
     if (rc == pcmk_rc_ok) {
         native->expected_late_replies++;
     } else {
-        lrmd_api_disconnect(lrmd);
+        lrmd->cmds->disconnect(lrmd);
     }
 
     pcmk__xml_free(hello);
