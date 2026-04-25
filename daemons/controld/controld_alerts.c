@@ -1,5 +1,5 @@
 /*
- * Copyright 2012-2025 the Pacemaker project contributors
+ * Copyright 2012-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,8 +45,8 @@ crmd_alert_node_event(pcmk__node_status_t *node)
         return;
     }
 
-    lrmd_send_node_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
-                         node->name, node->cluster_layer_id, node->state);
+    lrmd_send_node_alert(lrm_state->conn, crmd_alert_list, node->name,
+                         node->cluster_layer_id, node->state);
 }
 
 void
@@ -65,8 +65,8 @@ crmd_alert_fencing_op(stonith_event_t * e)
     }
 
     desc = stonith__event_description(e);
-    lrmd_send_fencing_alert((lrmd_t *) lrm_state->conn, crmd_alert_list,
-                            e->target, e->operation, desc, e->result);
+    lrmd_send_fencing_alert(lrm_state->conn, crmd_alert_list, e->target,
+                            e->operation, desc, e->result);
     free(desc);
 }
 
@@ -84,6 +84,5 @@ crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
         return;
     }
 
-    lrmd_send_resource_alert((lrmd_t *) lrm_state->conn, crmd_alert_list, node,
-                             op);
+    lrmd_send_resource_alert(lrm_state->conn, crmd_alert_list, node, op);
 }

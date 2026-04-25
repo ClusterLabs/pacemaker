@@ -184,8 +184,7 @@ should_purge_attributes(pcmk__node_status_t *node)
     connection_rsc = controld_get_executor_state(node->name, false);
 
     if (connection_rsc != NULL) {
-        lrmd_t *lrm = connection_rsc->conn;
-        time_t uptime = lrmd__uptime(lrm);
+        time_t uptime = lrmd__uptime(connection_rsc->conn);
         time_t now = time(NULL);
 
         /* Add 20s of fuzziness to give corosync a while to notice the remote
@@ -258,8 +257,7 @@ remote_node_up(const char *node_name)
     connection_rsc = controld_get_executor_state(node->name, false);
 
     if (connection_rsc != NULL) {
-        lrmd_t *lrm = connection_rsc->conn;
-        const char *start_state = lrmd__node_start_state(lrm);
+        const char *start_state = lrmd__node_start_state(connection_rsc->conn);
 
         if (start_state) {
             set_join_state(start_state, node->name, node->xml_id, true);
