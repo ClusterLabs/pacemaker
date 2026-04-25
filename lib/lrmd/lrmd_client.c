@@ -52,7 +52,6 @@ static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 
 static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
-static void lrmd_tls_connection_destroy(gpointer userdata);
 static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
 static gnutls_datum_t remote_key = { NULL, 0 };
@@ -664,45 +663,6 @@ lrmd_ipc_connection_destroy(gpointer userdata)
     }
 }
 
-static void
-lrmd_tls_connection_destroy(gpointer userdata)
-{
-    lrmd_t *lrmd = userdata;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    pcmk__info("TLS connection destroyed");
-
-    if (native->remote->tls_session) {
-        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
-    }
-
-    g_clear_pointer(&native->tls, pcmk__free_tls);
-
-    if (native->sock >= 0) {
-        close(native->sock);
-    }
-
-    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
-
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
-
-    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
-
-    g_clear_pointer(&native->remote->buffer, free);
-    g_clear_pointer(&native->remote->start_state, free);
-    native->source = 0;
-    native->sock = -1;
-
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.remote_nodename = native->remote_nodename;
-        event.type = lrmd_event_disconnect;
-        native->callback(&event);
-    }
-}
-
 // \return Standard Pacemaker return code
 int
 lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
@@ -1180,6 +1140,45 @@ lrmd__init_remote_key(gnutls_datum_t *key)
                DEFAULT_REMOTE_KEY_LOCATION ": %s",
                pcmk_rc_str(rc));
     return ENOKEY;
+}
+
+static void
+lrmd_tls_connection_destroy(gpointer userdata)
+{
+    lrmd_t *lrmd = userdata;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    pcmk__info("TLS connection destroyed");
+
+    if (native->remote->tls_session) {
+        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
+    }
+
+    g_clear_pointer(&native->tls, pcmk__free_tls);
+
+    if (native->sock >= 0) {
+        close(native->sock);
+    }
+
+    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+
+    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
+
+    g_clear_pointer(&native->remote->buffer, free);
+    g_clear_pointer(&native->remote->start_state, free);
+    native->source = 0;
+    native->sock = -1;
+
+    if (native->callback) {
+        lrmd_event_data_t event = { 0, };
+        event.remote_nodename = native->remote_nodename;
+        event.type = lrmd_event_disconnect;
+        native->callback(&event);
+    }
 }
 
 static void
