@@ -95,7 +95,6 @@ typedef struct {
 } lrmd_private_t;
 
 static int process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native);
-static void report_async_connection_result(lrmd_t * lrmd, int rc);
 
 static lrmd_list_t *
 lrmd_list_add(lrmd_list_t * head, const char *value)
@@ -345,6 +344,20 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         pcmk__xml_free(msg);
     }
     return 0;
+}
+
+static void
+report_async_connection_result(lrmd_t *lrmd, int rc)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->callback) {
+        lrmd_event_data_t event = { 0, };
+        event.type = lrmd_event_connect;
+        event.remote_nodename = native->remote_nodename;
+        event.connection_rc = rc;
+        native->callback(&event);
+    }
 }
 
 static void
@@ -1169,20 +1182,6 @@ lrmd__init_remote_key(gnutls_datum_t *key)
                DEFAULT_REMOTE_KEY_LOCATION ": %s",
                pcmk_rc_str(rc));
     return ENOKEY;
-}
-
-static void
-report_async_connection_result(lrmd_t * lrmd, int rc)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.type = lrmd_event_connect;
-        event.remote_nodename = native->remote_nodename;
-        event.connection_rc = rc;
-        native->callback(&event);
-    }
 }
 
 static void
