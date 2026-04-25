@@ -38,13 +38,25 @@
 
 #include "pacemaker-controld.h"         // remote_proxy_*
 
+typedef struct {
+    char *node_name;
+    char *session_id;
+
+    bool is_local;
+
+    crm_ipc_t *ipc;
+    mainloop_io_t *source;
+    uint32_t last_request_id;
+    lrmd_t *lrm;
+} remote_proxy_t;
+
 int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 static GHashTable *proxy_table = NULL;
 
 static void
 remote_proxy_free(gpointer data)
 {
-    controld_remote_proxy_t *proxy = data;
+    remote_proxy_t *proxy = data;
 
     pcmk__trace("Freed proxy session ID %s", proxy->session_id);
     free(proxy->node_name);
@@ -69,8 +81,7 @@ controld_remote_proxy_table_free(void)
 }
 
 static void
-remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
-                            int msg_id)
+remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg, int msg_id)
 {
     /* sending to the remote node a response msg. */
     xmlNode *response = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
@@ -88,7 +99,7 @@ remote_proxy_relay_response(controld_remote_proxy_t *proxy, xmlNode *msg,
 }
 
 static void
-remote_proxy_relay_event(controld_remote_proxy_t *proxy, xmlNode *msg)
+remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
 {
     /* sending to the remote node an event msg. */
     xmlNode *event = pcmk__xe_create(NULL, PCMK__XE_LRMD_IPC_PROXY);
@@ -111,7 +122,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     // Async responses from servers to clients via the remote executor
     xmlNode *xml = NULL;
     uint32_t flags = 0;
-    controld_remote_proxy_t *proxy = userdata;
+    remote_proxy_t *proxy = userdata;
 
     xml = pcmk__xml_parse(buffer);
     if (xml == NULL) {
@@ -150,7 +161,7 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 static void
 remote_proxy_disconnected(gpointer userdata)
 {
-    controld_remote_proxy_t *proxy = userdata;
+    remote_proxy_t *proxy = userdata;
 
     proxy->source = NULL;
     proxy->ipc = NULL;
@@ -163,7 +174,7 @@ remote_proxy_disconnected(gpointer userdata)
     g_hash_table_remove(proxy_table, proxy->session_id);
 }
 
-static controld_remote_proxy_t *
+static remote_proxy_t *
 remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
                  const char *channel)
 {
@@ -172,7 +183,7 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
         .destroy = remote_proxy_disconnected
     };
 
-    controld_remote_proxy_t *proxy = NULL;
+    remote_proxy_t *proxy = NULL;
 
     if(channel == NULL) {
         pcmk__err("No channel specified to proxy");
@@ -180,7 +191,7 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
         return NULL;
     }
 
-    proxy = pcmk__assert_alloc(1, sizeof(controld_remote_proxy_t));
+    proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));
 
     proxy->node_name = strdup(node_name);
     proxy->session_id = strdup(session_id);
@@ -212,7 +223,7 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
 int
 controld_remote_proxy_send(const char *session, xmlNode *msg)
 {
-    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
     if (proxy == NULL) {
         return ENXIO;
@@ -292,7 +303,7 @@ crmd_proxy_dispatch(const char *session, xmlNode *msg)
 }
 
 static void
-remote_proxy_end_session(controld_remote_proxy_t *proxy)
+remote_proxy_end_session(remote_proxy_t *proxy)
 {
     if (proxy == NULL) {
         return;
@@ -310,7 +321,7 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
     lrm_state_t *lrm_state = user_data;
     const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
-    controld_remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
     int msg_id = 0;
 
     /* sessions are raw ipc connections to IPC,
@@ -540,11 +551,11 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
     }
 }
 
-static controld_remote_proxy_t *
+static remote_proxy_t *
 find_proxy_by_node(const char *node_name)
 {
     GHashTableIter gIter;
-    controld_remote_proxy_t *proxy = NULL;
+    remote_proxy_t *proxy = NULL;
 
     g_hash_table_iter_init(&gIter, proxy_table);
 
@@ -561,7 +572,7 @@ find_proxy_by_node(const char *node_name)
 static gboolean
 remote_proxy_node_matches(void *key, void *value, void *user_data)
 {
-    controld_remote_proxy_t *proxy = value;
+    remote_proxy_t *proxy = value;
     const char *node_name = user_data;
 
     return pcmk__str_eq(proxy->node_name, node_name, pcmk__str_casei);
@@ -570,7 +581,7 @@ remote_proxy_node_matches(void *key, void *value, void *user_data)
 void
 controld_remote_proxy_disconnect_node(const char *node_name)
 {
-    controld_remote_proxy_t *proxy = NULL;
+    remote_proxy_t *proxy = NULL;
 
     CRM_CHECK(proxy_table != NULL, return);
 
