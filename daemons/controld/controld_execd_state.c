@@ -247,7 +247,7 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
 
     controld_remote_proxy_disconnect_node(lrm_state->node_name);
 
-    ((lrmd_t *) lrm_state->conn)->cmds->disconnect(lrm_state->conn);
+    lrm_state->conn->cmds->disconnect(lrm_state->conn);
 
     if (!pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
         removed = g_hash_table_foreach_remove(lrm_state->active_ops,
@@ -276,7 +276,7 @@ lrm_state_is_connected(lrm_state_t * lrm_state)
     if (!lrm_state->conn) {
         return FALSE;
     }
-    return ((lrmd_t *) lrm_state->conn)->cmds->is_connected(lrm_state->conn);
+    return lrm_state->conn->cmds->is_connected(lrm_state->conn);
 }
 
 int
@@ -286,7 +286,7 @@ lrm_state_poke_connection(lrm_state_t * lrm_state)
     if (!lrm_state->conn) {
         return -ENOTCONN;
     }
-    return ((lrmd_t *) lrm_state->conn)->cmds->poke_connection(lrm_state->conn);
+    return lrm_state->conn->cmds->poke_connection(lrm_state->conn);
 }
 
 // \return Standard Pacemaker return code
@@ -306,8 +306,7 @@ controld_connect_local_executor(lrm_state_t *lrm_state)
         lrm_state->conn = api;
     }
 
-    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect(lrm_state->conn,
-                                                     CRM_SYSTEM_CRMD, NULL);
+    rc = lrm_state->conn->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
     rc = pcmk_legacy2rc(rc);
 
     if (rc == pcmk_rc_ok) {
@@ -344,9 +343,8 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
 
     pcmk__trace("Initiating remote connection to %s:%d with timeout %dms",
                 server, port, timeout_ms);
-    rc = ((lrmd_t *) lrm_state->conn)->cmds->connect_async(lrm_state->conn,
-                                                           lrm_state->node_name,
-                                                           timeout_ms);
+    rc = lrm_state->conn->cmds->connect_async(lrm_state->conn,
+                                              lrm_state->node_name, timeout_ms);
     if (rc == pcmk_ok) {
         lrm_state->num_lrm_register_fails = 0;
     } else {
@@ -384,8 +382,9 @@ lrm_state_get_metadata(lrm_state_t * lrm_state,
     params = lrmd_key_value_add(params, CRM_META "_" PCMK__META_ON_NODE,
                                 lrm_state->node_name);
 
-    return ((lrmd_t *) lrm_state->conn)->cmds->get_metadata_params(lrm_state->conn,
-            class, provider, agent, output, options, params);
+    return lrm_state->conn->cmds->get_metadata_params(lrm_state->conn, class,
+                                                      provider, agent, output,
+                                                      options, params);
 }
 
 int
@@ -403,8 +402,8 @@ lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id, const char *action,
     if (is_remote_lrmd_ra(NULL, NULL, rsc_id)) {
         return remote_ra_cancel(lrm_state, rsc_id, action, interval_ms);
     }
-    return ((lrmd_t *) lrm_state->conn)->cmds->cancel(lrm_state->conn, rsc_id,
-                                                      action, interval_ms);
+    return lrm_state->conn->cmds->cancel(lrm_state->conn, rsc_id, action,
+                                         interval_ms);
 }
 
 lrmd_rsc_info_t *
@@ -422,7 +421,8 @@ lrm_state_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id, enum lrmd_ca
     rsc = g_hash_table_lookup(lrm_state->rsc_info_cache, rsc_id);
     if (rsc == NULL) {
         /* only contact the lrmd if we don't already have a cached rsc info */
-        rsc = ((lrmd_t *) lrm_state->conn)->cmds->get_rsc_info(lrm_state->conn, rsc_id, options);
+        rsc = lrm_state->conn->cmds->get_rsc_info(lrm_state->conn, rsc_id,
+                                                  options);
         if (rsc == NULL) {
 		    return NULL;
         }
@@ -483,12 +483,10 @@ controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                            start_delay_ms, params, call_id);
 
     } else {
-        rc = ((lrmd_t *) lrm_state->conn)->cmds->exec(lrm_state->conn, rsc_id,
-                                                      action, userdata,
-                                                      interval_ms, timeout_ms,
-                                                      start_delay_ms,
-                                                      lrmd_opt_notify_changes_only,
-                                                      params);
+        rc = lrm_state->conn->cmds->exec(lrm_state->conn, rsc_id, action,
+                                         userdata, interval_ms, timeout_ms,
+                                         start_delay_ms,
+                                         lrmd_opt_notify_changes_only, params);
         if (rc < 0) {
             rc = pcmk_legacy2rc(rc);
         } else {
@@ -500,14 +498,11 @@ controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
 }
 
 int
-lrm_state_register_rsc(lrm_state_t * lrm_state,
-                       const char *rsc_id,
-                       const char *class,
-                       const char *provider, const char *agent, enum lrmd_call_options options)
+lrm_state_register_rsc(lrm_state_t *lrm_state, const char *rsc_id,
+                       const char *class, const char *provider,
+                       const char *agent, enum lrmd_call_options options)
 {
-    lrmd_t *conn = (lrmd_t *) lrm_state->conn;
-
-    if (conn == NULL) {
+    if (lrm_state->conn == NULL) {
         return -ENOTCONN;
     }
 
@@ -518,15 +513,15 @@ lrm_state_register_rsc(lrm_state_t * lrm_state,
     /* @TODO Implement an asynchronous version of this (currently a blocking
      * call to the lrmd).
      */
-    return conn->cmds->register_rsc(lrm_state->conn, rsc_id, class, provider,
-                                    agent, options);
+    return lrm_state->conn->cmds->register_rsc(lrm_state->conn, rsc_id, class,
+                                               provider, agent, options);
 }
 
 int
-lrm_state_unregister_rsc(lrm_state_t * lrm_state,
-                         const char *rsc_id, enum lrmd_call_options options)
+lrm_state_unregister_rsc(lrm_state_t *lrm_state, const char *rsc_id,
+                         enum lrmd_call_options options)
 {
-    if (!lrm_state->conn) {
+    if (lrm_state->conn == NULL) {
         return -ENOTCONN;
     }
 
@@ -542,5 +537,6 @@ lrm_state_unregister_rsc(lrm_state_t * lrm_state,
      * function should always treat it as an async operation. The executor API
      * should make an async version available.
      */
-    return ((lrmd_t *) lrm_state->conn)->cmds->unregister_rsc(lrm_state->conn, rsc_id, options);
+    return lrm_state->conn->cmds->unregister_rsc(lrm_state->conn, rsc_id,
+                                                 options);
 }
