@@ -1192,31 +1192,6 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
     lrmd_tls_connection_destroy(lrmd);
 }
 
-static void
-tls_handshake_succeeded(lrmd_t *lrmd)
-{
-    int rc = pcmk_rc_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    /* Now that the handshake is done, see if any client TLS certificate is
-     * close to its expiration date and log if so.  If a TLS certificate is not
-     * in use, this function will just return so we don't need to check for the
-     * session type here.
-     */
-    pcmk__tls_check_cert_expiration(native->remote->tls_session);
-
-    pcmk__info("TLS connection to Pacemaker Remote server %s:%d succeeded",
-               native->server, native->port);
-    rc = add_tls_to_mainloop(lrmd, true);
-
-    /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
-     * to wait until we read the async reply to report anything.
-     */
-    if (rc != pcmk_rc_ok) {
-        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
-    }
-}
-
 /*!
  * \internal
  * \brief Perform a TLS client handshake with a Pacemaker Remote server
@@ -1286,147 +1261,6 @@ struct handshake_data_s {
     time_t start_time;
     int timeout_sec;
 };
-
-static gboolean
-try_handshake_cb(gpointer user_data)
-{
-    struct handshake_data_s *hs = user_data;
-    lrmd_t *lrmd = hs->lrmd;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    pcmk__remote_t *remote = native->remote;
-
-    int rc = pcmk_rc_ok;
-    int tls_rc = GNUTLS_E_SUCCESS;
-
-    if (time(NULL) >= hs->start_time + hs->timeout_sec) {
-        rc = ETIME;
-
-        tls_handshake_failed(lrmd, GNUTLS_E_TIMEDOUT, rc);
-        free(hs);
-        return 0;
-    }
-
-    rc = pcmk__tls_client_try_handshake(remote, &tls_rc);
-
-    if (rc == pcmk_rc_ok) {
-        tls_handshake_succeeded(lrmd);
-        free(hs);
-        return 0;
-    } else if (rc == EAGAIN) {
-        mainloop_set_trigger(native->handshake_trigger);
-        return 1;
-    } else {
-        rc = EKEYREJECTED;
-        tls_handshake_failed(lrmd, tls_rc, rc);
-        free(hs);
-        return 0;
-    }
-}
-
-static void
-lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
-{
-    lrmd_t *lrmd = userdata;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    int tls_rc = GNUTLS_E_SUCCESS;
-
-    native->async_timer = 0;
-
-    if (rc != pcmk_rc_ok) {
-        lrmd_tls_connection_destroy(lrmd);
-        pcmk__info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                   QB_XS " rc=%d",
-                   native->server, native->port, pcmk_rc_str(rc), rc);
-        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
-        return;
-    }
-
-    /* The TCP connection was successful, so establish the TLS connection. */
-
-    native->sock = sock;
-
-    if (native->tls == NULL) {
-        rc = pcmk__init_tls(&native->tls, false, true);
-
-        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
-            lrmd_tls_connection_destroy(lrmd);
-            report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
-            return;
-        }
-    }
-
-    if (!pcmk__x509_enabled()) {
-        gnutls_datum_t psk_key = { NULL, 0 };
-
-        rc = lrmd__init_remote_key(&psk_key);
-        if (rc != pcmk_rc_ok) {
-            pcmk__info("Could not connect to Pacemaker Remote at %s:%d: %s "
-                       QB_XS " rc=%d",
-                       native->server, native->port, pcmk_rc_str(rc), rc);
-            lrmd_tls_connection_destroy(lrmd);
-            report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
-            return;
-        }
-
-        pcmk__tls_client_add_psk_key(native->tls, DEFAULT_REMOTE_USERNAME,
-                                     &psk_key, true);
-        gnutls_free(psk_key.data);
-    }
-
-    native->remote->tls_session = pcmk__new_tls_session(native->tls, sock);
-    if (native->remote->tls_session == NULL) {
-        lrmd_tls_connection_destroy(lrmd);
-        report_async_connection_result(lrmd, -EPROTO);
-        return;
-    }
-
-    /* If the TLS handshake immediately succeeds or fails, we can handle that
-     * now without having to deal with mainloops and retries.  Otherwise, add a
-     * trigger to keep trying until we get a result (or it times out).
-     */
-    rc = pcmk__tls_client_try_handshake(native->remote, &tls_rc);
-    if (rc == EAGAIN) {
-        struct handshake_data_s *hs = NULL;
-
-        if (native->handshake_trigger != NULL) {
-            return;
-        }
-
-        hs = pcmk__assert_alloc(1, sizeof(struct handshake_data_s));
-        hs->lrmd = lrmd;
-        hs->start_time = time(NULL);
-        hs->timeout_sec = TLS_HANDSHAKE_TIMEOUT;
-
-        native->handshake_trigger = mainloop_add_trigger(G_PRIORITY_LOW, try_handshake_cb, hs);
-        mainloop_set_trigger(native->handshake_trigger);
-
-    } else if (rc == pcmk_rc_ok) {
-        tls_handshake_succeeded(lrmd);
-
-    } else {
-        tls_handshake_failed(lrmd, tls_rc, rc);
-    }
-}
-
-static int
-lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
-{
-    int rc = pcmk_rc_ok;
-    int timer_id = 0;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    native->sock = -1;
-    rc = pcmk__connect_remote(native->server, native->port, timeout, &timer_id,
-                              &(native->sock), lrmd, lrmd_tcp_connect_cb);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Pacemaker Remote connection to %s:%d failed: %s "
-                   QB_XS " rc=%d",
-                   native->server, native->port, pcmk_rc_str(rc), rc);
-        return rc;
-    }
-    native->async_timer = timer_id;
-    return rc;
-}
 
 static int
 lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
@@ -1585,6 +1419,172 @@ lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
         rc = pcmk_rc2legacy(rc);
     }
 
+    return rc;
+}
+
+static void
+tls_handshake_succeeded(lrmd_t *lrmd)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    /* Now that the handshake is done, see if any client TLS certificate is
+     * close to its expiration date and log if so.  If a TLS certificate is not
+     * in use, this function will just return so we don't need to check for the
+     * session type here.
+     */
+    pcmk__tls_check_cert_expiration(native->remote->tls_session);
+
+    pcmk__info("TLS connection to Pacemaker Remote server %s:%d succeeded",
+               native->server, native->port);
+    rc = add_tls_to_mainloop(lrmd, true);
+
+    /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
+     * to wait until we read the async reply to report anything.
+     */
+    if (rc != pcmk_rc_ok) {
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+    }
+}
+
+static gboolean
+try_handshake_cb(gpointer user_data)
+{
+    struct handshake_data_s *hs = user_data;
+    lrmd_t *lrmd = hs->lrmd;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    pcmk__remote_t *remote = native->remote;
+
+    int rc = pcmk_rc_ok;
+    int tls_rc = GNUTLS_E_SUCCESS;
+
+    if (time(NULL) >= hs->start_time + hs->timeout_sec) {
+        rc = ETIME;
+
+        tls_handshake_failed(lrmd, GNUTLS_E_TIMEDOUT, rc);
+        free(hs);
+        return 0;
+    }
+
+    rc = pcmk__tls_client_try_handshake(remote, &tls_rc);
+
+    if (rc == pcmk_rc_ok) {
+        tls_handshake_succeeded(lrmd);
+        free(hs);
+        return 0;
+    } else if (rc == EAGAIN) {
+        mainloop_set_trigger(native->handshake_trigger);
+        return 1;
+    } else {
+        rc = EKEYREJECTED;
+        tls_handshake_failed(lrmd, tls_rc, rc);
+        free(hs);
+        return 0;
+    }
+}
+
+static void
+lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
+{
+    lrmd_t *lrmd = userdata;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    int tls_rc = GNUTLS_E_SUCCESS;
+
+    native->async_timer = 0;
+
+    if (rc != pcmk_rc_ok) {
+        lrmd_tls_connection_destroy(lrmd);
+        pcmk__info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                   QB_XS " rc=%d",
+                   native->server, native->port, pcmk_rc_str(rc), rc);
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+        return;
+    }
+
+    /* The TCP connection was successful, so establish the TLS connection. */
+
+    native->sock = sock;
+
+    if (native->tls == NULL) {
+        rc = pcmk__init_tls(&native->tls, false, true);
+
+        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
+            lrmd_tls_connection_destroy(lrmd);
+            report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+            return;
+        }
+    }
+
+    if (!pcmk__x509_enabled()) {
+        gnutls_datum_t psk_key = { NULL, 0 };
+
+        rc = lrmd__init_remote_key(&psk_key);
+        if (rc != pcmk_rc_ok) {
+            pcmk__info("Could not connect to Pacemaker Remote at %s:%d: %s "
+                       QB_XS " rc=%d",
+                       native->server, native->port, pcmk_rc_str(rc), rc);
+            lrmd_tls_connection_destroy(lrmd);
+            report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+            return;
+        }
+
+        pcmk__tls_client_add_psk_key(native->tls, DEFAULT_REMOTE_USERNAME,
+                                     &psk_key, true);
+        gnutls_free(psk_key.data);
+    }
+
+    native->remote->tls_session = pcmk__new_tls_session(native->tls, sock);
+    if (native->remote->tls_session == NULL) {
+        lrmd_tls_connection_destroy(lrmd);
+        report_async_connection_result(lrmd, -EPROTO);
+        return;
+    }
+
+    /* If the TLS handshake immediately succeeds or fails, we can handle that
+     * now without having to deal with mainloops and retries.  Otherwise, add a
+     * trigger to keep trying until we get a result (or it times out).
+     */
+    rc = pcmk__tls_client_try_handshake(native->remote, &tls_rc);
+    if (rc == EAGAIN) {
+        struct handshake_data_s *hs = NULL;
+
+        if (native->handshake_trigger != NULL) {
+            return;
+        }
+
+        hs = pcmk__assert_alloc(1, sizeof(struct handshake_data_s));
+        hs->lrmd = lrmd;
+        hs->start_time = time(NULL);
+        hs->timeout_sec = TLS_HANDSHAKE_TIMEOUT;
+
+        native->handshake_trigger = mainloop_add_trigger(G_PRIORITY_LOW, try_handshake_cb, hs);
+        mainloop_set_trigger(native->handshake_trigger);
+
+    } else if (rc == pcmk_rc_ok) {
+        tls_handshake_succeeded(lrmd);
+
+    } else {
+        tls_handshake_failed(lrmd, tls_rc, rc);
+    }
+}
+
+static int
+lrmd_tls_connect_async(lrmd_t *lrmd, int timeout)
+{
+    int rc = pcmk_rc_ok;
+    int timer_id = 0;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    native->sock = -1;
+    rc = pcmk__connect_remote(native->server, native->port, timeout, &timer_id,
+                              &(native->sock), lrmd, lrmd_tcp_connect_cb);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Pacemaker Remote connection to %s:%d failed: %s "
+                   QB_XS " rc=%d",
+                   native->server, native->port, pcmk_rc_str(rc), rc);
+        return rc;
+    }
+    native->async_timer = timer_id;
     return rc;
 }
 
