@@ -48,7 +48,6 @@ static int lrmd_api_disconnect(lrmd_t * lrmd);
 static int lrmd_api_is_connected(lrmd_t * lrmd);
 
 /* IPC proxy functions */
-int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
 static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 
 // GnuTLS client handshake timeout in seconds
@@ -1898,14 +1897,17 @@ lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg)
 }
 
 int
-lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
+lrmd__proxy_send(lrmd_t *lrmd, xmlNode *msg)
 {
+    CRM_CHECK(msg != NULL, return -EINVAL);
+
     if (lrmd == NULL) {
         return -ENOTCONN;
     }
-    pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
 
+    pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
     pcmk__log_xml_trace(msg, "PROXY_OUTBOUND");
+
     return lrmd_send_xml_no_reply(lrmd, msg);
 }
 
