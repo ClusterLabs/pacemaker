@@ -342,18 +342,66 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
     return 0;
 }
 
-static void
-report_async_connection_result(lrmd_t *lrmd, int rc)
+/*!
+ * \internal
+ * \brief Notify trigger handler
+ *
+ * \param[in,out] userdata API connection
+ *
+ * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
+ *         mainloop
+ */
+static int
+process_pending_notifies(gpointer userdata)
+{
+    lrmd_t *lrmd = userdata;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->pending_notify == NULL) {
+        return G_SOURCE_CONTINUE;
+    }
+
+    pcmk__trace("Processing pending notifies");
+    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+    return G_SOURCE_CONTINUE;
+}
+
+static bool
+remote_executor_connected(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.type = lrmd_event_connect;
-        event.remote_nodename = native->remote_nodename;
-        event.connection_rc = rc;
-        native->callback(&event);
+    return (native->remote->tls_session != NULL);
+}
+
+static void
+lrmd_tls_disconnect(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->remote->tls_session) {
+        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     }
+
+    if (native->async_timer) {
+        g_source_remove(native->async_timer);
+        native->async_timer = 0;
+    }
+
+    if (native->source != NULL) {
+        /* Attached to mainloop */
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
+
+    } else if (native->sock >= 0) {
+        close(native->sock);
+        native->sock = -1;
+    }
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
 }
 
 static void
@@ -423,6 +471,20 @@ process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
 }
 
 static void
+report_async_connection_result(lrmd_t *lrmd, int rc)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->callback) {
+        lrmd_event_data_t event = { 0, };
+        event.type = lrmd_event_connect;
+        event.remote_nodename = native->remote_nodename;
+        event.connection_rc = rc;
+        native->callback(&event);
+    }
+}
+
+static void
 handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -452,68 +514,6 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
             pcmk__err("Got outdated Pacemaker Remote reply %d", reply_id);
         }
     }
-}
-
-/*!
- * \internal
- * \brief Notify trigger handler
- *
- * \param[in,out] userdata API connection
- *
- * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
- *         mainloop
- */
-static int
-process_pending_notifies(gpointer userdata)
-{
-    lrmd_t *lrmd = userdata;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->pending_notify == NULL) {
-        return G_SOURCE_CONTINUE;
-    }
-
-    pcmk__trace("Processing pending notifies");
-    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
-    return G_SOURCE_CONTINUE;
-}
-
-static bool
-remote_executor_connected(lrmd_t *lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    return (native->remote->tls_session != NULL);
-}
-
-static void
-lrmd_tls_disconnect(lrmd_t *lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->remote->tls_session) {
-        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
-    }
-
-    if (native->async_timer) {
-        g_source_remove(native->async_timer);
-        native->async_timer = 0;
-    }
-
-    if (native->source != NULL) {
-        /* Attached to mainloop */
-        g_clear_pointer(&native->source, mainloop_del_ipc_client);
-
-    } else if (native->sock >= 0) {
-        close(native->sock);
-        native->sock = -1;
-    }
-
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
 }
 
 /*!
