@@ -295,14 +295,8 @@ controld_connect_local_executor(lrm_state_t *lrm_state)
     int rc = pcmk_rc_ok;
 
     if (lrm_state->conn == NULL) {
-        lrmd_t *api = NULL;
-
-        rc = lrmd__new(&api, NULL, NULL, 0);
-        if (rc != pcmk_rc_ok) {
-            return rc;
-        }
-        api->cmds->set_callback(api, lrm_op_callback);
-        lrm_state->conn = api;
+        lrm_state->conn = lrmd_api_new();
+        lrm_state->conn->cmds->set_callback(lrm_state->conn, lrm_op_callback);
     }
 
     rc = lrm_state->conn->cmds->connect(lrm_state->conn, CRM_SYSTEM_CRMD, NULL);
