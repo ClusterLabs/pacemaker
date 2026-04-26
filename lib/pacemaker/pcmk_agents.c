@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2024 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -22,10 +22,7 @@ pcmk__list_alternatives(pcmk__output_t *out, const char *agent_spec)
 
     pcmk__assert((out != NULL) && (agent_spec != NULL));
 
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
+    lrmd_conn = lrmd_api_new();
 
     rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
 
@@ -35,7 +32,6 @@ pcmk__list_alternatives(pcmk__output_t *out, const char *agent_spec)
         rc = pcmk_rc_error;
     }
 
-error:
     if (rc != pcmk_rc_ok) {
        out->err(out, _("No %s found for %s"), "OCF providers", agent_spec);
        rc = ENXIO;
@@ -83,13 +79,9 @@ pcmk__list_agents(pcmk__output_t *out, char *agent_spec)
 
     pcmk__assert((out != NULL) && (agent_spec != NULL));
 
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
+    lrmd_conn = lrmd_api_new();
 
     provider = strchr(agent_spec, ':');
-
     if (provider) {
         *provider++ = 0;
     }
@@ -102,7 +94,6 @@ pcmk__list_agents(pcmk__output_t *out, char *agent_spec)
         rc = pcmk_rc_error;
     }
 
-error:
     if (rc != pcmk_rc_ok) {
         if (provider == NULL) {
            out->err(out, _("No agents found for standard '%s'"), agent_spec);
@@ -144,10 +135,7 @@ pcmk__list_providers(pcmk__output_t *out, const char *agent_spec)
 
     pcmk__assert(out != NULL);
 
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
+    lrmd_conn = lrmd_api_new();
 
     rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, agent_spec, &list);
 
@@ -157,7 +145,6 @@ pcmk__list_providers(pcmk__output_t *out, const char *agent_spec)
         rc = pcmk_rc_error;
     }
 
-error:
     if (rc != pcmk_rc_ok) {
         if (agent_spec == NULL) {
            out->err(out, _("No %s found"), "OCF providers");
@@ -200,10 +187,7 @@ pcmk__list_standards(pcmk__output_t *out)
 
     pcmk__assert(out != NULL);
 
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        goto error;
-    }
+    lrmd_conn = lrmd_api_new();
 
     rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
 
@@ -213,7 +197,6 @@ pcmk__list_standards(pcmk__output_t *out)
         rc = pcmk_rc_error;
     }
 
-error:
     if (rc != pcmk_rc_ok) {
        out->err(out, _("No %s found"), "standards");
        rc = ENXIO;
