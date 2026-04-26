@@ -44,9 +44,6 @@
 
 #define MAX_TLS_RECV_WAIT 10000
 
-/* IPC proxy functions */
-static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
-
 // GnuTLS client handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
@@ -256,11 +253,16 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
     lrmd_event_data_t event = { 0, };
 
     if (proxy_session != NULL) {
-        /* this is proxy business */
-        lrmd_internal_proxy_dispatch(lrmd, msg);
+        if (native->proxy_callback == NULL) {
+            return;
+        }
+
+        pcmk__log_xml_trace(msg, "PROXY_INBOUND");
+        native->proxy_callback(lrmd, native->proxy_callback_userdata, msg);
         return;
-    } else if (!native->callback) {
-        /* no callback set */
+    }
+
+    if (native->callback == NULL) {
         pcmk__trace("notify event received but client has not set callback");
         return;
     }
@@ -2085,17 +2087,6 @@ lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
 
     native->proxy_callback = cb;
     native->proxy_callback_userdata = user_data;
-}
-
-void
-lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->proxy_callback) {
-        pcmk__log_xml_trace(msg, "PROXY_INBOUND");
-        native->proxy_callback(lrmd, native->proxy_callback_userdata, msg);
-    }
 }
 
 int
