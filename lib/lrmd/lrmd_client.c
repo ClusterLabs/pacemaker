@@ -241,6 +241,38 @@ lrmd_free_event(lrmd_event_data_t *event)
     free(event);
 }
 
+/* Not used with mainloop */
+int
+lrmd_poll(lrmd_t * lrmd, int timeout)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    switch (native->type) {
+        case pcmk__client_ipc:
+            return crm_ipc_ready(native->ipc);
+
+        case pcmk__client_tls:
+            if (native->pending_notify) {
+                return 1;
+            } else {
+                int rc = pcmk__remote_ready(native->remote, 0);
+
+                switch (rc) {
+                    case pcmk_rc_ok:
+                        return 1;
+                    case ETIME:
+                        return 0;
+                    default:
+                        return pcmk_rc2legacy(rc);
+                }
+            }
+        default:
+            pcmk__err("Unsupported executor connection type (bug?): %d",
+                      native->type);
+            return -EPROTONOSUPPORT;
+    }
+}
+
 static void
 lrmd_dispatch_internal(gpointer data, gpointer user_data)
 {
@@ -539,38 +571,6 @@ lrmd_tls_dispatch(gpointer userdata)
     handle_remote_msg(xml, lrmd);
     pcmk__xml_free(xml);
     return 0;
-}
-
-/* Not used with mainloop */
-int
-lrmd_poll(lrmd_t * lrmd, int timeout)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    switch (native->type) {
-        case pcmk__client_ipc:
-            return crm_ipc_ready(native->ipc);
-
-        case pcmk__client_tls:
-            if (native->pending_notify) {
-                return 1;
-            } else {
-                int rc = pcmk__remote_ready(native->remote, 0);
-
-                switch (rc) {
-                    case pcmk_rc_ok:
-                        return 1;
-                    case ETIME:
-                        return 0;
-                    default:
-                        return pcmk_rc2legacy(rc);
-                }
-            }
-        default:
-            pcmk__err("Unsupported executor connection type (bug?): %d",
-                      native->type);
-            return -EPROTONOSUPPORT;
-    }
 }
 
 /* Not used with mainloop */
