@@ -2050,6 +2050,33 @@ lrmd_api_list_standards(lrmd_t *lrmd, lrmd_list_t **supported)
     return rc;
 }
 
+/* timeout is in ms */
+static int
+lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
+                    int timeout, lrmd_key_value_t *params)
+{
+    int rc = pcmk_ok;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_ALERT);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
+    lrmd_key_value_t *tmp = NULL;
+
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
+    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_PATH, alert_path);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+
+    for (tmp = params; tmp; tmp = tmp->next) {
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+    }
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
+                           lrmd_opt_notify_orig_only, true);
+    pcmk__xml_free(data);
+
+    lrmd_key_value_freeall(params);
+    return rc;
+}
+
 void
 lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
                          void (*cb)(lrmd_t *, void *, xmlNode *))
@@ -2164,33 +2191,6 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     services_action_free(action);
 
     return pcmk_ok;
-}
-
-/* timeout is in ms */
-static int
-lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
-                    int timeout, lrmd_key_value_t *params)
-{
-    int rc = pcmk_ok;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_ALERT);
-    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
-    lrmd_key_value_t *tmp = NULL;
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
-    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_PATH, alert_path);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-
-    for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
-    }
-
-    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
-                           lrmd_opt_notify_orig_only, true);
-    pcmk__xml_free(data);
-
-    lrmd_key_value_freeall(params);
-    return rc;
 }
 
 /*!
