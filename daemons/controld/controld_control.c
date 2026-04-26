@@ -286,11 +286,8 @@ crmd_exit(crm_exit_t exit_code)
         mainloop_destroy_signal(SIGCHLD);
     }
 
-    cib_delete(controld_globals.cib_conn);
-    controld_globals.cib_conn = NULL;
-
     throttle_fini();
-
+    g_clear_pointer(&controld_globals.cib_conn, cib_delete);
     g_clear_pointer(&controld_globals.cluster, pcmk_cluster_free);
 
     /* Graceful */
