@@ -466,7 +466,7 @@ pcmk__tls_check_cert_expiration(gnutls_session_t session)
 
     expiry = gnutls_x509_crt_get_expiration_time(cert);
 
-    if (expiry != -1) {
+    if (expiry != (time_t) -1) {
         time_t now = time(NULL);
 
         /* If the cert is going to expire within ~ one month (30 days), log it */
