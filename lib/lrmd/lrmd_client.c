@@ -1919,6 +1919,72 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     return rc;
 }
 
+static int
+list_stonith_agents(lrmd_list_t **resources)
+{
+    int rc = 0;
+    stonith_t *stonith_api = stonith__api_new();
+    stonith_key_value_t *stonith_resources = NULL;
+    stonith_key_value_t *dIter = NULL;
+
+    if (stonith_api == NULL) {
+        pcmk__err("Could not list fence agents: API memory allocation failed");
+        return -ENOMEM;
+    }
+    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
+                                   &stonith_resources, 0);
+    stonith_api->cmds->free(stonith_api);
+
+    for (dIter = stonith_resources; dIter; dIter = dIter->next) {
+        rc++;
+        if (resources) {
+            *resources = lrmd_list_add(*resources, dIter->value);
+        }
+    }
+
+    stonith__key_value_freeall(stonith_resources, true, false);
+    return rc;
+}
+
+static int
+lrmd_api_list_agents(lrmd_t *lrmd, lrmd_list_t **resources, const char *class,
+                     const char *provider)
+{
+    int rc = 0;
+    int stonith_count = 0; // Initially, whether to include stonith devices
+
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+        stonith_count = 1;
+
+    } else {
+        GList *gIter = NULL;
+        GList *agents = resources_list_agents(class, provider);
+
+        for (gIter = agents; gIter != NULL; gIter = gIter->next) {
+            *resources = lrmd_list_add(*resources, (const char *)gIter->data);
+            rc++;
+        }
+        g_list_free_full(agents, free);
+
+        if (!class) {
+            stonith_count = 1;
+        }
+    }
+
+    if (stonith_count) {
+        // Now, if stonith devices are included, how many there are
+        stonith_count = list_stonith_agents(resources);
+        if (stonith_count > 0) {
+            rc += stonith_count;
+        }
+    }
+    if (rc == 0) {
+        pcmk__notice("No agents found for class %s", class);
+        rc = -EPROTONOSUPPORT;
+    }
+    return rc;
+}
+
 void
 lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
                          void (*cb)(lrmd_t *, void *, xmlNode *))
@@ -2059,72 +2125,6 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
-    return rc;
-}
-
-static int
-list_stonith_agents(lrmd_list_t ** resources)
-{
-    int rc = 0;
-    stonith_t *stonith_api = stonith__api_new();
-    stonith_key_value_t *stonith_resources = NULL;
-    stonith_key_value_t *dIter = NULL;
-
-    if (stonith_api == NULL) {
-        pcmk__err("Could not list fence agents: API memory allocation failed");
-        return -ENOMEM;
-    }
-    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
-                                   &stonith_resources, 0);
-    stonith_api->cmds->free(stonith_api);
-
-    for (dIter = stonith_resources; dIter; dIter = dIter->next) {
-        rc++;
-        if (resources) {
-            *resources = lrmd_list_add(*resources, dIter->value);
-        }
-    }
-
-    stonith__key_value_freeall(stonith_resources, true, false);
-    return rc;
-}
-
-static int
-lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
-                     const char *provider)
-{
-    int rc = 0;
-    int stonith_count = 0; // Initially, whether to include stonith devices
-
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        stonith_count = 1;
-
-    } else {
-        GList *gIter = NULL;
-        GList *agents = resources_list_agents(class, provider);
-
-        for (gIter = agents; gIter != NULL; gIter = gIter->next) {
-            *resources = lrmd_list_add(*resources, (const char *)gIter->data);
-            rc++;
-        }
-        g_list_free_full(agents, free);
-
-        if (!class) {
-            stonith_count = 1;
-        }
-    }
-
-    if (stonith_count) {
-        // Now, if stonith devices are included, how many there are
-        stonith_count = list_stonith_agents(resources);
-        if (stonith_count > 0) {
-            rc += stonith_count;
-        }
-    }
-    if (rc == 0) {
-        pcmk__notice("No agents found for class %s", class);
-        rc = -EPROTONOSUPPORT;
-    }
     return rc;
 }
 
