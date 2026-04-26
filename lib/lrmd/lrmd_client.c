@@ -1863,6 +1863,15 @@ lrmd_api_set_callback(lrmd_t * lrmd, lrmd_event_callback callback)
     native->callback = callback;
 }
 
+static int
+lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
+                      const char *type, char **output,
+                      enum lrmd_call_options options)
+{
+    return lrmd->cmds->get_metadata_params(lrmd, standard, provider, type,
+                                           output, options, NULL);
+}
+
 void
 lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
                          void (*cb)(lrmd_t *, void *, xmlNode *))
@@ -1918,15 +1927,6 @@ stonith_get_metadata(const char *type, char **output)
     }
     stonith_api->cmds->free(stonith_api);
     return rc;
-}
-
-static int
-lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
-                      const char *type, char **output,
-                      enum lrmd_call_options options)
-{
-    return lrmd->cmds->get_metadata_params(lrmd, standard, provider, type,
-                                           output, options, NULL);
 }
 
 static int
