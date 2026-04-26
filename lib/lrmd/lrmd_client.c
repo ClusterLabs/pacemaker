@@ -2079,31 +2079,6 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     return rc;
 }
 
-void
-lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
-                         void (*cb)(lrmd_t *, void *, xmlNode *))
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    native->proxy_callback = cb;
-    native->proxy_callback_userdata = user_data;
-}
-
-int
-lrmd__proxy_send(lrmd_t *lrmd, xmlNode *msg)
-{
-    CRM_CHECK(msg != NULL, return -EINVAL);
-
-    if (lrmd == NULL) {
-        return -ENOTCONN;
-    }
-
-    pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
-    pcmk__log_xml_trace(msg, "PROXY_OUTBOUND");
-
-    return lrmd_send_xml_no_reply(lrmd, msg);
-}
-
 static int
 stonith_get_metadata(const char *type, char **output)
 {
@@ -2479,4 +2454,29 @@ lrmd__node_start_state(lrmd_t *lrmd)
     } else {
         return native->remote->start_state;
     }
+}
+
+void
+lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
+                         void (*cb)(lrmd_t *, void *, xmlNode *))
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    native->proxy_callback = cb;
+    native->proxy_callback_userdata = user_data;
+}
+
+int
+lrmd__proxy_send(lrmd_t *lrmd, xmlNode *msg)
+{
+    CRM_CHECK(msg != NULL, return -EINVAL);
+
+    if (lrmd == NULL) {
+        return -ENOTCONN;
+    }
+
+    pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
+    pcmk__log_xml_trace(msg, "PROXY_OUTBOUND");
+
+    return lrmd_send_xml_no_reply(lrmd, msg);
 }
