@@ -51,7 +51,6 @@ static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
 #define TLS_HANDSHAKE_TIMEOUT 5
 
 static int global_remote_msg_id = 0;
-static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
 static gnutls_datum_t remote_key = { NULL, 0 };
 
@@ -340,32 +339,6 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
         pcmk__xml_free(msg);
     }
     return 0;
-}
-
-/*!
- * \internal
- * \brief Notify trigger handler
- *
- * \param[in,out] userdata API connection
- *
- * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
- *         mainloop
- */
-static int
-process_pending_notifies(gpointer userdata)
-{
-    lrmd_t *lrmd = userdata;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->pending_notify == NULL) {
-        return G_SOURCE_CONTINUE;
-    }
-
-    pcmk__trace("Processing pending notifies");
-    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
-    return G_SOURCE_CONTINUE;
 }
 
 static bool
@@ -688,6 +661,66 @@ lrmd_ipc_connection_destroy(gpointer userdata)
         event.remote_nodename = native->remote_nodename;
         native->callback(&event);
     }
+}
+
+/*!
+ * \internal
+ * \brief Initialize the Pacemaker Remote authentication key
+ *
+ * Try loading the Pacemaker Remote authentication key from cache if available,
+ * otherwise from these locations, in order of preference:
+ *
+ * - The value of the PCMK_authkey_location environment variable, if set
+ * - The Pacemaker default key file location
+ *
+ * \param[out] key  Where to store key
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+lrmd__init_remote_key(gnutls_datum_t *key)
+{
+    static const char *env_location = NULL;
+    static bool need_env = true;
+
+    int rc = pcmk_rc_ok;
+
+    if (need_env) {
+        env_location = pcmk__env_option(PCMK__ENV_AUTHKEY_LOCATION);
+        need_env = false;
+    }
+
+    if (remote_key.data != NULL) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
+    // Try location in environment variable, if set
+    if (env_location != NULL) {
+        rc = pcmk__load_key(env_location, &remote_key, true);
+
+        if (rc == pcmk_rc_ok) {
+            pcmk__copy_key(key, &remote_key);
+            return pcmk_rc_ok;
+        }
+
+        pcmk__warn("Could not read Pacemaker Remote key from %s: %s",
+                   env_location, pcmk_rc_str(rc));
+        return ENOKEY;
+    }
+
+    // Try default location, if environment wasn't explicitly set to it
+    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key, true);
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
+    pcmk__warn("Could not read Pacemaker Remote key from default location "
+               DEFAULT_REMOTE_KEY_LOCATION ": %s",
+               pcmk_rc_str(rc));
+    return ENOKEY;
 }
 
 // \return Standard Pacemaker return code
@@ -1041,101 +1074,43 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
-static xmlNode *
-lrmd_handshake_hello_msg(const char *name, bool is_proxy)
-{
-    xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
-
-    pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
-    pcmk__xe_set(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
-    pcmk__xe_set(hello, PCMK__XA_LRMD_CLIENTNAME, name);
-    pcmk__xe_set(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-
-    /* advertise that we are a proxy provider */
-    if (is_proxy) {
-        pcmk__xe_set_bool(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
-    }
-
-    return hello;
-}
-
 static int
-lrmd_handshake_async(lrmd_t * lrmd, const char *name)
+lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
 {
-    int rc = pcmk_rc_ok;
+    int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
 
-    rc = send_remote_message(lrmd, hello);
+    struct ipc_client_callbacks lrmd_callbacks = {
+        .dispatch = lrmd_ipc_dispatch,
+        .destroy = lrmd_ipc_connection_destroy
+    };
 
-    if (rc == pcmk_rc_ok) {
-        native->expected_late_replies++;
-    } else {
-        lrmd->cmds->disconnect(lrmd);
-    }
+    pcmk__info("Connecting to executor");
 
-    pcmk__xml_free(hello);
-    return rc;
-}
-
-/*!
- * \internal
- * \brief Initialize the Pacemaker Remote authentication key
- *
- * Try loading the Pacemaker Remote authentication key from cache if available,
- * otherwise from these locations, in order of preference:
- *
- * - The value of the PCMK_authkey_location environment variable, if set
- * - The Pacemaker default key file location
- *
- * \param[out] key  Where to store key
- *
- * \return Standard Pacemaker return code
- */
-int
-lrmd__init_remote_key(gnutls_datum_t *key)
-{
-    static const char *env_location = NULL;
-    static bool need_env = true;
-
-    int rc = pcmk_rc_ok;
-
-    if (need_env) {
-        env_location = pcmk__env_option(PCMK__ENV_AUTHKEY_LOCATION);
-        need_env = false;
-    }
-
-    if (remote_key.data != NULL) {
-        pcmk__copy_key(key, &remote_key);
-        return pcmk_rc_ok;
-    }
-
-    // Try location in environment variable, if set
-    if (env_location != NULL) {
-        rc = pcmk__load_key(env_location, &remote_key, true);
-
-        if (rc == pcmk_rc_ok) {
-            pcmk__copy_key(key, &remote_key);
-            return pcmk_rc_ok;
+    if (fd) {
+        /* No mainloop */
+        native->ipc = crm_ipc_new(CRM_SYSTEM_LRMD, 0);
+        if (native->ipc != NULL) {
+            rc = pcmk__connect_generic_ipc(native->ipc);
+            if (rc == pcmk_rc_ok) {
+                rc = pcmk__ipc_fd(native->ipc, fd);
+            }
+            if (rc != pcmk_rc_ok) {
+                pcmk__err("Connection to executor failed: %s", pcmk_rc_str(rc));
+                rc = -ENOTCONN;
+            }
         }
-
-        pcmk__warn("Could not read Pacemaker Remote key from %s: %s",
-                   env_location, pcmk_rc_str(rc));
-        return ENOKEY;
+    } else {
+        native->source = mainloop_add_ipc_client(CRM_SYSTEM_LRMD, G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
+        native->ipc = mainloop_get_ipc_client(native->source);
     }
 
-    // Try default location, if environment wasn't explicitly set to it
-    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key, true);
-
-    if (rc == pcmk_rc_ok) {
-        pcmk__copy_key(key, &remote_key);
-        return pcmk_rc_ok;
+    if (native->ipc == NULL) {
+        pcmk__debug("Could not connect to the executor API");
+        rc = -ENOTCONN;
     }
 
-    pcmk__warn("Could not read Pacemaker Remote key from default location "
-               DEFAULT_REMOTE_KEY_LOCATION ": %s",
-               pcmk_rc_str(rc));
-    return ENOKEY;
+    return rc;
 }
 
 static void
@@ -1217,6 +1192,69 @@ tls_client_handshake(lrmd_t *lrmd)
 
 /*!
  * \internal
+ * \brief Notify trigger handler
+ *
+ * \param[in,out] userdata API connection
+ *
+ * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
+ *         mainloop
+ */
+static int
+process_pending_notifies(gpointer userdata)
+{
+    lrmd_t *lrmd = userdata;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->pending_notify == NULL) {
+        return G_SOURCE_CONTINUE;
+    }
+
+    pcmk__trace("Processing pending notifies");
+    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+    return G_SOURCE_CONTINUE;
+}
+
+static xmlNode *
+lrmd_handshake_hello_msg(const char *name, bool is_proxy)
+{
+    xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
+
+    pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
+    pcmk__xe_set(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(hello, PCMK__XA_LRMD_CLIENTNAME, name);
+    pcmk__xe_set(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+
+    /* advertise that we are a proxy provider */
+    if (is_proxy) {
+        pcmk__xe_set_bool(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
+    }
+
+    return hello;
+}
+
+static int
+lrmd_handshake_async(lrmd_t *lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
+
+    rc = send_remote_message(lrmd, hello);
+
+    if (rc == pcmk_rc_ok) {
+        native->expected_late_replies++;
+    } else {
+        lrmd->cmds->disconnect(lrmd);
+    }
+
+    pcmk__xml_free(hello);
+    return rc;
+}
+
+/*!
+ * \internal
  * \brief Add trigger and file descriptor mainloop sources for TLS
  *
  * \param[in,out] lrmd              API connection with established TLS session
@@ -1253,51 +1291,6 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
         rc = lrmd_handshake_async(lrmd, name);
     }
     free(name);
-    return rc;
-}
-
-struct handshake_data_s {
-    lrmd_t *lrmd;
-    time_t start_time;
-    int timeout_sec;
-};
-
-static int
-lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
-{
-    int rc = pcmk_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    struct ipc_client_callbacks lrmd_callbacks = {
-        .dispatch = lrmd_ipc_dispatch,
-        .destroy = lrmd_ipc_connection_destroy
-    };
-
-    pcmk__info("Connecting to executor");
-
-    if (fd) {
-        /* No mainloop */
-        native->ipc = crm_ipc_new(CRM_SYSTEM_LRMD, 0);
-        if (native->ipc != NULL) {
-            rc = pcmk__connect_generic_ipc(native->ipc);
-            if (rc == pcmk_rc_ok) {
-                rc = pcmk__ipc_fd(native->ipc, fd);
-            }
-            if (rc != pcmk_rc_ok) {
-                pcmk__err("Connection to executor failed: %s", pcmk_rc_str(rc));
-                rc = -ENOTCONN;
-            }
-        }
-    } else {
-        native->source = mainloop_add_ipc_client(CRM_SYSTEM_LRMD, G_PRIORITY_HIGH, 0, lrmd, &lrmd_callbacks);
-        native->ipc = mainloop_get_ipc_client(native->source);
-    }
-
-    if (native->ipc == NULL) {
-        pcmk__debug("Could not connect to the executor API");
-        rc = -ENOTCONN;
-    }
-
     return rc;
 }
 
@@ -1446,6 +1439,12 @@ tls_handshake_succeeded(lrmd_t *lrmd)
         report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
     }
 }
+
+struct handshake_data_s {
+    lrmd_t *lrmd;
+    time_t start_time;
+    int timeout_sec;
+};
 
 static gboolean
 try_handshake_cb(gpointer user_data)
