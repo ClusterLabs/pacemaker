@@ -2213,38 +2213,19 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
 int
 lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
 {
-    lrmd_private_t *pvt = NULL;
+    lrmd_private_t *api_priv = NULL;
 
-    if (api == NULL) {
-        return EINVAL;
-    }
-    *api = NULL;
+    pcmk__assert((api != NULL) && (*api == NULL));
 
-    // Allocate all memory needed
+    *api = pcmk__assert_alloc(1, sizeof(lrmd_t));
 
-    *api = calloc(1, sizeof(lrmd_t));
-    if (*api == NULL) {
-        return ENOMEM;
-    }
-
-    pvt = calloc(1, sizeof(lrmd_private_t));
-    if (pvt == NULL) {
-        lrmd_api_delete(*api);
-        *api = NULL;
-        return ENOMEM;
-    }
-    (*api)->lrmd_private = pvt;
+    (*api)->lrmd_private = pcmk__assert_alloc(1, sizeof(lrmd_private_t));
+    api_priv = (*api)->lrmd_private;
 
     // @TODO Do we need to do this for local connections?
-    pvt->remote = calloc(1, sizeof(pcmk__remote_t));
+    api_priv->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
-    (*api)->cmds = calloc(1, sizeof(lrmd_api_operations_t));
-
-    if ((pvt->remote == NULL) || ((*api)->cmds == NULL)) {
-        lrmd_api_delete(*api);
-        *api = NULL;
-        return ENOMEM;
-    }
+    (*api)->cmds = pcmk__assert_alloc(1, sizeof(lrmd_api_operations_t));
 
     // Set methods
     (*api)->cmds->connect = lrmd_api_connect;
@@ -2267,26 +2248,20 @@ lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
     (*api)->cmds->get_metadata_params = lrmd_api_get_metadata_params;
 
     if ((nodename == NULL) && (server == NULL)) {
-        pvt->type = pcmk__client_ipc;
-    } else {
-        if (nodename == NULL) {
-            nodename = server;
-        } else if (server == NULL) {
-            server = nodename;
-        }
-        pvt->type = pcmk__client_tls;
-        pvt->remote_nodename = strdup(nodename);
-        pvt->server = strdup(server);
-        if ((pvt->remote_nodename == NULL) || (pvt->server == NULL)) {
-            lrmd_api_delete(*api);
-            *api = NULL;
-            return ENOMEM;
-        }
-        pvt->port = port;
-        if (pvt->port == 0) {
-            pvt->port = crm_default_remote_port();
-        }
+        api_priv->type = pcmk__client_ipc;
+        return pcmk_rc_ok;
     }
+
+    if (nodename == NULL) {
+        nodename = server;
+    } else if (server == NULL) {
+        server = nodename;
+    }
+
+    api_priv->type = pcmk__client_tls;
+    api_priv->remote_nodename = pcmk__str_copy(nodename);
+    api_priv->server = pcmk__str_copy(server);
+    api_priv->port = (port != 0)? port : crm_default_remote_port();
     return pcmk_rc_ok;
 }
 
