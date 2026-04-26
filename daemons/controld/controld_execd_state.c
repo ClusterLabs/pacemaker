@@ -259,14 +259,8 @@ lrm_state_disconnect_only(lrm_state_t * lrm_state)
 void
 lrm_state_disconnect(lrm_state_t * lrm_state)
 {
-    if (!lrm_state->conn) {
-        return;
-    }
-
     lrm_state_disconnect_only(lrm_state);
-
-    lrmd_api_delete(lrm_state->conn);
-    lrm_state->conn = NULL;
+    g_clear_pointer(&lrm_state->conn, lrmd_api_delete);
 }
 
 int

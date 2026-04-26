@@ -175,8 +175,7 @@ test_exit(crm_exit_t exit_code)
 static void
 test_shutdown(int nsig)
 {
-    lrmd_api_delete(lrmd_conn);
-    lrmd_conn = NULL;
+    g_clear_pointer(&lrmd_conn, lrmd_api_delete);
 }
 
 static void
