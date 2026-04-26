@@ -1985,6 +1985,71 @@ lrmd_api_list_agents(lrmd_t *lrmd, lrmd_list_t **resources, const char *class,
     return rc;
 }
 
+static bool
+does_provider_have_agent(const char *agent, const char *provider,
+                         const char *class)
+{
+    bool found = false;
+    GList *agents = NULL;
+    GList *gIter2 = NULL;
+
+    agents = resources_list_agents(class, provider);
+    for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
+        if (pcmk__str_eq(agent, gIter2->data, pcmk__str_casei)) {
+            found = true;
+        }
+    }
+    g_list_free_full(agents, free);
+    return found;
+}
+
+static int
+lrmd_api_list_ocf_providers(lrmd_t *lrmd, const char *agent,
+                            lrmd_list_t **providers)
+{
+    int rc = pcmk_ok;
+    char *provider = NULL;
+    GList *ocf_providers = NULL;
+    GList *gIter = NULL;
+
+    ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
+
+    for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
+        provider = gIter->data;
+        if (!agent || does_provider_have_agent(agent, provider,
+                                               PCMK_RESOURCE_CLASS_OCF)) {
+            *providers = lrmd_list_add(*providers, (const char *)gIter->data);
+            rc++;
+        }
+    }
+
+    g_list_free_full(ocf_providers, free);
+    return rc;
+}
+
+static int
+lrmd_api_list_standards(lrmd_t *lrmd, lrmd_list_t **supported)
+{
+    int rc = 0;
+    GList *standards = NULL;
+    GList *gIter = NULL;
+
+    standards = resources_list_standards();
+
+    for (gIter = standards; gIter != NULL; gIter = gIter->next) {
+        *supported = lrmd_list_add(*supported, (const char *)gIter->data);
+        rc++;
+    }
+
+    if (list_stonith_agents(NULL) > 0) {
+        *supported = lrmd_list_add(*supported, PCMK_RESOURCE_CLASS_STONITH);
+        rc++;
+    }
+
+    g_list_free_full(standards, free);
+    return rc;
+}
+
 void
 lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
                          void (*cb)(lrmd_t *, void *, xmlNode *))
@@ -2125,69 +2190,6 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
-    return rc;
-}
-
-static bool
-does_provider_have_agent(const char *agent, const char *provider, const char *class)
-{
-    bool found = false;
-    GList *agents = NULL;
-    GList *gIter2 = NULL;
-
-    agents = resources_list_agents(class, provider);
-    for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
-        if (pcmk__str_eq(agent, gIter2->data, pcmk__str_casei)) {
-            found = true;
-        }
-    }
-    g_list_free_full(agents, free);
-    return found;
-}
-
-static int
-lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** providers)
-{
-    int rc = pcmk_ok;
-    char *provider = NULL;
-    GList *ocf_providers = NULL;
-    GList *gIter = NULL;
-
-    ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
-
-    for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
-        provider = gIter->data;
-        if (!agent || does_provider_have_agent(agent, provider,
-                                               PCMK_RESOURCE_CLASS_OCF)) {
-            *providers = lrmd_list_add(*providers, (const char *)gIter->data);
-            rc++;
-        }
-    }
-
-    g_list_free_full(ocf_providers, free);
-    return rc;
-}
-
-static int
-lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
-{
-    int rc = 0;
-    GList *standards = NULL;
-    GList *gIter = NULL;
-
-    standards = resources_list_standards();
-
-    for (gIter = standards; gIter != NULL; gIter = gIter->next) {
-        *supported = lrmd_list_add(*supported, (const char *)gIter->data);
-        rc++;
-    }
-
-    if (list_stonith_agents(NULL) > 0) {
-        *supported = lrmd_list_add(*supported, PCMK_RESOURCE_CLASS_STONITH);
-        rc++;
-    }
-
-    g_list_free_full(standards, free);
     return rc;
 }
 
