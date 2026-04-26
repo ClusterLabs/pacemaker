@@ -1872,6 +1872,53 @@ lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
                                            output, options, NULL);
 }
 
+static int
+lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
+              const char *userdata, guint interval_ms,
+              int timeout,      /* ms */
+              int start_delay,  /* ms */
+              enum lrmd_call_options options, lrmd_key_value_t * params)
+{
+    int rc = pcmk_ok;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
+    lrmd_key_value_t *tmp = NULL;
+
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
+    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
+
+    for (tmp = params; tmp; tmp = tmp->next) {
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+    }
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
+    pcmk__xml_free(data);
+
+    lrmd_key_value_freeall(params);
+    return rc;
+}
+
+static int
+lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
+                guint interval_ms)
+{
+    int rc = pcmk_ok;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
+    pcmk__xml_free(data);
+    return rc;
+}
+
 void
 lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
                          void (*cb)(lrmd_t *, void *, xmlNode *))
@@ -1988,37 +2035,6 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     return pcmk_ok;
 }
 
-static int
-lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
-              const char *userdata, guint interval_ms,
-              int timeout,      /* ms */
-              int start_delay,  /* ms */
-              enum lrmd_call_options options, lrmd_key_value_t * params)
-{
-    int rc = pcmk_ok;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
-    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
-    lrmd_key_value_t *tmp = NULL;
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
-
-    for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
-    }
-
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
-    pcmk__xml_free(data);
-
-    lrmd_key_value_freeall(params);
-    return rc;
-}
-
 /* timeout is in ms */
 static int
 lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
@@ -2043,22 +2059,6 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
-    return rc;
-}
-
-static int
-lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
-                guint interval_ms)
-{
-    int rc = pcmk_ok;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
-    pcmk__xml_free(data);
     return rc;
 }
 
