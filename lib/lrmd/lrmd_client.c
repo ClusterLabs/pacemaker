@@ -2195,9 +2195,6 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
  * \internal
  * \brief Create an executor API object
  *
- * \param[out] api       Will be set to newly created API object (it is the
- *                       caller's responsibility to free this value with
- *                       lrmd_api_delete() if this function succeeds)
  * \param[in]  nodename  If the object will be used for a remote connection,
  *                       the node name to use in cluster for remote executor
  * \param[in]  server    If the object will be used for a remote connection,
@@ -2205,51 +2202,50 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
  * \param[in]  port      If the object will be used for a remote connection,
  *                       port number on \p server to connect to
  *
- * \return Standard Pacemaker return code
+ * \return Newly allocated API object
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c lrmd_api_delete().
  * \note If the caller leaves one of \p nodename or \p server NULL, the other's
  *       value will be used for both. If the caller leaves both NULL, an API
  *       object will be created for a local executor connection.
  */
-int
-lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
+static lrmd_t *
+new_lrmd_api(const char *nodename, const char *server, int port)
 {
-    lrmd_private_t *api_priv = NULL;
+    lrmd_t *api = pcmk__assert_alloc(1, sizeof(lrmd_t));
+    lrmd_private_t *api_priv = pcmk__assert_alloc(1, sizeof(lrmd_private_t));
 
-    pcmk__assert((api != NULL) && (*api == NULL));
-
-    *api = pcmk__assert_alloc(1, sizeof(lrmd_t));
-
-    (*api)->lrmd_private = pcmk__assert_alloc(1, sizeof(lrmd_private_t));
-    api_priv = (*api)->lrmd_private;
+    api->lrmd_private = api_priv;
 
     // @TODO Do we need to do this for local connections?
     api_priv->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
-    (*api)->cmds = pcmk__assert_alloc(1, sizeof(lrmd_api_operations_t));
+    api->cmds = pcmk__assert_alloc(1, sizeof(lrmd_api_operations_t));
 
     // Set methods
-    (*api)->cmds->connect = lrmd_api_connect;
-    (*api)->cmds->connect_async = lrmd_api_connect_async;
-    (*api)->cmds->is_connected = lrmd_api_is_connected;
-    (*api)->cmds->poke_connection = lrmd_api_poke_connection;
-    (*api)->cmds->disconnect = lrmd_api_disconnect;
-    (*api)->cmds->register_rsc = lrmd_api_register_rsc;
-    (*api)->cmds->unregister_rsc = lrmd_api_unregister_rsc;
-    (*api)->cmds->get_rsc_info = lrmd_api_get_rsc_info;
-    (*api)->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
-    (*api)->cmds->set_callback = lrmd_api_set_callback;
-    (*api)->cmds->get_metadata = lrmd_api_get_metadata;
-    (*api)->cmds->exec = lrmd_api_exec;
-    (*api)->cmds->cancel = lrmd_api_cancel;
-    (*api)->cmds->list_agents = lrmd_api_list_agents;
-    (*api)->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
-    (*api)->cmds->list_standards = lrmd_api_list_standards;
-    (*api)->cmds->exec_alert = lrmd_api_exec_alert;
-    (*api)->cmds->get_metadata_params = lrmd_api_get_metadata_params;
+    api->cmds->connect = lrmd_api_connect;
+    api->cmds->connect_async = lrmd_api_connect_async;
+    api->cmds->is_connected = lrmd_api_is_connected;
+    api->cmds->poke_connection = lrmd_api_poke_connection;
+    api->cmds->disconnect = lrmd_api_disconnect;
+    api->cmds->register_rsc = lrmd_api_register_rsc;
+    api->cmds->unregister_rsc = lrmd_api_unregister_rsc;
+    api->cmds->get_rsc_info = lrmd_api_get_rsc_info;
+    api->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
+    api->cmds->set_callback = lrmd_api_set_callback;
+    api->cmds->get_metadata = lrmd_api_get_metadata;
+    api->cmds->exec = lrmd_api_exec;
+    api->cmds->cancel = lrmd_api_cancel;
+    api->cmds->list_agents = lrmd_api_list_agents;
+    api->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
+    api->cmds->list_standards = lrmd_api_list_standards;
+    api->cmds->exec_alert = lrmd_api_exec_alert;
+    api->cmds->get_metadata_params = lrmd_api_get_metadata_params;
 
     if ((nodename == NULL) && (server == NULL)) {
         api_priv->type = pcmk__client_ipc;
-        return pcmk_rc_ok;
+        return api;
     }
 
     if (nodename == NULL) {
@@ -2262,25 +2258,19 @@ lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
     api_priv->remote_nodename = pcmk__str_copy(nodename);
     api_priv->server = pcmk__str_copy(server);
     api_priv->port = (port != 0)? port : crm_default_remote_port();
-    return pcmk_rc_ok;
+    return api;
 }
 
 lrmd_t *
 lrmd_api_new(void)
 {
-    lrmd_t *api = NULL;
-
-    pcmk__assert(lrmd__new(&api, NULL, NULL, 0) == pcmk_rc_ok);
-    return api;
+    return new_lrmd_api(NULL, NULL, 0);
 }
 
 lrmd_t *
 lrmd_remote_api_new(const char *nodename, const char *server, int port)
 {
-    lrmd_t *api = NULL;
-
-    pcmk__assert(lrmd__new(&api, nodename, server, port) == pcmk_rc_ok);
-    return api;
+    return new_lrmd_api(nodename, server, port);
 }
 
 void
