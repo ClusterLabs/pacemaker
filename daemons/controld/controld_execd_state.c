@@ -318,19 +318,12 @@ controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
     int rc = pcmk_rc_ok;
 
     if (lrm_state->conn == NULL) {
-        lrmd_t *api = NULL;
-
-        rc = lrmd__new(&api, lrm_state->node_name, server, port);
-        if (rc != pcmk_rc_ok) {
-            pcmk__warn("Pacemaker Remote connection to %s:%s failed: %s "
-                       QB_XS " rc=%d",
-                       server, port, pcmk_rc_str(rc), rc);
-
-            return rc;
-        }
-        lrm_state->conn = api;
-        api->cmds->set_callback(api, remote_lrm_op_callback);
-        lrmd__proxy_set_callback(api, lrm_state, controld_remote_proxy_cb);
+        lrm_state->conn = lrmd_remote_api_new(lrm_state->node_name, server,
+                                              port);
+        lrm_state->conn->cmds->set_callback(lrm_state->conn,
+                                            remote_lrm_op_callback);
+        lrmd__proxy_set_callback(lrm_state->conn, lrm_state,
+                                 controld_remote_proxy_cb);
     }
 
     pcmk__trace("Initiating remote connection to %s:%d with timeout %dms",
