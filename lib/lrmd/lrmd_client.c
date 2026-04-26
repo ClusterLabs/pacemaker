@@ -1837,13 +1837,10 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
              op_xml != NULL;
              op_xml = pcmk__xe_next(op_xml, PCMK__XE_LRMD_RSC_OP)) {
 
-            lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
+            lrmd_op_info_t *op_info =
+                pcmk__assert_alloc(1, sizeof(lrmd_op_info_t));
 
-            if (op_info == NULL) {
-                rc = -ENOMEM;
-                break;
-            }
-            op_info->rsc_id = strdup(rsc_id);
+            op_info->rsc_id = pcmk__str_copy(rsc_id);
             op_info->action = pcmk__xe_get_copy(op_xml,
                                                 PCMK__XA_LRMD_RSC_ACTION);
             op_info->interval_ms_s =
