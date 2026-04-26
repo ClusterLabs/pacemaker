@@ -44,21 +44,10 @@
 
 #define MAX_TLS_RECV_WAIT 10000
 
-static int lrmd_api_disconnect(lrmd_t * lrmd);
-static int lrmd_api_is_connected(lrmd_t * lrmd);
-
-/* IPC proxy functions */
-int lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg);
-static void lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg);
-void lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg));
-
 // GnuTLS client handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
-static void lrmd_tls_disconnect(lrmd_t * lrmd);
 static int global_remote_msg_id = 0;
-static void lrmd_tls_connection_destroy(gpointer userdata);
-static int add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake);
 
 static gnutls_datum_t remote_key = { NULL, 0 };
 
@@ -98,9 +87,6 @@ typedef struct {
     void *proxy_callback_userdata;
     char *peer_version;
 } lrmd_private_t;
-
-static int process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native);
-static void report_async_connection_result(lrmd_t * lrmd, int rc);
 
 static lrmd_list_t *
 lrmd_list_add(lrmd_list_t * head, const char *value)
@@ -255,6 +241,38 @@ lrmd_free_event(lrmd_event_data_t *event)
     free(event);
 }
 
+/* Not used with mainloop */
+int
+lrmd_poll(lrmd_t * lrmd, int timeout)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    switch (native->type) {
+        case pcmk__client_ipc:
+            return crm_ipc_ready(native->ipc);
+
+        case pcmk__client_tls:
+            if (native->pending_notify) {
+                return 1;
+            } else {
+                int rc = pcmk__remote_ready(native->remote, 0);
+
+                switch (rc) {
+                    case pcmk_rc_ok:
+                        return 1;
+                    case ETIME:
+                        return 0;
+                    default:
+                        return pcmk_rc2legacy(rc);
+                }
+            }
+        default:
+            pcmk__err("Unsupported executor connection type (bug?): %d",
+                      native->type);
+            return -EPROTONOSUPPORT;
+    }
+}
+
 static void
 lrmd_dispatch_internal(gpointer data, gpointer user_data)
 {
@@ -267,11 +285,16 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
     lrmd_event_data_t event = { 0, };
 
     if (proxy_session != NULL) {
-        /* this is proxy business */
-        lrmd_internal_proxy_dispatch(lrmd, msg);
+        if (native->proxy_callback == NULL) {
+            return;
+        }
+
+        pcmk__log_xml_trace(msg, "PROXY_INBOUND");
+        native->proxy_callback(lrmd, native->proxy_callback_userdata, msg);
         return;
-    } else if (!native->callback) {
-        /* no callback set */
+    }
+
+    if (native->callback == NULL) {
         pcmk__trace("notify event received but client has not set callback");
         return;
     }
@@ -353,11 +376,119 @@ lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
 }
 
 static bool
-remote_executor_connected(lrmd_t * lrmd)
+remote_executor_connected(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
     return (native->remote->tls_session != NULL);
+}
+
+static void
+lrmd_tls_disconnect(lrmd_t *lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->remote->tls_session) {
+        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
+    }
+
+    if (native->async_timer) {
+        g_source_remove(native->async_timer);
+        native->async_timer = 0;
+    }
+
+    if (native->source != NULL) {
+        /* Attached to mainloop */
+        g_clear_pointer(&native->source, mainloop_del_ipc_client);
+
+    } else if (native->sock >= 0) {
+        close(native->sock);
+        native->sock = -1;
+    }
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+}
+
+static void
+handle_ack(const xmlNode *reply)
+{
+    int status = 0;
+
+    pcmk__log_xml_err(reply, "Bad reply");
+
+    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
+    pcmk__err("Received error response from executor: %s", crm_exit_str(status));
+}
+
+static int
+process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
+{
+    int rc = pcmk_rc_ok;
+    const char *version = pcmk__xe_get(reply, PCMK__XA_LRMD_PROTOCOL_VERSION);
+    const char *msg_type = pcmk__xe_get(reply, PCMK__XA_LRMD_OP);
+    const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
+    const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
+
+    /* The only reason we can receive an ACK here is because execd didn't
+     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake{,_async},
+     * and the status code will always indicate some sort of error.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
+        handle_ack(reply);
+        return EPROTO;
+    }
+
+    pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
+    rc = pcmk_legacy2rc(rc);
+
+    /* The remote executor may add its uptime to the XML reply, which is useful
+     * in handling transient attributes when the connection to the remote node
+     * unexpectedly drops.  If no parameter is given, just default to -1.
+     */
+    native->remote->uptime = -1;
+    pcmk__xe_get_time(reply, PCMK__XA_UPTIME, &native->remote->uptime);
+
+    if (start_state) {
+        native->remote->start_state = strdup(start_state);
+    }
+
+    if (rc == EPROTO) {
+        pcmk__err("Executor protocol version mismatch between client "
+                  "(" LRMD_PROTOCOL_VERSION ") and server (%s)",
+                  version);
+        pcmk__log_xml_err(reply, "Protocol Error");
+    } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+        pcmk__err("Invalid registration message: %s", msg_type);
+        pcmk__log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else if (tmp_ticket == NULL) {
+        pcmk__err("No registration token provided");
+        pcmk__log_xml_err(reply, "Bad reply");
+        rc = EPROTO;
+    } else {
+        pcmk__trace("Obtained registration token: %s", tmp_ticket);
+        native->token = strdup(tmp_ticket);
+        native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
+        rc = pcmk_rc_ok;
+    }
+
+    return rc;
+}
+
+static void
+report_async_connection_result(lrmd_t *lrmd, int rc)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->callback) {
+        lrmd_event_data_t event = { 0, };
+        event.type = lrmd_event_connect;
+        event.remote_nodename = native->remote_nodename;
+        event.connection_rc = rc;
+        native->callback(&event);
+    }
 }
 
 static void
@@ -390,32 +521,6 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
             pcmk__err("Got outdated Pacemaker Remote reply %d", reply_id);
         }
     }
-}
-
-/*!
- * \internal
- * \brief Notify trigger handler
- *
- * \param[in,out] userdata API connection
- *
- * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
- *         mainloop
- */
-static int
-process_pending_notifies(gpointer userdata)
-{
-    lrmd_t *lrmd = userdata;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->pending_notify == NULL) {
-        return G_SOURCE_CONTINUE;
-    }
-
-    pcmk__trace("Processing pending notifies");
-    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
-    return G_SOURCE_CONTINUE;
 }
 
 /*!
@@ -469,38 +574,6 @@ lrmd_tls_dispatch(gpointer userdata)
 }
 
 /* Not used with mainloop */
-int
-lrmd_poll(lrmd_t * lrmd, int timeout)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    switch (native->type) {
-        case pcmk__client_ipc:
-            return crm_ipc_ready(native->ipc);
-
-        case pcmk__client_tls:
-            if (native->pending_notify) {
-                return 1;
-            } else {
-                int rc = pcmk__remote_ready(native->remote, 0);
-
-                switch (rc) {
-                    case pcmk_rc_ok:
-                        return 1;
-                    case ETIME:
-                        return 0;
-                    default:
-                        return pcmk_rc2legacy(rc);
-                }
-            }
-        default:
-            pcmk__err("Unsupported executor connection type (bug?): %d",
-                      native->type);
-            return -EPROTONOSUPPORT;
-    }
-}
-
-/* Not used with mainloop */
 bool
 lrmd_dispatch(lrmd_t * lrmd)
 {
@@ -528,7 +601,7 @@ lrmd_dispatch(lrmd_t * lrmd)
                       private->type);
     }
 
-    if (lrmd_api_is_connected(lrmd) == FALSE) {
+    if (!lrmd->cmds->is_connected(lrmd)) {
         pcmk__err("Connection closed");
         return FALSE;
     }
@@ -592,43 +665,64 @@ lrmd_ipc_connection_destroy(gpointer userdata)
     }
 }
 
-static void
-lrmd_tls_connection_destroy(gpointer userdata)
+/*!
+ * \internal
+ * \brief Initialize the Pacemaker Remote authentication key
+ *
+ * Try loading the Pacemaker Remote authentication key from cache if available,
+ * otherwise from these locations, in order of preference:
+ *
+ * - The value of the PCMK_authkey_location environment variable, if set
+ * - The Pacemaker default key file location
+ *
+ * \param[out] key  Where to store key
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+lrmd__init_remote_key(gnutls_datum_t *key)
 {
-    lrmd_t *lrmd = userdata;
-    lrmd_private_t *native = lrmd->lrmd_private;
+    static const char *env_location = NULL;
+    static bool need_env = true;
 
-    pcmk__info("TLS connection destroyed");
+    int rc = pcmk_rc_ok;
 
-    if (native->remote->tls_session) {
-        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
+    if (need_env) {
+        env_location = pcmk__env_option(PCMK__ENV_AUTHKEY_LOCATION);
+        need_env = false;
     }
 
-    g_clear_pointer(&native->tls, pcmk__free_tls);
-
-    if (native->sock >= 0) {
-        close(native->sock);
+    if (remote_key.data != NULL) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
     }
 
-    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
+    // Try location in environment variable, if set
+    if (env_location != NULL) {
+        rc = pcmk__load_key(env_location, &remote_key, true);
 
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
+        if (rc == pcmk_rc_ok) {
+            pcmk__copy_key(key, &remote_key);
+            return pcmk_rc_ok;
+        }
 
-    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
-
-    g_clear_pointer(&native->remote->buffer, free);
-    g_clear_pointer(&native->remote->start_state, free);
-    native->source = 0;
-    native->sock = -1;
-
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.remote_nodename = native->remote_nodename;
-        event.type = lrmd_event_disconnect;
-        native->callback(&event);
+        pcmk__warn("Could not read Pacemaker Remote key from %s: %s",
+                   env_location, pcmk_rc_str(rc));
+        return ENOKEY;
     }
+
+    // Try default location, if environment wasn't explicitly set to it
+    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key, true);
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__copy_key(key, &remote_key);
+        return pcmk_rc_ok;
+    }
+
+    pcmk__warn("Could not read Pacemaker Remote key from default location "
+               DEFAULT_REMOTE_KEY_LOCATION ": %s",
+               pcmk_rc_str(rc));
+    return ENOKEY;
 }
 
 // \return Standard Pacemaker return code
@@ -830,34 +924,6 @@ lrmd_send_xml_no_reply(lrmd_t * lrmd, xmlNode * msg)
     return rc;
 }
 
-static int
-lrmd_api_is_connected(lrmd_t * lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    switch (native->type) {
-        case pcmk__client_ipc:
-            return crm_ipc_connected(native->ipc);
-        case pcmk__client_tls:
-            return remote_executor_connected(lrmd);
-        default:
-            pcmk__err("Unsupported executor connection type (bug?): %d",
-                      native->type);
-            return 0;
-    }
-}
-
-static void
-handle_ack(const xmlNode *reply)
-{
-    int status = 0;
-
-    pcmk__log_xml_err(reply, "Bad reply");
-
-    pcmk__xe_get_int(reply, PCMK_XA_STATUS, &status);
-    pcmk__err("Received error response from executor: %s", crm_exit_str(status));
-}
-
 /*!
  * \internal
  * \brief Send a prepared API command to the executor
@@ -886,7 +952,7 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     xmlNode *op_msg = NULL;
     xmlNode *op_reply = NULL;
 
-    if (!lrmd_api_is_connected(lrmd)) {
+    if (!lrmd->cmds->is_connected(lrmd)) {
         return -ENOTCONN;
     }
 
@@ -946,28 +1012,13 @@ lrmd_send_command(lrmd_t *lrmd, const char *op, xmlNode *data,
     }
 
   done:
-    if (lrmd_api_is_connected(lrmd) == FALSE) {
+    if (!lrmd->cmds->is_connected(lrmd)) {
         pcmk__err("Executor disconnected");
     }
 
     pcmk__xml_free(op_msg);
     pcmk__xml_free(op_reply);
     return rc;
-}
-
-static int
-lrmd_api_poke_connection(lrmd_t * lrmd)
-{
-    int rc;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
-                           (native->type == pcmk__client_ipc));
-    pcmk__xml_free(data);
-
-    return rc < 0 ? rc : pcmk_ok;
 }
 
 // \return Standard Pacemaker return code
@@ -993,131 +1044,8 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     return (rc < 0)? pcmk_legacy2rc(rc) : pcmk_rc_ok;
 }
 
-static xmlNode *
-lrmd_handshake_hello_msg(const char *name, bool is_proxy)
-{
-    xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
-
-    pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
-    pcmk__xe_set(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
-    pcmk__xe_set(hello, PCMK__XA_LRMD_CLIENTNAME, name);
-    pcmk__xe_set(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-
-    /* advertise that we are a proxy provider */
-    if (is_proxy) {
-        pcmk__xe_set_bool(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
-    }
-
-    return hello;
-}
-
 static int
-process_lrmd_handshake_reply(xmlNode *reply, lrmd_private_t *native)
-{
-    int rc = pcmk_rc_ok;
-    const char *version = pcmk__xe_get(reply, PCMK__XA_LRMD_PROTOCOL_VERSION);
-    const char *msg_type = pcmk__xe_get(reply, PCMK__XA_LRMD_OP);
-    const char *tmp_ticket = pcmk__xe_get(reply, PCMK__XA_LRMD_CLIENTID);
-    const char *start_state = pcmk__xe_get(reply, PCMK__XA_NODE_START_STATE);
-
-    /* The only reason we can receive an ACK here is because execd didn't
-     * understand the CRM_OP_REGISTER message we sent in lrmd_handshake{,_async},
-     * and the status code will always indicate some sort of error.
-     */
-    if (pcmk__xe_is(reply, PCMK__XE_ACK)) {
-        handle_ack(reply);
-        return EPROTO;
-    }
-
-    pcmk__xe_get_int(reply, PCMK__XA_LRMD_RC, &rc);
-    rc = pcmk_legacy2rc(rc);
-
-    /* The remote executor may add its uptime to the XML reply, which is useful
-     * in handling transient attributes when the connection to the remote node
-     * unexpectedly drops.  If no parameter is given, just default to -1.
-     */
-    native->remote->uptime = -1;
-    pcmk__xe_get_time(reply, PCMK__XA_UPTIME, &native->remote->uptime);
-
-    if (start_state) {
-        native->remote->start_state = strdup(start_state);
-    }
-
-    if (rc == EPROTO) {
-        pcmk__err("Executor protocol version mismatch between client "
-                  "(" LRMD_PROTOCOL_VERSION ") and server (%s)",
-                  version);
-        pcmk__log_xml_err(reply, "Protocol Error");
-    } else if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-        pcmk__err("Invalid registration message: %s", msg_type);
-        pcmk__log_xml_err(reply, "Bad reply");
-        rc = EPROTO;
-    } else if (tmp_ticket == NULL) {
-        pcmk__err("No registration token provided");
-        pcmk__log_xml_err(reply, "Bad reply");
-        rc = EPROTO;
-    } else {
-        pcmk__trace("Obtained registration token: %s", tmp_ticket);
-        native->token = strdup(tmp_ticket);
-        native->peer_version = strdup(version?version:"1.0"); /* Included since 1.1 */
-        rc = pcmk_rc_ok;
-    }
-
-    return rc;
-}
-
-static int
-lrmd_handshake(lrmd_t * lrmd, const char *name)
-{
-    int rc = pcmk_rc_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *reply = NULL;
-    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
-
-    rc = lrmd_send_xml(lrmd, hello, -1, &reply);
-
-    if (rc < 0) {
-        pcmk__debug("Couldn't complete registration with the executor API: %s",
-                    pcmk_strerror(rc));
-        rc = ECOMM;
-    } else if (reply == NULL) {
-        pcmk__err("Did not receive registration reply");
-        rc = EPROTO;
-    } else {
-        rc = process_lrmd_handshake_reply(reply, native);
-    }
-
-    pcmk__xml_free(reply);
-    pcmk__xml_free(hello);
-
-    if (rc != pcmk_rc_ok) {
-        lrmd_api_disconnect(lrmd);
-    }
-
-    return rc;
-}
-
-static int
-lrmd_handshake_async(lrmd_t * lrmd, const char *name)
-{
-    int rc = pcmk_rc_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
-
-    rc = send_remote_message(lrmd, hello);
-
-    if (rc == pcmk_rc_ok) {
-        native->expected_late_replies++;
-    } else {
-        lrmd_api_disconnect(lrmd);
-    }
-
-    pcmk__xml_free(hello);
-    return rc;
-}
-
-static int
-lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
+lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
 {
     int rc = pcmk_ok;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1155,76 +1083,41 @@ lrmd_ipc_connect(lrmd_t * lrmd, int *fd)
     return rc;
 }
 
-/*!
- * \internal
- * \brief Initialize the Pacemaker Remote authentication key
- *
- * Try loading the Pacemaker Remote authentication key from cache if available,
- * otherwise from these locations, in order of preference:
- *
- * - The value of the PCMK_authkey_location environment variable, if set
- * - The Pacemaker default key file location
- *
- * \param[out] key  Where to store key
- *
- * \return Standard Pacemaker return code
- */
-int
-lrmd__init_remote_key(gnutls_datum_t *key)
-{
-    static const char *env_location = NULL;
-    static bool need_env = true;
-
-    int rc = pcmk_rc_ok;
-
-    if (need_env) {
-        env_location = pcmk__env_option(PCMK__ENV_AUTHKEY_LOCATION);
-        need_env = false;
-    }
-
-    if (remote_key.data != NULL) {
-        pcmk__copy_key(key, &remote_key);
-        return pcmk_rc_ok;
-    }
-
-    // Try location in environment variable, if set
-    if (env_location != NULL) {
-        rc = pcmk__load_key(env_location, &remote_key, true);
-
-        if (rc == pcmk_rc_ok) {
-            pcmk__copy_key(key, &remote_key);
-            return pcmk_rc_ok;
-        }
-
-        pcmk__warn("Could not read Pacemaker Remote key from %s: %s",
-                   env_location, pcmk_rc_str(rc));
-        return ENOKEY;
-    }
-
-    // Try default location, if environment wasn't explicitly set to it
-    rc = pcmk__load_key(DEFAULT_REMOTE_KEY_LOCATION, &remote_key, true);
-
-    if (rc == pcmk_rc_ok) {
-        pcmk__copy_key(key, &remote_key);
-        return pcmk_rc_ok;
-    }
-
-    pcmk__warn("Could not read Pacemaker Remote key from default location "
-               DEFAULT_REMOTE_KEY_LOCATION ": %s",
-               pcmk_rc_str(rc));
-    return ENOKEY;
-}
-
 static void
-report_async_connection_result(lrmd_t * lrmd, int rc)
+lrmd_tls_connection_destroy(gpointer userdata)
 {
+    lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
+
+    pcmk__info("TLS connection destroyed");
+
+    if (native->remote->tls_session) {
+        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
+        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
+    }
+
+    g_clear_pointer(&native->tls, pcmk__free_tls);
+
+    if (native->sock >= 0) {
+        close(native->sock);
+    }
+
+    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
+
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+
+    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
+
+    g_clear_pointer(&native->remote->buffer, free);
+    g_clear_pointer(&native->remote->start_state, free);
+    native->source = 0;
+    native->sock = -1;
 
     if (native->callback) {
         lrmd_event_data_t event = { 0, };
-        event.type = lrmd_event_connect;
         event.remote_nodename = native->remote_nodename;
-        event.connection_rc = rc;
+        event.type = lrmd_event_disconnect;
         native->callback(&event);
     }
 }
@@ -1242,31 +1135,6 @@ tls_handshake_failed(lrmd_t *lrmd, int tls_rc, int rc)
 
     g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
     lrmd_tls_connection_destroy(lrmd);
-}
-
-static void
-tls_handshake_succeeded(lrmd_t *lrmd)
-{
-    int rc = pcmk_rc_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    /* Now that the handshake is done, see if any client TLS certificate is
-     * close to its expiration date and log if so.  If a TLS certificate is not
-     * in use, this function will just return so we don't need to check for the
-     * session type here.
-     */
-    pcmk__tls_check_cert_expiration(native->remote->tls_session);
-
-    pcmk__info("TLS connection to Pacemaker Remote server %s:%d succeeded",
-               native->server, native->port);
-    rc = add_tls_to_mainloop(lrmd, true);
-
-    /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
-     * to wait until we read the async reply to report anything.
-     */
-    if (rc != pcmk_rc_ok) {
-        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
-    }
 }
 
 /*!
@@ -1289,6 +1157,69 @@ tls_client_handshake(lrmd_t *lrmd)
         tls_handshake_failed(lrmd, tls_rc, rc);
     }
 
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Notify trigger handler
+ *
+ * \param[in,out] userdata API connection
+ *
+ * \return Always return G_SOURCE_CONTINUE to leave this trigger handler in the
+ *         mainloop
+ */
+static int
+process_pending_notifies(gpointer userdata)
+{
+    lrmd_t *lrmd = userdata;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    if (native->pending_notify == NULL) {
+        return G_SOURCE_CONTINUE;
+    }
+
+    pcmk__trace("Processing pending notifies");
+    g_list_foreach(native->pending_notify, lrmd_dispatch_internal, lrmd);
+    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
+    native->pending_notify = NULL;
+    return G_SOURCE_CONTINUE;
+}
+
+static xmlNode *
+lrmd_handshake_hello_msg(const char *name, bool is_proxy)
+{
+    xmlNode *hello = pcmk__xe_create(NULL, PCMK__XE_LRMD_COMMAND);
+
+    pcmk__xe_set(hello, PCMK__XA_T, PCMK__VALUE_LRMD);
+    pcmk__xe_set(hello, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(hello, PCMK__XA_LRMD_CLIENTNAME, name);
+    pcmk__xe_set(hello, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
+
+    /* advertise that we are a proxy provider */
+    if (is_proxy) {
+        pcmk__xe_set_bool(hello, PCMK__XA_LRMD_IS_IPC_PROVIDER, true);
+    }
+
+    return hello;
+}
+
+static int
+lrmd_handshake_async(lrmd_t *lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
+
+    rc = send_remote_message(lrmd, hello);
+
+    if (rc == pcmk_rc_ok) {
+        native->expected_late_replies++;
+    } else {
+        lrmd->cmds->disconnect(lrmd);
+    }
+
+    pcmk__xml_free(hello);
     return rc;
 }
 
@@ -1331,6 +1262,152 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
     }
     free(name);
     return rc;
+}
+
+static int
+lrmd_tls_connect(lrmd_t * lrmd, int *fd)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    native->sock = -1;
+    rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
+                              &(native->sock), NULL, NULL);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Pacemaker Remote connection to %s:%d failed: %s "
+                   QB_XS " rc=%d",
+                   native->server, native->port, pcmk_rc_str(rc), rc);
+        lrmd_tls_connection_destroy(lrmd);
+        return ENOTCONN;
+    }
+
+    if (native->tls == NULL) {
+        rc = pcmk__init_tls(&native->tls, false, true);
+
+        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
+            lrmd_tls_connection_destroy(lrmd);
+            return rc;
+        }
+    }
+
+    if (!pcmk__x509_enabled()) {
+        gnutls_datum_t psk_key = { NULL, 0 };
+
+        rc = lrmd__init_remote_key(&psk_key);
+        if (rc != pcmk_rc_ok) {
+            lrmd_tls_connection_destroy(lrmd);
+            return rc;
+        }
+
+        pcmk__tls_client_add_psk_key(native->tls, DEFAULT_REMOTE_USERNAME,
+                                     &psk_key, true);
+        gnutls_free(psk_key.data);
+    }
+
+    native->remote->tls_session = pcmk__new_tls_session(native->tls, native->sock);
+    if (native->remote->tls_session == NULL) {
+        lrmd_tls_connection_destroy(lrmd);
+        return EPROTO;
+    }
+
+    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
+        return EKEYREJECTED;
+    }
+
+    pcmk__info("Client TLS connection established with Pacemaker Remote server "
+               "%s:%d",
+               native->server, native->port);
+
+    if (fd) {
+        *fd = native->sock;
+    } else {
+        rc = add_tls_to_mainloop(lrmd, false);
+    }
+    return rc;
+}
+
+static int
+lrmd_handshake(lrmd_t *lrmd, const char *name)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *reply = NULL;
+    xmlNode *hello = lrmd_handshake_hello_msg(name, native->proxy_callback != NULL);
+
+    rc = lrmd_send_xml(lrmd, hello, -1, &reply);
+
+    if (rc < 0) {
+        pcmk__debug("Couldn't complete registration with the executor API: %s",
+                    pcmk_strerror(rc));
+        rc = ECOMM;
+    } else if (reply == NULL) {
+        pcmk__err("Did not receive registration reply");
+        rc = EPROTO;
+    } else {
+        rc = process_lrmd_handshake_reply(reply, native);
+    }
+
+    pcmk__xml_free(reply);
+    pcmk__xml_free(hello);
+
+    if (rc != pcmk_rc_ok) {
+        lrmd->cmds->disconnect(lrmd);
+    }
+
+    return rc;
+}
+
+static int
+lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
+{
+    int rc = -ENOTCONN;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    switch (native->type) {
+        case pcmk__client_ipc:
+            rc = lrmd_ipc_connect(lrmd, fd);
+            break;
+        case pcmk__client_tls:
+            rc = lrmd_tls_connect(lrmd, fd);
+            rc = pcmk_rc2legacy(rc);
+            break;
+        default:
+            pcmk__err("Unsupported executor connection type (bug?): %d",
+                      native->type);
+            rc = -EPROTONOSUPPORT;
+    }
+
+    if (rc == pcmk_ok) {
+        rc = lrmd_handshake(lrmd, name);
+        rc = pcmk_rc2legacy(rc);
+    }
+
+    return rc;
+}
+
+static void
+tls_handshake_succeeded(lrmd_t *lrmd)
+{
+    int rc = pcmk_rc_ok;
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    /* Now that the handshake is done, see if any client TLS certificate is
+     * close to its expiration date and log if so.  If a TLS certificate is not
+     * in use, this function will just return so we don't need to check for the
+     * session type here.
+     */
+    pcmk__tls_check_cert_expiration(native->remote->tls_session);
+
+    pcmk__info("TLS connection to Pacemaker Remote server %s:%d succeeded",
+               native->server, native->port);
+    rc = add_tls_to_mainloop(lrmd, true);
+
+    /* If add_tls_to_mainloop failed, report that right now.  Otherwise, we have
+     * to wait until we read the async reply to report anything.
+     */
+    if (rc != pcmk_rc_ok) {
+        report_async_connection_result(lrmd, pcmk_rc2legacy(rc));
+    }
 }
 
 struct handshake_data_s {
@@ -1461,7 +1538,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 }
 
 static int
-lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
+lrmd_tls_connect_async(lrmd_t *lrmd, int timeout)
 {
     int rc = pcmk_rc_ok;
     int timer_id = 0;
@@ -1477,96 +1554,6 @@ lrmd_tls_connect_async(lrmd_t * lrmd, int timeout /*ms */ )
         return rc;
     }
     native->async_timer = timer_id;
-    return rc;
-}
-
-static int
-lrmd_tls_connect(lrmd_t * lrmd, int *fd)
-{
-    int rc = pcmk_rc_ok;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    native->sock = -1;
-    rc = pcmk__connect_remote(native->server, native->port, 0, NULL,
-                              &(native->sock), NULL, NULL);
-    if (rc != pcmk_rc_ok) {
-        pcmk__warn("Pacemaker Remote connection to %s:%d failed: %s "
-                   QB_XS " rc=%d",
-                   native->server, native->port, pcmk_rc_str(rc), rc);
-        lrmd_tls_connection_destroy(lrmd);
-        return ENOTCONN;
-    }
-
-    if (native->tls == NULL) {
-        rc = pcmk__init_tls(&native->tls, false, true);
-
-        if ((rc != pcmk_rc_ok) || (native->tls == NULL)) {
-            lrmd_tls_connection_destroy(lrmd);
-            return rc;
-        }
-    }
-
-    if (!pcmk__x509_enabled()) {
-        gnutls_datum_t psk_key = { NULL, 0 };
-
-        rc = lrmd__init_remote_key(&psk_key);
-        if (rc != pcmk_rc_ok) {
-            lrmd_tls_connection_destroy(lrmd);
-            return rc;
-        }
-
-        pcmk__tls_client_add_psk_key(native->tls, DEFAULT_REMOTE_USERNAME,
-                                     &psk_key, true);
-        gnutls_free(psk_key.data);
-    }
-
-    native->remote->tls_session = pcmk__new_tls_session(native->tls, native->sock);
-    if (native->remote->tls_session == NULL) {
-        lrmd_tls_connection_destroy(lrmd);
-        return EPROTO;
-    }
-
-    if (tls_client_handshake(lrmd) != pcmk_rc_ok) {
-        return EKEYREJECTED;
-    }
-
-    pcmk__info("Client TLS connection established with Pacemaker Remote server "
-               "%s:%d",
-               native->server, native->port);
-
-    if (fd) {
-        *fd = native->sock;
-    } else {
-        rc = add_tls_to_mainloop(lrmd, false);
-    }
-    return rc;
-}
-
-static int
-lrmd_api_connect(lrmd_t * lrmd, const char *name, int *fd)
-{
-    int rc = -ENOTCONN;
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    switch (native->type) {
-        case pcmk__client_ipc:
-            rc = lrmd_ipc_connect(lrmd, fd);
-            break;
-        case pcmk__client_tls:
-            rc = lrmd_tls_connect(lrmd, fd);
-            rc = pcmk_rc2legacy(rc);
-            break;
-        default:
-            pcmk__err("Unsupported executor connection type (bug?): %d",
-                      native->type);
-            rc = -EPROTONOSUPPORT;
-    }
-
-    if (rc == pcmk_ok) {
-        rc = lrmd_handshake(lrmd, name);
-        rc = pcmk_rc2legacy(rc);
-    }
-
     return rc;
 }
 
@@ -1600,8 +1587,40 @@ lrmd_api_connect_async(lrmd_t * lrmd, const char *name, int timeout)
     return rc;
 }
 
+static int
+lrmd_api_is_connected(lrmd_t * lrmd)
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    switch (native->type) {
+        case pcmk__client_ipc:
+            return crm_ipc_connected(native->ipc);
+        case pcmk__client_tls:
+            return remote_executor_connected(lrmd);
+        default:
+            pcmk__err("Unsupported executor connection type (bug?): %d",
+                      native->type);
+            return 0;
+    }
+}
+
+static int
+lrmd_api_poke_connection(lrmd_t *lrmd)
+{
+    int rc;
+    lrmd_private_t *native = lrmd->lrmd_private;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    rc = lrmd_send_command(lrmd, LRMD_OP_POKE, data, NULL, 0, 0,
+                           (native->type == pcmk__client_ipc));
+    pcmk__xml_free(data);
+
+    return rc < 0 ? rc : pcmk_ok;
+}
+
 static void
-lrmd_ipc_disconnect(lrmd_t * lrmd)
+lrmd_ipc_disconnect(lrmd_t *lrmd)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
@@ -1618,34 +1637,6 @@ lrmd_ipc_disconnect(lrmd_t * lrmd)
         crm_ipc_close(ipc);
         crm_ipc_destroy(ipc);
     }
-}
-
-static void
-lrmd_tls_disconnect(lrmd_t * lrmd)
-{
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    if (native->remote->tls_session) {
-        gnutls_bye(native->remote->tls_session, GNUTLS_SHUT_RDWR);
-        g_clear_pointer(&native->remote->tls_session, gnutls_deinit);
-    }
-
-    if (native->async_timer) {
-        g_source_remove(native->async_timer);
-        native->async_timer = 0;
-    }
-
-    if (native->source != NULL) {
-        /* Attached to mainloop */
-        g_clear_pointer(&native->source, mainloop_del_ipc_client);
-
-    } else if (native->sock >= 0) {
-        close(native->sock);
-        native->sock = -1;
-    }
-
-    g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
-    native->pending_notify = NULL;
 }
 
 static int
@@ -1848,13 +1839,10 @@ lrmd_api_get_recurring_ops(lrmd_t *lrmd, const char *rsc_id, int timeout_ms,
              op_xml != NULL;
              op_xml = pcmk__xe_next(op_xml, PCMK__XE_LRMD_RSC_OP)) {
 
-            lrmd_op_info_t *op_info = calloc(1, sizeof(lrmd_op_info_t));
+            lrmd_op_info_t *op_info =
+                pcmk__assert_alloc(1, sizeof(lrmd_op_info_t));
 
-            if (op_info == NULL) {
-                rc = -ENOMEM;
-                break;
-            }
-            op_info->rsc_id = strdup(rsc_id);
+            op_info->rsc_id = pcmk__str_copy(rsc_id);
             op_info->action = pcmk__xe_get_copy(op_xml,
                                                 PCMK__XA_LRMD_RSC_ACTION);
             op_info->interval_ms_s =
@@ -1877,36 +1865,218 @@ lrmd_api_set_callback(lrmd_t * lrmd, lrmd_event_callback callback)
     native->callback = callback;
 }
 
-void
-lrmd_internal_set_proxy_callback(lrmd_t * lrmd, void *userdata, void (*callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg))
+static int
+lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
+                      const char *type, char **output,
+                      enum lrmd_call_options options)
 {
-    lrmd_private_t *native = lrmd->lrmd_private;
-
-    native->proxy_callback = callback;
-    native->proxy_callback_userdata = userdata;
+    return lrmd->cmds->get_metadata_params(lrmd, standard, provider, type,
+                                           output, options, NULL);
 }
 
-void
-lrmd_internal_proxy_dispatch(lrmd_t *lrmd, xmlNode *msg)
+static int
+lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
+              const char *userdata, guint interval_ms,
+              int timeout,      /* ms */
+              int start_delay,  /* ms */
+              enum lrmd_call_options options, lrmd_key_value_t * params)
 {
-    lrmd_private_t *native = lrmd->lrmd_private;
+    int rc = pcmk_ok;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
+    lrmd_key_value_t *tmp = NULL;
 
-    if (native->proxy_callback) {
-        pcmk__log_xml_trace(msg, "PROXY_INBOUND");
-        native->proxy_callback(lrmd, native->proxy_callback_userdata, msg);
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
+    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
+
+    for (tmp = params; tmp; tmp = tmp->next) {
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
     }
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
+    pcmk__xml_free(data);
+
+    lrmd_key_value_freeall(params);
+    return rc;
 }
 
-int
-lrmd_internal_proxy_send(lrmd_t * lrmd, xmlNode *msg)
+static int
+lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
+                guint interval_ms)
 {
-    if (lrmd == NULL) {
-        return -ENOTCONN;
-    }
-    pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
+    int rc = pcmk_ok;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
 
-    pcmk__log_xml_trace(msg, "PROXY_OUTBOUND");
-    return lrmd_send_xml_no_reply(lrmd, msg);
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
+    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
+    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
+    pcmk__xml_free(data);
+    return rc;
+}
+
+static int
+list_stonith_agents(lrmd_list_t **resources)
+{
+    int rc = 0;
+    stonith_t *stonith_api = stonith__api_new();
+    stonith_key_value_t *stonith_resources = NULL;
+    stonith_key_value_t *dIter = NULL;
+
+    if (stonith_api == NULL) {
+        pcmk__err("Could not list fence agents: API memory allocation failed");
+        return -ENOMEM;
+    }
+    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
+                                   &stonith_resources, 0);
+    stonith_api->cmds->free(stonith_api);
+
+    for (dIter = stonith_resources; dIter; dIter = dIter->next) {
+        rc++;
+        if (resources) {
+            *resources = lrmd_list_add(*resources, dIter->value);
+        }
+    }
+
+    stonith__key_value_freeall(stonith_resources, true, false);
+    return rc;
+}
+
+static int
+lrmd_api_list_agents(lrmd_t *lrmd, lrmd_list_t **resources, const char *class,
+                     const char *provider)
+{
+    int rc = 0;
+    int stonith_count = 0; // Initially, whether to include stonith devices
+
+    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
+        stonith_count = 1;
+
+    } else {
+        GList *gIter = NULL;
+        GList *agents = resources_list_agents(class, provider);
+
+        for (gIter = agents; gIter != NULL; gIter = gIter->next) {
+            *resources = lrmd_list_add(*resources, (const char *)gIter->data);
+            rc++;
+        }
+        g_list_free_full(agents, free);
+
+        if (!class) {
+            stonith_count = 1;
+        }
+    }
+
+    if (stonith_count) {
+        // Now, if stonith devices are included, how many there are
+        stonith_count = list_stonith_agents(resources);
+        if (stonith_count > 0) {
+            rc += stonith_count;
+        }
+    }
+    if (rc == 0) {
+        pcmk__notice("No agents found for class %s", class);
+        rc = -EPROTONOSUPPORT;
+    }
+    return rc;
+}
+
+static bool
+does_provider_have_agent(const char *agent, const char *provider,
+                         const char *class)
+{
+    bool found = false;
+    GList *agents = NULL;
+    GList *gIter2 = NULL;
+
+    agents = resources_list_agents(class, provider);
+    for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
+        if (pcmk__str_eq(agent, gIter2->data, pcmk__str_casei)) {
+            found = true;
+        }
+    }
+    g_list_free_full(agents, free);
+    return found;
+}
+
+static int
+lrmd_api_list_ocf_providers(lrmd_t *lrmd, const char *agent,
+                            lrmd_list_t **providers)
+{
+    int rc = pcmk_ok;
+    char *provider = NULL;
+    GList *ocf_providers = NULL;
+    GList *gIter = NULL;
+
+    ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
+
+    for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
+        provider = gIter->data;
+        if (!agent || does_provider_have_agent(agent, provider,
+                                               PCMK_RESOURCE_CLASS_OCF)) {
+            *providers = lrmd_list_add(*providers, (const char *)gIter->data);
+            rc++;
+        }
+    }
+
+    g_list_free_full(ocf_providers, free);
+    return rc;
+}
+
+static int
+lrmd_api_list_standards(lrmd_t *lrmd, lrmd_list_t **supported)
+{
+    int rc = 0;
+    GList *standards = NULL;
+    GList *gIter = NULL;
+
+    standards = resources_list_standards();
+
+    for (gIter = standards; gIter != NULL; gIter = gIter->next) {
+        *supported = lrmd_list_add(*supported, (const char *)gIter->data);
+        rc++;
+    }
+
+    if (list_stonith_agents(NULL) > 0) {
+        *supported = lrmd_list_add(*supported, PCMK_RESOURCE_CLASS_STONITH);
+        rc++;
+    }
+
+    g_list_free_full(standards, free);
+    return rc;
+}
+
+/* timeout is in ms */
+static int
+lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
+                    int timeout, lrmd_key_value_t *params)
+{
+    int rc = pcmk_ok;
+    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_ALERT);
+    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
+    lrmd_key_value_t *tmp = NULL;
+
+    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
+    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
+    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_PATH, alert_path);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
+
+    for (tmp = params; tmp; tmp = tmp->next) {
+        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+    }
+
+    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
+                           lrmd_opt_notify_orig_only, true);
+    pcmk__xml_free(data);
+
+    lrmd_key_value_freeall(params);
+    return rc;
 }
 
 static int
@@ -1928,15 +2098,6 @@ stonith_get_metadata(const char *type, char **output)
     }
     stonith_api->cmds->free(stonith_api);
     return rc;
-}
-
-static int
-lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
-                      const char *type, char **output,
-                      enum lrmd_call_options options)
-{
-    return lrmd->cmds->get_metadata_params(lrmd, standard, provider, type,
-                                           output, options, NULL);
 }
 
 static int
@@ -1998,216 +2159,10 @@ lrmd_api_get_metadata_params(lrmd_t *lrmd, const char *standard,
     return pcmk_ok;
 }
 
-static int
-lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
-              const char *userdata, guint interval_ms,
-              int timeout,      /* ms */
-              int start_delay,  /* ms */
-              enum lrmd_call_options options, lrmd_key_value_t * params)
-{
-    int rc = pcmk_ok;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
-    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
-    lrmd_key_value_t *tmp = NULL;
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
-
-    for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
-    }
-
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
-    pcmk__xml_free(data);
-
-    lrmd_key_value_freeall(params);
-    return rc;
-}
-
-/* timeout is in ms */
-static int
-lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
-                    int timeout, lrmd_key_value_t *params)
-{
-    int rc = pcmk_ok;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_ALERT);
-    xmlNode *args = pcmk__xe_create(data, PCMK__XE_ATTRIBUTES);
-    lrmd_key_value_t *tmp = NULL;
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_ID, alert_id);
-    pcmk__xe_set(data, PCMK__XA_LRMD_ALERT_PATH, alert_path);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-
-    for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
-    }
-
-    rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,
-                           lrmd_opt_notify_orig_only, true);
-    pcmk__xml_free(data);
-
-    lrmd_key_value_freeall(params);
-    return rc;
-}
-
-static int
-lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
-                guint interval_ms)
-{
-    int rc = pcmk_ok;
-    xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
-
-    pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
-    pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
-    pcmk__xml_free(data);
-    return rc;
-}
-
-static int
-list_stonith_agents(lrmd_list_t ** resources)
-{
-    int rc = 0;
-    stonith_t *stonith_api = stonith__api_new();
-    stonith_key_value_t *stonith_resources = NULL;
-    stonith_key_value_t *dIter = NULL;
-
-    if (stonith_api == NULL) {
-        pcmk__err("Could not list fence agents: API memory allocation failed");
-        return -ENOMEM;
-    }
-    stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
-                                   &stonith_resources, 0);
-    stonith_api->cmds->free(stonith_api);
-
-    for (dIter = stonith_resources; dIter; dIter = dIter->next) {
-        rc++;
-        if (resources) {
-            *resources = lrmd_list_add(*resources, dIter->value);
-        }
-    }
-
-    stonith__key_value_freeall(stonith_resources, true, false);
-    return rc;
-}
-
-static int
-lrmd_api_list_agents(lrmd_t * lrmd, lrmd_list_t ** resources, const char *class,
-                     const char *provider)
-{
-    int rc = 0;
-    int stonith_count = 0; // Initially, whether to include stonith devices
-
-    if (pcmk__str_eq(class, PCMK_RESOURCE_CLASS_STONITH, pcmk__str_casei)) {
-        stonith_count = 1;
-
-    } else {
-        GList *gIter = NULL;
-        GList *agents = resources_list_agents(class, provider);
-
-        for (gIter = agents; gIter != NULL; gIter = gIter->next) {
-            *resources = lrmd_list_add(*resources, (const char *)gIter->data);
-            rc++;
-        }
-        g_list_free_full(agents, free);
-
-        if (!class) {
-            stonith_count = 1;
-        }
-    }
-
-    if (stonith_count) {
-        // Now, if stonith devices are included, how many there are
-        stonith_count = list_stonith_agents(resources);
-        if (stonith_count > 0) {
-            rc += stonith_count;
-        }
-    }
-    if (rc == 0) {
-        pcmk__notice("No agents found for class %s", class);
-        rc = -EPROTONOSUPPORT;
-    }
-    return rc;
-}
-
-static bool
-does_provider_have_agent(const char *agent, const char *provider, const char *class)
-{
-    bool found = false;
-    GList *agents = NULL;
-    GList *gIter2 = NULL;
-
-    agents = resources_list_agents(class, provider);
-    for (gIter2 = agents; gIter2 != NULL; gIter2 = gIter2->next) {
-        if (pcmk__str_eq(agent, gIter2->data, pcmk__str_casei)) {
-            found = true;
-        }
-    }
-    g_list_free_full(agents, free);
-    return found;
-}
-
-static int
-lrmd_api_list_ocf_providers(lrmd_t * lrmd, const char *agent, lrmd_list_t ** providers)
-{
-    int rc = pcmk_ok;
-    char *provider = NULL;
-    GList *ocf_providers = NULL;
-    GList *gIter = NULL;
-
-    ocf_providers = resources_list_providers(PCMK_RESOURCE_CLASS_OCF);
-
-    for (gIter = ocf_providers; gIter != NULL; gIter = gIter->next) {
-        provider = gIter->data;
-        if (!agent || does_provider_have_agent(agent, provider,
-                                               PCMK_RESOURCE_CLASS_OCF)) {
-            *providers = lrmd_list_add(*providers, (const char *)gIter->data);
-            rc++;
-        }
-    }
-
-    g_list_free_full(ocf_providers, free);
-    return rc;
-}
-
-static int
-lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
-{
-    int rc = 0;
-    GList *standards = NULL;
-    GList *gIter = NULL;
-
-    standards = resources_list_standards();
-
-    for (gIter = standards; gIter != NULL; gIter = gIter->next) {
-        *supported = lrmd_list_add(*supported, (const char *)gIter->data);
-        rc++;
-    }
-
-    if (list_stonith_agents(NULL) > 0) {
-        *supported = lrmd_list_add(*supported, PCMK_RESOURCE_CLASS_STONITH);
-        rc++;
-    }
-
-    g_list_free_full(standards, free);
-    return rc;
-}
-
 /*!
  * \internal
  * \brief Create an executor API object
  *
- * \param[out] api       Will be set to newly created API object (it is the
- *                       caller's responsibility to free this value with
- *                       lrmd_api_delete() if this function succeeds)
  * \param[in]  nodename  If the object will be used for a remote connection,
  *                       the node name to use in cluster for remote executor
  * \param[in]  server    If the object will be used for a remote connection,
@@ -2215,107 +2170,75 @@ lrmd_api_list_standards(lrmd_t * lrmd, lrmd_list_t ** supported)
  * \param[in]  port      If the object will be used for a remote connection,
  *                       port number on \p server to connect to
  *
- * \return Standard Pacemaker return code
+ * \return Newly allocated API object
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c lrmd_api_delete().
  * \note If the caller leaves one of \p nodename or \p server NULL, the other's
  *       value will be used for both. If the caller leaves both NULL, an API
  *       object will be created for a local executor connection.
  */
-int
-lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port)
+static lrmd_t *
+new_lrmd_api(const char *nodename, const char *server, int port)
 {
-    lrmd_private_t *pvt = NULL;
+    lrmd_t *api = pcmk__assert_alloc(1, sizeof(lrmd_t));
+    lrmd_private_t *api_priv = pcmk__assert_alloc(1, sizeof(lrmd_private_t));
 
-    if (api == NULL) {
-        return EINVAL;
-    }
-    *api = NULL;
-
-    // Allocate all memory needed
-
-    *api = calloc(1, sizeof(lrmd_t));
-    if (*api == NULL) {
-        return ENOMEM;
-    }
-
-    pvt = calloc(1, sizeof(lrmd_private_t));
-    if (pvt == NULL) {
-        lrmd_api_delete(*api);
-        *api = NULL;
-        return ENOMEM;
-    }
-    (*api)->lrmd_private = pvt;
+    api->lrmd_private = api_priv;
 
     // @TODO Do we need to do this for local connections?
-    pvt->remote = calloc(1, sizeof(pcmk__remote_t));
+    api_priv->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
-    (*api)->cmds = calloc(1, sizeof(lrmd_api_operations_t));
-
-    if ((pvt->remote == NULL) || ((*api)->cmds == NULL)) {
-        lrmd_api_delete(*api);
-        *api = NULL;
-        return ENOMEM;
-    }
+    api->cmds = pcmk__assert_alloc(1, sizeof(lrmd_api_operations_t));
 
     // Set methods
-    (*api)->cmds->connect = lrmd_api_connect;
-    (*api)->cmds->connect_async = lrmd_api_connect_async;
-    (*api)->cmds->is_connected = lrmd_api_is_connected;
-    (*api)->cmds->poke_connection = lrmd_api_poke_connection;
-    (*api)->cmds->disconnect = lrmd_api_disconnect;
-    (*api)->cmds->register_rsc = lrmd_api_register_rsc;
-    (*api)->cmds->unregister_rsc = lrmd_api_unregister_rsc;
-    (*api)->cmds->get_rsc_info = lrmd_api_get_rsc_info;
-    (*api)->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
-    (*api)->cmds->set_callback = lrmd_api_set_callback;
-    (*api)->cmds->get_metadata = lrmd_api_get_metadata;
-    (*api)->cmds->exec = lrmd_api_exec;
-    (*api)->cmds->cancel = lrmd_api_cancel;
-    (*api)->cmds->list_agents = lrmd_api_list_agents;
-    (*api)->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
-    (*api)->cmds->list_standards = lrmd_api_list_standards;
-    (*api)->cmds->exec_alert = lrmd_api_exec_alert;
-    (*api)->cmds->get_metadata_params = lrmd_api_get_metadata_params;
+    api->cmds->connect = lrmd_api_connect;
+    api->cmds->connect_async = lrmd_api_connect_async;
+    api->cmds->is_connected = lrmd_api_is_connected;
+    api->cmds->poke_connection = lrmd_api_poke_connection;
+    api->cmds->disconnect = lrmd_api_disconnect;
+    api->cmds->register_rsc = lrmd_api_register_rsc;
+    api->cmds->unregister_rsc = lrmd_api_unregister_rsc;
+    api->cmds->get_rsc_info = lrmd_api_get_rsc_info;
+    api->cmds->get_recurring_ops = lrmd_api_get_recurring_ops;
+    api->cmds->set_callback = lrmd_api_set_callback;
+    api->cmds->get_metadata = lrmd_api_get_metadata;
+    api->cmds->exec = lrmd_api_exec;
+    api->cmds->cancel = lrmd_api_cancel;
+    api->cmds->list_agents = lrmd_api_list_agents;
+    api->cmds->list_ocf_providers = lrmd_api_list_ocf_providers;
+    api->cmds->list_standards = lrmd_api_list_standards;
+    api->cmds->exec_alert = lrmd_api_exec_alert;
+    api->cmds->get_metadata_params = lrmd_api_get_metadata_params;
 
     if ((nodename == NULL) && (server == NULL)) {
-        pvt->type = pcmk__client_ipc;
-    } else {
-        if (nodename == NULL) {
-            nodename = server;
-        } else if (server == NULL) {
-            server = nodename;
-        }
-        pvt->type = pcmk__client_tls;
-        pvt->remote_nodename = strdup(nodename);
-        pvt->server = strdup(server);
-        if ((pvt->remote_nodename == NULL) || (pvt->server == NULL)) {
-            lrmd_api_delete(*api);
-            *api = NULL;
-            return ENOMEM;
-        }
-        pvt->port = port;
-        if (pvt->port == 0) {
-            pvt->port = crm_default_remote_port();
-        }
+        api_priv->type = pcmk__client_ipc;
+        return api;
     }
-    return pcmk_rc_ok;
+
+    if (nodename == NULL) {
+        nodename = server;
+    } else if (server == NULL) {
+        server = nodename;
+    }
+
+    api_priv->type = pcmk__client_tls;
+    api_priv->remote_nodename = pcmk__str_copy(nodename);
+    api_priv->server = pcmk__str_copy(server);
+    api_priv->port = (port != 0)? port : crm_default_remote_port();
+    return api;
 }
 
 lrmd_t *
 lrmd_api_new(void)
 {
-    lrmd_t *api = NULL;
-
-    pcmk__assert(lrmd__new(&api, NULL, NULL, 0) == pcmk_rc_ok);
-    return api;
+    return new_lrmd_api(NULL, NULL, 0);
 }
 
 lrmd_t *
 lrmd_remote_api_new(const char *nodename, const char *server, int port)
 {
-    lrmd_t *api = NULL;
-
-    pcmk__assert(lrmd__new(&api, nodename, server, port) == pcmk_rc_ok);
-    return api;
+    return new_lrmd_api(nodename, server, port);
 }
 
 void
@@ -2531,4 +2454,29 @@ lrmd__node_start_state(lrmd_t *lrmd)
     } else {
         return native->remote->start_state;
     }
+}
+
+void
+lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
+                         void (*cb)(lrmd_t *, void *, xmlNode *))
+{
+    lrmd_private_t *native = lrmd->lrmd_private;
+
+    native->proxy_callback = cb;
+    native->proxy_callback_userdata = user_data;
+}
+
+int
+lrmd__proxy_send(lrmd_t *lrmd, xmlNode *msg)
+{
+    CRM_CHECK(msg != NULL, return -EINVAL);
+
+    if (lrmd == NULL) {
+        return -ENOTCONN;
+    }
+
+    pcmk__xe_set(msg, PCMK__XA_LRMD_OP, CRM_OP_IPC_FWD);
+    pcmk__log_xml_trace(msg, "PROXY_OUTBOUND");
+
+    return lrmd_send_xml_no_reply(lrmd, msg);
 }

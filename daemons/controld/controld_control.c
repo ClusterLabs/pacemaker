@@ -222,7 +222,9 @@ crmd_exit(crm_exit_t exit_code)
 
     verify_stopped(controld_globals.fsa_state, LOG_WARNING);
     controld_clear_fsa_input_flags(R_LRM_CONNECTED);
-    lrm_state_destroy_all();
+
+    controld_execd_state_table_free();
+    controld_remote_proxy_table_free();
 
     g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
 
@@ -284,11 +286,8 @@ crmd_exit(crm_exit_t exit_code)
         mainloop_destroy_signal(SIGCHLD);
     }
 
-    cib_delete(controld_globals.cib_conn);
-    controld_globals.cib_conn = NULL;
-
     throttle_fini();
-
+    g_clear_pointer(&controld_globals.cib_conn, cib_delete);
     g_clear_pointer(&controld_globals.cluster, pcmk_cluster_free);
 
     /* Graceful */
@@ -329,7 +328,9 @@ do_startup(long long action, enum crmd_fsa_cause cause,
 
     controld_globals.cib_conn = cib_new();
 
-    lrm_state_init_local();
+    controld_execd_state_table_init();
+    controld_remote_proxy_table_init();
+
     if (!controld_init_fsa_timers()) {
         register_fsa_error(I_ERROR, msg_data);
     }

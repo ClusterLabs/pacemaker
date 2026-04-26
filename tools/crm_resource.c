@@ -1615,15 +1615,7 @@ handle_metadata(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
     char *standard = NULL;
     char *provider = NULL;
     char *type = NULL;
-    lrmd_t *lrmd_conn = NULL;
-
-    rc = lrmd__new(&lrmd_conn, NULL, NULL, 0);
-    if (rc != pcmk_rc_ok) {
-        g_set_error(&error, PCMK__RC_ERROR, rc,
-                    _("Could not create executor connection"));
-        lrmd_api_delete(lrmd_conn);
-        return pcmk_rc2exitc(rc);
-    }
+    lrmd_t *lrmd_conn = lrmd_api_new();
 
     rc = crm_parse_agent_spec(options.agent_spec, &standard, &provider, &type);
     rc = pcmk_legacy2rc(rc);

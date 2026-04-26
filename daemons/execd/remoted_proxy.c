@@ -198,7 +198,8 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
      *
      * -----remote node----------------|---- cluster node ------
      * ipc_client <--1--> this code
-     *    <--2--> pacemaker-controld:remote_proxy_cb/remote_proxy_relay_event()
+     *    <--2--> pacemaker-controld:controld_remote_proxy_cb
+     *            /remote_proxy_relay_event()
      *    <--3--> ipc server
      *
      * This function is receiving a msg from connection 2

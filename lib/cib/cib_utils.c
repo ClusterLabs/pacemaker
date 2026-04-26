@@ -1017,7 +1017,6 @@ cib__clean_up_connection(cib_t **cib)
     }
 
     rc = (*cib)->cmds->signoff(*cib);
-    cib_delete(*cib);
-    *cib = NULL;
+    g_clear_pointer(cib, cib_delete);
     return pcmk_legacy2rc(rc);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -64,9 +64,6 @@ void controld_fsa_stall_as(const char *function, fsa_data_t *cur_data,
 void delete_fsa_input(fsa_data_t * fsa_data);
 
 extern gboolean relay_message(xmlNode * relay_message, gboolean originated_locally);
-
-gboolean crmd_is_proxy_session(const char *session);
-void crmd_proxy_send(const char *session, xmlNode *msg);
 
 bool controld_authorize_ipc_message(const xmlNode *client_msg,
                                     pcmk__client_t *curr_client,
