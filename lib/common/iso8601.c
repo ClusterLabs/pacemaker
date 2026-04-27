@@ -55,6 +55,9 @@
 #define HOURS_IN_DAY        24
 #define SECONDS_IN_DAY      (SECONDS_IN_HOUR * HOURS_IN_DAY)
 
+#define BEGIN_VALID_RANGE_S "0001-01-01T00:00:00"
+#define END_VALID_RANGE_S   "9999-12-31T23:59:59"
+
 /*!
  * \internal
  * \brief Validate a seconds/microseconds tuple
@@ -1426,16 +1429,24 @@ crm_time_parse_period(const char *period_str)
         period->end = crm_time_add(period->start, period->diff);
     }
 
-    if (!valid_time(period->start)) {
+    if (!pcmk__time_valid_year(period->start->years)
+        || !valid_time(period->start)) {
+
         pcmk__err("'%s' is not a valid ISO 8601 time period because the start "
-                  "is invalid", period_str);
+                  "is invalid (must be between " BEGIN_VALID_RANGE_S " and "
+                  END_VALID_RANGE_S ")", period_str);
         goto invalid;
     }
-    if (!valid_time(period->end)) {
+
+    if (!pcmk__time_valid_year(period->end->years)
+        || !valid_time(period->end)) {
+
         pcmk__err("'%s' is not a valid ISO 8601 time period because the end is "
-                  "invalid", period_str);
+                  "invalid (must be between " BEGIN_VALID_RANGE_S " and "
+                  END_VALID_RANGE_S ")", period_str);
         goto invalid;
     }
+
     return period;
 
 invalid:
