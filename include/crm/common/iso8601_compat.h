@@ -67,6 +67,9 @@ void crm_time_log_alias(int log_level, const char *file, const char *function,
                         const crm_time_t *date_time, int flags);
 
 //! \deprecated Do not use
+void crm_time_free_period(crm_time_period_t *period);
+
+//! \deprecated Do not use
 crm_time_period_t *crm_time_parse_period(const char *period_str);
 
 #ifdef __cplusplus
