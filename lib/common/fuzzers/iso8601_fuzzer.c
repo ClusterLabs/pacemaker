@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,8 +21,6 @@ int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     char *ns = NULL;
-    crm_time_period_t *period = NULL;
-
     struct timespec tv = { 0, };
     crm_time_t *now = NULL;
     char *result = NULL;
@@ -33,9 +31,6 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     }
     ns = pcmk__assert_alloc(size + 1, sizeof(char));
     memcpy(ns, data, size);
-
-    period = crm_time_parse_period(ns);
-    crm_time_free_period(period);
 
     qb_util_timespec_from_epoch_get(&tv);
     now = pcmk__copy_timet(tv.tv_sec);
