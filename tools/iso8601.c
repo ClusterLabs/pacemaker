@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2025 the Pacemaker project contributors
+ * Copyright 2005-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -215,65 +215,67 @@ duration_ends_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("period", "crm_time_period_t *", "int")
+PCMK__OUTPUT_ARGS("period", "crm_time_t *", "crm_time_t *", "int")
 static int
 period_default(pcmk__output_t *out, va_list args)
 {
-    crm_time_period_t *period = va_arg(args, crm_time_period_t *);
+    const crm_time_t *start = va_arg(args, crm_time_t *);
+    const crm_time_t *end = va_arg(args, crm_time_t *);
     int opts = va_arg(args, int);
 
-    char *start = NULL;
-    char *end = NULL;
+    char *start_s = NULL;
+    char *end_s = NULL;
 
     opts |= crm_time_log_date | crm_time_log_timeofday;
 
-    start = crm_time_as_string(period->start, opts);
-    if (start == NULL) {
+    start_s = crm_time_as_string(start, opts);
+    if (start_s == NULL) {
         return pcmk_rc_no_output;
     }
 
-    end = crm_time_as_string(period->end, opts);
-    if (end == NULL) {
-        free(start);
+    end_s = crm_time_as_string(end, opts);
+    if (end_s == NULL) {
+        free(start_s);
         return pcmk_rc_no_output;
     }
 
-    out->info(out, "Period: %s to %s", start, end);
+    out->info(out, "Period: %s to %s", start_s, end_s);
 
-    free(start);
-    free(end);
+    free(start_s);
+    free(end_s);
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("period", "crm_time_period_t *", "int")
+PCMK__OUTPUT_ARGS("period", "crm_time_t *", "crm_time_t *", "int")
 static int
 period_xml(pcmk__output_t *out, va_list args)
 {
-    crm_time_period_t *period = va_arg(args, crm_time_period_t *);
+    const crm_time_t *start = va_arg(args, crm_time_t *);
+    const crm_time_t *end = va_arg(args, crm_time_t *);
     int opts = va_arg(args, int);
 
-    char *start = NULL;
-    char *end = NULL;
+    char *start_s = NULL;
+    char *end_s = NULL;
 
     opts |= crm_time_log_date | crm_time_log_timeofday;
 
-    start = crm_time_as_string(period->start, opts);
-    if (start == NULL) {
+    start_s = crm_time_as_string(start, opts);
+    if (start_s == NULL) {
         return pcmk_rc_no_output;
     }
 
-    end = crm_time_as_string(period->end, opts);
-    if (end == NULL) {
-        free(start);
+    end_s = crm_time_as_string(end, opts);
+    if (end_s == NULL) {
+        free(start_s);
         return pcmk_rc_no_output;
     }
 
     pcmk__output_xml_create_parent(out, PCMK_XE_PERIOD, NULL);
-    pcmk__output_create_xml_text_node(out, PCMK_XE_START, start);
-    pcmk__output_create_xml_text_node(out, PCMK_XE_END, end);
+    pcmk__output_create_xml_text_node(out, PCMK_XE_START, start_s);
+    pcmk__output_create_xml_text_node(out, PCMK_XE_END, end_s);
 
-    free(start);
-    free(end);
+    free(start_s);
+    free(end_s);
     return pcmk_rc_ok;
 }
 
@@ -398,7 +400,8 @@ main(int argc, char **argv)
             goto done;
         }
 
-        out->message(out, "period", period, options.print_options);
+        out->message(out, "period", period->start, period->end,
+                     options.print_options);
         crm_time_free_period(period);
     }
 
