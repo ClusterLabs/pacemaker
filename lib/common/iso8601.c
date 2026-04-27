@@ -1354,108 +1354,6 @@ invalid:
 }
 
 /*!
- * \brief Parse a time period from an ISO 8601 interval specification
- *
- * \param[in] period_str  ISO 8601 interval specification (start/end,
- *                        start/duration, or duration/end)
- *
- * \return New time period object on success, NULL (and set errno) otherwise
- * \note The caller is responsible for freeing the result using
- *       crm_time_free_period().
- */
-crm_time_period_t *
-crm_time_parse_period(const char *period_str)
-{
-    const char *original = period_str;
-    crm_time_period_t *period = NULL;
-
-    if (pcmk__str_empty(period_str)) {
-        pcmk__err("No ISO 8601 time period given");
-        goto invalid;
-    }
-
-    tzset();
-    period = pcmk__assert_alloc(1, sizeof(crm_time_period_t));
-
-    if (period_str[0] == 'P') {
-        period->diff = crm_time_parse_duration(period_str);
-        if (period->diff == NULL) {
-            goto invalid;
-        }
-    } else {
-        period->start = parse_date(period_str);
-        if (period->start == NULL) {
-            goto invalid;
-        }
-    }
-
-    period_str = strchr(original, '/');
-    if (period_str != NULL) {
-        ++period_str;
-        if (period_str[0] == 'P') {
-            if (period->diff != NULL) {
-                pcmk__err("'%s' is not a valid ISO 8601 time period because it "
-                          "has two durations",
-                          original);
-                goto invalid;
-            }
-            period->diff = crm_time_parse_duration(period_str);
-            if (period->diff == NULL) {
-                goto invalid;
-            }
-        } else {
-            period->end = parse_date(period_str);
-            if (period->end == NULL) {
-                goto invalid;
-            }
-        }
-
-    } else if (period->diff != NULL) {
-        // Only duration given, assume start is now
-        period->start = pcmk__copy_timet(time(NULL));
-
-    } else {
-        // Only start given
-        pcmk__err("'%s' is not a valid ISO 8601 time period because it has no "
-                  "duration or ending time",
-                  original);
-        goto invalid;
-    }
-
-    if (period->start == NULL) {
-        period->start = crm_time_subtract(period->end, period->diff);
-
-    } else if (period->end == NULL) {
-        period->end = crm_time_add(period->start, period->diff);
-    }
-
-    if (!pcmk__time_valid_year(period->start->years)
-        || !valid_time(period->start)) {
-
-        pcmk__err("'%s' is not a valid ISO 8601 time period because the start "
-                  "is invalid (must be between " BEGIN_VALID_RANGE_S " and "
-                  END_VALID_RANGE_S ")", period_str);
-        goto invalid;
-    }
-
-    if (!pcmk__time_valid_year(period->end->years)
-        || !valid_time(period->end)) {
-
-        pcmk__err("'%s' is not a valid ISO 8601 time period because the end is "
-                  "invalid (must be between " BEGIN_VALID_RANGE_S " and "
-                  END_VALID_RANGE_S ")", period_str);
-        goto invalid;
-    }
-
-    return period;
-
-invalid:
-    errno = EINVAL;
-    crm_time_free_period(period);
-    return NULL;
-}
-
-/*!
  * \brief Free a dynamically allocated time period object
  *
  * \param[in,out] period  Time period to free
@@ -2425,6 +2323,98 @@ crm_time_log_alias(int log_level, const char *file, const char *function,
 {
     pcmk__time_log_as(file, function, line, pcmk__clip_log_level(log_level),
                       prefix, date_time, flags);
+}
+
+crm_time_period_t *
+crm_time_parse_period(const char *period_str)
+{
+    const char *original = period_str;
+    crm_time_period_t *period = NULL;
+
+    if (pcmk__str_empty(period_str)) {
+        pcmk__err("No ISO 8601 time period given");
+        goto invalid;
+    }
+
+    tzset();
+    period = pcmk__assert_alloc(1, sizeof(crm_time_period_t));
+
+    if (period_str[0] == 'P') {
+        period->diff = crm_time_parse_duration(period_str);
+        if (period->diff == NULL) {
+            goto invalid;
+        }
+    } else {
+        period->start = parse_date(period_str);
+        if (period->start == NULL) {
+            goto invalid;
+        }
+    }
+
+    period_str = strchr(original, '/');
+    if (period_str != NULL) {
+        ++period_str;
+        if (period_str[0] == 'P') {
+            if (period->diff != NULL) {
+                pcmk__err("'%s' is not a valid ISO 8601 time period because it "
+                          "has two durations",
+                          original);
+                goto invalid;
+            }
+            period->diff = crm_time_parse_duration(period_str);
+            if (period->diff == NULL) {
+                goto invalid;
+            }
+        } else {
+            period->end = parse_date(period_str);
+            if (period->end == NULL) {
+                goto invalid;
+            }
+        }
+
+    } else if (period->diff != NULL) {
+        // Only duration given, assume start is now
+        period->start = pcmk__copy_timet(time(NULL));
+
+    } else {
+        // Only start given
+        pcmk__err("'%s' is not a valid ISO 8601 time period because it has no "
+                  "duration or ending time",
+                  original);
+        goto invalid;
+    }
+
+    if (period->start == NULL) {
+        period->start = crm_time_subtract(period->end, period->diff);
+
+    } else if (period->end == NULL) {
+        period->end = crm_time_add(period->start, period->diff);
+    }
+
+    if (!pcmk__time_valid_year(period->start->years)
+        || !valid_time(period->start)) {
+
+        pcmk__err("'%s' is not a valid ISO 8601 time period because the start "
+                  "is invalid (must be between " BEGIN_VALID_RANGE_S " and "
+                  END_VALID_RANGE_S ")", period_str);
+        goto invalid;
+    }
+
+    if (!pcmk__time_valid_year(period->end->years)
+        || !valid_time(period->end)) {
+
+        pcmk__err("'%s' is not a valid ISO 8601 time period because the end is "
+                  "invalid (must be between " BEGIN_VALID_RANGE_S " and "
+                  END_VALID_RANGE_S ")", period_str);
+        goto invalid;
+    }
+
+    return period;
+
+invalid:
+    errno = EINVAL;
+    crm_time_free_period(period);
+    return NULL;
 }
 
 // LCOV_EXCL_STOP
