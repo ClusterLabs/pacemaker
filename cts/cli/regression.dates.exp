@@ -88,6 +88,11 @@ parse_date 	error: '-0001-10-01T00:00:00Z/P1M' is not a valid ISO 8601 date/time
 iso8601: Invalid interval specified: -0001-10-01T00:00:00Z/P1M
 =#=#=#= End test: Invalid period - [-0001-10-01T00:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [-0001-10-01T00:00:00Z/P1M]
+=#=#=#= Begin test: Invalid period - [10000-10-01T00:00:00Z/P1M] =#=#=#=
+crm_time_parse_period 	error: 'P1M' is not a valid ISO 8601 time period because the start is invalid (must be between 0001-01-01T00:00:00 and 9999-12-31T23:59:59)
+iso8601: Invalid interval specified: 10000-10-01T00:00:00Z/P1M
+=#=#=#= End test: Invalid period - [10000-10-01T00:00:00Z/P1M] - Invalid parameter (2) =#=#=#=
+* Passed: iso8601               - Invalid period - [10000-10-01T00:00:00Z/P1M]
 =#=#=#= Begin test: '2005-040/2005-043' period =#=#=#=
 Period: 2005-02-09 00:00:00Z to 2005-02-12 00:00:00Z
 =#=#=#= End test: '2005-040/2005-043' period - OK (0) =#=#=#=
@@ -102,20 +107,6 @@ Period: 2005-02-09 00:00:00Z to 2005-02-12 00:00:00Z
 </pacemaker-result>
 =#=#=#= End test: '2005-040/2005-043' period (XML) - OK (0) =#=#=#=
 * Passed: iso8601               - '2005-040/2005-043' period (XML)
-=#=#=#= Begin test: '10000-10-01T00:00:00Z/P1M' period =#=#=#=
-Period: 10000-10-01 00:00:00Z to 10000-11-01 00:00:00Z
-=#=#=#= End test: '10000-10-01T00:00:00Z/P1M' period - OK (0) =#=#=#=
-* Passed: iso8601               - '10000-10-01T00:00:00Z/P1M' period
-=#=#=#= Begin test: '10000-10-01T00:00:00Z/P1M' period (XML) =#=#=#=
-<pacemaker-result api-version="X" request="iso8601 --output-as=xml -p 10000-10-01T00:00:00Z/P1M">
-  <period>
-    <start>10000-10-01 00:00:00Z</start>
-    <end>10000-11-01 00:00:00Z</end>
-  </period>
-  <status code="0" message="OK"/>
-</pacemaker-result>
-=#=#=#= End test: '10000-10-01T00:00:00Z/P1M' period (XML) - OK (0) =#=#=#=
-* Passed: iso8601               - '10000-10-01T00:00:00Z/P1M' period (XML)
 =#=#=#= Begin test: 2014-01-01 00:30:00 - 1 Hour =#=#=#=
 Date: 2014-01-01 00:30:00Z
 Duration: -3600 seconds (1 hour)

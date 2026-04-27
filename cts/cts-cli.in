@@ -1118,6 +1118,7 @@ class DatesRegressionTest(RegressionTest):
             "P1YM/2019-02-20 00:00:00Z",        # No number for duration unit
             "0000-10-01T00:00:00Z/P1M",         # Zero year
             "-0001-10-01T00:00:00Z/P1M",        # Negative year
+            "10000-10-01T00:00:00Z/P1M",        # Year greater than 9999
         ]
 
         # Ensure invalid period specifications are rejected
@@ -1142,7 +1143,6 @@ class DatesRegressionTest(RegressionTest):
 
         return invalid_period_tests + [
             make_test_group("'2005-040/2005-043' period", "iso8601 -p '2005-040/2005-043'"),
-            make_test_group("'10000-10-01T00:00:00Z/P1M' period", "iso8601 -p '10000-10-01T00:00:00Z/P1M'"),
             Test("2014-01-01 00:30:00 - 1 Hour",
                  "iso8601 -d '2014-01-01 00:30:00Z' -D P-1H -E '2013-12-31 23:30:00Z'"),
             Test("Valid date - Feb 29 in leap year",
