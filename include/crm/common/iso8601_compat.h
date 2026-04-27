@@ -30,6 +30,13 @@ extern "C" {
  */
 
 //! \deprecated Do not use
+typedef struct crm_time_period_s {
+    crm_time_t *start;
+    crm_time_t *end;
+    crm_time_t *diff;
+} crm_time_period_t;
+
+//! \deprecated Do not use
 bool crm_time_leapyear(int year);
 
 //! \deprecated Do not use
