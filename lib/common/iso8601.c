@@ -434,7 +434,7 @@ parse_time(const char *time_str, crm_time_t *a_time)
  * \return \c true if days and seconds are valid given the year, or \c false
  *         otherwise
  */
-static bool
+bool
 valid_time(const crm_time_t *dt)
 {
     return (dt != NULL)

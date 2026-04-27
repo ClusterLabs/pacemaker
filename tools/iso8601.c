@@ -34,6 +34,8 @@ struct {
 } options;
 
 #define INDENT "                              "
+#define BEGIN_VALID_RANGE_S "0001-01-01T00:00:00"
+#define END_VALID_RANGE_S   "9999-12-31T23:59:59"
 
 static gboolean
 date_now_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
@@ -279,6 +281,93 @@ period_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
+static int
+parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
+{
+    const char *original = period_str;
+    crm_time_t *diff = NULL;
+
+    if (pcmk__str_empty(period_str)) {
+        pcmk__err("No ISO 8601 time period given");
+        goto invalid;
+    }
+
+    tzset();
+
+    if (period_str[0] == 'P') {
+        diff = crm_time_parse_duration(period_str);
+        if (diff == NULL) {
+            goto invalid;
+        }
+    } else {
+        *start = crm_time_new(period_str);
+        if (*start == NULL) {
+            goto invalid;
+        }
+    }
+
+    period_str = strchr(original, '/');
+    if (period_str != NULL) {
+        ++period_str;
+        if (period_str[0] == 'P') {
+            if (diff != NULL) {
+                pcmk__err("'%s' is not a valid ISO 8601 time period because it "
+                          "has two durations", original);
+                goto invalid;
+            }
+            diff = crm_time_parse_duration(period_str);
+            if (diff == NULL) {
+                goto invalid;
+            }
+        } else {
+            *end = crm_time_new(period_str);
+            if (*end == NULL) {
+                goto invalid;
+            }
+        }
+
+    } else if (diff != NULL) {
+        // Only duration given, assume start is now
+        *start = pcmk__copy_timet(time(NULL));
+
+    } else {
+        // Only start given
+        pcmk__err("'%s' is not a valid ISO 8601 time period because it has no "
+                  "duration or ending time", original);
+        goto invalid;
+    }
+
+    if (*start == NULL) {
+        *start = crm_time_subtract(*end, diff);
+
+    } else if (*end == NULL) {
+        *end = crm_time_add(*start, diff);
+    }
+
+    if (!pcmk__time_valid_year((*start)->years) || !valid_time(*start)) {
+        pcmk__err("'%s' is not a valid ISO 8601 time period because the start "
+                  "is invalid (must be between " BEGIN_VALID_RANGE_S " and "
+                  END_VALID_RANGE_S ")", period_str);
+        goto invalid;
+    }
+
+    if (!pcmk__time_valid_year((*end)->years) || !valid_time(*end)) {
+        pcmk__err("'%s' is not a valid ISO 8601 time period because the end is "
+                  "invalid (must be between " BEGIN_VALID_RANGE_S " and "
+                  END_VALID_RANGE_S ")", period_str);
+        goto invalid;
+    }
+
+    crm_time_free(diff);
+    return pcmk_rc_ok;
+
+invalid:
+    crm_time_free(diff);
+    crm_time_free(*start);
+    crm_time_free(*end);
+    return EINVAL;
+}
+
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
@@ -391,18 +480,19 @@ main(int argc, char **argv)
     }
 
     if (options.period_s) {
-        crm_time_period_t *period = crm_time_parse_period(options.period_s);
+        crm_time_t *start = NULL;
+        crm_time_t *end = NULL;
 
-        if (period == NULL) {
+        if (parse_period(options.period_s, &start, &end) != pcmk_rc_ok) {
             exit_code = CRM_EX_INVALID_PARAM;
             g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                         "Invalid interval specified: %s", options.period_s);
             goto done;
         }
 
-        out->message(out, "period", period->start, period->end,
-                     options.print_options);
-        crm_time_free_period(period);
+        out->message(out, "period", start, end, options.print_options);
+        crm_time_free(start);
+        crm_time_free(end);
     }
 
     if (date_time && duration) {
