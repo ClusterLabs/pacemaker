@@ -38,16 +38,6 @@ extern "C" {
  */
 typedef struct crm_time_s crm_time_t;
 
-/*!
- * \deprecated Use \c crm_time_period_t instead of
- *             <tt>struct crm_time_period_s</tt>.
- */
-typedef struct crm_time_period_s {
-    crm_time_t *start;
-    crm_time_t *end;
-    crm_time_t *diff;
-} crm_time_period_t;
-
 /* Creates a new date/time object conforming to ISO 8601, for example:
  *   Ordinal:   2010-01 12:00:00 +10:00
  *   Gregorian: 2010-01-01 12:00:00 +10:00
