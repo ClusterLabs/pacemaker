@@ -64,6 +64,8 @@ struct crm_time_s {
     bool duration;
 };
 
+bool valid_time(const crm_time_t *dt);
+
 #ifdef __cplusplus
 }
 #endif
