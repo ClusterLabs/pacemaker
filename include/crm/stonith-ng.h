@@ -712,7 +712,7 @@ time_t stonith_api_time(uint32_t nodeid, const char *uname, bool in_progress);
 
  */
 
-#define STONITH_LIBRARY "libstonithd.so.57"
+#define STONITH_LIBRARY "libstonithd.so.56"
 
 // NOTE: dlm (as of at least 4.3.0) uses these (via the helper functions below)
 typedef int (*st_api_kick_fn) (int nodeid, const char *uname, int timeout, bool off);

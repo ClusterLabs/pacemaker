@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2026 the Pacemaker project contributors
+ * Copyright 2004-2025 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -52,7 +52,7 @@ void cib_dump_pending_callbacks(void);
 int num_cib_op_callbacks(void);
 void remove_cib_op_callback(int call_id, gboolean all_callbacks);
 
-#define CIB_LIBRARY "libcib.so.55"
+#define CIB_LIBRARY "libcib.so.54"
 
 #ifdef __cplusplus
 }
