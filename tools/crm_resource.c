@@ -1414,9 +1414,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
                  xmlNode *cib_xml_orig)
 {
     unsigned int count = 0;
-    GHashTable *params = NULL;
     pcmk_node_t *current = rsc->priv->fns->active_node(rsc, &count, NULL);
-    bool free_params = true;
     const char *value = NULL;
     int rc = pcmk_rc_ok;
 
@@ -1432,38 +1430,35 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
 
     if (pcmk__str_eq(options.attr_set_type, PCMK_XE_INSTANCE_ATTRIBUTES,
                      pcmk__str_none)) {
-        params = pe_rsc_params(rsc, current, scheduler);
-        free_params = false;
 
-        value = g_hash_table_lookup(params, options.prop_name);
+        value = g_hash_table_lookup(pe_rsc_params(rsc, current, scheduler),
+                                    options.prop_name);
 
     } else if (pcmk__str_eq(options.attr_set_type, PCMK_XE_META_ATTRIBUTES,
                             pcmk__str_none)) {
+
         value = g_hash_table_lookup(rsc->priv->meta, options.prop_name);
-        free_params = false;
 
     } else if (pcmk__str_eq(options.attr_set_type, ATTR_SET_ELEMENT,
                             pcmk__str_none)) {
+
         value = pcmk__xe_get(rsc->priv->xml, options.prop_name);
-        free_params = false;
 
     } else {
         const pcmk_rule_input_t rule_input = {
             .now = scheduler->priv->now,
         };
 
-        params = pcmk__strkey_table(free, free);
+        GHashTable *params = pcmk__strkey_table(free, free);
+
         pe__unpack_dataset_nvpairs(rsc->priv->xml, PCMK_XE_UTILIZATION,
                                    &rule_input, params, NULL, scheduler);
 
         value = g_hash_table_lookup(params, options.prop_name);
-    }
-
-    rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
-    if (free_params) {
         g_hash_table_destroy(params);
     }
 
+    rc = out->message(out, "attribute-list", rsc, options.prop_name, value);
     return pcmk_rc2exitc(rc);
 }
 
