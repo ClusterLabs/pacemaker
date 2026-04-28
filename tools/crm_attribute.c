@@ -708,27 +708,8 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
         { NULL }
     };
 
-    const char *description = "Examples:\n\n"
-                              "Add new node attribute called 'location' with the value of 'office' for host 'myhost':\n\n"
-                              "\tcrm_attribute --node myhost --name location --update office\n\n"
-                              "Query the value of the 'location' node attribute for host 'myhost':\n\n"
-                              "\tcrm_attribute --node myhost --name location --query\n\n"
-                              "Change the value of the 'location' node attribute for host 'myhost':\n\n"
-                              "\tcrm_attribute --node myhost --name location --update backoffice\n\n"
-                              "Delete the 'location' node attribute for host 'myhost':\n\n"
-                              "\tcrm_attribute --node myhost --name location --delete\n\n"
-                              "Query the value of the '" PCMK_OPT_CLUSTER_DELAY
-                                "' cluster option:\n\n"
-                              "\tcrm_attribute --type crm_config --name "
-                                PCMK_OPT_CLUSTER_DELAY " --query\n\n"
-                              "Query value of the '" PCMK_OPT_CLUSTER_DELAY
-                                "' cluster option and print only the value:\n\n"
-                              "\tcrm_attribute --type crm_config --name "
-                                PCMK_OPT_CLUSTER_DELAY " --query --quiet\n\n";
-
     context = pcmk__build_arg_context(args, "text (default), xml", group, NULL);
     pcmk__add_main_args(context, extra_prog_entries);
-    g_option_context_set_description(context, description);
 
     pcmk__add_arg_group(context, "selections", "Selecting attributes:",
                         "Show selecting options", selecting_entries);
