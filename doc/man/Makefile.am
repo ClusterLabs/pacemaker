@@ -10,3 +10,4 @@ include $(top_srcdir)/mk/common.mk
 
 man8_MANS = attrd_updater.8
 man8_MANS += cibadmin.8
+man8_MANS += crm_attribute.8
