@@ -560,9 +560,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         pcmk__assert(*current_cib != working_cib);
     }
 
-    // Allow ourselves to make any additional necessary changes
-    xml_acl_disable(working_cib);
-
     if (rc != pcmk_rc_ok) {
         goto done;
     }
@@ -571,6 +568,9 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         rc = EINVAL;
         goto done;
     }
+
+    // Allow ourselves to make any additional necessary changes
+    xml_acl_disable(working_cib);
 
     if (xml_acl_denied(working_cib)) {
         pcmk__trace("ACL rejected part or all of the proposed changes");
