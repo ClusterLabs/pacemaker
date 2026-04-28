@@ -289,23 +289,21 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
     }
 
     data->ip_last = replica->ipaddr;
-    switch (data->agent_type) {
-        case PE__CONTAINER_AGENT_DOCKER:
-        case PE__CONTAINER_AGENT_PODMAN:
-            if (data->add_host) {
-                g_string_append_printf(buffer, " --add-host=%s-%d:%s",
-                                       data->prefix, replica->offset,
-                                       replica->ipaddr);
-            } else {
-                g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d",
-                                       replica->ipaddr, data->prefix,
-                                       replica->offset);
-            }
-            break;
 
-        default: // PE__CONTAINER_AGENT_UNKNOWN
-            break;
+    if ((data->agent_type != PE__CONTAINER_AGENT_DOCKER)
+        && (data->agent_type != PE__CONTAINER_AGENT_PODMAN)) {
+
+        return;
     }
+
+    if (data->add_host) {
+        g_string_append_printf(buffer, " --add-host=%s-%d:%s", data->prefix,
+                               replica->offset, replica->ipaddr);
+        return;
+    }
+
+    g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d", replica->ipaddr,
+                           data->prefix, replica->offset);
 }
 
 static xmlNode *
@@ -426,14 +424,11 @@ create_container_resource(pcmk_resource_t *parent,
     GString *dbuffer = NULL;
     int rc = pcmk_rc_ok;
 
-    switch (data->agent_type) {
-        case PE__CONTAINER_AGENT_DOCKER:
-        case PE__CONTAINER_AGENT_PODMAN:
-            break;
+    if ((data->agent_type != PE__CONTAINER_AGENT_DOCKER)
+        && (data->agent_type != PE__CONTAINER_AGENT_PODMAN)) {
 
-        default:
-            rc = pcmk_rc_unpack_error;
-            goto done;
+        rc = pcmk_rc_unpack_error;
+        goto done;
     }
 
     agent_str = container_agent_str(data->agent_type);
