@@ -106,7 +106,7 @@ struct pcmk__node_private {
     /* Node's XML ID in the CIB (the cluster layer ID for cluster nodes,
      * the node name for Pacemaker Remote nodes)
      */
-    const char *id;
+    char *id;
 
     /*
      * Sum of priorities of all resources active on node and on any guest nodes
@@ -115,7 +115,7 @@ struct pcmk__node_private {
      */
     int priority;
 
-    const char *name;                   // Node name in cluster
+    char *name;                         // Node name in cluster
     enum pcmk__node_variant variant;    // Node variant
     uint32_t flags;                     // Group of enum pcmk__node_flags
     GHashTable *attrs;                  // Node attributes

@@ -153,8 +153,8 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
         .now = now,
     };
 
-    pcmk_unpack_nvpair_blocks(xml, PCMK_XE_META_ATTRIBUTES, NULL, &rule_input,
-                              config_hash, NULL);
+    pcmk__unpack_nvpair_blocks(xml, PCMK_XE_META_ATTRIBUTES, NULL, &rule_input,
+                               config_hash, NULL, xml->doc);
     crm_time_free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);

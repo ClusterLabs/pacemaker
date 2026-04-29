@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -397,7 +397,8 @@ unpack_nvpair(xmlNode *nvpair, void *userdata)
     const char *name = NULL;
     const char *value = NULL;
     const char *old_value = NULL;
-    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair, NULL);
+    const xmlNode *ref_nvpair = pcmk__xe_resolve_idref(nvpair,
+                                                       unpack_data->doc);
 
     if (ref_nvpair == NULL) {
         /* Not possible with schema validation enabled (error already
@@ -470,6 +471,7 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
 }
 
 /*!
+ * \internal
  * \brief Unpack nvpair blocks contained by an XML element into a hash table,
  *        evaluated for any rules
  *
@@ -480,35 +482,41 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
  * \param[out] values        Where to store extracted name/value pairs
  * \param[out] next_change   If not NULL, set to when evaluation will next
  *                           change, if sooner than its current value
+ * \param[in]  doc           XML document to use for resolving IDREFs
  */
 void
-pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
-                          const char *first_id,
-                          const pcmk_rule_input_t *rule_input,
-                          GHashTable *values, crm_time_t *next_change)
+pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                           const char *first_id,
+                           const pcmk_rule_input_t *rule_input,
+                           GHashTable *values, crm_time_t *next_change,
+                           xmlDoc *doc)
 {
-    GList *blocks = pcmk__xe_dereference_children(xml, element_name);
+    GList *blocks = NULL;
+    pcmk__nvpair_unpack_t data = {
+        .values = values,
+        .first_id = first_id,
+        .overwrite = false,
+        .next_change = next_change,
+    };
 
-    if (blocks != NULL) {
-        pcmk__nvpair_unpack_t data = {
-            .values = values,
-            .first_id = first_id,
-            .rule_input = {
-                .now = NULL,
-            },
-            .overwrite = false,
-            .next_change = next_change,
-        };
-
-        if (rule_input != NULL) {
-            data.rule_input = *rule_input;
-        }
-        blocks = g_list_sort_with_data(blocks, pcmk__cmp_nvpair_blocks, &data);
-        g_list_foreach(blocks, pcmk__unpack_nvpair_block, &data);
-        g_list_free(blocks);
+    if (xml == NULL) {
+        return;
     }
-}
 
+    blocks = pcmk__xe_dereference_children(xml, element_name, xml->doc);
+    if (blocks == NULL) {
+        return;
+    }
+
+    data.doc = doc;
+    if (rule_input != NULL) {
+        data.rule_input = *rule_input;
+    }
+
+    blocks = g_list_sort_with_data(blocks, pcmk__cmp_nvpair_blocks, &data);
+    g_list_foreach(blocks, pcmk__unpack_nvpair_block, &data);
+    g_list_free(blocks);
+}
 
 // Meta-attribute handling
 
@@ -722,6 +730,20 @@ hash2nvpair(gpointer key, gpointer value, gpointer user_data)
 
     crm_create_nvpair_xml(xml_node, name, name, s_value);
     pcmk__trace("dumped: name=%s value=%s", name, s_value);
+}
+
+void
+pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
+                          const char *first_id,
+                          const pcmk_rule_input_t *rule_input,
+                          GHashTable *values, crm_time_t *next_change)
+{
+    if (xml == NULL) {
+        return;
+    }
+
+    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, rule_input, values,
+                               next_change, xml->doc);
 }
 
 // LCOV_EXCL_STOP
