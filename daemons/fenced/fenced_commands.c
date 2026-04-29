@@ -153,6 +153,8 @@ fenced_has_watchdog_device(void)
 void
 fenced_foreach_device(GHFunc fn, gpointer user_data)
 {
+    pcmk__assert(fn != NULL);
+
     if (device_table == NULL) {
         return;
     }
@@ -170,6 +172,8 @@ fenced_foreach_device(GHFunc fn, gpointer user_data)
 void
 fenced_foreach_device_remove(GHRFunc fn)
 {
+    pcmk__assert(fn != NULL);
+
     if (device_table == NULL) {
         return;
     }

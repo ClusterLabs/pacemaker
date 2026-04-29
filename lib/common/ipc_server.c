@@ -50,7 +50,9 @@ pcmk__ipc_client_count(void)
 void
 pcmk__foreach_ipc_client(GHFunc func, gpointer user_data)
 {
-    if ((func != NULL) && (client_connections != NULL)) {
+    pcmk__assert(func != NULL);
+
+    if (client_connections != NULL) {
         g_hash_table_foreach(client_connections, func, user_data);
     }
 }

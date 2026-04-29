@@ -369,7 +369,8 @@ pcmk__foreach_param_check(pcmk_scheduler_t *scheduler,
                                      const xmlNode*,
                                      enum pcmk__check_parameters))
 {
-    CRM_CHECK((scheduler != NULL) && (cb != NULL), return);
+    pcmk__assert(cb != NULL);
+    CRM_CHECK(scheduler != NULL, return);
 
     for (GList *item = scheduler->priv->param_check;
          item != NULL; item = item->next) {
