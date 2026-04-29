@@ -252,6 +252,8 @@ foreach_notify_entry (stonith_private_t *private,
                 GFunc func,
                 gpointer user_data)
 {
+    pcmk__assert(func != NULL);
+
     private->notify_refcnt++;
     g_list_foreach(private->notify_list, func, user_data);
     private->notify_refcnt--;

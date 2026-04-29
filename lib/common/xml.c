@@ -87,6 +87,8 @@ bool
 pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
                        void *user_data)
 {
+    pcmk__assert(fn != NULL);
+
     if (xml == NULL) {
         return true;
     }

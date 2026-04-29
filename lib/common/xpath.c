@@ -173,7 +173,8 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
     xmlXPathObject *xpath_obj = NULL;
     int num_results = 0;
 
-    CRM_CHECK((doc != NULL) && !pcmk__str_empty(path) && (fn != NULL), return);
+    pcmk__assert(fn != NULL);
+    CRM_CHECK((doc != NULL) && !pcmk__str_empty(path), return);
 
     xpath_obj = pcmk__xpath_search(doc, path);
     num_results = pcmk__xpath_num_results(xpath_obj);
