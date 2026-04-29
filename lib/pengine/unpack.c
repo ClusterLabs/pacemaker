@@ -469,8 +469,8 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
  *       freed separately.
  */
 pcmk_node_t *
-pe_create_node(const char *id, const char *uname, const char *type,
-               int score, pcmk_scheduler_t *scheduler)
+pe__create_node(const char *id, const char *uname, const char *type, int score,
+                pcmk_scheduler_t *scheduler)
 {
     enum pcmk__node_variant variant = pcmk__node_variant_cluster;
     pcmk_node_t *new_node = NULL;
@@ -492,34 +492,20 @@ pe_create_node(const char *id, const char *uname, const char *type,
         return NULL;
     }
 
-    new_node = calloc(1, sizeof(pcmk_node_t));
-    if (new_node == NULL) {
-        pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
-                        uname);
-        return NULL;
-    }
-
-    new_node->assign = calloc(1, sizeof(struct pcmk__node_assignment));
-    new_node->details = calloc(1, sizeof(struct pcmk__node_details));
-    new_node->priv = calloc(1, sizeof(pcmk__node_private_t));
-    if ((new_node->assign == NULL) || (new_node->details == NULL)
-        || (new_node->priv == NULL)) {
-        free(new_node->assign);
-        free(new_node->details);
-        free(new_node->priv);
-        free(new_node);
-        pcmk__sched_err(scheduler, "Could not allocate memory for node %s",
-                        uname);
-        return NULL;
-    }
+    new_node = pcmk__assert_alloc(1, sizeof(pcmk_node_t));
+    new_node->assign = pcmk__assert_alloc(1,
+                                          sizeof(struct pcmk__node_assignment));
+    new_node->details = pcmk__assert_alloc(1,
+                                           sizeof(struct pcmk__node_details));
+    new_node->priv = pcmk__assert_alloc(1, sizeof(pcmk__node_private_t));
 
     pcmk__trace("Creating node for entry %s/%s", uname, id);
     new_node->assign->score = score;
-    new_node->priv->id = id;
-    new_node->priv->name = uname;
+    new_node->priv->id = pcmk__str_copy(id);
+    new_node->priv->name = pcmk__str_copy(uname);
     new_node->priv->flags = pcmk__node_probes_allowed;
-    new_node->details->online = FALSE;
-    new_node->details->shutdown = FALSE;
+    new_node->details->online = false;
+    new_node->details->shutdown = false;
     new_node->details->running_rsc = NULL;
     new_node->priv->scheduler = scheduler;
     new_node->priv->variant = variant;
@@ -530,6 +516,7 @@ pe_create_node(const char *id, const char *uname, const char *type,
     if (pcmk__is_pacemaker_remote_node(new_node)) {
         pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "remote");
         pcmk__set_scheduler_flags(scheduler, pcmk__sched_have_remote_nodes);
+
     } else {
         pcmk__insert_dup(new_node->priv->attrs, CRM_ATTR_KIND, "cluster");
     }
@@ -661,7 +648,7 @@ unpack_nodes(xmlNode *xml_nodes, pcmk_scheduler_t *scheduler)
                               pcmk__xe_get(xml_obj, PCMK_XA_SCORE),
                               pcmk_rc_str(rc));
         }
-        new_node = pe_create_node(id, uname, type, score, scheduler);
+        new_node = pe__create_node(id, uname, type, score, scheduler);
 
         if (new_node == NULL) {
             return FALSE;
@@ -732,8 +719,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 && (pcmk_find_node(scheduler, new_node_id) == NULL)) {
                 pcmk__trace("Found remote node %s defined by resource %s",
                             new_node_id, pcmk__xe_id(xml_obj));
-                pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                               0, scheduler);
+                pe__create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE, 0,
+                                scheduler);
             }
             continue;
         }
@@ -752,8 +739,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                 && (pcmk_find_node(scheduler, new_node_id) == NULL)) {
                 pcmk__trace("Found guest node %s in resource %s",
                             new_node_id, pcmk__xe_id(xml_obj));
-                pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                               0, scheduler);
+                pe__create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE, 0,
+                                scheduler);
             }
             continue;
         }
@@ -775,8 +762,8 @@ unpack_remote_nodes(xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
                                 "group %s",
                                 new_node_id, pcmk__xe_id(xml_obj2),
                                 pcmk__xe_id(xml_obj));
-                    pe_create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
-                                   0, scheduler);
+                    pe__create_node(new_node_id, new_node_id, PCMK_VALUE_REMOTE,
+                                    0, scheduler);
                 }
             }
         }
@@ -820,7 +807,7 @@ link_rsc2remotenode(pcmk_scheduler_t *scheduler, pcmk_resource_t *new_rsc)
         handle_startup_fencing(scheduler, remote_node);
 
     } else {
-        /* pe_create_node() marks the new node as "remote" or "cluster"; now
+        /* pe__create_node() marks the new node as "remote" or "cluster"; now
          * that we know the node is a guest node, update it correctly.
          */
         pcmk__insert_dup(remote_node->priv->attrs,
@@ -2050,8 +2037,8 @@ create_fake_resource(const char *rsc_id, const xmlNode *rsc_entry,
         pcmk__debug("Detected removed remote node %s", rsc_id);
         node = pcmk_find_node(scheduler, rsc_id);
         if (node == NULL) {
-            node = pe_create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, 0,
-                                  scheduler);
+            node = pe__create_node(rsc_id, rsc_id, PCMK_VALUE_REMOTE, 0,
+                                   scheduler);
         }
         link_rsc2remotenode(scheduler, rsc);
 
