@@ -70,12 +70,15 @@ coverity: $(COVTAR)
 # of them are designed so that things execute in the proper order (which is
 # not the same as GNU make's order-only prerequisites).
 
+# @COMPAT Prior to GLib 2.58, the implementation of g_clear_pointer()
+# triggers the INCONSISTENT_UNION_ACCESS warning
 .PHONY: coverity-analyze
 coverity-analyze: $(COVERITY_DIR)
 	@echo ""
 	@echo "Analyzing (waiting for coverity license if necessary) ..."
 	cd $(top_builddir) && cov-analyze --dir "$<" --wait-for-license	\
-		--security --aggressiveness-level "$(COVLEVEL)"
+		--security --aggressiveness-level "$(COVLEVEL)"		\
+		--disable INCONSISTENT_UNION_ACCESS
 
 .PHONY: $(COVEMACS)
 $(COVEMACS): coverity-analyze
