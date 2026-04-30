@@ -1358,23 +1358,6 @@ invalid:
 }
 
 /*!
- * \brief Parse a time duration from an ISO 8601 duration specification
- *
- * \param[in] period_s  ISO 8601 duration specification (optionally followed by
- *                      whitespace, after which the rest of the string will be
- *                      ignored)
- *
- * \return New time object on success, NULL (and set errno) otherwise
- * \note It is the caller's responsibility to return the result using
- *       crm_time_free().
- */
-crm_time_t *
-crm_time_parse_duration(const char *period_s)
-{
-    return pcmk__time_parse_duration(period_s);
-}
-
-/*!
  * \internal
  * \brief Set one time object to another if the other is earlier
  *
@@ -2431,6 +2414,12 @@ crm_time_t *
 crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
 {
     return subtract_time(dt, value, true);
+}
+
+crm_time_t *
+crm_time_parse_duration(const char *period_s)
+{
+    return pcmk__time_parse_duration(period_s);
 }
 
 // LCOV_EXCL_STOP

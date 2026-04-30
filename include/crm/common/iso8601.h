@@ -69,8 +69,6 @@ char *crm_time_as_string(const crm_time_t *dt, int flags);
 #define crm_time_epoch             0x200
 #define crm_time_usecs             0x400
 
-crm_time_t *crm_time_parse_duration(const char *duration_str);
-
 int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
