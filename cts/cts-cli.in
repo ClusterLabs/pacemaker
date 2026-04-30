@@ -251,7 +251,6 @@ def sanitize_output(s):
         (r'(<cib.*) cib-last-written="[^"]*"', r'\1'),
         (r'crm_feature_set="[^"]*" ', r''),
         (r'@crm_feature_set=[0-9.]+, ', r''),
-        (r'\(crm_time_parse_duration@.*\.c:[0-9]+\)', r'crm_time_parse_duration'),
         (r'\(parse_hms@.*\.c:[0-9]+\)', r'parse_hms'),
         (re.escape(cts_cli_data), r'CTS_CLI_DATA'),
         (r' default="[^"]*"', r' default=""'),

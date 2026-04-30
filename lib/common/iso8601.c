@@ -1282,18 +1282,19 @@ parse_duration_element(const char **element, const char *duration_s,
 }
 
 /*!
+ * \internal
  * \brief Parse a time duration from an ISO 8601 duration specification
  *
  * \param[in] period_s  ISO 8601 duration specification (optionally followed by
  *                      whitespace, after which the rest of the string will be
  *                      ignored)
  *
- * \return New time object on success, NULL (and set errno) otherwise
- * \note It is the caller's responsibility to return the result using
- *       crm_time_free().
+ * \return New time object on success, or \c NULL (and set \c errno) otherwise
+ * \note It is the caller's responsibility to free the result using
+ *       \c crm_time_free().
  */
 crm_time_t *
-crm_time_parse_duration(const char *period_s)
+pcmk__time_parse_duration(const char *period_s)
 {
     bool is_time = false;
     crm_time_t *diff = NULL;
@@ -1344,13 +1345,33 @@ crm_time_parse_duration(const char *period_s)
         goto invalid;
     }
 
-    diff->duration = TRUE;
+    diff->duration = true;
     return diff;
 
 invalid:
+    /* @COMPAT Setting errno is required only for backward compatibility with
+     * crm_time_parse_duration()
+     */
     crm_time_free(diff);
     errno = EINVAL;
     return NULL;
+}
+
+/*!
+ * \brief Parse a time duration from an ISO 8601 duration specification
+ *
+ * \param[in] period_s  ISO 8601 duration specification (optionally followed by
+ *                      whitespace, after which the rest of the string will be
+ *                      ignored)
+ *
+ * \return New time object on success, NULL (and set errno) otherwise
+ * \note It is the caller's responsibility to return the result using
+ *       crm_time_free().
+ */
+crm_time_t *
+crm_time_parse_duration(const char *period_s)
+{
+    return pcmk__time_parse_duration(period_s);
 }
 
 /*!
@@ -2329,7 +2350,7 @@ crm_time_parse_period(const char *period_str)
     period = pcmk__assert_alloc(1, sizeof(crm_time_period_t));
 
     if (period_str[0] == 'P') {
-        period->diff = crm_time_parse_duration(period_str);
+        period->diff = pcmk__time_parse_duration(period_str);
         if (period->diff == NULL) {
             goto invalid;
         }
@@ -2350,7 +2371,7 @@ crm_time_parse_period(const char *period_str)
                           original);
                 goto invalid;
             }
-            period->diff = crm_time_parse_duration(period_str);
+            period->diff = pcmk__time_parse_duration(period_str);
             if (period->diff == NULL) {
                 goto invalid;
             }

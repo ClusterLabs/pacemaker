@@ -372,7 +372,7 @@ pcmk_parse_interval_spec(const char *input, unsigned int *result_ms)
     }
 
     if (input[0] == 'P') {
-        crm_time_t *period_s = crm_time_parse_duration(input);
+        crm_time_t *period_s = pcmk__time_parse_duration(input);
 
         if (period_s != NULL) {
             msec = crm_time_get_seconds(period_s);
