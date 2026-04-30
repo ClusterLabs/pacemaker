@@ -1635,12 +1635,6 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
 }
 
 crm_time_t *
-crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
-{
-    return subtract_time(dt, value, true);
-}
-
-crm_time_t *
 crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
     return subtract_time(dt, value, false);
@@ -2410,6 +2404,12 @@ invalid:
     errno = EINVAL;
     crm_time_free_period(period);
     return NULL;
+}
+
+crm_time_t *
+crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
+{
+    return subtract_time(dt, value, true);
 }
 
 // LCOV_EXCL_STOP

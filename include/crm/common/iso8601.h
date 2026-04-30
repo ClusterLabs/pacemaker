@@ -70,8 +70,6 @@ char *crm_time_as_string(const crm_time_t *dt, int flags);
 #define crm_time_usecs             0x400
 
 crm_time_t *crm_time_parse_duration(const char *duration_str);
-crm_time_t *crm_time_calculate_duration(const crm_time_t *dt,
-                                        const crm_time_t *value);
 
 int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
