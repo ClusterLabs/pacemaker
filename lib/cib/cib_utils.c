@@ -197,6 +197,8 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
+    const xmlNode *saved_cib = NULL;
+    const xmlDoc *saved_doc = NULL;
 
     pcmk__assert((fn != NULL) && (req != NULL)
                  && (current_cib != NULL) && (*current_cib != NULL)
@@ -226,7 +228,16 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                 pcmk__s(section, "(null)"), pcmk__s(user, "(null)"));
     pcmk__log_xml_trace(req, "request");
 
+    saved_cib = cib;
+    saved_doc = cib->doc;
+
     rc = fn(req, input, &cib, output);
+
+    /* Sanity check: op should be read-only (but this does not check children,
+     * attributes, or private data)
+     */
+    pcmk__assert((cib == saved_cib) && (cib->doc == saved_doc)
+                 && (cib == xmlDocGetRootElement(cib->doc)));
 
     if (*output == NULL) {
         // Do nothing
@@ -483,6 +494,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     xmlNode *old_versions = NULL;
 
     xmlNode *top = NULL;
+    const xmlDoc *saved_doc = NULL;
 
     pcmk__assert((fn != NULL) && (req != NULL)
                  && (config_changed != NULL) && (!*config_changed)
@@ -530,6 +542,8 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         }
     }
 
+    saved_doc = (*cib)->doc;
+
     rc = fn(req, input, cib, output);
     if (rc != pcmk_rc_ok) {
         goto done;
@@ -539,6 +553,10 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         rc = EINVAL;
         goto done;
     }
+
+    // Sanity check: doc should not change and *cib must be the root
+    pcmk__assert(((*cib)->doc == saved_doc)
+                 && (*cib == xmlDocGetRootElement((*cib)->doc)));
 
     // Tracking flag should still be set after operation
     pcmk__assert(pcmk__xml_doc_all_flags_set((*cib)->doc, pcmk__xf_tracking));
