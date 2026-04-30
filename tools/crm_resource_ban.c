@@ -31,7 +31,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
         return NULL;
     }
 
-    duration = crm_time_parse_duration(move_lifetime);
+    duration = pcmk__time_parse_duration(move_lifetime);
     if (duration == NULL) {
         out->err(out, "Invalid duration specified: %s\n"
                       "Please refer to https://en.wikipedia.org/wiki/ISO_8601#Durations "

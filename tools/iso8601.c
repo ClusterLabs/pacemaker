@@ -295,7 +295,7 @@ parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
     tzset();
 
     if (period_str[0] == 'P') {
-        diff = crm_time_parse_duration(period_str);
+        diff = pcmk__time_parse_duration(period_str);
         if (diff == NULL) {
             goto invalid;
         }
@@ -315,7 +315,7 @@ parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
                           "has two durations", original);
                 goto invalid;
             }
-            diff = crm_time_parse_duration(period_str);
+            diff = pcmk__time_parse_duration(period_str);
             if (diff == NULL) {
                 goto invalid;
             }
@@ -467,7 +467,7 @@ main(int argc, char **argv)
     }
 
     if (options.duration_s) {
-        duration = crm_time_parse_duration(options.duration_s);
+        duration = pcmk__time_parse_duration(options.duration_s);
 
         if (duration == NULL) {
             exit_code = CRM_EX_INVALID_PARAM;
