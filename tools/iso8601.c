@@ -164,7 +164,7 @@ duration_default(pcmk__output_t *out, va_list args)
     crm_time_t *time = va_arg(args, crm_time_t *);
     int opts = va_arg(args, int);
 
-    char *date_s = pcmk__time_text(time, opts|crm_time_log_duration);
+    char *date_s = pcmk__time_text(time, opts|pcmk__time_fmt_duration);
 
     out->info(out, "Duration: %s", date_s);
 
@@ -179,7 +179,7 @@ duration_xml(pcmk__output_t *out, va_list args)
     crm_time_t *time = va_arg(args, crm_time_t *);
     int opts = va_arg(args, int);
 
-    char *date_s = pcmk__time_text(time, opts|crm_time_log_duration);
+    char *date_s = pcmk__time_text(time, opts|pcmk__time_fmt_duration);
 
     pcmk__output_create_xml_text_node(out, PCMK_XE_DURATION, date_s);
     free(date_s);

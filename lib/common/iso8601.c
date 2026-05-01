@@ -1004,7 +1004,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
      * These never depend on time zone.
      */
 
-    if (pcmk__is_set(flags, crm_time_log_duration)) {
+    if (pcmk__is_set(flags, pcmk__time_fmt_duration)) {
         duration_as_string(dt, usec, pcmk__is_set(flags, crm_time_usecs), buf);
         goto done;
     }
