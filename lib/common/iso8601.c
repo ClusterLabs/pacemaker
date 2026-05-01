@@ -75,20 +75,6 @@
          && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
 /*!
- * \brief Allocate memory for an uninitialized time object
- *
- * \return Newly allocated time object (guaranteed not to be \c NULL)
- *
- * \note The caller is responsible for freeing the return value using
- *       \c crm_time_free().
- */
-crm_time_t *
-crm_time_new_undefined(void)
-{
-    return pcmk__assert_alloc(1, sizeof(crm_time_t));
-}
-
-/*!
  * \internal
  * \brief Check whether a year is positive and representable by four digits
  *
@@ -2420,6 +2406,12 @@ crm_time_t *
 crm_time_parse_duration(const char *period_s)
 {
     return pcmk__time_parse_duration(period_s);
+}
+
+crm_time_t *
+crm_time_new_undefined(void)
+{
+    return pcmk__assert_alloc(1, sizeof(crm_time_t));
 }
 
 // LCOV_EXCL_STOP
