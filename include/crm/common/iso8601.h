@@ -10,11 +10,6 @@
 #ifndef PCMK__CRM_COMMON_ISO8601__H
 #define PCMK__CRM_COMMON_ISO8601__H
 
-#include <ctype.h>
-#include <stdbool.h>  // bool
-#include <stdint.h>   // uint32_t
-#include <time.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
