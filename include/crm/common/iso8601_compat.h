@@ -122,6 +122,9 @@ bool crm_time_is_defined(const crm_time_t *t);
 //! \deprecated Do not use
 char *crm_time_as_string(const crm_time_t *dt, int flags);
 
+//! \deprecated Do not use
+int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
+
 #ifdef __cplusplus
 }
 #endif
