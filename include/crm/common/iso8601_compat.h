@@ -39,6 +39,9 @@ extern "C" {
 #define crm_time_log_with_timezone 0x004
 
 //! \deprecated Do not use
+#define crm_time_log_duration 0x008
+
+//! \deprecated Do not use
 typedef struct crm_time_period_s {
     crm_time_t *start;
     crm_time_t *end;
