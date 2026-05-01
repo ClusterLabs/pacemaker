@@ -706,13 +706,21 @@ pcmk__time_log_as(const char *file, const char *function, int line,
     free(date_s);
 }
 
+void
+pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
+                         uint32_t *minute, uint32_t *second)
+{
+    pcmk__assert((dt != NULL) && (hour != NULL) && (minute != NULL)
+                 && (second != NULL));
+
+    seconds_to_hms(dt->seconds, hour, minute, second);
+}
+
 int
 crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                        uint32_t *s)
 {
-    pcmk__assert((dt != NULL) && (h != NULL) && (m != NULL) && (s != NULL));
-
-    seconds_to_hms(dt->seconds, h, m, s);
+    pcmk__time_get_timeofday(dt, h, m, s);
     return TRUE;
 }
 
@@ -1077,7 +1085,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             g_string_append_c(buf, ' ');
         }
 
-        crm_time_get_timeofday(dt, &h, &m, &s);
+        pcmk__time_get_timeofday(dt, &h, &m, &s);
         g_string_append_printf(buf, "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
                                h, m, s);
 
