@@ -1048,12 +1048,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             }
 
         } else if (pcmk__is_set(flags, pcmk__time_fmt_ordinal)) { // YYYY-DDD
-            uint32_t y = 0;
-            uint32_t d = 0;
-
-            if (crm_time_get_ordinal(dt, &y, &d)) {
-                g_string_append_printf(buf, "%" PRIu32 "-%.3" PRIu32, y, d);
-            }
+            g_string_append_printf(buf, "%d-%.3d", dt->years, dt->days);
 
         } else { // YYYY-MM-DD
             uint32_t y = 0;
