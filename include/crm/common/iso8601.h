@@ -54,8 +54,6 @@ typedef struct crm_time_s crm_time_t;
 crm_time_t *crm_time_new(const char *string);
 void crm_time_free(crm_time_t * dt);
 
-#define crm_time_usecs             0x400
-
 int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,

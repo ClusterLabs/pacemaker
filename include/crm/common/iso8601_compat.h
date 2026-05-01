@@ -54,6 +54,9 @@ extern "C" {
 #define crm_time_epoch 0x200
 
 //! \deprecated Do not use
+#define crm_time_usecs 0x400
+
+//! \deprecated Do not use
 typedef struct crm_time_period_s {
     crm_time_t *start;
     crm_time_t *end;
