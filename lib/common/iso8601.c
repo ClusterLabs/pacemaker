@@ -1478,6 +1478,45 @@ pcmk__copy_timet(time_t source_sec)
     return target;
 }
 
+static void
+add_months(crm_time_t *dt, int value)
+{
+    uint32_t year = 0;
+    uint32_t month = 0;
+    uint32_t day = 0;
+    int days_in_month = 0;
+
+    pcmk__time_get_ymd(dt, &year, &month, &day);
+
+    if (value > 0) {
+        for (int i = value; i > 0; i--) {
+            month++;
+            if (month == 13) {
+                month = 1;
+                year++;
+            }
+        }
+    } else {
+        for (int i = value; i < 0; i++) {
+            month--;
+            if (month == 0) {
+                month = 12;
+                year--;
+            }
+        }
+    }
+
+    days_in_month = days_in_month_year(month, year);
+
+    if (days_in_month < day) {
+        // Preserve day-of-month unless the month doesn't have enough days
+        day = days_in_month;
+    }
+
+    dt->years = year;
+    dt->days = get_ordinal_days(year, month, day);
+}
+
 crm_time_t *
 pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
 {
@@ -1490,7 +1529,7 @@ pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
     utc = copy_time_to_utc(value);
 
     crm_time_add_years(answer, utc->years);
-    crm_time_add_months(answer, utc->months);
+    add_months(answer, utc->months);
     pcmk__time_add_days(answer, utc->days);
     pcmk__time_add_seconds(answer, utc->seconds);
 
@@ -1573,7 +1612,7 @@ component_fn(enum pcmk__time_component component)
             return crm_time_add_years;
 
         case pcmk__time_months:
-            return crm_time_add_months;
+            return add_months;
 
         case pcmk__time_weeks:
             return add_weeks;
@@ -1657,10 +1696,10 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     crm_time_add_years(result, -utc->years);
 
     if (utc->months == INT_MIN) {
-        crm_time_add_months(result, -1);
+        add_months(result, -1);
         utc->months++;
     }
-    crm_time_add_months(result, -utc->months);
+    add_months(result, -utc->months);
 
     if (utc->days == INT_MIN) {
         pcmk__time_add_days(result, -1);
@@ -1724,45 +1763,6 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
     free(t1);
     free(t2);
     return rc;
-}
-
-void
-crm_time_add_months(crm_time_t *dt, int value)
-{
-    uint32_t year = 0;
-    uint32_t month = 0;
-    uint32_t day = 0;
-    int days_in_month = 0;
-
-    pcmk__time_get_ymd(dt, &year, &month, &day);
-
-    if (value > 0) {
-        for (int i = value; i > 0; i--) {
-            month++;
-            if (month == 13) {
-                month = 1;
-                year++;
-            }
-        }
-    } else {
-        for (int i = value; i < 0; i++) {
-            month--;
-            if (month == 0) {
-                month = 12;
-                year--;
-            }
-        }
-    }
-
-    days_in_month = days_in_month_year(month, year);
-
-    if (days_in_month < day) {
-        // Preserve day-of-month unless the month doesn't have enough days
-        day = days_in_month;
-    }
-
-    dt->years = year;
-    dt->days = get_ordinal_days(year, month, day);
 }
 
 void
@@ -2504,6 +2504,12 @@ void
 crm_time_add_weeks(crm_time_t *dt, int value)
 {
     add_weeks(dt, value);
+}
+
+void
+crm_time_add_months(crm_time_t *dt, int value)
+{
+    add_months(dt, value);
 }
 
 // LCOV_EXCL_STOP
