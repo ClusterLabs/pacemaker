@@ -54,8 +54,6 @@ typedef struct crm_time_s crm_time_t;
 crm_time_t *crm_time_new(const char *string);
 void crm_time_free(crm_time_t * dt);
 
-int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
-                           uint32_t *d);
 int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
 
 /* Time in seconds since 0000-01-01 00:00:00Z */
