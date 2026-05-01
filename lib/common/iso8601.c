@@ -1781,12 +1781,6 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
     return rc;
 }
 
-void
-crm_time_add_years(crm_time_t *dt, int value)
-{
-    pcmk__time_add_years(dt, value);
-}
-
 static void
 ha_get_tm_time(struct tm *target, const crm_time_t *source)
 {
@@ -2516,6 +2510,12 @@ void
 crm_time_add_months(crm_time_t *dt, int value)
 {
     add_months(dt, value);
+}
+
+void
+crm_time_add_years(crm_time_t *dt, int value)
+{
+    pcmk__time_add_years(dt, value);
 }
 
 // LCOV_EXCL_STOP
