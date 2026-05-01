@@ -54,8 +54,6 @@ typedef struct crm_time_s crm_time_t;
 crm_time_t *crm_time_new(const char *string);
 void crm_time_free(crm_time_t * dt);
 
-char *crm_time_as_string(const crm_time_t *dt, int flags);
-
 #define crm_time_log_date          0x001
 #define crm_time_log_timeofday     0x002
 #define crm_time_log_with_timezone 0x004
