@@ -188,8 +188,8 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
                            &(ranges[2].value));
 
     // Hour, minute, second
-    crm_time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
-                           &(ranges[5].value));
+    pcmk__time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
+                             &(ranges[5].value));
 
     // Year (redundant) and day of year
     crm_time_get_ordinal(now, &(ranges[0].value), &(ranges[6].value));
