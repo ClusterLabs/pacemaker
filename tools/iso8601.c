@@ -338,7 +338,7 @@ parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
     }
 
     if (*start == NULL) {
-        *start = crm_time_subtract(*end, diff);
+        *start = pcmk__time_subtract(*end, diff);
 
     } else if (*end == NULL) {
         *end = pcmk__time_add(*start, diff);

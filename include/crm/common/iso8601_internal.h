@@ -69,6 +69,7 @@ const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__time_parse_duration(const char *period_s);
 crm_time_t *pcmk__copy_timet(time_t source_sec);
 crm_time_t *pcmk__time_add(const crm_time_t *dt, const crm_time_t *value);
+crm_time_t *pcmk__time_subtract(const crm_time_t *dt, const crm_time_t *value);
 
 int pcmk__time_compare(const crm_time_t *a, const crm_time_t *b);
 

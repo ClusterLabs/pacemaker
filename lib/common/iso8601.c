@@ -1558,10 +1558,7 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     crm_time_t *result = NULL;
     crm_time_t *utc = NULL;
 
-    if ((dt1 == NULL) || (dt2 == NULL)) {
-        errno = EINVAL;
-        return NULL;
-    }
+    pcmk__assert((dt1 != NULL) && (dt2 != NULL));
 
     result = (as_duration? copy_time_to_utc(dt1) : pcmk__time_copy(dt1));
     result->duration = as_duration;
@@ -1599,9 +1596,20 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
 }
 
 crm_time_t *
-crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
+pcmk__time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
     return subtract_time(dt, value, false);
+}
+
+crm_time_t *
+crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
+{
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return pcmk__time_subtract(dt, value);
 }
 
 #define do_cmp_field(l, r, field)					\
@@ -2338,7 +2346,7 @@ crm_time_parse_period(const char *period_str)
     }
 
     if (period->start == NULL) {
-        period->start = crm_time_subtract(period->end, period->diff);
+        period->start = pcmk__time_subtract(period->end, period->diff);
 
     } else if (period->end == NULL) {
         period->end = pcmk__time_add(period->start, period->diff);
@@ -2373,6 +2381,11 @@ invalid:
 crm_time_t *
 crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
 {
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
     return subtract_time(dt, value, true);
 }
 
