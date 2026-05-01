@@ -714,7 +714,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
                                hash, next_change, scheduler->input->doc);
 
     if (pcmk__time_is_initialized(next_change)) {
-        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+        time_t recheck = (time_t) pcmk__time_to_unix(next_change);
 
         pcmk__update_recheck_time(recheck, scheduler, "rule evaluation");
     }

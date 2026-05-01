@@ -380,7 +380,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
          * change, make sure the scheduler is re-run by that time.
          */
         if (pcmk__time_is_initialized(next_change)) {
-            time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
+            time_t t = (time_t) pcmk__time_to_unix(next_change);
 
             pcmk__update_recheck_time(t, rsc->priv->scheduler,
                                       "location rule evaluation");

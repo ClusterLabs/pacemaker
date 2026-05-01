@@ -761,10 +761,17 @@ pcmk__time_get_seconds(const crm_time_t *dt)
 }
 
 #define EPOCH_SECONDS 62135596800ULL // Calculated using pcmk__time_get_seconds
+// Time in seconds since 1970-01-01 00:00:00Z
+long long
+pcmk__time_to_unix(const crm_time_t *dt)
+{
+    return (dt == NULL)? 0 : (pcmk__time_get_seconds(dt) - EPOCH_SECONDS);
+}
+
 long long
 crm_time_get_seconds_since_epoch(const crm_time_t *dt)
 {
-    return (dt == NULL)? 0 : (pcmk__time_get_seconds(dt) - EPOCH_SECONDS);
+    return pcmk__time_to_unix(dt);
 }
 
 void
@@ -1006,7 +1013,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
         if (pcmk__is_set(flags, pcmk__time_fmt_seconds)) {
             seconds = pcmk__time_get_seconds(dt);
         } else {
-            seconds = crm_time_get_seconds_since_epoch(dt);
+            seconds = pcmk__time_to_unix(dt);
         }
 
         if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {

@@ -285,7 +285,7 @@ pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
         pcmk__trace("Scheduler 'now' set to current time");
         scheduler->priv->now = crm_time_new(NULL);
     }
-    return crm_time_get_seconds_since_epoch(scheduler->priv->now);
+    return pcmk__time_to_unix(scheduler->priv->now);
 }
 
 /*!
