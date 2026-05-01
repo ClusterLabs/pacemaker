@@ -655,6 +655,15 @@ crm_time_new(const char *date_time)
     return parse_date(date_time);
 }
 
+crm_time_t *
+pcmk__time_copy(const crm_time_t *source)
+{
+    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
+
+    *target = *source;
+    return target;
+}
+
 /*!
  * \brief Check whether a time object has been initialized yet
  *
@@ -1351,10 +1360,7 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 crm_time_t *
 pcmk_copy_time(const crm_time_t *source)
 {
-    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
-
-    *target = *source;
-    return target;
+    return pcmk__time_copy(source);
 }
 
 /*!
@@ -1423,7 +1429,7 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
         return NULL;
     }
 
-    answer = pcmk_copy_time(dt);
+    answer = pcmk__time_copy(dt);
     utc = copy_time_to_utc(value);
 
     crm_time_add_years(answer, utc->years);
@@ -1566,7 +1572,7 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
         return NULL;
     }
 
-    result = (as_duration? copy_time_to_utc(dt1) : pcmk_copy_time(dt1));
+    result = (as_duration? copy_time_to_utc(dt1) : pcmk__time_copy(dt1));
     result->duration = as_duration;
 
     utc = copy_time_to_utc(dt2);

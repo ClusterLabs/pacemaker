@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -834,8 +834,8 @@ pcmk__init_scheduler(pcmk__output_t *out, xmlNodePtr input, const crm_time_t *da
     // Make our own copy of the given crm_time_t object; otherwise
     // cluster_status() populates with the current time
     if (date != NULL) {
-        // pcmk_copy_time() guarantees non-NULL
-        new_scheduler->priv->now = pcmk_copy_time(date);
+        // pcmk__time_copy() guarantees non-NULL
+        new_scheduler->priv->now = pcmk__time_copy(date);
     }
 
     // Unpack everything

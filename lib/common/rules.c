@@ -258,7 +258,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
         return pcmk_rc_unpack_error;
     }
 
-    *end = pcmk_copy_time(start);
+    *end = pcmk__time_copy(start);
 
     ADD_COMPONENT(pcmk__time_years);
     ADD_COMPONENT(pcmk__time_months);
