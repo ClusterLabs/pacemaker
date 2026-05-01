@@ -204,6 +204,9 @@ enum pcmk__time_component {
 };
 
 G_GNUC_INTERNAL
+void pcmk__time_add_seconds(crm_time_t *dt, int value);
+
+G_GNUC_INTERNAL
 void pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
                               uint32_t *minute, uint32_t *second);
 

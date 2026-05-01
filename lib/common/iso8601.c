@@ -615,6 +615,35 @@ invalid:
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Add a given number of seconds to a date/time or duration
+ *
+ * \param[in,out] dt     Date/time or duration to add seconds to
+ * \param[in]     value  Number of seconds to add
+ */
+void
+pcmk__time_add_seconds(crm_time_t *dt, int value)
+{
+    int days = value / SECONDS_IN_DAY;
+
+    pcmk__assert(dt != NULL);
+
+    dt->seconds += value % SECONDS_IN_DAY;
+
+    // Check whether the addition crossed a day boundary
+    if (dt->seconds > SECONDS_IN_DAY) {
+        ++days;
+        dt->seconds -= SECONDS_IN_DAY;
+
+    } else if (dt->seconds < 0) {
+        --days;
+        dt->seconds += SECONDS_IN_DAY;
+    }
+
+    crm_time_add_days(dt, days);
+}
+
 // Return value is guaranteed not to be NULL
 static crm_time_t *
 copy_time_to_utc(const crm_time_t *dt)
@@ -633,7 +662,7 @@ copy_time_to_utc(const crm_time_t *dt)
     utc->offset = 0;
 
     if (dt->offset != 0) {
-        crm_time_add_seconds(utc, -dt->offset);
+        pcmk__time_add_seconds(utc, -dt->offset);
 
     } else {
         // Durations (the only things that can include months) never have a TZ
@@ -1426,7 +1455,7 @@ pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
     crm_time_add_years(answer, utc->years);
     crm_time_add_months(answer, utc->months);
     crm_time_add_days(answer, utc->days);
-    crm_time_add_seconds(answer, utc->seconds);
+    pcmk__time_add_seconds(answer, utc->seconds);
 
     free(utc);
     return answer;
@@ -1504,7 +1533,7 @@ component_fn(enum pcmk__time_component component)
             return crm_time_add_minutes;
 
         case pcmk__time_seconds:
-            return crm_time_add_seconds;
+            return pcmk__time_add_seconds;
 
         default:
             return NULL;
@@ -1586,10 +1615,10 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     crm_time_add_days(result, -utc->days);
 
     if (utc->seconds == INT_MIN) {
-        crm_time_add_seconds(result, -1);
+        pcmk__time_add_seconds(result, -1);
         utc->seconds++;
     }
-    crm_time_add_seconds(result, -utc->seconds);
+    pcmk__time_add_seconds(result, -utc->seconds);
 
     free(utc);
     return result;
@@ -1652,26 +1681,7 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
 void
 crm_time_add_seconds(crm_time_t *dt, int value)
 {
-    int days = value / SECONDS_IN_DAY;
-
-    pcmk__assert(dt != NULL);
-
-    pcmk__trace("Adding %d seconds (including %d whole day%s) to %d", value,
-                days, pcmk__plural_s(days), dt->seconds);
-
-    dt->seconds += value % SECONDS_IN_DAY;
-
-    // Check whether the addition crossed a day boundary
-    if (dt->seconds > SECONDS_IN_DAY) {
-        ++days;
-        dt->seconds -= SECONDS_IN_DAY;
-
-    } else if (dt->seconds < 0) {
-        --days;
-        dt->seconds += SECONDS_IN_DAY;
-    }
-
-    crm_time_add_days(dt, days);
+    pcmk__time_add_seconds(dt, value);
 }
 
 /*!
@@ -1754,13 +1764,13 @@ crm_time_add_months(crm_time_t *dt, int value)
 void
 crm_time_add_minutes(crm_time_t *dt, int value)
 {
-    crm_time_add_seconds(dt, value * SECONDS_IN_MINUTE);
+    pcmk__time_add_seconds(dt, value * SECONDS_IN_MINUTE);
 }
 
 void
 crm_time_add_hours(crm_time_t *dt, int value)
 {
-    crm_time_add_seconds(dt, value * SECONDS_IN_HOUR);
+    pcmk__time_add_seconds(dt, value * SECONDS_IN_HOUR);
 }
 
 void

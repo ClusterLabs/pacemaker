@@ -348,7 +348,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
 
         // Evaluation doesn't change until second after end
         if (next_change != NULL) {
-            crm_time_add_seconds(end, 1);
+            pcmk__time_add_seconds(end, 1);
             pcmk__set_time_if_earlier(next_change, end);
         }
     }
@@ -398,7 +398,7 @@ evaluate_gt(const xmlNode *date_expression, const char *id,
     }
 
     // Evaluation doesn't change until second after start time
-    crm_time_add_seconds(start, 1);
+    pcmk__time_add_seconds(start, 1);
     pcmk__set_time_if_earlier(next_change, start);
     free(start);
     return pcmk_rc_before_range;

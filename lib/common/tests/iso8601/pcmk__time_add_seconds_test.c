@@ -16,6 +16,8 @@
 
 #include <crm/common/iso8601.h>
 
+#include "crmcommon_private.h"              // pcmk__time_add_seconds
+
 static void
 assert_add_seconds(const char *orig_date_time, int seconds,
                  const char *expected_date_time)
@@ -26,7 +28,7 @@ assert_add_seconds(const char *orig_date_time, int seconds,
     assert_non_null(orig);
     assert_non_null(expected);
 
-    crm_time_add_seconds(orig, seconds);
+    pcmk__time_add_seconds(orig, seconds);
     assert_int_equal(pcmk__time_compare(orig, expected), 0);
 
     free(orig);
@@ -36,7 +38,7 @@ assert_add_seconds(const char *orig_date_time, int seconds,
 static void
 invalid_argument(void **state)
 {
-    pcmk__assert_asserts(crm_time_add_seconds(NULL, 1));
+    pcmk__assert_asserts(pcmk__time_add_seconds(NULL, 1));
 }
 
 static void
