@@ -45,6 +45,9 @@ extern "C" {
 #define crm_time_ordinal 0x010
 
 //! \deprecated Do not use
+#define crm_time_weeks 0x020
+
+//! \deprecated Do not use
 typedef struct crm_time_period_s {
     crm_time_t *start;
     crm_time_t *end;
