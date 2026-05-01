@@ -738,7 +738,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
         last_updated_s = pcmk__epoch2str(&last_updated,
                                          pcmk__time_fmt_date
                                          |pcmk__time_fmt_time
-                                         |crm_time_log_with_timezone);
+                                         |pcmk__time_fmt_timezone);
     }
 
     rc = out->info(out, "Status of %s: '%s' (last updated %s)",
@@ -779,7 +779,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
         last_updated_s = pcmk__epoch2str(&last_updated,
                                          pcmk__time_fmt_date
                                          |pcmk__time_fmt_time
-                                         |crm_time_log_with_timezone);
+                                         |pcmk__time_fmt_timezone);
     }
 
     msg = pcmk__assert_asprintf("Status of %s: '%s' (last updated %s)",
@@ -843,7 +843,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
         last_updated_s = pcmk__epoch2str(&last_updated,
                                          pcmk__time_fmt_date
                                          |pcmk__time_fmt_time
-                                         |crm_time_log_with_timezone);
+                                         |pcmk__time_fmt_timezone);
     }
 
     pcmk__output_create_xml_node(out, PCMK_XE_PACEMAKERD,

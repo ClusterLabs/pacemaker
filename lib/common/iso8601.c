@@ -621,7 +621,7 @@ copy_time_to_utc(const crm_time_t *dt)
 {
     const uint32_t flags = pcmk__time_fmt_date
                            |pcmk__time_fmt_time
-                           |crm_time_log_with_timezone;
+                           |pcmk__time_fmt_timezone;
     crm_time_t *utc = NULL;
 
     pcmk__assert(dt != NULL);
@@ -1027,7 +1027,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
     }
 
     // Convert to UTC if local timezone was not requested
-    if ((dt->offset != 0) && !pcmk__is_set(flags, crm_time_log_with_timezone)) {
+    if ((dt->offset != 0) && !pcmk__is_set(flags, pcmk__time_fmt_timezone)) {
         utc = copy_time_to_utc(dt);
         dt = utc;
     }
@@ -1085,9 +1085,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             }
         }
 
-        if (pcmk__is_set(flags, crm_time_log_with_timezone)
-            && (dt->offset != 0)) {
-
+        if (pcmk__is_set(flags, pcmk__time_fmt_timezone) && (dt->offset != 0)) {
             seconds_to_hms(dt->offset, &h, &m, NULL);
             g_string_append_printf(buf, " %c%.2" PRIu32 ":%.2" PRIu32,
                                    ((dt->offset < 0)? '-' : '+'), h, m);
@@ -1361,7 +1359,7 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 {
     const int flags = pcmk__time_fmt_date
                       |pcmk__time_fmt_time
-                      |crm_time_log_with_timezone;
+                      |pcmk__time_fmt_timezone;
 
     if ((target == NULL)
         || (source == NULL)
@@ -2243,7 +2241,7 @@ crm_time_set(crm_time_t *target, const crm_time_t *source)
 {
     const uint32_t flags = pcmk__time_fmt_date
                            |pcmk__time_fmt_time
-                           |crm_time_log_with_timezone;
+                           |pcmk__time_fmt_timezone;
 
     pcmk__trace("target=%p, source=%p", target, source);
 
