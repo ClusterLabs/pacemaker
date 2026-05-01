@@ -768,12 +768,6 @@ pcmk__time_to_unix(const crm_time_t *dt)
     return (dt == NULL)? 0 : (pcmk__time_get_seconds(dt) - EPOCH_SECONDS);
 }
 
-long long
-crm_time_get_seconds_since_epoch(const crm_time_t *dt)
-{
-    return pcmk__time_to_unix(dt);
-}
-
 void
 pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
                    uint32_t *day)
@@ -2456,6 +2450,12 @@ long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
     return pcmk__time_get_seconds(dt);
+}
+
+long long
+crm_time_get_seconds_since_epoch(const crm_time_t *dt)
+{
+    return pcmk__time_to_unix(dt);
 }
 
 // LCOV_EXCL_STOP

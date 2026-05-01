@@ -54,9 +54,6 @@ typedef struct crm_time_s crm_time_t;
 crm_time_t *crm_time_new(const char *string);
 void crm_time_free(crm_time_t * dt);
 
-/* Time in seconds since 1970-01-01 00:00:00Z */
-long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
-
 /* Returns a new time object */
 crm_time_t *pcmk_copy_time(const crm_time_t *source);
 crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
