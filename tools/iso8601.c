@@ -59,7 +59,7 @@ modifier_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
     } else if (pcmk__str_any_of(option_name, "--ordinal", "-O", NULL)) {
         options.print_options |= pcmk__time_fmt_ordinal;
     } else if (pcmk__str_any_of(option_name, "--week", "-W", NULL)) {
-        options.print_options |= crm_time_weeks;
+        options.print_options |= pcmk__time_fmt_weeks;
     }
 
     return TRUE;
