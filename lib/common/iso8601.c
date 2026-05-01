@@ -658,6 +658,26 @@ crm_time_new(const char *date_time)
 /*!
  * \brief Check whether a time object has been initialized yet
  *
+ * \param[in] dt  Time object to check
+ *
+ * \return \c true if time object has been initialized, or \c false otherwise
+ */
+bool
+pcmk__time_is_initialized(const crm_time_t *dt)
+{
+    // Any nonzero member indicates something has been done to dt
+    return (dt != NULL)
+           && ((dt->years != 0)
+               || (dt->months != 0)
+               || (dt->days != 0)
+               || (dt->seconds != 0)
+               || (dt->offset != 0)
+               || (dt->duration));
+}
+
+/*!
+ * \brief Check whether a time object has been initialized yet
+ *
  * \param[in] t  Time object to check
  *
  * \return \c true if time object has been initialized, \c false otherwise
@@ -665,9 +685,7 @@ crm_time_new(const char *date_time)
 bool
 crm_time_is_defined(const crm_time_t *t)
 {
-    // Any nonzero member indicates something has been done to t
-    return (t != NULL) && (t->years || t->months || t->days || t->seconds
-                           || t->offset || t->duration);
+    return pcmk__time_is_initialized(t);
 }
 
 void
@@ -987,7 +1005,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
     GString *buf = NULL;
     char *result = NULL;
 
-    if (!crm_time_is_defined(dt)) {
+    if (!pcmk__time_is_initialized(dt)) {
         return pcmk__str_copy("<undefined time>");
     }
 
@@ -1324,7 +1342,7 @@ pcmk__time_parse_duration(const char *period_s)
         }
     }
 
-    if (!crm_time_is_defined(diff)) {
+    if (!pcmk__time_is_initialized(diff)) {
         pcmk__err("'%s' is not a valid ISO 8601 time duration because no "
                   "amounts and units given",
                   period_s);
@@ -1359,7 +1377,7 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 
     if ((target == NULL)
         || (source == NULL)
-        || (crm_time_is_defined(target)
+        || (pcmk__time_is_initialized(target)
             && (crm_time_compare(source, target) >= 0))) {
 
         return;
