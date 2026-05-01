@@ -51,7 +51,7 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
     return pcmk__timespec2str(&ts,
                               pcmk__time_fmt_date
                               |pcmk__time_fmt_time
-                              |crm_time_log_with_timezone
+                              |pcmk__time_fmt_timezone
                               |(show_usec? crm_time_usecs : 0));
 }
 

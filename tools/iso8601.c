@@ -59,7 +59,7 @@ modifier_cb(const char *option_name, const char *optarg, void *data,
     } else if (pcmk__str_any_of(option_name, "--epoch", "-S", NULL)) {
         options.print_options |= crm_time_epoch;
     } else if (pcmk__str_any_of(option_name, "--local", "-L", NULL)) {
-        options.print_options |= crm_time_log_with_timezone;
+        options.print_options |= pcmk__time_fmt_timezone;
     } else if (pcmk__str_any_of(option_name, "--ordinal", "-O", NULL)) {
         options.print_options |= crm_time_ordinal;
     } else if (pcmk__str_any_of(option_name, "--week", "-W", NULL)) {
@@ -195,7 +195,7 @@ duration_ends_default(pcmk__output_t *out, va_list args)
 
     char *date_s = NULL;
 
-    opts |= pcmk__time_fmt_date|pcmk__time_fmt_time|crm_time_log_with_timezone;
+    opts |= pcmk__time_fmt_date|pcmk__time_fmt_time|pcmk__time_fmt_timezone;
     date_s = pcmk__time_text(time, opts);
 
     out->info(out, "Duration ends at: %s", date_s);
@@ -213,7 +213,7 @@ duration_ends_xml(pcmk__output_t *out, va_list args)
 
     char *date_s = NULL;
 
-    opts |= pcmk__time_fmt_date|pcmk__time_fmt_time|crm_time_log_with_timezone;
+    opts |= pcmk__time_fmt_date|pcmk__time_fmt_time|pcmk__time_fmt_timezone;
     date_s = pcmk__time_text(time, opts);
 
     pcmk__output_create_xml_text_node(out, PCMK_XE_DURATION_ENDS, date_s);
