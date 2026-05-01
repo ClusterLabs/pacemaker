@@ -1077,14 +1077,12 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             g_string_append_c(buf, ' ');
         }
 
-        if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            g_string_append_printf(buf,
-                                   "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-                                   h, m, s);
+        crm_time_get_timeofday(dt, &h, &m, &s);
+        g_string_append_printf(buf, "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+                               h, m, s);
 
-            if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
-                g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
-            }
+        if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
+            g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
         }
 
         if (pcmk__is_set(flags, pcmk__time_fmt_timezone) && (dt->offset != 0)) {
