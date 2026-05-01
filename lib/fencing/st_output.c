@@ -49,7 +49,7 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
     };
 
     return pcmk__timespec2str(&ts,
-                              crm_time_log_date
+                              pcmk__time_fmt_date
                               |crm_time_log_timeofday
                               |crm_time_log_with_timezone
                               |(show_usec? crm_time_usecs : 0));

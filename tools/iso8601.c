@@ -130,7 +130,7 @@ date_default(pcmk__output_t *out, va_list args)
 
     char *date_s = NULL;
 
-    opts |= crm_time_log_date | crm_time_log_timeofday;
+    opts |= pcmk__time_fmt_date|crm_time_log_timeofday;
     date_s = pcmk__time_text(date, opts);
 
     out->info(out, "%s: %s", prefix, date_s);
@@ -149,7 +149,7 @@ date_xml(pcmk__output_t *out, va_list args)
 
     char *date_s = NULL;
 
-    opts |= crm_time_log_date | crm_time_log_timeofday;
+    opts |= pcmk__time_fmt_date|crm_time_log_timeofday;
     date_s = pcmk__time_text(date, opts);
 
     pcmk__output_create_xml_text_node(out, PCMK_XE_DATE, date_s);
@@ -195,7 +195,9 @@ duration_ends_default(pcmk__output_t *out, va_list args)
 
     char *date_s = NULL;
 
-    opts |= crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone;
+    opts |= pcmk__time_fmt_date
+            |crm_time_log_timeofday
+            |crm_time_log_with_timezone;
     date_s = pcmk__time_text(time, opts);
 
     out->info(out, "Duration ends at: %s", date_s);
@@ -213,7 +215,9 @@ duration_ends_xml(pcmk__output_t *out, va_list args)
 
     char *date_s = NULL;
 
-    opts |= crm_time_log_date | crm_time_log_timeofday | crm_time_log_with_timezone;
+    opts |= pcmk__time_fmt_date
+            |crm_time_log_timeofday
+            |crm_time_log_with_timezone;
     date_s = pcmk__time_text(time, opts);
 
     pcmk__output_create_xml_text_node(out, PCMK_XE_DURATION_ENDS, date_s);
@@ -232,7 +236,7 @@ period_default(pcmk__output_t *out, va_list args)
     char *start_s = NULL;
     char *end_s = NULL;
 
-    opts |= crm_time_log_date | crm_time_log_timeofday;
+    opts |= pcmk__time_fmt_date|crm_time_log_timeofday;
 
     start_s = pcmk__time_text(start, opts);
     if (start_s == NULL) {
@@ -263,7 +267,7 @@ period_xml(pcmk__output_t *out, va_list args)
     char *start_s = NULL;
     char *end_s = NULL;
 
-    opts |= crm_time_log_date | crm_time_log_timeofday;
+    opts |= pcmk__time_fmt_date|crm_time_log_timeofday;
 
     start_s = pcmk__time_text(start, opts);
     if (start_s == NULL) {
@@ -515,7 +519,7 @@ main(int argc, char **argv)
         if (options.expected_s) {
             char *dt_s = pcmk__time_text(later,
                                          options.print_options
-                                         |crm_time_log_date
+                                         |pcmk__time_fmt_date
                                          |crm_time_log_timeofday);
             if (!pcmk__str_eq(options.expected_s, dt_s, pcmk__str_casei)) {
                 exit_code = CRM_EX_ERROR;
@@ -528,7 +532,7 @@ main(int argc, char **argv)
     } else if (date_time && options.expected_s) {
         char *dt_s = pcmk__time_text(date_time,
                                      options.print_options
-                                     |crm_time_log_date
+                                     |pcmk__time_fmt_date
                                      |crm_time_log_timeofday);
 
         if (!pcmk__str_eq(options.expected_s, dt_s, pcmk__str_casei)) {

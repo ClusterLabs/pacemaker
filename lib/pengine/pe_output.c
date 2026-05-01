@@ -1669,7 +1669,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         unsigned int interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
-                                          crm_time_log_date
+                                          pcmk__time_fmt_date
                                           |crm_time_log_timeofday
                                           |crm_time_log_with_timezone);
 
