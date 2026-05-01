@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -404,7 +404,7 @@ profile_file(const char *xml_file, unsigned int repeat,
         goto done;
     }
 
-    if (!pcmk__validate_xml(cib_object, NULL, NULL, NULL)) {
+    if (!pcmk__validate_xml(cib_object, NULL, NULL)) {
         goto done;
     }
 

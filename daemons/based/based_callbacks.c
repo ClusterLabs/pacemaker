@@ -29,7 +29,6 @@
 #include <crm/cib/internal.h>       // cib__*
 #include <crm/cluster.h>            // pcmk_cluster_disconnect
 #include <crm/cluster/internal.h>   // pcmk__cluster_send_message
-#include <crm/common/cib.h>         // pcmk_find_cib_element
 #include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
@@ -248,37 +247,32 @@ process_ping_reply(xmlNode *reply)
         if (!pcmk__str_eq(ping_digest, digest, pcmk__str_casei)) {
             xmlNode *wrapper = pcmk__xe_first_child(pong, PCMK__XE_CIB_CALLDATA,
                                                     NULL, NULL);
-            xmlNode *remote_cib = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+            xmlNode *remote_versions = pcmk__xe_first_child(wrapper, NULL, NULL,
+                                                            NULL);
 
             const char *admin_epoch_s = NULL;
             const char *epoch_s = NULL;
             const char *num_updates_s = NULL;
 
-            if (remote_cib != NULL) {
-                admin_epoch_s = pcmk__xe_get(remote_cib, PCMK_XA_ADMIN_EPOCH);
-                epoch_s = pcmk__xe_get(remote_cib, PCMK_XA_EPOCH);
-                num_updates_s = pcmk__xe_get(remote_cib, PCMK_XA_NUM_UPDATES);
+            if (remote_versions != NULL) {
+                admin_epoch_s = pcmk__xe_get(remote_versions,
+                                             PCMK_XA_ADMIN_EPOCH);
+                epoch_s = pcmk__xe_get(remote_versions,
+                                       PCMK_XA_EPOCH);
+                num_updates_s = pcmk__xe_get(remote_versions,
+                                             PCMK_XA_NUM_UPDATES);
             }
 
-            pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s "
-                         "%p",
+            pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
                          pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
                          pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
                          pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES),
                          ping_digest, host,
                          pcmk__s(admin_epoch_s, "_"),
                          pcmk__s(epoch_s, "_"),
-                         pcmk__s(num_updates_s, "_"),
-                         digest, remote_cib);
+                         pcmk__s(num_updates_s, "_"), digest);
 
-            if(remote_cib && remote_cib->children) {
-                // Additional debug
-                pcmk__xml_mark_changes(the_cib, remote_cib);
-                pcmk__log_xml_changes(LOG_INFO, remote_cib);
-                pcmk__trace("End of differences");
-            }
-
-            pcmk__xml_free(remote_cib);
+            pcmk__xml_free(remote_versions);
             sync_our_cib(reply, false);
         }
     }
@@ -517,54 +511,17 @@ forward_request(xmlNode *request)
     pcmk__xe_remove_attr(request, PCMK__XA_CIB_DELEGATED_FROM);
 }
 
-/*!
- * \internal
- * \brief Get a CIB operation's input from the request XML
- *
- * \param[in]  request  CIB request XML
- * \param[in]  type     CIB operation type
- * \param[out] section  Where to store CIB section name
- *
- * \return Input XML for CIB operation
- *
- * \note If not \c NULL, the return value is a non-const pointer to part of
- *       \p request. The caller should not free it directly.
- */
-static xmlNode *
-prepare_input(const xmlNode *request, enum cib__op_type type,
-              const char **section)
-{
-    xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
-                                            NULL, NULL);
-    xmlNode *input = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-    if (type == cib__op_apply_patch) {
-        *section = NULL;
-    } else {
-        *section = pcmk__xe_get(request, PCMK__XA_CIB_SECTION);
-    }
-
-    // Grab the specified section
-    if ((*section != NULL) && pcmk__xe_is(input, PCMK_XE_CIB)) {
-        input = pcmk_find_cib_element(input, *section);
-    }
-
-    return input;
-}
-
 static int
 cib_process_command(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **reply, bool privileged)
 {
     xmlNode *cib_diff = NULL;
-    xmlNode *input = NULL;
     xmlNode *output = NULL;
     xmlNode *result_cib = NULL;
 
     uint32_t call_options = cib_none;
 
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
-    const char *section = NULL;
     const char *call_id = pcmk__xe_get(request, PCMK__XA_CIB_CALLID);
     const char *client_id = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTID);
     const char *client_name = pcmk__xe_get(request, PCMK__XA_CIB_CLIENTNAME);
@@ -573,7 +530,6 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
     int rc = pcmk_rc_ok;
 
     bool config_changed = false;
-    bool manage_counters = true;
 
     static mainloop_timer_t *digest_timer = NULL;
 
@@ -600,24 +556,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
         goto done;
     }
 
-    input = prepare_input(request, operation->type, &section);
-
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_query(op, call_options, op_function, section, request,
-                                input, &the_cib, &output);
+        rc = cib__perform_query(op_function, request, &the_cib, &output);
         goto done;
-    }
-
-    /* @COMPAT: Handle a valid write action (legacy)
-     *
-     * @TODO: Re-evaluate whether this is truly legacy. PCMK__XA_CIB_UPDATE may
-     * be set by a sync operation even in non-legacy mode, and manage_counters
-     * tells xml_create_patchset() whether to update version/epoch info.
-     */
-    if (pcmk__xe_attr_is_true(request, PCMK__XA_CIB_UPDATE)) {
-        manage_counters = false;
-        CRM_LOG_ASSERT(pcmk__str_eq(op, PCMK__CIB_REQUEST_REPLACE,
-                                    pcmk__str_none));
     }
 
     ping_modified_since = true;
@@ -627,9 +568,9 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
      * It's not important whether the client variant is cib_native or
      * cib_remote.
      */
-    rc = cib_perform_op(cib_undefined, op, call_options, op_function, section,
-                        request, input, manage_counters, &config_changed,
-                        &the_cib, &result_cib, &cib_diff, &output);
+    result_cib = the_cib;
+    rc = cib_perform_op(cib_undefined, op_function, request, &config_changed,
+                        &result_cib, &cib_diff, &output);
 
     /* Always write to disk for successful ops with the flag set. This also
      * negates the need to detect ordering changes.
