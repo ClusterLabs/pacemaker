@@ -1005,7 +1005,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
      */
 
     if (pcmk__is_set(flags, pcmk__time_fmt_duration)) {
-        duration_as_string(dt, usec, pcmk__is_set(flags, crm_time_usecs), buf);
+        duration_as_string(dt, usec, pcmk__is_set(flags, pcmk__time_fmt_usecs),
+                           buf);
         goto done;
     }
 
@@ -1019,7 +1020,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             seconds = crm_time_get_seconds_since_epoch(dt);
         }
 
-        if (pcmk__is_set(flags, crm_time_usecs)) {
+        if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
             sec_usec_as_string(seconds, usec, buf);
         } else {
             g_string_append_printf(buf, "%lld", seconds);
@@ -1081,7 +1082,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
                                    "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
                                    h, m, s);
 
-            if (pcmk__is_set(flags, crm_time_usecs)) {
+            if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
                 g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
             }
         }
@@ -2109,8 +2110,8 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
  * \brief Return a human-friendly string corresponding to seconds-and-
  *        nanoseconds value
  *
- * Time is shown with microsecond resolution if \p crm_time_usecs is in \p
- * flags.
+ * Time is shown with microsecond resolution if \c pcmk__time_fmt_usecs is in
+ * \p flags.
  *
  * \param[in]  ts     Time in seconds and nanoseconds (or \p NULL for current
  *                    time)

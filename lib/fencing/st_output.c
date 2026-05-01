@@ -52,7 +52,7 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
                               pcmk__time_fmt_date
                               |pcmk__time_fmt_time
                               |pcmk__time_fmt_timezone
-                              |(show_usec? crm_time_usecs : 0));
+                              |(show_usec? pcmk__time_fmt_usecs : 0));
 }
 
 /*!
