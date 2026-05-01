@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -43,7 +43,7 @@ static void
 null_invalid(void **state)
 {
     xmlNode *xml = NULL;
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk_evaluate_rule(NULL, NULL, next_change),
                      EINVAL);
@@ -69,7 +69,7 @@ static void
 id_missing(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_OP_MISSING_ID);
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
@@ -85,7 +85,7 @@ good_idref(void **state)
 {
     xmlNode *parent_xml = pcmk__xml_parse(RULE_IDREF_PARENT);
     xmlNode *rule_xml = pcmk__xe_create(parent_xml, PCMK_XE_RULE);
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     pcmk__xe_set(rule_xml, PCMK_XA_ID_REF, "r");
     assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
@@ -100,7 +100,7 @@ bad_idref(void **state)
 {
     xmlNode *parent_xml = pcmk__xml_parse(RULE_IDREF_PARENT);
     xmlNode *rule_xml = pcmk__xe_create(parent_xml, PCMK_XE_RULE);
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     pcmk__xe_set(rule_xml, PCMK_XA_ID_REF, "x");
     assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),

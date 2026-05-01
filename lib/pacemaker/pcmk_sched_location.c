@@ -362,7 +362,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         location->role_filter = role;
 
     } else {
-        crm_time_t *next_change = crm_time_new_undefined();
+        crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
         xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE, NULL,
                                                  NULL);
         pcmk_rule_input_t rule_input = {
