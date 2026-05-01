@@ -760,12 +760,6 @@ pcmk__time_get_seconds(const crm_time_t *dt)
     return seconds;
 }
 
-long long
-crm_time_get_seconds(const crm_time_t *dt)
-{
-    return pcmk__time_get_seconds(dt);
-}
-
 #define EPOCH_SECONDS 62135596800ULL // Calculated using pcmk__time_get_seconds
 long long
 crm_time_get_seconds_since_epoch(const crm_time_t *dt)
@@ -2449,6 +2443,12 @@ crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
     *y = dt->years;
     *d = dt->days;
     return TRUE;
+}
+
+long long
+crm_time_get_seconds(const crm_time_t *dt)
+{
+    return pcmk__time_get_seconds(dt);
 }
 
 // LCOV_EXCL_STOP
