@@ -47,8 +47,8 @@ null_xml_ok(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
 }
 
 static void
@@ -72,8 +72,8 @@ missing_attr(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -88,8 +88,8 @@ invalid_attr(void **state)
                      pcmk_rc_unpack_error);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -110,8 +110,8 @@ out_of_range_attr(void **state)
     assert_int_equal(pcmk__time_compare(t, reference), 0);
     pcmk__xml_free(xml);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
 }
 
 static void
@@ -125,8 +125,8 @@ add_years(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -141,8 +141,8 @@ add_months(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -157,8 +157,8 @@ add_weeks(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -173,8 +173,8 @@ add_days(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -189,8 +189,8 @@ add_hours(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -205,8 +205,8 @@ add_minutes(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -221,8 +221,8 @@ add_seconds(void **state)
                      pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 

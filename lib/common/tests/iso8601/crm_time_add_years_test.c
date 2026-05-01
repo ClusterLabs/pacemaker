@@ -29,8 +29,8 @@ assert_add_years(const char *orig_date_time, int years,
     crm_time_add_years(orig, years);
     assert_int_equal(pcmk__time_compare(orig, expected), 0);
 
-    crm_time_free(orig);
-    crm_time_free(expected);
+    free(orig);
+    free(expected);
 }
 
 static void

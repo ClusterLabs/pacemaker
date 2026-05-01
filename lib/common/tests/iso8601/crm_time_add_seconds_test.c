@@ -29,8 +29,8 @@ assert_add_seconds(const char *orig_date_time, int seconds,
     crm_time_add_seconds(orig, seconds);
     assert_int_equal(pcmk__time_compare(orig, expected), 0);
 
-    crm_time_free(orig);
-    crm_time_free(expected);
+    free(orig);
+    free(expected);
 }
 
 static void

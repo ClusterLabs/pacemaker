@@ -573,7 +573,7 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
 
     // Get seconds since origin (negative if origin is in the future)
     result = pcmk__time_get_seconds(now) - pcmk__time_get_seconds(origin);
-    crm_time_free(origin);
+    free(origin);
 
     // Calculate seconds from closest interval to now
     result = result % interval_sec;

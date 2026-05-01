@@ -36,7 +36,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     now = pcmk__copy_timet(tv.tv_sec);
     result = pcmk__time_format_hr(ns, now,
                                   (int) (tv.tv_nsec / QB_TIME_NS_IN_USEC));
-    crm_time_free(now);
+    free(now);
     free(result);
 
     free(ns);

@@ -272,7 +272,7 @@ remote_config_check(xmlNode *msg, int call_id, int rc, xmlNode *output,
     lrmd__validate_remote_settings(lrmd, config_hash);
 
     g_hash_table_destroy(config_hash);
-    crm_time_free(now);
+    free(now);
 }
 
 /*!

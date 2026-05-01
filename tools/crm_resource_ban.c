@@ -45,8 +45,8 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
         out->err(out, "Unable to add %s to current time\n"
                       "Please report to " PACKAGE_BUGREPORT " as possible bug",
                       move_lifetime);
-        crm_time_free(now);
-        crm_time_free(duration);
+        free(now);
+        free(duration);
         return NULL;
     }
 
@@ -56,9 +56,9 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     later_s = pcmk__time_text(later, time_flags);
     out->info(out, "Migration will take effect until: %s", later_s);
 
-    crm_time_free(duration);
-    crm_time_free(later);
-    crm_time_free(now);
+    free(duration);
+    free(later);
+    free(now);
     return later_s;
 }
 
@@ -516,7 +516,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
             pcmk__xml_free(fragment);
         }
 
-        crm_time_free(end);
+        free(end);
     }
 
 done:
@@ -524,6 +524,6 @@ done:
         g_string_free(buf, TRUE);
     }
     xmlXPathFreeObject(xpathObj);
-    crm_time_free(now);
+    free(now);
     return rc;
 }

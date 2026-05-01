@@ -718,7 +718,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
 
         pcmk__update_recheck_time(recheck, scheduler, "rule evaluation");
     }
-    crm_time_free(next_change);
+    free(next_change);
 }
 
 bool

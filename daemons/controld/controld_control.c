@@ -630,7 +630,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
     g_hash_table_destroy(config_hash);
   bail:
-    crm_time_free(now);
+    free(now);
 }
 
 /*!

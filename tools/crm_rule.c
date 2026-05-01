@@ -204,7 +204,7 @@ done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    crm_time_free(rule_date);
+    free(rule_date);
     pcmk__xml_free(input);
 
     pcmk__output_and_clear_error(&error, out);

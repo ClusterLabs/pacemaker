@@ -55,7 +55,7 @@ nonnull_time_invalid(void **state)
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), EINVAL);
 
-    crm_time_free(t);
+    free(t);
     pcmk__xml_free(xml);
 }
 
@@ -81,8 +81,8 @@ attr_valid(void **state)
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 

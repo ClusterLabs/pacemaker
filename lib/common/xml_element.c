@@ -1455,7 +1455,7 @@ pcmk__xe_set_timeval(xmlNode *xml, const char *sec_attr, const char *usec_attr,
  *                   (\p *t must be NULL initially)
  *
  * \return Standard Pacemaker return code
- * \note The caller is responsible for freeing \p *t using crm_time_free().
+ * \note The caller is responsible for freeing \p *t using \c free().
  */
 int
 pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t)

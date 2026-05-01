@@ -127,7 +127,7 @@ with_rules(void **state)
     assert_unpack_nvpair_block("<xml>" XML_NVPAIRS_2 XML_FAILING_RULE "</xml>",
                                &unpack_data, 2, "1", "1", NULL);
 
-    crm_time_free(now);
+    free(now);
     g_hash_table_destroy(unpack_data.values);
 }
 

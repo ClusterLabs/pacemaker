@@ -42,7 +42,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__unpack_duration(NULL, start, &end), EINVAL);
     assert_int_equal(pcmk__unpack_duration(NULL, NULL, &end), EINVAL);
 
-    crm_time_free(start);
+    free(start);
     pcmk__xml_free(duration);
 }
 
@@ -55,8 +55,8 @@ nonnull_end_invalid(void **state)
 
     assert_int_equal(pcmk__unpack_duration(duration, start, &end), EINVAL);
 
-    crm_time_free(start);
-    crm_time_free(end);
+    free(start);
+    free(end);
     pcmk__xml_free(duration);
 }
 
@@ -71,7 +71,7 @@ no_id(void **state)
                      pcmk_rc_unpack_error);
     assert_null(end);
 
-    crm_time_free(start);
+    free(start);
     pcmk__xml_free(duration);
 }
 
@@ -86,7 +86,7 @@ years_invalid(void **state)
                      pcmk_rc_unpack_error);
     assert_null(end);
 
-    crm_time_free(start);
+    free(start);
     pcmk__xml_free(duration);
 }
 
@@ -101,9 +101,9 @@ all_valid(void **state)
     assert_int_equal(pcmk__unpack_duration(duration, start, &end), pcmk_rc_ok);
     assert_int_equal(pcmk__time_compare(end, reference), 0);
 
-    crm_time_free(start);
-    crm_time_free(end);
-    crm_time_free(reference);
+    free(start);
+    free(end);
+    free(reference);
     pcmk__xml_free(duration);
 }
 

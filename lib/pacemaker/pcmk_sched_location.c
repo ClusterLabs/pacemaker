@@ -385,7 +385,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
             pcmk__update_recheck_time(t, rsc->priv->scheduler,
                                       "location rule evaluation");
         }
-        crm_time_free(next_change);
+        free(next_change);
     }
 }
 

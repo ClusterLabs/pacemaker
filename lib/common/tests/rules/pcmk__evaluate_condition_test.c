@@ -53,7 +53,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_condition(NULL, &rule_input, next_change),
                      EINVAL);
 
-    crm_time_free(next_change);
+    free(next_change);
 }
 
 
@@ -68,7 +68,7 @@ invalid_expression(void **state)
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 
-    crm_time_free(next_change);
+    free(next_change);
     pcmk__xml_free(xml);
 }
 
@@ -133,9 +133,9 @@ date_expression(void **state)
     assert_int_equal(pcmk__time_compare(next_change, reference), 0);
     rule_input.now = NULL;
 
-    crm_time_free(reference);
-    crm_time_free(next_change);
-    crm_time_free(now);
+    free(reference);
+    free(next_change);
+    free(now);
 }
 
 #define EXPR_RESOURCE                                       \

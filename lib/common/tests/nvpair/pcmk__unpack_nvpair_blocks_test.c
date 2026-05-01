@@ -74,8 +74,8 @@ null_xml(void **state)
                                &rule_input, values, next_change, NULL);
     assert_int_equal(g_hash_table_size(values), 0);
     g_hash_table_destroy(values);
-    crm_time_free(now);
-    crm_time_free(next_change);
+    free(now);
+    free(next_change);
 }
 
 static void
@@ -94,8 +94,8 @@ null_table(void **state)
                                                     "id1", &rule_input, NULL,
                                                     next_change, xml->doc));
     pcmk__xml_free(xml);
-    crm_time_free(next_change);
-    crm_time_free(now);
+    free(next_change);
+    free(now);
 }
 
 static void
@@ -118,8 +118,8 @@ rule_passes(void **state)
     assert_string_equal(g_hash_table_lookup(values, "name3"), "3");
 
     pcmk__xml_free(xml);
-    crm_time_free(next_change);
-    crm_time_free(now);
+    free(next_change);
+    free(now);
     g_hash_table_destroy(values);
 }
 
@@ -147,9 +147,9 @@ rule_fails(void **state)
     assert_int_equal(pcmk__time_compare(next_change, expected_next_change), 0);
 
     pcmk__xml_free(xml);
-    crm_time_free(now);
-    crm_time_free(next_change);
-    crm_time_free(expected_next_change);
+    free(now);
+    free(next_change);
+    free(expected_next_change);
     g_hash_table_destroy(values);
 }
 
@@ -185,7 +185,7 @@ element_name(void **state)
     assert_string_equal(g_hash_table_lookup(values, "name3"), "3");
 
     pcmk__xml_free(xml);
-    crm_time_free(now);
+    free(now);
     g_hash_table_destroy(values);
 }
 
