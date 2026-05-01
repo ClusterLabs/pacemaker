@@ -151,6 +151,9 @@ crm_time_t *pcmk_copy_time(const crm_time_t *source);
 //! \deprecated Do not use
 crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
 
+//! \deprecated Do not use
+crm_time_t *crm_time_subtract(const crm_time_t *dt, const crm_time_t *value);
+
 #ifdef __cplusplus
 }
 #endif
