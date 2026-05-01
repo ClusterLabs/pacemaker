@@ -34,6 +34,9 @@ enum pcmk__time_fmt_flags {
     pcmk__time_fmt_date     = (UINT32_C(1) << 0),
     pcmk__time_fmt_time     = (UINT32_C(1) << 1),
     pcmk__time_fmt_timezone = (UINT32_C(1) << 2),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_duration = (UINT32_C(1) << 3),
 };
 
 bool pcmk__time_valid_year(int year);
