@@ -375,7 +375,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
         crm_time_t *period_s = pcmk__time_parse_duration(input);
 
         if (period_s != NULL) {
-            msec = crm_time_get_seconds(period_s);
+            msec = pcmk__time_get_seconds(period_s);
             msec = QB_MIN(msec, G_MAXUINT / 1000) * 1000;
             crm_time_free(period_s);
         }
