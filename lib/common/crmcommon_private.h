@@ -208,6 +208,10 @@ void pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
                               uint32_t *minute, uint32_t *second);
 
 G_GNUC_INTERNAL
+void pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
+                        uint32_t *day);
+
+G_GNUC_INTERNAL
 const char *pcmk__time_component_attr(enum pcmk__time_component component);
 
 G_GNUC_INTERNAL
