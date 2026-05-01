@@ -10,19 +10,13 @@
 #ifndef PCMK__CRM_COMMON_SCHEDULER__H
 #define PCMK__CRM_COMMON_SCHEDULER__H
 
-#include <stdbool.h>
-#include <sys/types.h>                  // time_t
+#include <stdbool.h>                    // bool
+#include <stdint.h>                     // uint64_t
+
+#include <glib.h>                       // GList
 #include <libxml/tree.h>                // xmlNode
-#include <glib.h>                       // GList, GHashTable
 
-#include <crm/common/iso8601.h>         // crm_time_t
-
-#include <crm/common/actions.h>
-#include <crm/common/nodes.h>
-#include <crm/common/resources.h>
-#include <crm/common/roles.h>
-#include <crm/common/rules.h>
-#include <crm/common/scheduler_types.h>
+#include <crm/common/scheduler_types.h> // pcmk_node_t, pcmk_scheduler_t
 
 #ifdef __cplusplus
 extern "C" {
