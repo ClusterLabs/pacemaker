@@ -474,8 +474,7 @@ pcmk__tls_check_cert_expiration(gnutls_session_t session)
             crm_time_t *expiry_t = pcmk__copy_timet(expiry);
 
             pcmk__time_log(LOG_WARNING, "TLS certificate will expire on",
-                           expiry_t,
-                           pcmk__time_fmt_date|crm_time_log_timeofday);
+                           expiry_t, pcmk__time_fmt_date|pcmk__time_fmt_time);
             crm_time_free(expiry_t);
         }
     }

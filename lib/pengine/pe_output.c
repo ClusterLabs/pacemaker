@@ -1670,7 +1670,7 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
                                           pcmk__time_fmt_date
-                                          |crm_time_log_timeofday
+                                          |pcmk__time_fmt_time
                                           |crm_time_log_with_timezone);
 
         pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &interval_ms);
