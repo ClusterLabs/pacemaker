@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -53,7 +53,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     pcmk__time_log(LOG_INFO, "now     ", now, time_flags);
     pcmk__time_log(LOG_INFO, "later   ", later, time_flags);
     pcmk__time_log(LOG_INFO, "duration", duration, duration_flags);
-    later_s = crm_time_as_string(later, time_flags);
+    later_s = pcmk__time_text(later, time_flags);
     out->info(out, "Migration will take effect until: %s", later_s);
 
     crm_time_free(duration);

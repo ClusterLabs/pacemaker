@@ -689,7 +689,7 @@ pcmk__time_log_as(const char *file, const char *function, int line,
                   uint8_t level, const char *prefix, const crm_time_t *dt,
                   uint32_t flags)
 {
-    char *date_s = crm_time_as_string(dt, flags);
+    char *date_s = pcmk__time_text(dt, flags);
 
     if (prefix != NULL) {
         char *old = date_s;
@@ -1105,6 +1105,21 @@ done:
 }
 
 /*!
+ * \internal
+ * \brief Get a string representation of a \c crm_time_t object
+ *
+ * \param[in]  dt     Time to convert to string
+ * \param[in]  flags  Group of \c crm_time_* string format options
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+char *
+pcmk__time_text(const crm_time_t *dt, int flags)
+{
+    return time_as_string_common(dt, 0, flags);
+}
+
+/*!
  * \brief Get a string representation of a \p crm_time_t object
  *
  * \param[in]  dt      Time to convert to string
@@ -1115,7 +1130,7 @@ done:
 char *
 crm_time_as_string(const crm_time_t *dt, int flags)
 {
-    return time_as_string_common(dt, 0, flags);
+    return pcmk__time_text(dt, flags);
 }
 
 // Parse an ISO 8601 numeric value and return number of characters consumed
@@ -2098,7 +2113,7 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
     }
 
     dt = pcmk__copy_timet(epoch_time);
-    result = crm_time_as_string(dt, flags);
+    result = pcmk__time_text(dt, flags);
 
     crm_time_free(dt);
     return result;

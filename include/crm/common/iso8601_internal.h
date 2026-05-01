@@ -30,6 +30,7 @@ bool pcmk__time_valid_year(int year);
 bool pcmk__time_is_initialized(const crm_time_t *dt);
 void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
                         uint32_t *d);
+char *pcmk__time_text(const crm_time_t *dt, int flags);
 char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
 char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
