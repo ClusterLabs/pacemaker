@@ -125,6 +125,10 @@ char *crm_time_as_string(const crm_time_t *dt, int flags);
 //! \deprecated Do not use
 int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 
+//! \deprecated Do not use
+int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
+                           uint32_t *s);
+
 #ifdef __cplusplus
 }
 #endif
