@@ -30,6 +30,9 @@ extern "C" {
  */
 
 //! \deprecated Do not use
+#define crm_time_log_date 0x001
+
+//! \deprecated Do not use
 typedef struct crm_time_period_s {
     crm_time_t *start;
     crm_time_t *end;
