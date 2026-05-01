@@ -1501,6 +1501,12 @@ pcmk__time_component_attr(enum pcmk__time_component component)
 }
 
 static void
+add_hours(crm_time_t *dt, int value)
+{
+    pcmk__time_add_seconds(dt, value * SECONDS_IN_HOUR);
+}
+
+static void
 add_minutes(crm_time_t *dt, int value)
 {
     pcmk__time_add_seconds(dt, value * SECONDS_IN_MINUTE);
@@ -1533,7 +1539,7 @@ component_fn(enum pcmk__time_component component)
             return crm_time_add_days;
 
         case pcmk__time_hours:
-            return crm_time_add_hours;
+            return add_hours;
 
         case pcmk__time_minutes:
             return add_minutes;
@@ -1753,12 +1759,6 @@ crm_time_add_months(crm_time_t *dt, int value)
 
     dt->years = year;
     dt->days = get_ordinal_days(year, month, day);
-}
-
-void
-crm_time_add_hours(crm_time_t *dt, int value)
-{
-    pcmk__time_add_seconds(dt, value * SECONDS_IN_HOUR);
 }
 
 void
@@ -2488,6 +2488,12 @@ void
 crm_time_add_minutes(crm_time_t *dt, int value)
 {
     add_minutes(dt, value);
+}
+
+void
+crm_time_add_hours(crm_time_t *dt, int value)
+{
+    add_hours(dt, value);
 }
 
 // LCOV_EXCL_STOP

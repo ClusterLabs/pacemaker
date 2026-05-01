@@ -54,7 +54,6 @@ typedef struct crm_time_s crm_time_t;
 crm_time_t *crm_time_new(const char *string);
 
 /* All crm_time_add_... functions support negative values */
-void crm_time_add_hours(crm_time_t * dt, int value);
 void crm_time_add_days(crm_time_t * dt, int value);
 void crm_time_add_weeks(crm_time_t * dt, int value);
 void crm_time_add_months(crm_time_t * dt, int value);
