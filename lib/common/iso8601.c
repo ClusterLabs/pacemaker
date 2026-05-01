@@ -676,15 +676,6 @@ pcmk__time_is_initialized(const crm_time_t *dt)
 }
 
 void
-crm_time_free(crm_time_t * dt)
-{
-    if (dt == NULL) {
-        return;
-    }
-    free(dt);
-}
-
-void
 pcmk__time_log_as(const char *file, const char *function, int line,
                   uint8_t level, const char *prefix, const crm_time_t *dt,
                   uint32_t flags)
@@ -2454,6 +2445,12 @@ long long
 crm_time_get_seconds_since_epoch(const crm_time_t *dt)
 {
     return pcmk__time_to_unix(dt);
+}
+
+void
+crm_time_free(crm_time_t *dt)
+{
+    free(dt);
 }
 
 // LCOV_EXCL_STOP

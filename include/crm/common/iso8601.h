@@ -52,7 +52,6 @@ typedef struct crm_time_s crm_time_t;
  *   A timezone of 'Z' denotes UTC time
  */
 crm_time_t *crm_time_new(const char *string);
-void crm_time_free(crm_time_t * dt);
 
 /* Returns a new time object */
 crm_time_t *pcmk_copy_time(const crm_time_t *source);
