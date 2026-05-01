@@ -1119,20 +1119,6 @@ pcmk__time_text(const crm_time_t *dt, int flags)
     return time_as_string_common(dt, 0, flags);
 }
 
-/*!
- * \brief Get a string representation of a \p crm_time_t object
- *
- * \param[in]  dt      Time to convert to string
- * \param[in]  flags   Group of \p crm_time_* string format options
- *
- * \note The caller is responsible for freeing the return value using \p free().
- */
-char *
-crm_time_as_string(const crm_time_t *dt, int flags)
-{
-    return pcmk__time_text(dt, flags);
-}
-
 // Parse an ISO 8601 numeric value and return number of characters consumed
 static int
 parse_int(const char *str, int *result)
@@ -2438,6 +2424,12 @@ bool
 crm_time_is_defined(const crm_time_t *t)
 {
     return pcmk__time_is_initialized(t);
+}
+
+char *
+crm_time_as_string(const crm_time_t *dt, int flags)
+{
+    return pcmk__time_text(dt, flags);
 }
 
 // LCOV_EXCL_STOP
