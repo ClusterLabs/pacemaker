@@ -51,7 +51,7 @@ date_now_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 static gboolean
 modifier_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
     if (pcmk__str_any_of(option_name, "--seconds", "-s", NULL)) {
-        options.print_options |= crm_time_seconds;
+        options.print_options |= pcmk__time_fmt_seconds;
     } else if (pcmk__str_any_of(option_name, "--epoch", "-S", NULL)) {
         options.print_options |= crm_time_epoch;
     } else if (pcmk__str_any_of(option_name, "--local", "-L", NULL)) {
