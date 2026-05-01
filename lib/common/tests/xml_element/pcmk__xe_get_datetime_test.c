@@ -79,7 +79,7 @@ attr_valid(void **state)
     crm_time_t *reference = crm_time_new(REFERENCE_ISO8601);
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);

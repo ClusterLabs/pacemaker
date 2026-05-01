@@ -144,7 +144,7 @@ rule_fails(void **state)
     assert_string_equal(g_hash_table_lookup(values, "name1"), "3");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "3");
     assert_string_equal(g_hash_table_lookup(values, "name3"), "3");
-    assert_int_equal(crm_time_compare(next_change, expected_next_change), 0);
+    assert_int_equal(pcmk__time_compare(next_change, expected_next_change), 0);
 
     pcmk__xml_free(xml);
     crm_time_free(now);
