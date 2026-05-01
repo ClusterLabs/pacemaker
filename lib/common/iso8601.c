@@ -1678,12 +1678,6 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
     return rc;
 }
 
-int
-crm_time_compare(const crm_time_t *a, const crm_time_t *b)
-{
-    return pcmk__time_compare(a, b);
-}
-
 /*!
  * \brief Add a given number of seconds to a date/time or duration
  *
@@ -2436,6 +2430,12 @@ char *
 crm_time_as_string(const crm_time_t *dt, int flags)
 {
     return pcmk__time_text(dt, flags);
+}
+
+int
+crm_time_compare(const crm_time_t *a, const crm_time_t *b)
+{
+    return pcmk__time_compare(a, b);
 }
 
 // LCOV_EXCL_STOP
