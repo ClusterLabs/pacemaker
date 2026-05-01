@@ -737,7 +737,7 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
     if (last_updated != 0) {
         last_updated_s = pcmk__epoch2str(&last_updated,
                                          pcmk__time_fmt_date
-                                         |crm_time_log_timeofday
+                                         |pcmk__time_fmt_time
                                          |crm_time_log_with_timezone);
     }
 
@@ -778,7 +778,7 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
     if (last_updated != 0) {
         last_updated_s = pcmk__epoch2str(&last_updated,
                                          pcmk__time_fmt_date
-                                         |crm_time_log_timeofday
+                                         |pcmk__time_fmt_time
                                          |crm_time_log_with_timezone);
     }
 
@@ -842,7 +842,7 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
     if (last_updated != 0) {
         last_updated_s = pcmk__epoch2str(&last_updated,
                                          pcmk__time_fmt_date
-                                         |crm_time_log_timeofday
+                                         |pcmk__time_fmt_time
                                          |crm_time_log_with_timezone);
     }
 

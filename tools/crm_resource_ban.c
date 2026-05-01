@@ -24,7 +24,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     crm_time_t *now = NULL;
     crm_time_t *later = NULL;
     crm_time_t *duration = NULL;
-    const uint32_t duration_flags = pcmk__time_fmt_date|crm_time_log_timeofday;
+    const uint32_t duration_flags = pcmk__time_fmt_date|pcmk__time_fmt_time;
     const uint32_t time_flags = duration_flags|crm_time_log_with_timezone;
 
     if (move_lifetime == NULL) {
