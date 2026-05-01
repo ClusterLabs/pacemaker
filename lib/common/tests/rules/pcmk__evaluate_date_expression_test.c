@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -52,7 +52,7 @@ assert_date_expression(const xmlNode *xml, const char *now_s,
     if (check_next_change) {
         crm_time_t *reference = crm_time_new(reference_s);
 
-        assert_int_equal(crm_time_compare(next_change, reference), 0);
+        assert_int_equal(pcmk__time_compare(next_change, reference), 0);
         crm_time_free(reference);
         crm_time_free(next_change);
     }

@@ -130,7 +130,7 @@ date_expression(void **state)
     rule_input.now = now;
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, next_change),
                      pcmk_rc_before_range);
-    assert_int_equal(crm_time_compare(next_change, reference), 0);
+    assert_int_equal(pcmk__time_compare(next_change, reference), 0);
     rule_input.now = NULL;
 
     crm_time_free(reference);

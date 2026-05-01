@@ -332,7 +332,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
         }
     }
 
-    if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
+    if ((start != NULL) && (pcmk__time_compare(now, start) < 0)) {
         pcmk__set_time_if_earlier(next_change, start);
         crm_time_free(start);
         crm_time_free(end);
@@ -340,7 +340,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
     }
 
     if (end != NULL) {
-        if (crm_time_compare(now, end) > 0) {
+        if (pcmk__time_compare(now, end) > 0) {
             crm_time_free(start);
             crm_time_free(end);
             return pcmk_rc_after_range;
@@ -392,7 +392,7 @@ evaluate_gt(const xmlNode *date_expression, const char *id,
         return pcmk_rc_unpack_error;
     }
 
-    if (crm_time_compare(now, start) > 0) {
+    if (pcmk__time_compare(now, start) > 0) {
         crm_time_free(start);
         return pcmk_rc_within_range;
     }
@@ -437,7 +437,7 @@ evaluate_lt(const xmlNode *date_expression, const char *id,
         return pcmk_rc_unpack_error;
     }
 
-    if (crm_time_compare(now, end) < 0) {
+    if (pcmk__time_compare(now, end) < 0) {
         pcmk__set_time_if_earlier(next_change, end);
         crm_time_free(end);
         return pcmk_rc_within_range;

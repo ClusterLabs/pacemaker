@@ -66,6 +66,8 @@ const char *pcmk__readable_interval(guint interval_ms);
 crm_time_t *pcmk__time_parse_duration(const char *period_s);
 crm_time_t *pcmk__copy_timet(time_t source_sec);
 
+int pcmk__time_compare(const crm_time_t *a, const crm_time_t *b);
+
 void pcmk__time_log_as(const char *file, const char *function, int line,
                        uint8_t level, const char *prefix, const crm_time_t *dt,
                        uint32_t flags);

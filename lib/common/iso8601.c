@@ -1366,7 +1366,7 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
     if ((target == NULL)
         || (source == NULL)
         || (pcmk__time_is_initialized(target)
-            && (crm_time_compare(source, target) >= 0))) {
+            && (pcmk__time_compare(source, target) >= 0))) {
 
         return;
     }
@@ -1650,7 +1650,7 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     }
 
 int
-crm_time_compare(const crm_time_t *a, const crm_time_t *b)
+pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     int rc = 0;
     crm_time_t *t1 = NULL;
@@ -1676,6 +1676,12 @@ crm_time_compare(const crm_time_t *a, const crm_time_t *b)
     crm_time_free(t1);
     crm_time_free(t2);
     return rc;
+}
+
+int
+crm_time_compare(const crm_time_t *a, const crm_time_t *b)
+{
+    return pcmk__time_compare(a, b);
 }
 
 /*!

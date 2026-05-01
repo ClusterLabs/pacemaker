@@ -496,7 +496,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
             continue; // Treat as unexpired
         }
 
-        if (crm_time_compare(now, end) == 1) {
+        if (pcmk__time_compare(now, end) > 0) {
             xmlNode *fragment = NULL;
             xmlNode *location = NULL;
 

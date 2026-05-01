@@ -26,7 +26,7 @@ null_ok(void **state)
 
     // Shouldn't assert, crash, or change target
     pcmk__set_time_if_earlier(target, NULL);
-    assert_int_equal(crm_time_compare(target, target_copy), 0);
+    assert_int_equal(pcmk__time_compare(target, target_copy), 0);
 
     crm_time_free(target);
     crm_time_free(target_copy);
@@ -39,7 +39,7 @@ target_undefined(void **state)
     crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     pcmk__set_time_if_earlier(target, source);
-    assert_int_equal(crm_time_compare(target, source), 0);
+    assert_int_equal(pcmk__time_compare(target, source), 0);
 
     crm_time_free(source);
     crm_time_free(target);
@@ -52,7 +52,7 @@ source_earlier(void **state)
     crm_time_t *target = crm_time_new("2024-01-01 00:30:00 +01:00");
 
     pcmk__set_time_if_earlier(target, source);
-    assert_int_equal(crm_time_compare(target, source), 0);
+    assert_int_equal(pcmk__time_compare(target, source), 0);
 
     crm_time_free(source);
     crm_time_free(target);
@@ -66,7 +66,7 @@ source_later(void **state)
     crm_time_t *target_copy = pcmk_copy_time(target);
 
     pcmk__set_time_if_earlier(target, source);
-    assert_int_equal(crm_time_compare(target, target_copy), 0);
+    assert_int_equal(pcmk__time_compare(target, target_copy), 0);
 
     crm_time_free(source);
     crm_time_free(target);
