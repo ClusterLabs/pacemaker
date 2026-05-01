@@ -89,6 +89,9 @@ crm_time_t *crm_time_parse_duration(const char *duration_str);
 //! \deprecated Do not use
 crm_time_t *crm_time_new_undefined(void);
 
+//! \deprecated Do not use
+bool crm_time_is_defined(const crm_time_t *t);
+
 #ifdef __cplusplus
 }
 #endif
