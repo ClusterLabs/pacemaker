@@ -716,14 +716,6 @@ pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
     seconds_to_hms(dt->seconds, hour, minute, second);
 }
 
-int
-crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
-                       uint32_t *s)
-{
-    pcmk__time_get_timeofday(dt, h, m, s);
-    return TRUE;
-}
-
 long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
@@ -2442,6 +2434,14 @@ int
 crm_time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     return pcmk__time_compare(a, b);
+}
+
+int
+crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
+                       uint32_t *s)
+{
+    pcmk__time_get_timeofday(dt, h, m, s);
+    return TRUE;
 }
 
 // LCOV_EXCL_STOP
