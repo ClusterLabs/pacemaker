@@ -675,19 +675,6 @@ pcmk__time_is_initialized(const crm_time_t *dt)
                || (dt->duration));
 }
 
-/*!
- * \brief Check whether a time object has been initialized yet
- *
- * \param[in] t  Time object to check
- *
- * \return \c true if time object has been initialized, \c false otherwise
- */
-bool
-crm_time_is_defined(const crm_time_t *t)
-{
-    return pcmk__time_is_initialized(t);
-}
-
 void
 crm_time_free(crm_time_t * dt)
 {
@@ -2430,6 +2417,12 @@ crm_time_t *
 crm_time_new_undefined(void)
 {
     return pcmk__assert_alloc(1, sizeof(crm_time_t));
+}
+
+bool
+crm_time_is_defined(const crm_time_t *t)
+{
+    return pcmk__time_is_initialized(t);
 }
 
 // LCOV_EXCL_STOP
