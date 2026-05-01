@@ -1009,7 +1009,8 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
         goto done;
     }
 
-    if (pcmk__any_flags_set(flags, pcmk__time_fmt_seconds|crm_time_epoch)) {
+    if (pcmk__any_flags_set(flags,
+                            pcmk__time_fmt_seconds|pcmk__time_fmt_epoch)) {
         long long seconds = 0;
 
         if (pcmk__is_set(flags, pcmk__time_fmt_seconds)) {
