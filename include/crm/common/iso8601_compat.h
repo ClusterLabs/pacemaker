@@ -129,6 +129,10 @@ int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
 int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                            uint32_t *s);
 
+//! \deprecated Do not use
+int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                           uint32_t *d);
+
 #ifdef __cplusplus
 }
 #endif

@@ -801,14 +801,6 @@ pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
 }
 
 int
-crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
-                       uint32_t *d)
-{
-    pcmk__time_get_ymd(dt, y, m, d);
-    return TRUE;
-}
-
-int
 crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
 {
     pcmk__assert((dt != NULL) && (y != NULL) && (d != NULL));
@@ -2446,6 +2438,14 @@ crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
                        uint32_t *s)
 {
     pcmk__time_get_timeofday(dt, h, m, s);
+    return TRUE;
+}
+
+int
+crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                       uint32_t *d)
+{
+    pcmk__time_get_ymd(dt, y, m, d);
     return TRUE;
 }
 
