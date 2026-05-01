@@ -341,7 +341,7 @@ parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
         *start = crm_time_subtract(*end, diff);
 
     } else if (*end == NULL) {
-        *end = crm_time_add(*start, diff);
+        *end = pcmk__time_add(*start, diff);
     }
 
     if (!pcmk__time_valid_year((*start)->years) || !valid_time(*start)) {
@@ -496,7 +496,7 @@ main(int argc, char **argv)
     }
 
     if (date_time && duration) {
-        crm_time_t *later = crm_time_add(date_time, duration);
+        crm_time_t *later = pcmk__time_add(date_time, duration);
 
         if (later == NULL) {
             exit_code = CRM_EX_SOFTWARE;

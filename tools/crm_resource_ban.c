@@ -40,7 +40,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     }
 
     now = crm_time_new(NULL);
-    later = crm_time_add(now, duration);
+    later = pcmk__time_add(now, duration);
     if (later == NULL) {
         out->err(out, "Unable to add %s to current time\n"
                       "Please report to " PACKAGE_BUGREPORT " as possible bug",

@@ -1413,15 +1413,12 @@ pcmk__copy_timet(time_t source_sec)
 }
 
 crm_time_t *
-crm_time_add(const crm_time_t *dt, const crm_time_t *value)
+pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
 
-    if ((dt == NULL) || (value == NULL)) {
-        errno = EINVAL;
-        return NULL;
-    }
+    pcmk__assert((dt != NULL) && (value != NULL));
 
     answer = pcmk__time_copy(dt);
     utc = copy_time_to_utc(value);
@@ -1433,6 +1430,17 @@ crm_time_add(const crm_time_t *dt, const crm_time_t *value)
 
     free(utc);
     return answer;
+}
+
+crm_time_t *
+crm_time_add(const crm_time_t *dt, const crm_time_t *value)
+{
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return pcmk__time_add(dt, value);
 }
 
 /*!
@@ -2344,7 +2352,7 @@ crm_time_parse_period(const char *period_str)
         period->start = crm_time_subtract(period->end, period->diff);
 
     } else if (period->end == NULL) {
-        period->end = crm_time_add(period->start, period->diff);
+        period->end = pcmk__time_add(period->start, period->diff);
     }
 
     if (!pcmk__time_valid_year(period->start->years)
