@@ -521,7 +521,7 @@ set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
     scheduler->priv->now = pcmk__copy_timet(original_date);
 
     if (print_original) {
-        char *when = crm_time_as_string(scheduler->priv->now, flags);
+        char *when = pcmk__time_text(scheduler->priv->now, flags);
 
         out->info(out, "Using the original execution date of: %s", when);
         free(when);
