@@ -1432,17 +1432,6 @@ pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
     return answer;
 }
 
-crm_time_t *
-crm_time_add(const crm_time_t *dt, const crm_time_t *value)
-{
-    if ((dt == NULL) || (value == NULL)) {
-        errno = EINVAL;
-        return NULL;
-    }
-
-    return pcmk__time_add(dt, value);
-}
-
 /*!
  * \internal
  * \brief Return the XML attribute name corresponding to a time component
@@ -2465,6 +2454,17 @@ crm_time_t *
 pcmk_copy_time(const crm_time_t *source)
 {
     return pcmk__time_copy(source);
+}
+
+crm_time_t *
+crm_time_add(const crm_time_t *dt, const crm_time_t *value)
+{
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return pcmk__time_add(dt, value);
 }
 
 // LCOV_EXCL_STOP
