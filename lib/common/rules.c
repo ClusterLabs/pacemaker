@@ -191,8 +191,8 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     pcmk__time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
                              &(ranges[5].value));
 
-    // Year (redundant) and day of year
-    crm_time_get_ordinal(now, &(ranges[0].value), &(ranges[6].value));
+    // Day of year
+    ranges[6].value = now->days;
 
     // Week year, week of week year, day of week
     pcmk__time_get_ywd(now, &(ranges[7].value), &(ranges[8].value),
