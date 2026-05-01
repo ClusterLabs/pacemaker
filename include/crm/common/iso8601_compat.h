@@ -154,6 +154,9 @@ crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
 //! \deprecated Do not use
 crm_time_t *crm_time_subtract(const crm_time_t *dt, const crm_time_t *value);
 
+//! \deprecated Do not use
+void crm_time_add_seconds(crm_time_t *dt, int value);
+
 #ifdef __cplusplus
 }
 #endif

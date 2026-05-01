@@ -1673,18 +1673,6 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
 }
 
 /*!
- * \brief Add a given number of seconds to a date/time or duration
- *
- * \param[in,out] dt     Date/time or duration to add seconds to
- * \param[in]     value  Number of seconds to add
- */
-void
-crm_time_add_seconds(crm_time_t *dt, int value)
-{
-    pcmk__time_add_seconds(dt, value);
-}
-
-/*!
  * \brief Add days to a date/time
  *
  * \param[in,out] dt     Time to modify
@@ -2488,6 +2476,12 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     }
 
     return pcmk__time_subtract(dt, value);
+}
+
+void
+crm_time_add_seconds(crm_time_t *dt, int value)
+{
+    pcmk__time_add_seconds(dt, value);
 }
 
 // LCOV_EXCL_STOP
