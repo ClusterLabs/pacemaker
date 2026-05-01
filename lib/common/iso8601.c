@@ -1500,6 +1500,12 @@ pcmk__time_component_attr(enum pcmk__time_component component)
     }
 }
 
+static void
+add_minutes(crm_time_t *dt, int value)
+{
+    pcmk__time_add_seconds(dt, value * SECONDS_IN_MINUTE);
+}
+
 typedef void (*component_fn_t)(crm_time_t *, int);
 
 /*!
@@ -1530,7 +1536,7 @@ component_fn(enum pcmk__time_component component)
             return crm_time_add_hours;
 
         case pcmk__time_minutes:
-            return crm_time_add_minutes;
+            return add_minutes;
 
         case pcmk__time_seconds:
             return pcmk__time_add_seconds;
@@ -1747,12 +1753,6 @@ crm_time_add_months(crm_time_t *dt, int value)
 
     dt->years = year;
     dt->days = get_ordinal_days(year, month, day);
-}
-
-void
-crm_time_add_minutes(crm_time_t *dt, int value)
-{
-    pcmk__time_add_seconds(dt, value * SECONDS_IN_MINUTE);
 }
 
 void
@@ -2482,6 +2482,12 @@ void
 crm_time_add_seconds(crm_time_t *dt, int value)
 {
     pcmk__time_add_seconds(dt, value);
+}
+
+void
+crm_time_add_minutes(crm_time_t *dt, int value)
+{
+    add_minutes(dt, value);
 }
 
 // LCOV_EXCL_STOP
