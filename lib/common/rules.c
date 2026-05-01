@@ -184,8 +184,8 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     }
 
     // Year, month, day
-    crm_time_get_gregorian(now, &(ranges[0].value), &(ranges[1].value),
-                           &(ranges[2].value));
+    pcmk__time_get_ymd(now, &(ranges[0].value), &(ranges[1].value),
+                       &(ranges[2].value));
 
     // Hour, minute, second
     pcmk__time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),

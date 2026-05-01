@@ -766,14 +766,15 @@ crm_time_get_seconds_since_epoch(const crm_time_t *dt)
     return (dt == NULL)? 0 : (crm_time_get_seconds(dt) - EPOCH_SECONDS);
 }
 
-int
-crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
-                       uint32_t *d)
+void
+pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
+                   uint32_t *day)
 {
     int months = 0;
     int days = dt->days;
 
-    pcmk__assert((dt != NULL) && (y != NULL) && (m != NULL) && (d != NULL));
+    pcmk__assert((dt != NULL) && (year != NULL) && (month != NULL)
+                 && (day != NULL));
 
     if(dt->years != 0) {
         for (months = 1; months <= 12 && days > 0; months++) {
@@ -794,11 +795,16 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
         /* This is a duration not including months, still don't convert the days field */
     }
 
-    *y = dt->years;
-    *m = months;
-    *d = days;
-    pcmk__trace("%.4d-%.3d -> %.4d-%.2d-%.2d", dt->years, dt->days, dt->years,
-                months, days);
+    *year = dt->years;
+    *month = months;
+    *day = days;
+}
+
+int
+crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                       uint32_t *d)
+{
+    pcmk__time_get_ymd(dt, y, m, d);
     return TRUE;
 }
 
@@ -1062,7 +1068,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             uint32_t m = 0;
             uint32_t d = 0;
 
-            crm_time_get_gregorian(dt, &y, &m, &d);
+            pcmk__time_get_ymd(dt, &y, &m, &d);
             g_string_append_printf(buf,
                                    "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
                                    y, m, d);
@@ -1752,7 +1758,7 @@ crm_time_add_months(crm_time_t *dt, int value)
     uint32_t day = 0;
     int days_in_month = 0;
 
-    crm_time_get_gregorian(dt, &year, &month, &day);
+    pcmk__time_get_ymd(dt, &year, &month, &day);
 
     if (value > 0) {
         for (int i = value; i > 0; i--) {
