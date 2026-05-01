@@ -1423,6 +1423,22 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
     pcmk__time_log(LOG_TRACE, "target", target, flags);
 }
 
+void
+pcmk__time_add_years(crm_time_t *dt, int value)
+{
+    pcmk__assert(dt != NULL);
+
+    if ((value > 0) && ((dt->years + (long long) value) > INT_MAX)) {
+        dt->years = INT_MAX;
+
+    } else if ((value < 0) && ((dt->years + (long long) value) < 1)) {
+        dt->years = 1; // Clip to earliest we can handle (no BCE)
+
+    } else {
+        dt->years += value;
+    }
+}
+
 /*!
  * \internal
  * \brief Convert a \c time_t time to a \c crm_time_t time
@@ -1445,7 +1461,7 @@ pcmk__copy_timet(time_t source_sec)
     if (source->tm_year > 0) {
         // Years since 1900
         target->years = 1900;
-        crm_time_add_years(target, source->tm_year);
+        pcmk__time_add_years(target, source->tm_year);
     }
 
     if (source->tm_yday >= 0) {
@@ -1528,7 +1544,7 @@ pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
     answer = pcmk__time_copy(dt);
     utc = copy_time_to_utc(value);
 
-    crm_time_add_years(answer, utc->years);
+    pcmk__time_add_years(answer, utc->years);
     add_months(answer, utc->months);
     pcmk__time_add_days(answer, utc->days);
     pcmk__time_add_seconds(answer, utc->seconds);
@@ -1609,7 +1625,7 @@ component_fn(enum pcmk__time_component component)
 {
     switch (component) {
         case pcmk__time_years:
-            return crm_time_add_years;
+            return pcmk__time_add_years;
 
         case pcmk__time_months:
             return add_months;
@@ -1690,10 +1706,10 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     // Avoid overflow when negating INT_MIN in calculations below
 
     if (utc->years == INT_MIN) {
-        crm_time_add_years(result, -1);
+        pcmk__time_add_years(result, -1);
         utc->years++;
     }
-    crm_time_add_years(result, -utc->years);
+    pcmk__time_add_years(result, -utc->years);
 
     if (utc->months == INT_MIN) {
         add_months(result, -1);
@@ -1768,17 +1784,7 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
 void
 crm_time_add_years(crm_time_t *dt, int value)
 {
-    pcmk__assert(dt != NULL);
-
-    if ((value > 0) && ((dt->years + (long long) value) > INT_MAX)) {
-        dt->years = INT_MAX;
-
-    } else if ((value < 0) && ((dt->years + (long long) value) < 1)) {
-        dt->years = 1; // Clip to earliest we can handle (no BCE)
-
-    } else {
-        dt->years += value;
-    }
+    pcmk__time_add_years(dt, value);
 }
 
 static void
