@@ -1062,11 +1062,10 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
             uint32_t m = 0;
             uint32_t d = 0;
 
-            if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                g_string_append_printf(buf,
-                                       "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
-                                       y, m, d);
-            }
+            crm_time_get_gregorian(dt, &y, &m, &d);
+            g_string_append_printf(buf,
+                                   "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+                                   y, m, d);
         }
     }
 
