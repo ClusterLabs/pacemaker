@@ -163,6 +163,9 @@ void crm_time_add_minutes(crm_time_t *dt, int value);
 //! \deprecated Do not use
 void crm_time_add_hours(crm_time_t *dt, int value);
 
+//! \deprecated Do not use
+void crm_time_add_days(crm_time_t *dt, int value);
+
 #ifdef __cplusplus
 }
 #endif

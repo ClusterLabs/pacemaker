@@ -1721,18 +1721,6 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
     return rc;
 }
 
-/*!
- * \brief Add days to a date/time
- *
- * \param[in,out] dt     Time to modify
- * \param[in]     value  Number of days to add (may be negative to subtract)
- */
-void
-crm_time_add_days(crm_time_t *dt, int value)
-{
-    pcmk__time_add_days(dt, value);
-}
-
 void
 crm_time_add_months(crm_time_t *dt, int value)
 {
@@ -2505,6 +2493,12 @@ void
 crm_time_add_hours(crm_time_t *dt, int value)
 {
     add_hours(dt, value);
+}
+
+void
+crm_time_add_days(crm_time_t *dt, int value)
+{
+    pcmk__time_add_days(dt, value);
 }
 
 // LCOV_EXCL_STOP
