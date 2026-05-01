@@ -204,6 +204,9 @@ enum pcmk__time_component {
 };
 
 G_GNUC_INTERNAL
+void pcmk__time_add_days(crm_time_t *dt, int value);
+
+G_GNUC_INTERNAL
 void pcmk__time_add_seconds(crm_time_t *dt, int value);
 
 G_GNUC_INTERNAL

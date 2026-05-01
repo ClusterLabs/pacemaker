@@ -359,6 +359,43 @@ seconds_to_hms(int seconds_i, uint32_t *hours, uint32_t *minutes,
 
 /*!
  * \internal
+ * \brief Add days to a date/time
+ *
+ * \param[in,out] dt     Time to modify
+ * \param[in]     value  Number of days to add (may be negative to subtract)
+ */
+void
+pcmk__time_add_days(crm_time_t *dt, int value)
+{
+    pcmk__assert(dt != NULL);
+
+    if (value > 0) {
+        while ((dt->days + (long long) value) > year_days(dt->years)) {
+            if (dt->years == INT_MAX) {
+                // Clip to latest we can handle
+                dt->days = year_days(dt->years);
+                return;
+            }
+            value -= year_days(dt->years);
+            dt->years++;
+        }
+    } else if (value < 0) {
+        const int min_days = dt->duration? 0 : 1;
+
+        while ((dt->days + (long long) value) < min_days) {
+            if (dt->years <= 1) {
+                dt->days = 1; // Clip to earliest we can handle (no BCE)
+                return;
+            }
+            dt->years--;
+            value += year_days(dt->years);
+        }
+    }
+    dt->days += value;
+}
+
+/*!
+ * \internal
  * \brief Parse the time portion of an ISO 8601 date/time string
  *
  * \param[in]     time_str  Time portion of specification (after any 'T')
@@ -406,7 +443,7 @@ parse_time(const char *time_str, crm_time_t *a_time)
     if (a_time->seconds == SECONDS_IN_DAY) {
         // 24:00:00 == 00:00:00 of next day
         a_time->seconds = 0;
-        crm_time_add_days(a_time, 1);
+        pcmk__time_add_days(a_time, 1);
     }
     return true;
 }
@@ -571,15 +608,15 @@ parse_date(const char *date_str)
                         year, jan1, week, day, date_str);
 
             dt->years = year;
-            crm_time_add_days(dt, (week - 1) * 7);
+            pcmk__time_add_days(dt, (week - 1) * 7);
 
             if (jan1 <= 4) {
-                crm_time_add_days(dt, 1 - jan1);
+                pcmk__time_add_days(dt, 1 - jan1);
             } else {
-                crm_time_add_days(dt, 8 - jan1);
+                pcmk__time_add_days(dt, 8 - jan1);
             }
 
-            crm_time_add_days(dt, day);
+            pcmk__time_add_days(dt, day);
         }
         goto parse_time_segment;
     }
@@ -641,7 +678,7 @@ pcmk__time_add_seconds(crm_time_t *dt, int value)
         dt->seconds += SECONDS_IN_DAY;
     }
 
-    crm_time_add_days(dt, days);
+    pcmk__time_add_days(dt, days);
 }
 
 // Return value is guaranteed not to be NULL
@@ -1454,7 +1491,7 @@ pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
 
     crm_time_add_years(answer, utc->years);
     crm_time_add_months(answer, utc->months);
-    crm_time_add_days(answer, utc->days);
+    pcmk__time_add_days(answer, utc->days);
     pcmk__time_add_seconds(answer, utc->seconds);
 
     free(utc);
@@ -1536,7 +1573,7 @@ component_fn(enum pcmk__time_component component)
             return crm_time_add_weeks;
 
         case pcmk__time_days:
-            return crm_time_add_days;
+            return pcmk__time_add_days;
 
         case pcmk__time_hours:
             return add_hours;
@@ -1621,10 +1658,10 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     crm_time_add_months(result, -utc->months);
 
     if (utc->days == INT_MIN) {
-        crm_time_add_days(result, -1);
+        pcmk__time_add_days(result, -1);
         utc->days++;
     }
-    crm_time_add_days(result, -utc->days);
+    pcmk__time_add_days(result, -utc->days);
 
     if (utc->seconds == INT_MIN) {
         pcmk__time_add_seconds(result, -1);
@@ -1693,33 +1730,7 @@ pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
 void
 crm_time_add_days(crm_time_t *dt, int value)
 {
-    pcmk__assert(dt != NULL);
-
-    pcmk__trace("Adding %d days to %.4d-%.3d", value, dt->years, dt->days);
-
-    if (value > 0) {
-        while ((dt->days + (long long) value) > year_days(dt->years)) {
-            if (dt->years == INT_MAX) {
-                // Clip to latest we can handle
-                dt->days = year_days(dt->years);
-                return;
-            }
-            value -= year_days(dt->years);
-            dt->years++;
-        }
-    } else if (value < 0) {
-        const int min_days = dt->duration? 0 : 1;
-
-        while ((dt->days + (long long) value) < min_days) {
-            if (dt->years <= 1) {
-                dt->days = 1; // Clip to earliest we can handle (no BCE)
-                return;
-            }
-            dt->years--;
-            value += year_days(dt->years);
-        }
-    }
-    dt->days += value;
+    pcmk__time_add_days(dt, value);
 }
 
 void
@@ -1764,7 +1775,7 @@ crm_time_add_months(crm_time_t *dt, int value)
 void
 crm_time_add_weeks(crm_time_t *dt, int value)
 {
-    crm_time_add_days(dt, value * 7);
+    pcmk__time_add_days(dt, value * 7);
 }
 
 void
