@@ -145,6 +145,9 @@ long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
 //! \deprecated Use \c free() instead
 void crm_time_free(crm_time_t *dt);
 
+//! \deprecated Do not use
+crm_time_t *pcmk_copy_time(const crm_time_t *source);
+
 #ifdef __cplusplus
 }
 #endif

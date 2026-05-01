@@ -1357,12 +1357,6 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
     pcmk__time_log(LOG_TRACE, "target", target, flags);
 }
 
-crm_time_t *
-pcmk_copy_time(const crm_time_t *source)
-{
-    return pcmk__time_copy(source);
-}
-
 /*!
  * \internal
  * \brief Convert a \c time_t time to a \c crm_time_t time
@@ -2457,6 +2451,12 @@ void
 crm_time_free(crm_time_t *dt)
 {
     free(dt);
+}
+
+crm_time_t *
+pcmk_copy_time(const crm_time_t *source)
+{
+    return pcmk__time_copy(source);
 }
 
 // LCOV_EXCL_STOP

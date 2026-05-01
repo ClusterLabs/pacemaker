@@ -54,7 +54,6 @@ typedef struct crm_time_s crm_time_t;
 crm_time_t *crm_time_new(const char *string);
 
 /* Returns a new time object */
-crm_time_t *pcmk_copy_time(const crm_time_t *source);
 crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
 crm_time_t *crm_time_subtract(const crm_time_t *dt, const crm_time_t *value);
 
