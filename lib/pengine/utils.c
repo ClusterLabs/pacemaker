@@ -727,7 +727,7 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
         return;
     }
 
-    next_change = crm_time_new_undefined();
+    next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
     pcmk__unpack_nvpair_blocks(xml_obj, set_name, always_first, rule_input,
                                hash, next_change, scheduler->input->doc);
 

@@ -482,7 +482,7 @@ parse_date(const char *date_str)
         goto parse_time_segment;
     }
 
-    dt = crm_time_new_undefined();
+    dt = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     if ((strncasecmp(PCMK__VALUE_EPOCH, date_str, 5) == 0)
         && ((date_str[5] == '\0')
@@ -640,7 +640,7 @@ copy_time_to_utc(const crm_time_t *dt)
 
     pcmk__assert(dt != NULL);
 
-    utc = crm_time_new_undefined();
+    utc = pcmk__assert_alloc(1, sizeof(crm_time_t));
     utc->years = dt->years;
     utc->days = dt->days;
     utc->seconds = dt->seconds;
@@ -1316,7 +1316,7 @@ pcmk__time_parse_duration(const char *period_s)
         goto invalid;
     }
 
-    diff = crm_time_new_undefined();
+    diff = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     for (const char *current = period_s + 1;
          current[0] && (current[0] != '/') && !isspace(current[0]);
@@ -1387,7 +1387,7 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 crm_time_t *
 pcmk_copy_time(const crm_time_t *source)
 {
-    crm_time_t *target = crm_time_new_undefined();
+    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     *target = *source;
     return target;
@@ -1408,7 +1408,7 @@ crm_time_t *
 pcmk__copy_timet(time_t source_sec)
 {
     const struct tm *source = localtime(&source_sec);
-    crm_time_t *target = crm_time_new_undefined();
+    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     int h_offset = 0;
     int m_offset = 0;
