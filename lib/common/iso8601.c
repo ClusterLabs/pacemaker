@@ -440,7 +440,7 @@ valid_time(const crm_time_t *dt)
 static crm_time_t *
 parse_date(const char *date_str)
 {
-    const uint32_t flags = crm_time_log_date|crm_time_log_timeofday;
+    const uint32_t flags = pcmk__time_fmt_date|crm_time_log_timeofday;
     const char *time_s = NULL;
     crm_time_t *dt = NULL;
 
@@ -619,7 +619,7 @@ invalid:
 static crm_time_t *
 copy_time_to_utc(const crm_time_t *dt)
 {
-    const uint32_t flags = crm_time_log_date
+    const uint32_t flags = pcmk__time_fmt_date
                            |crm_time_log_timeofday
                            |crm_time_log_with_timezone;
     crm_time_t *utc = NULL;
@@ -1034,7 +1034,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
 
     // As readable string
 
-    if (pcmk__is_set(flags, crm_time_log_date)) {
+    if (pcmk__is_set(flags, pcmk__time_fmt_date)) {
         if (pcmk__is_set(flags, crm_time_weeks)) { // YYYY-WW-D
             if (dt->days > 0) {
                 uint32_t y = 0;
@@ -1359,7 +1359,7 @@ invalid:
 void
 pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 {
-    const int flags = crm_time_log_date
+    const int flags = pcmk__time_fmt_date
                       |crm_time_log_timeofday
                       |crm_time_log_with_timezone;
 
@@ -2241,7 +2241,7 @@ crm_time_january1_weekday(int year)
 void
 crm_time_set(crm_time_t *target, const crm_time_t *source)
 {
-    const uint32_t flags = crm_time_log_date
+    const uint32_t flags = pcmk__time_fmt_date
                            |crm_time_log_timeofday
                            |crm_time_log_with_timezone;
 

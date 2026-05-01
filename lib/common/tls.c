@@ -27,7 +27,7 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm/common/internal.h>
-#include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
+#include <crm/common/iso8601.h>     // crm_time_*
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
 
@@ -474,7 +474,8 @@ pcmk__tls_check_cert_expiration(gnutls_session_t session)
             crm_time_t *expiry_t = pcmk__copy_timet(expiry);
 
             pcmk__time_log(LOG_WARNING, "TLS certificate will expire on",
-                           expiry_t, crm_time_log_date|crm_time_log_timeofday);
+                           expiry_t,
+                           pcmk__time_fmt_date|crm_time_log_timeofday);
             crm_time_free(expiry_t);
         }
     }

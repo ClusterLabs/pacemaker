@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,7 +41,7 @@ timespec_string(time_t sec, long nsec, bool show_usec) {
     };
 
     return pcmk__timespec2str(&ts,
-                              crm_time_log_date
+                              pcmk__time_fmt_date
                               |crm_time_log_timeofday
                               |crm_time_log_with_timezone
                               |(show_usec? crm_time_usecs : 0));
