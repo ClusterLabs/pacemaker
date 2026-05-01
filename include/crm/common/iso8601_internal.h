@@ -54,6 +54,7 @@ enum pcmk__time_fmt_flags {
 
 bool pcmk__time_valid_year(int year);
 bool pcmk__time_is_initialized(const crm_time_t *dt);
+long long pcmk__time_get_seconds(const crm_time_t *dt);
 void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
                         uint32_t *d);
 char *pcmk__time_text(const crm_time_t *dt, int flags);

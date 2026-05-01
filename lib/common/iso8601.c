@@ -716,8 +716,9 @@ pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
     seconds_to_hms(dt->seconds, hour, minute, second);
 }
 
+// Time in seconds since 0000-01-01 00:00:00Z
 long long
-crm_time_get_seconds(const crm_time_t *dt)
+pcmk__time_get_seconds(const crm_time_t *dt)
 {
     crm_time_t *utc = NULL;
     long long days = 0;
@@ -759,11 +760,17 @@ crm_time_get_seconds(const crm_time_t *dt)
     return seconds;
 }
 
-#define EPOCH_SECONDS 62135596800ULL    /* Calculated using crm_time_get_seconds() */
+long long
+crm_time_get_seconds(const crm_time_t *dt)
+{
+    return pcmk__time_get_seconds(dt);
+}
+
+#define EPOCH_SECONDS 62135596800ULL // Calculated using pcmk__time_get_seconds
 long long
 crm_time_get_seconds_since_epoch(const crm_time_t *dt)
 {
-    return (dt == NULL)? 0 : (crm_time_get_seconds(dt) - EPOCH_SECONDS);
+    return (dt == NULL)? 0 : (pcmk__time_get_seconds(dt) - EPOCH_SECONDS);
 }
 
 void
@@ -1003,7 +1010,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
         long long seconds = 0;
 
         if (pcmk__is_set(flags, pcmk__time_fmt_seconds)) {
-            seconds = crm_time_get_seconds(dt);
+            seconds = pcmk__time_get_seconds(dt);
         } else {
             seconds = crm_time_get_seconds_since_epoch(dt);
         }
