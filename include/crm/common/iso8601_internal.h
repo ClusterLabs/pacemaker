@@ -39,6 +39,9 @@ enum pcmk__time_fmt_flags {
 
     // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
     pcmk__time_fmt_ordinal  = (UINT32_C(1) << 4),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_weeks    = (UINT32_C(1) << 5),
 };
 
 bool pcmk__time_valid_year(int year);

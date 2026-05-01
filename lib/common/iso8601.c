@@ -1035,7 +1035,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
     // As readable string
 
     if (pcmk__is_set(flags, pcmk__time_fmt_date)) {
-        if (pcmk__is_set(flags, crm_time_weeks)) { // YYYY-WW-D
+        if (pcmk__is_set(flags, pcmk__time_fmt_weeks)) { // YYYY-WW-D
             if (dt->days > 0) {
                 uint32_t y = 0;
                 uint32_t w = 0;
