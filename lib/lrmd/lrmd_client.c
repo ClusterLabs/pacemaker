@@ -83,7 +83,7 @@ typedef struct {
     lrmd_event_callback callback;
 
     /* Internal IPC proxy msg passing for remote guests */
-    void (*proxy_callback)(lrmd_t *lrmd, void *userdata, xmlNode *msg);
+    lrmd__proxy_callback_t proxy_callback;
     void *proxy_callback_userdata;
     char *peer_version;
 } lrmd_private_t;
@@ -2458,7 +2458,7 @@ lrmd__node_start_state(lrmd_t *lrmd)
 
 void
 lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
-                         void (*cb)(lrmd_t *, void *, xmlNode *))
+                         lrmd__proxy_callback_t cb)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
 
