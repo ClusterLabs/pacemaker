@@ -2305,12 +2305,11 @@ metadata_complete(svc_action_t *action)
  *                           be in its result argument's action_stdout)
  * \param[in,out] user_data  User data to pass to callback
  *
- * \return Standard Pacemaker return code
  * \note This function is not a lrmd_api_operations_t method because it does not
  *       need an lrmd_t object and does not go through the executor, but
  *       executes the agent directly.
  */
-int
+void
 lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                      void (*callback)(int pid,
                                       const pcmk__action_result_t *result,
@@ -2321,7 +2320,7 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
     struct metadata_cb *metadata_cb = NULL;
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
-    CRM_CHECK(callback != NULL, return EINVAL);
+    CRM_CHECK(callback != NULL, return);
 
     if ((rsc == NULL) || (rsc->standard == NULL) || (rsc->type == NULL)) {
         pcmk__set_result(&result, PCMK_OCF_NOT_CONFIGURED,
@@ -2329,13 +2328,15 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                          "Invalid resource specification");
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
-        return EINVAL;
+        return;
     }
 
     if (strcmp(rsc->standard, PCMK_RESOURCE_CLASS_STONITH) == 0) {
-        return stonith__metadata_async(rsc->type,
-                                       pcmk__timeout_ms2s(PCMK_DEFAULT_ACTION_TIMEOUT_MS),
-                                       callback, user_data);
+        const unsigned int timeout_s =
+            pcmk__timeout_ms2s(PCMK_DEFAULT_ACTION_TIMEOUT_MS);
+
+        stonith__metadata_async(rsc->type, timeout_s, callback, user_data);
+        return;
     }
 
     action = services__create_resource_action(pcmk__s(rsc->id, rsc->type),
@@ -2349,14 +2350,14 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                          "Out of memory");
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
-        return ENOMEM;
+        return;
     }
     if (action->rc != PCMK_OCF_UNKNOWN) {
         services__copy_result(action, &result);
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
         services_action_free(action);
-        return EINVAL;
+        return;
     }
 
     action->cb_data = calloc(1, sizeof(struct metadata_cb));
@@ -2366,19 +2367,18 @@ lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
                          "Out of memory");
         callback(0, &result, user_data);
         pcmk__reset_result(&result);
-        return ENOMEM;
+        return;
     }
 
     metadata_cb = (struct metadata_cb *) action->cb_data;
     metadata_cb->callback = callback;
     metadata_cb->user_data = user_data;
+
     if (!services_action_async(action, metadata_complete)) {
         services_action_free(action);
-        return pcmk_rc_error; // @TODO Derive from action->rc and ->status
     }
 
     // The services library has taken responsibility for action
-    return pcmk_rc_ok;
 }
 
 /*!

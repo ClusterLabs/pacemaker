@@ -41,11 +41,11 @@ int lrmd_send_resource_alert(lrmd_t *lrmd, const GList *alert_list,
 int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                           const char *msg_type);
 
-int lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
-                         void (*callback)(int pid,
-                                          const pcmk__action_result_t *result,
-                                          void *user_data),
-                         void *user_data);
+void lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
+                          void (*callback)(int pid,
+                                           const pcmk__action_result_t *result,
+                                           void *user_data),
+                          void *user_data);
 
 void lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc,
                       int op_status, const char *exit_reason);
