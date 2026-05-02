@@ -151,8 +151,8 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     file_opaque_t *private = cib->variant_opaque;
 
-    // We error checked these in callers
-    cib__get_operation(op, &operation);
+    // We error checked these in callers, but make Coverity happy
+    pcmk__assert(cib__get_operation(op, &operation) == pcmk_rc_ok);
     op_function = get_op_function(operation);
 
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
