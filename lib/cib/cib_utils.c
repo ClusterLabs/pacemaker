@@ -236,8 +236,14 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     /* Sanity check: op should be read-only (but this does not check children,
      * attributes, or private data)
      */
-    pcmk__assert((cib == saved_cib) && (cib->doc == saved_doc)
-                 && (cib == xmlDocGetRootElement(cib->doc)));
+    if (!pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
+        /* @TODO based_terminate() frees the_cib during
+         * based_process_shutdown(). Consolidate the based cleanup logic and
+         * remove the if guard here.
+         */
+        pcmk__assert((cib == saved_cib) && (cib->doc == saved_doc)
+                     && (cib == xmlDocGetRootElement(cib->doc)));
+    }
 
     if (*output == NULL) {
         // Do nothing
