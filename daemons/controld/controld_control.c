@@ -177,8 +177,7 @@ crmd_exit(crm_exit_t exit_code)
 
     if(ipcs) {
         pcmk__trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
+        g_clear_pointer(&ipcs, mainloop_del_ipc_server);
     }
 
     controld_close_attrd_ipc();
@@ -443,8 +442,7 @@ do_stop(long long action, enum crmd_fsa_cause cause,
         fsa_data_t *msg_data)
 {
     pcmk__trace("Stopping IPC server");
-    mainloop_del_ipc_server(ipcs);
-    ipcs = NULL;
+    g_clear_pointer(&ipcs, mainloop_del_ipc_server);
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 
