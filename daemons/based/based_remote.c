@@ -11,7 +11,6 @@
 
 #include <arpa/inet.h>              // htons
 #include <errno.h>                  // errno, EAGAIN
-#include <grp.h>                    // getgrgid, getgrnam, group
 #include <inttypes.h>               // PRIx64
 #include <netinet/in.h>             // sockaddr_in, INADDR_ANY
 #include <stdbool.h>
@@ -131,61 +130,6 @@ based_read_handshake_data(pcmk__client_t *client)
                                                       remote_auth_timeout_cb,
                                                       client);
     return 0;
-}
-
-/*!
- * \internal
- * \brief Check whether a given user is a member of \c CRM_DAEMON_GROUP
- *
- * \param[in] user  User name
- *
- * \return \c true if \p user is a member of \c CRM_DAEMON_GROUP, or \c false
- *         otherwise
- */
-static bool
-is_daemon_group_member(const char *user)
-{
-    int rc = pcmk_rc_ok;
-    gid_t gid = 0;
-    const struct group *group = NULL;
-
-    /* group->gr_mem only contains those users that are listed in /etc/group.
-     * It won't list the user if the group is their primary (that is, it's in
-     * the GID field in /etc/passwd (or passwd->pw_gid as returned by getpwent).
-     * So, we first need to perform a primary group check.
-     */
-    rc = pcmk__lookup_user(user, NULL, &gid);
-    if (rc != pcmk_rc_ok) {
-        pcmk__notice("Rejecting remote client: could not find user '%s': %s",
-                     user, pcmk_rc_str(rc));
-        return false;
-    }
-
-    group = getgrnam(CRM_DAEMON_GROUP);
-    if (group == NULL) {
-        pcmk__err("Rejecting remote client: " CRM_DAEMON_GROUP " is not a "
-                  "valid group");
-        return false;
-    }
-
-    if (group->gr_gid == gid) {
-        return true;
-    }
-
-    /* If that didn't work, check if CRM_DAEMON_GROUP is a secondary group for
-     * the user.
-     */
-    for (const char *const *member = (const char *const *) group->gr_mem;
-         *member != NULL; member++) {
-
-        if (pcmk__str_eq(user, *member, pcmk__str_none)) {
-            return true;
-        }
-    }
-
-    pcmk__notice("Rejecting remote client: User %s is not a member of group %s",
-                 user, CRM_DAEMON_GROUP);
-    return false;
 }
 
 #ifdef HAVE_PAM
@@ -341,7 +285,7 @@ bail:
 }
 
 static bool
-cib_remote_auth(xmlNode * login)
+cib_remote_auth(xmlNode *login, const char *client_name)
 {
     const char *user = NULL;
     const char *pass = NULL;
@@ -379,7 +323,13 @@ cib_remote_auth(xmlNode * login)
 
     pcmk__log_xml_debug(login, "auth");
 
-    return is_daemon_group_member(user) && authenticate_user(user, pass);
+    if (!pcmk__is_user_in_group(user, CRM_DAEMON_GROUP)) {
+        pcmk__notice("Rejecting remote client %s: User %s is not a member of "
+                     "group %s", client_name, user, CRM_DAEMON_GROUP);
+        return false;
+    }
+
+    return authenticate_user(user, pass);
 }
 
 static void
@@ -495,7 +445,7 @@ based_remote_client_dispatch(gpointer data)
         xmlNode *cib_result = NULL;
 
         msg = pcmk__remote_message_xml(client->remote);
-        if (!cib_remote_auth(msg)) {
+        if (!cib_remote_auth(msg, pcmk__client_name(client))) {
             pcmk__xml_free(msg);
             return -1;
         }

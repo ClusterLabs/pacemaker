@@ -11,7 +11,6 @@
 
 #include <crm/common/unittest_internal.h>
 
-#include "../../crmcommon_private.h"
 #include "mock_private.h"
 
 #define assert_user_in_group(user, group, expected)             \
