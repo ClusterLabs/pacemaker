@@ -193,14 +193,15 @@ construct_pam_passwd(int num_msg, const struct pam_message **msg,
  * \internal
  * \brief Verify the username and password passed for a remote CIB connection
  *
- * \param[in] user    Username passed for remote CIB connection
- * \param[in] passwd  Password passed for remote CIB connection
+ * \param[in] user         Username passed for remote CIB connection
+ * \param[in] passwd       Password passed for remote CIB connection
+ * \param[in] client_name  Remote client name (for logging only)
  *
  * \return \c true if the username and password are accepted, otherwise \c false
  * \note This function rejects all credentials when built without PAM support.
  */
 static bool
-authenticate_user(const char *user, const char *passwd)
+authenticate_user(const char *user, const char *passwd, const char *client_name)
 {
 #ifdef HAVE_PAM
     int rc = 0;
@@ -223,16 +224,17 @@ authenticate_user(const char *user, const char *passwd)
 
     rc = pam_start(pam_name, user, &p_conv, &pam_h);
     if (rc != PAM_SUCCESS) {
-        pcmk__warn("Rejecting remote client for user %s because PAM "
-                   "initialization failed: %s",
-                   user, pam_strerror(pam_h, rc));
+        pcmk__warn("Rejecting remote client %s because PAM initialization "
+                   "failed for user %s: %s", client_name, user,
+                   pam_strerror(pam_h, rc));
         goto bail;
     }
 
     // Check user credentials
     rc = pam_authenticate(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        pcmk__notice("Access for remote user %s denied: %s", user,
+        pcmk__notice("Rejecting remote client %s because PAM authentication "
+                     "failed for user %s: %s", client_name, user,
                      pam_strerror(pam_h, rc));
         goto bail;
     }
@@ -243,33 +245,34 @@ authenticate_user(const char *user, const char *passwd)
      */
     rc = pam_get_item(pam_h, PAM_USER, &p_user);
     if (rc != PAM_SUCCESS) {
-        pcmk__warn("Rejecting remote client for user %s because PAM failed to "
-                   "return final user name: %s",
+        pcmk__warn("Rejecting remote client %s because PAM failed to return "
+                   "the authenticated user name for user %s: %s", client_name,
                    user, pam_strerror(pam_h, rc));
         goto bail;
     }
+
     if (p_user == NULL) {
-        pcmk__warn("Rejecting remote client for user %s because PAM returned "
-                   "no final user name",
-                   user);
+        pcmk__warn("Rejecting remote client %s because PAM returned no "
+                   "authenticated user name for user %s", client_name, user);
         goto bail;
     }
 
     // @TODO Why do we require these to match?
     if (!pcmk__str_eq(p_user, user, pcmk__str_none)) {
-        pcmk__warn("Rejecting remote client for user %s because PAM returned "
-                   "different final user name %s",
-                   user, p_user);
+        pcmk__warn("Rejecting remote client %s because PAM returned "
+                   "non-matching authenticated user name %s for user %s",
+                   client_name, user, p_user);
         goto bail;
     }
 
     // Check user account restrictions (expiration, etc.)
     rc = pam_acct_mgmt(pam_h, PAM_SILENT);
     if (rc != PAM_SUCCESS) {
-        pcmk__notice("Access for remote user %s denied: %s", user,
-                     pam_strerror(pam_h, rc));
+        pcmk__notice("Rejecting remote client %s because PAM denied access to "
+                     "user %s", client_name, user, pam_strerror(pam_h, rc));
         goto bail;
     }
+
     pass = true;
 
 bail:
@@ -277,9 +280,8 @@ bail:
     return pass;
 #else
     // @TODO Implement for non-PAM environments
-    pcmk__warn("Rejecting remote user %s because this build does not have PAM "
-               "support",
-               user);
+    pcmk__warn("Rejecting remote client %s (user %s) because this build does "
+               "not have PAM support", client_name, user);
     return false;
 #endif
 }
@@ -329,7 +331,7 @@ cib_remote_auth(xmlNode *login, const char *client_name)
         return false;
     }
 
-    return authenticate_user(user, pass);
+    return authenticate_user(user, pass, client_name);
 }
 
 static void
