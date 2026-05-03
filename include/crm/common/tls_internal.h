@@ -83,23 +83,6 @@ int pcmk__init_tls(pcmk__tls_t **tls, bool server, bool have_psk);
 
 /*!
  * \internal
- * \brief Initialize Diffie-Hellman parameters for a TLS server
- *
- * \param[out] dh_params  Parameter object to initialize
- *
- * \return Standard Pacemaker return code
- * \todo The current best practice is to allow the client and server to
- *       negotiate the Diffie-Hellman parameters via a TLS extension (RFC 7919).
- *       However, we have to support both older versions of GnuTLS (<3.6) that
- *       don't support the extension on our side, and older Pacemaker versions
- *       that don't support the extension on the other side. The next best
- *       practice would be to use a known good prime (see RFC 5114 section 2.2),
- *       possibly stored in a file distributed with Pacemaker.
- */
-int pcmk__init_tls_dh(gnutls_dh_params_t *dh_params);
-
-/*!
- * \internal
  * \brief Initialize a new TLS session
  *
  * \param[in] tls    TLS environment object
