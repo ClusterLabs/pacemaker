@@ -287,43 +287,42 @@ bail:
 }
 
 static bool
-cib_remote_auth(xmlNode *login, const char *client_name)
+cib_remote_auth(xmlNode *msg, const char *client_name)
 {
     const char *user = NULL;
     const char *pass = NULL;
     const char *tmp = NULL;
 
-    if (login == NULL) {
+    if (msg == NULL) {
         return false;
     }
 
-    if (!pcmk__xe_is(login, PCMK__XE_CIB_COMMAND)) {
+    if (!pcmk__xe_is(msg, PCMK__XE_CIB_COMMAND)) {
         pcmk__warn("Rejecting remote client: Unrecognizable message (element "
-                   "'%s' not '" PCMK__XE_CIB_COMMAND "')",
-                   login->name);
-        pcmk__log_xml_debug(login, "bad");
+                   "'%s' not '" PCMK__XE_CIB_COMMAND "')", msg->name);
+        pcmk__log_xml_debug(msg, "bad");
         return false;
     }
 
-    tmp = pcmk__xe_get(login, PCMK_XA_OP);
+    tmp = pcmk__xe_get(msg, PCMK_XA_OP);
     if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
         pcmk__warn("Rejecting remote client: Unrecognizable message (operation "
                    "'%s' not 'authenticate')",
                    tmp);
-        pcmk__log_xml_debug(login, "bad");
+        pcmk__log_xml_debug(msg, "bad");
         return false;
     }
 
-    user = pcmk__xe_get(login, PCMK_XA_USER);
-    pass = pcmk__xe_get(login, PCMK__XA_PASSWORD);
+    user = pcmk__xe_get(msg, PCMK_XA_USER);
+    pass = pcmk__xe_get(msg, PCMK__XA_PASSWORD);
     if (!user || !pass) {
         pcmk__warn("Rejecting remote client: No %s given",
                    ((user == NULL)? "username" : "password"));
-        pcmk__log_xml_debug(login, "bad");
+        pcmk__log_xml_debug(msg, "bad");
         return false;
     }
 
-    pcmk__log_xml_debug(login, "auth");
+    pcmk__log_xml_debug(msg, "auth");
 
     if (!pcmk__is_user_in_group(user, CRM_DAEMON_GROUP)) {
         pcmk__notice("Rejecting remote client %s: User %s is not a member of "
