@@ -8,22 +8,27 @@
  */
 
 #include <crm_internal.h>
-#include <unistd.h>
+
+#include <errno.h>                  // errno, EEXIST, EINVAL, ETIME, etc.
+#include <pwd.h>                    // getpwuid, struct passwd
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <pwd.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free, getenv, setenv, unsetenv
+#include <string.h>                 // strcmp, strerror
+#include <sys/stat.h>               // mkdir
+#include <unistd.h>                 // geteuid
 
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <glib.h>                   // gboolean, g_*, G_SOURCE_CONTINUE, etc.
+#include <libxml/tree.h>            // xmlNode
 
-#include <glib.h>
-
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*, etc.
+#include <crm/common/internal.h>    // pcmk__str_*, pcmk__trace, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_strerror, pcmk_ok, etc.
+#include <crm/common/xml.h>         // PCMK_XA_VERSION
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
+#include <crm/crm.h>                // CRM_OP_PING
 
 static GHashTable *cib_op_callback_table = NULL;
 

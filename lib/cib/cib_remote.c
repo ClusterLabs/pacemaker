@@ -9,33 +9,32 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>                  // ENOTCONN, EPROTO, EAGAIN
-#include <stdbool.h>                // false, bool, true
-#include <stdlib.h>                 // NULL, free, calloc
+#include <errno.h>                  // ENOTCONN, EPROTO, EAGAIN, etc.
+#include <stdbool.h>                // bool, true, false
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free, getenv
 #include <string.h>                 // strdup
 #include <sys/socket.h>             // shutdown, SHUT_RDWR
 #include <time.h>                   // time, time_t
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // gpointer, gboolean, g_list_foreach
+#include <glib.h>                   // gpointer, g_*, etc.
 #include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
 
-#include <crm/cib.h>                // cib_t, cib_remote_new
-#include <crm/cib/internal.h>       // cib__create_op, cib__extend_transaction
-#include <crm/common/internal.h>
-#include <crm/common/mainloop.h>    // mainloop_fd_callbacks
-#include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*
-#include <crm/common/xml.h>         // PCMK_XA_*,
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__xml_*, pcmk__err, etc.
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_ok, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*
 #include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
 static pcmk__tls_t *tls = NULL;
-
-#include <arpa/inet.h>
 
 typedef struct {
     int port;

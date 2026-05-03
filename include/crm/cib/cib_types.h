@@ -16,9 +16,6 @@
 #include <glib.h>               // gboolean, GList
 #include <libxml/tree.h>        // xmlNode
 
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif

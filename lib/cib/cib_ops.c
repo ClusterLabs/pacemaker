@@ -9,26 +9,25 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // EEXIST, EINVAL, ENXIO
 #include <stdbool.h>
-#include <stdint.h>                     // uint32_t
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <time.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // free
 
-#include <sys/param.h>
-#include <sys/types.h>
+#include <glib.h>                   // g_*, GHashTable, gpointer
+#include <libxml/tree.h>            // xmlGetNodePath, xmlNode, XML_ELEMENT_NODE
+#include <libxml/xmlstring.h>       // xmlChar
+#include <libxml/xpath.h>           // xmlXPathObject, xmlXPathFreeObject
 
-#include <glib.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>               // xmlXPathObject, etc.
-
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, createEmptyCib
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*
+#include <crm/common/cib.h>         // pcmk_cib_*, pcmk_find_cib_element
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_legacy2rc
+#include <crm/common/xml.h>         // xml_apply_patchset, PCMK_XA_, PCMK_XE_*
+#include <crm/crm.h>                // CRM_OP_PING
 
 // @TODO: Free this via crm_exit() when libcib gets merged with libcrmcommon
 static GHashTable *operation_table = NULL;
