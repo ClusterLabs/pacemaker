@@ -294,34 +294,33 @@ cib_remote_auth(xmlNode *msg, const char *client_name)
     const char *password = NULL;
 
     if (msg == NULL) {
+        pcmk__warn("Rejecting remote client %s: Unrecognizable message",
+                   client_name);
         return false;
     }
 
     if (!pcmk__xe_is(msg, PCMK__XE_CIB_COMMAND)) {
-        pcmk__warn("Rejecting remote client: Unrecognizable message (element "
-                   "'%s' not '" PCMK__XE_CIB_COMMAND "')", msg->name);
-        pcmk__log_xml_debug(msg, "bad");
+        pcmk__warn("Rejecting remote client %s: Expected element "
+                   "'" PCMK__XE_CIB_COMMAND "', got '%s'", client_name,
+                   msg->name);
         return false;
     }
 
     op = pcmk__xe_get(msg, PCMK_XA_OP);
     if (!pcmk__str_eq(op, "authenticate", pcmk__str_none)) {
-        pcmk__warn("Rejecting remote client: Unrecognizable message (operation "
-                   "'%s' not 'authenticate')", op);
-        pcmk__log_xml_debug(msg, "bad");
+        pcmk__warn("Rejecting remote client %s: Expected "
+                   PCMK_XA_OP "='authenticate', got " PCMK_XA_OP "='%s'",
+                   client_name, op);
         return false;
     }
 
     user = pcmk__xe_get(msg, PCMK_XA_USER);
     password = pcmk__xe_get(msg, PCMK__XA_PASSWORD);
     if ((user == NULL) || (password == NULL)) {
-        pcmk__warn("Rejecting remote client: No %s given",
+        pcmk__warn("Rejecting remote client %s: No %s given", client_name,
                    ((user == NULL)? "username" : "password"));
-        pcmk__log_xml_debug(msg, "bad");
         return false;
     }
-
-    pcmk__log_xml_debug(msg, "auth");
 
     if (!pcmk__is_user_in_group(user, CRM_DAEMON_GROUP)) {
         pcmk__notice("Rejecting remote client %s: User %s is not a member of "
@@ -446,6 +445,7 @@ based_remote_client_dispatch(gpointer data)
 
         msg = pcmk__remote_message_xml(client->remote);
         if (!cib_remote_auth(msg, pcmk__client_name(client))) {
+            pcmk__log_xml_debug(msg, "rejected");
             pcmk__xml_free(msg);
             return -1;
         }
