@@ -289,9 +289,9 @@ bail:
 static bool
 cib_remote_auth(xmlNode *msg, const char *client_name)
 {
+    const char *op = NULL;
     const char *user = NULL;
-    const char *pass = NULL;
-    const char *tmp = NULL;
+    const char *password = NULL;
 
     if (msg == NULL) {
         return false;
@@ -304,18 +304,17 @@ cib_remote_auth(xmlNode *msg, const char *client_name)
         return false;
     }
 
-    tmp = pcmk__xe_get(msg, PCMK_XA_OP);
-    if (!pcmk__str_eq(tmp, "authenticate", pcmk__str_casei)) {
+    op = pcmk__xe_get(msg, PCMK_XA_OP);
+    if (!pcmk__str_eq(op, "authenticate", pcmk__str_none)) {
         pcmk__warn("Rejecting remote client: Unrecognizable message (operation "
-                   "'%s' not 'authenticate')",
-                   tmp);
+                   "'%s' not 'authenticate')", op);
         pcmk__log_xml_debug(msg, "bad");
         return false;
     }
 
     user = pcmk__xe_get(msg, PCMK_XA_USER);
-    pass = pcmk__xe_get(msg, PCMK__XA_PASSWORD);
-    if (!user || !pass) {
+    password = pcmk__xe_get(msg, PCMK__XA_PASSWORD);
+    if ((user == NULL) || (password == NULL)) {
         pcmk__warn("Rejecting remote client: No %s given",
                    ((user == NULL)? "username" : "password"));
         pcmk__log_xml_debug(msg, "bad");
@@ -330,7 +329,7 @@ cib_remote_auth(xmlNode *msg, const char *client_name)
         return false;
     }
 
-    return authenticate_user(user, pass, client_name);
+    return authenticate_user(user, password, client_name);
 }
 
 static void
