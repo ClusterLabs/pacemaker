@@ -12,7 +12,7 @@ import threading
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts.errors import OutputNotFoundError
 from pacemaker._cts import logging
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 
 
 CTS_SUPPORT_BIN = f"{BuildOptions.DAEMON_DIR}/cts-support"
@@ -51,7 +51,7 @@ class SearchObj:
         self.limit = None
         self.name = name
         self.offset = "EOF"
-        self.rsh = RemoteFactory().getInstance()
+        self.rsh = RemoteExec()
 
         if host:
             self.host = host
@@ -188,8 +188,7 @@ class FileObj(SearchObj):
 
         cmd = f"{CTS_SUPPORT_BIN} watch -p CTSwatcher: -l 2 -f {self.filename} -o EOF"
 
-        # pylint: disable=not-callable
-        (_, lines) = self.rsh(self.host, cmd, verbose=0)
+        (_, lines) = self.rsh.call(self.host, cmd, verbose=0)
 
         for line in lines:
             match = re.search(r"^CTSwatcher:Last read: (\d+)", line)
@@ -323,8 +322,7 @@ class JournalObj(SearchObj):
             return
 
         # Seconds and nanoseconds since epoch
-        # pylint: disable=not-callable
-        (rc, lines) = self.rsh(self.host, "date +%s.%N", verbose=0)
+        (rc, lines) = self.rsh.call(self.host, "date +%s.%N", verbose=0)
 
         if rc == 0 and len(lines) == 1:
             self.limit = float(lines[0].strip())

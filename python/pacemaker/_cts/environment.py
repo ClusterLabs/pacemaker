@@ -15,7 +15,7 @@ import sys
 
 from pacemaker.buildoptions import BuildOptions
 from pacemaker._cts import logging
-from pacemaker._cts.remote import RemoteFactory
+from pacemaker._cts.remote import RemoteExec
 from pacemaker._cts.watcher import LogKind
 
 
@@ -25,15 +25,6 @@ class Environment:
 
     This consists largely of processing and storing command line parameters.
     """
-
-    # pylint doesn't understand that self._rsh is callable (it stores the
-    # singleton instance of RemoteExec, as returned by the getInstance method
-    # of RemoteFactory).
-    # @TODO See if type annotations fix this.
-
-    # I think we could also fix this by getting rid of the getInstance methods,
-    # but that's a project for another day.  For now, just disable the warning.
-    # pylint: disable=not-callable
 
     def __init__(self, args):
         """
@@ -67,7 +58,7 @@ class Environment:
 
         self.random_gen = random.Random()
 
-        self._rsh = RemoteFactory().getInstance()
+        self._rsh = RemoteExec()
 
         self._parse_args(args)
 
@@ -117,7 +108,7 @@ class Environment:
     def _detect_systemd(self, node):
         """Detect whether systemd is in use on the target node."""
         if "have_systemd" not in self.data:
-            (rc, _) = self._rsh(node, "systemctl list-units", verbose=0)
+            (rc, _) = self._rsh.call(node, "systemctl list-units", verbose=0)
             self["have_systemd"] = rc == 0
 
     def _detect_syslog(self, node):
@@ -127,10 +118,10 @@ class Environment:
 
         if self["have_systemd"]:
             # Systemd
-            (_, lines) = self._rsh(node, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
+            (_, lines) = self._rsh.call(node, r"systemctl list-units | grep syslog.*\.service.*active.*running | sed 's:.service.*::'", verbose=1)
         else:
             # SYS-V
-            (_, lines) = self._rsh(node, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
+            (_, lines) = self._rsh.call(node, "chkconfig --list | grep syslog.*on | awk '{print $1}' | head -n 1", verbose=1)
 
         with suppress(IndexError):
             self["syslogd"] = lines[0].strip()
@@ -139,22 +130,22 @@ class Environment:
         """Disable the given service on the given node."""
         if self["have_systemd"]:
             # Systemd
-            (rc, _) = self._rsh(node, f"systemctl disable {service}")
+            (rc, _) = self._rsh.call(node, f"systemctl disable {service}")
             return rc
 
         # SYS-V
-        (rc, _) = self._rsh(node, f"chkconfig {service} off")
+        (rc, _) = self._rsh.call(node, f"chkconfig {service} off")
         return rc
 
     def enable_service(self, node, service):
         """Enable the given service on the given node."""
         if self["have_systemd"]:
             # Systemd
-            (rc, _) = self._rsh(node, f"systemctl enable {service}")
+            (rc, _) = self._rsh.call(node, f"systemctl enable {service}")
             return rc
 
         # SYS-V
-        (rc, _) = self._rsh(node, f"chkconfig {service} on")
+        (rc, _) = self._rsh.call(node, f"chkconfig {service} on")
         return rc
 
     def service_is_enabled(self, node, service):
@@ -166,11 +157,11 @@ class Environment:
             # explicitly "enabled" instead of the return code. For example it returns
             # 0 if the service is "static" or "indirect", but they don't really count
             # as "enabled".
-            (rc, _) = self._rsh(node, f"systemctl is-enabled {service} | grep enabled")
+            (rc, _) = self._rsh.call(node, f"systemctl is-enabled {service} | grep enabled")
             return rc == 0
 
         # SYS-V
-        (rc, _) = self._rsh(node, f"chkconfig --list | grep -e {service}.*on")
+        (rc, _) = self._rsh.call(node, f"chkconfig --list | grep -e {service}.*on")
         return rc == 0
 
     def _detect_at_boot(self, node):
@@ -181,10 +172,10 @@ class Environment:
     def _detect_ip_offset(self, node):
         """Detect the offset for IPaddr resources."""
         if self["create_resources"] and "IPBase" not in self.data:
-            (_, lines) = self._rsh(node, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
+            (_, lines) = self._rsh.call(node, "ip addr | grep inet | grep -v -e link -e inet6 -e '/32' -e ' lo' | awk '{print $2}'", verbose=0)
             network = lines[0].strip()
 
-            (_, lines) = self._rsh(node, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
+            (_, lines) = self._rsh.call(node, "nmap -sn -n %s | grep 'scan report' | awk '{print $NF}' | sed 's:(::' | sed 's:)::' | sort -V | tail -n 1" % network, verbose=0)
 
             try:
                 self["IPBase"] = lines[0].strip()

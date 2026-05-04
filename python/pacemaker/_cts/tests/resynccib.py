@@ -1,7 +1,7 @@
 """Start the cluster without a CIB and verify it gets copied from another node."""
 
 __all__ = ["ResyncCIB"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker import BuildOptions
@@ -9,14 +9,6 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.restarttest import RestartTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
-
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._rsh is callable.
-# pylint: disable=not-callable
 
 
 class ResyncCIB(CTSTest):
@@ -46,7 +38,7 @@ class ResyncCIB(CTSTest):
             return self.failure("Could not stop all nodes")
 
         # Test config recovery when the other nodes come up
-        self._rsh(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
+        self._rsh.call(node, f"rm -f {BuildOptions.CIB_DIR}/cib*")
 
         # Start the selected node
         if not self._restart1(node):
