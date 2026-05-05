@@ -1283,6 +1283,20 @@ pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
     dst->exit_status = src->exit_status;
     dst->execution_status = src->execution_status;
     dst->exit_reason = pcmk__str_copy(src->exit_reason);
+
+    /* Even with our custom function model and macro suppression for
+     * g_clear_pointer(), Coverity fails to identify pcmk__reset_result() as the
+     * deallocator of pcmk__action_result_t. Instead, it thinks
+     * pcmk__format_result() is the deallocator. The issue is definitely with
+     * Coverity misunderstanding g_clear_pointer(), because it identifies
+     * pcmk__reset_result() correctly if we call free() and set the fields to
+     * NULL directly. There is an issue filed with Black Duck (Coverity vendor):
+     * case 03702994.
+     */
+
+    // coverity[INCOMPLETE_DEALLOCATOR : FALSE]
     dst->action_stdout = pcmk__str_copy(src->action_stdout);
+
+    // coverity[INCOMPLETE_DEALLOCATOR : FALSE]
     dst->action_stderr = pcmk__str_copy(src->action_stderr);
 }
