@@ -1963,23 +1963,23 @@ list_to_string(GList *list, const char *delim)
 {
     int max = g_list_length(list);
     size_t delim_len = delim?strlen(delim):0;
-    size_t alloc_size = 1 + (max?(max*delim_len):0);
+    size_t alloc_size = 1;
     char *rv;
 
     char *pos = NULL;
     const char *lead_delim = "";
 
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *value = (const char *) iter->data;
+        const char *value = iter->data;
 
-        alloc_size += strlen(value);
+        alloc_size += strlen(value) + delim_len;
     }
 
     rv = pcmk__assert_alloc(alloc_size, sizeof(char));
     pos = rv;
 
     for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *value = (const char *) iter->data;
+        const char *value = iter->data;
 
         pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
         lead_delim = delim;
