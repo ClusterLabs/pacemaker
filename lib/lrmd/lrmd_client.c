@@ -487,14 +487,16 @@ static void
 report_async_connection_result(lrmd_t *lrmd, int rc)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
+    lrmd_event_data_t event = { 0, };
 
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.type = lrmd_event_connect;
-        event.remote_nodename = native->remote_nodename;
-        event.connection_rc = rc;
-        native->callback(&event);
+    if (native->callback == NULL) {
+        return;
     }
+
+    event.type = lrmd_event_connect;
+    event.remote_nodename = native->remote_nodename;
+    event.connection_rc = rc;
+    native->callback(&event);
 }
 
 static void
@@ -645,6 +647,7 @@ lrmd_ipc_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
+    lrmd_event_data_t event = { 0, };
 
     switch (native->type) {
         case pcmk__client_ipc:
@@ -663,12 +666,13 @@ lrmd_ipc_connection_destroy(void *userdata)
     native->ipc = NULL;
     native->source = NULL;
 
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.type = lrmd_event_disconnect;
-        event.remote_nodename = native->remote_nodename;
-        native->callback(&event);
+    if (native->callback == NULL) {
+        return;
     }
+
+    event.type = lrmd_event_disconnect;
+    event.remote_nodename = native->remote_nodename;
+    native->callback(&event);
 }
 
 /*!
@@ -1094,6 +1098,7 @@ lrmd_tls_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
+    lrmd_event_data_t event = { 0, };
 
     pcmk__info("TLS connection destroyed");
 
@@ -1120,12 +1125,13 @@ lrmd_tls_connection_destroy(void *userdata)
     native->source = 0;
     native->sock = -1;
 
-    if (native->callback) {
-        lrmd_event_data_t event = { 0, };
-        event.remote_nodename = native->remote_nodename;
-        event.type = lrmd_event_disconnect;
-        native->callback(&event);
+    if (native->callback == NULL) {
+        return;
     }
+
+    event.type = lrmd_event_connect;
+    event.remote_nodename = native->remote_nodename;
+    native->callback(&event);
 }
 
 static void
