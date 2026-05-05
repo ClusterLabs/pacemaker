@@ -1959,11 +1959,11 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
 }
 
 static char *
-list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
+list_to_string(GList *list, const char *delim)
 {
     int max = g_list_length(list);
     size_t delim_len = delim?strlen(delim):0;
-    size_t alloc_size = 1 + (max?((max-1+(terminate_with_delim?1:0))*delim_len):0);
+    size_t alloc_size = 1 + (max?(max*delim_len):0);
     char *rv;
 
     char *pos = NULL;
@@ -1985,7 +1985,7 @@ list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
         lead_delim = delim;
     }
 
-    if ((max != 0) && terminate_with_delim) {
+    if (max != 0) {
         sprintf(pos, "%s", delim);
     }
 
@@ -2039,7 +2039,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             pcmk__set_result_output(result,
                                     list_to_string(stonith_watchdog_targets,
-                                                   "\n", TRUE),
+                                                   "\n"),
                                     NULL);
             return;
 
