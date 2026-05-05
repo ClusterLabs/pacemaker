@@ -67,8 +67,8 @@ set_result_from_svc_action(stonith_action_t *action, svc_action_t *svc_action)
 {
     services__copy_result(svc_action, &(action->result));
     pcmk__set_result_output(&(action->result),
-                            services__grab_stdout(svc_action),
-                            services__grab_stderr(svc_action));
+                            pcmk__str_copy(svc_action->stdout_data),
+                            pcmk__str_copy(svc_action->stderr_data));
 }
 
 static void
