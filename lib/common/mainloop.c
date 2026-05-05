@@ -799,37 +799,25 @@ static void
 mainloop_gio_destroy(void *c)
 {
     mainloop_io_t *client = c;
-    char *c_name = strdup(client->name);
 
-    /* client->source is valid but about to be destroyed (ref_count == 0) in gmain.c
-     * client->channel will still have ref_count > 0... should be == 1
+    /* client->source is valid but about to be destroyed (ref_count == 0) in
+     * gmain.c. client->channel will still have ref_count > 0 (should be == 1).
      */
-    pcmk__trace("Destroying client %s[%p]", c_name, c);
+    pcmk__trace("Destroying client %s[%p]", client->name, client);
 
-    if (client->ipc) {
-        crm_ipc_close(client->ipc);
+    // @TODO Would it be safe to call this immediately before crm_ipc_destroy()?
+    crm_ipc_close(client->ipc);
+
+    if (client->destroy_fn != NULL) {
+        client->destroy_fn(client->userdata);
     }
 
-    if (client->destroy_fn) {
-        void (*destroy_fn)(void *userdata) = client->destroy_fn;
+    crm_ipc_destroy(client->ipc);
 
-        client->destroy_fn = NULL;
-        destroy_fn(client->userdata);
-    }
-
-    if (client->ipc) {
-        crm_ipc_t *ipc = client->ipc;
-
-        client->ipc = NULL;
-        crm_ipc_destroy(ipc);
-    }
-
-    pcmk__trace("Destroyed client %s[%p]", c_name, c);
+    pcmk__trace("Destroyed client %s[%p]", client->name, client);
 
     free(client->name);
     free(client);
-
-    free(c_name);
 }
 
 /*!
