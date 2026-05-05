@@ -279,7 +279,9 @@ lrmd_dispatch_internal(void *data, void *user_data)
     xmlNode *msg = data;
     lrmd_t *lrmd = user_data;
 
-    const char *type;
+    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_OP);
+    const char *rsc_id = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_ID);
+    const char *rsc_action = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_ACTION);
     const char *proxy_session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     lrmd_private_t *native = lrmd->lrmd_private;
     lrmd_event_data_t event = { 0, };
@@ -300,15 +302,16 @@ lrmd_dispatch_internal(void *data, void *user_data)
     }
 
     event.remote_nodename = native->remote_nodename;
-    type = pcmk__xe_get(msg, PCMK__XA_LRMD_OP);
     pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
-    event.rsc_id = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_ID);
+    event.rsc_id = rsc_id;
 
-    if (pcmk__str_eq(type, LRMD_OP_RSC_REG, pcmk__str_none)) {
+    if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
         event.type = lrmd_event_register;
-    } else if (pcmk__str_eq(type, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
+
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
         event.type = lrmd_event_unregister;
-    } else if (pcmk__str_eq(type, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
+
+    } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
         int rc = 0;
         int exec_time = 0;
         int queue_time = 0;
@@ -334,7 +337,7 @@ lrmd_dispatch_internal(void *data, void *user_data)
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
         event.queue_time = QB_MAX(0, queue_time);
 
-        event.op_type = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_ACTION);
+        event.op_type = rsc_action;
         event.user_data = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_USERDATA_STR);
         event.type = lrmd_event_exec_complete;
 
@@ -344,15 +347,18 @@ lrmd_dispatch_internal(void *data, void *user_data)
                          pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_EXIT_REASON));
 
         event.params = xml2list(msg);
-    } else if (pcmk__str_eq(type, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
+
+    } else if (pcmk__str_eq(op, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
         event.type = lrmd_event_new_client;
-    } else if (pcmk__str_eq(type, LRMD_OP_POKE, pcmk__str_none)) {
+
+    } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
         event.type = lrmd_event_poke;
+
     } else {
         return;
     }
 
-    pcmk__trace("op %s notify event received", type);
+    pcmk__trace("op %s notify event received", op);
     native->callback(&event);
 
     g_clear_pointer(&event.params, g_hash_table_destroy);
