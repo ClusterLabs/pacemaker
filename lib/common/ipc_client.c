@@ -956,16 +956,13 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
 }
 
 void
-crm_ipc_close(crm_ipc_t * client)
+crm_ipc_close(crm_ipc_t *client)
 {
-    if (client) {
-        if (client->ipc) {
-            qb_ipcc_connection_t *ipc = client->ipc;
-
-            client->ipc = NULL;
-            qb_ipcc_disconnect(ipc);
-        }
+    if (client == NULL) {
+        return;
     }
+
+    g_clear_pointer(&client->ipc, qb_ipcc_disconnect);
 }
 
 void
