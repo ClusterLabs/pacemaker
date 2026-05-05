@@ -399,26 +399,24 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
 static void
 report_remote_ra_result(remote_ra_cmd_t * cmd)
 {
-    lrmd_event_data_t op = { 0, };
+    lrmd_event_data_t *event = lrmd_new_event(cmd->rsc_id, cmd->action,
+                                              cmd->interval_ms);
 
     check_remote_node_state(cmd);
 
-    op.type = lrmd_event_exec_complete;
-    op.rsc_id = cmd->rsc_id;
-    op.op_type = cmd->action;
-    op.user_data = cmd->userdata;
-    op.timeout = cmd->timeout;
-    op.interval_ms = cmd->interval_ms;
-    op.t_run = cmd->start_time;
-    op.t_rcchange = cmd->start_time;
+    event->type = lrmd_event_exec_complete;
+    event->user_data = pcmk__str_copy(cmd->userdata);
+    event->timeout = cmd->timeout;
+    event->t_run = cmd->start_time;
+    event->t_rcchange = cmd->start_time;
 
-    lrmd__set_result(&op, cmd->result.exit_status, cmd->result.execution_status,
-                     cmd->result.exit_reason);
+    lrmd__set_result(event, cmd->result.exit_status,
+                     cmd->result.execution_status, cmd->result.exit_reason);
 
     if (pcmk__is_set(cmd->status, cmd_reported_success)
         && !pcmk__result_ok(&(cmd->result))) {
 
-        op.t_rcchange = time(NULL);
+        event->t_rcchange = time(NULL);
         /* This edge case will likely never ever occur, but if it does the
          * result is that a failure will not be processed correctly. This is only
          * remotely possible because we are able to detect a connection resource's tcp
@@ -428,27 +426,25 @@ report_remote_ra_result(remote_ra_cmd_t * cmd)
          * basically, we are not guaranteed that the first successful monitor op and
          * a subsequent failed monitor op will not occur in the same timestamp. We have to
          * make it look like the operations occurred at separate times though. */
-        if (op.t_rcchange == op.t_run) {
-            op.t_rcchange++;
+        if (event->t_rcchange == event->t_run) {
+            event->t_rcchange++;
         }
     }
 
     if (cmd->params) {
         lrmd_key_value_t *tmp;
 
-        op.params = pcmk__strkey_table(free, free);
+        event->params = pcmk__strkey_table(free, free);
         for (tmp = cmd->params; tmp; tmp = tmp->next) {
-            pcmk__insert_dup(op.params, tmp->key, tmp->value);
+            pcmk__insert_dup(event->params, tmp->key, tmp->value);
         }
 
     }
-    op.call_id = cmd->call_id;
-    op.remote_nodename = cmd->owner;
+    event->call_id = cmd->call_id;
+    event->remote_nodename = pcmk__str_copy(cmd->owner);
 
-    lrm_op_callback(&op);
-
-    g_clear_pointer(&op.params, g_hash_table_destroy);
-    lrmd__reset_result(&op);
+    lrm_op_callback(event);
+    lrmd_free_event(event);
 }
 
 /*!
@@ -562,7 +558,7 @@ monitor_timeout_cb(void *data)
 static void
 synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *op_type)
 {
-    lrmd_event_data_t op = { 0, };
+    lrmd_event_data_t *event = NULL;
 
     if (lrm_state == NULL) {
         /* if lrm_state not given assume local */
@@ -570,14 +566,13 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
     }
     pcmk__assert(lrm_state != NULL);
 
-    op.type = lrmd_event_exec_complete;
-    op.rsc_id = rsc_id;
-    op.op_type = op_type;
-    op.t_run = time(NULL);
-    op.t_rcchange = op.t_run;
-    op.call_id = generate_callid();
-    lrmd__set_result(&op, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
-    process_lrm_event(lrm_state, &op, NULL, NULL);
+    event = lrmd_new_event(rsc_id, op_type, 0);
+    event->type = lrmd_event_exec_complete;
+    event->t_run = time(NULL);
+    event->t_rcchange = event->t_run;
+    event->call_id = generate_callid();
+    lrmd__set_result(event, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
+    process_lrm_event(lrm_state, event, NULL, NULL);
 }
 
 void

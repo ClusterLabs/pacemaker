@@ -179,7 +179,6 @@ lrmd_new_event(const char *rsc_id, const char *task, unsigned int interval_ms)
 {
     lrmd_event_data_t *event = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
-    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
     event->rsc_id = pcmk__str_copy(rsc_id);
     event->op_type = pcmk__str_copy(task);
     event->interval_ms = interval_ms;
@@ -195,7 +194,6 @@ lrmd_copy_event(const lrmd_event_data_t *event)
 
     copy->type = event->type;
 
-    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
     copy->rsc_id = pcmk__str_copy(event->rsc_id);
     copy->op_type = pcmk__str_copy(event->op_type);
     copy->user_data = pcmk__str_copy(event->user_data);
@@ -231,11 +229,11 @@ lrmd_free_event(lrmd_event_data_t *event)
     if (event == NULL) {
         return;
     }
-    // @TODO Why are these const char *?
-    free((void *) event->rsc_id);
-    free((void *) event->op_type);
-    free((void *) event->user_data);
-    free((void *) event->remote_nodename);
+
+    free(event->rsc_id);
+    free(event->op_type);
+    free(event->user_data);
+    free(event->remote_nodename);
     lrmd__reset_result(event);
     g_clear_pointer(&event->params, g_hash_table_destroy);
     free(event);
@@ -284,7 +282,7 @@ lrmd_dispatch_internal(void *data, void *user_data)
     const char *rsc_action = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_ACTION);
     const char *proxy_session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     lrmd_private_t *native = lrmd->lrmd_private;
-    lrmd_event_data_t event = { 0, };
+    lrmd_event_data_t *event = NULL;
 
     if (proxy_session != NULL) {
         if (native->proxy_callback == NULL) {
@@ -301,68 +299,68 @@ lrmd_dispatch_internal(void *data, void *user_data)
         return;
     }
 
-    event.remote_nodename = native->remote_nodename;
-    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &event.call_id);
-    event.rsc_id = rsc_id;
+    event = lrmd_new_event(rsc_id, rsc_action, 0);
+    event->remote_nodename = pcmk__str_copy(native->remote_nodename);
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_CALLID, &event->call_id);
 
     if (pcmk__str_eq(op, LRMD_OP_RSC_REG, pcmk__str_none)) {
-        event.type = lrmd_event_register;
+        event->type = lrmd_event_register;
 
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_UNREG, pcmk__str_none)) {
-        event.type = lrmd_event_unregister;
+        event->type = lrmd_event_unregister;
 
     } else if (pcmk__str_eq(op, LRMD_OP_RSC_EXEC, pcmk__str_none)) {
         int rc = 0;
         int exec_time = 0;
         int queue_time = 0;
 
-        pcmk__xe_get_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
-        pcmk__xe_get_uint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event.interval_ms);
+        event->type = lrmd_event_exec_complete;
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_TIMEOUT, &event->timeout);
+        pcmk__xe_get_uint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event->interval_ms);
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
-                         &event.start_delay);
+                         &event->start_delay);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_RC, &rc);
-        event.rc = (enum ocf_exitcode) rc;
+        event->rc = (enum ocf_exitcode) rc;
 
-        pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS, &event.op_status);
-        pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_DELETED, &event.rsc_deleted);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_OP_STATUS, &event->op_status);
+        pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_DELETED, &event->rsc_deleted);
 
-        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RUN_TIME, &event.t_run);
-        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &event.t_rcchange);
+        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RUN_TIME, &event->t_run);
+        pcmk__xe_get_time(msg, PCMK__XA_LRMD_RCCHANGE_TIME, &event->t_rcchange);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
         CRM_LOG_ASSERT(exec_time >= 0);
-        event.exec_time = QB_MAX(0, exec_time);
+        event->exec_time = QB_MAX(0, exec_time);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
-        event.queue_time = QB_MAX(0, queue_time);
+        event->queue_time = QB_MAX(0, queue_time);
 
-        event.op_type = rsc_action;
-        event.user_data = pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_USERDATA_STR);
-        event.type = lrmd_event_exec_complete;
+        event->user_data = pcmk__xe_get_copy(msg,
+                                             PCMK__XA_LRMD_RSC_USERDATA_STR);
 
-        /* output and exit_reason may be freed by a callback */
-        event.output = pcmk__xe_get_copy(msg, PCMK__XA_LRMD_RSC_OUTPUT);
-        lrmd__set_result(&event, event.rc, event.op_status,
+        event->output = pcmk__xe_get_copy(msg, PCMK__XA_LRMD_RSC_OUTPUT);
+        lrmd__set_result(event, event->rc, event->op_status,
                          pcmk__xe_get(msg, PCMK__XA_LRMD_RSC_EXIT_REASON));
 
-        event.params = xml2list(msg);
+        event->params = xml2list(msg);
 
     } else if (pcmk__str_eq(op, LRMD_OP_NEW_CLIENT, pcmk__str_none)) {
-        event.type = lrmd_event_new_client;
+        event->type = lrmd_event_new_client;
 
     } else if (pcmk__str_eq(op, LRMD_OP_POKE, pcmk__str_none)) {
-        event.type = lrmd_event_poke;
+        event->type = lrmd_event_poke;
 
     } else {
-        return;
+        goto done;
     }
 
     pcmk__trace("op %s notify event received", op);
-    native->callback(&event);
 
-    g_clear_pointer(&event.params, g_hash_table_destroy);
-    lrmd__reset_result(&event);
+    native->callback(event);
+
+done:
+    lrmd_free_event(event);
 }
 
 // \return Always 0, to indicate that IPC mainloop source should be kept
@@ -487,16 +485,19 @@ static void
 report_async_connection_result(lrmd_t *lrmd, int rc)
 {
     lrmd_private_t *native = lrmd->lrmd_private;
-    lrmd_event_data_t event = { 0, };
+    lrmd_event_data_t *event = NULL;
 
     if (native->callback == NULL) {
         return;
     }
 
-    event.type = lrmd_event_connect;
-    event.remote_nodename = native->remote_nodename;
-    event.connection_rc = rc;
-    native->callback(&event);
+    event = lrmd_new_event(NULL, NULL, 0);
+    event->type = lrmd_event_connect;
+    event->connection_rc = rc;
+    event->remote_nodename = pcmk__str_copy(native->remote_nodename);
+
+    native->callback(event);
+    lrmd_free_event(event);
 }
 
 static void
@@ -647,7 +648,7 @@ lrmd_ipc_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
-    lrmd_event_data_t event = { 0, };
+    lrmd_event_data_t *event = NULL;
 
     switch (native->type) {
         case pcmk__client_ipc:
@@ -670,9 +671,12 @@ lrmd_ipc_connection_destroy(void *userdata)
         return;
     }
 
-    event.type = lrmd_event_disconnect;
-    event.remote_nodename = native->remote_nodename;
-    native->callback(&event);
+    event = lrmd_new_event(NULL, NULL, 0);
+    event->type = lrmd_event_disconnect;
+    event->remote_nodename = pcmk__str_copy(native->remote_nodename);
+
+    native->callback(event);
+    lrmd_free_event(event);
 }
 
 /*!
@@ -1098,7 +1102,7 @@ lrmd_tls_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
-    lrmd_event_data_t event = { 0, };
+    lrmd_event_data_t *event = NULL;
 
     pcmk__info("TLS connection destroyed");
 
@@ -1129,9 +1133,12 @@ lrmd_tls_connection_destroy(void *userdata)
         return;
     }
 
-    event.type = lrmd_event_connect;
-    event.remote_nodename = native->remote_nodename;
-    native->callback(&event);
+    event = lrmd_new_event(NULL, NULL, 0);
+    event->type = lrmd_event_disconnect;
+    event->remote_nodename = pcmk__str_copy(native->remote_nodename);
+
+    native->callback(event);
+    lrmd_free_event(event);
 }
 
 static void
@@ -2437,9 +2444,7 @@ lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
 
     event->rc = rc;
     event->op_status = op_status;
-
-    // lrmd_event_data_t has (const char *) members that lrmd_free_event() frees
-    pcmk__str_update((char **) &event->exit_reason, exit_reason);
+    pcmk__str_update(&event->exit_reason, exit_reason);
 }
 
 /*!

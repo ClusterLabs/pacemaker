@@ -1729,11 +1729,13 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     pcmk__node_status_t *peer = NULL;
 
     CRM_CHECK(op != NULL, return);
+
     if (op->rsc_id == NULL) {
-        // op->rsc_id is a (const char *) but lrmd_free_event() frees it
-        pcmk__assert(rsc_id != NULL);
         op->rsc_id = pcmk__str_copy(rsc_id);
     }
+
+    pcmk__assert(op->rsc_id != NULL);
+
     if (to_sys == NULL) {
         to_sys = CRM_SYSTEM_TENGINE;
     }
