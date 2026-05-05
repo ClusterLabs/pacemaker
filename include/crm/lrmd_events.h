@@ -103,7 +103,7 @@ typedef struct lrmd_event_data_s {
 
 lrmd_event_data_t *lrmd_new_event(const char *rsc_id, const char *task,
                                   unsigned int interval_ms);
-lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t *event);
+lrmd_event_data_t *lrmd_copy_event(const lrmd_event_data_t *event);
 void lrmd_free_event(lrmd_event_data_t *event);
 
 #ifdef __cplusplus
