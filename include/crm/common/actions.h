@@ -77,7 +77,7 @@ gboolean decode_transition_magic(const char *magic, char **uuid,
 
 // @COMPAT Either these shouldn't be in libcrmcommon or lrmd_event_data_t should
 int rsc_op_expected_rc(const lrmd_event_data_t *event);
-gboolean did_rsc_op_fail(lrmd_event_data_t *event, int target_rc);
+gboolean did_rsc_op_fail(const lrmd_event_data_t *event, int target_rc);
 
 bool crm_op_needs_metadata(const char *rsc_class, const char *op);
 

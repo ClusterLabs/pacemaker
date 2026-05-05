@@ -510,9 +510,9 @@ rsc_op_expected_rc(const lrmd_event_data_t *op)
 }
 
 gboolean
-did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
+did_rsc_op_fail(const lrmd_event_data_t *event, int target_rc)
 {
-    switch (op->op_status) {
+    switch (event->op_status) {
         case PCMK_EXEC_CANCELLED:
         case PCMK_EXEC_PENDING:
             return FALSE;
@@ -527,7 +527,7 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
             return TRUE;
 
         default:
-            if (target_rc != op->rc) {
+            if (target_rc != event->rc) {
                 return TRUE;
             }
     }
