@@ -85,8 +85,6 @@ We will refer to a set of options and its enclosing element as a *block*.
 
        .. index::
           pair: id; cluster_property_set
-          pair: id; instance_attributes
-          pair: id; meta_attributes
           pair: id; utilization
           single: attribute; id (cluster_property_set)
           single: attribute; id (instance_attributes)
@@ -102,8 +100,6 @@ We will refer to a set of options and its enclosing element as a *block*.
 
        .. index::
           pair: score; cluster_property_set
-          pair: score; instance_attributes
-          pair: score; meta_attributes
           pair: score; utilization
           single: attribute; score (cluster_property_set)
           single: attribute; score (instance_attributes)

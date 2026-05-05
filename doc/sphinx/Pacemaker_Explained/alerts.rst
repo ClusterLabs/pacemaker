@@ -82,7 +82,6 @@ an e-mail address, a file name, whatever the particular agent supports.
 
 .. index::
    single: alert; meta-attributes
-   single: meta-attribute; alert meta-attributes
 
 Alert Meta-Attributes
 #####################
@@ -110,7 +109,6 @@ whether and how Pacemaker calls them.
      - true
      - .. index::
           single: alert; meta-attribute, enabled
-          single: meta-attribute; enabled (alert)
           single: enabled; alert meta-attribute
 
        If false for an alert, the alert will not be used.  If true for an alert
@@ -120,7 +118,6 @@ whether and how Pacemaker calls them.
      - %H:%M:%S.%6N
      - .. index::
           single: alert; meta-attribute, timestamp-format
-          single: meta-attribute; timestamp-format (alert)
           single: timestamp-format; alert meta-attribute
 
        Format the cluster will use when sending the event's timestamp to the
@@ -139,7 +136,6 @@ whether and how Pacemaker calls them.
      - 30s
      - .. index::
           single: alert; meta-attribute, timeout
-          single: meta-attribute; timeout (alert)
           single: timeout; alert meta-attribute
 
        If the alert agent does not complete within this amount of time, it
@@ -183,7 +179,6 @@ a timestamp in the format ``%c``.
 
 .. index::
    single: alert; instance attributes
-   single: instance attribute; alert instance attributes
 
 Alert Instance Attributes
 #########################
