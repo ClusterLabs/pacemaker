@@ -1958,40 +1958,6 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
-static char *
-list_to_string(GList *list, const char *delim)
-{
-    int max = g_list_length(list);
-    size_t delim_len = delim?strlen(delim):0;
-    size_t alloc_size = 1;
-    char *rv;
-
-    char *pos = NULL;
-    const char *lead_delim = "";
-
-    for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *value = iter->data;
-
-        alloc_size += strlen(value) + delim_len;
-    }
-
-    rv = pcmk__assert_alloc(alloc_size, sizeof(char));
-    pos = rv;
-
-    for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *value = iter->data;
-
-        pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
-        lead_delim = delim;
-    }
-
-    if (max != 0) {
-        sprintf(pos, "%s", delim);
-    }
-
-    return rv;
-}
-
 /*!
  * \internal
  * \brief Execute a fence agent action directly (and asynchronously)
@@ -2037,11 +2003,18 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
         }
 
         if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
+            GString *buf = g_string_sized_new(64);
+
+            for (const GList *iter = stonith_watchdog_targets; iter != NULL;
+                 iter = iter->next) {
+
+                g_string_append(buf, iter->data);
+                g_string_append_c(buf, '\n');
+            }
+
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-            pcmk__set_result_output(result,
-                                    list_to_string(stonith_watchdog_targets,
-                                                   "\n"),
-                                    NULL);
+            pcmk__set_result_output(result, pcmk__str_copy(buf->str), NULL);
+            g_string_free(buf, TRUE);
             return;
         }
 
