@@ -233,8 +233,9 @@ lrmd_free_event(lrmd_event_data_t *event)
     free(event->rsc_id);
     free(event->op_type);
     free(event->user_data);
+    free(event->output);
     free(event->remote_nodename);
-    lrmd__reset_result(event);
+    free(event->exit_reason);
     g_clear_pointer(&event->params, g_hash_table_destroy);
     free(event);
 }
@@ -2445,23 +2446,6 @@ lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc, int op_status,
     event->rc = rc;
     event->op_status = op_status;
     pcmk__str_update(&event->exit_reason, exit_reason);
-}
-
-/*!
- * \internal
- * \brief Clear an executor event's exit reason, output, and error output
- *
- * \param[in,out] event  Executor event to reset
- */
-void
-lrmd__reset_result(lrmd_event_data_t *event)
-{
-    if (event == NULL) {
-        return;
-    }
-
-    g_clear_pointer(&event->exit_reason, free);
-    g_clear_pointer(&event->output, free);
 }
 
 /*!
