@@ -1209,11 +1209,7 @@ pcmk__set_result(pcmk__action_result_t *result, int exit_status,
 
     result->exit_status = exit_status;
     result->execution_status = exec_status;
-
-    if (!pcmk__str_eq(result->exit_reason, exit_reason, pcmk__str_none)) {
-        free(result->exit_reason);
-        result->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
-    }
+    pcmk__str_update(&result->exit_reason, exit_reason);
 }
 
 
