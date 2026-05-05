@@ -2331,11 +2331,10 @@ metadata_complete(svc_action_t *action)
     pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
     services__copy_result(action, &result);
-    pcmk__set_result_output(&result, action->stdout_data, action->stderr_data);
+    result.action_stdout = pcmk__str_copy(action->stdout_data);
+    result.action_stderr = pcmk__str_copy(action->stderr_data);
 
     metadata_cb->callback(0, &result, metadata_cb->user_data);
-    result.action_stdout = NULL; // Prevent free, because action owns it
-    result.action_stderr = NULL; // Prevent free, because action owns it
     pcmk__reset_result(&result);
     free(metadata_cb);
 }

@@ -65,10 +65,9 @@ static void log_action(stonith_action_t *action, pid_t pid);
 static void
 set_result_from_svc_action(stonith_action_t *action, svc_action_t *svc_action)
 {
-    services__copy_result(svc_action, &(action->result));
-    pcmk__set_result_output(&(action->result),
-                            pcmk__str_copy(svc_action->stdout_data),
-                            pcmk__str_copy(svc_action->stderr_data));
+    services__copy_result(svc_action, &action->result);
+    action->result.action_stdout = pcmk__str_copy(svc_action->stdout_data);
+    action->result.action_stderr = pcmk__str_copy(svc_action->stderr_data);
 }
 
 static void
@@ -484,12 +483,10 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
     int exit_status = CRM_EX_OK;
     int execution_status = PCMK_EXEC_DONE;
     const char *exit_reason = NULL;
-    char *action_stdout = NULL;
 
     CRM_CHECK((xml != NULL) && (result != NULL), return);
 
     exit_reason = pcmk__xe_get(xml, PCMK_XA_EXIT_REASON);
-    action_stdout = pcmk__xe_get_copy(xml, PCMK__XA_ST_OUTPUT);
 
     // A result must include an exit status and execution status
     if ((pcmk__xe_get_int(xml, PCMK__XA_RC_CODE, &exit_status) != pcmk_rc_ok)
@@ -515,7 +512,7 @@ stonith__xe_get_result(const xmlNode *xml, pcmk__action_result_t *result)
         }
     }
     pcmk__set_result(result, exit_status, execution_status, exit_reason);
-    pcmk__set_result_output(result, action_stdout, NULL);
+    result->action_stdout = pcmk__xe_get_copy(xml, PCMK__XA_ST_OUTPUT);
 }
 
 static void

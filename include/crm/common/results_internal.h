@@ -78,9 +78,6 @@ void pcmk__format_result(pcmk__action_result_t *result, int exit_status,
                          enum pcmk_exec_status exec_status,
                          const char *format, ...) G_GNUC_PRINTF(4, 5);
 
-void pcmk__set_result_output(pcmk__action_result_t *result,
-                             char *out, char *err);
-
 void pcmk__reset_result(pcmk__action_result_t *result);
 
 void pcmk__copy_result(const pcmk__action_result_t *src,

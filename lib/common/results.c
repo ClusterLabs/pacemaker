@@ -1253,33 +1253,6 @@ pcmk__format_result(pcmk__action_result_t *result, int exit_status,
 
 /*!
  * \internal
- * \brief Set the output of an action
- *
- * \param[out] result         Action result to set output for
- * \param[in]  out            Action output to set (must be dynamically
- *                            allocated)
- * \param[in]  err            Action error output to set (must be dynamically
- *                            allocated)
- *
- * \note \p result will take ownership of \p out and \p err, so the caller
- *       should not free them.
- */
-void
-pcmk__set_result_output(pcmk__action_result_t *result, char *out, char *err)
-{
-    if (result == NULL) {
-        return;
-    }
-
-    free(result->action_stdout);
-    result->action_stdout = out;
-
-    free(result->action_stderr);
-    result->action_stderr = err;
-}
-
-/*!
- * \internal
  * \brief Clear a result's exit reason, output, and error output
  *
  * \param[in,out] result  Result to reset

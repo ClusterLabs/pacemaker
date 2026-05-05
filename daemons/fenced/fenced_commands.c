@@ -2013,7 +2013,7 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
             }
 
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-            pcmk__set_result_output(result, pcmk__str_copy(buf->str), NULL);
+            result->action_stdout = pcmk__str_copy(buf->str);
             g_string_free(buf, TRUE);
             return;
         }
