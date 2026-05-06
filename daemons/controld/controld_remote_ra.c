@@ -641,7 +641,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             pcmk__debug("Disconnection from Pacemaker Remote node %s complete",
                         lrm_state->node_name);
 
-        } else if (!remote_ra_is_in_maintenance(lrm_state)) {
+        } else if (!controld_remote_ra_in_maintenance(lrm_state)) {
             pcmk__err("Lost connection to Pacemaker Remote node %s",
                       lrm_state->node_name);
             ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
@@ -1395,11 +1395,10 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
     }
 }
 
-gboolean
-remote_ra_is_in_maintenance(lrm_state_t * lrm_state)
+bool
+controld_remote_ra_in_maintenance(const lrm_state_t *lrm_state)
 {
-    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
-    return pcmk__is_set(ra_data->status, remote_in_maint);
+    return pcmk__is_set(lrm_state->remote_ra_data->status, remote_in_maint);
 }
 
 gboolean

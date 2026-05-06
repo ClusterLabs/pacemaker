@@ -170,7 +170,7 @@ int controld_execute_remote_agent(const lrm_state_t *lrm_state,
 void remote_ra_cleanup(lrm_state_t * lrm_state);
 void remote_ra_fail(const char *node_name);
 void remote_ra_process_pseudo(xmlNode *xml);
-gboolean remote_ra_is_in_maintenance(lrm_state_t * lrm_state);
+bool controld_remote_ra_in_maintenance(const lrm_state_t *lrm_state);
 void remote_ra_process_maintenance_nodes(xmlNode *xml);
 gboolean remote_ra_controlling_guest(lrm_state_t * lrm_state);
 

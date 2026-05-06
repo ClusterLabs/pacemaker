@@ -375,7 +375,7 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
         pcmk__notice("%s requested shutdown of its remote connection",
                      lrm_state->node_name);
 
-        if (!remote_ra_is_in_maintenance(lrm_state)) {
+        if (!controld_remote_ra_in_maintenance(lrm_state)) {
             now_s = pcmk__ttoa(time(NULL));
             update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
                          true);
