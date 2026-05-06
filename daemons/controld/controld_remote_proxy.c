@@ -348,69 +348,18 @@ handle_lrmd_ipc_new(lrmd_t *lrmd, const lrm_state_t *lrm_state,
 }
 
 static void
-handle_lrmd_ipc_shutdown_req(lrmd_t *lrmd, const lrm_state_t *lrm_state)
+handle_lrmd_ipc_request(lrmd_t *lrmd, const lrm_state_t *lrm_state,
+                        xmlNode *msg)
 {
-    char *now_s = NULL;
-
-    pcmk__notice("%s requested shutdown of its remote connection",
-                 lrm_state->node_name);
-
-    if (controld_remote_ra_in_maintenance(lrm_state)) {
-        remote_proxy_ack_shutdown(lrmd, false);
-
-        pcmk__notice("Remote resource for %s is not managed so no ordered "
-                     "shutdown happening", lrm_state->node_name);
-        return;
-    }
-
-    now_s = pcmk__ttoa(time(NULL));
-    update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s, true);
-
-    remote_proxy_ack_shutdown(lrmd, true);
-
-    pcmk__warn("Reconnection attempts to %s may result in failures that must "
-               "be cleared", lrm_state->node_name);
-    free(now_s);
-}
-
-void
-controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
-{
-    const lrm_state_t *lrm_state = user_data;
-    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
     int msg_id = 0;
 
-    /* sessions are raw ipc connections to IPC,
-     * all we do is proxy requests/responses exactly
-     * like they are given to us at the ipc level. */
-
-    CRM_CHECK((op != NULL) && (session != NULL), return);
-
     pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
-    /* This is msg from remote ipc client going to real ipc server */
 
-    if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_none)) {
-        handle_lrmd_ipc_new(lrmd, lrm_state, msg);
-        return;
-    }
-
-    if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_none)) {
-        handle_lrmd_ipc_shutdown_req(lrmd, lrm_state);
-        return;
-    }
-
-    if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_none)) {
-        remote_proxy_end_session(proxy);
-        return;
-    }
-
-    if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none) && (proxy != NULL)
-        && proxy->is_local) {
-
-        /* This is for the controller, which we are, so don't try
-         * to send to ourselves over IPC -- do it directly.
+    if ((proxy != NULL) && proxy->is_local) {
+        /* This is for the controller, which we are, so don't try to send to
+         * ourselves over IPC -- do it directly
          */
         uint32_t flags = 0U;
         int rc = pcmk_rc_ok;
@@ -461,7 +410,7 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
             pcmk__xml_free(op_reply);
         }
 
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none)) {
+    } else {
         uint32_t flags = 0U;
         int rc = pcmk_rc_ok;
         const char *name = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_CLIENT);
@@ -567,9 +516,73 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
                 pcmk__xml_free(op_reply);
             }
         }
-    } else {
-        pcmk__err("Unknown proxy operation: %s", op);
     }
+}
+
+static void
+handle_lrmd_ipc_shutdown_req(lrmd_t *lrmd, const lrm_state_t *lrm_state)
+{
+    char *now_s = NULL;
+
+    pcmk__notice("%s requested shutdown of its remote connection",
+                 lrm_state->node_name);
+
+    if (controld_remote_ra_in_maintenance(lrm_state)) {
+        remote_proxy_ack_shutdown(lrmd, false);
+
+        pcmk__notice("Remote resource for %s is not managed so no ordered "
+                     "shutdown happening", lrm_state->node_name);
+        return;
+    }
+
+    now_s = pcmk__ttoa(time(NULL));
+    update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s, true);
+
+    remote_proxy_ack_shutdown(lrmd, true);
+
+    pcmk__warn("Reconnection attempts to %s may result in failures that must "
+               "be cleared", lrm_state->node_name);
+    free(now_s);
+}
+
+void
+controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
+{
+    const lrm_state_t *lrm_state = user_data;
+    const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
+    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
+
+    /* sessions are raw ipc connections to IPC,
+     * all we do is proxy requests/responses exactly
+     * like they are given to us at the ipc level. */
+
+    CRM_CHECK((op != NULL) && (session != NULL), return);
+
+    /* This is msg from remote ipc client going to real ipc server */
+
+    if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_none)) {
+        handle_lrmd_ipc_new(lrmd, lrm_state, msg);
+        return;
+    }
+
+    if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none)) {
+        handle_lrmd_ipc_request(lrmd, lrm_state, msg);
+        return;
+    }
+
+    if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_none)) {
+        handle_lrmd_ipc_shutdown_req(lrmd, lrm_state);
+        return;
+    }
+
+    if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_none)) {
+        remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+
+        remote_proxy_end_session(proxy);
+        return;
+    }
+
+    pcmk__err("Unknown proxy operation: %s", op);
 }
 
 static remote_proxy_t *
