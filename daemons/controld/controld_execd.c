@@ -1560,8 +1560,7 @@ controld_invoke_execd(fsa_data_t *msg_data)
                            rsc->id, rsc->standard,
                            ((rsc->provider != NULL)? ":" : ""),
                            pcmk__s(rsc->provider, ""), rsc->type);
-                (void) lrmd__metadata_async(rsc, metadata_complete,
-                                            (void *) data);
+                lrmd__metadata_async(rsc, metadata_complete, data);
             } else {
                 do_lrm_rsc_op(lrm_state, rsc, input->xml, md);
             }

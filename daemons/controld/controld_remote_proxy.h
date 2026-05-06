@@ -1,0 +1,29 @@
+/*
+ * Copyright 2015-2026 the Pacemaker project contributors
+ *
+ * The version control history for this file may have further details.
+ *
+ * This source code is licensed under the GNU General Public License version 2
+ * or later (GPLv2+) WITHOUT ANY WARRANTY.
+ */
+
+#ifndef CONTROLD_REMOTE_PROXY_H
+#define CONTROLD_REMOTE_PROXY_H
+
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // uint32_t
+
+#include <libxml/tree.h>            // xmlNode
+
+#include <crm/common/ipc.h>         // crm_ipc_t
+#include <crm/common/mainloop.h>    // mainloop_io_t
+#include <crm/lrmd.h>               // lrmd_t
+
+void controld_remote_proxy_table_init(void);
+void controld_remote_proxy_table_free(void);
+
+int controld_remote_proxy_send(const char *session, xmlNode *msg);
+void controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg);
+void controld_remote_proxy_disconnect_node(const char *node_name);
+
+#endif  // CONTROLD_REMOTE_PROXY_H

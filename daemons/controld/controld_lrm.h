@@ -107,14 +107,16 @@ void lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata);
 GList *lrm_state_get_list(void);
 
 /*!
- * \brief Initiate internal state tables
+ * \internal
+ * \brief Initialize the controller's executor state table
  */
-void lrm_state_init_local(void);
+void controld_execd_state_table_init(void);
 
 /*!
- * \brief Destroy all state entries and internal state tables
+ * \internal
+ * \brief Free the controller's executor state table and its entries
  */
-void lrm_state_destroy_all(void);
+void controld_execd_state_table_free(void);
 
 lrm_state_t *controld_get_executor_state(const char *node_name, bool create);
 

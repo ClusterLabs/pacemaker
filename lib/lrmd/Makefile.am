@@ -1,5 +1,5 @@
 #
-# Copyright 2012-2025 the Pacemaker project contributors
+# Copyright 2012-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -23,4 +23,3 @@ liblrmd_la_LIBADD += $(top_builddir)/lib/common/libcrmcommon.la
 liblrmd_la_SOURCES	= lrmd_alerts.c 
 liblrmd_la_SOURCES	+= lrmd_client.c
 liblrmd_la_SOURCES	+= lrmd_output.c
-liblrmd_la_SOURCES	+= proxy_common.c

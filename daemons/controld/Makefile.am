@@ -46,6 +46,7 @@ pacemaker_controld_SOURCES += controld_matrix.c
 pacemaker_controld_SOURCES += controld_membership.c
 pacemaker_controld_SOURCES += controld_messages.c
 pacemaker_controld_SOURCES += controld_metadata.c
+pacemaker_controld_SOURCES += controld_remote_proxy.c
 pacemaker_controld_SOURCES += controld_remote_ra.c
 pacemaker_controld_SOURCES += controld_schedulerd.c
 pacemaker_controld_SOURCES += controld_te_actions.c

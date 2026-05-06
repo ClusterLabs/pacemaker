@@ -27,8 +27,6 @@
 extern "C" {
 #endif
 
-int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);
-
 int lrmd_send_attribute_alert(lrmd_t *lrmd, const GList *alert_list,
                               const char *node, uint32_t nodeid,
                               const char *attr_name, const char *attr_value);
@@ -43,11 +41,10 @@ int lrmd_send_resource_alert(lrmd_t *lrmd, const GList *alert_list,
 int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                           const char *msg_type);
 
-int lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
-                         void (*callback)(int pid,
-                                          const pcmk__action_result_t *result,
-                                          void *user_data),
-                         void *user_data);
+void lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
+                          void (*callback)(int, const pcmk__action_result_t *,
+                                           void *),
+                          void *user_data);
 
 void lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc,
                       int op_status, const char *exit_reason);
@@ -57,43 +54,17 @@ void lrmd__reset_result(lrmd_event_data_t *event);
 time_t lrmd__uptime(lrmd_t *lrmd);
 const char *lrmd__node_start_state(lrmd_t *lrmd);
 
-/* Shared functions for IPC proxy back end */
-
-typedef struct {
-    char *node_name;
-    char *session_id;
-
-    gboolean is_local;
-
-    crm_ipc_t *ipc;
-    mainloop_io_t *source;
-    uint32_t last_request_id;
-    lrmd_t *lrm;
-
-} remote_proxy_t;
-
-remote_proxy_t *remote_proxy_new(lrmd_t *lrmd,
-                                 struct ipc_client_callbacks *proxy_callbacks,
-                                 const char *node_name, const char *session_id,
-                                 const char *channel);
-
 int lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash);
-void remote_proxy_cb(lrmd_t *lrmd, const char *node_name, xmlNode *msg);
-void remote_proxy_ack_shutdown(lrmd_t *lrmd);
-void remote_proxy_nack_shutdown(lrmd_t *lrmd);
-
-int  remote_proxy_dispatch(const char *buffer, ssize_t length,
-                           gpointer userdata);
-void remote_proxy_disconnected(gpointer data);
-void remote_proxy_free(gpointer data);
-
-void remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg);
-void remote_proxy_relay_response(remote_proxy_t *proxy, xmlNode *msg,
-                                 int msg_id);
 
 void lrmd__register_messages(pcmk__output_t *out);
 
 int lrmd__init_remote_key(gnutls_datum_t *key);
+
+typedef void (*lrmd__proxy_callback_t)(lrmd_t *, void *, xmlNode *);
+
+void lrmd__proxy_set_callback(lrmd_t *lrmd, void *user_data,
+                              lrmd__proxy_callback_t cb);
+int lrmd__proxy_send(lrmd_t *lrmd, xmlNode *msg);
 
 #ifdef __cplusplus
 }
