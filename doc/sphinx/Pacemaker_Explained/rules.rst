@@ -1020,8 +1020,6 @@ and **ip-gateway** a preference of -100 on node1 and 200 on node2.
 
 .. index::
    pair: cluster option; rule
-   pair: instance attribute; rule
-   pair: meta-attribute; rule
    pair: resource defaults; rule
    pair: operation defaults; rule
    pair: node attribute; rule
