@@ -347,6 +347,32 @@ handle_lrmd_ipc_new(lrmd_t *lrmd, const lrm_state_t *lrm_state,
                                            remote_config_check, NULL);
 }
 
+static void
+handle_lrmd_ipc_shutdown_req(lrmd_t *lrmd, const lrm_state_t *lrm_state)
+{
+    char *now_s = NULL;
+
+    pcmk__notice("%s requested shutdown of its remote connection",
+                 lrm_state->node_name);
+
+    if (!controld_remote_ra_in_maintenance(lrm_state)) {
+        now_s = pcmk__ttoa(time(NULL));
+        update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
+                     true);
+        free(now_s);
+
+        remote_proxy_ack_shutdown(lrmd, true);
+
+        pcmk__warn("Reconnection attempts to %s may result in failures that "
+                   "must be cleared", lrm_state->node_name);
+    } else {
+        remote_proxy_ack_shutdown(lrmd, false);
+
+        pcmk__notice("Remote resource for %s is not managed so no ordered "
+                     "shutdown happening", lrm_state->node_name);
+    }
+}
+
 void
 controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
 {
@@ -371,33 +397,13 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
     }
 
     if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_none)) {
-        char *now_s = NULL;
-
-        pcmk__notice("%s requested shutdown of its remote connection",
-                     lrm_state->node_name);
-
-        if (!controld_remote_ra_in_maintenance(lrm_state)) {
-            now_s = pcmk__ttoa(time(NULL));
-            update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
-                         true);
-            free(now_s);
-
-            remote_proxy_ack_shutdown(lrmd, true);
-
-            pcmk__warn("Reconnection attempts to %s may result in failures "
-                       "that must be cleared",
-                       lrm_state->node_name);
-        } else {
-            remote_proxy_ack_shutdown(lrmd, false);
-
-            pcmk__notice("Remote resource for %s is not managed so no ordered "
-                         "shutdown happening",
-                         lrm_state->node_name);
-        }
+        handle_lrmd_ipc_shutdown_req(lrmd, lrm_state);
         return;
+    }
 
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none)
-               && (proxy != NULL) && proxy->is_local) {
+    if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none) && (proxy != NULL)
+        && proxy->is_local) {
+
         /* This is for the controller, which we are, so don't try
          * to send to ourselves over IPC -- do it directly.
          */
