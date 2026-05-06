@@ -362,6 +362,9 @@ handle_lrmd_ipc_request_local(lrmd_t *lrmd, const lrm_state_t *lrm_state,
     uint32_t flags = 0;
     int rc = pcmk_rc_ok;
 
+    int msg_id = 0;
+    xmlNode *op_reply = NULL;
+
     pcmk__assert(lrm_state->node_name != NULL);
 
     if (request == NULL) {
@@ -397,18 +400,18 @@ handle_lrmd_ipc_request_local(lrmd_t *lrmd, const lrm_state_t *lrm_state,
                    pcmk_rc_str(rc));
     }
 
-    if (pcmk__is_set(flags, crm_ipc_client_response)) {
-        int msg_id = 0;
-        xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
-
-        pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
-        pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
-
-        pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
-        remote_proxy_relay_response(proxy, op_reply, msg_id);
-
-        pcmk__xml_free(op_reply);
+    if (!pcmk__is_set(flags, crm_ipc_client_response)) {
+        return;
     }
+
+    op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
+    pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
+    pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
+
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+    remote_proxy_relay_response(proxy, op_reply, msg_id);
+
+    pcmk__xml_free(op_reply);
 }
 
 static void
