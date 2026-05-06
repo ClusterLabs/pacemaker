@@ -325,24 +325,25 @@ handle_lrmd_ipc_new(lrmd_t *lrmd, lrm_state_t *lrm_state, const xmlNode *msg)
     const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
     remote_proxy_t *proxy = remote_proxy_new(lrmd, lrm_state->node_name,
                                              session, channel);
+    cib_t *cib_conn = controld_globals.cib_conn;
+    int rc = pcmk_ok;
 
     if (remote_ra_controlling_guest(lrm_state)) {
         pcmk__debug("Skipping remote_config_check for guest-nodes");
         return;
     }
 
-    if (proxy != NULL) {
-        cib_t *cib_conn = controld_globals.cib_conn;
-
-        /* Look up PCMK_OPT_FENCING_WATCHDOG_TIMEOUT and send to the remote peer
-         * for validation
-         */
-        int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG, NULL,
-                                       cib_none);
-        cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE, lrmd,
-                                               "remote_config_check",
-                                               remote_config_check, NULL);
+    if (proxy == NULL) {
+        return;
     }
+
+    /* Look up PCMK_OPT_FENCING_WATCHDOG_TIMEOUT and send to the remote peer for
+     * validation
+     */
+    rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG, NULL, cib_none);
+    cib_conn->cmds->register_callback_full(cib_conn, rc, 10, false, lrmd,
+                                           "remote_config_check",
+                                           remote_config_check, NULL);
 }
 
 void
