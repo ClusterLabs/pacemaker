@@ -578,17 +578,16 @@ handle_lrmd_ipc_shutdown_req(lrmd_t *lrmd, const lrm_state_t *lrm_state)
 void
 controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
 {
+    /* The message is from a remote IPC client to a cluster IPC server.
+     *
+     * Sessions are raw IPC connections. We proxy requests and responses exactly
+     * as they are given to us at the IPC level.
+     */
     const lrm_state_t *lrm_state = user_data;
     const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
 
-    /* sessions are raw ipc connections to IPC,
-     * all we do is proxy requests/responses exactly
-     * like they are given to us at the ipc level. */
-
-    CRM_CHECK((op != NULL) && (session != NULL), return);
-
-    /* This is msg from remote ipc client going to real ipc server */
+    pcmk__assert((op != NULL) && (session != NULL));
 
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_none)) {
         handle_lrmd_ipc_new(lrmd, lrm_state, msg);
