@@ -354,42 +354,49 @@ handle_lrmd_ipc_request_local(lrmd_t *lrmd, const lrm_state_t *lrm_state,
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
-    uint32_t flags = 0U;
-    int rc = pcmk_rc_ok;
     xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
                                             NULL, NULL);
     xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
-    CRM_CHECK(request != NULL, return);
-    CRM_CHECK(lrm_state->node_name, return);
+    const char *task = NULL;
+    uint32_t flags = 0;
+    int rc = pcmk_rc_ok;
+
+    pcmk__assert(lrm_state->node_name != NULL);
+
+    if (request == NULL) {
+        pcmk__err("Ignoring invalid pacemaker-remote IPC message");
+        pcmk__log_xml_err(msg, "bad-message");
+        return;
+    }
+
     pcmk__xe_set(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
     pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
                           lrm_state->node_name);
 
     /* Pacemaker Remote nodes don't know their own names (as known to the
-     * cluster). When getting a node info request with no name or ID, add
-     * the name, so we don't return info for ourselves instead of the
-     * Pacemaker Remote node.
+     * cluster). When getting a node info request with no name or ID, add the
+     * name, so we don't return info for ourselves instead of the Pacemaker
+     * Remote node.
      */
-    if (pcmk__str_eq(pcmk__xe_get(request, PCMK__XA_CRM_TASK),
-                     CRM_OP_NODE_INFO, pcmk__str_none)) {
+    task = pcmk__xe_get(request, PCMK__XA_CRM_TASK);
+    if (pcmk__str_eq(task, CRM_OP_NODE_INFO, pcmk__str_none)) {
         int node_id = 0;
 
         pcmk__xe_get_int(request, PCMK_XA_ID, &node_id);
-        if ((node_id <= 0)
-            && (pcmk__xe_get(request, PCMK_XA_UNAME) == NULL)) {
+        if ((node_id <= 0) && (pcmk__xe_get(request, PCMK_XA_UNAME) == NULL)) {
             pcmk__xe_set(request, PCMK_XA_UNAME, lrm_state->node_name);
         }
     }
 
     crmd_proxy_dispatch(session, request);
 
-    rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
+    rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0);
     if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse controller flags from remote request: "
-                   "%s",
+        pcmk__warn("Couldn't parse controller flags from remote request: %s",
                    pcmk_rc_str(rc));
     }
+
     if (pcmk__is_set(flags, crm_ipc_client_response)) {
         int msg_id = 0;
         xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_ACK);
