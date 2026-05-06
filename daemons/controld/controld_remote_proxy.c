@@ -355,22 +355,22 @@ handle_lrmd_ipc_shutdown_req(lrmd_t *lrmd, const lrm_state_t *lrm_state)
     pcmk__notice("%s requested shutdown of its remote connection",
                  lrm_state->node_name);
 
-    if (!controld_remote_ra_in_maintenance(lrm_state)) {
-        now_s = pcmk__ttoa(time(NULL));
-        update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s,
-                     true);
-        free(now_s);
-
-        remote_proxy_ack_shutdown(lrmd, true);
-
-        pcmk__warn("Reconnection attempts to %s may result in failures that "
-                   "must be cleared", lrm_state->node_name);
-    } else {
+    if (controld_remote_ra_in_maintenance(lrm_state)) {
         remote_proxy_ack_shutdown(lrmd, false);
 
         pcmk__notice("Remote resource for %s is not managed so no ordered "
                      "shutdown happening", lrm_state->node_name);
+        return;
     }
+
+    now_s = pcmk__ttoa(time(NULL));
+    update_attrd(lrm_state->node_name, PCMK__NODE_ATTR_SHUTDOWN, now_s, true);
+
+    remote_proxy_ack_shutdown(lrmd, true);
+
+    pcmk__warn("Reconnection attempts to %s may result in failures that must "
+               "be cleared", lrm_state->node_name);
+    free(now_s);
 }
 
 void
