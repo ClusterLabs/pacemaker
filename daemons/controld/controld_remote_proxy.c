@@ -318,6 +318,33 @@ remote_proxy_end_session(remote_proxy_t *proxy)
     }
 }
 
+static void
+handle_lrmd_ipc_new(lrmd_t *lrmd, lrm_state_t *lrm_state, const xmlNode *msg)
+{
+    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
+    const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
+    remote_proxy_t *proxy = remote_proxy_new(lrmd, lrm_state->node_name,
+                                             session, channel);
+
+    if (!remote_ra_controlling_guest(lrm_state)) {
+        if (proxy != NULL) {
+            cib_t *cib_conn = controld_globals.cib_conn;
+
+            /* Look up PCMK_OPT_FENCING_WATCHDOG_TIMEOUT and send to the remote
+             * peer for validation
+             */
+            int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG, NULL,
+                                           cib_none);
+            cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
+                                                   lrmd,
+                                                   "remote_config_check",
+                                                   remote_config_check, NULL);
+        }
+    } else {
+        pcmk__debug("Skipping remote_config_check for guest-nodes");
+    }
+}
+
 void
 controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
 {
@@ -337,30 +364,11 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
     /* This is msg from remote ipc client going to real ipc server */
 
     if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_none)) {
-        const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
+        handle_lrmd_ipc_new(lrmd, lrm_state, msg);
+        return;
+    }
 
-        proxy = remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
-
-        if (!remote_ra_controlling_guest(lrm_state)) {
-            if (proxy != NULL) {
-                cib_t *cib_conn = controld_globals.cib_conn;
-
-                /* Look up PCMK_OPT_FENCING_WATCHDOG_TIMEOUT and send to the
-                 * remote peer for validation
-                 */
-                int rc = cib_conn->cmds->query(cib_conn, PCMK_XE_CRM_CONFIG,
-                                               NULL, cib_none);
-                cib_conn->cmds->register_callback_full(cib_conn, rc, 10, FALSE,
-                                                       lrmd,
-                                                       "remote_config_check",
-                                                       remote_config_check,
-                                                       NULL);
-            }
-        } else {
-            pcmk__debug("Skipping remote_config_check for guest-nodes");
-        }
-
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_none)) {
+    if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_none)) {
         char *now_s = NULL;
 
         pcmk__notice("%s requested shutdown of its remote connection",
