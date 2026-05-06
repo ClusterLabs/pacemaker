@@ -319,7 +319,8 @@ remote_proxy_end_session(remote_proxy_t *proxy)
 }
 
 static void
-handle_lrmd_ipc_new(lrmd_t *lrmd, lrm_state_t *lrm_state, const xmlNode *msg)
+handle_lrmd_ipc_new(lrmd_t *lrmd, const lrm_state_t *lrm_state,
+                    const xmlNode *msg)
 {
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
@@ -328,7 +329,7 @@ handle_lrmd_ipc_new(lrmd_t *lrmd, lrm_state_t *lrm_state, const xmlNode *msg)
     cib_t *cib_conn = controld_globals.cib_conn;
     int rc = pcmk_ok;
 
-    if (remote_ra_controlling_guest(lrm_state)) {
+    if (controld_remote_ra_controlling_guest(lrm_state)) {
         pcmk__debug("Skipping remote_config_check for guest-nodes");
         return;
     }
@@ -349,7 +350,7 @@ handle_lrmd_ipc_new(lrmd_t *lrmd, lrm_state_t *lrm_state, const xmlNode *msg)
 void
 controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
 {
-    lrm_state_t *lrm_state = user_data;
+    const lrm_state_t *lrm_state = user_data;
     const char *op = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_OP);
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
     remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);

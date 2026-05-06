@@ -1401,9 +1401,8 @@ controld_remote_ra_in_maintenance(const lrm_state_t *lrm_state)
     return pcmk__is_set(lrm_state->remote_ra_data->status, remote_in_maint);
 }
 
-gboolean
-remote_ra_controlling_guest(lrm_state_t * lrm_state)
+bool
+controld_remote_ra_controlling_guest(const lrm_state_t *lrm_state)
 {
-    remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
-    return pcmk__is_set(ra_data->status, controlling_guest);
+    return pcmk__is_set(lrm_state->remote_ra_data->status, controlling_guest);
 }
