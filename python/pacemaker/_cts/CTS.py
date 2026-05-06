@@ -228,7 +228,7 @@ class Process:
                 return
             if rc != 0:
                 # 2 or 3: Syntax error or fatal error (like out of memory)
-                self._cm.log(f"ERROR: pgrep for {self.name} failed on node {node}")
+                logging.log(f"ERROR: pgrep for {self.name} failed on node {node}")
                 return
 
         # 0: One or more processes were successfully signaled.
@@ -236,4 +236,4 @@ class Process:
         # This is why we check for no matching process above.
         (rc, _) = self._cm.rsh.call(node, f"pkill --signal {sig} --full '{search_re}'")
         if rc != 0:
-            self._cm.log(f"ERROR: Sending signal {sig} to {self.name} failed on node {node}")
+            logging.log(f"ERROR: Sending signal {sig} to {self.name} failed on node {node}")
