@@ -2311,9 +2311,8 @@ metadata_complete(svc_action_t *action)
  */
 void
 lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
-                     void (*callback)(int pid,
-                                      const pcmk__action_result_t *result,
-                                      void *user_data),
+                     void (*callback)(int, const pcmk__action_result_t *,
+                                      void *),
                      void *user_data)
 {
     svc_action_t *action = NULL;

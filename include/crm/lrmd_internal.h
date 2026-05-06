@@ -42,9 +42,8 @@ int lrmd__remote_send_xml(pcmk__remote_t *session, xmlNode *msg, uint32_t id,
                           const char *msg_type);
 
 void lrmd__metadata_async(const lrmd_rsc_info_t *rsc,
-                          void (*callback)(int pid,
-                                           const pcmk__action_result_t *result,
-                                           void *user_data),
+                          void (*callback)(int, const pcmk__action_result_t *,
+                                           void *),
                           void *user_data);
 
 void lrmd__set_result(lrmd_event_data_t *event, enum ocf_exitcode rc,
