@@ -415,128 +415,139 @@ handle_lrmd_ipc_request_local(lrmd_t *lrmd, const lrm_state_t *lrm_state,
 }
 
 static void
+handle_lrmd_ipc_request_nonlocal(lrmd_t *lrmd, const lrm_state_t *lrm_state,
+                                 xmlNode *msg)
+{
+    const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
+    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
+
+    uint32_t flags = 0U;
+    int rc = pcmk_rc_ok;
+    const char *name = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_CLIENT);
+
+    xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
+                                            NULL, NULL);
+    xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+
+    int msg_id = 0;
+
+    pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+
+    CRM_CHECK(request != NULL, return);
+
+    if (proxy == NULL) {
+        /* proxy connection no longer exists */
+        remote_proxy_notify_destroy(lrmd, session);
+        return;
+    }
+
+    // Controller requests MUST be handled by the controller, not us
+    CRM_CHECK(!proxy->is_local,
+              remote_proxy_end_session(proxy); return);
+
+    if (!crm_ipc_connected(proxy->ipc)) {
+        remote_proxy_end_session(proxy);
+        return;
+    }
+    proxy->last_request_id = 0;
+    pcmk__xe_set(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
+
+    rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Couldn't parse controller flags from remote request: "
+                   "%s",
+                   pcmk_rc_str(rc));
+    }
+
+    pcmk__assert(lrm_state->node_name != NULL);
+    pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
+                          lrm_state->node_name);
+
+    if (pcmk__is_set(flags, crm_ipc_proxied)) {
+        const char *type = pcmk__xe_get(request, PCMK__XA_T);
+        int rc = 0;
+
+        if (pcmk__str_eq(type, PCMK__VALUE_ATTRD, pcmk__str_none)
+            && (pcmk__xe_get(request, PCMK__XA_ATTR_HOST) == NULL)
+            && pcmk__str_any_of(pcmk__xe_get(request, PCMK_XA_TASK),
+                                PCMK__ATTRD_CMD_UPDATE,
+                                PCMK__ATTRD_CMD_UPDATE_BOTH,
+                                PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
+
+            pcmk__xe_set(request, PCMK__XA_ATTR_HOST, proxy->node_name);
+        }
+
+        rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
+
+        if (rc < 0) {
+            xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_NACK);
+
+            pcmk__err("Could not relay request %d from %s to %s for %s: "
+                      "%s (%d)",
+                      msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                      name, pcmk_strerror(rc), rc);
+
+            /* Send a NACK to the caller (for instance, a program like
+             * cibadmin or crm_mon running on the remote node) so it doesn't
+             * block waiting for a reply.  Nothing actually checks that it
+             * receives a PCMK__XE_NACK, but it's got to receive something
+             * and since this message isn't being used anywhere else, it's
+             * a good one to use.
+             */
+            pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
+            pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
+            pcmk__xe_set_int(op_reply, PCMK_XA_RC, rc);
+            remote_proxy_relay_response(proxy, op_reply, msg_id);
+            pcmk__xml_free(op_reply);
+            return;
+        }
+
+        pcmk__trace("Relayed request %d from %s to %s for %s", msg_id,
+                    proxy->node_name, crm_ipc_name(proxy->ipc), name);
+        proxy->last_request_id = msg_id;
+
+    } else {
+        int rc = pcmk_ok;
+        xmlNode *op_reply = NULL;
+        // @COMPAT pacemaker_remoted <= 1.1.10
+
+        pcmk__trace("Relaying request %d from %s to %s for %s", msg_id,
+                    proxy->node_name, crm_ipc_name(proxy->ipc), name);
+
+        rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
+        if(rc < 0) {
+            pcmk__err("Could not relay request %d from %s to %s for %s: "
+                      "%s (%d)",
+                      msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
+                      name, pcmk_strerror(rc), rc);
+        } else {
+            pcmk__trace("Relayed request %d from %s to %s for %s", msg_id,
+                        proxy->node_name, crm_ipc_name(proxy->ipc), name);
+        }
+
+        if(op_reply) {
+            remote_proxy_relay_response(proxy, op_reply, msg_id);
+            pcmk__xml_free(op_reply);
+        }
+    }
+}
+
+static void
 handle_lrmd_ipc_request(lrmd_t *lrmd, const lrm_state_t *lrm_state,
                         xmlNode *msg)
 {
     const char *session = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SESSION);
-    remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
-    int msg_id = 0;
-
-    pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
+    const remote_proxy_t *proxy = g_hash_table_lookup(proxy_table, session);
 
     if ((proxy != NULL) && proxy->is_local) {
         /* This is for the controller, which we are, so don't try to send to
          * ourselves over IPC -- do it directly
          */
         handle_lrmd_ipc_request_local(lrmd, lrm_state, msg);
-
-    } else {
-        uint32_t flags = 0U;
-        int rc = pcmk_rc_ok;
-        const char *name = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_CLIENT);
-
-        xmlNode *wrapper = pcmk__xe_first_child(msg, PCMK__XE_LRMD_IPC_MSG,
-                                                NULL, NULL);
-        xmlNode *request = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
-
-        CRM_CHECK(request != NULL, return);
-
-        if (proxy == NULL) {
-            /* proxy connection no longer exists */
-            remote_proxy_notify_destroy(lrmd, session);
-            return;
-        }
-
-        // Controller requests MUST be handled by the controller, not us
-        CRM_CHECK(!proxy->is_local,
-                  remote_proxy_end_session(proxy); return);
-
-        if (!crm_ipc_connected(proxy->ipc)) {
-            remote_proxy_end_session(proxy);
-            return;
-        }
-        proxy->last_request_id = 0;
-        pcmk__xe_set(request, PCMK_XE_ACL_ROLE, "pacemaker-remote");
-
-        rc = pcmk__xe_get_flags(msg, PCMK__XA_LRMD_IPC_MSG_FLAGS, &flags, 0U);
-        if (rc != pcmk_rc_ok) {
-            pcmk__warn("Couldn't parse controller flags from remote request: "
-                       "%s",
-                       pcmk_rc_str(rc));
-        }
-
-        pcmk__assert(lrm_state->node_name != NULL);
-        pcmk__update_acl_user(request, PCMK__XA_LRMD_IPC_USER,
-                              lrm_state->node_name);
-
-        if (pcmk__is_set(flags, crm_ipc_proxied)) {
-            const char *type = pcmk__xe_get(request, PCMK__XA_T);
-            int rc = 0;
-
-            if (pcmk__str_eq(type, PCMK__VALUE_ATTRD, pcmk__str_none)
-                && (pcmk__xe_get(request, PCMK__XA_ATTR_HOST) == NULL)
-                && pcmk__str_any_of(pcmk__xe_get(request, PCMK_XA_TASK),
-                                    PCMK__ATTRD_CMD_UPDATE,
-                                    PCMK__ATTRD_CMD_UPDATE_BOTH,
-                                    PCMK__ATTRD_CMD_UPDATE_DELAY, NULL)) {
-
-                pcmk__xe_set(request, PCMK__XA_ATTR_HOST, proxy->node_name);
-            }
-
-            rc = crm_ipc_send(proxy->ipc, request, flags, 5000, NULL);
-
-            if (rc < 0) {
-                xmlNode *op_reply = pcmk__xe_create(NULL, PCMK__XE_NACK);
-
-                pcmk__err("Could not relay request %d from %s to %s for %s: "
-                          "%s (%d)",
-                          msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
-                          name, pcmk_strerror(rc), rc);
-
-                /* Send a NACK to the caller (for instance, a program like
-                 * cibadmin or crm_mon running on the remote node) so it doesn't
-                 * block waiting for a reply.  Nothing actually checks that it
-                 * receives a PCMK__XE_NACK, but it's got to receive something
-                 * and since this message isn't being used anywhere else, it's
-                 * a good one to use.
-                 */
-                pcmk__xe_set(op_reply, PCMK_XA_FUNCTION, __func__);
-                pcmk__xe_set_int(op_reply, PCMK__XA_LINE, __LINE__);
-                pcmk__xe_set_int(op_reply, PCMK_XA_RC, rc);
-                remote_proxy_relay_response(proxy, op_reply, msg_id);
-                pcmk__xml_free(op_reply);
-                return;
-            }
-
-            pcmk__trace("Relayed request %d from %s to %s for %s", msg_id,
-                        proxy->node_name, crm_ipc_name(proxy->ipc), name);
-            proxy->last_request_id = msg_id;
-
-        } else {
-            int rc = pcmk_ok;
-            xmlNode *op_reply = NULL;
-            // @COMPAT pacemaker_remoted <= 1.1.10
-
-            pcmk__trace("Relaying request %d from %s to %s for %s", msg_id,
-                        proxy->node_name, crm_ipc_name(proxy->ipc), name);
-
-            rc = crm_ipc_send(proxy->ipc, request, flags, 10000, &op_reply);
-            if(rc < 0) {
-                pcmk__err("Could not relay request %d from %s to %s for %s: "
-                          "%s (%d)",
-                          msg_id, proxy->node_name, crm_ipc_name(proxy->ipc),
-                          name, pcmk_strerror(rc), rc);
-            } else {
-                pcmk__trace("Relayed request %d from %s to %s for %s", msg_id,
-                            proxy->node_name, crm_ipc_name(proxy->ipc), name);
-            }
-
-            if(op_reply) {
-                remote_proxy_relay_response(proxy, op_reply, msg_id);
-                pcmk__xml_free(op_reply);
-            }
-        }
+        return;
     }
+
+    handle_lrmd_ipc_request_nonlocal(lrmd, lrm_state, msg);
 }
 
 static void
