@@ -401,6 +401,11 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
         return;
     }
 
+    if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_none)) {
+        remote_proxy_end_session(proxy);
+        return;
+    }
+
     if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none) && (proxy != NULL)
         && proxy->is_local) {
 
@@ -455,9 +460,6 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
 
             pcmk__xml_free(op_reply);
         }
-
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_none)) {
-        remote_proxy_end_session(proxy);
 
     } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none)) {
         uint32_t flags = 0U;
