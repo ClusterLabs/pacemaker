@@ -336,7 +336,7 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
     pcmk__xe_get_int(msg, PCMK__XA_LRMD_IPC_MSG_ID, &msg_id);
     /* This is msg from remote ipc client going to real ipc server */
 
-    if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_casei)) {
+    if (pcmk__str_eq(op, LRMD_IPC_OP_NEW, pcmk__str_none)) {
         const char *channel = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_SERVER);
 
         proxy = remote_proxy_new(lrmd, lrm_state->node_name, session, channel);
@@ -360,7 +360,7 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
             pcmk__debug("Skipping remote_config_check for guest-nodes");
         }
 
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_SHUTDOWN_REQ, pcmk__str_none)) {
         char *now_s = NULL;
 
         pcmk__notice("%s requested shutdown of its remote connection",
@@ -386,7 +386,7 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
         }
         return;
 
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none)
                && (proxy != NULL) && proxy->is_local) {
         /* This is for the controller, which we are, so don't try
          * to send to ourselves over IPC -- do it directly.
@@ -440,10 +440,10 @@ controld_remote_proxy_cb(lrmd_t *lrmd, void *user_data, xmlNode *msg)
             pcmk__xml_free(op_reply);
         }
 
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_DESTROY, pcmk__str_none)) {
         remote_proxy_end_session(proxy);
 
-    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_casei)) {
+    } else if (pcmk__str_eq(op, LRMD_IPC_OP_REQUEST, pcmk__str_none)) {
         uint32_t flags = 0U;
         int rc = pcmk_rc_ok;
         const char *name = pcmk__xe_get(msg, PCMK__XA_LRMD_IPC_CLIENT);
