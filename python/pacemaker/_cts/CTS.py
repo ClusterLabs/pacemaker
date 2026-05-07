@@ -33,7 +33,7 @@ class CtsLab:
     to the tests through this mechanism.
     """
 
-    def __init__(self, args=None):
+    def __init__(self, args):
         """
         Create a new CtsLab instance.
 
