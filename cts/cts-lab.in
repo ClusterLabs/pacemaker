@@ -100,13 +100,13 @@ if __name__ == '__main__':
     # Scenario selection
     if lab["scenario"] == "all-once":
         iters = len(tests)
-        scenario = AllOnce(cm, [BootCluster(cm, lab)], audits, tests)
+        scenario = AllOnce(cm, [BootCluster(cm)], audits, tests)
     elif lab["scenario"] == "sequence":
-        scenario = Sequence(cm, [BootCluster(cm, lab)], audits, tests)
+        scenario = Sequence(cm, [BootCluster(cm)], audits, tests)
     elif lab["scenario"] == "boot":
-        scenario = Boot(cm, [LeaveBooted(cm, lab)], audits, [])
+        scenario = Boot(cm, [LeaveBooted(cm)], audits, [])
     else:
-        scenario = RandomTests(cm, [BootCluster(cm, lab)], audits, tests)
+        scenario = RandomTests(cm, [BootCluster(cm)], audits, tests)
 
     logging.log(f">>>>>>>>>>>>>>>> BEGINNING {iters!r} TEST{plural_s(iters)}")
     logging.log(f"Schema:                 {lab['Schema']}")
