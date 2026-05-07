@@ -30,7 +30,7 @@ class SimulStartLite(CTSTest):
     def __call__(self, dummy):
         """Return whether starting all stopped nodes more or less simultaneously succeeds."""
         self.incr("calls")
-        self.debug(f"Setup: {self.name}")
+        logging.debug(f"Setup: {self.name}")
 
         # We ignore the "node" parameter...
         node_list = []
@@ -77,17 +77,17 @@ class SimulStartLite(CTSTest):
                     try:
                         watch.unmatched.remove(uppat % node)
                     except ValueError:
-                        self.debug(f"Already matched: {uppat % node}")
+                        logging.debug(f"Already matched: {uppat % node}")
 
                     try:
                         watch.unmatched.remove(self._cm.templates["Pat:InfraUp"] % node)
                     except ValueError:
-                        self.debug(f"Already matched: {self._cm.templates['Pat:InfraUp'] % node}")
+                        logging.debug(f"Already matched: {self._cm.templates['Pat:InfraUp'] % node}")
 
                     try:
                         watch.unmatched.remove(self._cm.templates["Pat:PacemakerUp"] % node)
                     except ValueError:
-                        self.debug(f"Already matched: {self._cm.templates['Pat:PacemakerUp'] % node}")
+                        logging.debug(f"Already matched: {self._cm.templates['Pat:PacemakerUp'] % node}")
 
             if watch.unmatched:
                 for regex in watch.unmatched:

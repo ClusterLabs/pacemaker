@@ -55,7 +55,7 @@ class ComponentFail(CTSTest):
         chosen = self._env.random_gen.choice(self._complist)
         node_is_dc = self._cm.is_node_dc(node, None)
 
-        self.debug(f"...component {chosen.name} (dc={node_is_dc})")
+        logging.debug(f"...component {chosen.name} (dc={node_is_dc})")
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
@@ -105,20 +105,20 @@ class ComponentFail(CTSTest):
         # kill the component
         chosen.signal("KILL", node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
 
-        self.debug("Waiting for any fenced node to come back up")
+        logging.debug("Waiting for any fenced node to come back up")
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
-        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        logging.debug("Waiting for the cluster to re-stabilize with all nodes")
         self._cm.cluster_stable(self._env["start_time"])
 
-        self.debug(f"Checking if {node} was shot")
+        logging.debug(f"Checking if {node} was shot")
         shot = stonith.look(60)
 
         if shot:
-            self.debug(f"Found: {shot!r}")
+            logging.debug(f"Found: {shot!r}")
             self._okerrpatterns.append(self._cm.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
@@ -133,7 +133,7 @@ class ComponentFail(CTSTest):
         if watch.unmatched:
             logging.log(f"Patterns not found: {watch.unmatched!r}")
 
-        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        logging.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:

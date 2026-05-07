@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2025-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.timer import Timer
@@ -52,7 +53,7 @@ class CibsecretTest(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when adding dummy resource")
+            logging.debug("Failed to find patterns when adding dummy resource")
             return repr(watch.unmatched)
 
         return ""
@@ -71,7 +72,7 @@ class CibsecretTest(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when removing dummy resource")
+            logging.debug("Failed to find patterns when removing dummy resource")
             return repr(watch.unmatched)
 
         return ""

@@ -31,7 +31,7 @@ class SimulStopLite(CTSTest):
     def __call__(self, dummy):
         """Return whether stopping all running nodes more or less simultaneously succeeds."""
         self.incr("calls")
-        self.debug(f"Setup: {self.name}")
+        logging.debug(f"Setup: {self.name}")
 
         # We ignore the "node" parameter...
         watchpats = []

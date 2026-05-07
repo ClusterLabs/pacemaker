@@ -44,10 +44,10 @@ class StonithdTest(CTSTest):
         ]
 
         if not self._env["at-boot"]:
-            self.debug(f"Expecting {node} to stay down")
+            logging.debug(f"Expecting {node} to stay down")
             self._cm.expected_status[node] = "down"
         else:
-            self.debug(f"Expecting {node} to come up again {self._env['at-boot']}")
+            logging.debug(f"Expecting {node} to come up again {self._env['at-boot']}")
             watchpats.extend([
                 f"{node}.* S_STARTING -> S_PENDING",
                 f"{node}.* S_PENDING -> S_NOT_DC",
@@ -74,10 +74,10 @@ class StonithdTest(CTSTest):
             logging.log(f"Fencing command on {origin} to fence {node} timed out")
 
         elif origin != node and rc != 0:
-            self.debug("Waiting for the cluster to recover")
+            logging.debug("Waiting for the cluster to recover")
             self._cm.cluster_stable()
 
-            self.debug("Waiting for fenced node to come back up")
+            logging.debug("Waiting for fenced node to come back up")
             self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
             logging.log(f"Fencing command on {origin} failed to fence {node} (rc={rc})")
@@ -93,13 +93,13 @@ class StonithdTest(CTSTest):
         if watch.unmatched:
             logging.log(f"Patterns not found: {watch.unmatched!r}")
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
 
-        self.debug("Waiting for fenced node to come back up")
+        logging.debug("Waiting for fenced node to come back up")
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
-        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        logging.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:

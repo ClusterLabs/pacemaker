@@ -39,8 +39,8 @@ class NearQuorumPointTest(CTSTest):
             elif action == "stop":
                 stopset.append(node)
 
-        self.debug(f"start nodes:{startset!r}")
-        self.debug(f"stop nodes:{stopset!r}")
+        logging.debug(f"start nodes:{startset!r}")
+        logging.debug(f"stop nodes:{stopset!r}")
 
         # add search patterns
         watchpats = []

@@ -57,14 +57,6 @@ class CTSTest:
         self.is_unsafe = False
         self.passed = True
 
-    def log(self, args):
-        """Log a message."""
-        logging.log(args)
-
-    def debug(self, args):
-        """Log a debug message."""
-        logging.debug(args)
-
     def get_timer(self, key="test"):
         """Get the start time of the given timer."""
         try:
@@ -86,7 +78,7 @@ class CTSTest:
             return
 
         elapsed = self._timers[key].elapsed
-        self.debug(f"{self.name}:{key} runtime: {elapsed:.2f}")
+        logging.debug(f"{self.name}:{key} runtime: {elapsed:.2f}")
         del self._timers[key]
 
     def incr(self, name):

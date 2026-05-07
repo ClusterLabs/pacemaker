@@ -4,6 +4,7 @@ __all__ = ["RemoteStonithd"]
 __copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
@@ -30,7 +31,7 @@ class RemoteStonithd(RemoteDriver):
         self.fail_connection(node)
         self.cleanup_metal(node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
         if self.failed:
             return self.failure(self.fail_string)

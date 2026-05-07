@@ -42,7 +42,7 @@ class StandbyTest(CTSTest):
         if not ret:
             return self.failure("Start all nodes failed")
 
-        self.debug(f"Make sure node {node} is active")
+        logging.debug(f"Make sure node {node} is active")
         if self._cm.in_standby_mode(node):
             if not self._cm.set_standby_mode(node, False):
                 return self.failure(f"can't set node {node} to active mode")
@@ -58,7 +58,7 @@ class StandbyTest(CTSTest):
         watch = self.create_watch(watchpats, self._env["dead_time"] + 10)
         watch.set_watch()
 
-        self.debug(f"Setting node {node} to standby mode")
+        logging.debug(f"Setting node {node} to standby mode")
         if not self._cm.set_standby_mode(node, True):
             return self.failure(f"can't set node {node} to standby mode")
 
@@ -77,15 +77,15 @@ class StandbyTest(CTSTest):
 
         self.log_timer("on")
 
-        self.debug("Checking resources")
+        logging.debug("Checking resources")
         rscs_on_node = self._cm.active_resources(node)
         if rscs_on_node:
             rc = self.failure(f"{node} set to standby, {rscs_on_node!r} is still running on it")
-            self.debug(f"Setting node {node} to active mode")
+            logging.debug(f"Setting node {node} to active mode")
             self._cm.set_standby_mode(node, False)
             return rc
 
-        self.debug(f"Setting node {node} to active mode")
+        logging.debug(f"Setting node {node} to active mode")
         if not self._cm.set_standby_mode(node, False):
             return self.failure(f"can't set node {node} to active mode")
 

@@ -42,12 +42,12 @@ class Reattach(CTSTest):
 
     def _set_unmanaged(self, node):
         """Disable resource management."""
-        self.debug("Disable resource management")
+        logging.debug("Disable resource management")
         self._rsh.call(node, "crm_attribute -t rsc_defaults -n is-managed -v false")
 
     def _set_managed(self, node):
         """Enable resource management."""
-        self.debug("Re-enable resource management")
+        logging.debug("Re-enable resource management")
         self._rsh.call(node, "crm_attribute -t rsc_defaults -n is-managed -D")
 
     def _disable_incompatible_rscs(self, node):
@@ -61,7 +61,7 @@ class Reattach(CTSTest):
 
         Set target-role to "Stopped" for any of these resources in the CIB.
         """
-        self.debug("Disable incompatible resources")
+        logging.debug("Disable incompatible resources")
         xml = """'<meta_attributes id="cts-lab-Reattach-meta">
                     <nvpair id="cts-lab-Reattach-target-role" name="target-role" value="Stopped"/>
                     <rule id="cts-lab-Reattach-rule" boolean-op="or" score="INFINITY">
@@ -72,7 +72,7 @@ class Reattach(CTSTest):
 
     def _enable_incompatible_rscs(self, node):
         """Re-enable resources that were incompatible with this test."""
-        self.debug("Re-enable incompatible resources")
+        logging.debug("Re-enable incompatible resources")
         xml = """<meta_attributes id="cts-lab-Reattach-meta"/>"""
         return self._rsh.call(node, f"cibadmin --delete --xml-text '{xml}'")
 
@@ -151,13 +151,13 @@ class Reattach(CTSTest):
         watch = self.create_watch(pats, 60, "ShutdownActivity")
         watch.set_watch()
 
-        self.debug("Shutting down the cluster")
+        logging.debug("Shutting down the cluster")
         ret = self._stopall(None)
         if not ret:
             self._set_managed(node)
             return self.failure("Couldn't shut down the cluster")
 
-        self.debug("Bringing the cluster back up")
+        logging.debug("Bringing the cluster back up")
         ret = self._startall(None)
         time.sleep(5)  # allow ping to update the CIB
         if not ret:
@@ -185,7 +185,7 @@ class Reattach(CTSTest):
                 r = AuditResource(self._cm, line)
 
                 if r.rclass == "stonith":
-                    self.debug(f"Ignoring start actions for {r.id}")
+                    logging.debug(f"Ignoring start actions for {r.id}")
                     ignore.append(self._cm.templates["Pat:RscOpOK"] % ("start", r.id))
 
         if self.local_badnews("ResourceActivity:", watch, ignore):

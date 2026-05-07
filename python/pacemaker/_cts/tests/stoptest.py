@@ -64,11 +64,11 @@ class StopTest(CTSTest):
         if watch.unmatched:
             (_, output) = self._rsh.call(node, "/bin/ps axf", verbose=1)
             for line in output:
-                self.debug(line)
+                logging.debug(line)
 
             (_, output) = self._rsh.call(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
             for line in output:
-                self.debug(line)
+                logging.debug(line)
 
             for regex in watch.unmatched:
                 logging.log(f"ERROR: Shutdown pattern not found: {regex}")

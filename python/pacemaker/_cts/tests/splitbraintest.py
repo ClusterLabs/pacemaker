@@ -50,8 +50,8 @@ class SplitBrainTest(CTSTest):
         if not other_nodes:
             return
 
-        self.debug(f"Creating partition: {partition!r}")
-        self.debug(f"Everyone else: {other_nodes!r}")
+        logging.debug(f"Creating partition: {partition!r}")
+        logging.debug(f"Everyone else: {other_nodes!r}")
 
         for node in partition:
             if not self._cm.isolate_node(node, other_nodes):
@@ -71,8 +71,8 @@ class SplitBrainTest(CTSTest):
         if len(other_nodes) == 0:
             return
 
-        self.debug(f"Healing partition: {partition!r}")
-        self.debug(f"Everyone else: {other_nodes!r}")
+        logging.debug(f"Healing partition: {partition!r}")
+        logging.debug(f"Everyone else: {other_nodes!r}")
 
         for node in partition:
             self._cm.unisolate_node(node, other_nodes)
@@ -104,9 +104,9 @@ class SplitBrainTest(CTSTest):
                 break
             # else, try again
 
-        self.debug(f"Created {p_max} partitions")
+        logging.debug(f"Created {p_max} partitions")
         for (key, val) in partitions.items():
-            self.debug(f"Partition[{key}]:\t{val!r}")
+            logging.debug(f"Partition[{key}]:\t{val!r}")
 
         # Disabling STONITH to reduce test complexity for now
         self._rsh.call(node, "crm_attribute -V -n fencing-enabled -v false")

@@ -4,6 +4,7 @@ __all__ = ["RemoteRscFailure"]
 __copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 # Disable various pylint warnings that occur in so many places throughout this
@@ -39,7 +40,7 @@ class RemoteRscFailure(RemoteDriver):
         self.fail_rsc(node)
         self.cleanup_metal(node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
         if self.failed:
             return self.failure(self.fail_string)

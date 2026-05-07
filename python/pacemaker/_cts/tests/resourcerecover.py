@@ -53,9 +53,9 @@ class ResourceRecover(CTSTest):
             return self.failure(f"Could not get details of resource '{self._rid}'")
 
         if rsc.id == rsc.clone_id:
-            self.debug(f"Failing {rsc.id}")
+            logging.debug(f"Failing {rsc.id}")
         else:
-            self.debug(f"Failing {rsc.id} (also known as {rsc.clone_id})")
+            logging.debug(f"Failing {rsc.id} (also known as {rsc.clone_id})")
 
         # Log patterns to watch for (failure, plus restart if managed)
         pats = [
@@ -141,7 +141,7 @@ class ResourceRecover(CTSTest):
             return self.failure(f"{self._rid} is now active on more than one node: {recovered!r}")
 
         if recovered:
-            self.debug(f"{self._rid} is running on: {recovered!r}")
+            logging.debug(f"{self._rid} is running on: {recovered!r}")
 
         elif rsc.managed:
             return self.failure(f"{self._rid} was not recovered and is inactive")
