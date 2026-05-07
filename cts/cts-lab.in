@@ -13,8 +13,9 @@ import signal
 import sys
 
 from pacemaker._cts.CTS import CtsLab
-from pacemaker._cts.cmcorosync import Corosync2
 from pacemaker._cts.audits import audit_list
+from pacemaker._cts.cmcorosync import Corosync2
+from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts import logging
 from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
 from pacemaker._cts.tests import test_list
@@ -47,6 +48,7 @@ def plural_s(n):
 
 
 if __name__ == '__main__':
+    env = EnvFactory().getInstance()
     lab = CtsLab(sys.argv[1:])
     iters = lab["iterations"]
     tests = []
@@ -71,7 +73,7 @@ if __name__ == '__main__':
     audits = audit_list(cm)
 
     if lab["ListTests"]:
-        tests = test_list(cm, audits)
+        tests = test_list(cm, env, audits)
         logging.log(f"Total {len(tests)} tests")
 
         for test in tests:
@@ -80,14 +82,14 @@ if __name__ == '__main__':
         sys.exit(0)
 
     elif len(lab["tests"]) == 0:
-        tests = test_list(cm, audits)
+        tests = test_list(cm, env, audits)
 
     else:
         chosen = lab["tests"]
         for test_case in chosen:
             match = None
 
-            for test in test_list(cm, audits):
+            for test in test_list(cm, env, audits):
                 if test.name == test_case:
                     match = test
 
