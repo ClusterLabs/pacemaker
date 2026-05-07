@@ -18,7 +18,6 @@ from pacemaker.exitstatus import ExitStatus
 from pacemaker._cts.CTS import NodeStatus
 from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.cib import create_config
-from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts import logging
 from pacemaker._cts.patterns import PatternSelector
 from pacemaker._cts.remote import RemoteExec
@@ -39,7 +38,7 @@ class ClusterManager(UserDict):
     Among other things, this class tracks the state every node is expected to be in.
     """
 
-    def __init__(self):
+    def __init__(self, env):
         """Create a new ClusterManager instance."""
         # Eventually, ClusterManager should not be a UserDict subclass.  Until
         # that point...
@@ -48,7 +47,7 @@ class ClusterManager(UserDict):
 
         self._cib_installed = False
 
-        self.env = EnvFactory().getInstance()
+        self.env = env
         self.expected_status = {}
         self.name = self.env["Name"]
         # pylint: disable=invalid-name

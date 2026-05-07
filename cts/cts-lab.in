@@ -15,7 +15,7 @@ import sys
 from pacemaker._cts.CTS import CtsLab
 from pacemaker._cts.audits import audit_list
 from pacemaker._cts.cmcorosync import Corosync2
-from pacemaker._cts.environment import EnvFactory
+from pacemaker._cts.environment import Environment
 from pacemaker._cts import logging
 from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
 from pacemaker._cts.tests import test_list
@@ -48,8 +48,8 @@ def plural_s(n):
 
 
 if __name__ == '__main__':
-    env = EnvFactory().getInstance()
-    lab = CtsLab(sys.argv[1:])
+    env = Environment(sys.argv[1:])
+    lab = CtsLab(env)
     iters = lab["iterations"]
     tests = []
 
@@ -59,7 +59,7 @@ if __name__ == '__main__':
 
     # Create the Cluster Manager object.
     # Currently Corosync2 is the only available cluster manager.
-    cm = Corosync2()
+    cm = Corosync2(env)
 
     if lab["TruncateLog"]:
         if lab["OutputFile"] is None:

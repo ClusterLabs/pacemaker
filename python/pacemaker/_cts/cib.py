@@ -22,7 +22,7 @@ class CIB:
         Create a new CIB instance.
 
         Arguments:
-        env     -- An EnvFactory instance
+        env     -- An Environment instance
         node    -- The node to install this CIB to
         """
         self._cib = None
