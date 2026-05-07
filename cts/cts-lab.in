@@ -47,8 +47,8 @@ def plural_s(n):
 
 
 if __name__ == '__main__':
-    environment = CtsLab(sys.argv[1:])
-    iters = environment["iterations"]
+    lab = CtsLab(sys.argv[1:])
+    iters = lab["iterations"]
     tests = []
 
     # Set the signal handler
@@ -59,18 +59,18 @@ if __name__ == '__main__':
     # Currently Corosync2 is the only available cluster manager.
     cm = Corosync2()
 
-    if environment["TruncateLog"]:
-        if environment["OutputFile"] is None:
+    if lab["TruncateLog"]:
+        if lab["OutputFile"] is None:
             logging.log("Ignoring truncate request because no output file specified")
         else:
-            logging.log(f"Truncating {environment['OutputFile']}")
+            logging.log(f"Truncating {lab['OutputFile']}")
 
-            with open(environment["OutputFile"], "w", encoding="utf-8") as outputfile:
+            with open(lab["OutputFile"], "w", encoding="utf-8") as outputfile:
                 outputfile.truncate(0)
 
     audits = audit_list(cm)
 
-    if environment["ListTests"]:
+    if lab["ListTests"]:
         tests = test_list(cm, audits)
         logging.log(f"Total {len(tests)} tests")
 
@@ -79,11 +79,11 @@ if __name__ == '__main__':
 
         sys.exit(0)
 
-    elif len(environment["tests"]) == 0:
+    elif len(lab["tests"]) == 0:
         tests = test_list(cm, audits)
 
     else:
-        chosen = environment["tests"]
+        chosen = lab["tests"]
         for test_case in chosen:
             match = None
 
@@ -98,32 +98,32 @@ if __name__ == '__main__':
                 tests.append(match)
 
     # Scenario selection
-    if environment["scenario"] == "all-once":
+    if lab["scenario"] == "all-once":
         iters = len(tests)
-        scenario = AllOnce(cm, [BootCluster(cm, environment)], audits, tests)
-    elif environment["scenario"] == "sequence":
-        scenario = Sequence(cm, [BootCluster(cm, environment)], audits, tests)
-    elif environment["scenario"] == "boot":
-        scenario = Boot(cm, [LeaveBooted(cm, environment)], audits, [])
+        scenario = AllOnce(cm, [BootCluster(cm, lab)], audits, tests)
+    elif lab["scenario"] == "sequence":
+        scenario = Sequence(cm, [BootCluster(cm, lab)], audits, tests)
+    elif lab["scenario"] == "boot":
+        scenario = Boot(cm, [LeaveBooted(cm, lab)], audits, [])
     else:
-        scenario = RandomTests(cm, [BootCluster(cm, environment)], audits, tests)
+        scenario = RandomTests(cm, [BootCluster(cm, lab)], audits, tests)
 
     logging.log(f">>>>>>>>>>>>>>>> BEGINNING {iters!r} TEST{plural_s(iters)}")
-    logging.log(f"Schema:                 {environment['Schema']}")
+    logging.log(f"Schema:                 {lab['Schema']}")
     logging.log(f"Scenario:               {scenario.__doc__}")
-    logging.log(f"CTS Exerciser:          {environment['cts-exerciser']}")
-    logging.log(f"CTS Logfile:            {environment['OutputFile']}")
-    if "syslogd" in environment:
-        logging.log(f"Syslog variant:         {environment['syslogd']}")
-    logging.log(f"System log files:       {environment['LogFileName']}")
+    logging.log(f"CTS Exerciser:          {lab['cts-exerciser']}")
+    logging.log(f"CTS Logfile:            {lab['OutputFile']}")
+    if "syslogd" in lab:
+        logging.log(f"Syslog variant:         {lab['syslogd']}")
+    logging.log(f"System log files:       {lab['LogFileName']}")
 
-    if "IPBase" in environment:
-        logging.log(f"Base IP for resources:  {environment['IPBase']}")
+    if "IPBase" in lab:
+        logging.log(f"Base IP for resources:  {lab['IPBase']}")
 
-    logging.log(f"Cluster starts at boot: {environment['at-boot']}")
+    logging.log(f"Cluster starts at boot: {lab['at-boot']}")
 
-    environment.dump()
-    rc = environment.run(scenario, iters)
+    lab.dump()
+    rc = lab.run(scenario, iters)
     sys.exit(rc)
 
 # vim: set filetype=python:
