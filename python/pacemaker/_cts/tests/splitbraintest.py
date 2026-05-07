@@ -12,14 +12,6 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class SplitBrainTest(CTSTest):
     """
@@ -29,20 +21,21 @@ class SplitBrainTest(CTSTest):
     resource, resulting in two nodes running the same resource.
     """
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new SplitBrainTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.is_unsafe = True
         self.name = "SplitBrain"
 
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
 
     def _isolate_partition(self, partition):
         """Create a new partition containing the given nodes."""

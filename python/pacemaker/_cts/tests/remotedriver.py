@@ -28,23 +28,24 @@ class RemoteDriver(CTSTest):
     behavior.
     """
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteDriver instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.name = "RemoteDriver"
 
         self._corosync_enabled = False
         self._pacemaker_enabled = False
         self._remote_node = None
         self._remote_rsc = "remote-rsc"
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
-        self._stop = StopTest(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
+        self._stop = StopTest(cm, env)
 
         self.reset()
 

@@ -10,30 +10,23 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.timer import Timer
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class StonithdTest(CTSTest):
     """Fence a running node and wait for it to restart."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new StonithdTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.benchmark = True
         self.name = "Stonithd"
 
-        self._startall = SimulStartLite(cm)
+        self._startall = SimulStartLite(cm, env)
 
     def __call__(self, node):
         """Perform this test."""

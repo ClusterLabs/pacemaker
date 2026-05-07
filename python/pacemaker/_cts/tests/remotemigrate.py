@@ -1,31 +1,24 @@
 """Move a connection resource from one node to another."""
 
 __all__ = ["RemoteMigrate"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.remotedriver import RemoteDriver
-
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
 
 
 class RemoteMigrate(RemoteDriver):
     """Move a connection resource from one node to another."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteMigrate instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        RemoteDriver.__init__(self, cm)
+        RemoteDriver.__init__(self, cm, env)
 
         self.name = "RemoteMigrate"
 

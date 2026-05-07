@@ -10,32 +10,25 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 from pacemaker._cts.tests.stoptest import StopTest
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class PartialStart(CTSTest):
     """Interrupt a node before it's finished starting up."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new PartialStart instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.name = "PartialStart"
 
-        self._startall = SimulStartLite(cm)
-        self._stop = StopTest(cm)
-        self._stopall = SimulStopLite(cm)
+        self._startall = SimulStartLite(cm, env)
+        self._stop = StopTest(cm, env)
+        self._stopall = SimulStopLite(cm, env)
 
     def __call__(self, node):
         """Perform this test."""

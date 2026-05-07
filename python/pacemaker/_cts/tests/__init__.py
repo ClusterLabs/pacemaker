@@ -80,7 +80,7 @@ def test_list(cm, env, audits):
     result = []
 
     for testclass in enabled_test_classes:
-        bound_test = testclass(cm)
+        bound_test = testclass(cm, env)
 
         if bound_test.is_applicable():
             bound_test.audits = audits

@@ -14,20 +14,21 @@ from pacemaker._cts.tests.simulstoplite import SimulStopLite
 class ResyncCIB(CTSTest):
     """Start the cluster on a node without a CIB and verify the CIB is copied over later."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new ResyncCIB instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.name = "ResyncCIB"
 
-        self._restart1 = RestartTest(cm)
-        self._startall = SimulStartLite(cm)
-        self._stopall = SimulStopLite(cm)
+        self._restart1 = RestartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
+        self._stopall = SimulStopLite(cm, env)
 
     def __call__(self, node):
         """Perform this test."""

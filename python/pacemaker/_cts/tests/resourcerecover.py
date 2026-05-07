@@ -14,14 +14,15 @@ from pacemaker._cts.timer import Timer
 class ResourceRecover(CTSTest):
     """Fail a random resource."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new ResourceRecover instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.benchmark = True
         self.name = "ResourceRecover"
@@ -30,8 +31,8 @@ class ResourceRecover(CTSTest):
         self._interval = 0
         self._rid = None
         self._rid_alt = None
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
 
     def __call__(self, node):
         """Perform this test."""

@@ -1,7 +1,7 @@
 """Cause the Pacemaker Remote connection resource to fail."""
 
 __all__ = ["RemoteRscFailure"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.remotedriver import RemoteDriver
@@ -11,21 +11,19 @@ from pacemaker._cts.tests.remotedriver import RemoteDriver
 # possibility that we'll miss some other cause of the same warning, but we'll
 # just have to be careful.
 
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class RemoteRscFailure(RemoteDriver):
     """Cause the Pacemaker Remote connection resource to fail."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteRscFailure instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        RemoteDriver.__init__(self, cm)
+        RemoteDriver.__init__(self, cm, env)
         self.name = "RemoteRscFailure"
 
     def __call__(self, node):

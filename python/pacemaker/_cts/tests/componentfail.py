@@ -11,14 +11,6 @@ from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 # @TODO Separate this into a separate test for each component, so the patterns
 # can be made specific to each component, investigating failures is a little
@@ -27,14 +19,15 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 class ComponentFail(CTSTest):
     """Kill a random pacemaker daemon and wait for the cluster to recover."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new ComponentFail instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.is_unsafe = True
         self.name = "ComponentFail"
@@ -42,7 +35,7 @@ class ComponentFail(CTSTest):
         self._complist = cm.components
         self._okerrpatterns = []
         self._patterns = []
-        self._startall = SimulStartLite(cm)
+        self._startall = SimulStartLite(cm, env)
 
     def __call__(self, node):
         """Perform this test."""

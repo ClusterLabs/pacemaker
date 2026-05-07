@@ -19,19 +19,20 @@ from pacemaker._cts.tests.starttest import StartTest
 class Reattach(CTSTest):
     """Restart the cluster and verify that resources remain running throughout."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new Reattach instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.name = "Reattach"
 
-        self._startall = SimulStartLite(cm)
-        self._stopall = SimulStopLite(cm)
+        self._startall = SimulStartLite(cm, env)
+        self._stopall = SimulStopLite(cm, env)
 
     def _is_managed(self, node):
         """Return whether resources are managed by the cluster."""
@@ -107,7 +108,7 @@ class Reattach(CTSTest):
     def teardown(self, node):
         """Tear down this test."""
         # Make sure 'node' is up
-        start = StartTest(self._cm)
+        start = StartTest(self._cm, self._env)
         start(node)
 
         if not self._is_managed(node):

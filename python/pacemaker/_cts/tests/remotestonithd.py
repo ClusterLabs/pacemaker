@@ -10,14 +10,15 @@ from pacemaker._cts.tests.remotedriver import RemoteDriver
 class RemoteStonithd(RemoteDriver):
     """Fail the connection resource and fence the remote node."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteStonithd instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        RemoteDriver.__init__(self, cm)
+        RemoteDriver.__init__(self, cm, env)
 
         self.name = "RemoteStonithd"
 
@@ -38,8 +39,6 @@ class RemoteStonithd(RemoteDriver):
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        # pylint doesn't understand that self._env is subscriptable.
-        # pylint: disable=unsubscriptable-object
         return self._env["fencing_enabled"] and RemoteDriver.is_applicable(self)
 
     @property

@@ -9,32 +9,25 @@ from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.tests.starttest import StartTest
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class StandbyTest(CTSTest):
     """Put a node into standby and check that resources migrate away from it."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new StandbyTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.benchmark = True
         self.name = "Standby"
 
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
 
     # make sure the node is active
     # set the node to standby mode

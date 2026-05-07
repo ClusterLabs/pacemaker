@@ -7,7 +7,6 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 import re
 
 from pacemaker._cts import logging
-from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.remote import RemoteExec
 from pacemaker._cts.timer import Timer
 from pacemaker._cts.watcher import LogWatcher
@@ -27,12 +26,13 @@ class CTSTest:
     to implement their own specialized behavior on top of this class.
     """
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new CTSTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
         # pylint: disable=invalid-name
 
@@ -48,7 +48,7 @@ class CTSTest:
         }
 
         self._cm = cm
-        self._env = EnvFactory().getInstance()
+        self._env = env
         self._rsh = RemoteExec()
         self._timers = {}
 

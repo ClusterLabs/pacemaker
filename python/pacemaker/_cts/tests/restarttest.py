@@ -1,7 +1,7 @@
 """Stop and restart a node."""
 
 __all__ = ["RestartTest"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
@@ -12,19 +12,20 @@ from pacemaker._cts.tests.stoptest import StopTest
 class RestartTest(CTSTest):
     """Stop and restart a node."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RestartTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.benchmark = True
         self.name = "Restart"
 
-        self._start = StartTest(cm)
-        self._stop = StopTest(cm)
+        self._start = StartTest(cm, env)
+        self._stop = StopTest(cm, env)
 
     def __call__(self, node):
         """Perform this test."""

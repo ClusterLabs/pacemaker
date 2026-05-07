@@ -17,22 +17,23 @@ from pacemaker._cts.timer import Timer
 class MaintenanceMode(CTSTest):
     """Toggle nodes in and ount of maintenance mode."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new MaintenanceMode instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.benchmark = True
         self.name = "MaintenanceMode"
 
         self._action = "asyncmon"
         self._rid = "maintenanceDummy"
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
 
     def _toggle_maintenance_mode(self, node, enabled):
         """Toggle maintenance mode on the given node."""
