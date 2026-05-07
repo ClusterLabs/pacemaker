@@ -1,6 +1,6 @@
 """Test environment classes for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["EnvFactory", "set_cts_path"]
+__all__ = ["EnvFactory", "Environment", "set_cts_path"]
 __copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
