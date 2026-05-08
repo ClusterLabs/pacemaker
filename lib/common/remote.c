@@ -38,17 +38,44 @@
 #define ENDIAN_LOCAL 0xBADADBBD
 
 struct remote_header_v0 {
-    uint32_t endian;    /* Detect messages from hosts with different endian-ness */
+    /*!
+     * Magic number used to detect whether the message came from a host with
+     * different endianness than ours
+     */
+    uint32_t endian;
+
+    //! Remote protocol version
     uint32_t version;
+
+    //! Message ID number
     uint64_t id;
+
+    //! Currently unused
     uint64_t flags;
+
+    /*!
+     * Amount that will be transmitted:
+     * - Header size plus payload_compressed if the payload is compressed
+     * - Header size plus payload_uncompressed otherwise
+     */
     uint32_t size_total;
+
+    /*!
+     * Where the payload starts - should be immediately after this header,
+     * so sizeof(struct remote_header_v0)
+     */
     uint32_t payload_offset;
+
+    //! If non-zero, the payload is compressed and this is its compressed size
     uint32_t payload_compressed;
+
+    /*!
+     * The payload's size including a terminating null byte.  If the payload
+     * is compressed, this is its size after being decompressed.
+     */
     uint32_t payload_uncompressed;
 
-        /* New fields get added here */
-
+    /* New fields get added here */
 } __attribute__ ((packed));
 
 /*!
