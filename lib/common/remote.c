@@ -401,7 +401,6 @@ handle_compressed_payload(struct remote_header_v0 *header,
 
     free(remote->buffer);
     remote->buffer = uncompressed;
-    header = localized_remote_header(remote);
     return pcmk_rc_ok;
 }
 
@@ -439,6 +438,11 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         if (rc != pcmk_rc_ok) {
             return NULL;
         }
+
+        /* handle_compressed_payload copies the header to the front of the
+         * uncompressed buffer, so update the pointer here.
+         */
+        header = (struct remote_header_v0 *) remote->buffer;
     }
 
     /* take ownership of the buffer */
