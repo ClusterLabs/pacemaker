@@ -387,14 +387,7 @@ handle_compressed_payload(struct remote_header_v0 *header,
                                     header->payload_compressed, 1, 0);
     rc = pcmk__bzlib2rc(rc);
 
-    if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
-        pcmk__warn("Couldn't decompress v%d message, we only understand "
-                   "v%d",
-                   header->version, REMOTE_MSG_VERSION);
-        free(uncompressed);
-        return EPROTO;
-
-    } else if (rc != pcmk_rc_ok) {
+    if (rc != pcmk_rc_ok) {
         pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
                   pcmk_rc_str(rc), rc);
         free(uncompressed);
@@ -433,6 +426,12 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         return NULL;
     }
 
+    if (header->version > REMOTE_MSG_VERSION) {
+        pcmk__err("Header version %" PRIu32 " does not match expected version %d",
+                  header->version, REMOTE_MSG_VERSION);
+        return NULL;
+    }
+
     /* Support compression on the receiving end now, in case we ever want to add it later */
     if (header->payload_compressed != 0) {
         int rc = handle_compressed_payload(header, remote);
@@ -462,13 +461,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 
     xml = pcmk__xml_parse(payload);
     if (xml == NULL) {
-        if (header->version > REMOTE_MSG_VERSION) {
-            pcmk__warn("Couldn't parse v%d message, we only understand v%d",
-                       header->version, REMOTE_MSG_VERSION);
-        } else {
-            pcmk__err("Couldn't parse: '%.120s'", payload);
-        }
-
+        pcmk__err("Couldn't parse: '%.120s'", payload);
     } else {
         pcmk__log_xml_trace(xml, "[remote msg]");
     }
