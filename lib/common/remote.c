@@ -240,8 +240,7 @@ send_plaintext(int sock, struct iovec *iov)
             unsent_len -= write_rc;
 
         } else {
-            pcmk__trace("Sent all %zd bytes remaining: %.100s", write_rc,
-                        (const char *) iov->iov_base);
+            pcmk__trace("Sent all %zd bytes", write_rc);
             return pcmk_rc_ok;
         }
     }
