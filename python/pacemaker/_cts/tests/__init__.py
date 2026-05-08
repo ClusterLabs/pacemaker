@@ -1,6 +1,6 @@
 """Test classes for the `pacemaker._cts` package."""
 
-__copyright__ = "Copyright 2023-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2026 the Pacemaker project contributors"
 __license__ = "GNU Lesser General Public License version 2.1 or later (LGPLv2.1+)"
 
 from pacemaker._cts.tests.cibsecret import CibsecretTest
@@ -33,7 +33,7 @@ from pacemaker._cts.tests.stoponebyone import StopOnebyOne
 from pacemaker._cts.tests.stoptest import StopTest
 
 
-def test_list(cm, audits):
+def test_list(cm, env, audits):
     """
     Return a list of runnable test class objects.
 
@@ -80,7 +80,7 @@ def test_list(cm, audits):
     result = []
 
     for testclass in enabled_test_classes:
-        bound_test = testclass(cm)
+        bound_test = testclass(cm, env)
 
         if bound_test.is_applicable():
             bound_test.audits = audits

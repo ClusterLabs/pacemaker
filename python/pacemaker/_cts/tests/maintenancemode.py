@@ -17,22 +17,23 @@ from pacemaker._cts.timer import Timer
 class MaintenanceMode(CTSTest):
     """Toggle nodes in and ount of maintenance mode."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new MaintenanceMode instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.benchmark = True
         self.name = "MaintenanceMode"
 
         self._action = "asyncmon"
         self._rid = "maintenanceDummy"
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
 
     def _toggle_maintenance_mode(self, node, enabled):
         """Toggle maintenance mode on the given node."""
@@ -58,7 +59,7 @@ class MaintenanceMode(CTSTest):
         watch = self.create_watch(pats, 60)
         watch.set_watch()
 
-        self.debug(f"Turning maintenance mode {action}")
+        logging.debug(f"Turning maintenance mode {action}")
         self._rsh.call(node, self._cm.templates[f"MaintenanceMode{action}"])
 
         if enabled:
@@ -68,7 +69,7 @@ class MaintenanceMode(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug(f"Failed to find patterns when turning maintenance mode {action}")
+            logging.debug(f"Failed to find patterns when turning maintenance mode {action}")
             return repr(watch.unmatched)
 
         return ""
@@ -88,7 +89,7 @@ class MaintenanceMode(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when adding maintenance dummy resource")
+            logging.debug("Failed to find patterns when adding maintenance dummy resource")
             return repr(watch.unmatched)
 
         return ""
@@ -107,7 +108,7 @@ class MaintenanceMode(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when removing maintenance dummy resource")
+            logging.debug("Failed to find patterns when removing maintenance dummy resource")
             return repr(watch.unmatched)
 
         return ""
@@ -149,7 +150,7 @@ class MaintenanceMode(CTSTest):
                     managed_rscs.remove(tmp.id)
 
         if not managed_rscs:
-            self.debug(f"Found all {managed_str} resources on {node}")
+            logging.debug(f"Found all {managed_str} resources on {node}")
             return True
 
         logging.log(f"Could not find all {managed_str} resources on {node}. {managed_rscs}")

@@ -1,7 +1,7 @@
 """A module providing functions for manipulating corosync."""
 
 __all__ = ["Corosync", "localname"]
-__copyright__ = "Copyright 2009-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2009-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+)"
 
 import os
@@ -11,7 +11,7 @@ import tempfile
 import time
 
 from pacemaker.buildoptions import BuildOptions
-from pacemaker._cts.environment import EnvFactory
+from pacemaker._cts.environment import Environment
 from pacemaker._cts.process import killall, stdout_from_command
 
 
@@ -115,7 +115,7 @@ class Corosync:
 
         # The Corosync class doesn't use self._env["nodes"], but the
         # "--nodes" argument is required to be present and nonempty
-        self._env = EnvFactory().getInstance(args=["--nodes", "localhost"])
+        self._env = Environment(["--nodes", "localhost"])
         self._existing_cfg_file = None
 
     def _ready(self, logfile, timeout=10):
@@ -138,8 +138,6 @@ class Corosync:
 
     def _start(self):
         """Start corosync using whatever method is supported on the system."""
-        # pylint doesn't understand that self._env is subscriptable.
-        # pylint: disable=unsubscriptable-object
         if self._env["have_systemd"]:
             cmd = ["systemctl", "start", "corosync.service"]
         else:
@@ -153,8 +151,6 @@ class Corosync:
 
     def _stop(self):
         """Stop corosync using whatever method is supported on the system."""
-        # pylint doesn't understand that self._env is subscriptable.
-        # pylint: disable=unsubscriptable-object
         if self._env["have_systemd"]:
             cmd = ["systemctl", "stop", "corosync.service"]
 

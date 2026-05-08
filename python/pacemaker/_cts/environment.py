@@ -1,6 +1,6 @@
 """Test environment classes for Pacemaker's Cluster Test Suite (CTS)."""
 
-__all__ = ["EnvFactory", "set_cts_path"]
+__all__ = ["Environment", "set_cts_path"]
 __copyright__ = "Copyright 2014-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
@@ -378,24 +378,6 @@ class Environment:
             logging.add_file(self["OutputFile"])
 
         self.random_gen.seed(args.seed)
-
-
-class EnvFactory:
-    """A class for constructing a singleton instance of an Environment object."""
-
-    instance = None
-
-    # pylint: disable=invalid-name
-    def getInstance(self, args=None):
-        """
-        Return the previously created instance of Environment.
-
-        If no instance exists, create a new instance and return that.
-        """
-        if not EnvFactory.instance:
-            EnvFactory.instance = Environment(args)
-
-        return EnvFactory.instance
 
 
 def set_cts_path(extra=None):

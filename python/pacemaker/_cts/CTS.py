@@ -9,7 +9,6 @@ import time
 import traceback
 
 from pacemaker.exitstatus import ExitStatus
-from pacemaker._cts.environment import EnvFactory
 from pacemaker._cts.input import should_continue
 from pacemaker._cts import logging
 from pacemaker._cts.remote import RemoteExec
@@ -33,7 +32,7 @@ class CtsLab:
     to the tests through this mechanism.
     """
 
-    def __init__(self, args=None):
+    def __init__(self, env):
         """
         Create a new CtsLab instance.
 
@@ -43,9 +42,9 @@ class CtsLab:
         behavior.
 
         Arguments:
-        args -- A list of command line parameters, minus the program name.
+        env -- An Environment instance
         """
-        self._env = EnvFactory().getInstance(args)
+        self._env = env
 
     def dump(self):
         """Print the current environment."""
@@ -53,21 +52,14 @@ class CtsLab:
 
     def __contains__(self, key):
         """Return True if the given environment key exists."""
-        # pylint gets confused because of EnvFactory here.
-        # pylint: disable=unsupported-membership-test
         return key in self._env
 
     def __getitem__(self, key):
         """Return the given environment key, or raise KeyError if it does not exist."""
-        # Throughout this file, pylint has trouble understanding that EnvFactory
-        # is a singleton instance that can be treated as a subscriptable object.
-        # Various warnings are disabled because of this.
-        # pylint: disable=unsubscriptable-object
         return self._env[key]
 
     def __setitem__(self, key, value):
         """Set the given environment key to the given value, overriding any previous value."""
-        # pylint: disable=unsupported-assignment-operation
         self._env[key] = value
 
     def run(self, scenario, iterations):
@@ -81,7 +73,6 @@ class CtsLab:
             return ExitStatus.ERROR
 
         logging.log("Cluster nodes: ")
-        # pylint: disable=unsubscriptable-object
         for node in self._env["nodes"]:
             logging.log(f"    * {node}")
 

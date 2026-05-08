@@ -1,23 +1,25 @@
 """Start and stop a remote node."""
 
 __all__ = ["RemoteBasic"]
-__copyright__ = "Copyright 2000-2024 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
 class RemoteBasic(RemoteDriver):
     """Start and stop a remote node."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteBasic instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        RemoteDriver.__init__(self, cm)
+        RemoteDriver.__init__(self, cm, env)
 
         self.name = "RemoteBasic"
 
@@ -29,7 +31,7 @@ class RemoteBasic(RemoteDriver):
         self.test_attributes(node)
         self.cleanup_metal(node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
         if self.failed:
             return self.failure(self.fail_string)

@@ -4,20 +4,22 @@ __all__ = ["RemoteStonithd"]
 __copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from pacemaker._cts import logging
 from pacemaker._cts.tests.remotedriver import RemoteDriver
 
 
 class RemoteStonithd(RemoteDriver):
     """Fail the connection resource and fence the remote node."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteStonithd instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        RemoteDriver.__init__(self, cm)
+        RemoteDriver.__init__(self, cm, env)
 
         self.name = "RemoteStonithd"
 
@@ -29,7 +31,7 @@ class RemoteStonithd(RemoteDriver):
         self.fail_connection(node)
         self.cleanup_metal(node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
         if self.failed:
             return self.failure(self.fail_string)
@@ -38,8 +40,6 @@ class RemoteStonithd(RemoteDriver):
 
     def is_applicable(self):
         """Return True if this test is applicable in the current test configuration."""
-        # pylint doesn't understand that self._env is subscriptable.
-        # pylint: disable=unsubscriptable-object
         return self._env["fencing_enabled"] and RemoteDriver.is_applicable(self)
 
     @property

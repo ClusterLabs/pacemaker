@@ -11,14 +11,6 @@ from pacemaker._cts.audits import AuditResource
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 # @TODO Separate this into a separate test for each component, so the patterns
 # can be made specific to each component, investigating failures is a little
@@ -27,14 +19,15 @@ from pacemaker._cts.tests.simulstartlite import SimulStartLite
 class ComponentFail(CTSTest):
     """Kill a random pacemaker daemon and wait for the cluster to recover."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new ComponentFail instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
 
         self.is_unsafe = True
         self.name = "ComponentFail"
@@ -42,7 +35,7 @@ class ComponentFail(CTSTest):
         self._complist = cm.components
         self._okerrpatterns = []
         self._patterns = []
-        self._startall = SimulStartLite(cm)
+        self._startall = SimulStartLite(cm, env)
 
     def __call__(self, node):
         """Perform this test."""
@@ -62,7 +55,7 @@ class ComponentFail(CTSTest):
         chosen = self._env.random_gen.choice(self._complist)
         node_is_dc = self._cm.is_node_dc(node, None)
 
-        self.debug(f"...component {chosen.name} (dc={node_is_dc})")
+        logging.debug(f"...component {chosen.name} (dc={node_is_dc})")
         self.incr(chosen.name)
 
         if chosen.name != "corosync":
@@ -112,20 +105,20 @@ class ComponentFail(CTSTest):
         # kill the component
         chosen.signal("KILL", node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
 
-        self.debug("Waiting for any fenced node to come back up")
+        logging.debug("Waiting for any fenced node to come back up")
         self._cm.ns.wait_for_all_nodes(self._env["nodes"], 600)
 
-        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        logging.debug("Waiting for the cluster to re-stabilize with all nodes")
         self._cm.cluster_stable(self._env["start_time"])
 
-        self.debug(f"Checking if {node} was shot")
+        logging.debug(f"Checking if {node} was shot")
         shot = stonith.look(60)
 
         if shot:
-            self.debug(f"Found: {shot!r}")
+            logging.debug(f"Found: {shot!r}")
             self._okerrpatterns.append(self._cm.templates["Pat:Fencing_start"] % node)
 
             if not self._env["at-boot"]:
@@ -140,7 +133,7 @@ class ComponentFail(CTSTest):
         if watch.unmatched:
             logging.log(f"Patterns not found: {watch.unmatched!r}")
 
-        self.debug("Waiting for the cluster to re-stabilize with all nodes")
+        logging.debug("Waiting for the cluster to re-stabilize with all nodes")
         is_stable = self._cm.cluster_stable(self._env["start_time"])
 
         if not matched:

@@ -29,17 +29,15 @@ class ScenarioComponent:
     basically just a setup and teardown method.
     """
 
-    def __init__(self, cm, env):
+    def __init__(self, cm):
         """
         Create a new ScenarioComponent instance.
 
         Arguments:
         cm  -- A ClusterManager instance
-        env -- An Environment instance
         """
         # pylint: disable=invalid-name
         self._cm = cm
-        self._env = env
 
     def is_applicable(self):
         """

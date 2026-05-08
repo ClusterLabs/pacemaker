@@ -28,23 +28,24 @@ class RemoteDriver(CTSTest):
     behavior.
     """
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new RemoteDriver instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.name = "RemoteDriver"
 
         self._corosync_enabled = False
         self._pacemaker_enabled = False
         self._remote_node = None
         self._remote_rsc = "remote-rsc"
-        self._start = StartTest(cm)
-        self._startall = SimulStartLite(cm)
-        self._stop = StopTest(cm)
+        self._start = StartTest(cm, env)
+        self._startall = SimulStartLite(cm, env)
+        self._stop = StopTest(cm, env)
 
         self.reset()
 
@@ -295,7 +296,7 @@ class RemoteDriver(CTSTest):
         watch = self.create_watch(watchpats, 120)
         watch.set_watch()
 
-        self.debug("causing dummy rsc to fail.")
+        logging.debug("causing dummy rsc to fail.")
 
         self._rsh.call(node, "rm -f /var/run/resource-agents/Dummy*")
 
@@ -324,10 +325,10 @@ class RemoteDriver(CTSTest):
         watch.set_watch()
 
         # freeze the pcmk remote daemon. this will result in fencing
-        self.debug("Force stopped active remote node")
+        logging.debug("Force stopped active remote node")
         self._freeze_pcmk_remote(node)
 
-        self.debug("Waiting for remote node to be fenced.")
+        logging.debug("Waiting for remote node to be fenced.")
 
         with Timer(self.name, "remoteMetalFence"):
             watch.look_for_all()
@@ -336,7 +337,7 @@ class RemoteDriver(CTSTest):
             self.fail(f"Unmatched patterns: {watch.unmatched}")
             return
 
-        self.debug("Waiting for the remote node to come back up")
+        logging.debug("Waiting for the remote node to come back up")
         self._cm.ns.wait_for_node(node, 120)
 
         pats = []
@@ -355,7 +356,7 @@ class RemoteDriver(CTSTest):
             self.fail(f"Failed to start pacemaker_remote on node {node}")
             return
 
-        self.debug("Waiting for remote node to rejoin cluster after being fenced.")
+        logging.debug("Waiting for remote node to rejoin cluster after being fenced.")
 
         with Timer(self.name, "remoteMetalRestart"):
             watch.look_for_all()
@@ -442,13 +443,13 @@ class RemoteDriver(CTSTest):
 
             if self._remote_rsc_added:
                 # Remove dummy resource added for remote node tests
-                self.debug("Cleaning up dummy rsc put on remote node")
+                logging.debug("Cleaning up dummy rsc put on remote node")
                 self._rsh.call(self._get_other_node(node), f"crm_resource -U -r {self._remote_rsc}")
                 self._del_rsc(node, self._remote_rsc)
 
             if self._remote_node_added:
                 # Remove remote node's connection resource
-                self.debug("Cleaning up remote node connection resource")
+                logging.debug("Cleaning up remote node connection resource")
                 self._rsh.call(self._get_other_node(node), f"crm_resource -U -r {self._remote_node}")
                 self._del_rsc(node, self._remote_node)
 
@@ -459,12 +460,12 @@ class RemoteDriver(CTSTest):
 
         self._stop_pcmk_remote(node)
 
-        self.debug("Waiting for the cluster to recover")
+        logging.debug("Waiting for the cluster to recover")
         self._cm.cluster_stable()
 
         if self._remote_node_added:
             # Remove remote node itself
-            self.debug("Cleaning up node entry for remote node")
+            logging.debug("Cleaning up node entry for remote node")
             self._rsh.call(self._get_other_node(node), f"crm_node --force --remove {self._remote_node}")
 
     def _setup_env(self, node):

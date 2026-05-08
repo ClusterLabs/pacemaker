@@ -1,37 +1,30 @@
 """Start all stopped nodes serially."""
 
 __all__ = ["StartOnebyOne"]
-__copyright__ = "Copyright 2000-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstoplite import SimulStopLite
 from pacemaker._cts.tests.starttest import StartTest
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class StartOnebyOne(CTSTest):
     """Start all stopped nodes serially."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new StartOnebyOne instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.name = "StartOnebyOne"
 
-        self._start = StartTest(cm)
-        self._stopall = SimulStopLite(cm)
+        self._start = StartTest(cm, env)
+        self._stopall = SimulStopLite(cm, env)
 
     def __call__(self, dummy):
         """Perform this test."""

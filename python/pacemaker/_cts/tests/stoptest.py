@@ -7,14 +7,6 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
-
 
 class StopTest(CTSTest):
     """
@@ -24,14 +16,15 @@ class StopTest(CTSTest):
     should not use this one as a superclass.
     """
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new StopTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.name = "Stop"
 
     def __call__(self, node):
@@ -71,11 +64,11 @@ class StopTest(CTSTest):
         if watch.unmatched:
             (_, output) = self._rsh.call(node, "/bin/ps axf", verbose=1)
             for line in output:
-                self.debug(line)
+                logging.debug(line)
 
             (_, output) = self._rsh.call(node, "/usr/sbin/dlm_tool dump 2>/dev/null", verbose=1)
             for line in output:
-                self.debug(line)
+                logging.debug(line)
 
             for regex in watch.unmatched:
                 logging.log(f"ERROR: Shutdown pattern not found: {regex}")

@@ -5,17 +5,10 @@ __copyright__ = "Copyright 2025-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 from pacemaker.exitstatus import ExitStatus
+from pacemaker._cts import logging
 from pacemaker._cts.tests.ctstest import CTSTest
 from pacemaker._cts.tests.simulstartlite import SimulStartLite
 from pacemaker._cts.timer import Timer
-
-# Disable various pylint warnings that occur in so many places throughout this
-# file it's easiest to just take care of them globally.  This does introduce the
-# possibility that we'll miss some other cause of the same warning, but we'll
-# just have to be careful.
-
-# pylint doesn't understand that self._env is subscriptable.
-# pylint: disable=unsubscriptable-object
 
 
 # This comes from include/config.h as private API, assuming pacemaker is built
@@ -28,21 +21,22 @@ SECRETS_DIR = "/var/lib/pacemaker/lrm/secrets"
 class CibsecretTest(CTSTest):
     """Test managing secrets with cibsecret."""
 
-    def __init__(self, cm):
+    def __init__(self, cm, env):
         """
         Create a new CibsecretTest instance.
 
         Arguments:
-        cm -- A ClusterManager instance
+        cm  -- A ClusterManager instance
+        env -- An Environment instance
         """
-        CTSTest.__init__(self, cm)
+        CTSTest.__init__(self, cm, env)
         self.name = "Cibsecret"
 
         self._secret = "passwd"
         self._secret_val = "SecreT_PASS"
 
         self._rid = "secretDummy"
-        self._startall = SimulStartLite(cm)
+        self._startall = SimulStartLite(cm, env)
 
     def _insert_dummy(self, node):
         """Create a dummy resource on the given node."""
@@ -59,7 +53,7 @@ class CibsecretTest(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when adding dummy resource")
+            logging.debug("Failed to find patterns when adding dummy resource")
             return repr(watch.unmatched)
 
         return ""
@@ -78,7 +72,7 @@ class CibsecretTest(CTSTest):
             watch.look_for_all()
 
         if watch.unmatched:
-            self.debug("Failed to find patterns when removing dummy resource")
+            logging.debug("Failed to find patterns when removing dummy resource")
             return repr(watch.unmatched)
 
         return ""
