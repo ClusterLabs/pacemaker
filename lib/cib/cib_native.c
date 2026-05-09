@@ -485,19 +485,9 @@ cib_native_client_id(const cib_t *cib, const char **async_id,
 cib_t *
 cib_native_new(void)
 {
-    cib_native_opaque_t *native = NULL;
     cib_t *cib = cib_new_variant();
-
-    if (cib == NULL) {
-        return NULL;
-    }
-
-    native = calloc(1, sizeof(cib_native_opaque_t));
-
-    if (native == NULL) {
-        free(cib);
-        return NULL;
-    }
+    cib_native_opaque_t *native =
+        pcmk__assert_alloc(1, sizeof(cib_native_opaque_t));
 
     cib->variant = cib_native;
     cib->variant_opaque = native;

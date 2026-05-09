@@ -747,7 +747,6 @@ cib_file_new(const char *cib_location)
 {
     cib_t *cib = NULL;
     file_opaque_t *private = NULL;
-    char *filename = NULL;
 
     if (cib_location == NULL) {
         cib_location = getenv("CIB_file");
@@ -757,25 +756,10 @@ cib_file_new(const char *cib_location)
     }
 
     cib = cib_new_variant();
-    if (cib == NULL) {
-        return NULL;
-    }
 
-    filename = strdup(cib_location);
-    if (filename == NULL) {
-        free(cib);
-        return NULL;
-    }
-
-    private = calloc(1, sizeof(file_opaque_t));
-    if (private == NULL) {
-        free(cib);
-        free(filename);
-        return NULL;
-    }
-
+    private = pcmk__assert_alloc(1, sizeof(file_opaque_t));
     private->id = pcmk__generate_uuid();
-    private->filename = filename;
+    private->filename = pcmk__str_copy(cib_location);
 
     cib->variant = cib_file;
     cib->variant_opaque = private;
