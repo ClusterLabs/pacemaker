@@ -28,7 +28,6 @@
 #include <crm/common/iso8601.h>         // crm_time_t
 #include <crm/common/mainloop.h>        // mainloop_io_t
 #include <crm/common/results.h>         // crm_exit_t
-#include <crm/common/rules.h>           // pcmk_rule_input_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -448,15 +447,15 @@ int pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now);
 
 G_GNUC_INTERNAL
 int pcmk__evaluate_attr_expression(const xmlNode *expression,
-                                   const pcmk_rule_input_t *rule_input);
+                                   const pcmk__rule_input_t *rule_input);
 
 G_GNUC_INTERNAL
 int pcmk__evaluate_rsc_expression(const xmlNode *expr,
-                                  const pcmk_rule_input_t *rule_input);
+                                  const pcmk__rule_input_t *rule_input);
 
 G_GNUC_INTERNAL
 int pcmk__evaluate_op_expression(const xmlNode *expr,
-                                 const pcmk_rule_input_t *rule_input);
+                                 const pcmk__rule_input_t *rule_input);
 
 
 /*

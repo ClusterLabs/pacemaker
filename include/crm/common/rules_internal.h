@@ -95,10 +95,11 @@ enum pcmk__combine pcmk__parse_combine(const char *combine);
 int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    const crm_time_t *now,
                                    crm_time_t *next_change);
-int pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
+int pcmk__evaluate_condition(xmlNode *expr,
+                             const pcmk__rule_input_t *rule_input,
                              crm_time_t *next_change);
 
-int pcmk__evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+int pcmk__evaluate_rule(xmlNode *rule, const pcmk__rule_input_t *rule_input,
                         crm_time_t *next_change);
 
 #ifdef __cplusplus

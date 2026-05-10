@@ -946,7 +946,7 @@ evaluate_attr_comparison(const char *actual, const char *reference,
  */
 static const char *
 value_from_source(const char *value, enum pcmk__reference_source source,
-                  const pcmk_rule_input_t *rule_input)
+                  const pcmk__rule_input_t *rule_input)
 {
     GHashTable *table = NULL;
 
@@ -984,7 +984,7 @@ value_from_source(const char *value, enum pcmk__reference_source source,
  */
 int
 pcmk__evaluate_attr_expression(const xmlNode *expression,
-                               const pcmk_rule_input_t *rule_input)
+                               const pcmk__rule_input_t *rule_input)
 {
     const char *id = NULL;
     const char *op = NULL;
@@ -1138,7 +1138,7 @@ done:
  */
 int
 pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
-                              const pcmk_rule_input_t *rule_input)
+                              const pcmk__rule_input_t *rule_input)
 {
     const char *id = NULL;
     const char *standard = NULL;
@@ -1207,7 +1207,7 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
  */
 int
 pcmk__evaluate_op_expression(const xmlNode *op_expression,
-                             const pcmk_rule_input_t *rule_input)
+                             const pcmk__rule_input_t *rule_input)
 {
     const char *id = NULL;
     const char *name = NULL;
@@ -1280,10 +1280,9 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
  */
 int
 pcmk__evaluate_condition(xmlNode *condition,
-                         const pcmk_rule_input_t *rule_input,
+                         const pcmk__rule_input_t *rule_input,
                          crm_time_t *next_change)
 {
-
     if ((condition == NULL) || (rule_input == NULL)) {
         return EINVAL;
     }
@@ -1315,7 +1314,7 @@ pcmk__evaluate_condition(xmlNode *condition,
             pcmk__config_err("Treating rule condition %s as not passing "
                              "because %s is not a valid condition type",
                              pcmk__s(pcmk__xe_id(condition), "without ID"),
-                             (const char *) condition->name);
+                             condition->name);
             return pcmk_rc_unpack_error;
     }
 }
@@ -1332,7 +1331,7 @@ pcmk__evaluate_condition(xmlNode *condition,
  *         satisfied, some other value if it is not)
  */
 int
-pcmk__evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+pcmk__evaluate_rule(xmlNode *rule, const pcmk__rule_input_t *rule_input,
                     crm_time_t *next_change)
 {
     bool empty = true;
@@ -1415,7 +1414,14 @@ int
 pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
                    crm_time_t *next_change)
 {
-    return pcmk__evaluate_rule(rule, rule_input, next_change);
+    pcmk__rule_input_t new_input = { NULL, };
+
+    if (rule_input == NULL) {
+        return EINVAL;
+    }
+
+    pcmk__rule_input_convert(rule_input, &new_input);
+    return pcmk__evaluate_rule(rule, &new_input, next_change);
 }
 
 // LCOV_EXCL_STOP
