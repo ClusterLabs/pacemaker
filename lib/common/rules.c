@@ -67,6 +67,37 @@ pcmk__condition_type(const xmlNode *condition)
 
 /*!
  * \internal
+ * \brief Convert a \c pcmk_rule_input_t to a \c pcmk__rule_input_t
+ *
+ * \param[in]  source  Source object
+ * \param[out] target  Target object
+ */
+void
+pcmk__rule_input_convert(const pcmk_rule_input_t *source,
+                         pcmk__rule_input_t *target)
+{
+    /* @COMPAT Drop this function when pcmk_rule_input_t is dropped. It exists
+     * purely for as a helper for deprecated API.
+     */
+    pcmk__assert((source != NULL) && (target != NULL));
+
+    // Non-numeric fields are const and are shared between source and target
+    target->now = source->now;
+    target->rsc_standard = source->rsc_standard;
+    target->rsc_provider = source->rsc_provider;
+    target->rsc_agent = source->rsc_agent;
+    target->op_name = source->op_name;
+    target->op_interval_ms = source->op_interval_ms;
+    target->node_attrs = source->node_attrs;
+    target->rsc_params = source->rsc_params;
+    target->rsc_meta = source->rsc_meta;
+    target->rsc_id = source->rsc_id;
+    target->rsc_id_submatches = source->rsc_id_submatches;
+    target->rsc_id_nmatches = source->rsc_id_nmatches;
+}
+
+/*!
+ * \internal
  * \brief Get parent XML element's ID for logging purposes
  *
  * \param[in] xml  XML of a subelement
