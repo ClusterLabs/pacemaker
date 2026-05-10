@@ -15,10 +15,11 @@
 #define PCMK__CRM_COMMON_RULES_INTERNAL__H
 
 #include <regex.h>                      // regmatch_t
+
 #include <libxml/tree.h>                // xmlNode
 
-#include <crm/common/rules.h>           // enum expression_type, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
+#include <crm/common/rules.h>           // enum expression_type, etc.
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,6 +41,9 @@ int pcmk__evaluate_date_expression(const xmlNode *date_expression,
                                    crm_time_t *next_change);
 int pcmk__evaluate_condition(xmlNode *expr, const pcmk_rule_input_t *rule_input,
                              crm_time_t *next_change);
+
+int pcmk__evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                        crm_time_t *next_change);
 
 #ifdef __cplusplus
 }

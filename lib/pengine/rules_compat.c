@@ -14,11 +14,11 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
+#include <crm/common/internal.h>        // pcmk__evaluate_rule, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
 #include <crm/common/roles.h>           // enum rsc_role_e
-
-#include <crm/common/xml.h>
 #include <crm/common/rules.h>           // pcmk_rule_input_t, etc.
+#include <crm/common/xml.h>
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
@@ -34,7 +34,7 @@ test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time
         .now = now,
     };
 
-    return pcmk_evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
+    return pcmk__evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
 }
 
 /*!

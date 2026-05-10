@@ -45,14 +45,13 @@ null_invalid(void **state)
     xmlNode *xml = NULL;
     crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
-    assert_int_equal(pcmk_evaluate_rule(NULL, NULL, next_change),
-                     EINVAL);
+    assert_int_equal(pcmk__evaluate_rule(NULL, NULL, next_change), EINVAL);
 
     xml = pcmk__xml_parse(RULE_OP);
-    assert_int_equal(pcmk_evaluate_rule(xml, NULL, next_change), EINVAL);
+    assert_int_equal(pcmk__evaluate_rule(xml, NULL, next_change), EINVAL);
     pcmk__xml_free(xml);
 
-    assert_int_equal(pcmk_evaluate_rule(NULL, &rule_input, next_change),
+    assert_int_equal(pcmk__evaluate_rule(NULL, &rule_input, next_change),
                      EINVAL);
 
     free(next_change);
@@ -71,7 +70,7 @@ id_missing(void **state)
     xmlNode *xml = pcmk__xml_parse(RULE_OP_MISSING_ID);
     crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, next_change),
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 
     free(next_change);
@@ -88,7 +87,7 @@ good_idref(void **state)
     crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     pcmk__xe_set(rule_xml, PCMK_XA_ID_REF, "r");
-    assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
+    assert_int_equal(pcmk__evaluate_rule(rule_xml, &rule_input, next_change),
                      pcmk_rc_ok);
 
     free(next_change);
@@ -103,7 +102,7 @@ bad_idref(void **state)
     crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     pcmk__xe_set(rule_xml, PCMK_XA_ID_REF, "x");
-    assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
+    assert_int_equal(pcmk__evaluate_rule(rule_xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 
     free(next_change);
@@ -118,8 +117,7 @@ empty_default(void **state)
     // Currently acceptable
     xmlNode *xml = pcmk__xml_parse(RULE_EMPTY);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
-                     pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -134,8 +132,7 @@ empty_and(void **state)
     // Currently acceptable
     xmlNode *xml = pcmk__xml_parse(RULE_EMPTY_AND);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
-                     pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -149,8 +146,7 @@ empty_or(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_EMPTY_OR);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
-                     pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -170,7 +166,7 @@ default_boolean_op(void **state)
     // Defaults to PCMK_VALUE_AND
     xmlNode *xml = pcmk__xml_parse(RULE_DEFAULT_BOOLEAN_OP);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
     pcmk__xml_free(xml);
@@ -191,7 +187,7 @@ invalid_boolean_op(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_INVALID_BOOLEAN_OP);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_unpack_error);
 
     pcmk__xml_free(xml);
@@ -212,7 +208,7 @@ and_passes(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_AND_PASSES);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -229,7 +225,7 @@ lonely_and_passes(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_LONELY_AND);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -249,7 +245,7 @@ and_one_fails(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_AND_ONE_FAILS);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
     pcmk__xml_free(xml);
@@ -270,7 +266,7 @@ and_two_fail(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_AND_TWO_FAIL);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
     pcmk__xml_free(xml);
@@ -291,7 +287,7 @@ or_one_passes(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_OR_ONE_PASSES);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -311,7 +307,7 @@ or_two_pass(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_OR_TWO_PASS);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -329,7 +325,7 @@ lonely_or_passes(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_LONELY_OR);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL), pcmk_rc_ok);
 
     pcmk__xml_free(xml);
 }
@@ -349,7 +345,7 @@ or_fails(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(RULE_OR_FAILS);
 
-    assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, NULL),
+    assert_int_equal(pcmk__evaluate_rule(xml, &rule_input, NULL),
                      pcmk_rc_op_unsatisfied);
 
     pcmk__xml_free(xml);
