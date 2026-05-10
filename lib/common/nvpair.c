@@ -477,7 +477,7 @@ pcmk__unpack_nvpair_block(void *data, void *user_data)
 void
 pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                            const char *first_id,
-                           const pcmk_rule_input_t *rule_input,
+                           const pcmk__rule_input_t *rule_input,
                            GHashTable *values, crm_time_t *next_change,
                            xmlDoc *doc)
 {
@@ -500,7 +500,7 @@ pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
 
     data.doc = doc;
     if (rule_input != NULL) {
-        pcmk__rule_input_convert(rule_input, &data.rule_input);
+        data.rule_input = *rule_input;
     }
 
     blocks = g_list_sort_with_data(blocks, pcmk__cmp_nvpair_blocks, &data);
@@ -728,11 +728,17 @@ pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                           const pcmk_rule_input_t *rule_input,
                           GHashTable *values, crm_time_t *next_change)
 {
+    pcmk__rule_input_t new_input = { NULL, };
+
     if (xml == NULL) {
         return;
     }
 
-    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, rule_input, values,
+    if (rule_input != NULL) {
+        pcmk__rule_input_convert(rule_input, &new_input);
+    }
+
+    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, &new_input, values,
                                next_change, xml->doc);
 }
 
