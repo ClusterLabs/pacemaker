@@ -249,7 +249,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
 {
     GHashTable *params = pcmk__strkey_table(free, free);
 
-    const pcmk_rule_input_t rule_input = {
+    const pcmk__rule_input_t rule_input = {
         .now = scheduler->priv->now,
         .node_attrs = node_attrs,
     };
@@ -685,7 +685,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *timeout_spec = NULL;
     const char *str = NULL;
 
-    const pcmk_rule_input_t rule_input = {
+    const pcmk__rule_input_t rule_input = {
         /* Node attributes are not set because node expressions are not allowed
          * for meta-attributes
          */

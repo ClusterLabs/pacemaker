@@ -132,7 +132,7 @@ dup_attr(gpointer key, gpointer value, gpointer user_data)
 
 static void
 expand_parents_fixed_nvpairs(const pcmk_resource_t *rsc,
-                             const pcmk_rule_input_t *rule_input,
+                             const pcmk__rule_input_t *rule_input,
                              GHashTable *meta_hash, pcmk_scheduler_t *scheduler)
 {
     GHashTable *parent_orig_meta = pcmk__strkey_table(free, free);
@@ -168,7 +168,7 @@ void
 get_meta_attributes(GHashTable *meta_hash, const pcmk_resource_t *rsc,
                     pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    pcmk_rule_input_t rule_input = { NULL, };
+    pcmk__rule_input_t rule_input = { NULL, };
 
     CRM_CHECK((meta_hash != NULL) && (rsc != NULL) && (scheduler != NULL),
               return);
@@ -227,7 +227,7 @@ void
 get_rsc_attributes(GHashTable *instance_attrs, const pcmk_resource_t *rsc,
                    const pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = NULL,
     };
 
@@ -681,7 +681,7 @@ pe__unpack_resource(xmlNode *xml_obj, pcmk_resource_t **rsc,
     bool remote_node = false;
     pcmk__resource_private_t *rsc_private = NULL;
 
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = NULL,
     };
 

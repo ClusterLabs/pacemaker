@@ -221,7 +221,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
     const char *value = NULL;
     GHashTable *config_hash = pcmk__strkey_table(free, free);
 
-    const pcmk_rule_input_t rule_input = {
+    const pcmk__rule_input_t rule_input = {
         .now = scheduler->priv->now,
     };
 
@@ -4963,7 +4963,7 @@ add_node_attrs(const xmlNode *xml_obj, pcmk_node_t *node, bool overwrite,
 {
     const char *cluster_name = NULL;
     const char *dc_id = pcmk__xe_get(scheduler->input, PCMK_XA_DC_UUID);
-    const pcmk_rule_input_t rule_input = {
+    const pcmk__rule_input_t rule_input = {
         .now = scheduler->priv->now,
     };
 

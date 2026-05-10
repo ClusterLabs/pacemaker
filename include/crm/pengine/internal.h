@@ -338,7 +338,7 @@ bool pe__shutdown_requested(const pcmk_node_t *node);
 void pe__register_messages(pcmk__output_t *out);
 
 void pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                                const pcmk_rule_input_t *rule_input,
+                                const pcmk__rule_input_t *rule_input,
                                 GHashTable *hash, const char *always_first,
                                 pcmk_scheduler_t *scheduler);
 

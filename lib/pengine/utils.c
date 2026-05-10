@@ -692,12 +692,11 @@ pe__shutdown_requested(const pcmk_node_t *node)
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                           const pcmk_rule_input_t *rule_input,
+                           const pcmk__rule_input_t *rule_input,
                            GHashTable *hash, const char *always_first,
                            pcmk_scheduler_t *scheduler)
 {
     crm_time_t *next_change = NULL;
-    pcmk__rule_input_t new_input = { NULL, };
 
     CRM_CHECK((set_name != NULL) && (rule_input != NULL) && (hash != NULL)
               && (scheduler != NULL), return);
@@ -710,9 +709,8 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
         return;
     }
 
-    pcmk__rule_input_convert(rule_input, &new_input);
     next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
-    pcmk__unpack_nvpair_blocks(xml_obj, set_name, always_first, &new_input,
+    pcmk__unpack_nvpair_blocks(xml_obj, set_name, always_first, rule_input,
                                hash, next_change, scheduler->input->doc);
 
     if (pcmk__time_is_initialized(next_change)) {
