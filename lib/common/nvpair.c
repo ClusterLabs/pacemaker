@@ -456,8 +456,8 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
 
     rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
     if ((rule_xml != NULL)
-        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
-                               unpack_data->next_change) != pcmk_rc_ok)) {
+        && (pcmk__evaluate_rule(rule_xml, &unpack_data->rule_input,
+                                unpack_data->next_change) != pcmk_rc_ok)) {
         return;
     }
 

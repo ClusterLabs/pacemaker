@@ -1259,7 +1259,7 @@ pcmk__evaluate_condition(xmlNode *condition,
 
     switch (pcmk__condition_type(condition)) {
         case pcmk__condition_rule:
-            return pcmk_evaluate_rule(condition, rule_input, next_change);
+            return pcmk__evaluate_rule(condition, rule_input, next_change);
 
         case pcmk__condition_attribute:
         case pcmk__condition_location:
@@ -1290,6 +1290,7 @@ pcmk__evaluate_condition(xmlNode *condition,
 }
 
 /*!
+ * \internal
  * \brief Evaluate a single rule, including all its conditions
  *
  * \param[in,out] rule         XML containing a rule definition or its id-ref
@@ -1300,8 +1301,8 @@ pcmk__evaluate_condition(xmlNode *condition,
  *         satisfied, some other value if it is not)
  */
 int
-pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
-                   crm_time_t *next_change)
+pcmk__evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                    crm_time_t *next_change)
 {
     bool empty = true;
     int rc = pcmk_rc_ok;
@@ -1372,4 +1373,21 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     pcmk__trace("Rule %s is %ssatisfied", id,
                 ((rc == pcmk_rc_ok)? "" : "not "));
     return rc;
+}
+
+/*!
+ * \brief Evaluate a single rule, including all its conditions
+ *
+ * \param[in,out] rule         XML containing a rule definition or its id-ref
+ * \param[in]     rule_input   Values used to evaluate rule criteria
+ * \param[out]    next_change  If not NULL, set to when evaluation will change
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if the rule is
+ *         satisfied, some other value if it is not)
+ */
+int
+pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                   crm_time_t *next_change)
+{
+    return pcmk__evaluate_rule(rule, rule_input, next_change);
 }

@@ -269,8 +269,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         rule_input->rsc_params = pe_rsc_params(rsc, node,
                                                rsc->priv->scheduler);
 
-        if (pcmk_evaluate_rule(rule_xml, rule_input,
-                               next_change) != pcmk_rc_ok) {
+        if (pcmk__evaluate_rule(rule_xml, rule_input,
+                                next_change) != pcmk_rc_ok) {
             continue;
         }
 

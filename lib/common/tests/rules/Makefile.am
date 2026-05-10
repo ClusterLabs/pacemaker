@@ -19,12 +19,12 @@ check_PROGRAMS += pcmk__evaluate_date_spec_test
 check_PROGRAMS += pcmk__evaluate_condition_test
 check_PROGRAMS += pcmk__evaluate_op_expression_test
 check_PROGRAMS += pcmk__evaluate_rsc_expression_test
+check_PROGRAMS += pcmk__evaluate_rule_test
 check_PROGRAMS += pcmk__parse_combine_test
 check_PROGRAMS += pcmk__parse_comparison_test
 check_PROGRAMS += pcmk__parse_source_test
 check_PROGRAMS += pcmk__parse_type_test
 check_PROGRAMS += pcmk__replace_submatches_test
 check_PROGRAMS += pcmk__unpack_duration_test
-check_PROGRAMS += pcmk_evaluate_rule_test
 
 TESTS = $(check_PROGRAMS)
