@@ -51,7 +51,7 @@ void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
 
 void pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                                 const char *first_id,
-                                const pcmk_rule_input_t *rule_input,
+                                const pcmk__rule_input_t *rule_input,
                                 GHashTable *values, crm_time_t *next_change,
                                 xmlDoc *doc);
 

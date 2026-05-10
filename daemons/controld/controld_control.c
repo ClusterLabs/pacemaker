@@ -541,7 +541,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
     crm_time_t *now = crm_time_new(NULL);
     xmlNode *crmconfig = NULL;
     xmlNode *alerts = NULL;
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
