@@ -13,7 +13,6 @@
 #include <regex.h>                  // regmatch_t
 
 #include <glib.h>                   // guint, GHashTable
-#include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/iso8601.h>     // crm_time_t
 
@@ -109,11 +108,12 @@ typedef struct pcmk_rule_input {
     int rsc_id_nmatches;
 } pcmk_rule_input_t;
 
-int pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
-                       crm_time_t *next_change);
-
 #ifdef __cplusplus
 }
+#endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/rules_compat.h>
 #endif
 
 #endif // PCMK__CRM_COMMON_RULES__H

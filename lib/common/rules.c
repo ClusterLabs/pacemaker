@@ -1375,19 +1375,17 @@ pcmk__evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
     return rc;
 }
 
-/*!
- * \brief Evaluate a single rule, including all its conditions
- *
- * \param[in,out] rule         XML containing a rule definition or its id-ref
- * \param[in]     rule_input   Values used to evaluate rule criteria
- * \param[out]    next_change  If not NULL, set to when evaluation will change
- *
- * \return Standard Pacemaker return code (\c pcmk_rc_ok if the rule is
- *         satisfied, some other value if it is not)
- */
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/rules_compat.h>    // pcmk_evaluate_rule
+
 int
 pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
                    crm_time_t *next_change)
 {
     return pcmk__evaluate_rule(rule, rule_input, next_change);
 }
+
+// LCOV_EXCL_STOP
+// End deprecated API

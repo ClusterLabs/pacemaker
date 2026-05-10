@@ -39,6 +39,7 @@ header_HEADERS += results.h
 header_HEADERS += results_compat.h
 header_HEADERS += roles.h
 header_HEADERS += rules.h
+header_HEADERS += rules_compat.h
 header_HEADERS += scheduler.h
 header_HEADERS += scheduler_types.h
 header_HEADERS += schemas.h
