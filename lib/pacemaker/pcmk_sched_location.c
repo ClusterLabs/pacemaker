@@ -70,7 +70,7 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  */
 static const char *
 score_attribute_name(const xmlNode *rule_xml, char **allocated,
-                     const pcmk_rule_input_t *rule_input)
+                     const pcmk__rule_input_t *rule_input)
 {
     const char *name = NULL;
 
@@ -191,7 +191,8 @@ score_from_attr(const char *constraint_id, const char *attr_name,
 static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pcmk_rule_input_t *rule_input, const char *constraint_id)
+                       pcmk__rule_input_t *rule_input,
+                       const char *constraint_id)
 {
     const char *rule_id = NULL;
     const char *score_attr = NULL;
@@ -365,7 +366,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
         xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE, NULL,
                                                  NULL);
-        pcmk_rule_input_t rule_input = {
+        pcmk__rule_input_t rule_input = {
             .now = rsc->priv->scheduler->priv->now,
             .rsc_meta = rsc->priv->meta,
             .rsc_id = rsc_id_match,

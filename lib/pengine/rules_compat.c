@@ -29,7 +29,7 @@
 gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .node_attrs = node_hash,
         .now = now,
     };
