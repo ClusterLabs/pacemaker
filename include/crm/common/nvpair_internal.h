@@ -18,8 +18,8 @@
 #include <glib.h>                           // gboolean, gpointer, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
-#include <crm/common/rules.h>               // pcmk_rule_input_t
 #include <crm/common/iso8601.h>             // crm_time_t
+#include <crm/common/rules_internal.h>      // pcmk__rule_input_t
 #include <crm/common/strings_internal.h>    // pcmk__str_eq(), etc.
 
 #ifdef __cplusplus
@@ -31,7 +31,7 @@ typedef struct {
     GHashTable *values;             // Where to put name/value pairs
     const char *first_id;           // Block with this XML ID should sort first
     xmlDoc *doc;                    // XML document to use for resolving IDREFs
-    pcmk_rule_input_t rule_input;   // Data used to evaluate rules
+    pcmk__rule_input_t rule_input;  // Data used to evaluate rules
 
     /* Whether each block's values should overwrite any existing ones
      *

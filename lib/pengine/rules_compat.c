@@ -79,6 +79,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 crm_time_t *next_change)
 {
     GList *pairs = NULL;
+    pcmk_rule_input_t tmp_input = { NULL, };
     pcmk__nvpair_unpack_t data = {
         .values = hash,
         .first_id = always_first,
@@ -96,7 +97,11 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     }
 
     data.doc = xml_obj->doc;
-    map_rule_input(&(data.rule_input), rule_data);
+
+    map_rule_input(&tmp_input, rule_data);
+    if (rule_data != NULL) {
+        pcmk__rule_input_convert(&tmp_input, &data.rule_input);
+    }
 
     pairs = g_list_sort_with_data(pairs, pcmk__cmp_nvpair_blocks, &data);
     g_list_foreach(pairs, pcmk__unpack_nvpair_block, &data);

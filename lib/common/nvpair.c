@@ -448,7 +448,6 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
 {
     xmlNode *pair = data;
     pcmk__nvpair_unpack_t *unpack_data = user_data;
-    pcmk__rule_input_t new_input = { NULL, };
 
     xmlNode *rule_xml = NULL;
 
@@ -456,10 +455,8 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
                  && (unpack_data->values != NULL));
 
     rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
-    pcmk__rule_input_convert(&unpack_data->rule_input, &new_input);
-
     if ((rule_xml != NULL)
-        && (pcmk__evaluate_rule(rule_xml, &new_input,
+        && (pcmk__evaluate_rule(rule_xml, &unpack_data->rule_input,
                                 unpack_data->next_change) != pcmk_rc_ok)) {
         return;
     }
@@ -513,7 +510,7 @@ pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
 
     data.doc = doc;
     if (rule_input != NULL) {
-        data.rule_input = *rule_input;
+        pcmk__rule_input_convert(rule_input, &data.rule_input);
     }
 
     blocks = g_list_sort_with_data(blocks, pcmk__cmp_nvpair_blocks, &data);
