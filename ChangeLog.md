@@ -1,3 +1,21 @@
+# Pacemaker-3.0.2 (11 May 2026)
+* 45 commits with 49 files changed, 949 insertions(+), 867 deletions(-)
+
+## Fixes since Pacemaker-3.0.2-rc1
+
+* **libcib:** Full-CIB replace op no longer segfaults with `cib_xpath`
+* **libcib:** Handle `cib_xpath_address` for an XPath query for an attribute
+* **libcib:** Prevent crashing when handling an XPath query for an attribute
+              *(regression introduced in 3.0.1)*
+* **libcrmcommon:** Avoid leak in `pcmk__xe_dereference_children()` test
+* **libpe_status:** Avoid leaking a `pcmk_resource_t's` xml/orig_xml
+
+## Public API changes since Pacemaker-3.0.2-rc1
+
+* **libcrmcommon:** Deprecate `PCMK_dh_max_bits.`
+* **libcrmcommon:** Deprecate `pcmk_unpack_nvpair_blocks()`
+* **libpe_status:** `get_meta_attributes()` rsc argument is now const
+
 # Pacemaker-3.0.2 (23 Apr 2026)
 * 1806 commits with 607 files changed, 38242 insertions(+), 30786 deletions(-)
 
