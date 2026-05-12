@@ -655,6 +655,7 @@ pcmk__cmp_nvpair_blocks(const void *a, const void *b, void *user_data)
 // LCOV_EXCL_START
 
 #include <crm/common/nvpair_compat.h>
+#include <crm/common/rules_compat.h>    // pcmk_rule_input_t
 
 static int
 pcmk__compare_nvpair(const void *a, const void *b)
