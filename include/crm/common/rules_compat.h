@@ -32,6 +32,21 @@ extern "C" {
 
 //!@{
 //! \deprecated Do not use
+enum expression_type {
+    not_expr        = 0,
+    nested_rule     = 1,
+    attr_expr       = 2,
+    loc_expr        = 3,
+    role_expr       = 4,
+    time_expr       = 5,
+    version_expr    = 6,
+    rsc_expr        = 7,
+    op_expr         = 8,
+};
+//!@}
+
+//!@{
+//! \deprecated Do not use
 typedef struct pcmk_rule_input {
     const crm_time_t *now;
     const char *rsc_standard;

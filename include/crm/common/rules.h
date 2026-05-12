@@ -20,26 +20,6 @@ extern "C" {
  * \ingroup core
  */
 
-/* Allowed subexpressions of a rule
- * @COMPAT This should be made internal at an API compatibility break
- */
-//!@{
-//! \deprecated For Pacemaker use only
-enum expression_type {
-#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
-    not_expr        = 0,
-    nested_rule     = 1,
-    attr_expr       = 2,
-    loc_expr        = 3,
-    role_expr       = 4,
-    time_expr       = 5,
-    version_expr    = 6,
-    rsc_expr        = 7,
-    op_expr         = 8,
-#endif
-};
-//!@}
-
 #ifdef __cplusplus
 }
 #endif
