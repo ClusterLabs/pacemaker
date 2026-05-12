@@ -30,7 +30,7 @@
  *
  * \return Condition type corresponding to \p condition
  */
-enum expression_type
+enum pcmk__condition
 pcmk__condition_type(const xmlNode *condition)
 {
     const char *name = NULL;

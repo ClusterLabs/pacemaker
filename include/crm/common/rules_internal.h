@@ -20,7 +20,6 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/iso8601.h>         // crm_time_t
-#include <crm/common/rules.h>           // enum expression_type, etc.
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,6 +29,20 @@ enum pcmk__combine {
     pcmk__combine_unknown,
     pcmk__combine_and,
     pcmk__combine_or,
+};
+
+/*!
+ * \internal
+ * \brief Types of conditions within a rule
+ */
+enum pcmk__condition {
+    pcmk__condition_unknown,    //!< Unknown or invalid condition
+    pcmk__condition_rule,       //!< Nested rule
+    pcmk__condition_attribute,  //!< Node attribute expression
+    pcmk__condition_location,   //!< Node location expression
+    pcmk__condition_datetime,   //!< Date/time expression
+    pcmk__condition_resource,   //!< Resource agent expression
+    pcmk__condition_operation,  //!< Operation expression
 };
 
 /*!
@@ -84,7 +97,7 @@ typedef struct {
     int rsc_id_nmatches;
 } pcmk__rule_input_t;
 
-enum expression_type pcmk__condition_type(const xmlNode *condition);
+enum pcmk__condition pcmk__condition_type(const xmlNode *condition);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
 enum pcmk__combine pcmk__parse_combine(const char *combine);
