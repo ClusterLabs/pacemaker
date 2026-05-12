@@ -84,9 +84,6 @@ typedef struct {
     int rsc_id_nmatches;
 } pcmk__rule_input_t;
 
-void pcmk__rule_input_convert(const pcmk_rule_input_t *source,
-                              pcmk__rule_input_t *target);
-
 enum expression_type pcmk__condition_type(const xmlNode *condition);
 char *pcmk__replace_submatches(const char *string, const char *match,
                                const regmatch_t submatches[], int nmatches);
@@ -101,6 +98,12 @@ int pcmk__evaluate_condition(xmlNode *expr,
 
 int pcmk__evaluate_rule(xmlNode *rule, const pcmk__rule_input_t *rule_input,
                         crm_time_t *next_change);
+
+// Redeclare because the definition is in rules_compat.h
+typedef struct pcmk_rule_input pcmk_rule_input_t;
+
+void pcmk__rule_input_convert(const pcmk_rule_input_t *source,
+                              pcmk__rule_input_t *target);
 
 #ifdef __cplusplus
 }

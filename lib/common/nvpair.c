@@ -665,6 +665,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
 // LCOV_EXCL_START
 
 #include <crm/common/nvpair_compat.h>
+#include <crm/common/rules_compat.h>    // pcmk_rule_input_t
 
 static gint
 pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
