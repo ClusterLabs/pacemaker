@@ -243,16 +243,17 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
                                              NULL, NULL);
          set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
-        GList *tag_refs = NULL;
+        xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF, NULL,
+                                                NULL);
+        xmlNode *next = NULL;
 
-        for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
-                                                     NULL, NULL);
-             xml_rsc != NULL;
-             xml_rsc = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF)) {
-
+        while (xml_rsc != NULL) {
             pcmk_resource_t *rsc = NULL;
             pcmk__idref_t *tag = NULL;
             xmlNode *last_ref = xml_rsc;
+
+            // xml_rsc may get freed
+            next = pcmk__xe_next(xml_rsc, PCMK_XE_RESOURCE_REF);
 
             if (!pcmk__valid_resource_or_tag(scheduler, pcmk__xe_id(xml_rsc),
                                              &rsc, &tag)) {
@@ -265,6 +266,7 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
             }
 
             if (rsc != NULL) {
+                xml_rsc = next;
                 continue;
             }
 
@@ -304,27 +306,10 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 
             any_refs = true;
 
-            /* Freeing the resource_ref now would break the XML child iteration,
-             * so just remember it for freeing later
-             */
-            tag_refs = g_list_append(tag_refs, xml_rsc);
+            // Drop the tag reference, now that it has been expanded
+            pcmk__xml_free(xml_rsc);
+            xml_rsc = next;
         }
-
-        /* Now free '<resource_ref id="tag1"/>', and finally get:
-         *
-         * <resource_set id="tag1-colocation-0" sequential="true">
-         *   <resource_ref id="rsc1"/>
-         *   <resource_ref id="rsc2"/>
-         *   <resource_ref id="rsc3"/>
-         *   <resource_ref id="rsc4"/>
-         * </resource_set>
-         */
-        for (GList *iter = tag_refs; iter != NULL; iter = iter->next) {
-            xmlNode *tag_ref = iter->data;
-
-            pcmk__xml_free(tag_ref);
-        }
-        g_list_free(tag_refs);
     }
 
     if (!any_refs) {
