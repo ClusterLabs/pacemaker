@@ -77,30 +77,6 @@ pcmk__free_alert(pcmk__alert_t *entry)
     }
 }
 
-/*!
- * \internal
- * \brief Copy an alert entry
- *
- * \param[in] entry  Alert entry to copy
- *
- * \return Copy of alert entry
- */
-static pcmk__alert_t *
-copy_alert(const pcmk__alert_t *entry)
-{
-    pcmk__alert_t *new_entry = pcmk__alert_new(entry->id, entry->path);
-
-    new_entry->timeout = entry->timeout;
-    new_entry->flags = entry->flags;
-    new_entry->envvars = pcmk__str_table_dup(entry->envvars);
-    new_entry->tstamp_format = pcmk__str_copy(entry->tstamp_format);
-    new_entry->recipient = pcmk__str_copy(entry->recipient);
-    if (entry->select_attribute_name) {
-        new_entry->select_attribute_name = g_strdupv(entry->select_attribute_name);
-    }
-    return new_entry;
-}
-
 void
 pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,
                     const char *value)
@@ -349,6 +325,34 @@ unpack_alert(xmlNode *alert, pcmk__alert_t *entry, unsigned int *max_timeout)
 
 /*!
  * \internal
+ * \brief Copy an alert entry
+ *
+ * This creates a deep copy of \p entry, except that the new object's
+ * \c recipient field is copied from \p recipient instead of from \p entry.
+ * \p recipient is a \c PCMK_XE_RECIPIENT element, and its \c PCMK_XA_VALUE
+ * attribute is copied as the new object's \c recipient field.
+ *
+ * \param[in] entry      Alert entry to copy
+ * \param[in] recipient  Recipient XML
+ *
+ * \return Copy of alert entry
+ */
+static pcmk__alert_t *
+copy_alert(const pcmk__alert_t *entry, const xmlNode *recipient)
+{
+    pcmk__alert_t *new_entry = pcmk__alert_new(entry->id, entry->path);
+
+    new_entry->tstamp_format = pcmk__str_copy(entry->tstamp_format);
+    new_entry->recipient = pcmk__xe_get_copy(recipient, PCMK_XA_VALUE);
+    new_entry->select_attribute_name = g_strdupv(entry->select_attribute_name);
+    new_entry->envvars = pcmk__str_table_dup(entry->envvars);
+    new_entry->timeout = entry->timeout;
+    new_entry->flags = entry->flags;
+    return new_entry;
+}
+
+/*!
+ * \internal
  * \brief Unpack a CIB alerts section into a list of alert entries
  *
  * \param[in] alerts  XML of CIB alerts section
@@ -406,12 +410,10 @@ pcmk__unpack_alerts(const xmlNode *alerts)
              recipient != NULL;
              recipient = pcmk__xe_next(recipient, PCMK_XE_RECIPIENT)) {
 
-            pcmk__alert_t *recipient_entry = copy_alert(entry);
+            pcmk__alert_t *recipient_entry = copy_alert(entry, recipient);
             unsigned int n_envvars = 0;
 
             recipients++;
-            recipient_entry->recipient = pcmk__xe_get_copy(recipient,
-                                                           PCMK_XA_VALUE);
 
             if (unpack_alert(recipient, recipient_entry,
                              &max_timeout) != pcmk_rc_ok) {
