@@ -244,7 +244,6 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
          set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         GList *tag_refs = NULL;
-        GList *iter = NULL;
 
         for (xmlNode *xml_rsc = pcmk__xe_first_child(set, PCMK_XE_RESOURCE_REF,
                                                      NULL, NULL);
@@ -253,74 +252,74 @@ pcmk__expand_tags_in_sets(xmlNode *xml_obj, const pcmk_scheduler_t *scheduler)
 
             pcmk_resource_t *rsc = NULL;
             pcmk__idref_t *tag = NULL;
+            xmlNode *last_ref = xml_rsc;
 
             if (!pcmk__valid_resource_or_tag(scheduler, pcmk__xe_id(xml_rsc),
                                              &rsc, &tag)) {
+
                 pcmk__config_err("Ignoring resource sets for constraint '%s' "
                                  "because '%s' is not a valid resource or tag",
                                  pcmk__xe_id(xml_obj), pcmk__xe_id(xml_rsc));
                 pcmk__xml_free(new_xml);
                 return NULL;
-
-            } else if (rsc) {
-                continue;
-
-            } else if (tag) {
-                /* PCMK_XE_RESOURCE_REF under PCMK_XE_RESOURCE_SET references
-                 * template or tag
-                 */
-                xmlNode *last_ref = xml_rsc;
-
-                /* For example, given the original XML:
-                 *
-                 *   <resource_set id="tag1-colocation-0" sequential="true">
-                 *     <resource_ref id="rsc1"/>
-                 *     <resource_ref id="tag1"/>
-                 *     <resource_ref id="rsc4"/>
-                 *   </resource_set>
-                 *
-                 * If rsc2 and rsc3 are tagged with tag1, we add them after it:
-                 *
-                 *   <resource_set id="tag1-colocation-0" sequential="true">
-                 *     <resource_ref id="rsc1"/>
-                 *     <resource_ref id="tag1"/>
-                 *     <resource_ref id="rsc2"/>
-                 *     <resource_ref id="rsc3"/>
-                 *     <resource_ref id="rsc4"/>
-                 *   </resource_set>
-                 */
-
-                for (iter = tag->refs; iter != NULL; iter = iter->next) {
-                    const char *ref_id = iter->data;
-                    xmlNode *new_ref = pcmk__xe_create(set,
-                                                       PCMK_XE_RESOURCE_REF);
-
-                    pcmk__xe_set(new_ref, PCMK_XA_ID, ref_id);
-                    xmlAddNextSibling(last_ref, new_ref);
-
-                    last_ref = new_ref;
-                }
-
-                any_refs = true;
-
-                /* Freeing the resource_ref now would break the XML child
-                 * iteration, so just remember it for freeing later.
-                 */
-                tag_refs = g_list_append(tag_refs, xml_rsc);
             }
+
+            if (rsc != NULL) {
+                continue;
+            }
+
+            pcmk__assert(tag != NULL);
+
+            /* PCMK_XE_RESOURCE_REF under PCMK_XE_RESOURCE_SET references
+             * template or tag.
+             *
+             * For example, given the original XML:
+             *
+             *   <resource_set id="tag1-colocation-0" sequential="true">
+             *     <resource_ref id="rsc1"/>
+             *     <resource_ref id="tag1"/>
+             *     <resource_ref id="rsc4"/>
+             *   </resource_set>
+             *
+             * If rsc2 and rsc3 are tagged with tag1, we add them after it:
+             *
+             *   <resource_set id="tag1-colocation-0" sequential="true">
+             *     <resource_ref id="rsc1"/>
+             *     <resource_ref id="tag1"/>
+             *     <resource_ref id="rsc2"/>
+             *     <resource_ref id="rsc3"/>
+             *     <resource_ref id="rsc4"/>
+             *   </resource_set>
+             */
+
+            for (GList *iter = tag->refs; iter != NULL; iter = iter->next) {
+                const char *ref_id = iter->data;
+                xmlNode *new_ref = pcmk__xe_create(set, PCMK_XE_RESOURCE_REF);
+
+                pcmk__xe_set(new_ref, PCMK_XA_ID, ref_id);
+                xmlAddNextSibling(last_ref, new_ref);
+
+                last_ref = new_ref;
+            }
+
+            any_refs = true;
+
+            /* Freeing the resource_ref now would break the XML child iteration,
+             * so just remember it for freeing later
+             */
+            tag_refs = g_list_append(tag_refs, xml_rsc);
         }
 
         /* Now free '<resource_ref id="tag1"/>', and finally get:
-
-           <resource_set id="tag1-colocation-0" sequential="true">
-             <resource_ref id="rsc1"/>
-             <resource_ref id="rsc2"/>
-             <resource_ref id="rsc3"/>
-             <resource_ref id="rsc4"/>
-           </resource_set>
-
+         *
+         * <resource_set id="tag1-colocation-0" sequential="true">
+         *   <resource_ref id="rsc1"/>
+         *   <resource_ref id="rsc2"/>
+         *   <resource_ref id="rsc3"/>
+         *   <resource_ref id="rsc4"/>
+         * </resource_set>
          */
-        for (iter = tag_refs; iter != NULL; iter = iter->next) {
+        for (GList *iter = tag_refs; iter != NULL; iter = iter->next) {
             xmlNode *tag_ref = iter->data;
 
             pcmk__xml_free(tag_ref);
