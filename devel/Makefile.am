@@ -49,8 +49,9 @@ COVHTML		= $(COVERITY_DIR)/output/errors
 .PHONY: $(COVERITY_DIR)
 $(COVERITY_DIR): coverity-clean
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir) init core-clean
-	$(AM_V_GEN)cd $(top_builddir)	\
-		&& cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) core
+	$(AM_V_GEN)cd $(top_builddir)					\
+		&& cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) 	\
+			CFLAGS="-std=c99 $(CFLAGS)" core
 
 # Public coverity instance
 
