@@ -46,6 +46,14 @@ COVHTML		= $(COVERITY_DIR)/output/errors
 
 # Coverity outputs are phony so they get rebuilt every invocation
 
+# Coverity (as of version 2026.3) doesn't work correctly with C23. In
+# particular, it doesn't recognize the predefined identifiers bool, true, and
+# false, and it doesn't handle va_start() correctly. Here we tie compilation to
+# C99 as a workaround. Case 03702771 was opened with Black Duck (Coverity
+# vendor) to address this. That case is closed, and their engineering team is
+# investigating further under issue STGCOV-8389.
+#
+# @COMPAT Improvements are expected in Coverity 2026.9.
 .PHONY: $(COVERITY_DIR)
 $(COVERITY_DIR): coverity-clean
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir) init core-clean
