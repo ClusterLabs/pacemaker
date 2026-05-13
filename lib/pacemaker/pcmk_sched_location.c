@@ -584,22 +584,21 @@ unpack_location_set(xmlNode *location, xmlNode *set,
 void
 pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
-    xmlNode *set = NULL;
     bool any_sets = false;
 
-    xmlNode *orig_xml = NULL;
+    xmlNode *orig_xml = xml_obj;
     xmlNode *expanded_xml = NULL;
 
     if (unpack_location_tags(xml_obj, &expanded_xml, scheduler) != pcmk_rc_ok) {
         return;
     }
 
-    if (expanded_xml) {
-        orig_xml = xml_obj;
+    if (expanded_xml != NULL) {
         xml_obj = expanded_xml;
     }
 
-    for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
+    for (xmlNode *set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET,
+                                             NULL, NULL);
          set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         any_sets = true;
@@ -607,21 +606,18 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 
-            if (expanded_xml) {
-                pcmk__xml_free(expanded_xml);
-            }
+            pcmk__xml_free(expanded_xml);
             return;
         }
     }
 
-    if (expanded_xml) {
-        pcmk__xml_free(expanded_xml);
-        xml_obj = orig_xml;
+    pcmk__xml_free(expanded_xml);
+
+    if (any_sets) {
+        return;
     }
 
-    if (!any_sets) {
-        unpack_simple_location(xml_obj, scheduler);
-    }
+    unpack_simple_location(orig_xml, scheduler);
 }
 
 /*!
