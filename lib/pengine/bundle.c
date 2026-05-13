@@ -1124,10 +1124,17 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE, NULL,
                                    NULL);
-    if (xml_obj && valid_network(bundle_data)) {
+    if (xml_obj != NULL) {
         const char *suffix = NULL;
         char *value = NULL;
         xmlNode *xml_set = NULL;
+
+        if (!valid_network(bundle_data)) {
+            pcmk__config_err("Cannot control %s inside %s without either "
+                             PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
+                             rsc->id, pcmk__xe_id(xml_obj));
+            return false;
+        }
 
         xml_resource = pcmk__xe_create(NULL, PCMK_XE_CLONE);
 
@@ -1171,12 +1178,6 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
         //pcmk__xe_set(xml_obj, PCMK_XA_ID, bundle_data->prefix);
         pcmk__xml_copy(xml_resource, xml_obj);
-
-    } else if(xml_obj) {
-        pcmk__config_err("Cannot control %s inside %s without either "
-                         PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
-                         rsc->id, pcmk__xe_id(xml_obj));
-        return FALSE;
     }
 
     if(xml_resource) {
