@@ -79,10 +79,10 @@ score_attribute_name(const xmlNode *rule_xml, char **allocated,
         return NULL;
     }
 
-    /* A score attribute name may use submatches extracted from a
-     * resource ID regular expression. For example, if score-attribute is
-     * "loc-\1", rsc-pattern is "ip-(.*)", and the resource ID is "ip-db", then
-     * the score attribute name is "loc-db".
+    /* A score attribute name may use submatches extracted from a resource ID
+     * regular expression. For example, if score-attribute is "loc-%1",
+     * rsc-pattern is "ip-(.*)", and the resource ID is "ip-db", then the score
+     * attribute name is "loc-db".
      */
     if ((rule_input->rsc_id != NULL) && (rule_input->rsc_id_nmatches > 0)) {
         *allocated = pcmk__replace_submatches(name, rule_input->rsc_id,
