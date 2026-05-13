@@ -396,11 +396,12 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     const char *value = pcmk__xe_get(xml_obj, PCMK_XA_RSC);
 
-    if (value) {
-        pcmk_resource_t *rsc;
+    if (value != NULL) {
+        pcmk_resource_t *rsc =
+            pcmk__find_constraint_resource(scheduler->priv->resources, value);
 
-        rsc = pcmk__find_constraint_resource(scheduler->priv->resources, value);
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL, 0, NULL);
+        return;
     }
 
     value = pcmk__xe_get(xml_obj, PCMK_XA_RSC_PATTERN);
