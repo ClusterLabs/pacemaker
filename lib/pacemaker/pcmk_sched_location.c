@@ -473,10 +473,6 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     pcmk__idref_t *tag = NULL;
     xmlNode *rsc_set = NULL;
 
-    *expanded_xml = NULL;
-
-    CRM_CHECK(xml_obj != NULL, return EINVAL);
-
     id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
@@ -500,41 +496,40 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, rsc_id);
         return pcmk_rc_unpack_error;
+    }
 
-    } else if (rsc != NULL) {
+    if (rsc != NULL) {
         // No template is referenced
         return pcmk_rc_ok;
     }
-
-    state = pcmk__xe_get(xml_obj, PCMK_XA_ROLE);
 
     *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
     /* Convert any template or tag reference into constraint
      * PCMK_XE_RESOURCE_SET
      */
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
-                          false, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC, false,
+                          scheduler)) {
 
         g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
-    if (rsc_set != NULL) {
-        if (state != NULL) {
-            /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
-             * PCMK_XA_ROLE attribute
-             */
-            pcmk__xe_set(rsc_set, PCMK_XA_ROLE, state);
-            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
-        }
-        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
-
-    } else {
-        // No sets
+    if (rsc_set == NULL) {
         g_clear_pointer(expanded_xml, pcmk__xml_free);
+        return pcmk_rc_ok;
     }
 
+    state = pcmk__xe_get(xml_obj, PCMK_XA_ROLE);
+    if (state != NULL) {
+        /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
+         * PCMK_XA_ROLE attribute
+         */
+        pcmk__xe_set(rsc_set, PCMK_XA_ROLE, state);
+        pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
+    }
+
+    pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
     return pcmk_rc_ok;
 }
 
@@ -588,6 +583,8 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 
     xmlNode *orig_xml = xml_obj;
     xmlNode *expanded_xml = NULL;
+
+    CRM_CHECK(xml_obj != NULL, return);
 
     if (unpack_location_tags(xml_obj, &expanded_xml, scheduler) != pcmk_rc_ok) {
         return;
