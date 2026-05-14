@@ -623,6 +623,7 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
         int rc = 0;
         unsigned int size_u = 0;
         char *uncompressed = NULL;
+        size_t buffer_size = 0;
 
 #if (UINT32_MAX < UINT_MAX)
         if (header->payload_uncompressed >= UINT_MAX) {
@@ -656,11 +657,17 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
             return NULL;
         }
 
+        buffer_size = (size_t) header->payload_offset + size_u;
+        if (buffer_size > PCMK__REMOTE_MSG_MAX_SIZE) {
+            crm_err("Message size %zu is larger than max allowed %u bytes",
+                    buffer_size, PCMK__REMOTE_MSG_MAX_SIZE);
+            return NULL;
+        }
+
         crm_trace("Decompressing message data %" PRIu32 " bytes into %u "
                   "bytes", header->payload_compressed, size_u);
 
-        uncompressed = pcmk__assert_alloc(header->payload_offset + size_u,
-                                          sizeof(char));
+        uncompressed = pcmk__assert_alloc(buffer_size, sizeof(char));
 
         rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset,
                                         &size_u,
@@ -803,6 +810,12 @@ pcmk__read_available_remote_data(pcmk__remote_t *remote)
     if(header) {
         /* Stop at the end of the current message */
         read_len = header->size_total;
+    }
+
+    if (read_len > PCMK__REMOTE_MSG_MAX_SIZE) {
+        crm_err("Message size %zu is larger than max allowed %u bytes",
+                read_len, PCMK__REMOTE_MSG_MAX_SIZE);
+        return EINVAL;
     }
 
     /* automatically grow the buffer when needed */
