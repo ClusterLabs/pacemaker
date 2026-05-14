@@ -1372,6 +1372,27 @@ create_child_resource(pcmk_resource_t *rsc, xmlNode *clone_xml,
     return pcmk_rc_ok;
 }
 
+static void
+create_simple_replicas(pcmk_resource_t *rsc)
+{
+    // Just a naked container, no pacemaker-remote
+    GString *buffer = g_string_sized_new(1024);
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    for (int i = 0; i < bundle_data->nreplicas; i++) {
+        pcmk__bundle_replica_t *replica =
+            pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
+
+        replica->offset = i;
+        allocate_ip(rsc, replica, buffer);
+        bundle_data->replicas = g_list_append(bundle_data->replicas, replica);
+    }
+
+    bundle_data->container_host_options = g_string_free(buffer, false);
+}
+
 bool
 pe__unpack_bundle(pcmk_resource_t *rsc)
 {
@@ -1406,19 +1427,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         }
 
     } else {
-        // Just a naked container, no pacemaker-remote
-        GString *buffer = g_string_sized_new(1024);
-
-        for (int lpc = 0; lpc < bundle_data->nreplicas; lpc++) {
-            pcmk__bundle_replica_t *replica = NULL;
-
-            replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
-            replica->offset = lpc;
-            allocate_ip(rsc, replica, buffer);
-            bundle_data->replicas = g_list_append(bundle_data->replicas,
-                                                  replica);
-        }
-        bundle_data->container_host_options = g_string_free(buffer, false);
+        create_simple_replicas(rsc);
     }
 
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
