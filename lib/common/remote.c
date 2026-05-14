@@ -24,7 +24,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <inttypes.h>   // PRIx32
+#include <inttypes.h>   // PRIu32, PRIx32
 
 #include <glib.h>
 #include <bzlib.h>
@@ -66,6 +66,7 @@ static struct remote_header_v0 *
 localized_remote_header(pcmk__remote_t *remote)
 {
     struct remote_header_v0 *header = NULL;
+    size_t expected_size = 0;
 
     if ((remote == NULL) || (remote->buffer == NULL)
         || (remote->buffer_offset < sizeof(struct remote_header_v0))) {
@@ -100,11 +101,36 @@ localized_remote_header(pcmk__remote_t *remote)
 
     // Sanity checks
     if (header->payload_offset != sizeof(struct remote_header_v0)) {
+        pcmk__err("Header payload offset %" PRIu32 " does not have expected "
+                  "size %zu", header->payload_offset,
+                  sizeof(struct remote_header_v0));
         return NULL;
     }
-    if ((header->payload_offset
-         + header->payload_compressed
-         + header->payload_uncompressed) != header->size_total) {
+
+    if (header->payload_compressed != 0) {
+        if (header->payload_compressed > (SIZE_MAX - header->payload_offset)) {
+            pcmk__err("Header compressed size %" PRIu32 " is too large",
+                      header->payload_compressed);
+            return NULL;
+        }
+
+        expected_size = (size_t) header->payload_offset
+                        + header->payload_compressed;
+
+    } else {
+        if (header->payload_uncompressed > (SIZE_MAX - header->payload_offset)) {
+            pcmk__err("Header uncompressed size %" PRIu32 " is too large",
+                      header->payload_uncompressed);
+            return NULL;
+        }
+
+        expected_size = (size_t) header->payload_offset
+                        + header->payload_uncompressed;
+    }
+
+    if (expected_size != header->size_total) {
+        pcmk__err("Header total size %" PRIu32 " does not match calculated "
+                  "size %zu", header->size_total, expected_size);
         return NULL;
     }
 
