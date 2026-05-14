@@ -300,29 +300,34 @@ next_ip(const char *last_ip)
 }
 
 static void
-allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
+allocate_ip(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica,
             GString *buffer)
 {
-    if(data->ip_range_start == NULL) {
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, parent);
+
+    if (bundle_data->ip_range_start == NULL) {
         return;
-
-    } else if(data->ip_last) {
-        replica->ipaddr = next_ip(data->ip_last);
-
-    } else {
-        replica->ipaddr = pcmk__str_copy(data->ip_range_start);
     }
 
-    data->ip_last = replica->ipaddr;
+    if (bundle_data->ip_last != NULL) {
+        replica->ipaddr = next_ip(bundle_data->ip_last);
 
-    if (data->add_host) {
-        g_string_append_printf(buffer, " --add-host=%s-%d:%s", data->prefix,
+    } else {
+        replica->ipaddr = pcmk__str_copy(bundle_data->ip_range_start);
+    }
+
+    bundle_data->ip_last = replica->ipaddr;
+
+    if (bundle_data->add_host) {
+        g_string_append_printf(buffer, " --add-host=%s-%d:%s", parent->id,
                                replica->offset, replica->ipaddr);
         return;
     }
 
     g_string_append_printf(buffer, " --hosts-entry=%s=%s-%d", replica->ipaddr,
-                           data->prefix, replica->offset);
+                           parent->id, replica->offset);
 }
 
 static xmlNode *
@@ -1346,7 +1351,7 @@ create_child_resource(pcmk_resource_t *rsc, xmlNode *clone_xml,
             pcmk__set_rsc_flags(bundle_data->child, pcmk__rsc_notify);
         }
 
-        allocate_ip(bundle_data, replica, buffer);
+        allocate_ip(rsc, replica, buffer);
         bundle_data->replicas = g_list_append(bundle_data->replicas, replica);
 
         // coverity[null_field : FALSE] replica->child can't be NULL here
@@ -1411,7 +1416,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
             replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
             replica->offset = lpc;
-            allocate_ip(bundle_data, replica, buffer);
+            allocate_ip(rsc, replica, buffer);
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
         }
