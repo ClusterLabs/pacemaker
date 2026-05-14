@@ -1264,7 +1264,7 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
     nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
                                    NULL);
     pcmk__xe_set_bool(nvpair, PCMK_XA_VALUE,
-                      (bundle_data->nreplicas_per_host > 1));
+                      pcmk__is_set(rsc->flags, pcmk__rsc_unique));
 
     if (bundle_data->promoted_max != 0) {
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTABLE,
