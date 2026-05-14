@@ -310,7 +310,7 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
         replica->ipaddr = next_ip(data->ip_last);
 
     } else {
-        replica->ipaddr = strdup(data->ip_range_start);
+        replica->ipaddr = pcmk__str_copy(data->ip_range_start);
     }
 
     data->ip_last = replica->ipaddr;
@@ -988,7 +988,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
     bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
     rsc->priv->variant_opaque = bundle_data;
-    bundle_data->prefix = strdup(rsc->id);
+    bundle_data->prefix = pcmk__str_copy(rsc->id);
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_DOCKER, NULL,
                                    NULL);
@@ -1080,7 +1080,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
             if(port->source != NULL && strlen(port->source) > 0) {
                 if(port->target == NULL) {
-                    port->target = strdup(port->source);
+                    port->target = pcmk__str_copy(port->source);
                 }
                 bundle_data->ports = g_list_append(bundle_data->ports, port);
 
@@ -1223,7 +1223,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
         port = pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
         if(bundle_data->control_port) {
-            port->source = strdup(bundle_data->control_port);
+            port->source = pcmk__str_copy(bundle_data->control_port);
         } else {
             /* If we wanted to respect PCMK_remote_port, we could use
              * crm_default_remote_port() here and elsewhere in this file instead
@@ -1236,7 +1236,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
              */
             port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
         }
-        port->target = strdup(port->source);
+        port->target = pcmk__str_copy(port->source);
         bundle_data->ports = g_list_append(bundle_data->ports, port);
 
         buffer = g_string_sized_new(1024);
