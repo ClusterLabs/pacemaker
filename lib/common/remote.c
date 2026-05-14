@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -23,7 +23,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <inttypes.h>   // PRIx32
+#include <inttypes.h>   // PRIu32, PRIx32
 
 #include <glib.h>
 #include <bzlib.h>
@@ -97,11 +97,18 @@ struct remote_header_v0 {
 static struct remote_header_v0 *
 localized_remote_header(pcmk__remote_t *remote)
 {
-    struct remote_header_v0 *header = (struct remote_header_v0 *)remote->buffer;
-    if(remote->buffer_offset < sizeof(struct remote_header_v0)) {
-        return NULL;
+    struct remote_header_v0 *header = NULL;
+    size_t expected_size = 0;
 
-    } else if(header->endian != ENDIAN_LOCAL) {
+    if ((remote == NULL) || (remote->buffer == NULL)
+        || (remote->buffer_offset < sizeof(struct remote_header_v0))) {
+
+        // Caller error or we haven't received the full header yet
+        return NULL;
+    }
+
+    header = (struct remote_header_v0 *) remote->buffer;
+    if (header->endian != ENDIAN_LOCAL) {
         uint32_t endian = __swab32(header->endian);
 
         CRM_LOG_ASSERT(endian == ENDIAN_LOCAL);
@@ -121,6 +128,41 @@ localized_remote_header(pcmk__remote_t *remote)
         header->payload_offset = __swab32(header->payload_offset);
         header->payload_compressed = __swab32(header->payload_compressed);
         header->payload_uncompressed = __swab32(header->payload_uncompressed);
+    }
+
+    // Sanity checks
+    if (header->payload_offset != sizeof(struct remote_header_v0)) {
+        crm_err("Header payload offset %" PRIu32 " does not have expected "
+                "size %zu", header->payload_offset,
+                sizeof(struct remote_header_v0));
+        return NULL;
+    }
+
+    if (header->payload_compressed != 0) {
+        if (header->payload_compressed > (SIZE_MAX - header->payload_offset)) {
+            crm_err("Header compressed size %" PRIu32 " is too large",
+                    header->payload_compressed);
+            return NULL;
+        }
+
+        expected_size = (size_t) header->payload_offset
+                        + header->payload_compressed;
+
+    } else {
+        if (header->payload_uncompressed > (SIZE_MAX - header->payload_offset)) {
+            crm_err("Header uncompressed size %" PRIu32 " is too large",
+                    header->payload_uncompressed);
+            return NULL;
+        }
+
+        expected_size = (size_t) header->payload_offset
+                        + header->payload_uncompressed;
+    }
+
+    if (expected_size != header->size_total) {
+        crm_err("Header total size %" PRIu32 " does not match calculated "
+                "size %zu", header->size_total, expected_size);
+        return NULL;
     }
 
     return header;
