@@ -344,38 +344,6 @@ create_resource(const char *name, const char *provider, const char *kind)
     return rsc;
 }
 
-/*!
- * \internal
- * \brief Check whether cluster can manage resource inside container
- *
- * \param[in,out] data  Container variant data
- *
- * \return TRUE if networking configuration is acceptable, FALSE otherwise
- *
- * \note The resource is manageable if an IP range or control port has been
- *       specified. If a control port is used without an IP range, replicas per
- *       host must be 1.
- */
-static bool
-valid_network(pe__bundle_variant_data_t *data)
-{
-    if(data->ip_range_start) {
-        return TRUE;
-    }
-    if(data->control_port) {
-        if(data->nreplicas_per_host > 1) {
-            pcmk__config_err("Specifying the '" PCMK_XA_CONTROL_PORT "' for %s "
-                             "requires '" PCMK_XA_REPLICAS_PER_HOST "=1'",
-                             data->prefix);
-            data->nreplicas_per_host = 1;
-            // @TODO to be sure:
-            // pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
-        }
-        return TRUE;
-    }
-    return FALSE;
-}
-
 static int
 create_ip_resource(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica)
 {
@@ -673,7 +641,7 @@ create_remote_resource(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica)
 
     get_bundle_variant_data(bundle_data, parent);
 
-    if ((replica->child == NULL) || !valid_network(bundle_data)) {
+    if (replica->child == NULL) {
         goto done;
     }
 
@@ -1192,6 +1160,38 @@ unpack_bundle_storage(pcmk_resource_t *rsc)
     }
 
     return have_log_mount;
+}
+
+/*!
+ * \internal
+ * \brief Check whether cluster can manage resource inside container
+ *
+ * \param[in,out] data  Container variant data
+ *
+ * \return TRUE if networking configuration is acceptable, FALSE otherwise
+ *
+ * \note The resource is manageable if an IP range or control port has been
+ *       specified. If a control port is used without an IP range, replicas per
+ *       host must be 1.
+ */
+static bool
+valid_network(pe__bundle_variant_data_t *data)
+{
+    if(data->ip_range_start) {
+        return TRUE;
+    }
+    if(data->control_port) {
+        if(data->nreplicas_per_host > 1) {
+            pcmk__config_err("Specifying the '" PCMK_XA_CONTROL_PORT "' for %s "
+                             "requires '" PCMK_XA_REPLICAS_PER_HOST "=1'",
+                             data->prefix);
+            data->nreplicas_per_host = 1;
+            // @TODO to be sure:
+            // pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
+        }
+        return TRUE;
+    }
+    return FALSE;
 }
 
 /*!
