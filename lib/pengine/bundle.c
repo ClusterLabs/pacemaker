@@ -814,6 +814,31 @@ create_replica_resources(pcmk_resource_t *parent,
          */
         pcmk__set_rsc_flags(replica->remote, pcmk__rsc_remote_nesting_allowed);
     }
+
+    /* Utilization needs special handling for bundles. It makes no sense for the
+     * inner primitive to have utilization, because it is tied one-to-one to the
+     * guest node created by the container resource -- and there's no way to set
+     * capacities for that guest node anyway.
+     *
+     * What the user really wants is to configure utilization for the container.
+     * However, the schema only allows utilization for primitives, and the
+     * container resource is implicit anyway, so the user can *only* configure
+     * utilization for the inner primitive. If they do, move the primitive's
+     * utilization values to the container.
+     *
+     * @TODO This means that bundles without an inner primitive can't have
+     * utilization. An alternative might be to allow utilization values in the
+     * top-level bundle XML in the schema, and copy those to each container.
+     */
+    if (replica->child != NULL) {
+        GHashTable *empty = replica->container->priv->utilization;
+
+        replica->container->priv->utilization =
+            replica->child->priv->utilization;
+
+        replica->child->priv->utilization = empty;
+    }
+
     return rc;
 }
 
@@ -1436,31 +1461,6 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         if (create_replica_resources(rsc, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
             return false;
-        }
-
-        /* Utilization needs special handling for bundles. It makes no sense for
-         * the inner primitive to have utilization, because it is tied
-         * one-to-one to the guest node created by the container resource -- and
-         * there's no way to set capacities for that guest node anyway.
-         *
-         * What the user really wants is to configure utilization for the
-         * container. However, the schema only allows utilization for
-         * primitives, and the container resource is implicit anyway, so the
-         * user can *only* configure utilization for the inner primitive. If
-         * they do, move the primitive's utilization values to the container.
-         *
-         * @TODO This means that bundles without an inner primitive can't have
-         * utilization. An alternative might be to allow utilization values in
-         * the top-level bundle XML in the schema, and copy those to each
-         * container.
-         */
-        if (replica->child != NULL) {
-            GHashTable *empty = replica->container->priv->utilization;
-
-            replica->container->priv->utilization =
-                replica->child->priv->utilization;
-
-            replica->child->priv->utilization = empty;
         }
     }
 
