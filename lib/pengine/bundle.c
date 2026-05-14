@@ -1280,6 +1280,112 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
     return pcmk_rc_ok;
 }
 
+static int
+create_child_resource(pcmk_resource_t *rsc, xmlNode *clone_xml,
+                      bool have_log_mount)
+{
+    int offset = 0;
+    pe__bundle_port_t *port = NULL;
+    GString *buffer = NULL;
+    int rc = pcmk_rc_ok;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    rc = pe__unpack_resource(clone_xml, &bundle_data->child, rsc,
+                             rsc->priv->scheduler);
+    if (rc != pcmk_rc_ok) {
+        return rc;
+    }
+
+    /* Currently, we always map the default authentication key location into the
+     * same location inside the container.
+     *
+     * Ideally, we would respect the host's PCMK_authkey_location, but:
+     * - it may be different on different nodes;
+     * - the actual connection will do extra checking to make sure the key file
+     *   exists and is readable, that we can't do here on the DC
+     * - tools such as crm_resource and crm_simulate may not have the same
+     *   environment variables as the cluster, causing operation digests to
+     *   differ
+     *
+     * Always using the default location inside the container is fine, because
+     * we control the pacemaker_remote environment, and it avoids having to pass
+     * another environment variable to the container.
+     *
+     * @TODO A better solution may be to have only pacemaker_remote use the
+     * environment variable, and have the cluster nodes use a new cluster option
+     * for key location. This would introduce the limitation of the location
+     * being the same on all cluster nodes, but that's reasonable.
+     */
+    mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
+              DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
+
+    if (!have_log_mount) {
+        mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
+                  pe__bundle_mount_subdir);
+    }
+
+    port = pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
+
+    if (bundle_data->control_port != NULL) {
+        port->source = pcmk__str_copy(bundle_data->control_port);
+
+    } else {
+        /* If we wanted to respect PCMK_remote_port, we could use
+         * crm_default_remote_port() here and elsewhere in this file instead of
+         * DEFAULT_REMOTE_PORT.
+         *
+         * However, it gains nothing, since we control both the container
+         * environment and the connection resource parameters, and the user can
+         * use a different port if desired by setting PCMK_XA_CONTROL_PORT.
+         */
+        port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
+    }
+
+    port->target = pcmk__str_copy(port->source);
+    bundle_data->ports = g_list_append(bundle_data->ports, port);
+    buffer = g_string_sized_new(1024);
+
+    for (GList *iter = bundle_data->child->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        pcmk__bundle_replica_t *replica =
+            pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
+
+        replica->child = iter->data;
+        pcmk__set_rsc_flags(replica->child, pcmk__rsc_exclusive_probes);
+        replica->offset = offset++;
+
+        /* Ensure the child's notify gets set based on the underlying
+         * primitive's value
+         */
+        if (pcmk__is_set(replica->child->flags, pcmk__rsc_notify)) {
+            pcmk__set_rsc_flags(bundle_data->child, pcmk__rsc_notify);
+        }
+
+        allocate_ip(bundle_data, replica, buffer);
+        bundle_data->replicas = g_list_append(bundle_data->replicas, replica);
+
+        // coverity[null_field : FALSE] replica->child can't be NULL here
+        bundle_data->attribute_target =
+            g_hash_table_lookup(replica->child->priv->meta,
+                                PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+    }
+
+    bundle_data->container_host_options = g_string_free(buffer, false);
+
+    if (bundle_data->attribute_target != NULL) {
+        pcmk__insert_dup(rsc->priv->meta, PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                         bundle_data->attribute_target);
+        pcmk__insert_dup(bundle_data->child->priv->meta,
+                         PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                         bundle_data->attribute_target);
+    }
+
+    return pcmk_rc_ok;
+}
+
 bool
 pe__unpack_bundle(pcmk_resource_t *rsc)
 {
@@ -1307,99 +1413,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     }
 
     if (clone_xml != NULL) {
-        int lpc = 0;
-        pe__bundle_port_t *port = NULL;
-        GString *buffer = NULL;
-        int rc = pe__unpack_resource(clone_xml, &bundle_data->child, rsc,
-                                     rsc->priv->scheduler);
+        int rc = create_child_resource(rsc, clone_xml, have_log_mount);
 
         pcmk__xml_free(clone_xml);
-
         if (rc != pcmk_rc_ok) {
             return false;
-        }
-
-        /* Currently, we always map the default authentication key location
-         * into the same location inside the container.
-         *
-         * Ideally, we would respect the host's PCMK_authkey_location, but:
-         * - it may be different on different nodes;
-         * - the actual connection will do extra checking to make sure the key
-         *   file exists and is readable, that we can't do here on the DC
-         * - tools such as crm_resource and crm_simulate may not have the same
-         *   environment variables as the cluster, causing operation digests to
-         *   differ
-         *
-         * Always using the default location inside the container is fine,
-         * because we control the pacemaker_remote environment, and it avoids
-         * having to pass another environment variable to the container.
-         *
-         * @TODO A better solution may be to have only pacemaker_remote use the
-         * environment variable, and have the cluster nodes use a new
-         * cluster option for key location. This would introduce the limitation
-         * of the location being the same on all cluster nodes, but that's
-         * reasonable.
-         */
-        mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
-                  DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
-
-        if (!have_log_mount) {
-            mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
-                      pe__bundle_mount_subdir);
-        }
-
-        port = pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
-        if(bundle_data->control_port) {
-            port->source = pcmk__str_copy(bundle_data->control_port);
-        } else {
-            /* If we wanted to respect PCMK_remote_port, we could use
-             * crm_default_remote_port() here and elsewhere in this file instead
-             * of DEFAULT_REMOTE_PORT.
-             *
-             * However, it gains nothing, since we control both the container
-             * environment and the connection resource parameters, and the user
-             * can use a different port if desired by setting
-             * PCMK_XA_CONTROL_PORT.
-             */
-            port->source = pcmk__itoa(DEFAULT_REMOTE_PORT);
-        }
-        port->target = pcmk__str_copy(port->source);
-        bundle_data->ports = g_list_append(bundle_data->ports, port);
-
-        buffer = g_string_sized_new(1024);
-        for (GList *iter = bundle_data->child->priv->children;
-             iter != NULL; iter = iter->next) {
-
-            pcmk__bundle_replica_t *replica = NULL;
-
-            replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
-            replica->child = iter->data;
-            pcmk__set_rsc_flags(replica->child, pcmk__rsc_exclusive_probes);
-            replica->offset = lpc++;
-
-            // Ensure the child's notify gets set based on the underlying primitive's value
-            if (pcmk__is_set(replica->child->flags, pcmk__rsc_notify)) {
-                pcmk__set_rsc_flags(bundle_data->child, pcmk__rsc_notify);
-            }
-
-            allocate_ip(bundle_data, replica, buffer);
-            bundle_data->replicas = g_list_append(bundle_data->replicas,
-                                                  replica);
-
-            // coverity[null_field : FALSE] replica->child can't be NULL here
-            bundle_data->attribute_target =
-                g_hash_table_lookup(replica->child->priv->meta,
-                                    PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
-        }
-        bundle_data->container_host_options = g_string_free(buffer, false);
-
-        if (bundle_data->attribute_target) {
-            pcmk__insert_dup(rsc->priv->meta,
-                             PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
-                             bundle_data->attribute_target);
-            pcmk__insert_dup(bundle_data->child->priv->meta,
-                             PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
-                             bundle_data->attribute_target);
         }
 
     } else {
