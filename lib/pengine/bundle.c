@@ -73,7 +73,6 @@ typedef struct {
         int promoted_max;
         int nreplicas;
         int nreplicas_per_host;
-        char *prefix;
         char *image;
         const char *ip_last;
         char *host_network;
@@ -1385,7 +1384,6 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
     bundle_data = pcmk__assert_alloc(1, sizeof(pe__bundle_variant_data_t));
     rsc->priv->variant_opaque = bundle_data;
-    bundle_data->prefix = pcmk__str_copy(rsc->id);
 
     if (unpack_bundle_container(rsc) != pcmk_rc_ok) {
         return false;
@@ -2014,7 +2012,6 @@ pe__free_bundle(pcmk_resource_t *rsc)
     get_bundle_variant_data(bundle_data, rsc);
     pcmk__rsc_trace(rsc, "Freeing %s", rsc->id);
 
-    free(bundle_data->prefix);
     free(bundle_data->image);
     free(bundle_data->control_port);
     free(bundle_data->host_network);
