@@ -1127,20 +1127,70 @@ unpack_bundle_network(pcmk_resource_t *rsc)
     }
 }
 
-#define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
-        flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
-                                   "Bundle mount", pcmk__xe_id(mount_xml),  \
-                                   flags, (flags_to_set), #flags_to_set);   \
-    } while (0)
+/*!
+ * \internal
+ * \brief Unpack a bundle resource's storage child into bundle private data
+ *
+ * \param[in,out] rsc  Bundle resource
+ *
+ * \return \c true if a mount with target \c "/var/log" was unpacked, or
+ *         \c false otherwise
+ */
+static bool
+unpack_bundle_storage(pcmk_resource_t *rsc)
+{
+    xmlNode *xml = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    bool have_log_mount = false;
+
+    xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_STORAGE, NULL, NULL);
+    if (xml == NULL) {
+        return false;
+    }
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    for (const xmlNode *mapping = pcmk__xe_first_child(xml,
+                                                       PCMK_XE_STORAGE_MAPPING,
+                                                       NULL, NULL);
+         mapping != NULL;
+         mapping = pcmk__xe_next(mapping, PCMK_XE_STORAGE_MAPPING)) {
+
+        const char *source = pcmk__xe_get(mapping, PCMK_XA_SOURCE_DIR);
+        const char *target = pcmk__xe_get(mapping, PCMK_XA_TARGET_DIR);
+        const char *options = pcmk__xe_get(mapping, PCMK_XA_OPTIONS);
+        uint32_t flags = pe__bundle_mount_none;
+
+        if (source == NULL) {
+            source = pcmk__xe_get(mapping, PCMK_XA_SOURCE_DIR_ROOT);
+            flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,
+                                       "Bundle mount", pcmk__xe_id(mapping),
+                                       flags, pe__bundle_mount_subdir,
+                                       "pe__bundle_mount_subdir");
+        }
+
+        if ((source == NULL) || (target == NULL)) {
+            pcmk__config_err("Invalid mount directive %s",
+                             pcmk__xe_id(mapping));
+            continue;
+        }
+
+        mount_add(bundle_data, source, target, options, flags);
+        if (pcmk__str_eq(target, "/var/log", pcmk__str_none)) {
+            have_log_mount = true;
+        }
+    }
+
+    return have_log_mount;
+}
 
 bool
 pe__unpack_bundle(pcmk_resource_t *rsc)
 {
     xmlNode *xml_obj = NULL;
-    const xmlNode *xml_child = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
-    bool need_log_mount = true;
+    bool have_log_mount = false;
 
     pcmk__assert(rsc != NULL);
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -1155,34 +1205,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
     unpack_bundle_network(rsc);
 
-    xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_STORAGE, NULL,
-                                   NULL);
-    for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_STORAGE_MAPPING,
-                                          NULL, NULL);
-         xml_child != NULL;
-         xml_child = pcmk__xe_next(xml_child, PCMK_XE_STORAGE_MAPPING)) {
-
-        const char *source = pcmk__xe_get(xml_child, PCMK_XA_SOURCE_DIR);
-        const char *target = pcmk__xe_get(xml_child, PCMK_XA_TARGET_DIR);
-        const char *options = pcmk__xe_get(xml_child, PCMK_XA_OPTIONS);
-        int flags = pe__bundle_mount_none;
-
-        if (source == NULL) {
-            source = pcmk__xe_get(xml_child, PCMK_XA_SOURCE_DIR_ROOT);
-            pe__set_bundle_mount_flags(xml_child, flags,
-                                       pe__bundle_mount_subdir);
-        }
-
-        if (source && target) {
-            mount_add(bundle_data, source, target, options, flags);
-            if (strcmp(target, "/var/log") == 0) {
-                need_log_mount = false;
-            }
-        } else {
-            pcmk__config_err("Invalid mount directive %s",
-                             pcmk__xe_id(xml_child));
-        }
-    }
+    have_log_mount = unpack_bundle_storage(rsc);
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE, NULL,
                                    NULL);
@@ -1279,7 +1302,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         mount_add(bundle_data, DEFAULT_REMOTE_KEY_LOCATION,
                   DEFAULT_REMOTE_KEY_LOCATION, NULL, pe__bundle_mount_none);
 
-        if (need_log_mount) {
+        if (!have_log_mount) {
             mount_add(bundle_data, CRM_BUNDLE_DIR, "/var/log", NULL,
                       pe__bundle_mount_subdir);
         }
