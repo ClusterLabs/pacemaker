@@ -1184,11 +1184,90 @@ unpack_bundle_storage(pcmk_resource_t *rsc)
     return have_log_mount;
 }
 
+/*!
+ * \internal
+ * \brief Unpack a bundle resource's primitive child
+ *
+ * If a primitive child is found, this creates a \c PCMK_XE_CLONE element
+ * containing a copy of the primitive element and appropriate options. This does
+ * not unpack the created element.
+ *
+ * \param[in,out] rsc        Bundle resource
+ * \param[out]    clone_xml  Where to store newly allocated \c PCMK_XE_CLONE
+ *
+ * \return Standard Pacemaker return code
+ *
+ * \note The caller is responsible for freeing \p *clone_xml using
+ *       \c pcmk__xml_free().
+ */
+static int
+unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
+{
+    xmlNode *xml = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    const char *suffix = NULL;
+    char *value = NULL;
+    xmlNode *xml_set = NULL;
+
+    xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE, NULL, NULL);
+    if (xml == NULL) {
+        return pcmk_rc_ok;
+    }
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    if (!valid_network(bundle_data)) {
+        pcmk__config_err("Cannot control %s inside %s without either "
+                         PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
+                         rsc->id, pcmk__xe_id(xml));
+        return pcmk_rc_unpack_error;
+    }
+
+    *clone_xml = pcmk__xe_create(NULL, PCMK_XE_CLONE);
+
+    /* @COMPAT We no longer use the <master> tag, but we need to keep it as part
+     * of the resource name, so that bundles don't restart in a rolling upgrade.
+     * (It also avoids needing to change regression tests.)
+     */
+    suffix = (bundle_data->promoted_max > 0)? "master" : PCMK_XE_CLONE;
+    pcmk__xe_set_id(*clone_xml, "%s-%s", bundle_data->prefix, suffix);
+
+    xml_set = pcmk__xe_create(*clone_xml, PCMK_XE_META_ATTRIBUTES);
+    pcmk__xe_set_id(xml_set, "%s-%s-meta", bundle_data->prefix,
+                    (*clone_xml)->name);
+
+    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_ORDERED, PCMK_VALUE_TRUE);
+
+    value = pcmk__itoa(bundle_data->nreplicas);
+    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
+    free(value);
+
+    value = pcmk__itoa(bundle_data->nreplicas_per_host);
+    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX, value);
+    free(value);
+
+    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
+                          pcmk__btoa(bundle_data->nreplicas_per_host > 1));
+
+    if (bundle_data->promoted_max != 0) {
+        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTABLE,
+                              PCMK_VALUE_TRUE);
+
+        value = pcmk__itoa(bundle_data->promoted_max);
+        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);
+        free(value);
+    }
+
+    //pcmk__xe_set(xml, PCMK_XA_ID, bundle_data->prefix);
+    pcmk__xml_copy(*clone_xml, xml);
+
+    return pcmk_rc_ok;
+}
+
 bool
 pe__unpack_bundle(pcmk_resource_t *rsc)
 {
-    xmlNode *xml_obj = NULL;
-    xmlNode *xml_resource = NULL;
+    xmlNode *clone_xml = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     bool have_log_mount = false;
 
@@ -1207,72 +1286,18 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
     have_log_mount = unpack_bundle_storage(rsc);
 
-    xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE, NULL,
-                                   NULL);
-    if (xml_obj != NULL) {
-        const char *suffix = NULL;
-        char *value = NULL;
-        xmlNode *xml_set = NULL;
-
-        if (!valid_network(bundle_data)) {
-            pcmk__config_err("Cannot control %s inside %s without either "
-                             PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
-                             rsc->id, pcmk__xe_id(xml_obj));
-            return false;
-        }
-
-        xml_resource = pcmk__xe_create(NULL, PCMK_XE_CLONE);
-
-        /* @COMPAT We no longer use the <master> tag, but we need to keep it as
-         * part of the resource name, so that bundles don't restart in a rolling
-         * upgrade. (It also avoids needing to change regression tests.)
-         */
-        suffix = (const char *) xml_resource->name;
-        if (bundle_data->promoted_max > 0) {
-            suffix = "master";
-        }
-
-        pcmk__xe_set_id(xml_resource, "%s-%s", bundle_data->prefix, suffix);
-
-        xml_set = pcmk__xe_create(xml_resource, PCMK_XE_META_ATTRIBUTES);
-        pcmk__xe_set_id(xml_set, "%s-%s-meta",
-                        bundle_data->prefix, xml_resource->name);
-
-        crm_create_nvpair_xml(xml_set, NULL,
-                              PCMK_META_ORDERED, PCMK_VALUE_TRUE);
-
-        value = pcmk__itoa(bundle_data->nreplicas);
-        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
-        free(value);
-
-        value = pcmk__itoa(bundle_data->nreplicas_per_host);
-        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX, value);
-        free(value);
-
-        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
-                              pcmk__btoa(bundle_data->nreplicas_per_host > 1));
-
-        if (bundle_data->promoted_max) {
-            crm_create_nvpair_xml(xml_set, NULL,
-                                  PCMK_META_PROMOTABLE, PCMK_VALUE_TRUE);
-
-            value = pcmk__itoa(bundle_data->promoted_max);
-            crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);
-            free(value);
-        }
-
-        //pcmk__xe_set(xml_obj, PCMK_XA_ID, bundle_data->prefix);
-        pcmk__xml_copy(xml_resource, xml_obj);
+    if (unpack_bundle_primitive(rsc, &clone_xml) != pcmk_rc_ok) {
+        return false;
     }
 
-    if(xml_resource) {
+    if (clone_xml != NULL) {
         int lpc = 0;
         pe__bundle_port_t *port = NULL;
         GString *buffer = NULL;
-        int rc = pe__unpack_resource(xml_resource, &bundle_data->child, rsc,
+        int rc = pe__unpack_resource(clone_xml, &bundle_data->child, rsc,
                                      rsc->priv->scheduler);
 
-        pcmk__xml_free(xml_resource);
+        pcmk__xml_free(clone_xml);
 
         if (rc != pcmk_rc_ok) {
             return false;
