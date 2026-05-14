@@ -1206,8 +1206,8 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
     xmlNode *xml = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     const char *suffix = NULL;
-    char *value = NULL;
     xmlNode *xml_set = NULL;
+    xmlNode *nvpair = NULL;
 
     xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE, NULL, NULL);
     if (xml == NULL) {
@@ -1238,24 +1238,25 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
 
     crm_create_nvpair_xml(xml_set, NULL, PCMK_META_ORDERED, PCMK_VALUE_TRUE);
 
-    value = pcmk__itoa(bundle_data->nreplicas);
-    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, value);
-    free(value);
+    nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, NULL);
+    pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->nreplicas);
 
-    value = pcmk__itoa(bundle_data->nreplicas_per_host);
-    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX, value);
-    free(value);
+    nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX,
+                                   NULL);
+    pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->nreplicas_per_host);
 
-    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
-                          pcmk__btoa(bundle_data->nreplicas_per_host > 1));
+    nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
+                                   NULL);
+    pcmk__xe_set_bool(nvpair, PCMK_XA_VALUE,
+                      (bundle_data->nreplicas_per_host > 1));
 
     if (bundle_data->promoted_max != 0) {
         crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTABLE,
                               PCMK_VALUE_TRUE);
 
-        value = pcmk__itoa(bundle_data->promoted_max);
-        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX, value);
-        free(value);
+        nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX,
+                                       NULL);
+        pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->promoted_max);
     }
 
     //pcmk__xe_set(xml, PCMK_XA_ID, bundle_data->prefix);
