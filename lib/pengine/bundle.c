@@ -315,12 +315,6 @@ allocate_ip(pe__bundle_variant_data_t *data, pcmk__bundle_replica_t *replica,
 
     data->ip_last = replica->ipaddr;
 
-    if ((data->agent_type != PE__CONTAINER_AGENT_DOCKER)
-        && (data->agent_type != PE__CONTAINER_AGENT_PODMAN)) {
-
-        return;
-    }
-
     if (data->add_host) {
         g_string_append_printf(buffer, " --add-host=%s-%d:%s", data->prefix,
                                replica->offset, replica->ipaddr);
@@ -420,13 +414,6 @@ create_container_resource(pcmk_resource_t *parent,
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
     get_bundle_variant_data(bundle_data, parent);
-
-    if ((bundle_data->agent_type != PE__CONTAINER_AGENT_DOCKER)
-        && (bundle_data->agent_type != PE__CONTAINER_AGENT_PODMAN)) {
-
-        rc = pcmk_rc_unpack_error;
-        goto done;
-    }
 
     agent_str = container_agent_str(bundle_data->agent_type);
     buffer = g_string_sized_new(4096);
