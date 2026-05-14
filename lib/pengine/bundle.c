@@ -1058,6 +1058,75 @@ unpack_bundle_container(pcmk_resource_t *rsc)
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Unpack a bundle resource's network child into bundle private data
+ *
+ * This does not create or unpack an IP resource.
+ *
+ * \param[in,out] rsc  Bundle resource
+ */
+static void
+unpack_bundle_network(pcmk_resource_t *rsc)
+{
+    xmlNode *xml = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    const char *value = NULL;
+
+    xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_NETWORK, NULL, NULL);
+    if (xml == NULL) {
+        return;
+    }
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    bundle_data->ip_range_start = pcmk__xe_get_copy(xml,
+                                                    PCMK_XA_IP_RANGE_START);
+    bundle_data->host_netmask = pcmk__xe_get_copy(xml, PCMK_XA_HOST_NETMASK);
+    bundle_data->host_network = pcmk__xe_get_copy(xml, PCMK_XA_HOST_INTERFACE);
+    bundle_data->control_port = pcmk__xe_get_copy(xml, PCMK_XA_CONTROL_PORT);
+
+    value = pcmk__xe_get(xml, PCMK_XA_ADD_HOST);
+    if ((value == NULL)
+        || (pcmk__parse_bool(value, &bundle_data->add_host) != pcmk_rc_ok)) {
+
+        // Default to true if unset or invaid
+        bundle_data->add_host = true;
+    }
+
+    for (const xmlNode *mapping = pcmk__xe_first_child(xml,
+                                                       PCMK_XE_PORT_MAPPING,
+                                                       NULL, NULL);
+         mapping != NULL;
+         mapping = pcmk__xe_next(mapping, PCMK_XE_PORT_MAPPING)) {
+
+        pe__bundle_port_t *port = pcmk__assert_alloc(1,
+                                                     sizeof(pe__bundle_port_t));
+
+        port->source = pcmk__xe_get_copy(mapping, PCMK_XA_PORT);
+
+        if (port->source == NULL) {
+            port->source = pcmk__xe_get_copy(mapping, PCMK_XA_RANGE);
+
+        } else {
+            port->target = pcmk__xe_get_copy(mapping, PCMK_XA_INTERNAL_PORT);
+        }
+
+        if (pcmk__str_empty(port->source)) {
+            pcmk__config_err("Invalid " PCMK_XA_PORT " directive %s",
+                             pcmk__xe_id(mapping));
+            port_free(port);
+            return;
+        }
+
+        if (port->target == NULL) {
+            port->target = pcmk__str_copy(port->source);
+        }
+
+        bundle_data->ports = g_list_append(bundle_data->ports, port);
+    }
+}
+
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
         flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
                                    "Bundle mount", pcmk__xe_id(mount_xml),  \
@@ -1067,7 +1136,6 @@ unpack_bundle_container(pcmk_resource_t *rsc)
 bool
 pe__unpack_bundle(pcmk_resource_t *rsc)
 {
-    const char *value = NULL;
     xmlNode *xml_obj = NULL;
     const xmlNode *xml_child = NULL;
     xmlNode *xml_resource = NULL;
@@ -1085,57 +1153,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         return false;
     }
 
-    xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_NETWORK, NULL,
-                                   NULL);
-    if(xml_obj) {
-        bundle_data->ip_range_start = pcmk__xe_get_copy(xml_obj,
-                                                        PCMK_XA_IP_RANGE_START);
-        bundle_data->host_netmask = pcmk__xe_get_copy(xml_obj,
-                                                      PCMK_XA_HOST_NETMASK);
-        bundle_data->host_network = pcmk__xe_get_copy(xml_obj,
-                                                      PCMK_XA_HOST_INTERFACE);
-        bundle_data->control_port = pcmk__xe_get_copy(xml_obj,
-                                                      PCMK_XA_CONTROL_PORT);
-
-        value = pcmk__xe_get(xml_obj, PCMK_XA_ADD_HOST);
-        if ((value == NULL)
-            || (pcmk__parse_bool(value,
-                                 &bundle_data->add_host) != pcmk_rc_ok)) {
-
-            // Default to true if unset or invaid
-            bundle_data->add_host = true;
-        }
-
-        for (xml_child = pcmk__xe_first_child(xml_obj, PCMK_XE_PORT_MAPPING,
-                                              NULL, NULL);
-             xml_child != NULL;
-             xml_child = pcmk__xe_next(xml_child, PCMK_XE_PORT_MAPPING)) {
-
-            pe__bundle_port_t *port =
-                pcmk__assert_alloc(1, sizeof(pe__bundle_port_t));
-
-            port->source = pcmk__xe_get_copy(xml_child, PCMK_XA_PORT);
-
-            if(port->source == NULL) {
-                port->source = pcmk__xe_get_copy(xml_child, PCMK_XA_RANGE);
-            } else {
-                port->target = pcmk__xe_get_copy(xml_child,
-                                                 PCMK_XA_INTERNAL_PORT);
-            }
-
-            if(port->source != NULL && strlen(port->source) > 0) {
-                if(port->target == NULL) {
-                    port->target = pcmk__str_copy(port->source);
-                }
-                bundle_data->ports = g_list_append(bundle_data->ports, port);
-
-            } else {
-                pcmk__config_err("Invalid " PCMK_XA_PORT " directive %s",
-                                 pcmk__xe_id(xml_child));
-                port_free(port);
-            }
-        }
-    }
+    unpack_bundle_network(rsc);
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_STORAGE, NULL,
                                    NULL);
