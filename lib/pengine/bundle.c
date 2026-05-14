@@ -1219,21 +1219,22 @@ valid_network_for_primitive(pcmk_resource_t *rsc)
 static int
 unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
 {
-    xmlNode *xml = NULL;
+    xmlNode *primitive_xml = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
     const char *suffix = NULL;
-    xmlNode *xml_set = NULL;
+    xmlNode *meta = NULL;
     xmlNode *nvpair = NULL;
 
-    xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE, NULL, NULL);
-    if (xml == NULL) {
+    primitive_xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PRIMITIVE,
+                                         NULL, NULL);
+    if (primitive_xml == NULL) {
         return pcmk_rc_ok;
     }
 
     if (!valid_network_for_primitive(rsc)) {
         pcmk__config_err("Cannot control %s inside %s without either "
                          PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
-                         rsc->id, pcmk__xe_id(xml));
+                         rsc->id, pcmk__xe_id(primitive_xml));
         return pcmk_rc_unpack_error;
     }
 
@@ -1248,35 +1249,33 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
     suffix = (bundle_data->promoted_max > 0)? "master" : PCMK_XE_CLONE;
     pcmk__xe_set_id(*clone_xml, "%s-%s", bundle_data->prefix, suffix);
 
-    xml_set = pcmk__xe_create(*clone_xml, PCMK_XE_META_ATTRIBUTES);
-    pcmk__xe_set_id(xml_set, "%s-%s-meta", bundle_data->prefix,
+    meta = pcmk__xe_create(*clone_xml, PCMK_XE_META_ATTRIBUTES);
+    pcmk__xe_set_id(meta, "%s-%s-meta", bundle_data->prefix,
                     (*clone_xml)->name);
 
-    crm_create_nvpair_xml(xml_set, NULL, PCMK_META_ORDERED, PCMK_VALUE_TRUE);
+    crm_create_nvpair_xml(meta, NULL, PCMK_META_ORDERED, PCMK_VALUE_TRUE);
 
-    nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_MAX, NULL);
+    nvpair = crm_create_nvpair_xml(meta, NULL, PCMK_META_CLONE_MAX, NULL);
     pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->nreplicas);
 
-    nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_CLONE_NODE_MAX,
-                                   NULL);
+    nvpair = crm_create_nvpair_xml(meta, NULL, PCMK_META_CLONE_NODE_MAX, NULL);
     pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->nreplicas_per_host);
 
-    nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_GLOBALLY_UNIQUE,
-                                   NULL);
+    nvpair = crm_create_nvpair_xml(meta, NULL, PCMK_META_GLOBALLY_UNIQUE, NULL);
     pcmk__xe_set_bool(nvpair, PCMK_XA_VALUE,
                       pcmk__is_set(rsc->flags, pcmk__rsc_unique));
 
     if (bundle_data->promoted_max != 0) {
-        crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTABLE,
+        crm_create_nvpair_xml(meta, NULL, PCMK_META_PROMOTABLE,
                               PCMK_VALUE_TRUE);
 
-        nvpair = crm_create_nvpair_xml(xml_set, NULL, PCMK_META_PROMOTED_MAX,
+        nvpair = crm_create_nvpair_xml(meta, NULL, PCMK_META_PROMOTED_MAX,
                                        NULL);
         pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->promoted_max);
     }
 
-    //pcmk__xe_set(xml, PCMK_XA_ID, bundle_data->prefix);
-    pcmk__xml_copy(*clone_xml, xml);
+    //pcmk__xe_set(primitive_xml, PCMK_XA_ID, bundle_data->prefix);
+    pcmk__xml_copy(*clone_xml, primitive_xml);
 
     return pcmk_rc_ok;
 }
