@@ -1194,8 +1194,7 @@ valid_network_for_primitive(pcmk_resource_t *rsc)
                           "because specifying " PCMK_XA_CONTROL_PORT " "
                           "requires it", bundle_data->prefix);
         bundle_data->nreplicas_per_host = 1;
-        // @TODO to be sure:
-        // pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
+        pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     }
 
     return true;
