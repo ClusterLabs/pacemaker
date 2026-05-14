@@ -619,16 +619,51 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     }
 
     /* Support compression on the receiving end now, in case we ever want to add it later */
-    if (header->payload_compressed) {
+    if (header->payload_compressed != 0) {
         int rc = 0;
-        unsigned int size_u = 1 + header->payload_uncompressed;
-        char *uncompressed =
-            pcmk__assert_alloc(1, header->payload_offset + size_u);
+        unsigned int size_u = 0;
+        char *uncompressed = NULL;
 
-        crm_trace("Decompressing message data %d bytes into %d bytes",
-                 header->payload_compressed, size_u);
+#if (UINT32_MAX < UINT_MAX)
+        if (header->payload_uncompressed >= UINT_MAX) {
+            crm_err("Couldn't decompress message because uncompressed "
+                    "payload size (%" PRIu32 ") is greater than UINT_MAX "
+                    "(%u)", header->payload_uncompressed, UINT_MAX);
+            return NULL;
+        }
+#endif
 
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset, &size_u,
+        /* @TODO Is the extra byte for the null terminator?
+         * pcmk__remote_send_xml() also adds one byte to the iov length.
+         * (However, we do need to account for the possibility of receiving a
+         * message from an untrusted sender.)
+         */
+        size_u = 1 + header->payload_uncompressed;
+
+        /* Header and uncompressed payload must fit in the destination buffer.
+         * We do not need to separately check the header size here since
+         * localized_remote_header will return NULL if it's incorrect.
+         */
+#if (UINT_MAX >= SIZE_MAX)
+        if ((size_u >= SIZE_MAX)
+            || (header->payload_offset > (SIZE_MAX - size_u))) {
+#else
+        if (header->payload_offset > (SIZE_MAX - size_u)) {
+#endif
+            crm_err("Couldn't decompress message because the required buffer "
+                    "size (%" PRIu32 " + %u) is greater than SIZE_MAX (%zu)",
+                    header->payload_offset, size_u, SIZE_MAX);
+            return NULL;
+        }
+
+        crm_trace("Decompressing message data %" PRIu32 " bytes into %u "
+                  "bytes", header->payload_compressed, size_u);
+
+        uncompressed = pcmk__assert_alloc(header->payload_offset + size_u,
+                                          sizeof(char));
+
+        rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset,
+                                        &size_u,
                                         remote->buffer + header->payload_offset,
                                         header->payload_compressed, 1, 0);
         rc = pcmk__bzlib2rc(rc);
