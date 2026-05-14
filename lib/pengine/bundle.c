@@ -1435,7 +1435,6 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
         if (create_replica_resources(rsc, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
-            pcmk__free_resource(rsc);
             return false;
         }
 
@@ -1465,10 +1464,11 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         }
     }
 
-    if (bundle_data->child) {
+    if (bundle_data->child != NULL) {
         rsc->priv->children = g_list_append(rsc->priv->children,
                                             bundle_data->child);
     }
+
     return true;
 }
 
