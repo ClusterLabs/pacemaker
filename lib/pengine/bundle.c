@@ -1164,34 +1164,41 @@ unpack_bundle_storage(pcmk_resource_t *rsc)
 
 /*!
  * \internal
- * \brief Check whether cluster can manage resource inside container
+ * \brief Validate a bundle's networking configuration for running a primitive
  *
- * \param[in,out] data  Container variant data
+ * The networking configuration is considered valid if an IP range or control
+ * port has been specified. If a control port is used without an IP range,
+ * replicas per host must be 1.
  *
- * \return TRUE if networking configuration is acceptable, FALSE otherwise
+ * \param[in,out] rsc  Bundle resource
  *
- * \note The resource is manageable if an IP range or control port has been
- *       specified. If a control port is used without an IP range, replicas per
- *       host must be 1.
+ * \return \c true if the configuration is valid, or \c false otherwise
  */
 static bool
-valid_network(pe__bundle_variant_data_t *data)
+valid_network_for_primitive(pcmk_resource_t *rsc)
 {
-    if(data->ip_range_start) {
-        return TRUE;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    if (bundle_data->ip_range_start != NULL) {
+        return true;
     }
-    if(data->control_port) {
-        if(data->nreplicas_per_host > 1) {
-            pcmk__config_err("Specifying the '" PCMK_XA_CONTROL_PORT "' for %s "
-                             "requires '" PCMK_XA_REPLICAS_PER_HOST "=1'",
-                             data->prefix);
-            data->nreplicas_per_host = 1;
-            // @TODO to be sure:
-            // pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
-        }
-        return TRUE;
+
+    if (bundle_data->control_port == NULL) {
+        return false;
     }
-    return FALSE;
+
+    if (bundle_data->nreplicas_per_host > 1) {
+        pcmk__config_warn("Using " PCMK_XA_REPLICAS_PER_HOST "=1 for %s "
+                          "because specifying " PCMK_XA_CONTROL_PORT " "
+                          "requires it", bundle_data->prefix);
+        bundle_data->nreplicas_per_host = 1;
+        // @TODO to be sure:
+        // pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
+    }
+
+    return true;
 }
 
 /*!
@@ -1224,14 +1231,14 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
         return pcmk_rc_ok;
     }
 
-    get_bundle_variant_data(bundle_data, rsc);
-
-    if (!valid_network(bundle_data)) {
+    if (!valid_network_for_primitive(rsc)) {
         pcmk__config_err("Cannot control %s inside %s without either "
                          PCMK_XA_IP_RANGE_START " or " PCMK_XA_CONTROL_PORT,
                          rsc->id, pcmk__xe_id(xml));
         return pcmk_rc_unpack_error;
     }
+
+    get_bundle_variant_data(bundle_data, rsc);
 
     *clone_xml = pcmk__xe_create(NULL, PCMK_XE_CLONE);
 
