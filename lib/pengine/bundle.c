@@ -967,6 +967,40 @@ pe__add_bundle_remote_name(pcmk_resource_t *rsc, xmlNode *xml,
     return node->priv->name;
 }
 
+/*!
+ * \internal
+ * \brief Get container XML element from a bundle resource and set agent type
+ *
+ * On success, this sets the \c agent_type field of the resource's bundle
+ * private data.
+ *
+ * \param[in,out] rsc  Bundle resource
+ *
+ * \return Child XML element for container within <tt>rsc->priv->xml</tt>
+ */
+static xmlNode *
+get_container_xml(pcmk_resource_t *rsc)
+{
+    xmlNode *xml = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_DOCKER, NULL, NULL);
+    if (xml != NULL) {
+        bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
+        return xml;
+    }
+
+    xml = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PODMAN, NULL, NULL);
+    if (xml != NULL) {
+        bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
+        return xml;
+    }
+
+    return NULL;
+}
+
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
         flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
                                    "Bundle mount", pcmk__xe_id(mount_xml),  \
@@ -990,20 +1024,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     rsc->priv->variant_opaque = bundle_data;
     bundle_data->prefix = pcmk__str_copy(rsc->id);
 
-    xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_DOCKER, NULL,
-                                   NULL);
-    if (xml_obj != NULL) {
-        bundle_data->agent_type = PE__CONTAINER_AGENT_DOCKER;
-    }
-
-    if (xml_obj == NULL) {
-        xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_PODMAN, NULL,
-                                       NULL);
-        if (xml_obj != NULL) {
-            bundle_data->agent_type = PE__CONTAINER_AGENT_PODMAN;
-        }
-    }
-
+    xml_obj = get_container_xml(rsc);
     if (xml_obj == NULL) {
         return false;
     }
