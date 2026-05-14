@@ -1001,6 +1001,63 @@ get_container_xml(pcmk_resource_t *rsc)
     return NULL;
 }
 
+/*!
+ * \internal
+ * \brief Unpack a bundle resource's container child into bundle private data
+ *
+ * This does not create or unpack a container resource.
+ *
+ * \param[in,out] rsc  Bundle resource
+ *
+ * \return Standard Pacemaker return code
+ */
+static int
+unpack_bundle_container(pcmk_resource_t *rsc)
+{
+    xmlNode *xml = NULL;
+    pe__bundle_variant_data_t *bundle_data = NULL;
+    const char *value = NULL;
+
+    xml = get_container_xml(rsc);
+    if (xml == NULL) {
+        return pcmk_rc_unpack_error;
+    }
+
+    get_bundle_variant_data(bundle_data, rsc);
+
+    // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX
+    value = pcmk__xe_get(xml, PCMK_XA_PROMOTED_MAX);
+    pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
+
+    // Default nreplicas to PCMK_XA_PROMOTED_MAX if specified or 1 otherwise
+    value = pcmk__xe_get(xml, PCMK_XA_REPLICAS);
+
+    if ((value == NULL) && (bundle_data->promoted_max > 0)) {
+        bundle_data->nreplicas = bundle_data->promoted_max;
+
+    } else {
+        pcmk__scan_min_int(value, &bundle_data->nreplicas, 1);
+    }
+
+    /* Communication between containers on the same host via the floating IPs
+     * works only if the container is started with:
+     *   --userland-proxy=false --ip-masq=false
+     */
+    value = pcmk__xe_get(xml, PCMK_XA_REPLICAS_PER_HOST);
+    pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
+
+    if (bundle_data->nreplicas_per_host == 1) {
+        pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
+    }
+
+    bundle_data->container_command = pcmk__xe_get_copy(xml,
+                                                       PCMK_XA_RUN_COMMAND);
+    bundle_data->launcher_options = pcmk__xe_get_copy(xml, PCMK_XA_OPTIONS);
+    bundle_data->image = pcmk__xe_get_copy(xml, PCMK_XA_IMAGE);
+    bundle_data->container_network = pcmk__xe_get_copy(xml, PCMK_XA_NETWORK);
+    return pcmk_rc_ok;
+}
+
 #define pe__set_bundle_mount_flags(mount_xml, flags, flags_to_set) do {     \
         flags = pcmk__set_flags_as(__func__, __LINE__, LOG_TRACE,           \
                                    "Bundle mount", pcmk__xe_id(mount_xml),  \
@@ -1024,42 +1081,9 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     rsc->priv->variant_opaque = bundle_data;
     bundle_data->prefix = pcmk__str_copy(rsc->id);
 
-    xml_obj = get_container_xml(rsc);
-    if (xml_obj == NULL) {
+    if (unpack_bundle_container(rsc) != pcmk_rc_ok) {
         return false;
     }
-
-    // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX
-    value = pcmk__xe_get(xml_obj, PCMK_XA_PROMOTED_MAX);
-    pcmk__scan_min_int(value, &bundle_data->promoted_max, 0);
-
-    /* Default replicas to PCMK_XA_PROMOTED_MAX if it was specified and 1
-     * otherwise
-     */
-    value = pcmk__xe_get(xml_obj, PCMK_XA_REPLICAS);
-    if ((value == NULL) && (bundle_data->promoted_max > 0)) {
-        bundle_data->nreplicas = bundle_data->promoted_max;
-    } else {
-        pcmk__scan_min_int(value, &bundle_data->nreplicas, 1);
-    }
-
-    /*
-     * Communication between containers on the same host via the
-     * floating IPs only works if the container is started with:
-     *   --userland-proxy=false --ip-masq=false
-     */
-    value = pcmk__xe_get(xml_obj, PCMK_XA_REPLICAS_PER_HOST);
-    pcmk__scan_min_int(value, &bundle_data->nreplicas_per_host, 1);
-    if (bundle_data->nreplicas_per_host == 1) {
-        pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
-    }
-
-    bundle_data->container_command = pcmk__xe_get_copy(xml_obj,
-                                                       PCMK_XA_RUN_COMMAND);
-    bundle_data->launcher_options = pcmk__xe_get_copy(xml_obj, PCMK_XA_OPTIONS);
-    bundle_data->image = pcmk__xe_get_copy(xml_obj, PCMK_XA_IMAGE);
-    bundle_data->container_network = pcmk__xe_get_copy(xml_obj,
-                                                       PCMK_XA_NETWORK);
 
     xml_obj = pcmk__xe_first_child(rsc->priv->xml, PCMK_XE_NETWORK, NULL,
                                    NULL);
