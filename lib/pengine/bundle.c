@@ -377,33 +377,37 @@ valid_network(pe__bundle_variant_data_t *data)
 }
 
 static int
-create_ip_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                   pcmk__bundle_replica_t *replica)
+create_ip_resource(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica)
 {
     char *id = NULL;
     xmlNode *xml_ip = NULL;
     xmlNode *xml_obj = NULL;
     int rc = pcmk_rc_ok;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
-    if (data->ip_range_start == NULL) {
+    get_bundle_variant_data(bundle_data, parent);
+
+    if (bundle_data->ip_range_start == NULL) {
         goto done;
     }
 
-    id = pcmk__assert_asprintf("%s-ip-%s", data->prefix, replica->ipaddr);
+    id = pcmk__assert_asprintf("%s-ip-%s", bundle_data->prefix,
+                               replica->ipaddr);
     pcmk__xml_sanitize_id(id);
     xml_ip = create_resource(id, "heartbeat", "IPaddr2");
 
     xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
-    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", bundle_data->prefix,
+                    replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
 
-    if (data->host_network != NULL) {
-        crm_create_nvpair_xml(xml_obj, NULL, "nic", data->host_network);
+    if (bundle_data->host_network != NULL) {
+        crm_create_nvpair_xml(xml_obj, NULL, "nic", bundle_data->host_network);
     }
 
     crm_create_nvpair_xml(xml_obj, NULL, "cidr_netmask",
-                          pcmk__s(data->host_netmask, "32"));
+                          pcmk__s(bundle_data->host_netmask, "32"));
 
     xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_OPERATIONS);
     crm_create_op_xml(xml_obj, id, PCMK_ACTION_MONITOR, "60s", NULL);
@@ -438,7 +442,6 @@ container_agent_str(enum pe__container_agent t)
 
 static int
 create_container_resource(pcmk_resource_t *parent,
-                          const pe__bundle_variant_data_t *data,
                           pcmk__bundle_replica_t *replica)
 {
     char *id = NULL;
@@ -448,31 +451,35 @@ create_container_resource(pcmk_resource_t *parent,
     GString *buffer = NULL;
     GString *dbuffer = NULL;
     int rc = pcmk_rc_ok;
+    const pe__bundle_variant_data_t *bundle_data = NULL;
 
-    if ((data->agent_type != PE__CONTAINER_AGENT_DOCKER)
-        && (data->agent_type != PE__CONTAINER_AGENT_PODMAN)) {
+    get_bundle_variant_data(bundle_data, parent);
+
+    if ((bundle_data->agent_type != PE__CONTAINER_AGENT_DOCKER)
+        && (bundle_data->agent_type != PE__CONTAINER_AGENT_PODMAN)) {
 
         rc = pcmk_rc_unpack_error;
         goto done;
     }
 
-    agent_str = container_agent_str(data->agent_type);
+    agent_str = container_agent_str(bundle_data->agent_type);
     buffer = g_string_sized_new(4096);
 
-    id = pcmk__assert_asprintf("%s-%s-%d", data->prefix, agent_str,
+    id = pcmk__assert_asprintf("%s-%s-%d", bundle_data->prefix, agent_str,
                                replica->offset);
     pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
 
     xml_obj = pcmk__xe_create(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
-    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", data->prefix, replica->offset);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", bundle_data->prefix,
+                    replica->offset);
 
-    crm_create_nvpair_xml(xml_obj, NULL, "image", data->image);
+    crm_create_nvpair_xml(xml_obj, NULL, "image", bundle_data->image);
     crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", PCMK_VALUE_TRUE);
     crm_create_nvpair_xml(xml_obj, NULL, "force_kill", PCMK_VALUE_FALSE);
     crm_create_nvpair_xml(xml_obj, NULL, "reuse", PCMK_VALUE_FALSE);
 
-    if (data->agent_type == PE__CONTAINER_AGENT_DOCKER) {
+    if (bundle_data->agent_type == PE__CONTAINER_AGENT_DOCKER) {
         g_string_append(buffer, " --restart=no");
     }
 
@@ -481,32 +488,34 @@ create_container_resource(pcmk_resource_t *parent,
      * this makes applications happy who need their  hostname to match the IP
      * they bind to.
      */
-    if (data->ip_range_start != NULL) {
-        g_string_append_printf(buffer, " -h %s-%d", data->prefix,
+    if (bundle_data->ip_range_start != NULL) {
+        g_string_append_printf(buffer, " -h %s-%d", bundle_data->prefix,
                                replica->offset);
     }
 
     g_string_append(buffer, " -e PCMK_stderr=1");
 
-    if (data->container_network != NULL) {
-        pcmk__g_strcat(buffer, " --net=", data->container_network, NULL);
+    if (bundle_data->container_network != NULL) {
+        pcmk__g_strcat(buffer, " --net=", bundle_data->container_network, NULL);
     }
 
-    if (data->control_port != NULL) {
+    if (bundle_data->control_port != NULL) {
         pcmk__g_strcat(buffer, " -e PCMK_" PCMK__ENV_REMOTE_PORT "=",
-                       data->control_port, NULL);
+                       bundle_data->control_port, NULL);
+
     } else {
         g_string_append_printf(buffer, " -e PCMK_" PCMK__ENV_REMOTE_PORT "=%d",
                                DEFAULT_REMOTE_PORT);
     }
 
-    for (GList *iter = data->mounts; iter != NULL; iter = iter->next) {
-        pe__bundle_mount_t *mount = (pe__bundle_mount_t *) iter->data;
+    for (GList *iter = bundle_data->mounts; iter != NULL; iter = iter->next) {
+        pe__bundle_mount_t *mount = iter->data;
         char *source = NULL;
 
         if (pcmk__is_set(mount->flags, pe__bundle_mount_subdir)) {
             source = pcmk__assert_asprintf("%s/%s-%d", mount->source,
-                                           data->prefix, replica->offset);
+                                           bundle_data->prefix,
+                                           replica->offset);
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
@@ -520,15 +529,15 @@ create_container_resource(pcmk_resource_t *parent,
         free(source);
     }
 
-    for (GList *iter = data->ports; iter != NULL; iter = iter->next) {
-        pe__bundle_port_t *port = (pe__bundle_port_t *) iter->data;
+    for (GList *iter = bundle_data->ports; iter != NULL; iter = iter->next) {
+        pe__bundle_port_t *port = iter->data;
 
         if (replica->ipaddr != NULL) {
             pcmk__g_strcat(buffer, " -p ", replica->ipaddr, ":", port->source,
                            ":", port->target, NULL);
 
-        } else if (!pcmk__str_eq(data->container_network, PCMK_VALUE_HOST,
-                                 pcmk__str_none)) {
+        } else if (!pcmk__str_eq(bundle_data->container_network,
+                                 PCMK_VALUE_HOST, pcmk__str_none)) {
 
             // No need to do port mapping if net == host
             pcmk__g_strcat(buffer, " -p ", port->source, ":", port->target,
@@ -540,36 +549,36 @@ create_container_resource(pcmk_resource_t *parent,
      * it would cause restarts during rolling upgrades.
      *
      * In a previous version of the container resource creation logic, if
-     * data->launcher_options is not NULL, we append
-     * (" %s", data->launcher_options) even if data->launcher_options is an
-     * empty string. Likewise for data->container_host_options. Using
+     * bundle_data->launcher_options is not NULL, we append
+     * (" %s", bundle_data->launcher_options) even if
+     * bundle_data->launcher_options is an empty string. Likewise for
+     * bundle_data->container_host_options. Using
      *
-     *     pcmk__add_word(buffer, 0, data->launcher_options)
+     *     pcmk__add_word(buffer, 0, bundle_data->launcher_options)
      *
      * removes that extra trailing space, causing a resource definition change.
      */
-    if (data->launcher_options != NULL) {
-        pcmk__g_strcat(buffer, " ", data->launcher_options, NULL);
+    if (bundle_data->launcher_options != NULL) {
+        pcmk__g_strcat(buffer, " ", bundle_data->launcher_options, NULL);
     }
 
-    if (data->container_host_options != NULL) {
-        pcmk__g_strcat(buffer, " ", data->container_host_options, NULL);
+    if (bundle_data->container_host_options != NULL) {
+        pcmk__g_strcat(buffer, " ", bundle_data->container_host_options, NULL);
     }
 
-    crm_create_nvpair_xml(xml_obj, NULL, "run_opts",
-                          (const char *) buffer->str);
+    crm_create_nvpair_xml(xml_obj, NULL, "run_opts", buffer->str);
     g_string_free(buffer, TRUE);
 
     crm_create_nvpair_xml(xml_obj, NULL, "mount_points",
-                          (dbuffer != NULL)? (const char *) dbuffer->str : "");
+                          (dbuffer != NULL)? dbuffer->str : "");
     if (dbuffer != NULL) {
         g_string_free(dbuffer, TRUE);
     }
 
     if (replica->child != NULL) {
-        if (data->container_command != NULL) {
+        if (bundle_data->container_command != NULL) {
             crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                  data->container_command);
+                                  bundle_data->container_command);
         } else {
             crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
                                   SBIN_DIR "/" PCMK__SERVER_REMOTED);
@@ -588,16 +597,16 @@ create_container_resource(pcmk_resource_t *parent,
          * However, this would probably be better done via ACLs as with other
          * Pacemaker Remote nodes.
          */
-    } else if ((child != NULL) && data->untrusted) {
+    } else if ((child != NULL) && bundle_data->untrusted) {
         crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
                               CRM_DAEMON_DIR "/" PCMK__SERVER_EXECD);
         crm_create_nvpair_xml(xml_obj, NULL, "monitor_cmd",
                               CRM_DAEMON_DIR "/pacemaker/cts-exec-helper -c poke");
 #endif
     } else {
-        if (data->container_command != NULL) {
+        if (bundle_data->container_command != NULL) {
             crm_create_nvpair_xml(xml_obj, NULL, "run_cmd",
-                                  data->container_command);
+                                  bundle_data->container_command);
         }
 
         /* TODO: Allow users to specify their own?
@@ -649,8 +658,7 @@ disallow_node(pcmk_resource_t *rsc, const char *uname)
 }
 
 static int
-create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
-                       pcmk__bundle_replica_t *replica)
+create_remote_resource(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica)
 {
     GHashTableIter iter;
     pcmk_node_t *node = NULL;
@@ -661,12 +669,15 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
     const char *connect_name = NULL;
     pcmk_scheduler_t *scheduler = parent->priv->scheduler;
     int rc = pcmk_rc_ok;
+    pe__bundle_variant_data_t *bundle_data = NULL;
 
-    if ((replica->child == NULL) || !valid_network(data)) {
+    get_bundle_variant_data(bundle_data, parent);
+
+    if ((replica->child == NULL) || !valid_network(bundle_data)) {
         goto done;
     }
 
-    id = pcmk__assert_asprintf("%s-%d", data->prefix, replica->offset);
+    id = pcmk__assert_asprintf("%s-%d", bundle_data->prefix, replica->offset);
 
     if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
         free(id);
@@ -690,10 +701,10 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
      * that the bundle node is fenced by recovering the container, and that
      * remote should be ordered relative to the container.
      */
-    if (data->control_port != NULL) {
+    if (bundle_data->control_port != NULL) {
         xml_remote = pe_create_remote_xml(NULL, id, replica->container->id,
                                           NULL, NULL, NULL, connect_name,
-                                          data->control_port);
+                                          bundle_data->control_port);
 
     } else {
         char *port_s = pcmk__itoa(DEFAULT_REMOTE_PORT);
@@ -814,22 +825,21 @@ done:
 
 static int
 create_replica_resources(pcmk_resource_t *parent,
-                         pe__bundle_variant_data_t *data,
                          pcmk__bundle_replica_t *replica)
 {
     int rc = pcmk_rc_ok;
 
-    rc = create_container_resource(parent, data, replica);
+    rc = create_container_resource(parent, replica);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
-    rc = create_ip_resource(parent, data, replica);
+    rc = create_ip_resource(parent, replica);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
 
-    rc = create_remote_resource(parent, data, replica);
+    rc = create_remote_resource(parent, replica);
     if (rc != pcmk_rc_ok) {
         return rc;
     }
@@ -1406,7 +1416,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
         pcmk__bundle_replica_t *replica = iter->data;
 
-        if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
+        if (create_replica_resources(rsc, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
             pcmk__free_resource(rsc);
             return false;
