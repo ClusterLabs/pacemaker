@@ -359,14 +359,12 @@ create_ip_resource(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica)
         goto done;
     }
 
-    id = pcmk__assert_asprintf("%s-ip-%s", bundle_data->prefix,
-                               replica->ipaddr);
+    id = pcmk__assert_asprintf("%s-ip-%s", parent->id, replica->ipaddr);
     pcmk__xml_sanitize_id(id);
     xml_ip = create_resource(id, "heartbeat", "IPaddr2");
 
     xml_obj = pcmk__xe_create(xml_ip, PCMK_XE_INSTANCE_ATTRIBUTES);
-    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", bundle_data->prefix,
-                    replica->offset);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", parent->id, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "ip", replica->ipaddr);
 
@@ -433,14 +431,13 @@ create_container_resource(pcmk_resource_t *parent,
     agent_str = container_agent_str(bundle_data->agent_type);
     buffer = g_string_sized_new(4096);
 
-    id = pcmk__assert_asprintf("%s-%s-%d", bundle_data->prefix, agent_str,
+    id = pcmk__assert_asprintf("%s-%s-%d", parent->id, agent_str,
                                replica->offset);
     pcmk__xml_sanitize_id(id);
     xml_container = create_resource(id, "heartbeat", agent_str);
 
     xml_obj = pcmk__xe_create(xml_container, PCMK_XE_INSTANCE_ATTRIBUTES);
-    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", bundle_data->prefix,
-                    replica->offset);
+    pcmk__xe_set_id(xml_obj, "%s-attributes-%d", parent->id, replica->offset);
 
     crm_create_nvpair_xml(xml_obj, NULL, "image", bundle_data->image);
     crm_create_nvpair_xml(xml_obj, NULL, "allow_pull", PCMK_VALUE_TRUE);
@@ -457,7 +454,7 @@ create_container_resource(pcmk_resource_t *parent,
      * they bind to.
      */
     if (bundle_data->ip_range_start != NULL) {
-        g_string_append_printf(buffer, " -h %s-%d", bundle_data->prefix,
+        g_string_append_printf(buffer, " -h %s-%d", parent->id,
                                replica->offset);
     }
 
@@ -482,8 +479,7 @@ create_container_resource(pcmk_resource_t *parent,
 
         if (pcmk__is_set(mount->flags, pe__bundle_mount_subdir)) {
             source = pcmk__assert_asprintf("%s/%s-%d", mount->source,
-                                           bundle_data->prefix,
-                                           replica->offset);
+                                           parent->id, replica->offset);
             pcmk__add_separated_word(&dbuffer, 1024, source, ",");
         }
 
@@ -645,7 +641,7 @@ create_remote_resource(pcmk_resource_t *parent, pcmk__bundle_replica_t *replica)
         goto done;
     }
 
-    id = pcmk__assert_asprintf("%s-%d", bundle_data->prefix, replica->offset);
+    id = pcmk__assert_asprintf("%s-%d", parent->id, replica->offset);
 
     if (pe_find_resource(scheduler->priv->resources, id) != NULL) {
         free(id);
@@ -1192,7 +1188,7 @@ valid_network_for_primitive(pcmk_resource_t *rsc)
     if (bundle_data->nreplicas_per_host > 1) {
         pcmk__config_warn("Using " PCMK_XA_REPLICAS_PER_HOST "=1 for %s "
                           "because specifying " PCMK_XA_CONTROL_PORT " "
-                          "requires it", bundle_data->prefix);
+                          "requires it", rsc->id);
         bundle_data->nreplicas_per_host = 1;
         pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     }
@@ -1247,11 +1243,10 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
      * (It also avoids needing to change regression tests.)
      */
     suffix = (bundle_data->promoted_max > 0)? "master" : PCMK_XE_CLONE;
-    pcmk__xe_set_id(*clone_xml, "%s-%s", bundle_data->prefix, suffix);
+    pcmk__xe_set_id(*clone_xml, "%s-%s", rsc->id, suffix);
 
     meta = pcmk__xe_create(*clone_xml, PCMK_XE_META_ATTRIBUTES);
-    pcmk__xe_set_id(meta, "%s-%s-meta", bundle_data->prefix,
-                    (*clone_xml)->name);
+    pcmk__xe_set_id(meta, "%s-%s-meta", rsc->id, (*clone_xml)->name);
 
     crm_create_nvpair_xml(meta, NULL, PCMK_META_ORDERED, PCMK_VALUE_TRUE);
 
@@ -1274,7 +1269,7 @@ unpack_bundle_primitive(pcmk_resource_t *rsc, xmlNode **clone_xml)
         pcmk__xe_set_int(nvpair, PCMK_XA_VALUE, bundle_data->promoted_max);
     }
 
-    //pcmk__xe_set(primitive_xml, PCMK_XA_ID, bundle_data->prefix);
+    //pcmk__xe_set(primitive_xml, PCMK_XA_ID, rsc->id);
     pcmk__xml_copy(*clone_xml, primitive_xml);
 
     return pcmk_rc_ok;
