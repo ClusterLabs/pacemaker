@@ -1158,8 +1158,8 @@ get_pseudo_op(const char *name, pcmk_scheduler_t *scheduler)
 static GList *
 find_unfencing_devices(GList *candidates, GList *matches)
 {
-    for (GList *gIter = candidates; gIter != NULL; gIter = gIter->next) {
-        pcmk_resource_t *candidate = gIter->data;
+    for (GList *iter = candidates; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *candidate = iter->data;
 
         if (candidate->priv->children != NULL) {
             matches = find_unfencing_devices(candidate->priv->children,
@@ -1188,7 +1188,6 @@ node_priority_fencing_delay(const pcmk_node_t *node,
     int online_count = 0;
     int top_priority = 0;
     int lowest_priority = 0;
-    GList *gIter = NULL;
 
     // PCMK_OPT_PRIORITY_FENCING_DELAY is disabled
     if (scheduler->priv->priority_fencing_ms == 0U) {
@@ -1206,8 +1205,8 @@ node_priority_fencing_delay(const pcmk_node_t *node,
         return 0;
     }
 
-    for (gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *n = gIter->data;
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *n = iter->data;
 
         if (n->priv->variant != pcmk__node_variant_cluster) {
             continue;
@@ -1281,8 +1280,8 @@ pe_fence_op(pcmk_node_t *node, const char *op, bool optional,
             GList *matches = find_unfencing_devices(scheduler->priv->resources,
                                                     NULL);
 
-            for (GList *gIter = matches; gIter != NULL; gIter = gIter->next) {
-                pcmk_resource_t *match = gIter->data;
+            for (GList *iter = matches; iter != NULL; iter = iter->next) {
+                pcmk_resource_t *match = iter->data;
                 const char *agent = g_hash_table_lookup(match->priv->meta,
                                                         PCMK_XA_TYPE);
                 pcmk__op_digest_t *data = NULL;
@@ -1404,8 +1403,8 @@ find_first_action(const GList *input, const char *uuid, const char *task,
 {
     CRM_CHECK(uuid || task, return NULL);
 
-    for (const GList *gIter = input; gIter != NULL; gIter = gIter->next) {
-        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
+    for (const GList *iter = input; iter != NULL; iter = iter->next) {
+        pcmk_action_t *action = iter->data;
 
         if (uuid != NULL && !pcmk__str_eq(uuid, action->uuid, pcmk__str_casei)) {
             continue;
@@ -1430,13 +1429,12 @@ find_first_action(const GList *input, const char *uuid, const char *task,
 GList *
 find_actions(GList *input, const char *key, const pcmk_node_t *on_node)
 {
-    GList *gIter = input;
     GList *result = NULL;
 
     CRM_CHECK(key != NULL, return NULL);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
+    for (GList *iter = input; iter != NULL; iter = iter->next) {
+        pcmk_action_t *action = iter->data;
 
         if (!pcmk__str_eq(key, action->uuid, pcmk__str_casei)) {
             continue;
@@ -1473,8 +1471,8 @@ find_actions_exact(GList *input, const char *key, const pcmk_node_t *on_node)
         return NULL;
     }
 
-    for (GList *gIter = input; gIter != NULL; gIter = gIter->next) {
-        pcmk_action_t *action = (pcmk_action_t *) gIter->data;
+    for (GList *iter = input; iter != NULL; iter = iter->next) {
+        pcmk_action_t *action = iter->data;
 
         if ((action->node != NULL)
             && pcmk__str_eq(key, action->uuid, pcmk__str_casei)

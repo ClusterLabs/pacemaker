@@ -171,10 +171,10 @@ pe__node_list2table(const GList *list)
     GHashTable *result = NULL;
 
     result = pcmk__strkey_table(NULL, pcmk__free_node_copy);
-    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
         pcmk_node_t *new_node = NULL;
 
-        new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
+        new_node = pe__copy_node((const pcmk_node_t *) iter->data);
         g_hash_table_insert(result, (void *) new_node->priv->id, new_node);
     }
     return result;
@@ -235,8 +235,8 @@ pe__output_node_weights(const pcmk_resource_t *rsc, const char *comment,
     GList *list = g_list_sort(g_hash_table_get_values(nodes),
                               pe__cmp_node_name);
 
-    for (const GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        const pcmk_node_t *node = (const pcmk_node_t *) gIter->data;
+    for (const GList *iter = list; iter != NULL; iter = iter->next) {
+        const pcmk_node_t *node = iter->data;
 
         out->message(out, "node-weight", rsc, comment, node->priv->name,
                      pcmk_readable_score(node->assign->score));
@@ -324,10 +324,8 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
     }
 
     // If this resource has children, repeat recursively for each
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child = iter->data;
 
         pe__show_node_scores_as(file, function, line, to_log, child, comment,
                                 child->priv->allowed_nodes, scheduler);
@@ -388,10 +386,10 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         return;
 
     } else {
-        for (GList *gIter = rsc->priv->children;
-             gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
 
-            pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+            pcmk_resource_t *child_rsc = iter->data;
 
             resource_node_score(child_rsc, node, score, tag);
         }
@@ -419,10 +417,8 @@ resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
         resource_node_score(rsc, node, score, tag);
 
     } else if (scheduler != NULL) {
-        GList *gIter = scheduler->nodes;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pcmk_node_t *node_iter = (pcmk_node_t *) gIter->data;
+        for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
+            pcmk_node_t *node_iter = iter->data;
 
             resource_node_score(rsc, node_iter, score, tag);
         }
@@ -498,7 +494,6 @@ get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role)
 gboolean
 order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
 {
-    GList *gIter = NULL;
     pcmk__related_action_t *wrapper = NULL;
     GList *list = NULL;
 
@@ -517,9 +512,8 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
     pcmk__assert(first != then);
 
     /* Filter dups, otherwise update_action_states() has too much work to do */
-    gIter = first->actions_after;
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk__related_action_t *after = gIter->data;
+    for (GList *iter = first->actions_after; iter != NULL; iter = iter->next) {
+        pcmk__related_action_t *after = iter->data;
 
         if ((after->action == then)
             && pcmk__any_flags_set(after->flags, flags)) {
@@ -605,11 +599,10 @@ pe__clear_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pcmk__clear_rsc_flags(rsc, flags);
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
 
-        pe__clear_resource_flags_recursive((pcmk_resource_t *) gIter->data,
-                                           flags);
+        pe__clear_resource_flags_recursive(child_rsc, flags);
     }
 }
 
@@ -630,11 +623,10 @@ pe__set_resource_flags_recursive(pcmk_resource_t *rsc, uint64_t flags)
 {
     pcmk__set_rsc_flags(rsc, flags);
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
 
-        pe__set_resource_flags_recursive((pcmk_resource_t *) gIter->data,
-                                         flags);
+        pe__set_resource_flags_recursive(child_rsc, flags);
     }
 }
 
@@ -805,8 +797,8 @@ pe__filter_rsc_list(GList *rscs, GList *filter)
 {
     GList *retval = NULL;
 
-    for (GList *gIter = rscs; gIter; gIter = gIter->next) {
-        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rscs; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *rsc = iter->data;
 
         /* I think the second condition is safe here for all callers of this
          * function.  If not, it needs to move into pe__node_text.

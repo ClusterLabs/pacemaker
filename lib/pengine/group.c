@@ -112,10 +112,8 @@ inactive_resources(pcmk_resource_t *rsc)
 {
     int retval = 0;
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
 
         if (!child_rsc->priv->fns->active(child_rsc, true)) {
             retval++;
@@ -252,10 +250,8 @@ group_active(const pcmk_resource_t *rsc, bool all)
     gboolean c_all = TRUE;
     gboolean c_any = FALSE;
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
 
         if (child_rsc->priv->fns->active(child_rsc, all)) {
             c_any = TRUE;
@@ -298,17 +294,15 @@ pe__group_xml(pcmk__output_t *out, va_list args)
         return rc;
     }
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
 
         if (skip_child_rsc(rsc, child_rsc, parent_passes, only_rsc, show_opts)) {
             continue;
         }
 
         if (rc == pcmk_rc_no_output) {
-            char *count = pcmk__itoa(g_list_length(gIter));
+            char *count = pcmk__itoa(g_list_length(iter));
             const char *maintenance = pcmk__flag_text(rsc->flags,
                                                       pcmk__rsc_maintenance);
             const char *managed = pcmk__flag_text(rsc->flags,
@@ -382,9 +376,10 @@ pe__group_default(pcmk__output_t *out, va_list args)
         }
 
     } else {
-        for (GList *gIter = rsc->priv->children;
-             gIter != NULL; gIter = gIter->next) {
-            pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+        for (GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
+
+            pcmk_resource_t *child_rsc = iter->data;
 
             if (skip_child_rsc(rsc, child_rsc, parent_passes, only_rsc, show_opts)) {
                 continue;
@@ -419,10 +414,8 @@ group_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e group_role = pcmk_role_unknown;
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
         enum rsc_role_e role = child_rsc->priv->fns->state(child_rsc,
                                                            current);
 

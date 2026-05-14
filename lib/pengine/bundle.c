@@ -652,7 +652,7 @@ static int
 create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
                        pcmk__bundle_replica_t *replica)
 {
-    GHashTableIter gIter;
+    GHashTableIter iter;
     pcmk_node_t *node = NULL;
     pcmk_node_t *copy = NULL;
     xmlNode *xml_remote = NULL;
@@ -776,8 +776,8 @@ create_remote_resource(pcmk_resource_t *parent, pe__bundle_variant_data_t *data,
     // Make Coverity happy
     pcmk__assert(replica->remote != NULL);
 
-    g_hash_table_iter_init(&gIter, replica->remote->priv->allowed_nodes);
-    while (g_hash_table_iter_next(&gIter, NULL, (void **)&node)) {
+    g_hash_table_iter_init(&iter, replica->remote->priv->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         if (pcmk__is_pacemaker_remote_node(node)) {
             // Remote resources can only run on 'normal' cluster node
             node->assign->score = -PCMK_SCORE_INFINITY;
@@ -897,9 +897,8 @@ replica_for_remote(pcmk_resource_t *remote)
     }
 
     get_bundle_variant_data(bundle_data, top);
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pcmk__bundle_replica_t *replica = gIter->data;
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pcmk__bundle_replica_t *replica = iter->data;
 
         if (replica->remote == remote) {
             return replica;
@@ -1182,7 +1181,6 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
 
     if(xml_resource) {
         int lpc = 0;
-        GList *childIter = NULL;
         pe__bundle_port_t *port = NULL;
         GString *buffer = NULL;
         int rc = pe__unpack_resource(xml_resource, &bundle_data->child, rsc,
@@ -1242,13 +1240,13 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         bundle_data->ports = g_list_append(bundle_data->ports, port);
 
         buffer = g_string_sized_new(1024);
-        for (childIter = bundle_data->child->priv->children;
-             childIter != NULL; childIter = childIter->next) {
+        for (GList *iter = bundle_data->child->priv->children;
+             iter != NULL; iter = iter->next) {
 
             pcmk__bundle_replica_t *replica = NULL;
 
             replica = pcmk__assert_alloc(1, sizeof(pcmk__bundle_replica_t));
-            replica->child = childIter->data;
+            replica->child = iter->data;
             pcmk__set_rsc_flags(replica->child, pcmk__rsc_exclusive_probes);
             replica->offset = lpc++;
 
@@ -1293,9 +1291,8 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         bundle_data->container_host_options = g_string_free(buffer, false);
     }
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pcmk__bundle_replica_t *replica = gIter->data;
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pcmk__bundle_replica_t *replica = iter->data;
 
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
@@ -1407,9 +1404,8 @@ pe__find_bundle_replica(const pcmk_resource_t *bundle, const pcmk_node_t *node)
     pcmk__assert((bundle != NULL) && (node != NULL));
 
     get_bundle_variant_data(bundle_data, bundle);
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pcmk__bundle_replica_t *replica = gIter->data;
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pcmk__bundle_replica_t *replica = iter->data;
 
         pcmk__assert((replica != NULL) && (replica->node != NULL));
         if (pcmk__same_node(replica->node, node)) {
@@ -1445,9 +1441,8 @@ pe__bundle_xml(pcmk__output_t *out, va_list args)
 
     print_everything = pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches);
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pcmk__bundle_replica_t *replica = gIter->data;
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pcmk__bundle_replica_t *replica = iter->data;
         pcmk_resource_t *ip = replica->ip;
         pcmk_resource_t *child = replica->child;
         pcmk_resource_t *container = replica->container;
@@ -1612,9 +1607,8 @@ pe__bundle_html(pcmk__output_t *out, va_list args)
 
     print_everything = pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches);
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pcmk__bundle_replica_t *replica = gIter->data;
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pcmk__bundle_replica_t *replica = iter->data;
         pcmk_resource_t *ip = replica->ip;
         pcmk_resource_t *child = replica->child;
         pcmk_resource_t *container = replica->container;
@@ -1763,9 +1757,8 @@ pe__bundle_text(pcmk__output_t *out, va_list args)
 
     print_everything = pcmk__str_in_list(rsc->id, only_rsc, pcmk__str_star_matches);
 
-    for (GList *gIter = bundle_data->replicas; gIter != NULL;
-         gIter = gIter->next) {
-        pcmk__bundle_replica_t *replica = gIter->data;
+    for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
+        pcmk__bundle_replica_t *replica = iter->data;
         pcmk_resource_t *ip = replica->ip;
         pcmk_resource_t *child = replica->child;
         pcmk_resource_t *container = replica->container;
