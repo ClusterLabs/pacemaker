@@ -982,7 +982,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     const xmlNode *xml_child = NULL;
     xmlNode *xml_resource = NULL;
     pe__bundle_variant_data_t *bundle_data = NULL;
-    bool need_log_mount = TRUE;
+    bool need_log_mount = true;
 
     pcmk__assert(rsc != NULL);
     pcmk__rsc_trace(rsc, "Processing resource %s...", rsc->id);
@@ -1006,7 +1006,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
     }
 
     if (xml_obj == NULL) {
-        return FALSE;
+        return false;
     }
 
     // Use 0 for default, minimum, and invalid PCMK_XA_PROMOTED_MAX
@@ -1114,7 +1114,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         if (source && target) {
             mount_add(bundle_data, source, target, options, flags);
             if (strcmp(target, "/var/log") == 0) {
-                need_log_mount = FALSE;
+                need_log_mount = false;
             }
         } else {
             pcmk__config_err("Invalid mount directive %s",
@@ -1191,7 +1191,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         pcmk__xml_free(xml_resource);
 
         if (rc != pcmk_rc_ok) {
-            return FALSE;
+            return false;
         }
 
         /* Currently, we always map the default authentication key location
@@ -1266,7 +1266,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
                 g_hash_table_lookup(replica->child->priv->meta,
                                     PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
         }
-        bundle_data->container_host_options = g_string_free(buffer, FALSE);
+        bundle_data->container_host_options = g_string_free(buffer, false);
 
         if (bundle_data->attribute_target) {
             pcmk__insert_dup(rsc->priv->meta,
@@ -1290,7 +1290,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
             bundle_data->replicas = g_list_append(bundle_data->replicas,
                                                   replica);
         }
-        bundle_data->container_host_options = g_string_free(buffer, FALSE);
+        bundle_data->container_host_options = g_string_free(buffer, false);
     }
 
     for (GList *gIter = bundle_data->replicas; gIter != NULL;
@@ -1300,7 +1300,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         if (create_replica_resources(rsc, bundle_data, replica) != pcmk_rc_ok) {
             pcmk__config_err("Failed unpacking resource %s", rsc->id);
             pcmk__free_resource(rsc);
-            return FALSE;
+            return false;
         }
 
         /* Utilization needs special handling for bundles. It makes no sense for
@@ -1333,7 +1333,7 @@ pe__unpack_bundle(pcmk_resource_t *rsc)
         rsc->priv->children = g_list_append(rsc->priv->children,
                                             bundle_data->child);
     }
-    return TRUE;
+    return true;
 }
 
 static int
