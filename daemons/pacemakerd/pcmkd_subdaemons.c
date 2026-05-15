@@ -796,11 +796,11 @@ find_and_track_existing_processes(void)
             int rc = find_and_track_child(&pcmk_children[i], rounds,
                                           &wait_in_progress);
 
-            if (rc == pcmk_rc_ok) {
-                break;
-            } else if (rc != EAGAIN) {
-                return rc;
+            if ((rc == pcmk_rc_ok) || (rc == EAGAIN)) {
+                continue;
             }
+
+            return rc;
         }
 
         if (!wait_in_progress) {
