@@ -280,6 +280,13 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
     header->version = REMOTE_MSG_VERSION;
     header->payload_offset = iov[0].iov_len;
     header->payload_uncompressed = iov[1].iov_len;
+
+    if ((UINT32_MAX - iov[0].iov_len) < iov[1].iov_len) {
+        pcmk__err("Remote message size %zu + %zu exceeds maximum of %" PRIu32,
+                  iov[0].iov_len, iov[1].iov_len, UINT32_MAX);
+        goto done;
+    }
+
     header->size_total = iov[0].iov_len + iov[1].iov_len;
 
     rc = remote_send_iovs(remote, iov, 2);
@@ -288,6 +295,7 @@ pcmk__remote_send_xml(pcmk__remote_t *remote, const xmlNode *msg)
                   pcmk_rc_str(rc), rc);
     }
 
+done:
     free(iov[0].iov_base);
     g_free((gchar *) iov[1].iov_base);
     return rc;
