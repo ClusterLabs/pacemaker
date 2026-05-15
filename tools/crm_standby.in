@@ -69,7 +69,8 @@ while true ; do
             exit 0
             ;;
         --version)
-            crm_attribute --version
+            echo "Pacemaker @VERSION@"
+            echo "Written by Andrew Beekhof and the Pacemaker project contributors"
             exit 0
             ;;
         -q|--quiet|-V|--verbose|-Q)

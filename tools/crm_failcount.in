@@ -223,7 +223,8 @@ while true ; do
 			exit $CRM_EX_OK
 			;;
 		--version)
-			crm_attribute --version
+			echo "Pacemaker @VERSION@"
+			echo "Written by Andrew Beekhof and the Pacemaker project contributors"
 			exit $?
 			;;
 		-q|-Q|--quiet)
