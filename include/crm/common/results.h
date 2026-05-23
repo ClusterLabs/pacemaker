@@ -376,7 +376,6 @@ const char *crm_exit_str(crm_exit_t exit_code);
 
 _Noreturn crm_exit_t crm_exit(crm_exit_t rc);
 
-/* coverity[+kill] */
 void crm_abort(const char *file, const char *function, int line,
                const char *condition, gboolean do_core, gboolean do_fork);
 

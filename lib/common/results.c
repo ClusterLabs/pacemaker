@@ -134,7 +134,6 @@ log_assertion_as(const char *file, const char *function, int line,
               line, assert_condition);
 }
 
-/* coverity[+kill] */
 /*!
  * \internal
  * \brief Log a failed assertion and abort
@@ -154,7 +153,6 @@ pcmk__abort_as(const char *file, const char *function, int line,
     abort();
 }
 
-/* coverity[+kill] */
 /*!
  * \internal
  * \brief Handle a failed assertion
@@ -212,7 +210,6 @@ fail_assert_as(const char *file, const char *function, int line,
     }
 }
 
-/* coverity[+kill] */
 void
 crm_abort(const char *file, const char *function, int line,
           const char *assert_condition, gboolean do_core, gboolean do_fork)
