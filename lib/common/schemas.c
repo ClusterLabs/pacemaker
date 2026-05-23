@@ -1182,7 +1182,8 @@ pcmk__update_schema(xmlNode **xml, const char *max_schema_name, bool transform,
             break; // No further transformations possible
         }
 
-        // coverity[null_field] The index check ensures entry->next is not NULL
+        pcmk__assert(entry->next != NULL);
+
         if (!transform || (current_schema->transforms == NULL)
             || validate_with_silent((*xml)->doc, entry->next->data)) {
             /* The next schema either doesn't require a transform or validates
