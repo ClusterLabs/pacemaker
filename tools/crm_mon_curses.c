@@ -295,6 +295,10 @@ curses_progress(pcmk__output_t *out, bool end) {
     }
 }
 
+/* @TODO Make the behavior here match that of pcmk__text_prompt(), which stores
+ * the entire line. scanw() here stores only the first 1023 non-whitespace
+ * characters.
+ */
 static void
 curses_prompt(const char *prompt, char **dest)
 {

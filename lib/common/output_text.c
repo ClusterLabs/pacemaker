@@ -478,6 +478,8 @@ pcmk__text_prompt(const char *prompt, char **dest)
     int rc = 0;
     struct termios settings;
     tcflag_t orig_c_lflag = 0;
+    size_t buf_size = 0;
+    ssize_t nread = 0;
 
     pcmk__assert((prompt != NULL) && (dest != NULL) && (*dest == NULL));
 
@@ -496,17 +498,18 @@ pcmk__text_prompt(const char *prompt, char **dest)
 
     fprintf(stderr, "%s: ", prompt);
 
-#if HAVE_SSCANF_M
-    rc = scanf("%ms", dest);
-#else
-    *dest = pcmk__assert_alloc(1024, sizeof(char));
-    rc = scanf("%1023s", *dest);
-#endif
-    fprintf(stderr, "\n");
+    nread = getline(dest, &buf_size, stdin);
 
-    if (rc < 1) {
+    if (nread < 2) {
+        // Error or empty line ("\n")
         g_clear_pointer(dest, free);
+
+    } else {
+        // Strip the trailing newline but no other whitespace
+        (*dest)[nread - 1] = '\0';
     }
+
+    fprintf(stderr, "\n");
 
     if (orig_c_lflag != 0) {
         settings.c_lflag = orig_c_lflag;
