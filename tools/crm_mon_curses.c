@@ -296,42 +296,26 @@ curses_progress(pcmk__output_t *out, bool end) {
 }
 
 static void
-curses_prompt(const char *prompt, bool do_echo, char **dest)
+curses_prompt(const char *prompt, char **dest)
 {
-    int rc = OK;
+    int rc = 0;
 
     pcmk__assert((prompt != NULL) && (dest != NULL));
 
-    /* This is backwards from the text version of this function on purpose.  We
-     * disable echo by default in curses_init, so we need to enable it here if
-     * asked for.
+    printw("%s: ", prompt);
+
+    g_clear_pointer(dest, free);
+    *dest = pcmk__assert_alloc(1024, sizeof(char));
+
+    /* On older systems, scanw is defined as taking a char * for its first
+     * argument, while newer systems rightly want a const char *. Accommodate
+     * both here due to building with -Werror.
      */
-    if (do_echo) {
-        rc = echo();
-    }
-
-    if (rc == OK) {
-        printw("%s: ", prompt);
-
-        if (*dest != NULL) {
-            free(*dest);
-        }
-
-        *dest = pcmk__assert_alloc(1024, sizeof(char));
-        /* On older systems, scanw is defined as taking a char * for its first argument,
-         * while newer systems rightly want a const char *.  Accomodate both here due
-         * to building with -Werror.
-         */
-        rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
-        addch('\n');
-    }
+    rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
+    addch('\n');
 
     if (rc < 1) {
         g_clear_pointer(dest, free);
-    }
-
-    if (do_echo) {
-        noecho();
     }
 }
 

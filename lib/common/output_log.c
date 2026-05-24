@@ -307,7 +307,7 @@ log_progress(pcmk__output_t *out, bool end)
 }
 
 static void
-log_prompt(const char *prompt, bool echo, char **dest)
+log_prompt(const char *prompt, char **dest)
 {
     /* This function intentionally left blank */
 }

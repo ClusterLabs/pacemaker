@@ -584,9 +584,9 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
             /* If no pcmk__output_t is set, just assume that a text prompt
              * is good enough.
              */
-            pcmk__text_prompt("Password", false, &(private->passwd));
+            pcmk__text_prompt("Password", &private->passwd);
         } else {
-            private->out->prompt("Password", false, &(private->passwd));
+            private->out->prompt("Password", &private->passwd);
         }
     }
 

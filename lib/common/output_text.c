@@ -473,7 +473,7 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...)
 }
 
 void
-pcmk__text_prompt(const char *prompt, bool echo, char **dest)
+pcmk__text_prompt(const char *prompt, char **dest)
 {
     int rc = 0;
     struct termios settings;
@@ -481,13 +481,11 @@ pcmk__text_prompt(const char *prompt, bool echo, char **dest)
 
     pcmk__assert((prompt != NULL) && (dest != NULL));
 
-    if (!echo) {
-        rc = tcgetattr(0, &settings);
-        if (rc == 0) {
-            orig_c_lflag = settings.c_lflag;
-            settings.c_lflag &= ~ECHO;
-            rc = tcsetattr(0, TCSANOW, &settings);
-        }
+    rc = tcgetattr(0, &settings);
+    if (rc == 0) {
+        orig_c_lflag = settings.c_lflag;
+        settings.c_lflag &= ~ECHO;
+        rc = tcsetattr(0, TCSANOW, &settings);
     }
 
     if (rc == 0) {
