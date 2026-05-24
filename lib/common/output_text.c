@@ -482,23 +482,27 @@ pcmk__text_prompt(const char *prompt, char **dest)
     pcmk__assert((prompt != NULL) && (dest != NULL) && (*dest == NULL));
 
     rc = tcgetattr(0, &settings);
-    if (rc == 0) {
-        orig_c_lflag = settings.c_lflag;
-        settings.c_lflag &= ~ECHO;
-        rc = tcsetattr(0, TCSANOW, &settings);
+    if (rc != 0) {
+        return;
     }
 
-    if (rc == 0) {
-        fprintf(stderr, "%s: ", prompt);
+    orig_c_lflag = settings.c_lflag;
+    settings.c_lflag &= ~ECHO;
+
+    rc = tcsetattr(0, TCSANOW, &settings);
+    if (rc != 0) {
+        return;
+    }
+
+    fprintf(stderr, "%s: ", prompt);
 
 #if HAVE_SSCANF_M
-        rc = scanf("%ms", dest);
+    rc = scanf("%ms", dest);
 #else
-        *dest = pcmk__assert_alloc(1024, sizeof(char));
-        rc = scanf("%1023s", *dest);
+    *dest = pcmk__assert_alloc(1024, sizeof(char));
+    rc = scanf("%1023s", *dest);
 #endif
-        fprintf(stderr, "\n");
-    }
+    fprintf(stderr, "\n");
 
     if (rc < 1) {
         g_clear_pointer(dest, free);
@@ -506,6 +510,6 @@ pcmk__text_prompt(const char *prompt, char **dest)
 
     if (orig_c_lflag != 0) {
         settings.c_lflag = orig_c_lflag;
-        /* rc = */ tcsetattr(0, TCSANOW, &settings);
+        tcsetattr(0, TCSANOW, &settings);
     }
 }
