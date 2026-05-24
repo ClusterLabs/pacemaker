@@ -313,6 +313,11 @@ curses_prompt(const char *prompt, char **dest)
     /* On older systems, scanw is defined as taking a char * for its first
      * argument, while newer systems rightly want a const char *. Accommodate
      * both here due to building with -Werror.
+     *
+     * @COMPAT The prototype was updated to use const in X/Open Curses Issue 7,
+     * and ncurses was updated to reflect it on 2018-04-07:
+     * * https://pubs.opengroup.org/onlinepubs/9699909599/toc.pdf
+     * * https://invisible-island.net/ncurses/NEWS.html#index-t20180407
      */
     rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
     addch('\n');
