@@ -300,11 +300,10 @@ curses_prompt(const char *prompt, char **dest)
 {
     int rc = 0;
 
-    pcmk__assert((prompt != NULL) && (dest != NULL));
+    pcmk__assert((prompt != NULL) && (dest != NULL) && (*dest == NULL));
 
     printw("%s: ", prompt);
 
-    g_clear_pointer(dest, free);
     *dest = pcmk__assert_alloc(1024, sizeof(char));
 
     /* On older systems, scanw is defined as taking a char * for its first

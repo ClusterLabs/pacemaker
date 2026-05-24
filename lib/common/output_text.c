@@ -479,7 +479,7 @@ pcmk__text_prompt(const char *prompt, char **dest)
     struct termios settings;
     tcflag_t orig_c_lflag = 0;
 
-    pcmk__assert((prompt != NULL) && (dest != NULL));
+    pcmk__assert((prompt != NULL) && (dest != NULL) && (*dest == NULL));
 
     rc = tcgetattr(0, &settings);
     if (rc == 0) {
@@ -490,8 +490,6 @@ pcmk__text_prompt(const char *prompt, char **dest)
 
     if (rc == 0) {
         fprintf(stderr, "%s: ", prompt);
-
-        g_clear_pointer(dest, free);
 
 #if HAVE_SSCANF_M
         rc = scanf("%ms", dest);
