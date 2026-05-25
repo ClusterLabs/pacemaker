@@ -388,50 +388,62 @@ pcmk__notify_key(const char *rsc_id, const char *notify_type,
  *       for freeing the memory for *uuid using free().
  */
 gboolean
-decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
-                        int *op_status, int *op_rc, int *target_rc)
+decode_transition_magic(const char *magic, char **uuid, int *transition_id,
+                        int *action_id, int *op_status, int *op_rc,
+                        int *target_rc)
 {
-    int res = 0;
-    char *key = NULL;
+    GRegex *regex = NULL;
+    GMatchInfo *match_info = NULL;
+    char **matches = NULL;
+
+    long long status_ll = 0;
+    long long rc_ll = 0;
     bool result = false;
-    int local_op_status = -1;
-    int local_op_rc = -1;
 
     CRM_CHECK(magic != NULL, goto done);
 
-#ifdef HAVE_SSCANF_M
-    res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
-#else
-    // magic must have >=4 other characters
-    key = pcmk__assert_alloc(strlen(magic) - 3, sizeof(char));
-    res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
-#endif
-    if (res == EOF) {
-        pcmk__err("Could not decode transition information '%s': %s", magic,
-                  pcmk_rc_str(errno));
+    regex = g_regex_new("^(-?\\d+):(-?\\d+);(.*)$", 0, 0, NULL);
+    pcmk__assert(regex != NULL);
+
+    if (!g_regex_match(regex, magic, 0, &match_info)) {
+        pcmk__err("Could not decode transition information '%s': does not "
+                  "match pattern 'STATUS:RC;KEY'", magic);
         goto done;
     }
 
-    if (res < 3) {
-        pcmk__warn("Transition information '%s' incomplete (%d of 3 expected "
-                   "items)",
-                   magic, res);
+    matches = g_match_info_fetch_all(match_info);
+
+    if ((pcmk__scan_ll(matches[1], &status_ll, 0) != pcmk_rc_ok)
+        || (status_ll < INT_MIN) || (status_ll > INT_MAX)) {
+
+        pcmk__err("Could not decode transition information '%s': op status "
+                  "'%s' is not a valid int", magic, matches[1]);
+        goto done;
+    }
+
+    if ((pcmk__scan_ll(matches[2], &rc_ll, 0) != pcmk_rc_ok)
+        || (rc_ll < INT_MIN) || (rc_ll > INT_MAX)) {
+
+        pcmk__err("Could not decode transition information '%s': op rc '%s' is "
+                  "not a valid int", magic, matches[2]);
         goto done;
     }
 
     if (op_status != NULL) {
-        *op_status = local_op_status;
+        *op_status = status_ll;
     }
 
     if (op_rc != NULL) {
-        *op_rc = local_op_rc;
+        *op_rc = rc_ll;
     }
 
-    result = decode_transition_key(key, uuid, transition_id, action_id,
+    result = decode_transition_key(matches[3], uuid, transition_id, action_id,
                                    target_rc);
 
 done:
-    free(key);
+    g_regex_unref(regex);
+    g_match_info_unref(match_info);
+    g_strfreev(matches);
     return result;
 }
 
