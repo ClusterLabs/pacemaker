@@ -1301,7 +1301,22 @@ dnl (i.e. "ncurses" still wants the include to be simple, no-'n', "curses.h").
 dnl
 dnl ncurses takes precedence.
 dnl
-AC_CHECK_HEADERS([curses.h curses/curses.h ncurses.h ncurses/ncurses.h])
+found_curses_header=0
+
+m4_foreach(
+    [header],
+    [[curses.h], [curses/curses.h], [ncurses.h], [ncurses/ncurses.h]],
+    [AS_IF(
+        [test "$found_curses_header" -eq 0],
+        [AC_CHECK_HEADER(
+            header,
+            [
+                found_curses_header=1
+                AC_DEFINE([PCMK__CURSES_H], [<header>], [Curses header file])
+            ]
+        )]
+    )]
+)
 
 save_LIBS="$LIBS"
 found_curses=0
@@ -1327,18 +1342,13 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
 
     AC_MSG_CHECKING([whether curses library is compatible])
     AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM([
-#if defined(HAVE_NCURSES_H)
-#  include <ncurses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H)
-#  include <ncurses/ncurses.h>
-#elif defined(HAVE_CURSES_H)
-#  include <curses.h>
-#elif defined(HAVE_CURSES_CURSES_H)
-#  include <curses/curses.h>
-#endif
-                         ],
-                         [printw((const char *)"Test");]
+        [AC_LANG_PROGRAM(
+            [
+                #ifdef PCMK__CURSES_H
+                #include PCMK__CURSES_H
+                #endif
+            ],
+            [printw((const char *) "Test");]
         )],
         [AC_MSG_RESULT([yes])
          PCMK_FEATURES="$PCMK_FEATURES ncurses"
