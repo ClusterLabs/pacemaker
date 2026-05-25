@@ -1292,46 +1292,41 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <signal.h>]], [[sighandler_t *f;]]
 dnl ========================================================================
 dnl   ncurses
 dnl ========================================================================
-dnl
-dnl A few OSes (e.g. Linux) deliver a default "ncurses" alongside "curses".
-dnl Many non-Linux deliver "curses"; sites may add "ncurses".
-dnl
-dnl However, the source-code recommendation for both is to #include "curses.h"
-dnl (i.e. "ncurses" still wants the include to be simple, no-'n', "curses.h").
-dnl
-dnl ncurses takes precedence.
-dnl
-found_curses_header=0
+
+found_ncurses_header=0
 
 m4_foreach(
-    [header],
-    [[curses.h], [curses/curses.h], [ncurses.h], [ncurses/ncurses.h]],
+    [header], [[ncurses.h], [ncurses/ncurses.h]],
     [AS_IF(
-        [test "$found_curses_header" -eq 0],
+        [test "$found_ncurses_header" -eq 0],
         [AC_CHECK_HEADER(
             header,
             [
-                found_curses_header=1
-                AC_DEFINE([PCMK__CURSES_H], [<header>], [Curses header file])
+                found_ncurses_header=1
+                AC_DEFINE([PCMK__NCURSES_H], [<header>], [Ncurses header file])
             ]
         )]
     )]
 )
 
 save_LIBS="$LIBS"
-found_curses=0
-CURSES_LIBS=""
+found_ncurses=0
+NCURSES_LIBS=""
 LIBS=""
-AC_SEARCH_LIBS([printw], [ncurses curses],
-               [test "$ac_cv_search_printw" = "none required" || CURSES_LIBS="$LIBS"
-                found_curses=1],
-               [found_curses=0])
+AC_SEARCH_LIBS(
+    [printw], [ncurses],
+    [
+        test "$ac_cv_search_printw" = "none required" || NCURSES_LIBS="$LIBS"
+        found_ncurses=1
+    ],
+    [found_ncurses=0]
+)
 LIBS="$save_LIBS"
 
 dnl Check for printw() prototype compatibility
-AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
+AS_IF([test $found_ncurses -eq 1 && cc_supports_flag -Wcast-qual], [
     ac_save_LIBS="$LIBS"
-    LIBS="$CURSES_LIBS"
+    LIBS="$NCURSES_LIBS"
 
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
@@ -1340,12 +1335,12 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
           [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
           [cc_temp_flags "-Wcast-qual $WERROR"])
 
-    AC_MSG_CHECKING([whether curses library is compatible])
+    AC_MSG_CHECKING([whether ncurses library is compatible])
     AC_LINK_IFELSE(
         [AC_LANG_PROGRAM(
             [
-                #ifdef PCMK__CURSES_H
-                #include PCMK__CURSES_H
+                #ifdef PCMK__NCURSES_H
+                #include PCMK__NCURSES_H
                 #endif
             ],
             [printw((NCURSES_CONST char *) "Test");]
@@ -1354,12 +1349,12 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
          PCMK_FEATURES="$PCMK_FEATURES ncurses"
         ],
         [
-            found_curses=0
-            CURSES_LIBS=""
+            found_ncurses=0
+            NCURSES_LIBS=""
             AC_MSG_RESULT([no])
-            AC_MSG_WARN(m4_normalize([Disabling curses because the printw()
-                                      function of your (n)curses library is old.
-                                      If you wish to enable curses, update to a
+            AC_MSG_WARN(m4_normalize([Disabling ncurses because the printw()
+                                      function of your ncurses library is old.
+                                      If you wish to enable ncurses, update to a
                                       newer version (ncurses 5.4 or later is
                                       recommended, available from
                                       https://invisible-island.net/ncurses/)
@@ -1371,8 +1366,9 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
     cc_restore_flags
 ])
 
-AC_DEFINE_UNQUOTED([PCMK__ENABLE_CURSES], [$found_curses], [have ncurses library])
-AC_SUBST(CURSES_LIBS)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CURSES], [$found_ncurses],
+                   [have ncurses library])
+AC_SUBST(NCURSES_LIBS)
 
 dnl ========================================================================
 dnl    Profiling and GProf

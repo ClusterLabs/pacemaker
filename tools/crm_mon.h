@@ -18,9 +18,9 @@
 #include <crm/common/scheduler.h>
 #include <crm/stonith-ng.h>
 
-#if (PCMK__ENABLE_CURSES && defined(PCMK__CURSES_H))
-#include PCMK__CURSES_H
-#endif  // (PCMK__ENABLE_CURSES && defined(PCMK__CURSES_H))
+#if (PCMK__ENABLE_CURSES && defined(PCMK__NCURSES_H))
+#include PCMK__NCURSES_H
+#endif  // (PCMK__ENABLE_CURSES && defined(PCMK__NCURSES_H))
 
 typedef enum {
     mon_output_unset,
