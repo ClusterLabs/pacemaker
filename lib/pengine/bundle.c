@@ -1376,12 +1376,11 @@ create_child_resource(pcmk_resource_t *rsc, xmlNode *clone_xml,
         }
 
         allocate_ip(rsc, replica, buffer);
-        bundle_data->replicas = g_list_append(bundle_data->replicas, replica);
 
-        // coverity[null_field : FALSE] replica->child can't be NULL here
         bundle_data->attribute_target =
             g_hash_table_lookup(replica->child->priv->meta,
                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
+        bundle_data->replicas = g_list_append(bundle_data->replicas, replica);
     }
 
     bundle_data->container_host_options = g_string_free(buffer, false);
