@@ -1221,19 +1221,6 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
               [AC_MSG_ERROR([strerror() is not C99-compliant])],
               [AC_MSG_ERROR([strerror() is not C99-compliant])])
 
-AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
-    const char *s = "some-command-line-arg";
-    char *name = NULL;
-    int n = sscanf(s, "%ms", &name);
-    return n != 1;
-                               ]])],
-              [have_sscanf_m="yes"],
-              [have_sscanf_m="no"],
-              [have_sscanf_m="no"])
-AS_IF([test x"$have_sscanf_m" = x"yes"],
-      [AC_DEFINE([HAVE_SSCANF_M], [1],
-                 [Define to 1 if sscanf %m modifier is available])])
-
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[
     char s[200];
     time_t t;
