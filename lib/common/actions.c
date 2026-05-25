@@ -393,11 +393,11 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
 {
     int res = 0;
     char *key = NULL;
-    gboolean result = TRUE;
+    bool result = false;
     int local_op_status = -1;
     int local_op_rc = -1;
 
-    CRM_CHECK(magic != NULL, return FALSE);
+    CRM_CHECK(magic != NULL, goto done);
 
 #ifdef HAVE_SSCANF_M
     res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
@@ -409,22 +409,28 @@ decode_transition_magic(const char *magic, char **uuid, int *transition_id, int 
     if (res == EOF) {
         pcmk__err("Could not decode transition information '%s': %s", magic,
                   pcmk_rc_str(errno));
-        result = FALSE;
-    } else if (res < 3) {
+        goto done;
+    }
+
+    if (res < 3) {
         pcmk__warn("Transition information '%s' incomplete (%d of 3 expected "
                    "items)",
                    magic, res);
-        result = FALSE;
-    } else {
-        if (op_status) {
-            *op_status = local_op_status;
-        }
-        if (op_rc) {
-            *op_rc = local_op_rc;
-        }
-        result = decode_transition_key(key, uuid, transition_id, action_id,
-                                       target_rc);
+        goto done;
     }
+
+    if (op_status != NULL) {
+        *op_status = local_op_status;
+    }
+
+    if (op_rc != NULL) {
+        *op_rc = local_op_rc;
+    }
+
+    result = decode_transition_key(key, uuid, transition_id, action_id,
+                                   target_rc);
+
+done:
     free(key);
     return result;
 }
