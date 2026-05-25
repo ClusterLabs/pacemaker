@@ -1560,14 +1560,14 @@ stonith_send_notification(void *data, void *user_data)
         return;
 
     } else if (!pcmk__str_eq(entry->event, event, pcmk__str_none)) {
-        pcmk__trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
+        pcmk__trace("Skipping callback - event mismatch %s vs. %s",
+                    entry->event, event);
         return;
     }
 
     st_event = xml_to_event(blob->xml);
 
-    pcmk__trace("Invoking callback for %p/%s event...", entry, event);
-    // coverity[null_field]
+    pcmk__trace("Invoking callback for %s event...", event);
     entry->notify(blob->stonith, st_event);
     pcmk__trace("Callback invoked...");
 
