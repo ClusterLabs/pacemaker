@@ -1348,7 +1348,7 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
                 #include PCMK__CURSES_H
                 #endif
             ],
-            [printw((const char *) "Test");]
+            [printw((NCURSES_CONST char *) "Test");]
         )],
         [AC_MSG_RESULT([yes])
          PCMK_FEATURES="$PCMK_FEATURES ncurses"
