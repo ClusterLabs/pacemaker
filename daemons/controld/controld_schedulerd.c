@@ -251,6 +251,7 @@ static mainloop_timer_t *controld_sched_timer = NULL;
 static gboolean
 controld_sched_timeout(gpointer user_data)
 {
+    pcmk__err("Timeout waiting for reply from scheduler.");
     if (AM_I_DC) {
         /* If this node is the DC but can't communicate with the scheduler, just
          * exit (and likely get fenced) so this node doesn't interfere with any
