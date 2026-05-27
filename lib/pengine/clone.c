@@ -12,7 +12,7 @@
 #include <stdarg.h>                     // va_arg, va_list
 #include <stdbool.h>                    // bool, true, false
 #include <stddef.h>                     // NULL
-#include <stdint.h>                     // uint32_t
+#include <stdint.h>                     // uint32_t, uint64_t
 #include <stdlib.h>                     // free
 #include <string.h>                     // strcmp, strchr
 
@@ -515,33 +515,38 @@ configured_role(pcmk_resource_t *rsc)
 }
 
 bool
-is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any)
+pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag, bool any)
 {
-    bool all = !any;
+    const bool all = !any;
+    bool is_set = pcmk__is_set(rsc->flags, flag);
 
-    if (pcmk__is_set(rsc->flags, flag)) {
-        if(any) {
-            return TRUE;
+    if (any && is_set) {
+        return true;
+    }
+
+    if (all && !is_set) {
+        return false;
+    }
+
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        is_set = pcmk__is_set_recursive(iter->data, flag, any);
+
+        if (any && is_set) {
+            return true;
         }
-    } else if(all) {
-        return FALSE;
-    }
 
-    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
-        if (is_set_recursive(iter->data, flag, any)) {
-            if(any) {
-                return TRUE;
-            }
-
-        } else if(all) {
-            return FALSE;
+        if (all && !is_set) {
+            return false;
         }
     }
 
-    if(all) {
-        return TRUE;
-    }
-    return FALSE;
+    /* If all is true, then flag was set for rsc and all of its descendants.
+     * Otherwise, any is true, and flag was not set for rsc or any of its
+     * descendants.
+     */
+    return all;
 }
 
 PCMK__OUTPUT_ARGS("clone", "uint32_t", "pcmk_resource_t *", "GList *",
@@ -710,9 +715,11 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 pcmk__insert_dup(stopped, child_rsc->id, "Stopped");
             }
 
-        } else if (is_set_recursive(child_rsc, pcmk__rsc_removed, TRUE)
-                   || !is_set_recursive(child_rsc, pcmk__rsc_managed, FALSE)
-                   || is_set_recursive(child_rsc, pcmk__rsc_failed, TRUE)) {
+        } else if (pcmk__is_set_recursive(child_rsc, pcmk__rsc_removed, true)
+                   || !pcmk__is_set_recursive(child_rsc, pcmk__rsc_managed,
+                                              false)
+                   || pcmk__is_set_recursive(child_rsc, pcmk__rsc_failed,
+                                             true)) {
 
             // Print individual instance when active removed/unmanaged/failed
             print_full = TRUE;

@@ -11,7 +11,7 @@
 #define PCMK__CRM_PENGINE_INTERNAL__H
 
 #include <stdbool.h>                        // bool, false
-#include <stdint.h>                         // uint32_t
+#include <stdint.h>                         // uint32_t, uint64_t
 #include <string.h>                         // strncmp
 
 #include <libxml/tree.h>                    // xmlNode
@@ -259,7 +259,8 @@ pe_base_name_eq(const pcmk_resource_t *rsc, const char *id)
 int pe__target_rc_from_xml(const xmlNode *xml_op);
 
 int pe__cmp_node_name(const void *a, const void *b);
-bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
+bool pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag,
+                            bool any);
 
 pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          unsigned int *interval_ms,
