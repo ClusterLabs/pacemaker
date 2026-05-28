@@ -623,8 +623,11 @@ pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
 unsigned int
 pcmk_controld_api_replies_expected(const pcmk_ipc_api_t *api)
 {
-    struct controld_api_private_s *private = api->api_data;
+    struct controld_api_private_s *private = NULL;
 
+    CRM_CHECK(api != NULL, return 0);
+
+    private = api->api_data;
     return private->replies_expected;
 }
 
