@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>              // EINVAL, ENODEV, ENOENT, ENOTCONN
+#include <locale.h>             // setlocale
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
@@ -1103,6 +1104,9 @@ main(int argc, char **argv)
     struct subcommand_entry cmd;
     rsh_fn_t rsh_fn;
     rcp_fn_t rcp_fn;
+
+    // Load locale information for the local host from the environment
+    setlocale(LC_ALL, "");
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
