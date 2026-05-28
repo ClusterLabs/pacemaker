@@ -514,6 +514,35 @@ configured_role(pcmk_resource_t *rsc)
     return role;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a resource and all of its descendants are managed
+ *
+ * \param[in] rsc  Resource
+ *
+ * \return \c true if \p rsc and all of its descendants are managed, or \c false
+ *         otherwise
+ */
+static bool
+rsc_managed_recursive(const pcmk_resource_t *rsc)
+{
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
+        return false;
+    }
+
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child_rsc = iter->data;
+
+        if (!rsc_managed_recursive(child_rsc)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 bool
 pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag, bool any)
 {
@@ -716,8 +745,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             }
 
         } else if (pcmk__is_set_recursive(child_rsc, pcmk__rsc_removed, true)
-                   || !pcmk__is_set_recursive(child_rsc, pcmk__rsc_managed,
-                                              false)
+                   || !rsc_managed_recursive(child_rsc)
                    || pcmk__is_set_recursive(child_rsc, pcmk__rsc_failed,
                                              true)) {
 
