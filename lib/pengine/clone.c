@@ -544,38 +544,23 @@ rsc_managed_recursive(const pcmk_resource_t *rsc)
 }
 
 bool
-pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag, bool any)
+pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag)
 {
-    const bool all = !any;
-    bool is_set = pcmk__is_set(rsc->flags, flag);
-
-    if (any && is_set) {
+    if (pcmk__is_set(rsc->flags, flag)) {
         return true;
-    }
-
-    if (all && !is_set) {
-        return false;
     }
 
     for (const GList *iter = rsc->priv->children; iter != NULL;
          iter = iter->next) {
 
-        is_set = pcmk__is_set_recursive(iter->data, flag, any);
+        const pcmk_resource_t *child_rsc = iter->data;
 
-        if (any && is_set) {
+        if (pcmk__is_set_recursive(child_rsc, flag)) {
             return true;
-        }
-
-        if (all && !is_set) {
-            return false;
         }
     }
 
-    /* If all is true, then flag was set for rsc and all of its descendants.
-     * Otherwise, any is true, and flag was not set for rsc or any of its
-     * descendants.
-     */
-    return all;
+    return false;
 }
 
 PCMK__OUTPUT_ARGS("clone", "uint32_t", "pcmk_resource_t *", "GList *",
@@ -744,10 +729,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 pcmk__insert_dup(stopped, child_rsc->id, "Stopped");
             }
 
-        } else if (pcmk__is_set_recursive(child_rsc, pcmk__rsc_removed, true)
+        } else if (pcmk__is_set_recursive(child_rsc, pcmk__rsc_removed)
                    || !rsc_managed_recursive(child_rsc)
-                   || pcmk__is_set_recursive(child_rsc, pcmk__rsc_failed,
-                                             true)) {
+                   || pcmk__is_set_recursive(child_rsc, pcmk__rsc_failed)) {
 
             // Print individual instance when active removed/unmanaged/failed
             print_full = TRUE;

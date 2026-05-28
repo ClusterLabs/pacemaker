@@ -343,7 +343,7 @@ pcmk__clone_apply_coloc_score(pcmk_resource_t *dependent,
             chosen = instance->priv->fns->location(instance, NULL,
                                                    pcmk__rsc_node_assigned);
             if ((chosen != NULL)
-                && !pcmk__is_set_recursive(instance, pcmk__rsc_blocked, true)) {
+                && !pcmk__is_set_recursive(instance, pcmk__rsc_blocked)) {
                 pcmk__rsc_trace(primary, "Allowing %s: %s %d",
                                 colocation->id, pcmk__node_name(chosen),
                                 chosen->assign->score);

@@ -259,8 +259,7 @@ pe_base_name_eq(const pcmk_resource_t *rsc, const char *id)
 int pe__target_rc_from_xml(const xmlNode *xml_op);
 
 int pe__cmp_node_name(const void *a, const void *b);
-bool pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag,
-                            bool any);
+bool pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag);
 
 pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
                                          unsigned int *interval_ms,
