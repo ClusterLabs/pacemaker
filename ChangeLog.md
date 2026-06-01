@@ -1,5 +1,5 @@
-# Pacemaker-3.0.2 (23 Apr 2026)
-* 1806 commits with 607 files changed, 38242 insertions(+), 30786 deletions(-)
+# Pacemaker-3.0.2 (01 Jun 2026)
+* 1856 commits with 615 files changed, 39078 insertions(+), 31526 deletions(-)
 
 ## Features added since Pacemaker-3.0.1
 
@@ -65,6 +65,8 @@
                     *(regression introduced in 3.0.1)*
 * **libcib:** Fix setting origin attributes in CIB updates
               *(regression introduced in 2.1.6)*
+* **libcib:** Prevent crashing when handling an XPath query for an attribute
+              *(regression introduced in 3.0.1)*
 * **agents:** Error check calling `attrd_updater` in HealthCPU.
 * **agents:** Error check calling `attrd_updater` in HealthIOWait.
 * **agents:** Error check calling `attrd_updater` in HealthSMART.
@@ -134,9 +136,13 @@
 * **libcib:** Explicitly handle receiving a NACK from based.
 * **libcib:** Explicitly handle receiving a NACK from fenced.
 * **libcib:** Fix `cib__signon_retry()` return code
+* **libcib:** Full-CIB replace op no longer segfaults with `cib_xpath`
+* **libcib:** Handle `cib_xpath_address` for an XPath query for an attribute
 * **libcrmcommon, libpacemaker:** Don't assign const char * to char *
+* **libcrmcommon, tools:** Fix NULL dereference in `crm_resource.c`
 * **libcrmcommon:** Allow empty string values in `pcmk__scan_nvpair()`
 * **libcrmcommon:** Avoid integer overflow in `seconds_to_hms()`
+* **libcrmcommon:** Avoid leak in `pcmk__xe_dereference_children()` test
 * **libcrmcommon:** Avoid overflow in `crm_time_add_months()`
 * **libcrmcommon:** Avoid overflow when negating `INT_MIN`
 * **libcrmcommon:** Create a log file if it doesn't exist.
@@ -176,6 +182,7 @@
 * **libpacemaker:** If `process_rsc_history` exits early, free the list.
 * **libpe:** Free elements of `rsc->priv->ticket_constraints`...
 * **libpe:** If `pe__clone_default` exits early, free the lists.
+* **libpe_status:** Avoid leaking a `pcmk_resource_t's` xml/orig_xml
 * **libpe_status:** Use first operations child when expanding template
 * **libraries:** Ensure includes are outside extern in public headers
 * **libservices:** Deal with fgets errors in `services__get_lsb_metadata.`
@@ -183,6 +190,7 @@
 * **pacemaker-attrd:** Wipe CIB along with memory
 * **pacemakerd:** Correctly detect ping requests from sbd
 * **pacemakerd:** Match correctly in `PCMK_{valgrind,callgrind}_enabled`
+* **pacemakerd:** Properly find and track all existing sub-daemons
 * **scheduler:** promoted state with promoted state with attribute
 * **sysconfig:** Remove `--leak-check=full` from default `VALGRIND_OPTS.`
 * **tools:** Avoid memory leak in `crm_resource --clear`
@@ -197,6 +205,7 @@
 * **tools:** Free the list at the end of `cli_resource_print_operations.`
 * **tools:** Handle large timeouts correctly in `crm_resource --wait`
 * **tools:** Improve some cibadmin error messages
+* **tools:** Use the VERSION variable instead of invoking `crm_attribute --version`.
 * **various:** Always NULL-check return value of `pcmk__find_client()`
 * **various:** Use const for a few string pointer variables
 
@@ -274,6 +283,7 @@
 * **libcrmcommon:** Deprecate `pcmk_all_flags_set()`
 * **libcrmcommon:** Deprecate `pcmk_any_flags_set()`
 * **libcrmcommon:** Deprecate `pcmk_daemon_user()`
+* **libcrmcommon:** Deprecate `PCMK_dh_max_bits.`
 * **libcrmcommon:** Deprecate `PCMK_FENCING_HOST_ARGUMENT`
 * **libcrmcommon:** Deprecate `PCMK_FENCING_HOST_CHECK`
 * **libcrmcommon:** Deprecate `pcmk_is_set()`
@@ -300,6 +310,7 @@
 * **libcrmcommon:** Deprecate `PCMK_XA_ORPHANED`
 * **libcrmcommon:** Deprecate `PCMK_XA_STONITH_ENABLED`
 * **libcrmcommon:** Deprecate `PCMK_XA_STONITH_TIMEOUT_MS`
+* **libcrmcommon:** Deprecate `pcmk_unpack_nvpair_blocks()`
 * **libcrmcommon:** Deprecate `save_xml_to_file()`
 * **libcrmcommon:** Deprecate struct `crm_time_period_s`
 * **libcrmcommon:** Deprecate struct `crm_time_s`
@@ -352,6 +363,7 @@
 * **liblrmd:** Deprecate struct `lrmd_s`
 * **libpacemaker:** Convert the `pcmk_rc_disp_flags` enum to use `UINT32_C`.
 * **libpacemaker:** Convert the `pcmk_sim_flags` enum to use `UINT32_C`.
+* **libpe_status:** `get_meta_attributes()` rsc argument is now const
 * **libstonithd:** Convert the `stonith_call_options` enum to use `UINT32_C`.
 * **libstonithd:** Deprecate `stonith_t`
 * **schemas:** Add a schema for `cibadmin`
