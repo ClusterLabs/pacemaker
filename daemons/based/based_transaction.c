@@ -118,7 +118,7 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
  * \note This function is expected to be called only by
  *       \p based_process_commit_transact().
  * \note \p result_cib is expected to be a copy of the current CIB as created by
- *       \p cib_perform_op().
+ *       \p cib__perform_op_rw().
  * \note The caller is responsible for activating and syncing \p result_cib on
  *       success, and for freeing it on failure.
  */
@@ -130,7 +130,7 @@ based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
     int rc = pcmk_rc_ok;
     char *source = NULL;
 
-    // *result_cib should be a copy of the_cib (created by cib_perform_op())
+    // *result_cib should be a copy of the_cib (created by cib__perform_op_rw())
     pcmk__assert((result_cib != NULL) && (*result_cib != NULL)
                  && (*result_cib != the_cib));
 

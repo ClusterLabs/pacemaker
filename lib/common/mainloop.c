@@ -951,43 +951,41 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
                 struct mainloop_fd_callbacks * callbacks)
 {
     mainloop_io_t *client = NULL;
+    const GIOCondition condition = G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR;
 
-    if (fd >= 0) {
-        client = calloc(1, sizeof(mainloop_io_t));
-        if (client == NULL) {
-            return NULL;
-        }
-        client->name = strdup(name);
-        client->userdata = userdata;
-
-        if (callbacks) {
-            client->destroy_fn = callbacks->destroy;
-            client->dispatch_fn_io = callbacks->dispatch;
-        }
-
-        client->fd = fd;
-        client->channel = g_io_channel_unix_new(fd);
-        client->source =
-            g_io_add_watch_full(client->channel, priority,
-                                (G_IO_IN | G_IO_HUP | G_IO_NVAL | G_IO_ERR), mainloop_gio_callback,
-                                client, mainloop_gio_destroy);
-
-        /* Now that mainloop now holds a reference to channel,
-         * thanks to g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
-         *
-         * This means that channel will be free'd by:
-         * g_main_context_dispatch() or g_source_remove()
-         *  -> g_source_destroy_internal()
-         *      -> g_source_callback_unref()
-         * shortly after mainloop_gio_destroy() completes
-         */
-        g_io_channel_unref(client->channel);
-        pcmk__trace("Added connection %d for %s[%p].%d", client->source,
-                    client->name, client, fd);
-    } else {
+    if (fd < 0) {
         errno = EINVAL;
+        return NULL;
     }
 
+    client = pcmk__assert_alloc(1, sizeof(mainloop_io_t));
+    client->name = pcmk__str_copy(name);
+    client->userdata = userdata;
+
+    if (callbacks != NULL) {
+        client->destroy_fn = callbacks->destroy;
+        client->dispatch_fn_io = callbacks->dispatch;
+    }
+
+    client->fd = fd;
+    client->channel = g_io_channel_unix_new(fd);
+    client->source = g_io_add_watch_full(client->channel, priority, condition,
+                                         mainloop_gio_callback, client,
+                                         mainloop_gio_destroy);
+
+    /* Now that mainloop now holds a reference to channel, thanks to
+     * g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
+     *
+     * This means that channel will be free'd by:
+     * g_main_context_dispatch() or g_source_remove()
+     *  -> g_source_destroy_internal()
+     *      -> g_source_callback_unref()
+     * shortly after mainloop_gio_destroy() completes
+     */
+    g_io_channel_unref(client->channel);
+
+    pcmk__trace("Added connection %d for %s[%p].%d", client->source,
+                client->name, client, fd);
     return client;
 }
 
@@ -1000,7 +998,12 @@ mainloop_del_fd(mainloop_io_t *client)
 
     pcmk__trace("Removing client %s[%p]", client->name, client);
 
-    // mainloop_gio_destroy() gets called during source removal
+    /* g_source_remove() marks the source as destroyed, unsets the source
+     * callback (mainloop_gio_callback()), and destroys the callback data (the
+     * client) via the notify function (mainloop_gio_destroy()). We can rely on
+     * mainloop_gio_callback() not getting called again for this source, and on
+     * the client being destroyed.
+     */
     g_source_remove(client->source);
 }
 

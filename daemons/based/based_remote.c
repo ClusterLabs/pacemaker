@@ -544,10 +544,6 @@ based_remote_client_destroy(gpointer user_data)
     pcmk__free_client(client);
 
     pcmk__trace("Freed the cib client");
-
-    if (cib_shutdown_flag) {
-        based_shutdown(0);
-    }
 }
 
 static int
@@ -597,9 +593,13 @@ cib_remote_listen(gpointer data)
         /* create gnutls session for the server socket */
         new_client->remote->tls_session = pcmk__new_tls_session(tls, csock);
         if (new_client->remote->tls_session == NULL) {
+            pcmk__err("Dropping remote connection from %s because we failed to "
+                      "create a TLS session for it", ipstr);
+            pcmk__free_client(new_client);
             close(csock);
             return 0;
         }
+
     } else {
         pcmk__set_client_flags(new_client, pcmk__client_tcp);
         new_client->remote->tcp_socket = csock;
@@ -759,4 +759,39 @@ try_clear_port:
                    PCMK_XA_REMOTE_TLS_PORT " instead.", port);
         remote_fd = init_remote_listener(port);
     }
+}
+
+/*!
+ * \internal
+ * \brief Disconnect and free a CIB manager client if it is a remote client
+ *
+ * If \p value is a remote client, drop it by removing its source from the
+ * mainloop. It will be freed by \c based_remote_client_destroy() via
+ * \c remote_client_fd_callbacks.
+ *
+ * \param[in]     key        Ignored
+ * \param[in,out] value      CIB manager client (<tt>pcmk__client_t *</tt>)
+ * \param[in]     user_data  Ignored
+ */
+static void
+drop_client_if_remote(gpointer key, gpointer value, gpointer user_data)
+{
+    pcmk__client_t *client = value;
+
+    if (client->remote == NULL) {
+        return;
+    }
+
+    pcmk__notice("Disconnecting remote client %s", pcmk__client_name(client));
+    mainloop_del_fd(client->remote->source);
+}
+
+/*!
+ * \internal
+ * \brief Disconnect and free all remote CIB manager clients
+ */
+void
+based_drop_remote_clients(void)
+{
+    pcmk__foreach_ipc_client(drop_client_if_remote, NULL);
 }

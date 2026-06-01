@@ -48,7 +48,7 @@ enum cib__op_attr {
     //! No special attributes
     cib__op_attr_none           = 0,
 
-    //! Modifies CIB
+    //! May modify state (of the CIB itself or of the CIB manager)
     cib__op_attr_modifies       = (UINT32_C(1) << 1),
 
     //! Requires privileges
@@ -103,8 +103,7 @@ enum cib__op_type {
  * replace *cib, but the replacement must become the root of the original
  * document.
  */
-typedef int (*cib__op_fn_t)(xmlNode *request, xmlNode *input, xmlNode **cib,
-                            xmlNode **output);
+typedef int (*cib__op_fn_t)(xmlNode *request, xmlNode **cib, xmlNode **output);
 
 typedef struct {
     const char *name;
@@ -187,13 +186,15 @@ cib__client_triggers_refresh(const char *name)
 }
 
 int cib__get_notify_patchset(const xmlNode *msg, const xmlNode **patchset);
+xmlNode *cib__get_calldata(const xmlNode *request);
+void cib__set_calldata(xmlNode *request, xmlNode *data);
 
-int cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+int cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                        xmlNode **output);
 
-int cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
-                   bool *config_changed, xmlNode **cib, xmlNode **diff,
-                   xmlNode **output);
+int cib__perform_op_rw(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+                       bool *config_changed, xmlNode **cib, xmlNode **diff,
+                       xmlNode **output);
 
 int cib__create_op(cib_t *cib, const char *op, const char *host,
                    const char *section, xmlNode *data, int call_options,
@@ -207,32 +208,15 @@ void cib_native_notify(gpointer data, gpointer user_data);
 
 int cib__get_operation(const char *op, const cib__operation_t **operation);
 
-int cib__process_apply_patch(xmlNode *req, xmlNode *input, xmlNode **cib,
-                             xmlNode **answer);
-
-int cib__process_bump(xmlNode *req, xmlNode *input, xmlNode **cib,
-                      xmlNode **answer);
-
-int cib__process_create(xmlNode *req, xmlNode *input, xmlNode **cib,
-                        xmlNode **answer);
-
-int cib__process_delete(xmlNode *req, xmlNode *input, xmlNode **cib,
-                        xmlNode **answer);
-
-int cib__process_erase(xmlNode *req, xmlNode *input, xmlNode **cib,
-                       xmlNode **answer);
-
-int cib__process_modify(xmlNode *req, xmlNode *input, xmlNode **cib,
-                        xmlNode **answer);
-
-int cib__process_query(xmlNode *req, xmlNode *input, xmlNode **cib,
-                       xmlNode **answer);
-
-int cib__process_replace(xmlNode *req, xmlNode *input, xmlNode **cib,
-                         xmlNode **answer);
-
-int cib__process_upgrade(xmlNode *req, xmlNode *input, xmlNode **cib,
-                         xmlNode **answer);
+int cib__process_apply_patch(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_bump(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_create(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_delete(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_erase(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_modify(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_query(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_replace(xmlNode *req, xmlNode **cib, xmlNode **answer);
+int cib__process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer);
 
 int cib_internal_op(cib_t * cib, const char *op, const char *host,
                     const char *section, xmlNode * data,

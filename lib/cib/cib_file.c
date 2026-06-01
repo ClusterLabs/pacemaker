@@ -151,8 +151,8 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
 
     file_opaque_t *private = cib->variant_opaque;
 
-    // We error checked these in callers
-    cib__get_operation(op, &operation);
+    // We error checked these in callers, but make Coverity happy
+    pcmk__assert(cib__get_operation(op, &operation) == pcmk_rc_ok);
     op_function = get_op_function(operation);
 
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
@@ -164,12 +164,12 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
 
     if (read_only) {
-        rc = cib__perform_query(op_function, request, &private->cib_xml,
+        rc = cib__perform_op_ro(op_function, request, &private->cib_xml,
                                 output);
     } else {
         result_cib = private->cib_xml;
-        rc = cib_perform_op(cib_file, op_function, request, &changed,
-                            &result_cib, &cib_diff, output);
+        rc = cib__perform_op_rw(cib_file, op_function, request, &changed,
+                                &result_cib, &cib_diff, output);
     }
 
     if (pcmk__is_set(call_options, cib_transaction)) {
@@ -191,8 +191,16 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         set_file_flags(private, file_flag_dirty);
     }
 
+    if (*output == NULL) {
+        goto done;
+    }
+
+    if ((*output)->doc == private->cib_xml->doc) {
+        *output = pcmk__xml_copy(NULL, *output);
+    }
+
 done:
-    if ((result_cib != private->cib_xml) && (result_cib != *output)) {
+    if (result_cib != private->cib_xml) {
         pcmk__xml_free(result_cib);
     }
     pcmk__xml_free(cib_diff);
@@ -225,6 +233,8 @@ process_transaction_requests(cib_t *cib, xmlNode *transaction)
         const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
 
         int rc = process_request(cib, request, &output);
+
+        pcmk__xml_free(output);
 
         if (rc != pcmk_rc_ok) {
             pcmk__err("Aborting transaction for CIB file client (%s) on file "
@@ -265,7 +275,7 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
     xmlNode *saved_cib = private->cib_xml;
 
     /* *result_cib should be a copy of private->cib_xml (created by
-     * cib_perform_op())
+     * cib__perform_op_rw())
      */
     pcmk__assert((result_cib != NULL) && (*result_cib != NULL)
                  && (*result_cib != private->cib_xml));
@@ -301,10 +311,10 @@ commit_transaction(cib_t *cib, xmlNode *transaction, xmlNode **result_cib)
 }
 
 static int
-process_commit_transact(xmlNode *req, xmlNode *input, xmlNode **cib_xml,
-                        xmlNode **answer)
+process_commit_transact(xmlNode *req, xmlNode **cib_xml, xmlNode **answer)
 {
     int rc = pcmk_rc_ok;
+    xmlNode *input = cib__get_calldata(req);
     const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
     cib_t *cib = NULL;
 
@@ -403,38 +413,35 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     const cib__operation_t *operation = NULL;
 
-    pcmk__info("Handling %s operation for %s as %s",
-               pcmk__s(op, "invalid"), pcmk__s(section, "entire CIB"),
+    pcmk__info("Handling %s operation for %s as %s", pcmk__s(op, "invalid"),
+               pcmk__s(section, "entire CIB"),
                pcmk__s(user_name, "default user"));
 
-    if (output_data != NULL) {
-        *output_data = NULL;
-    }
-
     if (cib->state == cib_disconnected) {
-        return -ENOTCONN;
+        rc = ENOTCONN;
+        goto done;
     }
 
     rc = cib__get_operation(op, &operation);
-    rc = pcmk_rc2legacy(rc);
-    if (rc != pcmk_ok) {
+    if (rc != pcmk_rc_ok) {
         // @COMPAT: At compatibility break, use rc directly
-        return -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
+        goto done;
     }
 
     if (get_op_function(operation) == NULL) {
         // @COMPAT: At compatibility break, use EOPNOTSUPP
         pcmk__err("Operation %s is not supported by CIB file clients", op);
-        return -EPROTONOSUPPORT;
+        rc = EPROTONOSUPPORT;
+        goto done;
     }
 
     cib__set_call_options(call_options, "file operation", cib_no_mtime);
 
     rc = cib__create_op(cib, op, host, section, data, call_options, user_name,
                         NULL, &request);
-    rc = pcmk_rc2legacy(rc);
-    if (rc != pcmk_ok) {
-        return rc;
+    if (rc != pcmk_rc_ok) {
+        goto done;
     }
 
     pcmk__xe_set(request, PCMK__XA_ACL_TARGET, user_name);
@@ -442,30 +449,22 @@ file_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     if (pcmk__is_set(call_options, cib_transaction)) {
         rc = cib__extend_transaction(cib, request);
-        rc = pcmk_rc2legacy(rc);
         goto done;
     }
 
     rc = process_request(cib, request, &output);
-    rc = pcmk_rc2legacy(rc);
-
-    if ((output_data != NULL) && (output != NULL)) {
-        if (output->doc == private->cib_xml->doc) {
-            *output_data = pcmk__xml_copy(NULL, output);
-        } else {
-            *output_data = output;
-        }
-    }
 
 done:
-    if ((output != NULL)
-        && (output->doc != private->cib_xml->doc)
-        && ((output_data == NULL) || (output != *output_data))) {
+    pcmk__xml_free(request);
 
+    if (output_data != NULL) {
+        *output_data = output;
+
+    } else {
         pcmk__xml_free(output);
     }
-    pcmk__xml_free(request);
-    return rc;
+
+    return pcmk_rc2legacy(rc);
 }
 
 /*!

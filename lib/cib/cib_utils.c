@@ -171,12 +171,15 @@ cib_acl_enabled(xmlNode *xml, const char *user)
 
 /*!
  * \internal
- * \brief Get input data from a CIB request
+ * \brief Get call data from a CIB request
  *
  * \param[in] request  CIB request XML
+ *
+ * \return Call data added by \c cib__set_calldata(), or \c NULL if none is
+ *         found
  */
-static xmlNode *
-get_op_input(const xmlNode *request)
+xmlNode *
+cib__get_calldata(const xmlNode *request)
 {
     xmlNode *wrapper = pcmk__xe_first_child(request, PCMK__XE_CIB_CALLDATA,
                                             NULL, NULL);
@@ -184,8 +187,30 @@ get_op_input(const xmlNode *request)
     return pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Add call data to a CIB request
+ *
+ * Add a copy of \p data to a new \c PCMK__XE_CIB_CALLDATA child of \p request.
+ *
+ * \param[in,out] request  CIB request XML
+ * \param[in]     data     Call data to add a copy of (if \c NULL, do nothing)
+ */
+void
+cib__set_calldata(xmlNode *request, xmlNode *data)
+{
+    xmlNode *wrapper = NULL;
+
+    if (data == NULL) {
+        return;
+    }
+
+    wrapper = pcmk__xe_create(request, PCMK__XE_CIB_CALLDATA);
+    pcmk__xml_copy(wrapper, data);
+}
+
 int
-cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
+cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                    xmlNode **output)
 {
     int rc = pcmk_rc_ok;
@@ -193,7 +218,6 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     const char *section = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
-    xmlNode *input = NULL;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -209,7 +233,6 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
-    input = get_op_input(req);
     cib = *current_cib;
 
     if (cib_acl_enabled(*current_cib, user)
@@ -231,7 +254,7 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     saved_cib = cib;
     saved_doc = cib->doc;
 
-    rc = fn(req, input, &cib, output);
+    rc = fn(req, &cib, output);
 
     /* Sanity check: op should be read-only (but this does not check children,
      * attributes, or private data)
@@ -245,26 +268,34 @@ cib__perform_query(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
                      && (cib == xmlDocGetRootElement(cib->doc)));
     }
 
-    if (*output == NULL) {
-        // Do nothing
-
-    } else if (cib_filtered == *output) {
-        // Let them have this copy
-        cib_filtered = NULL;
-
-    } else if (*output == *current_cib) {
-        // They already know not to free it
-
-    } else if ((cib_filtered != NULL)
-               && ((*output)->doc == cib_filtered->doc)) {
-        // We're about to free the document of which *output is a part
-        *output = pcmk__xml_copy(NULL, *output);
-
-    } else if ((*output)->doc == (*current_cib)->doc) {
-        // Give them a copy they can free
-        *output = pcmk__xml_copy(NULL, *output);
+    if (cib_filtered == *output) {
+        // Let the caller have this copy
+        return rc;
     }
 
+    if (*output == NULL) {
+        goto done;
+    }
+
+    if (*output == *current_cib) {
+        // Trust the caller to check this and not free *output
+        goto done;
+    }
+
+    if ((*output)->doc == (*current_cib)->doc) {
+        // Give the caller a copy that it can free
+        *output = pcmk__xml_copy(NULL, *output);
+        goto done;
+    }
+
+    if ((cib_filtered == NULL) || ((*output)->doc != cib_filtered->doc)) {
+        goto done;
+    }
+
+    // We're about to free the document of which *output is a part
+    *output = pcmk__xml_copy(NULL, *output);
+
+done:
     pcmk__xml_free(cib_filtered);
     return rc;
 }
@@ -353,7 +384,6 @@ check_new_feature_set(const xmlNode *new_cib)
  * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
  * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
  * \param[in] request  CIB request
- * \param[in] input    Input data for CIB request
  *
  * \return Standard Pacemaker return code
  *
@@ -362,8 +392,7 @@ check_new_feature_set(const xmlNode *new_cib)
  */
 static int
 check_cib_version_attr(const char *attr, const xmlNode *old_cib,
-                       const xmlNode *new_cib, const xmlNode *request,
-                       const xmlNode *input)
+                       const xmlNode *new_cib, const xmlNode *request)
 {
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     int old_version = 0;
@@ -383,7 +412,6 @@ check_cib_version_attr(const char *attr, const xmlNode *old_cib,
     pcmk__err("%s went backwards in %s request: %d -> %d", attr, op,
               old_version, new_version);
     pcmk__log_xml_warn(request, "bad-request");
-    pcmk__log_xml_warn(input, "bad-input");
 
     return pcmk_rc_old_data;
 }
@@ -400,7 +428,6 @@ check_cib_version_attr(const char *attr, const xmlNode *old_cib,
  * \param[in] old_cib  \c PCMK_XE_CIB element before performing operation
  * \param[in] new_cib  \c PCMK_XE_CIB element from result of operation
  * \param[in] request  CIB request
- * \param[in] input    Input data for CIB request
  *
  * \return Standard Pacemaker return code
  *
@@ -409,18 +436,17 @@ check_cib_version_attr(const char *attr, const xmlNode *old_cib,
  */
 static int
 check_cib_versions(const xmlNode *old_cib, const xmlNode *new_cib,
-                   const xmlNode *request, const xmlNode *input)
+                   const xmlNode *request)
 {
     int rc = check_cib_version_attr(PCMK_XA_ADMIN_EPOCH, old_cib, new_cib,
-                                    request, input);
+                                    request);
 
     if (rc != pcmk_rc_undetermined) {
         return rc;
     }
 
     // @TODO Why aren't we checking PCMK_XA_NUM_UPDATES if epochs are equal?
-    rc = check_cib_version_attr(PCMK_XA_EPOCH, old_cib, new_cib, request,
-                                input);
+    rc = check_cib_version_attr(PCMK_XA_EPOCH, old_cib, new_cib, request);
     if (rc == pcmk_rc_undetermined) {
         rc = pcmk_rc_ok;
     }
@@ -479,9 +505,9 @@ set_update_origin(xmlNode *new_cib, const xmlNode *request)
 }
 
 int
-cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
-               bool *config_changed, xmlNode **cib, xmlNode **diff,
-               xmlNode **output)
+cib__perform_op_rw(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
+                   bool *config_changed, xmlNode **cib, xmlNode **diff,
+                   xmlNode **output)
 {
     int rc = pcmk_rc_ok;
 
@@ -489,7 +515,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     const char *section = NULL;
     const char *user = NULL;
     uint32_t call_options = cib_none;
-    xmlNode *input = NULL;
     bool enable_acl = false;
     bool manage_version = true;
 
@@ -513,7 +538,6 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
     pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
-    input = get_op_input(req);
     enable_acl = cib_acl_enabled(*cib, user);
 
     pcmk__trace("Processing %s for section '%s', user '%s'", op,
@@ -550,7 +574,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
 
     saved_doc = (*cib)->doc;
 
-    rc = fn(req, input, cib, output);
+    rc = fn(req, cib, output);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
@@ -587,7 +611,7 @@ cib_perform_op(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
         }
     }
 
-    rc = check_cib_versions(old_versions, *cib, req, input);
+    rc = check_cib_versions(old_versions, *cib, req);
 
     pcmk__strip_xml_text(*cib);
 
@@ -686,12 +710,7 @@ cib__create_op(cib_t *cib, const char *op, const char *host,
     pcmk__trace("Sending call options: %.8lx, %d", (long) call_options,
                 call_options);
     pcmk__xe_set_int(*op_msg, PCMK__XA_CIB_CALLOPT, call_options);
-
-    if (data != NULL) {
-        xmlNode *wrapper = pcmk__xe_create(*op_msg, PCMK__XE_CIB_CALLDATA);
-
-        pcmk__xml_copy(wrapper, data);
-    }
+    cib__set_calldata(*op_msg, data);
 
     return pcmk_rc_ok;
 }
@@ -776,12 +795,9 @@ cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc)
     cib_callback_client_t *blob = NULL;
 
     if (msg != NULL) {
-        xmlNode *wrapper = NULL;
-
         pcmk__xe_get_int(msg, PCMK__XA_CIB_RC, &rc);
         pcmk__xe_get_int(msg, PCMK__XA_CIB_CALLID, &call_id);
-        wrapper = pcmk__xe_first_child(msg, PCMK__XE_CIB_CALLDATA, NULL, NULL);
-        output = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
+        output = cib__get_calldata(msg);
     }
 
     blob = cib__lookup_id(call_id);
@@ -915,8 +931,7 @@ cib_apply_patch_event(xmlNode *event, xmlNode *input, xmlNode **output,
         *output = pcmk__xml_copy(NULL, input);
     }
 
-    rc = cib__process_apply_patch(event, diff, output, NULL);
-    rc = pcmk_rc2legacy(rc);
+    rc = xml_apply_patchset(*output, diff, true);
     if (rc == pcmk_ok) {
         return pcmk_ok;
     }
