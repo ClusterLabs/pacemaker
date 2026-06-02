@@ -330,20 +330,21 @@ typedef struct lrmd_api_operations_s {
      * \param[in]     rsc_id       ID of resource
      * \param[in]     action       Name of resource action to execute
      * \param[in]     userdata     Arbitrary string to pass to event callback
-     * \param[in]     interval_ms  If 0, execute action once, otherwise
-     *                             recurring at this interval (in milliseconds)
+     * \param[in]     interval_ms  If 0, execute action once; otherwise, execute
+     *                             it on a recurring basis at this interval (in
+     *                             milliseconds)
      * \param[in]     timeout      Error if not complete within this time (in
      *                             milliseconds)
      * \param[in]     start_delay  Wait this long before execution (in
      *                             milliseconds)
-     * \param[in]     options      Group of enum lrmd_call_options flags
+     * \param[in]     options      Group of <tt>enum lrmd_call_options</tt>
      * \param[in,out] params       Parameters to pass to agent (will be freed)
      *
      * \return A call ID for the action on success (in which case the action is
      *         queued in the executor, and the event callback will be called
-     *         later with the result), otherwise a negative legacy Pacemaker
+     *         later with the result); otherwise, a negative legacy Pacemaker
      *         return code
-     * \note exec() and cancel() operations on an individual resource are
+     * \note \c exec() and \c cancel() operations on an individual resource are
      *       guaranteed to occur in the order the client API is called. However,
      *       operations on different resources are not guaranteed to occur in
      *       any specific order.

@@ -1874,12 +1874,37 @@ lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
                                            output, options, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Request execution of a resource action
+ *
+ * \param[in,out] lrmd         Executor connection object
+ * \param[in]     rsc_id       ID of resource
+ * \param[in]     action       Name of resource action to execute
+ * \param[in]     userdata     Arbitrary string to pass to event callback
+ * \param[in]     interval_ms  If 0, execute action once; otherwise, execute it
+ *                             on a recurring basis at this interval (in
+ *                             milliseconds)
+ * \param[in]     timeout      Error if not complete within this time (in
+ *                             milliseconds)
+ * \param[in]     start_delay  Wait this long before execution (in milliseconds)
+ * \param[in]     options      Group of <tt>enum lrmd_call_options</tt>
+ * \param[in,out] params       Parameters to pass to agent (will be freed)
+ *
+ * \return A call ID for the action on success (in which case the action is
+ *         queued in the executor, and the event callback will be called
+ *         later with the result); otherwise, a negative legacy Pacemaker return
+ *         code
+ * \note \c exec() and \c cancel() operations on an individual resource are
+ *       guaranteed to occur in the order the client API is called. However,
+ *       operations on different resources are not guaranteed to occur in any
+ *       specific order.
+ */
 static int
 lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
               const char *userdata, unsigned int interval_ms,
-              int timeout,      /* ms */
-              int start_delay,  /* ms */
-              enum lrmd_call_options options, lrmd_key_value_t * params)
+              int timeout, int start_delay, enum lrmd_call_options options,
+              lrmd_key_value_t * params)
 {
     int rc = pcmk_ok;
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
