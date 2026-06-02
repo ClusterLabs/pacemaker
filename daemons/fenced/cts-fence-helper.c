@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -605,6 +605,7 @@ mainloop_tests(void)
     pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 }
 
 static GOptionContext *

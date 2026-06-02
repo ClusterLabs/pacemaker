@@ -14,14 +14,9 @@
 
 #include <libxml/tree.h>            // xmlNode *
 
-extern bool based_is_primary;
-extern xmlNode *the_cib;
-
-int based_process_abs_delete(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_apply_patch(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_commit_transact(xmlNode *req, xmlNode **cib,
                                   xmlNode **answer);
-int based_process_is_primary(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_noop(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer);
 int based_process_primary(xmlNode *req, xmlNode **cib, xmlNode **answer);

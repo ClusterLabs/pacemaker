@@ -10,22 +10,23 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <crm_internal.h>
-#include <unistd.h>
+#include <errno.h>                  // ECOMM, EINVAL, ENOMSG, ENOTCONN, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free
+#include <sys/types.h>              // ssize_t
 
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*, G_*, FALSE, TRUE
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, remove_cib_op_callback
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_REQUEST_QUERY
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, crm_log_xml_explicit
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_ok, pcmk_ok, pcmk_strerror, etc.
+#include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 typedef struct {
     char *token;
@@ -298,20 +299,19 @@ cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     cib->call_timeout = PCMK__IPC_TIMEOUT;
 
-    if (type == cib_command) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_RW;
+    switch (type) {
+        case cib_command:
+        case cib_command_nonblocking:
+        case cib_query:
+            /* @COMPAT cib_command_nonblocking and cib_query are deprecated
+             * since 3.0.2
+             */
+            cib->state = cib_connected_command;
+            channel = PCMK__SERVER_BASED_RW;
+            break;
 
-    } else if (type == cib_command_nonblocking) {
-        cib->state = cib_connected_command;
-        channel = PCMK__SERVER_BASED_SHM;
-
-    } else if (type == cib_query) {
-        cib->state = cib_connected_query;
-        channel = PCMK__SERVER_BASED_RO;
-
-    } else {
-        return -ENOTCONN;
+        default:
+            return -ENOTCONN;
     }
 
     pcmk__trace("Connecting %s channel", channel);

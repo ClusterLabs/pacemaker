@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -71,7 +71,7 @@ G_GNUC_INTERNAL
 uint32_t pcmk__cpg_local_nodeid(cpg_handle_t handle);
 
 G_GNUC_INTERNAL
-bool pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
+void pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
                         enum pcmk_ipc_server dest);
 
 #endif  // SUPPORT_COROSYNC

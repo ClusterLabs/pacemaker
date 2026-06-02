@@ -10,24 +10,13 @@
 #ifndef BASED_CALLBACKS__H
 #define BASED_CALLBACKS__H
 
-#include <stdbool.h>
-
 #include <libxml/tree.h>                // xmlNode
-#include <qb/qbipcs.h>                  // qb_*
 
 #include <crm/common/internal.h>        // pcmk__client_t
 
-extern struct qb_ipcs_service_handlers ipc_ro_callbacks;
-extern struct qb_ipcs_service_handlers ipc_rw_callbacks;
+void based_callbacks_init(void);
+void based_callbacks_cleanup(void);
 
-extern qb_ipcs_service_t *ipcs_ro;
-extern qb_ipcs_service_t *ipcs_rw;
-extern qb_ipcs_service_t *ipcs_shm;
-
-void based_peer_callback(xmlNode *msg, void *private_data);
-int based_process_request(xmlNode *request, bool privileged,
-                          const pcmk__client_t *client);
-void based_shutdown(int nsig);
-void based_terminate(int exit_status);
+int based_handle_request(pcmk__request_t *request);
 
 #endif // BASED_CALLBACKS__H

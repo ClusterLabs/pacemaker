@@ -199,6 +199,8 @@ done:
     // Run mainloop
     controld_globals.mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(controld_globals.mainloop);
+    g_main_loop_unref(controld_globals.mainloop);
+
     if (pcmk__is_set(controld_globals.fsa_input_register, R_STAYDOWN)) {
         pcmk__info("Inhibiting automated respawn");
         exit_code = CRM_EX_FATAL;

@@ -21,65 +21,34 @@ extern "C" {
 #endif
 
 // Request types for CIB manager IPC/CPG
-#define PCMK__CIB_REQUEST_SECONDARY     "cib_slave"
-#define PCMK__CIB_REQUEST_PRIMARY       "cib_master"
-#define PCMK__CIB_REQUEST_SYNC          "cib_sync"
-#define PCMK__CIB_REQUEST_IS_PRIMARY    "cib_ismaster"
-#define PCMK__CIB_REQUEST_BUMP          "cib_bump"
-#define PCMK__CIB_REQUEST_QUERY         "cib_query"
-#define PCMK__CIB_REQUEST_CREATE        "cib_create"
-#define PCMK__CIB_REQUEST_MODIFY        "cib_modify"
-#define PCMK__CIB_REQUEST_DELETE        "cib_delete"
-#define PCMK__CIB_REQUEST_ERASE         "cib_erase"
-#define PCMK__CIB_REQUEST_REPLACE       "cib_replace"
-#define PCMK__CIB_REQUEST_APPLY_PATCH   "cib_apply_diff"
-#define PCMK__CIB_REQUEST_UPGRADE       "cib_upgrade"
-#define PCMK__CIB_REQUEST_ABS_DELETE    "cib_delete_alt"
-#define PCMK__CIB_REQUEST_NOOP          "noop"
-#define PCMK__CIB_REQUEST_SHUTDOWN      "cib_shutdown_req"
+#define PCMK__CIB_REQUEST_APPLY_PATCH       "cib_apply_diff"
+#define PCMK__CIB_REQUEST_BUMP              "cib_bump"
 #define PCMK__CIB_REQUEST_COMMIT_TRANSACT   "cib_commit_transact"
-#define PCMK__CIB_REQUEST_SCHEMAS       "cib_schemas"
-
-/*!
- * \internal
- * \brief Flags for CIB operation attributes
- */
-enum cib__op_attr {
-    //! No special attributes
-    cib__op_attr_none           = 0,
-
-    //! May modify state (of the CIB itself or of the CIB manager)
-    cib__op_attr_modifies       = (UINT32_C(1) << 1),
-
-    //! Requires privileges
-    cib__op_attr_privileged     = (UINT32_C(1) << 2),
-
-    //! Must only be processed locally
-    cib__op_attr_local          = (UINT32_C(1) << 3),
-
-    //! Replaces CIB
-    cib__op_attr_replaces       = (UINT32_C(1) << 4),
-
-    //! Writes to disk on success
-    cib__op_attr_writes_through = (UINT32_C(1) << 5),
-
-    //! Supported in a transaction
-    cib__op_attr_transaction    = (UINT32_C(1) << 6),
-};
+#define PCMK__CIB_REQUEST_CREATE            "cib_create"
+#define PCMK__CIB_REQUEST_DELETE            "cib_delete"
+#define PCMK__CIB_REQUEST_ERASE             "cib_erase"
+#define PCMK__CIB_REQUEST_MODIFY            "cib_modify"
+#define PCMK__CIB_REQUEST_NOOP              "noop"
+#define PCMK__CIB_REQUEST_PRIMARY           "cib_master"
+#define PCMK__CIB_REQUEST_QUERY             "cib_query"
+#define PCMK__CIB_REQUEST_REPLACE           "cib_replace"
+#define PCMK__CIB_REQUEST_SCHEMAS           "cib_schemas"
+#define PCMK__CIB_REQUEST_SECONDARY         "cib_slave"
+#define PCMK__CIB_REQUEST_SHUTDOWN          "cib_shutdown_req"
+#define PCMK__CIB_REQUEST_SYNC              "cib_sync"
+#define PCMK__CIB_REQUEST_UPGRADE           "cib_upgrade"
 
 /*!
  * \internal
  * \brief Types of CIB operations
  */
 enum cib__op_type {
-    cib__op_abs_delete,
     cib__op_apply_patch,
     cib__op_bump,
     cib__op_commit_transact,
     cib__op_create,
     cib__op_delete,
     cib__op_erase,
-    cib__op_is_primary,
     cib__op_modify,
     cib__op_noop,
     cib__op_ping,
@@ -108,7 +77,7 @@ typedef int (*cib__op_fn_t)(xmlNode *request, xmlNode **cib, xmlNode **output);
 typedef struct {
     const char *name;
     enum cib__op_type type;
-    uint32_t flags; //!< Group of <tt>enum cib__op_attr</tt> flags
+    bool modifies_cib;
 } cib__operation_t;
 
 typedef struct {

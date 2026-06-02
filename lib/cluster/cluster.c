@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -117,13 +117,21 @@ pcmk_cluster_disconnect(pcmk_cluster_t *cluster)
     const enum pcmk_cluster_layer cluster_layer = pcmk_get_cluster_layer();
     const char *cluster_layer_s = pcmk_cluster_layer_text(cluster_layer);
 
+    /* @TODO Either decouple this from cluster disconnection, or move the caches
+     * to pcmk_cluster_t as suggested in comments in membership.c.
+     */
+    pcmk__cluster_destroy_node_caches();
+
+    if (cluster == NULL) {
+        return EINVAL;
+    }
+
     pcmk__info("Disconnecting from %s cluster layer", cluster_layer_s);
 
     switch (cluster_layer) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
             pcmk__corosync_disconnect(cluster);
-            pcmk__cluster_destroy_node_caches();
             return pcmk_rc_ok;
 #endif // SUPPORT_COROSYNC
 
@@ -196,24 +204,21 @@ pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(gpointer))
  * \param[in] node     Cluster node to send message to
  * \param[in] service  Message type to use in message host info
  * \param[in] data     XML message to send
- *
- * \return \c true on success, or \c false otherwise
  */
-bool
+void
 pcmk__cluster_send_message(const pcmk__node_status_t *node,
                            enum pcmk_ipc_server service, const xmlNode *data)
 {
-    // @TODO Return standard Pacemaker return code
     switch (pcmk_get_cluster_layer()) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
-            return pcmk__cpg_send_xml(data, node, service);
+            pcmk__cpg_send_xml(data, node, service);
+            return;
 #endif  // SUPPORT_COROSYNC
 
         default:
-            break;
+            return;
     }
-    return false;
 }
 
 /*!

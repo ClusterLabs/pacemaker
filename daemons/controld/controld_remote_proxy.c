@@ -189,6 +189,16 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
         return NULL;
     }
 
+    /* @COMPAT Proxied clients from Pacemaker Remote nodes older than version
+     * 3.0.2 can connect using PCMK__SERVER_BASED_RO. Since we use
+     * PCMK__SERVER_BASED_RW for everything now, and since no local or same-
+     * versioned proxied clients can connect to PCMK__SERVER_BASED_RO, just map
+     * it to PCMK__SERVER_BASED_RW here.
+     */
+    if (pcmk__str_eq(channel, PCMK__SERVER_BASED_RO, pcmk__str_none)) {
+        channel = PCMK__SERVER_BASED_RW;
+    }
+
     proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));
 
     proxy->node_name = pcmk__str_copy(node_name);

@@ -57,28 +57,16 @@ attrd_shutdown(int nsig)
     // Tell various functions not to do anthing
     shutting_down = true;
 
-    // Don't respond to signals while shutting down
-    mainloop_destroy_signal(SIGTERM);
-    mainloop_destroy_signal(SIGCHLD);
-    mainloop_destroy_signal(SIGPIPE);
-    mainloop_destroy_signal(SIGUSR1);
-    mainloop_destroy_signal(SIGUSR2);
-    mainloop_destroy_signal(SIGTRAP);
-
     attrd_free_waitlist();
     attrd_free_confirmations();
 
     g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
 
-    if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
-        /* If there's no main loop active, just exit. This should be possible
-         * only if we get SIGTERM in brief windows at start-up and shutdown.
-         */
-        crm_exit(CRM_EX_OK);
-    } else {
-        g_main_loop_quit(mloop);
-        g_main_loop_unref(mloop);
-    }
+    // There should be no way to get here without the main loop running
+    CRM_CHECK((mloop != NULL) && g_main_loop_is_running(mloop),
+              crm_exit(CRM_EX_OK));
+
+    g_main_loop_quit(mloop);
 }
 
 /*!
@@ -99,6 +87,7 @@ void
 attrd_run_mainloop(void)
 {
     g_main_loop_run(mloop);
+    g_clear_pointer(&mloop, g_main_loop_unref);
 }
 
 /* strlen("value") */

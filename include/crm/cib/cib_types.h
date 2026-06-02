@@ -16,9 +16,6 @@
 #include <glib.h>               // gboolean, GList
 #include <libxml/tree.h>        // xmlNode
 
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,6 +38,7 @@ enum cib_state {
     cib_connected_command,
 
     // NOTE: sbd (as of at least 1.5.2) uses this value
+    //! \deprecated Look for \c cib_connected_command instead
     cib_connected_query,
 
     cib_disconnected
@@ -50,9 +48,12 @@ enum cib_conn_type {
     cib_command,
 
     // NOTE: sbd (as of at least 1.5.2) uses this value
+    //! \deprecated Use \c cib_command instead
     cib_query,
 
     cib_no_connection,
+
+    //! \deprecated Use \c cib_command instead
     cib_command_nonblocking,
 };
 
@@ -136,7 +137,10 @@ typedef struct cib_s cib_t;
  */
 typedef struct cib_api_operations_s {
     // NOTE: sbd (as of at least 1.5.2) uses this
-    // @COMPAT At compatibility break, drop name (always use crm_system_name)
+    /* @COMPAT At a compatibility break, drop name (always use crm_system_name)
+     * and type (always use cib_command -- cib_file and cib_remote already do
+     * this).
+     */
     int (*signon) (cib_t *cib, const char *name, enum cib_conn_type type);
 
     // NOTE: sbd (as of at least 1.5.2) uses this
@@ -167,10 +171,13 @@ typedef struct cib_api_operations_s {
     int (*query) (cib_t *cib, const char *section, xmlNode **output_data,
                   int call_options);
 
+    //! \deprecated This method will be removed and should not be used
     int (*query_from) (cib_t *cib, const char *host, const char *section,
                        xmlNode **output_data, int call_options);
 
+    //! \deprecated Do not use
     int (*sync) (cib_t *cib, const char *section, int call_options);
+
     int (*sync_from) (cib_t *cib, const char *host, const char *section,
                       int call_options);
     int (*upgrade) (cib_t *cib, int call_options);

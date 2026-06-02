@@ -276,7 +276,6 @@ stonith_cleanup(void)
 {
     fenced_cib_cleanup();
     fenced_ipc_cleanup();
-    pcmk__cluster_destroy_node_caches();
     free_stonith_remote_op_list();
     free_topology_list();
     fenced_free_device_table();
@@ -448,6 +447,7 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker fencer successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 
 done:
     g_strfreev(processed_args);

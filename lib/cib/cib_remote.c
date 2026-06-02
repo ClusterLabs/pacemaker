@@ -9,33 +9,32 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>                  // ENOTCONN, EPROTO, EAGAIN
-#include <stdbool.h>                // false, bool, true
-#include <stdlib.h>                 // NULL, free, calloc
+#include <errno.h>                  // ENOTCONN, EPROTO, EAGAIN, etc.
+#include <stdbool.h>                // bool, true, false
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free, getenv
 #include <string.h>                 // strdup
 #include <sys/socket.h>             // shutdown, SHUT_RDWR
 #include <time.h>                   // time, time_t
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // gpointer, gboolean, g_list_foreach
+#include <glib.h>                   // gpointer, g_*, etc.
 #include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
 
-#include <crm/cib.h>                // cib_t, cib_remote_new
-#include <crm/cib/internal.h>       // cib__create_op, cib__extend_transaction
-#include <crm/common/internal.h>
-#include <crm/common/mainloop.h>    // mainloop_fd_callbacks
-#include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*
-#include <crm/common/xml.h>         // PCMK_XA_*,
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__xml_*, pcmk__err, etc.
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_ok, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*
 #include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 // GnuTLS handshake timeout in seconds
 #define TLS_HANDSHAKE_TIMEOUT 5
 
 static pcmk__tls_t *tls = NULL;
-
-#include <arpa/inet.h>
 
 typedef struct {
     int port;
@@ -113,11 +112,12 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
     pcmk__xml_free(op_msg);
 
-    if ((call_options & cib_discard_reply)) {
+    if (pcmk__is_set(call_options, cib_discard_reply)) {
         pcmk__trace("Discarding reply");
         return pcmk_ok;
+    }
 
-    } else if (!(call_options & cib_sync_call)) {
+    if (!pcmk__is_set(call_options, cib_sync_call)) {
         return cib->call_id;
     }
 
@@ -197,10 +197,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         pcmk__log_xml_warn(op_reply, "failed");
     }
 
-    if (output_data == NULL) {
-        /* do nothing more */
-
-    } else if (!(call_options & cib_discard_reply)) {
+    if (output_data != NULL) {
         xmlNode *tmp = cib__get_calldata(op_reply);
 
         if (tmp == NULL) {

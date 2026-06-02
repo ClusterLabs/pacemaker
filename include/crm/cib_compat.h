@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -8,7 +8,7 @@
  */
 
 #ifndef PCMK__CRM_CIB_COMPAT__H
-#  define PCMK__CRM_CIB_COMPAT__H
+#define PCMK__CRM_CIB_COMPAT__H
 
 #include <crm/cib/cib_types.h>      // cib_t
 

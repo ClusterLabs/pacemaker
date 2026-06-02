@@ -16,7 +16,7 @@
 #include <stdbool.h>
 #include <stdint.h>                     // uint32_t
 #include <sys/socket.h>
-#include <sys/types.h>                  // size_t
+#include <sys/types.h>                  // pid_t, size_t
 #include <sys/utsname.h>
 
 #include <bzlib.h>
@@ -52,7 +52,7 @@ static int cs_message_timer = 0;
 
 struct pcmk__cpg_host_s {
     uint32_t id;
-    uint32_t pid;
+    uint32_t pid;               // For logging only
     gboolean local;             // Unused but needed for compatibility
     enum pcmk_ipc_server type;  // For logging only
     uint32_t size;
@@ -80,7 +80,7 @@ typedef struct pcmk__cpg_msg_s pcmk__cpg_msg_t;
 
 static void crm_cs_flush(gpointer data);
 
-#define msg_data_len(msg) (msg->is_compressed?msg->compressed_size:msg->size)
+#define msg_data_len(msg) (msg->is_compressed? msg->compressed_size : msg->size)
 
 #define cs_repeat(rc, counter, max, code) do {                          \
         rc = code;                                                      \
@@ -903,55 +903,48 @@ pcmk__cpg_disconnect(pcmk_cluster_t *cluster)
 
 /*!
  * \internal
- * \brief Send string data via Corosync CPG
+ * \brief Send an XML message via Corosync CPG
  *
- * \param[in] data   Data to send
- * \param[in] node   Cluster node to send message to
- * \param[in] dest   Type of message to send
- *
- * \return \c true on success, or \c false otherwise
+ * \param[in] msg   XML message to send
+ * \param[in] node  Cluster node to send message to
+ * \param[in] dest  Type of message to send
  */
-static bool
-send_cpg_text(const char *data, const pcmk__node_status_t *node,
-              enum pcmk_ipc_server dest)
+void
+pcmk__cpg_send_xml(const xmlNode *xml, const pcmk__node_status_t *node,
+                   enum pcmk_ipc_server dest)
 {
-    static int msg_id = 0;
-    static int local_pid = 0;
-    static int local_name_len = 0;
     static const char *local_name = NULL;
+    static size_t local_name_len = 0;
+    static pid_t local_pid = 0;
+    static int msg_id = 0;
 
     char *target = NULL;
     struct iovec *iov;
     pcmk__cpg_msg_t *msg = NULL;
+    GString *data = NULL;
 
+    // @TODO Refactor to take a cluster object and use its node name?
     if (local_name == NULL) {
         local_name = pcmk__cluster_local_node_name();
-    }
-    if ((local_name_len == 0) && (local_name != NULL)) {
-        local_name_len = strlen(local_name);
-    }
 
-    if (data == NULL) {
-        data = "";
-    }
+        if (local_name != NULL) {
+            local_name_len = strlen(local_name);
+            pcmk__assert(local_name_len <= UINT32_MAX);
+        }
 
-    if (local_pid == 0) {
         local_pid = getpid();
+        CRM_LOG_ASSERT((local_pid > 0) && (local_pid <= UINT32_MAX));
     }
 
     msg = pcmk__assert_alloc(1, sizeof(pcmk__cpg_msg_t));
-
-    msg_id++;
-    msg->id = msg_id;
+    msg->id = ++msg_id;
     msg->header.error = CS_OK;
-
     msg->host.type = dest;
 
     if (node != NULL) {
         if (node->name != NULL) {
             target = pcmk__str_copy(node->name);
             msg->host.size = strlen(node->name);
-            memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->name, msg->host.size);
 
         } else {
@@ -965,26 +958,30 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     msg->sender.id = 0;
     msg->sender.type = pcmk__parse_server(crm_system_name);
-    msg->sender.pid = local_pid;
-    msg->sender.size = local_name_len;
-    memset(msg->sender.uname, 0, MAX_NAME);
+    msg->sender.pid = (uint32_t) local_pid;
+    msg->sender.size = (uint32_t) local_name_len;
+    memcpy(msg->sender.uname, local_name, local_name_len);
 
-    if ((local_name != NULL) && (msg->sender.size != 0)) {
-        memcpy(msg->sender.uname, local_name, msg->sender.size);
-    }
+    data = g_string_sized_new(1024);
+    pcmk__xml_string(xml, 0, data, 0);
 
-    msg->size = 1 + strlen(data);
+    msg->size = data->len + 1;
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
 
+    /* @FIXME This is a mess of conversions among size_t, unsigned int, and
+     * uint32_t. It might be worth sending multipart messages, as we do in our
+     * IPC library and as Netlink does. This is also the only caller of
+     * pcmk__compress(), so we could get rid of it if this no longer needed it.
+     */
     if (msg->size < PCMK__BZ2_THRESHOLD) {
         msg = pcmk__realloc(msg, msg->header.size);
-        memcpy(msg->data, data, msg->size);
+        memcpy(msg->data, data->str, msg->size);
 
     } else {
         char *compressed = NULL;
         unsigned int new_size = 0;
 
-        if (pcmk__compress(data, (unsigned int) msg->size, 0, &compressed,
+        if (pcmk__compress(data->str, (unsigned int) msg->size, &compressed,
                            &new_size) == pcmk_rc_ok) {
 
             msg->header.size = sizeof(pcmk__cpg_msg_t) + new_size;
@@ -996,7 +993,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
         } else {
             msg = pcmk__realloc(msg, msg->header.size);
-            memcpy(msg->data, data, msg->size);
+            memcpy(msg->data, data->str, msg->size);
         }
 
         free(compressed);
@@ -1006,44 +1003,14 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     iov->iov_base = msg;
     iov->iov_len = msg->header.size;
 
-    if (msg->compressed_size > 0) {
-        pcmk__trace("Queueing CPG message %" PRIu32 " to %s "
-                    "(%zu bytes, %" PRIu32 " bytes compressed payload): %.200s",
-                    msg->id, target, iov->iov_len, msg->compressed_size, data);
-    } else {
-        pcmk__trace("Queueing CPG message %" PRIu32 " to %s "
-                    "(%zu bytes, %" PRIu32 " bytes payload): %.200s",
-                    msg->id, target, iov->iov_len, msg->size, data);
-    }
-
-    free(target);
+    pcmk__trace("Queueing CPG message %" PRIu32 " to %s (%zu bytes, "
+                "%" PRIu32 " bytes %spayload): %.200s",
+                msg->id, target, iov->iov_len, msg_data_len(msg),
+                (msg->is_compressed? "compressed " : ""), data->str);
 
     cs_message_queue = g_list_append(cs_message_queue, iov);
     crm_cs_flush(&pcmk_cpg_handle);
 
-    return true;
-}
-
-/*!
- * \internal
- * \brief Send an XML message via Corosync CPG
- *
- * \param[in] msg   XML message to send
- * \param[in] node  Cluster node to send message to
- * \param[in] dest  Type of message to send
- *
- * \return TRUE on success, otherwise FALSE
- */
-bool
-pcmk__cpg_send_xml(const xmlNode *msg, const pcmk__node_status_t *node,
-                   enum pcmk_ipc_server dest)
-{
-    bool rc = true;
-    GString *data = g_string_sized_new(1024);
-
-    pcmk__xml_string(msg, 0, data, 0);
-
-    rc = send_cpg_text(data->str, node, dest);
+    free(target);
     g_string_free(data, TRUE);
-    return rc;
 }

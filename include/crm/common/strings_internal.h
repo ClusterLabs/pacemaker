@@ -47,8 +47,8 @@ int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
                           guint *result);
 void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);
-int pcmk__compress(const char *data, unsigned int length, unsigned int max,
-                   char **result, unsigned int *result_len);
+int pcmk__compress(const char *data, unsigned int length, char **result,
+                   unsigned int *result_len);
 
 int pcmk__scan_ll(const char *text, long long *result, long long default_value);
 int pcmk__scan_min_int(const char *text, int *result, int minimum);

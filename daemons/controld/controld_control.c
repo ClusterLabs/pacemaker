@@ -117,9 +117,7 @@ do_shutdown_req(long long action, enum crmd_fsa_cause cause,
     msg = pcmk__new_request(pcmk_ipc_controld, CRM_SYSTEM_CRMD, NULL,
                             CRM_SYSTEM_CRMD, CRM_OP_SHUTDOWN_REQ, NULL);
 
-    if (!pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg)) {
-        register_fsa_error(I_ERROR, msg_data);
-    }
+    pcmk__cluster_send_message(NULL, pcmk_ipc_controld, msg);
     pcmk__xml_free(msg);
 }
 
@@ -177,8 +175,7 @@ crmd_exit(crm_exit_t exit_code)
 
     if(ipcs) {
         pcmk__trace("Closing IPC server");
-        mainloop_del_ipc_server(ipcs);
-        ipcs = NULL;
+        g_clear_pointer(&ipcs, mainloop_del_ipc_server);
     }
 
     controld_close_attrd_ipc();
@@ -280,8 +277,6 @@ crmd_exit(crm_exit_t exit_code)
                     g_main_context_pending(ctx));
         g_main_loop_quit(mloop);
 
-        /* Won't do anything yet, since we're inside it now */
-        g_main_loop_unref(mloop);
     } else {
         mainloop_destroy_signal(SIGCHLD);
     }
@@ -443,8 +438,7 @@ do_stop(long long action, enum crmd_fsa_cause cause,
         fsa_data_t *msg_data)
 {
     pcmk__trace("Stopping IPC server");
-    mainloop_del_ipc_server(ipcs);
-    ipcs = NULL;
+    g_clear_pointer(&ipcs, mainloop_del_ipc_server);
     controld_fsa_append(C_FSA_INTERNAL, I_TERMINATE, NULL);
 }
 

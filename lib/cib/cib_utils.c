@@ -7,20 +7,33 @@
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
+
 #include <crm_internal.h>
-#include <unistd.h>
+
+#include <errno.h>                  // errno, EACCES, EAGAIN, EALREADY, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <sys/utsname.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // free, getenv
+#include <syslog.h>                 // LOG_CRIT, LOG_INFO
 
-#include <glib.h>
+#include <glib.h>                   // gboolean, GHashTable, g_*, etc.
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, createEmptyCib, etc.
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*
+#include <crm/common/acl.h>         // pcmk_acl_*, xml_acl_*
+#include <crm/common/cib.h>         // pcmk_find_cib_element
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/iso8601.h>     // crm_time_*
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/nvpair.h>      // pcmk_unpack_nvpair_blocks
+#include <crm/common/options.h>     // PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_err_*, pcmk_ok, etc.
+#include <crm/common/rules.h>       // pcmk_rule_input_t
+#include <crm/common/xml.h>         // xml_*_patchset, PCMK_XA_*, PCMK_XE_*
+#include <crm/crm.h>                // CRM_FEATURE_SET, crm_system_name
 
 gboolean
 cib_version_details(xmlNode * cib, int *admin_epoch, int *epoch, int *updates)
@@ -217,7 +230,6 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     const char *op = NULL;
     const char *section = NULL;
     const char *user = NULL;
-    uint32_t call_options = cib_none;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -231,13 +243,11 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
-    pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     cib = *current_cib;
 
-    if (cib_acl_enabled(*current_cib, user)
-        && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                 &cib_filtered)) {
+    if (cib_acl_enabled(cib, user)
+        && xml_acl_filtered_copy(user, cib, cib, &cib_filtered)) {
 
         if (cib_filtered == NULL) {
             pcmk__debug("Pre-filtered the entire cib");
@@ -259,14 +269,8 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     /* Sanity check: op should be read-only (but this does not check children,
      * attributes, or private data)
      */
-    if (!pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        /* @TODO based_terminate() frees the_cib during
-         * based_process_shutdown(). Consolidate the based cleanup logic and
-         * remove the if guard here.
-         */
-        pcmk__assert((cib == saved_cib) && (cib->doc == saved_doc)
-                     && (cib == xmlDocGetRootElement(cib->doc)));
-    }
+    pcmk__assert((cib == saved_cib) && (cib->doc == saved_doc)
+                 && (cib == xmlDocGetRootElement(cib->doc)));
 
     if (cib_filtered == *output) {
         // Let the caller have this copy
@@ -277,14 +281,8 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
         goto done;
     }
 
-    if (*output == *current_cib) {
-        // Trust the caller to check this and not free *output
-        goto done;
-    }
-
     if ((*output)->doc == (*current_cib)->doc) {
-        // Give the caller a copy that it can free
-        *output = pcmk__xml_copy(NULL, *output);
+        // Trust the caller to check this and not free *output
         goto done;
     }
 
@@ -680,7 +678,6 @@ done:
     }
 
     pcmk__xml_free(top);
-    pcmk__trace("Done");
     return rc;
 }
 
@@ -729,24 +726,25 @@ validate_transaction_request(const xmlNode *request)
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
     const char *host = pcmk__xe_get(request, PCMK__XA_CIB_HOST);
     const cib__operation_t *operation = NULL;
-    int rc = cib__get_operation(op, &operation);
+    int rc = pcmk_rc_ok;
 
+    rc = cib__get_operation(op, &operation);
     if (rc != pcmk_rc_ok) {
         // cib__get_operation() logs error
         return rc;
     }
 
-    if (!pcmk__is_set(operation->flags, cib__op_attr_transaction)) {
+    if (operation->type == cib__op_commit_transact) {
         pcmk__err("Operation %s is not supported in CIB transactions", op);
         return EOPNOTSUPP;
     }
 
     if (host != NULL) {
         pcmk__err("Operation targeting a specific node (%s) is not supported "
-                  "in a CIB transaction",
-                  host);
+                  "in a CIB transaction", host);
         return EOPNOTSUPP;
     }
+
     return pcmk_rc_ok;
 }
 
@@ -866,8 +864,10 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
-    /* Note: *output_data gets set only for create and query requests. There are
-     * a lot of opportunities to clean up, clarify, check/enforce things, etc.
+    /* @COMPAT *output_data gets set only for create and query requests. Setting
+     * it for create requests is deprecated since 2.1.8. When that behavior is
+     * removed, we can restrict freeing it to read-only operations
+     * (cib__perform_op_ro()).
      */
     int (*delegate)(cib_t *cib, const char *op, const char *host,
                     const char *section, xmlNode *data, xmlNode **output_data,
