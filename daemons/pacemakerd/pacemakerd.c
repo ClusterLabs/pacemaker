@@ -67,12 +67,12 @@ PCMK__OUTPUT_ARGS("features")
 static int
 pacemakerd_features_xml(pcmk__output_t *out, va_list args) {
     gchar **feature_list = g_strsplit(CRM_FEATURES, " ", 0);
+    xmlNode *xml = pcmk__output_xml_create_parent(out, PCMK_XE_PACEMAKERD);
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_PACEMAKERD,
-                                   PCMK_XA_VERSION, PACEMAKER_VERSION,
-                                   PCMK_XA_BUILD, BUILD_VERSION,
-                                   PCMK_XA_FEATURE_SET, CRM_FEATURE_SET,
-                                   NULL);
+    pcmk__xe_set(xml, PCMK_XA_VERSION, PACEMAKER_VERSION);
+    pcmk__xe_set(xml, PCMK_XA_BUILD, BUILD_VERSION);
+    pcmk__xe_set(xml, PCMK_XA_FEATURE_SET, CRM_FEATURE_SET);
+
     out->begin_list(out, NULL, NULL, PCMK_XE_FEATURES);
 
     for (char **s = feature_list; *s != NULL; s++) {

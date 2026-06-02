@@ -156,7 +156,7 @@ cib_acl_enabled(xmlNode *xml, const char *user)
     GHashTable *options = NULL;
     bool rc = false;
 
-    if ((xml == NULL) || !pcmk_acl_required(user)) {
+    if ((xml == NULL) || !pcmk__acl_required(user)) {
         return false;
     }
 
@@ -235,9 +235,9 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
 
     cib = *current_cib;
 
-    if (cib_acl_enabled(*current_cib, user)
-        && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                 &cib_filtered)) {
+    if (cib_acl_enabled(*current_cib, user)) {
+        cib_filtered = pcmk__acl_filtered_copy(user, (*current_cib)->doc,
+                                               *current_cib);
 
         if (cib_filtered == NULL) {
             pcmk__debug("Pre-filtered the entire cib");
@@ -594,7 +594,7 @@ cib__perform_op_rw(enum cib_variant variant, cib__op_fn_t fn, xmlNode *req,
     // Allow ourselves to make any additional necessary changes
     xml_acl_disable(*cib);
 
-    if (xml_acl_denied(*cib)) {
+    if (pcmk__xml_doc_all_flags_set((*cib)->doc, pcmk__xf_acl_denied)) {
         pcmk__trace("ACL rejected part or all of the proposed changes");
         rc = EACCES;
         goto done;
@@ -671,12 +671,12 @@ done:
     if ((rc != pcmk_rc_ok) && cib_acl_enabled(old_versions, user)) {
         xmlNode *saved_cib = *cib;
 
-        if (xml_acl_filtered_copy(user, old_versions, *cib, cib)) {
-            if (*cib == NULL) {
-                pcmk__debug("Pre-filtered the entire cib result");
-            }
-            pcmk__xml_free(saved_cib);
+        *cib = pcmk__acl_filtered_copy(user, old_versions->doc, *cib);
+        if (*cib == NULL) {
+            pcmk__debug("Pre-filtered the entire cib result");
         }
+
+        pcmk__xml_free(saved_cib);
     }
 
     pcmk__xml_free(top);

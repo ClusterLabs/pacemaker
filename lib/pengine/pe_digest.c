@@ -46,7 +46,7 @@ pe__free_digests(gpointer ptr)
 
 // Return true if XML attribute name is an element of a given gchar ** array
 static bool
-attr_in_strv(xmlAttrPtr a, void *user_data)
+attr_in_strv(const xmlAttr *a, void *user_data)
 {
     const char *name = (const char *) a->name;
     gchar **strv = user_data;
@@ -56,7 +56,7 @@ attr_in_strv(xmlAttrPtr a, void *user_data)
 
 // Return true if XML attribute name is not an element of a given gchar ** array
 static bool
-attr_not_in_strv(xmlAttrPtr a, void *user_data)
+attr_not_in_strv(const xmlAttr *a, void *user_data)
 {
     return !attr_in_strv(a, user_data);
 }
@@ -148,7 +148,7 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
 
 // Return true if XML attribute name is a Pacemaker-defined fencing parameter
 static bool
-is_fence_param(xmlAttrPtr attr, void *user_data)
+is_fence_param(const xmlAttr *attr, void *user_data)
 {
     return pcmk_stonith_param((const char *) attr->name);
 }

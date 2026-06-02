@@ -24,11 +24,6 @@ extern "C" {
  */
 
 void xml_acl_disable(xmlNode *xml);
-bool xml_acl_denied(const xmlNode *xml);
-bool xml_acl_filtered_copy(const char *user, xmlNode* acl_source, xmlNode *xml,
-                           xmlNode **result);
-
-bool pcmk_acl_required(const char *user);
 
 #ifdef __cplusplus
 }

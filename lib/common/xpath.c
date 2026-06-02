@@ -173,7 +173,8 @@ pcmk__xpath_foreach_result(xmlDoc *doc, const char *path,
     xmlXPathObject *xpath_obj = NULL;
     int num_results = 0;
 
-    CRM_CHECK((doc != NULL) && !pcmk__str_empty(path) && (fn != NULL), return);
+    pcmk__assert(fn != NULL);
+    CRM_CHECK((doc != NULL) && !pcmk__str_empty(path), return);
 
     xpath_obj = pcmk__xpath_search(doc, path);
     num_results = pcmk__xpath_num_results(xpath_obj);
@@ -272,10 +273,11 @@ done:
  *
  * \param[in] xml  The XML element for which to build an XPath string
  *
- * \return A \p GString that matches \p xml, or \p NULL if \p xml is \p NULL.
+ * \return \c GString that matches \p xml, or \c NULL if \p xml is \c NULL
+ *         (guaranteed not to be \c NULL if \p xml is not \c NULL)
  *
  * \note The caller is responsible for freeing the string using
- *       \p g_string_free().
+ *       \c g_string_free().
  */
 GString *
 pcmk__element_xpath(const xmlNode *xml)

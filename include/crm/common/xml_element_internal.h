@@ -37,13 +37,19 @@ extern "C" {
 
 const char *pcmk__xe_add_last_written(xmlNode *xe);
 
+bool pcmk__xe_foreach_attr(xmlNode *xml, bool (*fn)(xmlAttr *, void *),
+                           void *user_data);
+bool pcmk__xe_foreach_const_attr(const xmlNode *xml,
+                                 bool (*fn)(const xmlAttr *, void *),
+                                 void *user_data);
+
 xmlNode *pcmk__xe_first_child(const xmlNode *parent, const char *node_name,
                               const char *attr_n, const char *attr_v);
 
 void pcmk__xe_remove_attr(xmlNode *element, const char *name);
 bool pcmk__xe_remove_attr_cb(xmlNode *xml, void *user_data);
 void pcmk__xe_remove_matching_attrs(xmlNode *element, bool force,
-                                    bool (*match)(xmlAttrPtr, void *),
+                                    bool (*match)(const xmlAttr *, void *),
                                     void *user_data);
 int pcmk__xe_delete_match(xmlNode *xml, xmlNode *search);
 int pcmk__xe_replace_match(xmlNode *xml, xmlNode *replace);
@@ -79,31 +85,6 @@ void pcmk__xe_sort_attrs(xmlNode *xml);
 
 void pcmk__xe_set_id(xmlNode *xml, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
-
-/*!
- * \internal
- * \brief Like pcmk__xe_set_props, but takes a va_list instead of
- *        arguments directly.
- *
- * \param[in,out] node   XML to add attributes to
- * \param[in]     pairs  NULL-terminated list of name/value pairs to add
- */
-void
-pcmk__xe_set_propv(xmlNodePtr node, va_list pairs);
-
-/*!
- * \internal
- * \brief Add a NULL-terminated list of name/value pairs to the given
- *        XML node as properties.
- *
- * \param[in,out] node XML node to add properties to
- * \param[in]     ...  NULL-terminated list of name/value pairs
- *
- * \note A NULL name terminates the arguments; a NULL value will be skipped.
- */
-void
-pcmk__xe_set_props(xmlNodePtr node, ...)
-G_GNUC_NULL_TERMINATED;
 
 /*!
  * \internal

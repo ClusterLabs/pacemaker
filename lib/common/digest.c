@@ -298,12 +298,12 @@ pcmk__xa_filterable(const char *name)
 
 // Return true if a is an attribute that should be filtered
 static bool
-should_filter_for_digest(xmlAttrPtr a, void *user_data)
+should_filter_for_digest(const xmlAttr *a, void *user_data)
 {
-    if (strncmp((const char *) a->name, CRM_META "_",
-                sizeof(CRM_META " ") - 1) == 0) {
+    if (g_str_has_prefix((const char *) a->name, CRM_META "_")) {
         return true;
     }
+
     return pcmk__str_any_of((const char *) a->name,
                             PCMK_XA_ID,
                             PCMK_XA_CRM_FEATURE_SET,

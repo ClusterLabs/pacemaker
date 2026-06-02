@@ -340,7 +340,6 @@ GHashTable *
 xml2list(const xmlNode *parent)
 {
     xmlNode *child = NULL;
-    xmlAttrPtr pIter = NULL;
     xmlNode *nvpair_list = NULL;
     GHashTable *nvpair_hash = pcmk__strkey_table(free, free);
 
@@ -354,16 +353,7 @@ xml2list(const xmlNode *parent)
 
     pcmk__log_xml_trace(nvpair_list, "Unpacking");
 
-    for (pIter = pcmk__xe_first_attr(nvpair_list); pIter != NULL;
-         pIter = pIter->next) {
-
-        const char *p_name = (const char *)pIter->name;
-        const char *p_value = pcmk__xml_attr_value(pIter);
-
-        pcmk__trace("Added %s=%s", p_name, p_value);
-
-        pcmk__insert_dup(nvpair_hash, p_name, p_value);
-    }
+    pcmk__xe_foreach_const_attr(nvpair_list, pcmk__xa_insert_dup, nvpair_hash);
 
     for (child = pcmk__xe_first_child(nvpair_list, PCMK__XE_PARAM, NULL, NULL);
          child != NULL; child = pcmk__xe_next(child, PCMK__XE_PARAM)) {

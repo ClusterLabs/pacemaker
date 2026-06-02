@@ -77,8 +77,6 @@ gchar *pcmk__native_output_string(const pcmk_resource_t *rsc, const char *name,
                                   const pcmk_node_t *node, uint32_t show_opts,
                                   const char *target_role, bool show_nodes);
 
-int pe__name_and_nvpairs_xml(pcmk__output_t *out, bool is_list, const char *tag_name,
-                             ...) G_GNUC_NULL_TERMINATED;
 char *pe__node_display_name(pcmk_node_t *node, bool print_detail);
 
 
@@ -246,7 +244,7 @@ pe_base_name_eq(const pcmk_resource_t *rsc, const char *id)
         // Number of characters in rsc->id before any clone suffix
         size_t base_len = pe_base_name_end(rsc->id) - rsc->id + 1;
 
-        return (strlen(id) == base_len) && !strncmp(id, rsc->id, base_len);
+        return (strlen(id) == base_len) && g_str_has_prefix(rsc->id, id);
     }
     return false;
 }

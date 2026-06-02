@@ -268,7 +268,7 @@ period_xml(pcmk__output_t *out, va_list args)
         return pcmk_rc_no_output;
     }
 
-    pcmk__output_xml_create_parent(out, PCMK_XE_PERIOD, NULL);
+    pcmk__output_xml_create_parent(out, PCMK_XE_PERIOD);
     pcmk__output_create_xml_text_node(out, PCMK_XE_START, start);
     pcmk__output_create_xml_text_node(out, PCMK_XE_END, end);
 
