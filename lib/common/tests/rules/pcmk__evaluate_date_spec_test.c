@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,7 +24,7 @@ run_one_test(const char *t, const char *x, int expected)
 
     assert_int_equal(pcmk__evaluate_date_spec(xml, tm), expected);
 
-    crm_time_free(tm);
+    free(tm);
     pcmk__xml_free(xml);
 }
 
@@ -40,7 +40,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_date_spec(xml, NULL), EINVAL);
     assert_int_equal(pcmk__evaluate_date_spec(NULL, tm), EINVAL);
 
-    crm_time_free(tm);
+    free(tm);
     pcmk__xml_free(xml);
 }
 

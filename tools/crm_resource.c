@@ -1445,7 +1445,7 @@ handle_get_param(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
         value = pcmk__xe_get(rsc->priv->xml, options.prop_name);
 
     } else {
-        const pcmk_rule_input_t rule_input = {
+        const pcmk__rule_input_t rule_input = {
             .now = scheduler->priv->now,
         };
 

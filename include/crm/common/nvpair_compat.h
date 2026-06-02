@@ -10,11 +10,11 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 #define PCMK__CRM_COMMON_NVPAIR_COMPAT__H
 
-#include <glib.h>               // GHashTable, gpointer, GSList
-#include <libxml/tree.h>        // xmlNode
+#include <glib.h>                       // GHashTable, gpointer, GSList
+#include <libxml/tree.h>                // xmlNode
 
-#include <crm/common/iso8601.h> // crm_time_t
-#include <crm/common/rules.h>   // pcmk_rule_input_t
+#include <crm/common/iso8601.h>         // crm_time_t
+#include <crm/common/rules_compat.h>    // pcmk_rule_input_t
 
 #ifdef __cplusplus
 extern "C" {

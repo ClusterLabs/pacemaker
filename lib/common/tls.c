@@ -27,7 +27,7 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm/common/internal.h>
-#include <crm/common/iso8601.h>     // crm_time_free, crm_time_log_date
+#include <crm/common/iso8601.h>     // crm_time_*
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
 
@@ -466,7 +466,7 @@ pcmk__tls_check_cert_expiration(gnutls_session_t session)
 
     expiry = gnutls_x509_crt_get_expiration_time(cert);
 
-    if (expiry != -1) {
+    if (expiry != (time_t) -1) {
         time_t now = time(NULL);
 
         /* If the cert is going to expire within ~ one month (30 days), log it */
@@ -474,8 +474,8 @@ pcmk__tls_check_cert_expiration(gnutls_session_t session)
             crm_time_t *expiry_t = pcmk__copy_timet(expiry);
 
             pcmk__time_log(LOG_WARNING, "TLS certificate will expire on",
-                           expiry_t, crm_time_log_date|crm_time_log_timeofday);
-            crm_time_free(expiry_t);
+                           expiry_t, pcmk__time_fmt_date|pcmk__time_fmt_time);
+            free(expiry_t);
         }
     }
 

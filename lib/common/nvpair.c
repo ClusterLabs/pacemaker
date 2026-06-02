@@ -456,8 +456,8 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
 
     rule_xml = pcmk__xe_first_child(pair, PCMK_XE_RULE, NULL, NULL);
     if ((rule_xml != NULL)
-        && (pcmk_evaluate_rule(rule_xml, &(unpack_data->rule_input),
-                               unpack_data->next_change) != pcmk_rc_ok)) {
+        && (pcmk__evaluate_rule(rule_xml, &unpack_data->rule_input,
+                                unpack_data->next_change) != pcmk_rc_ok)) {
         return;
     }
 
@@ -487,7 +487,7 @@ pcmk__unpack_nvpair_block(gpointer data, gpointer user_data)
 void
 pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                            const char *first_id,
-                           const pcmk_rule_input_t *rule_input,
+                           const pcmk__rule_input_t *rule_input,
                            GHashTable *values, crm_time_t *next_change,
                            xmlDoc *doc)
 {
@@ -665,6 +665,7 @@ pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b, gpointer user_data)
 // LCOV_EXCL_START
 
 #include <crm/common/nvpair_compat.h>
+#include <crm/common/rules_compat.h>    // pcmk_rule_input_t
 
 static gint
 pcmk__compare_nvpair(gconstpointer a, gconstpointer b)
@@ -738,11 +739,17 @@ pcmk_unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                           const pcmk_rule_input_t *rule_input,
                           GHashTable *values, crm_time_t *next_change)
 {
+    pcmk__rule_input_t new_input = { NULL, };
+
     if (xml == NULL) {
         return;
     }
 
-    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, rule_input, values,
+    if (rule_input != NULL) {
+        pcmk__rule_input_convert(rule_input, &new_input);
+    }
+
+    pcmk__unpack_nvpair_blocks(xml, element_name, first_id, &new_input, values,
                                next_change, xml->doc);
 }
 

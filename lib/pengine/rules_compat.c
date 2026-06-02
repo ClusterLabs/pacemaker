@@ -14,27 +14,27 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
+#include <crm/common/internal.h>        // pcmk__evaluate_rule, etc.
 #include <crm/common/iso8601.h>         // crm_time_t
 #include <crm/common/roles.h>           // enum rsc_role_e
-
 #include <crm/common/xml.h>
-#include <crm/common/rules.h>           // pcmk_rule_input_t, etc.
 
 // Deprecated functions kept only for backward API compatibility
 // LCOV_EXCL_START
 
+#include <crm/common/rules_compat.h>    // pcmk_rule_input_t
 #include <crm/pengine/common_compat.h>
 #include <crm/pengine/rules_compat.h>
 
 gboolean
 test_rule(xmlNode * rule, GHashTable * node_hash, enum rsc_role_e role, crm_time_t * now)
 {
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .node_attrs = node_hash,
         .now = now,
     };
 
-    return pcmk_evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
+    return pcmk__evaluate_rule(rule, &rule_input, NULL) == pcmk_rc_ok;
 }
 
 /*!
@@ -79,6 +79,7 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
                 crm_time_t *next_change)
 {
     GList *pairs = NULL;
+    pcmk_rule_input_t tmp_input = { NULL, };
     pcmk__nvpair_unpack_t data = {
         .values = hash,
         .first_id = always_first,
@@ -96,7 +97,11 @@ pe_eval_nvpairs(xmlNode *top, const xmlNode *xml_obj, const char *set_name,
     }
 
     data.doc = xml_obj->doc;
-    map_rule_input(&(data.rule_input), rule_data);
+
+    map_rule_input(&tmp_input, rule_data);
+    if (rule_data != NULL) {
+        pcmk__rule_input_convert(&tmp_input, &data.rule_input);
+    }
 
     pairs = g_list_sort_with_data(pairs, pcmk__cmp_nvpair_blocks, &data);
     g_list_foreach(pairs, pcmk__unpack_nvpair_block, &data);

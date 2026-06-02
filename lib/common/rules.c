@@ -184,15 +184,15 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     }
 
     // Year, month, day
-    crm_time_get_gregorian(now, &(ranges[0].value), &(ranges[1].value),
-                           &(ranges[2].value));
+    pcmk__time_get_ymd(now, &(ranges[0].value), &(ranges[1].value),
+                       &(ranges[2].value));
 
     // Hour, minute, second
-    crm_time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
-                           &(ranges[5].value));
+    pcmk__time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
+                             &(ranges[5].value));
 
-    // Year (redundant) and day of year
-    crm_time_get_ordinal(now, &(ranges[0].value), &(ranges[6].value));
+    // Day of year
+    ranges[6].value = now->days;
 
     // Week year, week of week year, day of week
     pcmk__time_get_ywd(now, &(ranges[7].value), &(ranges[8].value),
@@ -220,7 +220,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
                              parent_id, id,                                 \
                              pcmk__time_component_attr(component),          \
                              pcmk_rc_str(rc));                              \
-            g_clear_pointer(end, crm_time_free);                            \
+            g_clear_pointer(end, free);                                     \
             return rc;                                                      \
         }                                                                   \
     } while (0)
@@ -235,7 +235,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
  *                       initially)
  *
  * \return Standard Pacemaker return code
- * \note The caller is responsible for freeing \p *end using crm_time_free().
+ * \note The caller is responsible for freeing \p *end using \c free().
  */
 int
 pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
@@ -258,7 +258,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
         return pcmk_rc_unpack_error;
     }
 
-    *end = pcmk_copy_time(start);
+    *end = pcmk__time_copy(start);
 
     ADD_COMPONENT(pcmk__time_years);
     ADD_COMPONENT(pcmk__time_months);
@@ -302,7 +302,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
                               &end) != pcmk_rc_ok) {
         pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
                          "passing because " PCMK_XA_END " is invalid", id);
-        crm_time_free(start);
+        free(start);
         return pcmk_rc_unpack_error;
     }
 
@@ -326,35 +326,35 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
                 pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION
                                  " %s as not passing because duration "
                                  "is invalid", id);
-                crm_time_free(start);
+                free(start);
                 return rc;
             }
         }
     }
 
-    if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
+    if ((start != NULL) && (pcmk__time_compare(now, start) < 0)) {
         pcmk__set_time_if_earlier(next_change, start);
-        crm_time_free(start);
-        crm_time_free(end);
+        free(start);
+        free(end);
         return pcmk_rc_before_range;
     }
 
     if (end != NULL) {
-        if (crm_time_compare(now, end) > 0) {
-            crm_time_free(start);
-            crm_time_free(end);
+        if (pcmk__time_compare(now, end) > 0) {
+            free(start);
+            free(end);
             return pcmk_rc_after_range;
         }
 
         // Evaluation doesn't change until second after end
         if (next_change != NULL) {
-            crm_time_add_seconds(end, 1);
+            pcmk__time_add_seconds(end, 1);
             pcmk__set_time_if_earlier(next_change, end);
         }
     }
 
-    crm_time_free(start);
-    crm_time_free(end);
+    free(start);
+    free(end);
     return pcmk_rc_within_range;
 }
 
@@ -392,15 +392,15 @@ evaluate_gt(const xmlNode *date_expression, const char *id,
         return pcmk_rc_unpack_error;
     }
 
-    if (crm_time_compare(now, start) > 0) {
-        crm_time_free(start);
+    if (pcmk__time_compare(now, start) > 0) {
+        free(start);
         return pcmk_rc_within_range;
     }
 
     // Evaluation doesn't change until second after start time
-    crm_time_add_seconds(start, 1);
+    pcmk__time_add_seconds(start, 1);
     pcmk__set_time_if_earlier(next_change, start);
-    crm_time_free(start);
+    free(start);
     return pcmk_rc_before_range;
 }
 
@@ -437,13 +437,13 @@ evaluate_lt(const xmlNode *date_expression, const char *id,
         return pcmk_rc_unpack_error;
     }
 
-    if (crm_time_compare(now, end) < 0) {
+    if (pcmk__time_compare(now, end) < 0) {
         pcmk__set_time_if_earlier(next_change, end);
-        crm_time_free(end);
+        free(end);
         return pcmk_rc_within_range;
     }
 
-    crm_time_free(end);
+    free(end);
     return pcmk_rc_after_range;
 }
 
@@ -915,7 +915,7 @@ evaluate_attr_comparison(const char *actual, const char *reference,
  */
 static const char *
 value_from_source(const char *value, enum pcmk__reference_source source,
-                  const pcmk_rule_input_t *rule_input)
+                  const pcmk__rule_input_t *rule_input)
 {
     GHashTable *table = NULL;
 
@@ -953,7 +953,7 @@ value_from_source(const char *value, enum pcmk__reference_source source,
  */
 int
 pcmk__evaluate_attr_expression(const xmlNode *expression,
-                               const pcmk_rule_input_t *rule_input)
+                               const pcmk__rule_input_t *rule_input)
 {
     const char *id = NULL;
     const char *op = NULL;
@@ -1107,7 +1107,7 @@ done:
  */
 int
 pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
-                              const pcmk_rule_input_t *rule_input)
+                              const pcmk__rule_input_t *rule_input)
 {
     const char *id = NULL;
     const char *standard = NULL;
@@ -1176,7 +1176,7 @@ pcmk__evaluate_rsc_expression(const xmlNode *rsc_expression,
  */
 int
 pcmk__evaluate_op_expression(const xmlNode *op_expression,
-                             const pcmk_rule_input_t *rule_input)
+                             const pcmk__rule_input_t *rule_input)
 {
     const char *id = NULL;
     const char *name = NULL;
@@ -1249,17 +1249,16 @@ pcmk__evaluate_op_expression(const xmlNode *op_expression,
  */
 int
 pcmk__evaluate_condition(xmlNode *condition,
-                         const pcmk_rule_input_t *rule_input,
+                         const pcmk__rule_input_t *rule_input,
                          crm_time_t *next_change)
 {
-
     if ((condition == NULL) || (rule_input == NULL)) {
         return EINVAL;
     }
 
     switch (pcmk__condition_type(condition)) {
         case pcmk__condition_rule:
-            return pcmk_evaluate_rule(condition, rule_input, next_change);
+            return pcmk__evaluate_rule(condition, rule_input, next_change);
 
         case pcmk__condition_attribute:
         case pcmk__condition_location:
@@ -1284,12 +1283,13 @@ pcmk__evaluate_condition(xmlNode *condition,
             pcmk__config_err("Treating rule condition %s as not passing "
                              "because %s is not a valid condition type",
                              pcmk__s(pcmk__xe_id(condition), "without ID"),
-                             (const char *) condition->name);
+                             condition->name);
             return pcmk_rc_unpack_error;
     }
 }
 
 /*!
+ * \internal
  * \brief Evaluate a single rule, including all its conditions
  *
  * \param[in,out] rule         XML containing a rule definition or its id-ref
@@ -1300,8 +1300,8 @@ pcmk__evaluate_condition(xmlNode *condition,
  *         satisfied, some other value if it is not)
  */
 int
-pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
-                   crm_time_t *next_change)
+pcmk__evaluate_rule(xmlNode *rule, const pcmk__rule_input_t *rule_input,
+                    crm_time_t *next_change)
 {
     bool empty = true;
     int rc = pcmk_rc_ok;
@@ -1373,3 +1373,49 @@ pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
                 ((rc == pcmk_rc_ok)? "" : "not "));
     return rc;
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/rules_compat.h>    // pcmk_rule_input_t
+
+void
+pcmk__rule_input_convert(const pcmk_rule_input_t *source,
+                         pcmk__rule_input_t *target)
+{
+    /* @COMPAT Drop this function when pcmk_rule_input_t is dropped. It exists
+     * purely for as a helper for deprecated API.
+     */
+    pcmk__assert((source != NULL) && (target != NULL));
+
+    // Non-numeric fields are const and are shared between source and target
+    target->now = source->now;
+    target->rsc_standard = source->rsc_standard;
+    target->rsc_provider = source->rsc_provider;
+    target->rsc_agent = source->rsc_agent;
+    target->op_name = source->op_name;
+    target->op_interval_ms = source->op_interval_ms;
+    target->node_attrs = source->node_attrs;
+    target->rsc_params = source->rsc_params;
+    target->rsc_meta = source->rsc_meta;
+    target->rsc_id = source->rsc_id;
+    target->rsc_id_submatches = source->rsc_id_submatches;
+    target->rsc_id_nmatches = source->rsc_id_nmatches;
+}
+
+int
+pcmk_evaluate_rule(xmlNode *rule, const pcmk_rule_input_t *rule_input,
+                   crm_time_t *next_change)
+{
+    pcmk__rule_input_t new_input = { NULL, };
+
+    if (rule_input == NULL) {
+        return EINVAL;
+    }
+
+    pcmk__rule_input_convert(rule_input, &new_input);
+    return pcmk__evaluate_rule(rule, &new_input, next_change);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

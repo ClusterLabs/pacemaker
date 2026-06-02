@@ -65,7 +65,7 @@ null_xml(void **state)
     GHashTable *values = pcmk__strkey_table(free, free);
     crm_time_t *now = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *next_change = crm_time_new("2024-01-01 20:00:00");
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -74,8 +74,8 @@ null_xml(void **state)
                                &rule_input, values, next_change, NULL);
     assert_int_equal(g_hash_table_size(values), 0);
     g_hash_table_destroy(values);
-    crm_time_free(now);
-    crm_time_free(next_change);
+    free(now);
+    free(next_change);
 }
 
 static void
@@ -84,7 +84,7 @@ null_table(void **state)
     xmlNode *xml = pcmk__xml_parse(XML_BLOCKS);
     crm_time_t *now = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *next_change = crm_time_new("2024-01-01 20:00:00");
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -94,8 +94,8 @@ null_table(void **state)
                                                     "id1", &rule_input, NULL,
                                                     next_change, xml->doc));
     pcmk__xml_free(xml);
-    crm_time_free(next_change);
-    crm_time_free(now);
+    free(next_change);
+    free(now);
 }
 
 static void
@@ -105,7 +105,7 @@ rule_passes(void **state)
     crm_time_t *now = crm_time_new("2024-11-06 15:00:00");
     crm_time_t *next_change = crm_time_new("2024-11-06 20:00:00");
     GHashTable *values = pcmk__strkey_table(free, free);
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -118,8 +118,8 @@ rule_passes(void **state)
     assert_string_equal(g_hash_table_lookup(values, "name3"), "3");
 
     pcmk__xml_free(xml);
-    crm_time_free(next_change);
-    crm_time_free(now);
+    free(next_change);
+    free(now);
     g_hash_table_destroy(values);
 }
 
@@ -131,7 +131,7 @@ rule_fails(void **state)
     crm_time_t *next_change = crm_time_new("2024-11-05 20:00:00");
     crm_time_t *expected_next_change = crm_time_new("2024-11-05 00:00:01");
     GHashTable *values = pcmk__strkey_table(free, free);
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -144,12 +144,12 @@ rule_fails(void **state)
     assert_string_equal(g_hash_table_lookup(values, "name1"), "3");
     assert_string_equal(g_hash_table_lookup(values, "name2"), "3");
     assert_string_equal(g_hash_table_lookup(values, "name3"), "3");
-    assert_int_equal(crm_time_compare(next_change, expected_next_change), 0);
+    assert_int_equal(pcmk__time_compare(next_change, expected_next_change), 0);
 
     pcmk__xml_free(xml);
-    crm_time_free(now);
-    crm_time_free(next_change);
-    crm_time_free(expected_next_change);
+    free(now);
+    free(next_change);
+    free(expected_next_change);
     g_hash_table_destroy(values);
 }
 
@@ -159,7 +159,7 @@ element_name(void **state)
     xmlNode *xml = pcmk__xml_parse(XML_BLOCKS);
     crm_time_t *now = crm_time_new("2024-11-06 15:00:00");
     GHashTable *values = pcmk__strkey_table(free, free);
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -185,7 +185,7 @@ element_name(void **state)
     assert_string_equal(g_hash_table_lookup(values, "name3"), "3");
 
     pcmk__xml_free(xml);
-    crm_time_free(now);
+    free(now);
     g_hash_table_destroy(values);
 }
 

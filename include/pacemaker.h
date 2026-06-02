@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -16,6 +16,7 @@
 #  include <glib.h>
 #  include <libxml/tree.h>
 
+#  include <crm/common/iso8601.h>       // crm_time_t
 #  include <crm/common/scheduler.h>
 #  include <crm/cib/cib_types.h>
 

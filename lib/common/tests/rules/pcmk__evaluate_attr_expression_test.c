@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,10 +10,13 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+
 #include <glib.h>
 
-#include <crm/common/xml.h>
+#include <crm/common/internal.h>            // pcmk__rule_*, pcmk__xml_*, etc.
 #include <crm/common/unittest_internal.h>
+#include <crm/common/xml.h>                 // PCMK_XA_*, PCMK_XE_*, etc.
+
 #include "crmcommon_private.h"
 
 /*
@@ -27,7 +30,7 @@ static const regmatch_t submatches[] = {
     { .rm_so = 7, .rm_eo = 12 }, // %1 = "north"
 };
 
-static pcmk_rule_input_t rule_input = {
+static pcmk__rule_input_t rule_input = {
     // These are the only members used to evaluate attribute expressions
 
     // Used to replace submatches in attribute name

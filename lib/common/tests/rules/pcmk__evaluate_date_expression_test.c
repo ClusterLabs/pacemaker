@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -47,14 +47,14 @@ assert_date_expression(const xmlNode *xml, const char *now_s,
     now = crm_time_new(now_s);
     assert_int_equal(pcmk__evaluate_date_expression(xml, now, next_change),
                      reference_rc);
-    crm_time_free(now);
+    free(now);
 
     if (check_next_change) {
         crm_time_t *reference = crm_time_new(reference_s);
 
-        assert_int_equal(crm_time_compare(next_change, reference), 0);
-        crm_time_free(reference);
-        crm_time_free(next_change);
+        assert_int_equal(pcmk__time_compare(next_change, reference), 0);
+        free(reference);
+        free(next_change);
     }
 }
 
@@ -73,7 +73,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_date_expression(xml, NULL, NULL), EINVAL);
     assert_int_equal(pcmk__evaluate_date_expression(NULL, t, NULL), EINVAL);
 
-    crm_time_free(t);
+    free(t);
     pcmk__xml_free(xml);
 }
 
@@ -237,7 +237,7 @@ range_missing(void **state)
     assert_int_equal(pcmk__evaluate_date_expression(xml, t, NULL),
                      pcmk_rc_unpack_error);
 
-    crm_time_free(t);
+    free(t);
     pcmk__xml_free(xml);
 }
 

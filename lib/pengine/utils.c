@@ -692,7 +692,7 @@ pe__shutdown_requested(const pcmk_node_t *node)
  */
 void
 pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
-                           const pcmk_rule_input_t *rule_input,
+                           const pcmk__rule_input_t *rule_input,
                            GHashTable *hash, const char *always_first,
                            pcmk_scheduler_t *scheduler)
 {
@@ -709,16 +709,16 @@ pe__unpack_dataset_nvpairs(const xmlNode *xml_obj, const char *set_name,
         return;
     }
 
-    next_change = crm_time_new_undefined();
+    next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
     pcmk__unpack_nvpair_blocks(xml_obj, set_name, always_first, rule_input,
                                hash, next_change, scheduler->input->doc);
 
-    if (crm_time_is_defined(next_change)) {
-        time_t recheck = (time_t) crm_time_get_seconds_since_epoch(next_change);
+    if (pcmk__time_is_initialized(next_change)) {
+        time_t recheck = (time_t) pcmk__time_to_unix(next_change);
 
         pcmk__update_recheck_time(recheck, scheduler, "rule evaluation");
     }
-    crm_time_free(next_change);
+    free(next_change);
 }
 
 bool

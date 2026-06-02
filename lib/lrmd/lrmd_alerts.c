@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -184,7 +184,7 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         }
     }
 
-    crm_time_free(now_dt);
+    free(now_dt);
 
     if (any_failure) {
         return (any_success? -1 : -2);

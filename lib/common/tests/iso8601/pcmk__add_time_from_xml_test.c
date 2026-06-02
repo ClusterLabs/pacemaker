@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,14 +41,14 @@ static void
 null_xml_ok(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
-    crm_time_t *reference = pcmk_copy_time(t);
+    crm_time_t *reference = pcmk__time_copy(t);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, NULL),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
 }
 
 static void
@@ -65,15 +65,15 @@ static void
 missing_attr(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
-    crm_time_t *reference = pcmk_copy_time(t);
+    crm_time_t *reference = pcmk__time_copy(t);
     xmlNode *xml = pcmk__xml_parse(YEARS_INVALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_months, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -81,15 +81,15 @@ static void
 invalid_attr(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
-    crm_time_t *reference = pcmk_copy_time(t);
+    crm_time_t *reference = pcmk__time_copy(t);
     xmlNode *xml = pcmk__xml_parse(YEARS_INVALID);
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml),
                      pcmk_rc_unpack_error);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -97,21 +97,21 @@ static void
 out_of_range_attr(void **state)
 {
     crm_time_t *t = crm_time_new("2024-01-01 15:00:00");
-    crm_time_t *reference = pcmk_copy_time(t);
+    crm_time_t *reference = pcmk__time_copy(t);
     xmlNode *xml = NULL;
 
     xml = pcmk__xml_parse(YEARS_TOO_BIG);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
     pcmk__xml_free(xml);
 
     xml = pcmk__xml_parse(YEARS_TOO_SMALL);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
     pcmk__xml_free(xml);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
 }
 
 static void
@@ -123,10 +123,10 @@ add_years(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -139,10 +139,10 @@ add_months(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_months, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -155,10 +155,10 @@ add_weeks(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_weeks, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -171,10 +171,10 @@ add_days(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_days, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -187,10 +187,10 @@ add_hours(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_hours, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -203,10 +203,10 @@ add_minutes(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_minutes, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 
@@ -219,10 +219,10 @@ add_seconds(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_seconds, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
-    crm_time_free(t);
-    crm_time_free(reference);
+    free(t);
+    free(reference);
     pcmk__xml_free(xml);
 }
 

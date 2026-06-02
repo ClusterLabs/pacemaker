@@ -27,13 +27,51 @@
 extern "C" {
 #endif
 
-void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
-                        uint32_t *d);
+/* @COMPAT These must be kept in line with the deprecated crm_time_* flags until
+ * those are removed
+ */
+enum pcmk__time_fmt_flags {
+    pcmk__time_fmt_date     = (UINT32_C(1) << 0),
+    pcmk__time_fmt_time     = (UINT32_C(1) << 1),
+    pcmk__time_fmt_timezone = (UINT32_C(1) << 2),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_duration = (UINT32_C(1) << 3),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_ordinal  = (UINT32_C(1) << 4),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_weeks    = (UINT32_C(1) << 5),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_seconds  = (UINT32_C(1) << 8),
+
+    // @COMPAT Nothing sets this internally except tools/iso8601.c (deprecated)
+    pcmk__time_fmt_epoch    = (UINT32_C(1) << 9),
+
+    pcmk__time_fmt_usecs    = (UINT32_C(1) << 10),
+};
+
+bool pcmk__time_valid_year(int year);
+
+crm_time_t *pcmk__time_copy(const crm_time_t *source);
+
+bool pcmk__time_is_initialized(const crm_time_t *dt);
+long long pcmk__time_get_seconds(const crm_time_t *dt);
+long long pcmk__time_to_unix(const crm_time_t *dt);
+char *pcmk__time_text(const crm_time_t *dt, int flags);
 char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
 char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
 const char *pcmk__readable_interval(guint interval_ms);
+
+crm_time_t *pcmk__time_parse_duration(const char *period_s);
 crm_time_t *pcmk__copy_timet(time_t source_sec);
+crm_time_t *pcmk__time_add(const crm_time_t *dt, const crm_time_t *value);
+crm_time_t *pcmk__time_subtract(const crm_time_t *dt, const crm_time_t *value);
+
+int pcmk__time_compare(const crm_time_t *a, const crm_time_t *b);
 
 void pcmk__time_log_as(const char *file, const char *function, int line,
                        uint8_t level, const char *prefix, const crm_time_t *dt,
@@ -62,6 +100,8 @@ struct crm_time_s {
     // True if duration
     bool duration;
 };
+
+bool valid_time(const crm_time_t *dt);
 
 #ifdef __cplusplus
 }

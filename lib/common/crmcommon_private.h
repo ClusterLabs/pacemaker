@@ -28,7 +28,6 @@
 #include <crm/common/iso8601.h>         // crm_time_t
 #include <crm/common/mainloop.h>        // mainloop_io_t
 #include <crm/common/results.h>         // crm_exit_t
-#include <crm/common/rules.h>           // pcmk_rule_input_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -204,6 +203,24 @@ enum pcmk__time_component {
 };
 
 G_GNUC_INTERNAL
+void pcmk__time_add_days(crm_time_t *dt, int value);
+
+G_GNUC_INTERNAL
+void pcmk__time_add_seconds(crm_time_t *dt, int value);
+
+G_GNUC_INTERNAL
+void pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
+                              uint32_t *minute, uint32_t *second);
+
+G_GNUC_INTERNAL
+void pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
+                        uint32_t *day);
+
+G_GNUC_INTERNAL
+void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                        uint32_t *d);
+
+G_GNUC_INTERNAL
 const char *pcmk__time_component_attr(enum pcmk__time_component component);
 
 G_GNUC_INTERNAL
@@ -212,6 +229,9 @@ int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
 
 G_GNUC_INTERNAL
 void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
+
+G_GNUC_INTERNAL
+void pcmk__time_add_years(crm_time_t *dt, int value);
 
 
 /*
@@ -427,15 +447,15 @@ int pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now);
 
 G_GNUC_INTERNAL
 int pcmk__evaluate_attr_expression(const xmlNode *expression,
-                                   const pcmk_rule_input_t *rule_input);
+                                   const pcmk__rule_input_t *rule_input);
 
 G_GNUC_INTERNAL
 int pcmk__evaluate_rsc_expression(const xmlNode *expr,
-                                  const pcmk_rule_input_t *rule_input);
+                                  const pcmk__rule_input_t *rule_input);
 
 G_GNUC_INTERNAL
 int pcmk__evaluate_op_expression(const xmlNode *expr,
-                                 const pcmk_rule_input_t *rule_input);
+                                 const pcmk__rule_input_t *rule_input);
 
 
 /*

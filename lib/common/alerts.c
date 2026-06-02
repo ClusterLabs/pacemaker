@@ -149,13 +149,13 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry, guint *max_timeout)
     const char *value = NULL;
     int rc = pcmk_rc_ok;
 
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
     pcmk__unpack_nvpair_blocks(xml, PCMK_XE_META_ATTRIBUTES, NULL, &rule_input,
                                config_hash, NULL, xml->doc);
-    crm_time_free(now);
+    free(now);
 
     value = g_hash_table_lookup(config_hash, PCMK_META_ENABLED);
     if ((value != NULL) && !pcmk__is_true(value)) {

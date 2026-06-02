@@ -19,7 +19,7 @@
  * Shared data
  */
 
-static pcmk_rule_input_t rule_input = {
+static pcmk__rule_input_t rule_input = {
     .rsc_standard = PCMK_RESOURCE_CLASS_OCF,
     .rsc_provider = "heartbeat",
     .rsc_agent = "IPaddr2",
@@ -42,7 +42,7 @@ static void
 null_invalid(void **state)
 {
     xmlNode *xml = NULL;
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk__evaluate_condition(NULL, NULL, next_change), EINVAL);
 
@@ -53,7 +53,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk__evaluate_condition(NULL, &rule_input, next_change),
                      EINVAL);
 
-    crm_time_free(next_change);
+    free(next_change);
 }
 
 
@@ -63,12 +63,12 @@ static void
 invalid_expression(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(EXPR_INVALID);
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 
-    crm_time_free(next_change);
+    free(next_change);
     pcmk__xml_free(xml);
 }
 
@@ -130,12 +130,12 @@ date_expression(void **state)
     rule_input.now = now;
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, next_change),
                      pcmk_rc_before_range);
-    assert_int_equal(crm_time_compare(next_change, reference), 0);
+    assert_int_equal(pcmk__time_compare(next_change, reference), 0);
     rule_input.now = NULL;
 
-    crm_time_free(reference);
-    crm_time_free(next_change);
-    crm_time_free(now);
+    free(reference);
+    free(next_change);
+    free(now);
 }
 
 #define EXPR_RESOURCE                                       \

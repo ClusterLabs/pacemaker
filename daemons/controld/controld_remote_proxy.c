@@ -29,7 +29,6 @@
 #include <crm/common/nvpair.h>          // pcmk_unpack_nvpair_blocks
 #include <crm/common/options.h>         // PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS
 #include <crm/common/results.h>         // pcmk_ok, pcmk_rc_*, pcmk_strerror
-#include <crm/common/rules.h>           // pcmk_rule_input_t
 #include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
 #include <crm/crm.h>                    // crm_system_name
 #include <crm/lrmd.h>                   // lrmd_t
@@ -244,7 +243,7 @@ remote_config_check(xmlNode *msg, int call_id, int rc, xmlNode *output,
     lrmd_t *lrmd = user_data;
     GHashTable *config_hash = NULL;
     crm_time_t *now = NULL;
-    pcmk_rule_input_t rule_input = { NULL, };
+    pcmk__rule_input_t rule_input = { NULL, };
 
     if (rc != pcmk_ok) {
         pcmk__err("Query resulted in an error: %s", pcmk_strerror(rc));
@@ -272,7 +271,7 @@ remote_config_check(xmlNode *msg, int call_id, int rc, xmlNode *output,
     lrmd__validate_remote_settings(lrmd, config_hash);
 
     g_hash_table_destroy(config_hash);
-    crm_time_free(now);
+    free(now);
 }
 
 /*!

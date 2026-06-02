@@ -133,7 +133,7 @@ static void
 read_config(GHashTable *options, xmlNode *current_cib)
 {
     crm_time_t *now = NULL;
-    pcmk_rule_input_t rule_input = { 0, };
+    pcmk__rule_input_t rule_input = { NULL, };
     xmlNode *config = pcmk_find_cib_element(current_cib, PCMK_XE_CRM_CONFIG);
 
     if (config == NULL) {
@@ -146,7 +146,7 @@ read_config(GHashTable *options, xmlNode *current_cib)
     pcmk__unpack_nvpair_blocks(config, PCMK_XE_CLUSTER_PROPERTY_SET,
                                PCMK_VALUE_CIB_BOOTSTRAP_OPTIONS, &rule_input,
                                options, NULL, config->doc);
-    crm_time_free(now);
+    free(now);
 }
 
 static bool

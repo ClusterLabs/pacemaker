@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -736,9 +736,9 @@ pacemakerd_health(pcmk__output_t *out, va_list args)
 
     if (last_updated != 0) {
         last_updated_s = pcmk__epoch2str(&last_updated,
-                                         crm_time_log_date
-                                         |crm_time_log_timeofday
-                                         |crm_time_log_with_timezone);
+                                         pcmk__time_fmt_date
+                                         |pcmk__time_fmt_time
+                                         |pcmk__time_fmt_timezone);
     }
 
     rc = out->info(out, "Status of %s: '%s' (last updated %s)",
@@ -777,9 +777,9 @@ pacemakerd_health_html(pcmk__output_t *out, va_list args)
 
     if (last_updated != 0) {
         last_updated_s = pcmk__epoch2str(&last_updated,
-                                         crm_time_log_date
-                                         |crm_time_log_timeofday
-                                         |crm_time_log_with_timezone);
+                                         pcmk__time_fmt_date
+                                         |pcmk__time_fmt_time
+                                         |pcmk__time_fmt_timezone);
     }
 
     msg = pcmk__assert_asprintf("Status of %s: '%s' (last updated %s)",
@@ -841,9 +841,9 @@ pacemakerd_health_xml(pcmk__output_t *out, va_list args)
 
     if (last_updated != 0) {
         last_updated_s = pcmk__epoch2str(&last_updated,
-                                         crm_time_log_date
-                                         |crm_time_log_timeofday
-                                         |crm_time_log_with_timezone);
+                                         pcmk__time_fmt_date
+                                         |pcmk__time_fmt_time
+                                         |pcmk__time_fmt_timezone);
     }
 
     pcmk__output_create_xml_node(out, PCMK_XE_PACEMAKERD,

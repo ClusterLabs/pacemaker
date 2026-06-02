@@ -70,7 +70,7 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  */
 static const char *
 score_attribute_name(const xmlNode *rule_xml, char **allocated,
-                     const pcmk_rule_input_t *rule_input)
+                     const pcmk__rule_input_t *rule_input)
 {
     const char *name = NULL;
 
@@ -191,7 +191,8 @@ score_from_attr(const char *constraint_id, const char *attr_name,
 static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pcmk_rule_input_t *rule_input, const char *constraint_id)
+                       pcmk__rule_input_t *rule_input,
+                       const char *constraint_id)
 {
     const char *rule_id = NULL;
     const char *score_attr = NULL;
@@ -269,8 +270,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         rule_input->rsc_params = pe_rsc_params(rsc, node,
                                                rsc->priv->scheduler);
 
-        if (pcmk_evaluate_rule(rule_xml, rule_input,
-                               next_change) != pcmk_rc_ok) {
+        if (pcmk__evaluate_rule(rule_xml, rule_input,
+                                next_change) != pcmk_rc_ok) {
             continue;
         }
 
@@ -362,10 +363,10 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         location->role_filter = role;
 
     } else {
-        crm_time_t *next_change = crm_time_new_undefined();
+        crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
         xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE, NULL,
                                                  NULL);
-        pcmk_rule_input_t rule_input = {
+        pcmk__rule_input_t rule_input = {
             .now = rsc->priv->scheduler->priv->now,
             .rsc_meta = rsc->priv->meta,
             .rsc_id = rsc_id_match,
@@ -379,13 +380,13 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         /* If there is a point in the future when the evaluation of a rule will
          * change, make sure the scheduler is re-run by that time.
          */
-        if (crm_time_is_defined(next_change)) {
-            time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
+        if (pcmk__time_is_initialized(next_change)) {
+            time_t t = (time_t) pcmk__time_to_unix(next_change);
 
             pcmk__update_recheck_time(t, rsc->priv->scheduler,
                                       "location rule evaluation");
         }
-        crm_time_free(next_change);
+        free(next_change);
     }
 }
 

@@ -249,7 +249,7 @@ pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
 {
     GHashTable *params = pcmk__strkey_table(free, free);
 
-    const pcmk_rule_input_t rule_input = {
+    const pcmk__rule_input_t rule_input = {
         .now = scheduler->priv->now,
         .node_attrs = node_attrs,
     };
@@ -572,8 +572,8 @@ unpack_interval_origin(const char *value, const xmlNode *xml_obj,
     }
 
     // Get seconds since origin (negative if origin is in the future)
-    result = crm_time_get_seconds(now) - crm_time_get_seconds(origin);
-    crm_time_free(origin);
+    result = pcmk__time_get_seconds(now) - pcmk__time_get_seconds(origin);
+    free(origin);
 
     // Calculate seconds from closest interval to now
     result = result % interval_sec;
@@ -685,7 +685,7 @@ pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
     const char *timeout_spec = NULL;
     const char *str = NULL;
 
-    const pcmk_rule_input_t rule_input = {
+    const pcmk__rule_input_t rule_input = {
         /* Node attributes are not set because node expressions are not allowed
          * for meta-attributes
          */

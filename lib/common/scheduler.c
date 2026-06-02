@@ -105,7 +105,7 @@ pcmk_reset_scheduler(pcmk_scheduler_t *scheduler)
 
     // Do not reset local_node_name or out
 
-    g_clear_pointer(&scheduler->priv->now, crm_time_free);
+    g_clear_pointer(&scheduler->priv->now, free);
     g_clear_pointer(&scheduler->priv->options, g_hash_table_destroy);
 
     scheduler->priv->fence_action = NULL;
@@ -285,7 +285,7 @@ pcmk__scheduler_epoch_time(pcmk_scheduler_t *scheduler)
         pcmk__trace("Scheduler 'now' set to current time");
         scheduler->priv->now = crm_time_new(NULL);
     }
-    return crm_time_get_seconds_since_epoch(scheduler->priv->now);
+    return pcmk__time_to_unix(scheduler->priv->now);
 }
 
 /*!
