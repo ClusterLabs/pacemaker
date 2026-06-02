@@ -189,10 +189,8 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
 void
 pacemakerd_ipc_cleanup(void)
 {
-    if (ipcs != NULL) {
-        pcmk__drop_all_clients(ipcs);
-        g_clear_pointer(&ipcs, qb_ipcs_destroy);
-    }
+    pcmk__drop_all_clients(ipcs);
+    g_clear_pointer(&ipcs, qb_ipcs_destroy);
 
     pcmk__client_cleanup();
 }
