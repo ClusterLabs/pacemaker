@@ -1885,9 +1885,9 @@ lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
  * \param[in]     interval_ms  If 0, execute action once; otherwise, execute it
  *                             on a recurring basis at this interval (in
  *                             milliseconds)
- * \param[in]     timeout      Error if not complete within this time (in
+ * \param[in]     timeout_ms   Error if not complete within this time (in
  *                             milliseconds)
- * \param[in]     start_delay  Wait this long before execution (in milliseconds)
+ * \param[in]     delay_ms     Wait this long before execution (in milliseconds)
  * \param[in]     options      Group of <tt>enum lrmd_call_options</tt>
  * \param[in,out] params       Parameters to pass to agent (will be freed)
  *
@@ -1903,8 +1903,8 @@ lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
 static int
 lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
               const char *userdata, unsigned int interval_ms,
-              int timeout, int start_delay, enum lrmd_call_options options,
-              lrmd_key_value_t * params)
+              int timeout_ms, int delay_ms, enum lrmd_call_options options,
+              lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
@@ -1916,14 +1916,15 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
     pcmk__xe_set_uint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout_ms);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, delay_ms);
 
     for (tmp = params; tmp; tmp = tmp->next) {
         hash2smartfield((void *) tmp->key, (void *) tmp->value, args);
     }
 
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout_ms,
+                           options, true);
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);

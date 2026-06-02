@@ -192,6 +192,7 @@ typedef struct lrmd_list_s {
 void lrmd_list_freeall(lrmd_list_t * head);
 void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
+// @COMPAT The enum lrmd_call_options arguments should be of type uint32_t
 /*!
  * \deprecated Use \c lrmd_api_operations_t instead of
  *             <tt>struct lrmd_api_operations_s</tt>.
@@ -333,9 +334,9 @@ typedef struct lrmd_api_operations_s {
      * \param[in]     interval_ms  If 0, execute action once; otherwise, execute
      *                             it on a recurring basis at this interval (in
      *                             milliseconds)
-     * \param[in]     timeout      Error if not complete within this time (in
+     * \param[in]     timeout_ms   Error if not complete within this time (in
      *                             milliseconds)
-     * \param[in]     start_delay  Wait this long before execution (in
+     * \param[in]     delay_ms     Wait this long before execution (in
      *                             milliseconds)
      * \param[in]     options      Group of <tt>enum lrmd_call_options</tt>
      * \param[in,out] params       Parameters to pass to agent (will be freed)
@@ -350,8 +351,8 @@ typedef struct lrmd_api_operations_s {
      *       any specific order.
      */
     int (*exec) (lrmd_t *lrmd, const char *rsc_id, const char *action,
-                 const char *userdata, unsigned int interval_ms, int timeout,
-                 int start_delay, enum lrmd_call_options options,
+                 const char *userdata, unsigned int interval_ms, int timeout_ms,
+                 int delay_ms, enum lrmd_call_options options,
                  lrmd_key_value_t *params);
 
     /*!
