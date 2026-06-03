@@ -155,7 +155,7 @@ typedef struct cib_api_operations_s {
                                                   xmlNode *msg));
     // NOTE: sbd (as of at least 1.5.2) uses this
     int (*set_connection_dnotify) (cib_t *cib,
-                                   void (*dnotify) (gpointer user_data));
+                                   void (*dnotify)(void *user_data));
 
     // NOTE: sbd (as of at least 1.5.2) uses this
     //! \deprecated This method will be removed and should not be used

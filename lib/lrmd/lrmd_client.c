@@ -18,7 +18,7 @@
 #include <time.h>                   // time
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // g_list_free_full, gpointer
+#include <glib.h>                   // g_list_free_full
 #include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
 #include <libxml/parser.h>          // xmlNode
 #include <qb/qbdefs.h>              // QB_MAX
@@ -175,7 +175,7 @@ lrmd_key_value_freeall(lrmd_key_value_t * head)
  *       result with lrmd_free_event().
  */
 lrmd_event_data_t *
-lrmd_new_event(const char *rsc_id, const char *task, guint interval_ms)
+lrmd_new_event(const char *rsc_id, const char *task, unsigned int interval_ms)
 {
     lrmd_event_data_t *event = pcmk__assert_alloc(1, sizeof(lrmd_event_data_t));
 
@@ -274,7 +274,7 @@ lrmd_poll(lrmd_t * lrmd, int timeout)
 }
 
 static void
-lrmd_dispatch_internal(gpointer data, gpointer user_data)
+lrmd_dispatch_internal(void *data, void *user_data)
 {
     xmlNode *msg = data;
     lrmd_t *lrmd = user_data;
@@ -314,7 +314,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
         int queue_time = 0;
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_TIMEOUT, &event.timeout);
-        pcmk__xe_get_guint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event.interval_ms);
+        pcmk__xe_get_uint(msg, PCMK__XA_LRMD_RSC_INTERVAL, &event.interval_ms);
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_RSC_START_DELAY,
                          &event.start_delay);
 
@@ -361,7 +361,7 @@ lrmd_dispatch_internal(gpointer data, gpointer user_data)
 
 // \return Always 0, to indicate that IPC mainloop source should be kept
 static int
-lrmd_ipc_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+lrmd_ipc_dispatch(const char *buffer, ssize_t length, void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -533,7 +533,7 @@ handle_remote_msg(xmlNode *xml, lrmd_t *lrmd)
  *         to leave it in the mainloop
  */
 static int
-lrmd_tls_dispatch(gpointer userdata)
+lrmd_tls_dispatch(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -635,7 +635,7 @@ lrmd_create_op(const char *token, const char *op, xmlNode *data, int timeout,
 }
 
 static void
-lrmd_ipc_connection_destroy(gpointer userdata)
+lrmd_ipc_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1084,7 +1084,7 @@ lrmd_ipc_connect(lrmd_t *lrmd, int *fd)
 }
 
 static void
-lrmd_tls_connection_destroy(gpointer userdata)
+lrmd_tls_connection_destroy(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1170,7 +1170,7 @@ tls_client_handshake(lrmd_t *lrmd)
  *         mainloop
  */
 static int
-process_pending_notifies(gpointer userdata)
+process_pending_notifies(void *userdata)
 {
     lrmd_t *lrmd = userdata;
     lrmd_private_t *native = lrmd->lrmd_private;
@@ -1417,7 +1417,7 @@ struct handshake_data_s {
 };
 
 static gboolean
-try_handshake_cb(gpointer user_data)
+try_handshake_cb(void *user_data)
 {
     struct handshake_data_s *hs = user_data;
     lrmd_t *lrmd = hs->lrmd;
@@ -1874,12 +1874,37 @@ lrmd_api_get_metadata(lrmd_t *lrmd, const char *standard, const char *provider,
                                            output, options, NULL);
 }
 
+/*!
+ * \internal
+ * \brief Request execution of a resource action
+ *
+ * \param[in,out] lrmd         Executor connection object
+ * \param[in]     rsc_id       ID of resource
+ * \param[in]     action       Name of resource action to execute
+ * \param[in]     userdata     Arbitrary string to pass to event callback
+ * \param[in]     interval_ms  If 0, execute action once; otherwise, execute it
+ *                             on a recurring basis at this interval (in
+ *                             milliseconds)
+ * \param[in]     timeout_ms   Error if not complete within this time (in
+ *                             milliseconds)
+ * \param[in]     delay_ms     Wait this long before execution (in milliseconds)
+ * \param[in]     options      Group of <tt>enum lrmd_call_options</tt>
+ * \param[in,out] params       Parameters to pass to agent (will be freed)
+ *
+ * \return A call ID for the action on success (in which case the action is
+ *         queued in the executor, and the event callback will be called
+ *         later with the result); otherwise, a negative legacy Pacemaker return
+ *         code
+ * \note \c exec() and \c cancel() operations on an individual resource are
+ *       guaranteed to occur in the order the client API is called. However,
+ *       operations on different resources are not guaranteed to occur in any
+ *       specific order.
+ */
 static int
 lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
-              const char *userdata, guint interval_ms,
-              int timeout,      /* ms */
-              int start_delay,  /* ms */
-              enum lrmd_call_options options, lrmd_key_value_t * params)
+              const char *userdata, unsigned int interval_ms,
+              int timeout_ms, int delay_ms, enum lrmd_call_options options,
+              lrmd_key_value_t *params)
 {
     int rc = pcmk_ok;
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
@@ -1890,15 +1915,16 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_USERDATA_STR, userdata);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
-    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, start_delay);
+    pcmk__xe_set_uint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout_ms);
+    pcmk__xe_set_int(data, PCMK__XA_LRMD_RSC_START_DELAY, delay_ms);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+        hash2smartfield((void *) tmp->key, (void *) tmp->value, args);
     }
 
-    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout, options, true);
+    rc = lrmd_send_command(lrmd, LRMD_OP_RSC_EXEC, data, NULL, timeout_ms,
+                           options, true);
     pcmk__xml_free(data);
 
     lrmd_key_value_freeall(params);
@@ -1907,7 +1933,7 @@ lrmd_api_exec(lrmd_t *lrmd, const char *rsc_id, const char *action,
 
 static int
 lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
-                guint interval_ms)
+                unsigned int interval_ms)
 {
     int rc = pcmk_ok;
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XE_LRMD_RSC);
@@ -1915,7 +1941,7 @@ lrmd_api_cancel(lrmd_t *lrmd, const char *rsc_id, const char *action,
     pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ACTION, action);
     pcmk__xe_set(data, PCMK__XA_LRMD_RSC_ID, rsc_id);
-    pcmk__xe_set_guint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
+    pcmk__xe_set_uint(data, PCMK__XA_LRMD_RSC_INTERVAL, interval_ms);
     rc = lrmd_send_command(lrmd, LRMD_OP_RSC_CANCEL, data, NULL, 0, 0, true);
     pcmk__xml_free(data);
     return rc;
@@ -2068,7 +2094,7 @@ lrmd_api_exec_alert(lrmd_t *lrmd, const char *alert_id, const char *alert_path,
     pcmk__xe_set_int(data, PCMK__XA_LRMD_TIMEOUT, timeout);
 
     for (tmp = params; tmp; tmp = tmp->next) {
-        hash2smartfield((gpointer) tmp->key, (gpointer) tmp->value, args);
+        hash2smartfield((void *) tmp->key, (void *) tmp->value, args);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_ALERT_EXEC, data, NULL, timeout,

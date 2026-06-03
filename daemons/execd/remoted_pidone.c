@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2025 the Pacemaker project contributors
+ * Copyright 2017-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -72,7 +72,7 @@ static struct {
  *       [a-zA-Z0-9_] characters and do not start with a digit.
  */
 static bool
-valid_env_var_name(const gchar *name)
+valid_env_var_name(const char *name)
 {
     if (!isalpha(*name) && (*name != '_')) {
         // Invalid first character
@@ -104,7 +104,7 @@ valid_env_var_name(const gchar *name)
 static void
 load_env_var_line(const char *line)
 {
-    gint argc = 0;
+    int argc = 0;
     gchar **argv = NULL;
     GError *error = NULL;
 

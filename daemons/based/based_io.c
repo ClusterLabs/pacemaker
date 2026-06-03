@@ -87,7 +87,7 @@ write_cib_cb(mainloop_child_t *child, int core, int signo, int exit_code)
  * \param[in] user_data  Ignored
  */
 static int
-write_cib_async(gpointer user_data)
+write_cib_async(void *user_data)
 {
     int rc = pcmk_rc_ok;
     pid_t pid = 0;

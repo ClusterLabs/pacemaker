@@ -83,7 +83,7 @@ struct log_handler_id {
      * based on the implementation, a valid ID is always positive unless we set
      * UINT_MAX handlers.
      */
-    guint handler_id;
+    unsigned int handler_id;
 };
 
 // Log domains that we care about, and their handler function IDs once set
@@ -142,9 +142,8 @@ log_level_from_glib(GLogLevelFlags log_level)
  * \param[in] user_data   Ignored
  */
 static void
-handle_glib_message(const gchar *log_domain, GLogLevelFlags log_level,
-                    const gchar *message, gpointer user_data)
-
+handle_glib_message(const char *log_domain, GLogLevelFlags log_level,
+                    const char *message, void *user_data)
 {
     uint8_t syslog_level = log_level_from_glib(log_level);
 
@@ -539,13 +538,13 @@ pcmk__add_logfile(const char *filename)
  * \return Standard Pacemaker return code
  */
 void
-pcmk__add_logfiles(gchar **log_files, pcmk__output_t *out)
+pcmk__add_logfiles(char **log_files, pcmk__output_t *out)
 {
     if (log_files == NULL) {
         return;
     }
 
-    for (gchar **fname = log_files; *fname != NULL; fname++) {
+    for (char **fname = log_files; *fname != NULL; fname++) {
         int rc = pcmk__add_logfile(*fname);
 
         if (rc != pcmk_rc_ok) {

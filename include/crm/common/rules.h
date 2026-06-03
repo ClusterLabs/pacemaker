@@ -12,7 +12,7 @@
 
 #include <regex.h>                  // regmatch_t
 
-#include <glib.h>                   // guint, GHashTable
+#include <glib.h>                   // GHashTable
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/iso8601.h>     // crm_time_t
@@ -63,16 +63,19 @@ enum expression_type {
  */
 typedef struct pcmk_rule_input {
     // Used to evaluate date expressions
-    const crm_time_t *now; //!< Current time for rule evaluation purposes
+    /*!
+     * Current time for rule evaluation purposes
+     */
+    const crm_time_t *now;
 
     // Used to evaluate resource type expressions
-    const char *rsc_standard;   //!< Resource standard that rule applies to
-    const char *rsc_provider;   //!< Resource provider that rule applies to
-    const char *rsc_agent;      //!< Resource agent that rule applies to
+    const char *rsc_standard;       //!< Resource standard that rule applies to
+    const char *rsc_provider;       //!< Resource provider that rule applies to
+    const char *rsc_agent;          //!< Resource agent that rule applies to
 
     // Used to evaluate operation type expressions
-    const char *op_name;        //!< Operation name that rule applies to
-    guint op_interval_ms;       //!< Operation interval that rule applies to
+    const char *op_name;            //!< Operation name that rule applies to
+    unsigned int op_interval_ms;    //!< Operation interval that rule applies to
 
     // Remaining members are used to evaluate node attribute expressions
 

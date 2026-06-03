@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 #include <stdio.h>                  // NULL
 #include <stdint.h>                 // uint32_t
 #include <stdbool.h>                // bool, false
-#include <glib.h>                   // guint, gpointer, GList, GHashTable
+#include <glib.h>                   // GList, GHashTable
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/internal.h>    // pcmk__location_t, etc.
@@ -377,7 +377,7 @@ void pcmk__log_action(const char *pre_text, const pcmk_action_t *action,
 
 G_GNUC_INTERNAL
 pcmk_action_t *pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *name,
-                                       guint interval_ms,
+                                       unsigned int interval_ms,
                                        const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
@@ -407,12 +407,12 @@ void pcmk__create_recurring_actions(pcmk_resource_t *rsc);
 
 G_GNUC_INTERNAL
 void pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
-                           const char *task, guint interval_ms,
+                           const char *task, unsigned int interval_ms,
                            const pcmk_node_t *node, const char *reason);
 
 G_GNUC_INTERNAL
 void pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
-                                guint interval_ms, pcmk_node_t *node);
+                                unsigned int interval_ms, pcmk_node_t *node);
 
 G_GNUC_INTERNAL
 bool pcmk__action_is_recurring(const pcmk_action_t *action);
@@ -450,7 +450,7 @@ G_GNUC_INTERNAL
 bool pcmk__node_unfenced(const pcmk_node_t *node);
 
 G_GNUC_INTERNAL
-void pcmk__order_restart_vs_unfence(gpointer data, gpointer user_data);
+void pcmk__order_restart_vs_unfence(void *data, void *user_data);
 
 
 // Injected scheduler inputs (pcmk_sched_injections.c)
@@ -544,7 +544,7 @@ void pcmk__add_colocated_node_scores(pcmk_resource_t *source_rsc,
                                      float factor, uint32_t flags);
 
 G_GNUC_INTERNAL
-void pcmk__add_dependent_scores(gpointer data, gpointer user_data);
+void pcmk__add_dependent_scores(void *data, void *user_data);
 
 G_GNUC_INTERNAL
 void pcmk__colocation_intersect_nodes(pcmk_resource_t *dependent,
@@ -984,7 +984,7 @@ xmlNode *pcmk__inject_resource_history(pcmk__output_t *out, xmlNode *cib_node,
 G_GNUC_INTERNAL
 void pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn,
                             xmlNode *cib_node, const char *resource,
-                            const char *task, guint interval_ms, int rc,
+                            const char *task, unsigned int interval_ms, int rc,
                             bool infinity);
 
 G_GNUC_INTERNAL
@@ -1061,10 +1061,10 @@ G_GNUC_INTERNAL
 void pcmk__sort_resources(pcmk_scheduler_t *scheduler);
 
 G_GNUC_INTERNAL
-gint pcmk__cmp_instance(gconstpointer a, gconstpointer b);
+int pcmk__cmp_instance(const void *a, const void *b);
 
 G_GNUC_INTERNAL
-gint pcmk__cmp_instance_number(gconstpointer a, gconstpointer b);
+int pcmk__cmp_instance_number(const void *a, const void *b);
 
 
 // Functions related to probes (pcmk_sched_probes.c)

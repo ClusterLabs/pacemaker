@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2022 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #  define CONTROLD_TIMERS__H
 
 #  include <stdbool.h>              // bool
-#  include <glib.h>                 // gboolean, gpointer, guint
+#  include <glib.h>                 // GHashTable
 #  include <controld_fsa.h>         // crmd_fsa_input
 
 bool controld_init_fsa_timers(void);
@@ -27,10 +27,10 @@ void controld_start_wait_timer(void);
 
 bool controld_is_started_transition_timer(void);
 
-guint controld_get_period_transition_timer(void);
+unsigned int controld_get_period_transition_timer(void);
 
 void controld_reset_counter_election_timer(void);
 
-void controld_shutdown_start_countdown(guint default_period_ms);
+void controld_shutdown_start_countdown(unsigned int default_period_ms);
 
 #endif

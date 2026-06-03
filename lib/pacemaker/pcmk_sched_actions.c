@@ -95,7 +95,7 @@ static char *
 action_uuid_for_ordering(const char *first_uuid,
                          const pcmk_resource_t *first_rsc)
 {
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     char *uuid = NULL;
     char *rid = NULL;
     char *first_task_str = NULL;
@@ -1256,7 +1256,7 @@ pcmk__create_history_xml(xmlNode *parent, lrmd_event_data_t *op,
     pcmk__xe_set_int(xml_op, PCMK__XA_CALL_ID, op->call_id);
     pcmk__xe_set_int(xml_op, PCMK__XA_RC_CODE, op->rc);
     pcmk__xe_set_int(xml_op, PCMK__XA_OP_STATUS, op->op_status);
-    pcmk__xe_set_guint(xml_op, PCMK_META_INTERVAL, op->interval_ms);
+    pcmk__xe_set_uint(xml_op, PCMK_META_INTERVAL, op->interval_ms);
 
     if ((op->t_run > 0) || (op->t_rcchange > 0) || (op->exec_time > 0)
         || (op->queue_time > 0)) {
@@ -1345,8 +1345,8 @@ pcmk__action_locks_rsc_to_node(const pcmk_action_t *action)
 }
 
 /* lowest to highest */
-static gint
-sort_action_id(gconstpointer a, gconstpointer b)
+static int
+sort_action_id(const void *a, const void *b)
 {
     const pcmk__related_action_t *action_wrapper2 = a;
     const pcmk__related_action_t *action_wrapper1 = b;
@@ -1488,7 +1488,7 @@ pcmk__output_actions(pcmk_scheduler_t *scheduler)
  * \return Action name whose digest should be compared
  */
 static const char *
-task_for_digest(const char *task, guint interval_ms)
+task_for_digest(const char *task, unsigned int interval_ms)
 {
     /* Certain actions need to be compared against the parameters used to start
      * the resource.
@@ -1547,7 +1547,7 @@ only_sanitized_changed(const xmlNode *xml_op,
  * \param[in,out] node         Node where resource should be restarted
  */
 static void
-force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
+force_restart(pcmk_resource_t *rsc, const char *task, unsigned int interval_ms,
               pcmk_node_t *node)
 {
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -1567,7 +1567,7 @@ force_restart(pcmk_resource_t *rsc, const char *task, guint interval_ms,
  * \param[in]     user_data  Where resource should be reloaded
  */
 static void
-schedule_reload(gpointer data, gpointer user_data)
+schedule_reload(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
@@ -1639,7 +1639,7 @@ bool
 pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                           const xmlNode *xml_op)
 {
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     const char *task = NULL;
     const pcmk__op_digest_t *digest_data = NULL;
 
@@ -1649,7 +1649,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
     task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
     CRM_CHECK(task != NULL, return false);
 
-    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
+    pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &interval_ms);
 
     // If this is a recurring action, check whether it has been removed
     if (interval_ms > 0) {
@@ -1719,7 +1719,7 @@ pcmk__check_action_config(pcmk_resource_t *rsc, pcmk_node_t *node,
                                   "Device parameters changed (reload)", NULL,
                                   rsc->priv->scheduler);
                 pcmk__log_xml_debug(digest_data->params_all, "params:reload");
-                schedule_reload((gpointer) rsc, (gpointer) node);
+                schedule_reload((void *) rsc, (void *) node);
 
             } else {
                 pcmk__rsc_trace(rsc,
@@ -1831,7 +1831,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
     for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
         xmlNode *rsc_op = (xmlNode *) iter->data;
         const char *task = NULL;
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
 
         if (++offset < start_index) {
             // Skip actions that happened before a start
@@ -1839,7 +1839,7 @@ process_rsc_history(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
         }
 
         task = pcmk__xe_get(rsc_op, PCMK_XA_OPERATION);
-        pcmk__xe_get_guint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_uint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
 
         if ((interval_ms > 0)
             && (pcmk__is_set(rsc->flags, pcmk__rsc_maintenance)

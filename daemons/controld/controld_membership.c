@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ void post_cache_update(int instance);
 extern gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
 static void
-reap_dead_nodes(gpointer key, gpointer value, gpointer user_data)
+reap_dead_nodes(void *key, void *value, void *user_data)
 {
     pcmk__node_status_t *node = value;
 
@@ -261,7 +261,7 @@ search_conflicting_node_callback(xmlNode * msg, int call_id, int rc,
         }
 
         g_hash_table_iter_init(&iter, pcmk__peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             if ((node != NULL)
                 && pcmk__str_eq(node->xml_id, node_uuid, pcmk__str_casei)
                 && pcmk__str_eq(node->name, node_uname, pcmk__str_casei)) {
@@ -314,7 +314,7 @@ populate_cib_nodes_from_cache(xmlNode *nodes_xml)
     pcmk__node_status_t *node = NULL;
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         cib_t *cib_conn = controld_globals.cib_conn;
         int call_id = 0;
         xmlNode *new_node = NULL;
@@ -412,13 +412,13 @@ populate_cib_nodes(uint32_t flags, const char *source)
     node_list = pcmk__xe_create(NULL, PCMK_XE_STATUS);
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         create_node_state_update(node, flags, node_list, source);
     }
 
     if (pcmk__remote_peer_cache != NULL) {
         g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
-        while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
             create_node_state_update(node, flags, node_list, source);
         }
     }

@@ -168,7 +168,7 @@ attrd_expand_value(const char *value, const char *old_value)
  */
 int
 attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                    guint interval_ms)
+                    unsigned int interval_ms)
 {
     char *pattern = NULL;
     int rc;
@@ -193,7 +193,7 @@ attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
 }
 
 void
-attrd_free_attribute_value(gpointer data)
+attrd_free_attribute_value(void *data)
 {
     attribute_value_t *v = data;
 
@@ -204,7 +204,7 @@ attrd_free_attribute_value(gpointer data)
 }
 
 void
-attrd_free_attribute(gpointer data)
+attrd_free_attribute(void *data)
 {
     attribute_t *a = data;
     if(a) {

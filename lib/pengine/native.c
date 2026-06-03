@@ -9,15 +9,33 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                // bool, true, false
-#include <stdint.h>                 // uint32_t
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdio.h>                      // sscanf
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp, strdup, strlen
 
-#include <crm/common/output.h>
-#include <crm/pengine/status.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/output.h>          // pcmk_show_*
+#include <crm/common/resources.h>       // pcmk_rsc_match_*
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_*, rsc_role_e, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
 #include <crm/pengine/complex.h>
 #include <crm/pengine/internal.h>
-#include <crm/common/xml.h>
-#include <pe_status_private.h>
+#include <crm/pengine/status.h>
+
+#include "pe_status_private.h"          // pe__force_anon, etc.
 
 /*!
  * \internal
@@ -195,7 +213,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 }
 
 static void
-recursive_clear_unique(pcmk_resource_t *rsc, gpointer user_data)
+recursive_clear_unique(pcmk_resource_t *rsc, void *user_data)
 {
     pcmk__clear_rsc_flags(rsc, pcmk__rsc_unique);
     pcmk__insert_meta(rsc->priv, PCMK_META_GLOBALLY_UNIQUE,
@@ -925,7 +943,7 @@ native_location(const pcmk_resource_t *rsc, GList **list, uint32_t target)
         if (pcmk__is_set(target, pcmk__rsc_node_pending)
             && (rsc->priv->pending_node != NULL)
             && !pe_find_node_id(result, rsc->priv->pending_node->priv->id)) {
-            result = g_list_append(result, (gpointer) rsc->priv->pending_node);
+            result = g_list_append(result, (void *) rsc->priv->pending_node);
         }
         if (pcmk__is_set(target, pcmk__rsc_node_assigned)
             && (rsc->priv->assigned_node != NULL)) {
@@ -1034,7 +1052,7 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
 }
 
 static void
-destroy_node_table(gpointer data)
+destroy_node_table(void *data)
 {
     g_clear_pointer(&data, g_hash_table_destroy);
 }

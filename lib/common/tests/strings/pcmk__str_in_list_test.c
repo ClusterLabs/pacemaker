@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -25,7 +25,7 @@ static void
 empty_string(void **state) {
     GList *list = NULL;
 
-    list = g_list_prepend(list, (gpointer) "xxx");
+    list = g_list_prepend(list, (void *) "xxx");
 
     assert_false(pcmk__str_in_list(NULL, list, pcmk__str_none));
     assert_true(pcmk__str_in_list(NULL, list, pcmk__str_null_matches));
@@ -39,8 +39,8 @@ static void
 star_matches(void **state) {
     GList *list = NULL;
 
-    list = g_list_prepend(list, (gpointer) "*");
-    list = g_list_append(list, (gpointer) "more");
+    list = g_list_prepend(list, (void *) "*");
+    list = g_list_append(list, (void *) "more");
 
     assert_true(pcmk__str_in_list("xxx", list, pcmk__str_star_matches));
     assert_true(pcmk__str_in_list("yyy", list, pcmk__str_star_matches));
@@ -54,7 +54,7 @@ static void
 star_doesnt_match(void **state) {
     GList *list = NULL;
 
-    list = g_list_prepend(list, (gpointer) "*");
+    list = g_list_prepend(list, (void *) "*");
 
     assert_false(pcmk__str_in_list("xxx", list, pcmk__str_none));
     assert_false(pcmk__str_in_list("yyy", list, pcmk__str_none));
@@ -69,9 +69,9 @@ static void
 in_list(void **state) {
     GList *list = NULL;
 
-    list = g_list_prepend(list, (gpointer) "xxx");
-    list = g_list_prepend(list, (gpointer) "yyy");
-    list = g_list_prepend(list, (gpointer) "zzz");
+    list = g_list_prepend(list, (void *) "xxx");
+    list = g_list_prepend(list, (void *) "yyy");
+    list = g_list_prepend(list, (void *) "zzz");
 
     assert_true(pcmk__str_in_list("xxx", list, pcmk__str_none));
     assert_true(pcmk__str_in_list("XXX", list, pcmk__str_casei));
@@ -87,8 +87,8 @@ static void
 not_in_list(void **state) {
     GList *list = NULL;
 
-    list = g_list_prepend(list, (gpointer) "xxx");
-    list = g_list_prepend(list, (gpointer) "yyy");
+    list = g_list_prepend(list, (void *) "xxx");
+    list = g_list_prepend(list, (void *) "yyy");
 
     assert_false(pcmk__str_in_list("xx", list, pcmk__str_none));
     assert_false(pcmk__str_in_list("XXX", list, pcmk__str_none));

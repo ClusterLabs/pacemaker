@@ -29,7 +29,8 @@ typedef struct {
 } private_data_t;
 
 static void
-free_list_data(gpointer data) {
+free_list_data(void *data)
+{
     text_list_data_t *list_data = data;
 
     free(list_data->singular_noun);
@@ -38,7 +39,8 @@ free_list_data(gpointer data) {
 }
 
 static void
-text_free_priv(pcmk__output_t *out) {
+text_free_priv(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     if (out == NULL || out->priv == NULL) {
@@ -52,7 +54,8 @@ text_free_priv(pcmk__output_t *out) {
 }
 
 static bool
-text_init(pcmk__output_t *out) {
+text_init(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert(out != NULL);
@@ -73,14 +76,16 @@ text_init(pcmk__output_t *out) {
 }
 
 static void
-text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest)
+text_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print,
+            void **copy_dest)
 {
     pcmk__assert((out != NULL) && (out->dest != NULL));
     fflush(out->dest);
 }
 
 static void
-text_reset(pcmk__output_t *out) {
+text_reset(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
     bool old_fancy = false;
 
@@ -105,7 +110,8 @@ text_reset(pcmk__output_t *out) {
 
 static void
 text_subprocess_output(pcmk__output_t *out, int exit_status,
-                       const char *proc_stdout, const char *proc_stderr) {
+                       const char *proc_stdout, const char *proc_stderr)
+{
     pcmk__assert(out != NULL);
 
     if (proc_stdout != NULL) {
@@ -130,7 +136,8 @@ text_version(pcmk__output_t *out)
 
 G_GNUC_PRINTF(2, 3)
 static void
-text_err(pcmk__output_t *out, const char *format, ...) {
+text_err(pcmk__output_t *out, const char *format, ...)
+{
     va_list ap;
 
     pcmk__assert(out != NULL);
@@ -149,7 +156,8 @@ text_err(pcmk__output_t *out, const char *format, ...) {
 
 G_GNUC_PRINTF(2, 3)
 static int
-text_info(pcmk__output_t *out, const char *format, ...) {
+text_info(pcmk__output_t *out, const char *format, ...)
+{
     va_list ap;
 
     pcmk__assert(out != NULL);
@@ -179,15 +187,17 @@ text_transient(pcmk__output_t *out, const char *format, ...)
 }
 
 static void
-text_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
+text_output_xml(pcmk__output_t *out, const char *name, const char *buf)
+{
     pcmk__assert(out != NULL);
     pcmk__indented_printf(out, "%s", buf);
 }
 
 G_GNUC_PRINTF(4, 5)
 static void
-text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
-                const char *format, ...) {
+text_begin_list(pcmk__output_t *out, const char *singular_noun,
+                const char *plural_noun, const char *format, ...)
+{
     private_data_t *priv = NULL;
     text_list_data_t *new_list = NULL;
     va_list ap;
@@ -214,7 +224,8 @@ text_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plur
 
 G_GNUC_PRINTF(3, 4)
 static void
-text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
+text_list_item(pcmk__output_t *out, const char *id, const char *format, ...)
+{
     private_data_t *priv = NULL;
     va_list ap;
 
@@ -246,9 +257,10 @@ text_list_item(pcmk__output_t *out, const char *id, const char *format, ...) {
 }
 
 static void
-text_increment_list(pcmk__output_t *out) {
+text_increment_list(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
-    gpointer tail;
+    void *tail = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
     priv = out->priv;
@@ -259,7 +271,8 @@ text_increment_list(pcmk__output_t *out) {
 }
 
 static void
-text_end_list(pcmk__output_t *out) {
+text_end_list(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
     text_list_data_t *node = NULL;
 
@@ -280,19 +293,22 @@ text_end_list(pcmk__output_t *out) {
 }
 
 static bool
-text_is_quiet(pcmk__output_t *out) {
+text_is_quiet(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
     return out->quiet;
 }
 
 static void
-text_spacer(pcmk__output_t *out) {
+text_spacer(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
     fprintf(out->dest, "\n");
 }
 
 static void
-text_progress(pcmk__output_t *out, bool end) {
+text_progress(pcmk__output_t *out, bool end)
+{
     pcmk__assert(out != NULL);
 
     if (out->dest == stdout) {
@@ -305,7 +321,8 @@ text_progress(pcmk__output_t *out, bool end) {
 }
 
 pcmk__output_t *
-pcmk__mk_text_output(char **argv) {
+pcmk__mk_text_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -391,7 +408,8 @@ pcmk__output_text_set_fancy(pcmk__output_t *out, bool enabled)
 
 G_GNUC_PRINTF(2, 0)
 void
-pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args)
+{
     pcmk__assert(out != NULL);
     CRM_CHECK(pcmk__str_eq(out->fmt_name, "text", pcmk__str_none), return);
     vfprintf(out->dest, format, args);
@@ -399,7 +417,8 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 
 G_GNUC_PRINTF(2, 3)
 void
-pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) {
+pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...)
+{
     va_list ap;
 
     pcmk__assert(out != NULL);
@@ -411,7 +430,8 @@ pcmk__formatted_printf(pcmk__output_t *out, const char *format, ...) {
 
 G_GNUC_PRINTF(2, 0)
 void
-pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
+pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert(out != NULL);
@@ -441,7 +461,8 @@ pcmk__indented_vprintf(pcmk__output_t *out, const char *format, va_list args) {
 
 G_GNUC_PRINTF(2, 3)
 void
-pcmk__indented_printf(pcmk__output_t *out, const char *format, ...) {
+pcmk__indented_printf(pcmk__output_t *out, const char *format, ...)
+{
     va_list ap;
 
     pcmk__assert(out != NULL);

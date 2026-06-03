@@ -30,7 +30,7 @@
 typedef struct {
     char *token;
     crm_ipc_t *ipc;
-    void (*dnotify_fn) (gpointer user_data);
+    void (*dnotify_fn)(void *user_data);
     mainloop_io_t *source;
 } cib_native_opaque_t;
 
@@ -191,8 +191,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 }
 
 static int
-cib_native_dispatch_internal(const char *buffer, ssize_t length,
-                             gpointer userdata)
+cib_native_dispatch_internal(const char *buffer, ssize_t length, void *userdata)
 {
     const char *type = NULL;
     xmlNode *msg = NULL;
@@ -435,8 +434,7 @@ cib_native_register_notification(cib_t *cib, const char *callback, int enabled)
 }
 
 static int
-cib_native_set_connection_dnotify(cib_t *cib,
-                                  void (*dnotify) (gpointer user_data))
+cib_native_set_connection_dnotify(cib_t *cib, void (*dnotify)(void *user_data))
 {
     cib_native_opaque_t *native = NULL;
 

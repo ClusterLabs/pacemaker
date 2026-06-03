@@ -13,7 +13,7 @@
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // UINT32_C
 
-#include <glib.h>                   // guint, GList
+#include <glib.h>                   // GList
 
 #include <crm_config.h>
 #include <crm/common/internal.h>    // pcmk__compare_versions()
@@ -192,6 +192,7 @@ typedef struct lrmd_list_s {
 void lrmd_list_freeall(lrmd_list_t * head);
 void lrmd_key_value_freeall(lrmd_key_value_t * head);
 
+// @COMPAT The enum lrmd_call_options arguments should be of type uint32_t
 /*!
  * \deprecated Use \c lrmd_api_operations_t instead of
  *             <tt>struct lrmd_api_operations_s</tt>.
@@ -330,27 +331,28 @@ typedef struct lrmd_api_operations_s {
      * \param[in]     rsc_id       ID of resource
      * \param[in]     action       Name of resource action to execute
      * \param[in]     userdata     Arbitrary string to pass to event callback
-     * \param[in]     interval_ms  If 0, execute action once, otherwise
-     *                             recurring at this interval (in milliseconds)
-     * \param[in]     timeout      Error if not complete within this time (in
+     * \param[in]     interval_ms  If 0, execute action once; otherwise, execute
+     *                             it on a recurring basis at this interval (in
      *                             milliseconds)
-     * \param[in]     start_delay  Wait this long before execution (in
+     * \param[in]     timeout_ms   Error if not complete within this time (in
      *                             milliseconds)
-     * \param[in]     options      Group of enum lrmd_call_options flags
+     * \param[in]     delay_ms     Wait this long before execution (in
+     *                             milliseconds)
+     * \param[in]     options      Group of <tt>enum lrmd_call_options</tt>
      * \param[in,out] params       Parameters to pass to agent (will be freed)
      *
      * \return A call ID for the action on success (in which case the action is
      *         queued in the executor, and the event callback will be called
-     *         later with the result), otherwise a negative legacy Pacemaker
+     *         later with the result); otherwise, a negative legacy Pacemaker
      *         return code
-     * \note exec() and cancel() operations on an individual resource are
+     * \note \c exec() and \c cancel() operations on an individual resource are
      *       guaranteed to occur in the order the client API is called. However,
      *       operations on different resources are not guaranteed to occur in
      *       any specific order.
      */
     int (*exec) (lrmd_t *lrmd, const char *rsc_id, const char *action,
-                 const char *userdata, guint interval_ms, int timeout,
-                 int start_delay, enum lrmd_call_options options,
+                 const char *userdata, unsigned int interval_ms, int timeout_ms,
+                 int delay_ms, enum lrmd_call_options options,
                  lrmd_key_value_t *params);
 
     /*!
@@ -372,7 +374,7 @@ typedef struct lrmd_api_operations_s {
      *       any specific order.
      */
     int (*cancel) (lrmd_t *lrmd, const char *rsc_id, const char *action,
-                   guint interval_ms);
+                   unsigned int interval_ms);
 
     /*!
      * \brief Retrieve resource agent metadata synchronously

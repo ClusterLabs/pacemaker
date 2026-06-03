@@ -9,22 +9,40 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <stdio.h>
-#include <string.h>
-#include <time.h>
+#include <errno.h>                      // EAGAIN
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL, size_t
+#include <stdint.h>                     // uint8_t, uint64_t
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strcmp, strchr, memcpy, strdup, etc.
+#include <syslog.h>                     // LOG_DEBUG, LOG_ERR, LOG_NOTICE
+#include <time.h>                       // time_t
 
-#include <glib.h>
+#include <glib.h>                       // g_*
 #include <libxml/tree.h>                // xmlNode
-#include <libxml/xpath.h>               // xmlXPathObject, etc.
+#include <libxml/xpath.h>               // xmlXPathObject, xmlXPathFreeObject
+#include <qb/qblog.h>                   // LOG_TRACE, QB_XS
 
-#include <crm/crm.h>
-#include <crm/services.h>
-#include <crm/common/xml.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/agents.h>          // PCMK_FENCING_PROVIDES
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT, do_crm_log
+#include <crm/common/nodes.h>           // PCMK_NODE_ATTR_*
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/probes.h>          // pcmk_is_probe, pcmk_xe_is_probe, etc.
+#include <crm/common/resources.h>       // pcmk_rsc_match_clone_only
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*, etc.
+#include <crm/common/roles.h>           // pcmk_role_*, rsc_role_e
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // crm_system_name, CRMD_*
+#include <crm/pengine/complex.h>        // uber_parent
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // pe_find_*, etc.
 
-#include <crm/common/util.h>
-#include <crm/pengine/internal.h>
-#include <pe_status_private.h>
+#include "pe_status_private.h"
 
 // A (parsed) resource action history entry
 struct action_history {
@@ -37,7 +55,7 @@ struct action_history {
     const char *key;          // Operation key of action
     const char *task;         // Action name
     const char *exit_reason;  // Exit reason given for result
-    guint interval_ms;        // Action interval
+    unsigned int interval_ms; // Action interval
     int call_id;              // Call ID of action
     int expected_exit_status; // Expected exit status of action
     int exit_status;          // Actual exit status of action
@@ -291,7 +309,7 @@ unpack_config(xmlNode *config, pcmk_scheduler_t *scheduler)
 
     value = pcmk__cluster_option(config_hash, PCMK_OPT_PRIORITY_FENCING_DELAY);
     if (value) {
-        guint *delay_ms = &(scheduler->priv->priority_fencing_ms);
+        unsigned int *delay_ms = &(scheduler->priv->priority_fencing_ms);
 
         pcmk_parse_interval_spec(value, delay_ms);
         pcmk__trace("Priority fencing delay is %s",
@@ -2364,7 +2382,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
                                 pcmk__s(rsc->priv->history_id, "the same"),
                                 pcmk__node_name(n));
                 g_hash_table_insert(iter->priv->probed_nodes,
-                                    (gpointer) n->priv->id, n);
+                                    (void *) n->priv->id, n);
             }
             if (pcmk__is_set(iter->flags, pcmk__rsc_unique)) {
                 break;
@@ -2636,7 +2654,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
     for (; gIter != NULL; gIter = gIter->next) {
         xmlNode *rsc_op = (xmlNode *) gIter->data;
 
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         char *key = NULL;
         const char *id = pcmk__xe_id(rsc_op);
 
@@ -2659,7 +2677,7 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
             continue;
         }
 
-        pcmk__xe_get_guint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_uint(rsc_op, PCMK_META_INTERVAL, &interval_ms);
         if (interval_ms == 0) {
             pcmk__rsc_trace(rsc, "Skipping %s on %s: non-recurring",
                             id, pcmk__node_name(node));
@@ -2739,7 +2757,7 @@ unpack_shutdown_lock(const xmlNode *rsc_entry, pcmk_resource_t *rsc,
 {
     time_t lock_time = 0;   // When lock started (i.e. node shutdown time)
     time_t sched_time = 0;
-    guint shutdown_lock_ms = scheduler->priv->shutdown_lock_ms;
+    unsigned int shutdown_lock_ms = scheduler->priv->shutdown_lock_ms;
 
     pcmk__xe_get_time(rsc_entry, PCMK_OPT_SHUTDOWN_LOCK, &lock_time);
     if (lock_time == 0) {
@@ -2977,7 +2995,7 @@ set_active(pcmk_resource_t *rsc)
 }
 
 static void
-set_node_score(gpointer key, gpointer value, gpointer user_data)
+set_node_score(void *key, void *value, void *user_data)
 {
     pcmk_node_t *node = value;
     int *score = user_data;
@@ -3269,8 +3287,7 @@ add_dangling_migration(pcmk_resource_t *rsc, const pcmk_node_t *node)
                     rsc->id, pcmk__node_name(node));
     rsc->priv->orig_role = pcmk_role_stopped;
     rsc->priv->dangling_migration_sources =
-        g_list_prepend(rsc->priv->dangling_migration_sources,
-                       (gpointer) node);
+        g_list_prepend(rsc->priv->dangling_migration_sources, (void *) node);
 }
 
 /*!
@@ -3484,7 +3501,7 @@ unpack_migrate_to_failure(struct action_history *history)
         // Mark node as having dangling migration so we can force a stop later
         history->rsc->priv->dangling_migration_sources =
             g_list_prepend(history->rsc->priv->dangling_migration_sources,
-                           (gpointer) history->node);
+                           (void *) history->node);
     }
 }
 
@@ -4027,9 +4044,9 @@ remap_operation(struct action_history *history,
 
         case PCMK_OCF_UNIMPLEMENT_FEATURE:
             {
-                guint interval_ms = 0;
-                pcmk__xe_get_guint(history->xml, PCMK_META_INTERVAL,
-                                   &interval_ms);
+                unsigned int interval_ms = 0;
+                pcmk__xe_get_uint(history->xml, PCMK_META_INTERVAL,
+                                  &interval_ms);
 
                 if (interval_ms == 0) {
                     if (!expired) {
@@ -4132,7 +4149,7 @@ order_after_remote_fencing(pcmk_action_t *action, pcmk_resource_t *remote_conn,
 
 static bool
 should_ignore_failure_timeout(const pcmk_resource_t *rsc, const char *task,
-                              guint interval_ms, bool is_last_failure)
+                              unsigned int interval_ms, bool is_last_failure)
 {
     /* Clearing failures of recurring monitors has special concerns. The
      * executor reports only changes in the monitor result, so if the
@@ -4203,7 +4220,7 @@ check_operation_expiry(struct action_history *history)
     time_t last_run = 0;
     int unexpired_fail_count = 0;
     const char *clear_reason = NULL;
-    const guint expiration_sec =
+    const unsigned int expiration_sec =
         pcmk__timeout_ms2s(history->rsc->priv->failure_expiration_ms);
     pcmk_scheduler_t *scheduler = history->rsc->priv->scheduler;
 
@@ -4632,7 +4649,7 @@ static bool
 failure_is_newer(const struct action_history *history,
                  const xmlNode *last_failure)
 {
-    guint failure_interval_ms = 0U;
+    unsigned int failure_interval_ms = 0;
     long long failure_change = 0LL;
     long long this_change = 0LL;
 
@@ -4646,8 +4663,8 @@ failure_is_newer(const struct action_history *history,
         return false; // last_failure is for different action
     }
 
-    if ((pcmk__xe_get_guint(last_failure, PCMK_META_INTERVAL,
-                            &failure_interval_ms) != pcmk_rc_ok)
+    if ((pcmk__xe_get_uint(last_failure, PCMK_META_INTERVAL,
+                           &failure_interval_ms) != pcmk_rc_ok)
         || (history->interval_ms != failure_interval_ms)) {
         return false; // last_failure is for action with different interval
     }
@@ -4767,7 +4784,7 @@ unpack_rsc_op(pcmk_resource_t *rsc, pcmk_node_t *node, xmlNode *xml_op,
                          history.id, rsc->id, pcmk__node_name(node));
         return;
     }
-    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &(history.interval_ms));
+    pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &(history.interval_ms));
     if (!can_affect_state(&history)) {
         pcmk__rsc_trace(rsc,
                         "Ignoring resource history entry %s for %s on %s "
@@ -4949,7 +4966,7 @@ done:
  * \param[in]     user_data  \c GHashTable to insert into
  */
 static gboolean
-insert_attr(gpointer key, gpointer value, gpointer user_data)
+insert_attr(void *key, void *value, void *user_data)
 {
     GHashTable *table = user_data;
 

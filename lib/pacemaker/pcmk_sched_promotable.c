@@ -255,8 +255,8 @@ node_to_be_promoted_on(const pcmk_resource_t *rsc)
  *         a positive number if \p b has higher promotion priority,
  *         or 0 if promotion priorities are equal
  */
-static gint
-cmp_promotable_instance(gconstpointer a, gconstpointer b)
+static int
+cmp_promotable_instance(const void *a, const void *b)
 {
     const pcmk_resource_t *rsc1 = (const pcmk_resource_t *) a;
     const pcmk_resource_t *rsc2 = (const pcmk_resource_t *) b;
@@ -318,7 +318,7 @@ cmp_promotable_instance(gconstpointer a, gconstpointer b)
  * \param[in,out] user_data  Clone parent of \p data
  */
 static void
-add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
+add_promotion_priority_to_node_score(void *data, void *user_data)
 {
     const pcmk_resource_t *child = (const pcmk_resource_t *) data;
     pcmk_resource_t *clone = (pcmk_resource_t *) user_data;
@@ -362,7 +362,7 @@ add_promotion_priority_to_node_score(gpointer data, gpointer user_data)
  * \param[in,out] user_data  Promotable clone that is constraint's primary
  */
 static void
-apply_coloc_to_primary(gpointer data, gpointer user_data)
+apply_coloc_to_primary(void *data, void *user_data)
 {
     pcmk__colocation_t *colocation = data;
     pcmk_resource_t *clone = user_data;
@@ -394,7 +394,7 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
  * \param[in]     user_data  Parent clone of \p data
  */
 static void
-set_promotion_priority_to_node_score(gpointer data, gpointer user_data)
+set_promotion_priority_to_node_score(void *data, void *user_data)
 {
     pcmk_resource_t *child = (pcmk_resource_t *) data;
     const pcmk_resource_t *clone = (const pcmk_resource_t *) user_data;
@@ -887,7 +887,7 @@ set_next_role_unpromoted(void *data, void *user_data)
  * \param[in]     user_data  Ignored
  */
 static void
-set_next_role_promoted(void *data, gpointer user_data)
+set_next_role_promoted(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = (pcmk_resource_t *) data;
 
@@ -942,7 +942,7 @@ show_promotion_score(pcmk_resource_t *instance)
  * \param[in]     user_data  Instance's parent clone
  */
 static void
-set_instance_priority(gpointer data, gpointer user_data)
+set_instance_priority(void *data, void *user_data)
 {
     pcmk_resource_t *instance = (pcmk_resource_t *) data;
     const pcmk_resource_t *clone = (const pcmk_resource_t *) user_data;
@@ -1040,7 +1040,7 @@ set_instance_priority(gpointer data, gpointer user_data)
  * \param[in,out] user_data  Pointer to count of instances chosen for promotion
  */
 static void
-set_instance_role(gpointer data, gpointer user_data)
+set_instance_role(void *data, void *user_data)
 {
     pcmk_resource_t *instance = (pcmk_resource_t *) data;
     int *count = (int *) user_data;

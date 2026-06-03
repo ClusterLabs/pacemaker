@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2024 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,7 @@
 
 #include <stdbool.h>        // bool
 
-#include <glib.h>           // guint, GSourceFunc
+#include <glib.h>           // GSourceFunc
 #include <libxml/tree.h>    // xmlNode
 
 #include <crm/common/ipc.h> // enum pcmk_ipc_server
@@ -73,7 +73,8 @@ enum election_result {
 void election_reset(pcmk_cluster_t *cluster);
 void election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *));
 
-void election_timeout_set_period(pcmk_cluster_t *cluster, guint period_ms);
+void election_timeout_set_period(pcmk_cluster_t *cluster,
+                                 unsigned int period_ms);
 void election_timeout_stop(pcmk_cluster_t *cluster);
 
 void election_vote(pcmk_cluster_t *cluster);

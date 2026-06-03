@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2025 the Pacemaker project contributors
+ * Copyright 2009-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU General Public License version 2
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
@@ -55,7 +55,8 @@ struct {
 };
 
 static gboolean
-mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+mode_cb(const char *option_name, const char *optarg, void *data, GError **error)
+{
     if (pcmk__str_any_of(option_name, "--mainloop_api_test", "-m", NULL)) {
         options.mode = test_api_mainloop;
     } else if (pcmk__str_any_of(option_name, "--api_test", "-t", NULL)) {
@@ -571,7 +572,7 @@ iterate_mainloop_tests(gboolean event_ready)
 }
 
 static gboolean
-trigger_iterate_mainloop_tests(gpointer user_data)
+trigger_iterate_mainloop_tests(void *user_data)
 {
     iterate_mainloop_tests(FALSE);
     return TRUE;

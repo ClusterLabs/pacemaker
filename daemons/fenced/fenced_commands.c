@@ -69,7 +69,7 @@ struct device_search_s {
     uint32_t support_action_only;
 };
 
-static gboolean stonith_device_dispatch(gpointer user_data);
+static gboolean stonith_device_dispatch(void *user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
 
@@ -151,7 +151,7 @@ fenced_has_watchdog_device(void)
  * \param[in,out] user_data  User data
  */
 void
-fenced_foreach_device(GHFunc fn, gpointer user_data)
+fenced_foreach_device(GHFunc fn, void *user_data)
 {
     if (device_table == NULL) {
         return;
@@ -189,7 +189,7 @@ static int
 get_action_delay_max(const fenced_device_t *device, const char *action)
 {
     const char *value = NULL;
-    guint delay_max = 0U;
+    unsigned int delay_max = 0;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -298,7 +298,7 @@ get_action_delay_base(const fenced_device_t *device, const char *action,
     const char *param = NULL;
     gchar *stripped = NULL;
     gchar *delay_base_s = NULL;
-    guint delay_base = 0U;
+    unsigned int delay_base = 0;
 
     if (!pcmk__is_fencing_action(action)) {
         return 0;
@@ -398,7 +398,7 @@ get_action_timeout(const fenced_device_t *device, const char *action,
     }
 
     timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
-    timeout_sec = pcmk__timeout_ms2s((guint) timeout_ms);
+    timeout_sec = pcmk__timeout_ms2s((unsigned int) timeout_ms);
 
     return QB_MIN(timeout_sec, INT_MAX);
 }
@@ -622,9 +622,10 @@ fork_cb(int pid, void *user_data)
 }
 
 static int
-get_agent_metadata_cb(gpointer data) {
+get_agent_metadata_cb(void *data)
+{
     fenced_device_t *device = data;
-    guint period_ms;
+    unsigned int period_ms = 0;
     int rc = get_agent_metadata(device->agent, &device->agent_metadata);
 
     if (rc == pcmk_rc_ok) {
@@ -789,13 +790,13 @@ done:
 }
 
 static gboolean
-stonith_device_dispatch(gpointer user_data)
+stonith_device_dispatch(void *user_data)
 {
     return stonith_device_execute(user_data);
 }
 
 static gboolean
-start_delay_helper(gpointer data)
+start_delay_helper(void *data)
 {
     async_command_t *cmd = data;
     fenced_device_t *device = cmd_device(cmd);
@@ -884,7 +885,7 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
 }
 
 static void
-free_device(gpointer data)
+free_device(void *data)
 {
     fenced_device_t *device = data;
 
@@ -1521,7 +1522,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
 
     dup = device_has_duplicate(device);
     if (dup != NULL) {
-        guint ndevices = g_hash_table_size(device_table);
+        unsigned int ndevices = g_hash_table_size(device_table);
 
         pcmk__debug("Device '%s' already in device list (%d active device%s)",
                     device->id, ndevices, pcmk__plural_s(ndevices));
@@ -1530,7 +1531,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
         fenced_device_clear_flags(device, fenced_df_dirty);
 
     } else {
-        guint ndevices = 0;
+        unsigned int ndevices = 0;
         fenced_device_t *old = g_hash_table_lookup(device_table, device->id);
 
         if (from_cib && (old != NULL)
@@ -1573,7 +1574,7 @@ void
 stonith_device_remove(const char *id, bool from_cib)
 {
     fenced_device_t *device = g_hash_table_lookup(device_table, id);
-    guint ndevices = 0;
+    unsigned int ndevices = 0;
 
     if (device == NULL) {
         ndevices = g_hash_table_size(device_table);
@@ -1634,7 +1635,7 @@ count_active_levels(const stonith_topology_t *tp)
 }
 
 static void
-free_topology_entry(gpointer data)
+free_topology_entry(void *data)
 {
     stonith_topology_t *tp = data;
 
@@ -1924,13 +1925,13 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
 
     tp = g_hash_table_lookup(topology, target);
     if (tp == NULL) {
-        guint nentries = g_hash_table_size(topology);
+        unsigned int nentries = g_hash_table_size(topology);
 
         pcmk__info("No fencing topology found for %s (%d active %s)", target,
                    nentries, pcmk__plural_alt(nentries, "entry", "entries"));
 
     } else if (id == 0 && g_hash_table_remove(topology, target)) {
-        guint nentries = g_hash_table_size(topology);
+        unsigned int nentries = g_hash_table_size(topology);
 
         pcmk__info("Removed all fencing topology entries related to %s (%d "
                    "active %s remaining)",
@@ -1938,7 +1939,7 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
                    pcmk__plural_alt(nentries, "entry", "entries"));
 
     } else if (tp->levels[id] != NULL) {
-        guint nlevels;
+        unsigned int nlevels;
 
         g_list_free_full(tp->levels[id], free);
         tp->levels[id] = NULL;
@@ -2092,8 +2093,7 @@ search_devices_record_result(struct device_search_s *search, const char *device,
     }
 
     if (search->replies_needed == search->replies_received) {
-
-        guint ndevices = g_list_length(search->capable);
+        unsigned int ndevices = g_list_length(search->capable);
 
         pcmk__debug("Search found %d device%s that can perform '%s' targeting "
                     "%s",
@@ -2322,7 +2322,7 @@ can_fence_host_with_device(fenced_device_t *dev,
 }
 
 static void
-search_devices(gpointer key, gpointer value, gpointer user_data)
+search_devices(void *key, void *value, void *user_data)
 {
     fenced_device_t *dev = value;
     struct device_search_s *search = user_data;
@@ -2338,7 +2338,7 @@ get_capable_devices(const char *host, const char *action, int timeout,
                     uint32_t support_action_only)
 {
     struct device_search_s *search;
-    guint ndevices = g_hash_table_size(device_table);
+    unsigned int ndevices = g_hash_table_size(device_table);
 
     if (ndevices == 0) {
         callback(NULL, user_data);
@@ -2640,7 +2640,7 @@ log_async_result(const async_command_t *cmd,
 {
     int log_level = LOG_ERR;
     int output_log_level = PCMK__LOG_NEVER;
-    guint devices_remaining = g_list_length(cmd->next_device_iter);
+    unsigned int devices_remaining = g_list_length(cmd->next_device_iter);
 
     GString *msg = g_string_sized_new(80); // Reasonable starting size
 
@@ -2930,7 +2930,7 @@ stonith_fence_get_devices_cb(GList * devices, void *user_data)
 {
     async_command_t *cmd = user_data;
     fenced_device_t *device = NULL;
-    guint ndevices = g_list_length(devices);
+    unsigned int ndevices = g_list_length(devices);
 
     pcmk__info("Found %d matching device%s for target '%s'", ndevices,
                pcmk__plural_s(ndevices), cmd->target);

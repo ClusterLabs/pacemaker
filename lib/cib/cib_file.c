@@ -89,7 +89,7 @@ register_client(const cib_t *cib)
     if (client_table == NULL) {
         client_table = pcmk__strkey_table(NULL, NULL);
     }
-    g_hash_table_insert(client_table, private->id, (gpointer) cib);
+    g_hash_table_insert(client_table, private->id, (void *) cib);
 }
 
 /*!
@@ -131,7 +131,7 @@ get_client(const char *client_id)
     if (client_table == NULL) {
         return NULL;
     }
-    return g_hash_table_lookup(client_table, (gpointer) client_id);
+    return g_hash_table_lookup(client_table, (void *) client_id);
 }
 
 static int
@@ -710,7 +710,7 @@ file_register_notification(cib_t *cib, const char *callback, int enabled)
 }
 
 static int
-file_set_connection_dnotify(cib_t *cib, void (*dnotify)(gpointer user_data))
+file_set_connection_dnotify(cib_t *cib, void (*dnotify)(void *user_data))
 {
     return -EPROTONOSUPPORT;
 }

@@ -10,13 +10,15 @@
 #ifndef PCMK__CRM_PENGINE_INTERNAL__H
 #define PCMK__CRM_PENGINE_INTERNAL__H
 
-#include <stdbool.h>
+#include <stdbool.h>                        // bool, false
 #include <stdint.h>                         // uint32_t
-#include <string.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/status.h>
+#include <string.h>                         // strncmp
+
+#include <libxml/tree.h>                    // xmlNode
+
+#include <crm/common/internal.h>            // pcmk__clone_flags, etc.
+#include <crm/common/scheduler.h>           // pcmk_scheduler_t, etc.
 #include <crm/pengine/remote_internal.h>
-#include <crm/common/internal.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -158,13 +160,15 @@ void pe__show_node_scores_as(const char *file, const char *function,
 
 GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
                                      const pcmk_node_t *node,
-                                     const char *action_name, guint interval_ms,
+                                     const char *action_name,
+                                     unsigned int interval_ms,
                                      const xmlNode *action_config);
 GHashTable *pcmk__unpack_action_rsc_params(const xmlNode *action_xml,
                                            GHashTable *node_attrs,
                                            pcmk_scheduler_t *data_set);
 xmlNode *pcmk__find_action_config(const pcmk_resource_t *rsc,
-                                  const char *action_name, guint interval_ms,
+                                  const char *action_name,
+                                  unsigned int interval_ms,
                                   bool include_disabled);
 
 enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
@@ -172,7 +176,8 @@ enum pcmk__requires pcmk__action_requires(const pcmk_resource_t *rsc,
 
 enum pcmk__on_fail pcmk__parse_on_fail(const pcmk_resource_t *rsc,
                                        const char *action_name,
-                                       guint interval_ms, const char *value);
+                                       unsigned int interval_ms,
+                                       const char *value);
 
 enum rsc_role_e pcmk__role_after_failure(const pcmk_resource_t *rsc,
                                          const char *action_name,
@@ -226,12 +231,12 @@ void resource_location(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
                        const char *tag, pcmk_scheduler_t *scheduler);
 
 int pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b);
-extern gint sort_op_by_callid(gconstpointer a, gconstpointer b);
+int sort_op_by_callid(const void *a, const void *b);
 gboolean get_target_role(const pcmk_resource_t *rsc, enum rsc_role_e *role);
 void pe__set_next_role(pcmk_resource_t *rsc, enum rsc_role_e role,
                        const char *why);
 
-extern void destroy_ticket(gpointer data);
+void destroy_ticket(void *data);
 pcmk__ticket_t *ticket_new(const char *ticket_id, pcmk_scheduler_t *scheduler);
 
 // Resources for manipulating resource names
@@ -253,18 +258,18 @@ pe_base_name_eq(const pcmk_resource_t *rsc, const char *id)
 
 int pe__target_rc_from_xml(const xmlNode *xml_op);
 
-gint pe__cmp_node_name(gconstpointer a, gconstpointer b);
+int pe__cmp_node_name(const void *a, const void *b);
 bool is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any);
 
 pcmk__op_digest_t *pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
-                                         guint *interval_ms,
+                                         unsigned int *interval_ms,
                                          const pcmk_node_t *node,
                                          const xmlNode *xml_op,
                                          GHashTable *overrides,
                                          bool calc_secure,
                                          pcmk_scheduler_t *scheduler);
 
-void pe__free_digests(gpointer ptr);
+void pe__free_digests(void *ptr);
 
 pcmk__op_digest_t *rsc_action_digest_cmp(pcmk_resource_t *rsc,
                                          const xmlNode *xml_op,

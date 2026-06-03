@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,9 +9,14 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>                   // g_str_has_prefix()
+#include <stddef.h>                     // NULL
 
-#include <crm/pengine/status.h>
+#include <glib.h>                       // g_*, etc.
+
+#include <crm/common/options.h>         // PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY, etc.
 #include <crm/pengine/internal.h>
 #include "pe_status_private.h"
 
@@ -79,13 +84,13 @@ struct health_sum {
  *                           added if \p key is a node health attribute
  */
 static void
-add_node_health_value(gpointer key, gpointer value, gpointer user_data)
+add_node_health_value(void *key, void *value, void *user_data)
 {
     if (key == NULL) {
         return;
     }
 
-    if (g_str_has_prefix((const gchar *) key, "#health")) {
+    if (g_str_has_prefix((const char *) key, "#health")) {
         struct health_sum *health_sum = user_data;
         int score = 0;
         int rc = pcmk_parse_score((const char *) value, &score, 0);
@@ -151,8 +156,7 @@ pe__node_health(pcmk_node_t *node)
     }
 
     g_hash_table_iter_init(&iter, node->priv->attrs);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &name,
-                                  (gpointer *) &value)) {
+    while (g_hash_table_iter_next(&iter, (void **) &name, (void **) &value)) {
         if ((name != NULL) && g_str_has_prefix(name, "#health")) {
             int parse_rc = pcmk_rc_ok;
 

@@ -249,7 +249,7 @@ static mainloop_timer_t *controld_sched_timer = NULL;
  * \return FALSE (indicating that timer should not be restarted)
  */
 static gboolean
-controld_sched_timeout(gpointer user_data)
+controld_sched_timeout(void *user_data)
 {
     pcmk__err("Timeout waiting for reply from scheduler.");
     if (AM_I_DC) {
@@ -446,7 +446,7 @@ force_local_option(xmlNode *xml, const char *attr_name, const char *attr_value)
 }
 
 static gboolean
-sleep_timer(gpointer data)
+sleep_timer(void *data)
 {
     controld_set_fsa_action_flags(A_PE_INVOKE);
     controld_trigger_fsa();

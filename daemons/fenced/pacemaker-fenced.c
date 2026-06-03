@@ -37,7 +37,7 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
-// @TODO This should be guint
+// @TODO This should be unsigned int
 long long fencing_watchdog_timeout_ms = 0;
 
 GList *stonith_watchdog_targets = NULL;
@@ -122,9 +122,8 @@ fenced_parse_notify_flag(const char *type)
 }
 
 static void
-stonith_notify_client(gpointer key, gpointer value, gpointer user_data)
+stonith_notify_client(void *key, void *value, void *user_data)
 {
-
     const xmlNode *update_msg = user_data;
     pcmk__client_t *client = value;
     const char *type = NULL;

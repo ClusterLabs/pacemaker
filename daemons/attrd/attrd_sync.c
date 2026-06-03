@@ -98,7 +98,7 @@ next_key(void)
 }
 
 static void
-free_waitlist_node(gpointer data)
+free_waitlist_node(void *data)
 {
     struct waitlist_node *wl = (struct waitlist_node *) data;
 
@@ -196,7 +196,7 @@ void
 attrd_remove_client_from_waitlist(pcmk__client_t *client)
 {
     GHashTableIter iter;
-    gpointer value;
+    void *value = NULL;
 
     if (waitlist == NULL) {
         return;
@@ -231,7 +231,7 @@ void
 attrd_ack_waitlist_clients(enum attrd_sync_point sync_point, const xmlNode *xml)
 {
     int callid;
-    gpointer value;
+    void *value = NULL;
 
     if (waitlist == NULL) {
         return;
@@ -337,7 +337,7 @@ attrd_request_has_sync_point(xmlNode *xml)
 }
 
 static void
-free_action(gpointer data)
+free_action(void *data)
 {
     struct confirmation_action *action = (struct confirmation_action *) data;
     g_list_free_full(action->respondents, free);
@@ -353,12 +353,12 @@ free_action(gpointer data)
  * cleared of things that didn't complete.
  */
 static gboolean
-confirmation_timeout_cb(gpointer data)
+confirmation_timeout_cb(void *data)
 {
     struct confirmation_action *action = (struct confirmation_action *) data;
 
     GHashTableIter iter;
-    gpointer value;
+    void *value = NULL;
 
     if (expected_confirmations == NULL) {
         return G_SOURCE_REMOVE;
@@ -431,7 +431,7 @@ void
 attrd_do_not_wait_for_client(pcmk__client_t *client)
 {
     GHashTableIter iter;
-    gpointer value;
+    void *value = NULL;
 
     if (expected_confirmations == NULL) {
         return;
@@ -476,7 +476,8 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
 {
     struct confirmation_action *action = NULL;
     GHashTableIter iter;
-    gpointer host, ver;
+    void *host = NULL;
+    void *ver = NULL;
     GList *respondents = NULL;
     int callid;
 

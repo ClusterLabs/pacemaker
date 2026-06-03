@@ -93,8 +93,8 @@ int cli_cleanup_all(pcmk_ipc_api_t *controld_api, pcmk_node_t *node,
                     pcmk_scheduler_t *scheduler);
 int cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                          const pcmk_node_t *node, const char *move_lifetime,
-                         guint timeout_ms, cib_t *cib, bool promoted_role_only,
-                         bool force);
+                         unsigned int timeout_ms, cib_t *cib,
+                         bool promoted_role_only, bool force);
 int cli_resource_move(pcmk_resource_t *rsc, const char *rsc_id,
                       const pcmk_node_t *node, const char *move_lifetime,
                       cib_t *cib, bool promoted_role_only, bool force);
@@ -102,14 +102,14 @@ crm_exit_t cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc
                                             const char *rsc_class, const char *rsc_prov,
                                             const char *rsc_type, const char *rsc_action,
                                             GHashTable *params, GHashTable *override_hash,
-                                            guint timeout_ms,
+                                            unsigned int timeout_ms,
                                             int resource_verbose,
                                             bool force, int check_level);
 crm_exit_t cli_resource_execute(pcmk_resource_t *rsc,
                                 const char *requested_name,
                                 const char *rsc_action,
                                 GHashTable *override_hash,
-                                guint timeout_ms, cib_t *cib,
+                                unsigned int timeout_ms, cib_t *cib,
                                 int resource_verbose, bool force,
                                 int check_level);
 
@@ -129,7 +129,7 @@ int cli_resource_delete_attribute(pcmk_resource_t *rsc,
 
 int update_scheduler_input(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
                            cib_t *cib, xmlNode **cib_xml_orig);
-int wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib);
+int wait_till_stable(pcmk__output_t *out, unsigned int timeout_ms, cib_t *cib);
 
 bool resource_is_running_on(pcmk_resource_t *rsc, const char *host);
 

@@ -129,7 +129,7 @@ static struct {
     enum cibadmin_section_type section_type;
     char *cib_section;
     char *validate_with;
-    gint timeout_sec;
+    int timeout_sec;
     enum pcmk__acl_render_how acl_render_mode;
     gchar *cib_user;
     gchar *input_file;
@@ -359,8 +359,7 @@ cibadmin_post_default(pcmk__output_t *out, cib_t *cib_conn, int call_options,
 
 static void
 cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
-                    const gchar *acl_user, crm_exit_t *exit_code,
-                    GError **error)
+                    const char *acl_user, crm_exit_t *exit_code, GError **error)
 {
     if ((options.acl_render_mode != pcmk__acl_render_none)
         && (*exit_code == CRM_EX_OK)
@@ -406,7 +405,7 @@ cibadmin_output_xml(pcmk__output_t *out, xmlNode *xml, int call_options,
 static crm_exit_t
 cibadmin_handle_command(pcmk__output_t *out,
                         const cibadmin_cmd_info_t *cmd_info, int call_options,
-                        const gchar *acl_user, xmlNode *input, GError **error)
+                        const char *acl_user, xmlNode *input, GError **error)
 {
     int rc = pcmk_rc_ok;
     crm_exit_t exit_code = CRM_EX_OK;
@@ -551,7 +550,7 @@ static const cibadmin_cmd_info_t cibadmin_command_info[] = {
 };
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-u", "--upgrade", NULL)) {
@@ -604,7 +603,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-show_access_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+show_access_cb(const char *option_name, const char *optarg, void *data,
                GError **error)
 {
     if (pcmk__str_eq(optarg, "auto", pcmk__str_null_matches)) {
@@ -629,7 +628,7 @@ show_access_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-section_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+section_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-o", "--scope", NULL)) {

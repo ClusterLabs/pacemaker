@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -380,7 +380,7 @@ peer_update_callback(enum pcmk__node_update type, pcmk__node_status_t *node,
 }
 
 gboolean
-crm_fsa_trigger(gpointer user_data)
+crm_fsa_trigger(void *user_data)
 {
     pcmk__trace("Invoking FSA (queue len: %u)",
                 controld_fsa_message_queue_length());

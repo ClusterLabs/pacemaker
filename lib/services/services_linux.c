@@ -357,7 +357,7 @@ svc_read_output(int fd, svc_action_t * op, bool is_stderr)
 }
 
 static int
-dispatch_stdout(gpointer userdata)
+dispatch_stdout(void *userdata)
 {
     svc_action_t *op = (svc_action_t *) userdata;
 
@@ -365,7 +365,7 @@ dispatch_stdout(gpointer userdata)
 }
 
 static int
-dispatch_stderr(gpointer userdata)
+dispatch_stderr(void *userdata)
 {
     svc_action_t *op = (svc_action_t *) userdata;
 
@@ -373,7 +373,7 @@ dispatch_stderr(gpointer userdata)
 }
 
 static void
-pipe_out_done(gpointer user_data)
+pipe_out_done(void *user_data)
 {
     svc_action_t *op = (svc_action_t *) user_data;
 
@@ -387,7 +387,7 @@ pipe_out_done(gpointer user_data)
 }
 
 static void
-pipe_err_done(gpointer user_data)
+pipe_err_done(void *user_data)
 {
     svc_action_t *op = (svc_action_t *) user_data;
 
@@ -409,7 +409,7 @@ static struct mainloop_fd_callbacks stderr_callbacks = {
 };
 
 static void
-set_ocf_env(const char *key, const char *value, gpointer user_data)
+set_ocf_env(const char *key, const char *value, void *user_data)
 {
     // @FIXME @COMPAT This seems like it should be a fatal error
     if (setenv(key, value, 1) != 0) {
@@ -421,7 +421,7 @@ set_ocf_env(const char *key, const char *value, gpointer user_data)
 }
 
 static void
-set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
+set_ocf_env_with_prefix(void *key, void *value, void *user_data)
 {
     const char *ckey = key;
 
@@ -437,7 +437,7 @@ set_ocf_env_with_prefix(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-set_alert_env(gpointer key, gpointer value, gpointer user_data)
+set_alert_env(void *key, void *value, void *user_data)
 {
     int rc;
 
@@ -478,7 +478,7 @@ set_alert_env(gpointer key, gpointer value, gpointer user_data)
 static void
 add_action_env_vars(const svc_action_t *op)
 {
-    void (*env_setter)(gpointer, gpointer, gpointer) = NULL;
+    void (*env_setter)(void *, void *, void *) = NULL;
     if (op->agent == NULL) {
         env_setter = set_alert_env;  /* we deal with alert handler */
 
@@ -514,7 +514,7 @@ add_action_env_vars(const svc_action_t *op)
 }
 
 static void
-pipe_in_single_parameter(gpointer key, gpointer value, gpointer user_data)
+pipe_in_single_parameter(void *key, void *value, void *user_data)
 {
     svc_action_t *op = user_data;
     char *buffer = pcmk__assert_asprintf("%s=%s\n", (const char *) key,
@@ -543,12 +543,12 @@ static void
 pipe_in_action_stdin_parameters(const svc_action_t *op)
 {
     if (op->params) {
-        g_hash_table_foreach(op->params, pipe_in_single_parameter, (gpointer) op);
+        g_hash_table_foreach(op->params, pipe_in_single_parameter, (void *) op);
     }
 }
 
 gboolean
-recurring_action_timer(gpointer data)
+recurring_action_timer(void *data)
 {
     svc_action_t *op = data;
 

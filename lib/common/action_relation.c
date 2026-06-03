@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <stdlib.h>                 // free()
-#include <glib.h>                   // gpointer
 
 #include <crm/common/scheduler.h>
 
@@ -21,7 +20,7 @@
  * \param[in,out] user_data  Action relation to free
  */
 void
-pcmk__free_action_relation(gpointer user_data)
+pcmk__free_action_relation(void *user_data)
 {
     pcmk__action_relation_t *relation = user_data;
 

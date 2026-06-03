@@ -88,14 +88,14 @@ static void report_timeout_period(remote_fencing_op_t * op, int op_timeout);
 static int get_op_total_timeout(const remote_fencing_op_t *op,
                                 const peer_device_info_t *chosen_peer);
 
-static gint
-sort_strings(gconstpointer a, gconstpointer b)
+static int
+sort_strings(const void *a, const void *b)
 {
     return strcmp(a, b);
 }
 
 static void
-free_remote_query(gpointer data)
+free_remote_query(void *data)
 {
     if (data != NULL) {
         peer_device_info_t *peer = data;
@@ -128,7 +128,7 @@ struct peer_count_data {
  * \param[in,out] user_data  Peer count data
  */
 static void
-count_peer_device(gpointer key, gpointer value, gpointer user_data)
+count_peer_device(void *key, void *value, void *user_data)
 {
     device_properties_t *props = (device_properties_t*)value;
     struct peer_count_data *data = user_data;
@@ -244,7 +244,7 @@ clear_remote_op_timers(remote_fencing_op_t * op)
 }
 
 static void
-free_remote_op(gpointer data)
+free_remote_op(void *data)
 {
     remote_fencing_op_t *op = data;
 
@@ -641,7 +641,7 @@ finalize_op(remote_fencing_op_t *op, xmlNode *data, bool dup)
  * \return G_SOURCE_REMOVE (which tells glib not to restart timer)
  */
 static gboolean
-remote_op_watchdog_done(gpointer userdata)
+remote_op_watchdog_done(void *userdata)
 {
     remote_fencing_op_t *op = userdata;
 
@@ -657,7 +657,7 @@ remote_op_watchdog_done(gpointer userdata)
 }
 
 static gboolean
-remote_op_timeout_one(gpointer userdata)
+remote_op_timeout_one(void *userdata)
 {
     remote_fencing_op_t *op = userdata;
 
@@ -719,7 +719,7 @@ finalize_timed_out_op(remote_fencing_op_t *op, const char *reason)
  * \return G_SOURCE_REMOVE (which tells glib not to restart timer)
  */
 static gboolean
-remote_op_timeout(gpointer userdata)
+remote_op_timeout(void *userdata)
 {
     remote_fencing_op_t *op = userdata;
 
@@ -739,7 +739,7 @@ remote_op_timeout(gpointer userdata)
 }
 
 static gboolean
-remote_op_query_timeout(gpointer data)
+remote_op_query_timeout(void *data)
 {
     remote_fencing_op_t *op = data;
 
@@ -914,7 +914,7 @@ find_topology_for_host(const char *host)
     }
 
     g_hash_table_iter_init(&tIter, topology);
-    while (g_hash_table_iter_next(&tIter, NULL, (gpointer *) & tp)) {
+    while (g_hash_table_iter_next(&tIter, NULL, (void **) &tp)) {
         if (topology_matches(tp, host)) {
             pcmk__trace("Found %s for %s in %u entries", tp->target, host,
                         g_hash_table_size(topology));
@@ -1585,7 +1585,7 @@ struct timeout_data {
  * \param[in,out] user_data  Timeout data
  */
 static void
-add_device_timeout(gpointer key, gpointer value, gpointer user_data)
+add_device_timeout(void *key, void *value, void *user_data)
 {
     const char *device_id = key;
     device_properties_t *props = value;
@@ -1835,7 +1835,7 @@ static gboolean
 check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 {
     if (node_does_watchdog_fencing(op->target)) {
-        guint timeout_ms = QB_MIN(fencing_watchdog_timeout_ms, UINT_MAX);
+        unsigned int timeout_ms = QB_MIN(fencing_watchdog_timeout_ms, UINT_MAX);
 
         pcmk__notice("Waiting %s for %s to self-fence (%s) for client %s "
                      QB_XS " id=%.8s",
@@ -2109,8 +2109,8 @@ request_peer_fencing(remote_fencing_op_t *op, peer_device_info_t *peer)
  *         comes before the second, 0 if they are equal, or a positive integer
  *         if the first value comes after the second."
  */
-static gint
-sort_peers(gconstpointer a, gconstpointer b)
+static int
+sort_peers(const void *a, const void *b)
 {
     const peer_device_info_t *peer_a = a;
     const peer_device_info_t *peer_b = b;

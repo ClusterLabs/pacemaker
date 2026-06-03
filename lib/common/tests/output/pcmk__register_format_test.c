@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,7 +28,7 @@ add_format(void **state)
 {
     int rc = pcmk_rc_ok;
     GHashTable *formatters = NULL;
-    gpointer value = NULL;
+    void *value = NULL;
 
     /* For starters, there should be no formatters defined. */
     assert_null(pcmk__output_formatters());

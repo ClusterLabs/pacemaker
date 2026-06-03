@@ -70,7 +70,9 @@ static pcmk__supported_format_t formats[] = {
 };
 
 static gboolean
-attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+attr_value_cb(const char *option_name, const char *optarg, void *data,
+              GError **err)
+{
     pcmk__str_update(&options.attr_value, optarg);
 
     if (!options.attr_name || !options.attr_value) {
@@ -87,7 +89,9 @@ attr_value_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErr
 }
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+command_cb(const char *option_name, const char *optarg, void *data,
+           GError **err)
+{
     if (pcmk__str_any_of(option_name, "--info", "-l", NULL)) {
         options.ticket_cmd = 'l';
     } else if (pcmk__str_any_of(option_name, "--details", "-L", NULL)) {
@@ -106,21 +110,27 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 }
 
 static gboolean
-delete_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+delete_attr_cb(const char *option_name, const char *optarg, void *data,
+               GError **err)
+{
     attr_delete = g_list_append(attr_delete, strdup(optarg));
     modified = true;
     return TRUE;
 }
 
 static gboolean
-get_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+get_attr_cb(const char *option_name, const char *optarg, void *data,
+            GError **err)
+{
     pcmk__str_update(&options.get_attr_name, optarg);
     options.ticket_cmd = 'G';
     return TRUE;
 }
 
 static gboolean
-grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+grant_standby_cb(const char *option_name, const char *optarg, void *data,
+                 GError **err)
+{
     if (pcmk__str_any_of(option_name, "--grant", "-g", NULL)) {
         pcmk__insert_dup(attr_set, PCMK__XA_GRANTED, PCMK_VALUE_TRUE);
         modified = true;
@@ -139,7 +149,9 @@ grant_standby_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 }
 
 static gboolean
-set_attr_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+set_attr_cb(const char *option_name, const char *optarg, void *data,
+            GError **err)
+{
     pcmk__str_update(&options.attr_name, optarg);
 
     if (!options.attr_name || !options.attr_value) {
@@ -261,7 +273,7 @@ static GOptionEntry deprecated_entries[] = {
 };
 
 static void
-ticket_grant_warning(gchar *ticket_id)
+ticket_grant_warning(char *ticket_id)
 {
     out->err(out, "This command cannot help you verify whether '%s' has "
                   "been already granted elsewhere.\n"
@@ -272,7 +284,7 @@ ticket_grant_warning(gchar *ticket_id)
 }
 
 static void
-ticket_revoke_warning(gchar *ticket_id)
+ticket_revoke_warning(char *ticket_id)
 {
     out->err(out, "Revoking '%s' can trigger the specified '" PCMK_XA_LOSS_POLICY
               "'(s) relating to '%s'.\n\n"

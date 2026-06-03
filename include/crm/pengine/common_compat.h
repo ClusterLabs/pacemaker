@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2024 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #define PCMK__CRM_PENGINE_COMMON_COMPAT__H
 
 #include <regex.h>                  // regmatch_t
-#include <glib.h>                   // guint, GHashTable
+#include <glib.h>                   // GHashTable
 
 #include <crm/common/iso8601.h>     // crm_time_t
 #include <crm/common/roles.h>       // enum rsc_role_e
@@ -52,7 +52,7 @@ typedef struct pe_rsc_eval_data {
 
 typedef struct pe_op_eval_data {
     const char *op_name;
-    guint interval;
+    unsigned int interval;
 } pe_op_eval_data_t;
 
 typedef struct pe_rule_eval_data {

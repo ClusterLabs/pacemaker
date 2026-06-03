@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -41,7 +41,8 @@ struct {
     .mode = crm_rule_mode_none
 };
 
-static gboolean mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+static gboolean mode_cb(const char *option_name, const char *optarg, void *data,
+                        GError **error);
 
 static GOptionEntry mode_entries[] = {
     { "check", 'c', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, mode_cb,
@@ -71,7 +72,8 @@ static GOptionEntry addl_entries[] = {
 };
 
 static gboolean
-mode_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+mode_cb(const char *option_name, const char *optarg, void *data, GError **error)
+{
     if (strcmp(option_name, "c")) {
         options.mode = crm_rule_mode_check;
     }

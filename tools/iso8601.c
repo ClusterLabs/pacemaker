@@ -1,5 +1,5 @@
 /*
- * Copyright 2005-2025 the Pacemaker project contributors
+ * Copyright 2005-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -36,7 +36,9 @@ struct {
 #define INDENT "                              "
 
 static gboolean
-date_now_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+date_now_cb(const char *option_name, const char *optarg, void *data,
+            GError **error)
+{
     if (pcmk__str_any_of(option_name, "--now", "-n", NULL)) {
         pcmk__str_update(&options.date_time_s, "now");
     } else if (pcmk__str_any_of(option_name, "--date", "-d", NULL)) {
@@ -47,7 +49,9 @@ date_now_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static gboolean
-modifier_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+modifier_cb(const char *option_name, const char *optarg, void *data,
+            GError **error)
+{
     if (pcmk__str_any_of(option_name, "--seconds", "-s", NULL)) {
         options.print_options |= crm_time_seconds;
     } else if (pcmk__str_any_of(option_name, "--epoch", "-S", NULL)) {

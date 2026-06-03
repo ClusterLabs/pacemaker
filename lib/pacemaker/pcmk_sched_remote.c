@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -728,15 +728,13 @@ pcmk__add_guest_meta_to_xml(xmlNode *args_xml, const pcmk_action_t *action)
     }
 
     if (host != NULL) {
-        gpointer target =
+        void *target =
             g_hash_table_lookup(action->rsc->priv->meta,
                                 PCMK_META_CONTAINER_ATTRIBUTE_TARGET);
 
-        hash2metafield((gpointer) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
-                       target,
-                       (gpointer) args_xml);
-        hash2metafield((gpointer) PCMK__META_PHYSICAL_HOST,
-                       (gpointer) host->priv->name,
-                       (gpointer) args_xml);
+        hash2metafield((void *) PCMK_META_CONTAINER_ATTRIBUTE_TARGET,
+                       target, (void *) args_xml);
+        hash2metafield((void *) PCMK__META_PHYSICAL_HOST,
+                       (void *) host->priv->name, (void *) args_xml);
     }
 }

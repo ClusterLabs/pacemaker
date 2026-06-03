@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -107,7 +107,7 @@ failcount_clear_action_exists(const pcmk_node_t *node,
  * \param[in]     user_data  Node to check resource on
  */
 static void
-check_failure_threshold(gpointer data, gpointer user_data)
+check_failure_threshold(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
@@ -153,7 +153,7 @@ check_failure_threshold(gpointer data, gpointer user_data)
  * \param[in]     user_data  Node to check resource on
  */
 static void
-apply_exclusive_discovery(gpointer data, gpointer user_data)
+apply_exclusive_discovery(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     const pcmk_node_t *node = user_data;
@@ -187,7 +187,7 @@ apply_exclusive_discovery(gpointer data, gpointer user_data)
  * \param[in]     user_data  Ignored
  */
 static void
-apply_stickiness(gpointer data, gpointer user_data)
+apply_stickiness(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
     pcmk_node_t *node = NULL;
@@ -340,7 +340,7 @@ assign_resources(pcmk_scheduler_t *scheduler)
  * \param[in]     user_data  Ignored
  */
 static void
-clear_failcounts_if_removed(gpointer data, gpointer user_data)
+clear_failcounts_if_removed(void *data, void *user_data)
 {
     pcmk_resource_t *rsc = data;
 
@@ -658,7 +658,7 @@ log_resource_details(pcmk_scheduler_t *scheduler)
      * resource-related messages expects a list of nodes that we are allowed to
      * output information for. Here, we create a wildcard to match all nodes.
      */
-    all = g_list_prepend(all, (gpointer) "*");
+    all = g_list_prepend(all, (void *) "*");
 
     for (GList *item = scheduler->priv->resources;
          item != NULL; item = item->next) {

@@ -108,7 +108,7 @@ dbus_watch_flags_to_string(int flags)
  *       would indicate the file descriptor is no longer required).
  */
 static int
-dispatch_fd_data(gpointer userdata)
+dispatch_fd_data(void *userdata)
 {
     bool oom = FALSE;
     DBusWatch *watch = userdata;
@@ -143,7 +143,7 @@ dispatch_fd_data(gpointer userdata)
 }
 
 static void
-watch_fd_closed(gpointer userdata)
+watch_fd_closed(void *userdata)
 {
     pcmk__trace("DBus watch for file descriptor %d is now closed",
                 dbus_watch_get_unix_fd((DBusWatch *) userdata));
@@ -200,7 +200,7 @@ register_watch_functions(DBusConnection *connection)
  */
 
 static gboolean
-timer_popped(gpointer data)
+timer_popped(void *data)
 {
     pcmk__debug("%dms DBus timer expired",
                 dbus_timeout_get_interval((DBusTimeout *) data));
@@ -212,7 +212,7 @@ static dbus_bool_t
 add_dbus_timer(DBusTimeout *timeout, void *data)
 {
     int interval_ms = dbus_timeout_get_interval(timeout);
-    guint id = pcmk__create_timer(interval_ms, timer_popped, timeout);
+    unsigned int id = pcmk__create_timer(interval_ms, timer_popped, timeout);
 
     if (id) {
         dbus_timeout_set_data(timeout, GUINT_TO_POINTER(id), NULL);
@@ -225,7 +225,7 @@ static void
 remove_dbus_timer(DBusTimeout *timeout, void *data)
 {
     void *vid = dbus_timeout_get_data(timeout);
-    guint id = GPOINTER_TO_UINT(vid);
+    unsigned int id = GPOINTER_TO_UINT(vid);
 
     pcmk__trace("Removing %dms DBus timer", dbus_timeout_get_interval(timeout));
     if (id) {
@@ -703,7 +703,7 @@ async_query_result_cb(DBusPendingCall *pending, void *user_data)
  */
 char *
 pcmk_dbus_get_property(DBusConnection *connection, const char *target,
-                       const char *obj, const gchar * iface, const char *name,
+                       const char *obj, const char *iface, const char *name,
                        property_callback_func callback, void *userdata,
                        DBusPendingCall **pending, int timeout)
 {

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -44,7 +44,7 @@ void notify_crmd(pcmk__graph_t * graph);
 
 void cib_action_updated(xmlNode *msg, int call_id, int rc, xmlNode *output,
                         void *user_data);
-gboolean action_timer_callback(gpointer data);
+gboolean action_timer_callback(void *data);
 void te_update_diff(const char *event, xmlNode *msg);
 
 void controld_init_transition_trigger(void);
@@ -52,7 +52,7 @@ void controld_destroy_transition_trigger(void);
 
 void controld_trigger_graph_as(const char *fn, int line);
 void abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
-                       const char *abort_text, guint delay_ms);
+                       const char *abort_text, unsigned int delay_ms);
 void controld_node_pending_timer(const pcmk__node_status_t *node);
 void controld_free_node_pending_timers(void);
 void abort_transition_graph(int abort_priority,

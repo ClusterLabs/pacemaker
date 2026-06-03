@@ -39,7 +39,7 @@ static xmlNode *max_generation_xml = NULL;
  */
 static GHashTable *failed_sync_nodes = NULL;
 
-void finalize_join_for(gpointer key, gpointer value, gpointer user_data);
+void finalize_join_for(void *key, void *value, void *user_data);
 void finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void *user_data);
 gboolean check_join_state(enum crmd_fsa_state cur_state, const char *source);
 
@@ -109,7 +109,7 @@ controld_remove_failed_sync_node(const char *node_name)
  * \param[in] join_id    Join round when the failure occurred
  */
 static void
-record_failed_sync_node(const char *node_name, gint join_id)
+record_failed_sync_node(const char *node_name, int join_id)
 {
     if (failed_sync_nodes == NULL) {
         failed_sync_nodes = pcmk__strikey_table(g_free, NULL);
@@ -134,13 +134,13 @@ record_failed_sync_node(const char *node_name, gint join_id)
  * \note \p *join_id is set to -1 if the node is not found.
  */
 static int
-lookup_failed_sync_node(const char *node_name, gint *join_id)
+lookup_failed_sync_node(const char *node_name, int *join_id)
 {
     *join_id = -1;
 
     if (failed_sync_nodes != NULL) {
-        gpointer result = g_hash_table_lookup(failed_sync_nodes,
-                                              (gchar *) node_name);
+        void *result = g_hash_table_lookup(failed_sync_nodes,
+                                           (gchar *) node_name);
         if (result != NULL) {
             *join_id = GPOINTER_TO_INT(result);
             return pcmk_rc_ok;
@@ -195,7 +195,7 @@ crm_update_peer_join(const char *source, pcmk__node_status_t *node,
 }
 
 static void
-set_join_phase_none(gpointer key, gpointer value, gpointer user_data)
+set_join_phase_none(void *key, void *value, void *user_data)
 {
     crm_update_peer_join(__func__, (pcmk__node_status_t *) value,
                          controld_join_none);
@@ -227,7 +227,7 @@ create_dc_message(const char *join_op, const char *host_to)
 }
 
 static void
-join_make_offer(gpointer key, gpointer value, gpointer user_data)
+join_make_offer(void *key, void *value, void *user_data)
 {
     /* @TODO We don't use user_data except to distinguish one particular call
      * from others. Make this clearer.
@@ -433,7 +433,7 @@ do_dc_join_filter_offer(long long action, enum crmd_fsa_cause cause,
     pcmk__node_status_t *join_node = NULL;
     const char *join_version = NULL;
     const char *ref = NULL;
-    gint value = 0;
+    int value = 0;
     bool accept = true;
     int count = 0;
 
@@ -885,7 +885,7 @@ done:
 }
 
 void
-finalize_join_for(gpointer key, gpointer value, gpointer user_data)
+finalize_join_for(void *key, void *value, void *user_data)
 {
     xmlNode *acknak = NULL;
     xmlNode *tmp1 = NULL;
@@ -954,7 +954,7 @@ finalize_join_for(gpointer key, gpointer value, gpointer user_data)
             xmlNode *remotes = pcmk__xe_create(acknak, PCMK_XE_NODES);
 
             g_hash_table_iter_init(&iter, pcmk__remote_peer_cache);
-            while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+            while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
                 xmlNode *remote = NULL;
 
                 if (!node->conn_host) {
@@ -1065,7 +1065,7 @@ int crmd_join_phase_count(enum controld_join_phase phase)
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &peer)) {
         if (controld_get_join_phase(peer) == phase) {
             count++;
         }
@@ -1079,7 +1079,7 @@ void crmd_join_phase_log(int level)
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &peer)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &peer)) {
         do_crm_log(level, "join-%d: %s=%s", current_join_id, peer->name,
                    join_phase_text(controld_get_join_phase(peer)));
     }

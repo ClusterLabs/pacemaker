@@ -66,7 +66,7 @@ static mon_output_format_t output_format = mon_output_unset;
 /* other globals */
 static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
-static guint reconnect_timer = 0;
+static unsigned int reconnect_timer = 0;
 static mainloop_timer_t *refresh_timer = NULL;
 
 static enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
@@ -205,7 +205,7 @@ static pcmk__message_entry_t fmt_functions[] = {
 #define RECONNECT_MSECS 5000
 
 struct {
-    guint reconnect_ms;
+    unsigned int reconnect_ms;
     enum mon_exec_mode exec_mode;
     gboolean fence_connect;
     gboolean print_pending;
@@ -227,7 +227,7 @@ struct {
 static crm_exit_t clean_up(crm_exit_t exit_code);
 static void crm_diff_update(const char *event, xmlNode * msg);
 static void clean_up_on_connection_failure(int rc);
-static int mon_refresh_display(gpointer user_data);
+static int mon_refresh_display(void *user_data);
 static int setup_cib_connection(void);
 static int setup_fencer_connection(void);
 static int setup_api_connections(void);
@@ -301,7 +301,8 @@ find_section_bit(const char *name) {
 }
 
 static gboolean
-apply_exclude(const gchar *excludes, GError **error) {
+apply_exclude(const char *excludes, GError **error)
+{
     char **parts = NULL;
     gboolean result = TRUE;
 
@@ -331,7 +332,8 @@ apply_exclude(const gchar *excludes, GError **error) {
 }
 
 static gboolean
-apply_include(const gchar *includes, GError **error) {
+apply_include(const char *includes, GError **error)
+{
     char **parts = NULL;
     gboolean result = TRUE;
 
@@ -399,7 +401,9 @@ apply_include_exclude(GSList *lst, GError **error) {
 }
 
 static gboolean
-user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+user_include_exclude_cb(const char *option_name, const char *optarg, void *data,
+                        GError **err)
+{
     char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.user_includes_excludes = g_slist_append(options.user_includes_excludes, s);
@@ -407,7 +411,9 @@ user_include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer 
 }
 
 static gboolean
-include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+include_exclude_cb(const char *option_name, const char *optarg, void *data,
+                   GError **err)
+{
     char *s = pcmk__assert_asprintf("%s=%s", option_name, optarg);
 
     options.includes_excludes = g_slist_append(options.includes_excludes, s);
@@ -415,21 +421,24 @@ include_exclude_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-as_xml_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+as_xml_cb(const char *option_name, const char *optarg, void *data, GError **err)
+{
     pcmk__str_update(&args->output_ty, "xml");
     output_format = mon_output_legacy_xml;
     return TRUE;
 }
 
 static gboolean
-pid_file_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+pid_file_cb(const char *option_name, const char *optarg, void *data,
             GError **err)
 {
     return TRUE;
 }
 
 static gboolean
-fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+fence_history_cb(const char *option_name, const char *optarg, void *data,
+                 GError **err)
+{
     if (optarg == NULL) {
         interactive_fence_level = 2;
     } else {
@@ -467,48 +476,64 @@ fence_history_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 }
 
 static gboolean
-group_by_node_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+group_by_node_cb(const char *option_name, const char *optarg, void *data,
+                 GError **err)
+{
     show_opts |= pcmk_show_rscs_by_node;
     return TRUE;
 }
 
 static gboolean
-hide_headers_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+hide_headers_cb(const char *option_name, const char *optarg, void *data,
+                GError **err)
+{
     return user_include_exclude_cb("--exclude", "summary", data, err);
 }
 
 static gboolean
-inactive_resources_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+inactive_resources_cb(const char *option_name, const char *optarg, void *data,
+                      GError **err)
+{
     show_opts |= pcmk_show_inactive_rscs;
     return TRUE;
 }
 
 static gboolean
-print_brief_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+print_brief_cb(const char *option_name, const char *optarg, void *data,
+               GError **err)
+{
     show_opts |= pcmk_show_brief;
     return TRUE;
 }
 
 static gboolean
-print_detail_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+print_detail_cb(const char *option_name, const char *optarg, void *data,
+                GError **err)
+{
     show_opts |= pcmk_show_details;
     return TRUE;
 }
 
 static gboolean
-print_description_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+print_description_cb(const char *option_name, const char *optarg, void *data,
+                     GError **err)
+{
     show_opts |= pcmk_show_description;
     return TRUE;
 }
 
 static gboolean
-print_timing_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+print_timing_cb(const char *option_name, const char *optarg, void *data,
+                GError **err)
+{
     show_opts |= pcmk_show_timing;
     return user_include_exclude_cb("--include", "operations", data, err);
 }
 
 static gboolean
-reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+reconnect_cb(const char *option_name, const char *optarg, void *data,
+             GError **err)
+{
     long long reconnect_ms = 0;
 
     if ((pcmk__parse_ms(optarg, &reconnect_ms) != pcmk_rc_ok)
@@ -519,9 +544,9 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
     }
 
     /* @FIXME Why do we call this instead of just clipping the pcmk__parse_ms()
-     * result to guint range? This was added by e4aff648 so that we could accept
-     * more formats. However, if pcmk__parse_ms() would reject optarg, then
-     * we've already returned by now.
+     * result to unsigned int range? This was added by e4aff648 so that we could
+     * accept more formats. However, if pcmk__parse_ms() would reject optarg,
+     * then we've already returned by now.
      */
     pcmk_parse_interval_spec(optarg, &options.reconnect_ms);
 
@@ -542,7 +567,7 @@ reconnect_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
  * \param[out] err          Where to store error (ignored)
  */
 static gboolean
-one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+one_shot_cb(const char *option_name, const char *optarg, void *data,
             GError **err)
 {
     options.exec_mode = mon_exec_one_shot;
@@ -559,7 +584,7 @@ one_shot_cb(const gchar *option_name, const gchar *optarg, gpointer data,
  * \param[out] err          Where to store error (ignored)
  */
 static gboolean
-daemonize_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+daemonize_cb(const char *option_name, const char *optarg, void *data,
              GError **err)
 {
     options.exec_mode = mon_exec_daemonized;
@@ -567,12 +592,16 @@ daemonize_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-show_attributes_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+show_attributes_cb(const char *option_name, const char *optarg, void *data,
+                   GError **err)
+{
     return user_include_exclude_cb("--include", "attributes", data, err);
 }
 
 static gboolean
-show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+show_bans_cb(const char *option_name, const char *optarg, void *data,
+             GError **err)
+{
     if (optarg != NULL) {
         char *s = pcmk__assert_asprintf("bans:%s", optarg);
         gboolean rc = user_include_exclude_cb("--include", s, data, err);
@@ -584,22 +613,30 @@ show_bans_cb(const gchar *option_name, const gchar *optarg, gpointer data, GErro
 }
 
 static gboolean
-show_failcounts_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+show_failcounts_cb(const char *option_name, const char *optarg, void *data,
+                   GError **err)
+{
     return user_include_exclude_cb("--include", "failcounts", data, err);
 }
 
 static gboolean
-show_operations_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+show_operations_cb(const char *option_name, const char *optarg, void *data,
+                   GError **err)
+{
     return user_include_exclude_cb("--include", "failcounts,operations", data, err);
 }
 
 static gboolean
-show_tickets_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+show_tickets_cb(const char *option_name, const char *optarg, void *data,
+                GError **err)
+{
     return user_include_exclude_cb("--include", "tickets", data, err);
 }
 
 static gboolean
-use_cib_file_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+use_cib_file_cb(const char *option_name, const char *optarg, void *data,
+                GError **err)
+{
     setenv("CIB_file", optarg, 1);
     options.exec_mode = mon_exec_one_shot;
     return TRUE;
@@ -749,7 +786,7 @@ static GOptionEntry display_entries[] = {
  * mon_cib_connection_destroy.
  */
 static gboolean
-reconnect_after_timeout(gpointer data)
+reconnect_after_timeout(void *data)
 {
 #if PCMK__ENABLE_CURSES
     if (output_format == mon_output_console) {
@@ -779,7 +816,7 @@ reconnect_after_timeout(gpointer data)
  * attempt to sign off and reconnect.
  */
 static void
-mon_cib_connection_destroy(gpointer user_data)
+mon_cib_connection_destroy(void *user_data)
 {
     const char *msg = "Connection to the cluster lost";
 
@@ -1042,7 +1079,7 @@ get_option_desc(char c)
  * agent what would happen in mon_refresh_display.
  */
 static gboolean
-detect_user_input(GIOChannel *channel, GIOCondition condition, gpointer user_data)
+detect_user_input(GIOChannel *channel, GIOCondition condition, void *user_data)
 {
     int c;
     gboolean config_mode = FALSE;
@@ -1824,7 +1861,7 @@ handle_rsc_op(xmlNode *xml, void *userdata)
  * gets redrawn.
  */
 static gboolean
-mon_trigger_refresh(gpointer user_data)
+mon_trigger_refresh(void *user_data)
 {
     mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
     return FALSE;
@@ -1995,7 +2032,7 @@ crm_diff_update(const char *event, xmlNode * msg)
 }
 
 static int
-mon_refresh_display(gpointer user_data)
+mon_refresh_display(void *user_data)
 {
     int rc = pcmk_rc_ok;
 

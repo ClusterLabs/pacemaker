@@ -17,7 +17,7 @@
 #include <stdbool.h>            // bool
 #include <stdint.h>             // uint32_t, etc.
 
-#include <glib.h>               // guint, GList, GHashTable
+#include <glib.h>               // GList, GHashTable
 
 #include <crm/common/options.h> // PCMK_VALUE_TRUE, PCMK_VALUE_FALSE
 #include <crm/common/results.h> // pcmk_rc_ok
@@ -43,8 +43,8 @@ enum pcmk__str_flags {
 
 int pcmk__scan_double(const char *text, double *result,
                       const char *default_text, char **end_text);
-int pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
-                          guint *result);
+int pcmk__uint_from_hash(GHashTable *table, const char *key,
+                         unsigned int default_val, unsigned int *result);
 void pcmk__add_separated_word(GString **list, size_t init_size,
                               const char *word, const char *separator);
 int pcmk__compress(const char *data, unsigned int length, unsigned int max,
@@ -128,7 +128,7 @@ pcmk__intkey_table(GDestroyNotify value_destroy_func)
  *       already exists in the table, the old value is freed and replaced.
  */
 static inline gboolean
-pcmk__intkey_table_insert(GHashTable *hash_table, int key, gpointer value)
+pcmk__intkey_table_insert(GHashTable *hash_table, int key, void *value)
 {
     return g_hash_table_insert(hash_table, GINT_TO_POINTER(key), value);
 }
@@ -142,7 +142,7 @@ pcmk__intkey_table_insert(GHashTable *hash_table, int key, gpointer value)
  *
  * \return Value in table for \key (or NULL if not found)
  */
-static inline gpointer
+static inline void *
 pcmk__intkey_table_lookup(GHashTable *hash_table, int key)
 {
     return g_hash_table_lookup(hash_table, GINT_TO_POINTER(key));
@@ -164,7 +164,7 @@ pcmk__intkey_table_remove(GHashTable *hash_table, int key)
 }
 
 bool pcmk__str_in_list(const char *str, const GList *list, uint32_t flags);
-bool pcmk__g_strv_contains(gchar **strv, const gchar *str);
+bool pcmk__g_strv_contains(char **strv, const char *str);
 
 bool pcmk__strcase_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;
 bool pcmk__str_any_of(const char *s, ...) G_GNUC_NULL_TERMINATED;

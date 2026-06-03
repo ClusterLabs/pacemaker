@@ -16,8 +16,6 @@
 
 #include <stdint.h>                         // UINT32_C
 
-#include <glib.h>                           // guint
-
 #include <crm/common/logging.h>             // CRM_CHECK
 #include <crm/common/strings_internal.h>    // pcmk__assert_asprintf
 
@@ -61,7 +59,7 @@ enum pcmk__fc_flags {
  */
 static inline char *
 pcmk__fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
-                     guint interval_ms)
+                     unsigned int interval_ms)
 {
     CRM_CHECK(prefix && rsc_id && op, return NULL);
     return pcmk__assert_asprintf("%s-%s#%s_%u", prefix, rsc_id, op,
@@ -69,14 +67,16 @@ pcmk__fail_attr_name(const char *prefix, const char *rsc_id, const char *op,
 }
 
 static inline char *
-pcmk__failcount_name(const char *rsc_id, const char *op, guint interval_ms)
+pcmk__failcount_name(const char *rsc_id, const char *op,
+                     unsigned int interval_ms)
 {
     return pcmk__fail_attr_name(PCMK__FAIL_COUNT_PREFIX, rsc_id, op,
                                 interval_ms);
 }
 
 static inline char *
-pcmk__lastfailure_name(const char *rsc_id, const char *op, guint interval_ms)
+pcmk__lastfailure_name(const char *rsc_id, const char *op,
+                       unsigned int interval_ms)
 {
     return pcmk__fail_attr_name(PCMK__LAST_FAILURE_PREFIX, rsc_id, op,
                                 interval_ms);

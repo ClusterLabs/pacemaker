@@ -25,7 +25,7 @@
 
 struct pcmk__election {
     enum election_result state;     // Current state of election
-    guint count;                    // How many times local node has voted
+    unsigned int count;             // How many times local node has voted
     void (*cb)(pcmk_cluster_t *);   // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
     mainloop_timer_t *timeout; // When to abort if all votes not received
@@ -47,7 +47,7 @@ election_complete(pcmk_cluster_t *cluster)
 }
 
 static gboolean
-election_timer_cb(gpointer user_data)
+election_timer_cb(void *user_data)
 {
     pcmk_cluster_t *cluster = user_data;
 
@@ -189,7 +189,7 @@ election_timeout_stop(pcmk_cluster_t *cluster)
  * \param[in]     period   New timeout
  */
 void
-election_timeout_set_period(pcmk_cluster_t *cluster, guint period)
+election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
 {
     CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
     mainloop_timer_set_period(cluster->priv->election->timeout, period);
@@ -374,14 +374,14 @@ election_check(pcmk_cluster_t *cluster)
 
             pcmk__warn("Received too many votes in election");
             g_hash_table_iter_init(&gIter, pcmk__peer_cache);
-            while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) & node)) {
+            while (g_hash_table_iter_next(&gIter, NULL, (void **) &node)) {
                 if (pcmk__cluster_is_node_active(node)) {
                     pcmk__warn("* expected vote: %s", node->name);
                 }
             }
 
             g_hash_table_iter_init(&gIter, cluster->priv->election->voted);
-            while (g_hash_table_iter_next(&gIter, (gpointer *) & key, NULL)) {
+            while (g_hash_table_iter_next(&gIter, (void **) &key, NULL)) {
                 pcmk__warn("* actual vote: %s", key);
             }
 

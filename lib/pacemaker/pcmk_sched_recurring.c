@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -19,13 +19,13 @@
 // Information parsed from an operation history entry in the CIB
 struct op_history {
     // XML attributes
-    const char *id;         // ID of history entry
-    const char *name;       // Action name
+    const char *id;             // ID of history entry
+    const char *name;           // Action name
 
     // Parsed information
-    char *key;              // Operation key for action
-    enum rsc_role_e role;   // Action role (or pcmk_role_unknown for default)
-    guint interval_ms;      // Action interval
+    char *key;                  // Operation key for action
+    enum rsc_role_e role;       // Action role (pcmk_role_unknown for default)
+    unsigned int interval_ms;   // Action interval
 };
 
 /*!
@@ -36,10 +36,10 @@ struct op_history {
  *
  * \return Interval parsed from XML (or 0 as default)
  */
-static guint
+static unsigned int
 xe_interval(const xmlNode *xml)
 {
-    guint interval_ms = 0U;
+    unsigned int interval_ms = 0;
 
     pcmk_parse_interval_spec(pcmk__xe_get(xml, PCMK_META_INTERVAL),
                              &interval_ms);
@@ -58,7 +58,8 @@ xe_interval(const xmlNode *xml)
  *         once in the operation history of \p rsc, otherwise false
  */
 static bool
-is_op_dup(const pcmk_resource_t *rsc, const char *name, guint interval_ms)
+is_op_dup(const pcmk_resource_t *rsc, const char *name,
+          unsigned int interval_ms)
 {
     const char *id = NULL;
 
@@ -386,7 +387,7 @@ recurring_op_for_active(pcmk_resource_t *rsc, pcmk_action_t *start,
  */
 static void
 cancel_if_running(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                  const char *key, const char *name, guint interval_ms)
+                  const char *key, const char *name, unsigned int interval_ms)
 {
     GList *possible_matches = find_actions_exact(rsc->priv->actions, key,
                                                  node);
@@ -652,7 +653,7 @@ pcmk__create_recurring_actions(pcmk_resource_t *rsc)
  */
 pcmk_action_t *
 pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
-                        guint interval_ms, const pcmk_node_t *node)
+                        unsigned int interval_ms, const pcmk_node_t *node)
 {
     pcmk_action_t *cancel_op = NULL;
     char *key = NULL;
@@ -692,7 +693,7 @@ pcmk__new_cancel_action(pcmk_resource_t *rsc, const char *task,
  */
 void
 pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
-                      const char *task, guint interval_ms,
+                      const char *task, unsigned int interval_ms,
                       const pcmk_node_t *node, const char *reason)
 {
     pcmk_action_t *cancel = NULL;
@@ -723,7 +724,7 @@ pcmk__schedule_cancel(pcmk_resource_t *rsc, const char *call_id,
  */
 void
 pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
-                           guint interval_ms, pcmk_node_t *node)
+                           unsigned int interval_ms, pcmk_node_t *node)
 {
     pcmk_action_t *op = NULL;
 
@@ -745,10 +746,10 @@ pcmk__reschedule_recurring(pcmk_resource_t *rsc, const char *task,
 bool
 pcmk__action_is_recurring(const pcmk_action_t *action)
 {
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
-    if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
-                              &interval_ms) != pcmk_rc_ok) {
+    if (pcmk__uint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
+                             &interval_ms) != pcmk_rc_ok) {
         return false;
     }
     return (interval_ms > 0);

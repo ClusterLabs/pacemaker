@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -1033,7 +1033,7 @@ switch_shadow_instance(pcmk__output_t *out, GError **error)
 }
 
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     if (pcmk__str_any_of(option_name, "-w", "--which", NULL)) {

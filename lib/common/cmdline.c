@@ -18,7 +18,9 @@
 #include <crm/common/util.h>
 
 static gboolean
-bump_verbosity(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+bump_verbosity(const char *option_name, const char *optarg, void *data,
+               GError **error)
+{
     pcmk__common_args_t *common_args = (pcmk__common_args_t *) data;
     common_args->verbosity++;
     return TRUE;
@@ -46,7 +48,8 @@ pcmk__new_common_args(const char *summary)
 }
 
 static void
-free_common_args(gpointer data) {
+free_common_args(void *data)
+{
     pcmk__common_args_t *common_args = (pcmk__common_args_t *) data;
 
     free(common_args->summary);
@@ -143,7 +146,7 @@ pcmk__add_arg_group(GOptionContext *context, const char *name,
 }
 
 gchar *
-pcmk__quote_cmdline(gchar **argv)
+pcmk__quote_cmdline(char **argv)
 {
     GString *cmdline = NULL;
 
@@ -152,7 +155,7 @@ pcmk__quote_cmdline(gchar **argv)
     }
 
     for (int i = 0; argv[i] != NULL; i++) {
-        gint argc = 0;
+        int argc = 0;
 
         /* Quote the argument if it's unparsable as-is (empty, all whitespace,
          * or having mismatched quotes), or if it contains more than one token

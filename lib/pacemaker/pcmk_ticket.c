@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,15 +9,27 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <errno.h>                      // EACCES, EINVAL, ENXIO
+#include <stdbool.h>                    // bool, false
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // free
+#include <string.h>                     // strdup
+#include <time.h>                       // time_t
 
-#include <crm/cib/internal.h>
-#include <crm/pengine/internal.h>
+#include <glib.h>                       // g_str_has_suffix, GHashTable
+#include <libxml/tree.h>                // xmlNode
 
-#include <pacemaker.h>
-#include <pacemaker-internal.h>
+#include <crm/cib.h>                    // cib_*
+#include <crm/cib/internal.h>           // cib__clean_up_connection
+#include <crm/common/cib.h>             // pcmk_cib_xpath_for
+#include <crm/common/results.h>         // pcmk_legacy2rc, pcmk_rc_*, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__register_messages
+#include <pacemaker.h>                  // pcmk_ticket_*
+#include <pacemaker-internal.h>         // pcmk__ticket_*, etc.
 
-#include "libpacemaker_private.h"
+#include "libpacemaker_private.h"       // pcmk__setup_output_cib_sched
 
 static int
 build_ticket_modify_xml(cib_t *cib, const char *ticket_id, xmlNode **ticket_state_xml,
@@ -60,7 +72,8 @@ add_attribute_xml(pcmk_scheduler_t *scheduler, const char *ticket_id,
     ticket = g_hash_table_lookup(scheduler->priv->ticket_constraints,
                                  ticket_id);
     g_hash_table_iter_init(&hash_iter, attr_set);
-    while (g_hash_table_iter_next(&hash_iter, (gpointer *) & key, (gpointer *) & value)) {
+    while (g_hash_table_iter_next(&hash_iter, (void **) &key,
+                                  (void **) &value)) {
         pcmk__xe_set(*ticket_state_xml, key, value);
 
         if (pcmk__str_eq(key, PCMK__XA_GRANTED, pcmk__str_none)
@@ -150,7 +163,7 @@ pcmk__ticket_constraints(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
 }
 
 int
-pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id)
+pcmk_ticket_constraints(xmlNode **xml, const char *ticket_id)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -241,7 +254,7 @@ pcmk__ticket_delete(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *scheduler
 }
 
 int
-pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force)
+pcmk_ticket_delete(xmlNode **xml, const char *ticket_id, bool force)
 {
     pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
@@ -299,7 +312,7 @@ pcmk__ticket_get_attr(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 }
 
 int
-pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+pcmk_ticket_get_attr(xmlNode **xml, const char *ticket_id,
                      const char *attr_name, const char *attr_default)
 {
     pcmk_scheduler_t *scheduler = NULL;
@@ -354,7 +367,7 @@ pcmk__ticket_info(pcmk__output_t *out, pcmk_scheduler_t *scheduler,
 }
 
 int
-pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id)
+pcmk_ticket_info(xmlNode **xml, const char *ticket_id)
 {
     pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
@@ -427,7 +440,8 @@ pcmk__ticket_remove_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *sche
 }
 
 int
-pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete, bool force)
+pcmk_ticket_remove_attr(xmlNode **xml, const char *ticket_id,
+                       GList *attr_delete, bool force)
 {
     pcmk_scheduler_t *scheduler = NULL;
     pcmk__output_t *out = NULL;
@@ -495,7 +509,7 @@ pcmk__ticket_set_attr(pcmk__output_t *out, cib_t *cib, pcmk_scheduler_t *schedul
 }
 
 int
-pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
+pcmk_ticket_set_attr(xmlNode **xml, const char *ticket_id, GHashTable *attr_set,
                      bool force)
 {
     pcmk_scheduler_t *scheduler = NULL;
@@ -544,7 +558,7 @@ pcmk__ticket_state(pcmk__output_t *out, cib_t *cib, const char *ticket_id)
 }
 
 int
-pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id)
+pcmk_ticket_state(xmlNode **xml, const char *ticket_id)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;

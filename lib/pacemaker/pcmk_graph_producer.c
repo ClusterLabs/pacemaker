@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -205,7 +205,7 @@ add_downed_nodes(xmlNode *xml, const pcmk_action_t *action)
  * \return Newly allocated string with transition graph operation key
  */
 static char *
-clone_op_key(const pcmk_action_t *action, guint interval_ms)
+clone_op_key(const pcmk_action_t *action, unsigned int interval_ms)
 {
     if (pcmk__str_eq(action->task, PCMK_ACTION_NOTIFY, pcmk__str_none)) {
         const char *n_type = g_hash_table_lookup(action->meta, "notify_type");
@@ -438,10 +438,10 @@ create_graph_action(xmlNode *parent, pcmk_action_t *action, bool skip_details,
 
     if ((action->rsc != NULL) && (action->rsc->priv->history_id != NULL)) {
         char *clone_key = NULL;
-        guint interval_ms;
+        unsigned int interval_ms = 0;
 
-        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
-                                  &interval_ms) != pcmk_rc_ok) {
+        if (pcmk__uint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
+                                 &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
         clone_key = clone_op_key(action, interval_ms);
@@ -873,7 +873,7 @@ create_graph_synapse(const pcmk_action_t *action, pcmk_scheduler_t *scheduler)
  *       pcmk__create_graph().)
  */
 static void
-add_action_to_graph(gpointer data, gpointer user_data)
+add_action_to_graph(void *data, void *user_data)
 {
     pcmk_action_t *action = (pcmk_action_t *) data;
     pcmk_scheduler_t *scheduler = (pcmk_scheduler_t *) user_data;
@@ -1088,7 +1088,7 @@ pcmk__create_graph(pcmk_scheduler_t *scheduler)
             }
         }
 
-        add_action_to_graph((gpointer) action, (gpointer) scheduler);
+        add_action_to_graph((void *) action, (void *) scheduler);
     }
 
     pcmk__log_xml_trace(scheduler->priv->graph, "graph");

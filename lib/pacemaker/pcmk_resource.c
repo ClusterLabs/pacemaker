@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,19 +9,27 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <stdbool.h>
+#include <errno.h>                      // EINVAL, ENOTCONN, EOPNOTSUPP
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
 
-#include <glib.h>
+#include <glib.h>                       // g_str_has_suffix, GHashTable
 #include <libxml/tree.h>                // xmlNode
 
-#include <crm/cib/internal.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/results.h>
-#include <crm/pengine/internal.h>
+#include <crm/cib.h>                    // cib_new, cib_t, etc.
+#include <crm/cib/internal.h>           // cib__clean_up_connection
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/options.h>         // PCMK_META_INTERVAL
+#include <crm/common/results.h>         // pcmk_legacy2rc, pcmk_rc_*, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // crm_system_name
+#include <crm/pengine/internal.h>       // pe__*
 
-#include <pacemaker.h>
-#include <pacemaker-internal.h>
+#include <pacemaker.h>                  // pcmk_resource_{delete,digests}
+#include <pacemaker-internal.h>         // pcmk__register_*, pcmk__resource_*
 
 // Search path for resource operation history (takes node name and resource ID)
 #define XPATH_OP_HISTORY "//" PCMK_XE_STATUS                            \
@@ -37,7 +45,7 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
     xmlNode *history = NULL;
     xmlNode *best = NULL;
     bool best_effective_op = false;
-    guint best_interval = 0;
+    unsigned int best_interval = 0;
     bool best_failure = false;
     const char *best_digest = NULL;
 
@@ -56,14 +64,14 @@ best_op(const pcmk_resource_t *rsc, const pcmk_node_t *node)
 
         const char *digest = pcmk__xe_get(lrm_rsc_op,
                                           PCMK__XA_OP_RESTART_DIGEST);
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         const char *task = pcmk__xe_get(lrm_rsc_op, PCMK_XA_OPERATION);
         bool effective_op = false;
         const char *id = pcmk__xe_id(lrm_rsc_op);
         bool failure = (id != NULL) && g_str_has_suffix(id, "_last_failure_0");
 
 
-        pcmk__xe_get_guint(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_uint(lrm_rsc_op, PCMK_META_INTERVAL, &interval_ms);
         effective_op = interval_ms == 0
                        && pcmk__strcase_any_of(task, PCMK_ACTION_MONITOR,
                                                PCMK_ACTION_START,
@@ -148,7 +156,7 @@ pcmk__resource_delete(cib_t *cib, uint32_t cib_opts, const char *rsc_id,
 }
 
 int
-pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type)
+pcmk_resource_delete(xmlNode **xml, const char *rsc_id, const char *rsc_type)
 {
     pcmk__output_t *out = NULL;
     int rc = pcmk_rc_ok;
@@ -202,7 +210,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     const char *task = NULL;
     xmlNode *xml_op = NULL;
     pcmk__op_digest_t *digests = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     int rc = pcmk_rc_ok;
 
     if ((out == NULL) || (rsc == NULL) || (node == NULL)) {
@@ -220,7 +228,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
     // Generate an operation key
     if (xml_op != NULL) {
         task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
-        pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     }
     if (task == NULL) { // Assume start if no history is available
         task = PCMK_ACTION_START;
@@ -237,7 +245,7 @@ pcmk__resource_digests(pcmk__output_t *out, pcmk_resource_t *rsc,
 }
 
 int
-pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
+pcmk_resource_digests(xmlNode **xml, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *overrides)
 {
     pcmk__output_t *out = NULL;

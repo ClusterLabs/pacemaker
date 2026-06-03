@@ -39,9 +39,12 @@ struct {
     .force_flag = FALSE
 };
 
-gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
-gboolean remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean command_cb(const char *option_name, const char *optarg, void *data,
+                    GError **error);
+gboolean name_cb(const char *option_name, const char *optarg, void *data,
+                 GError **error);
+gboolean remove_cb(const char *option_name, const char *optarg, void *data,
+                   GError **error);
 
 static GError *error = NULL;
 static GMainLoop *mainloop = NULL;
@@ -102,7 +105,9 @@ static pcmk__supported_format_t formats[] = {
 };
 
 gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+command_cb(const char *option_name, const char *optarg, void *data,
+           GError **error)
+{
     if (pcmk__str_eq("-i", option_name, pcmk__str_casei) || pcmk__str_eq("--cluster-id", option_name, pcmk__str_casei)) {
         options.command = 'i';
     } else if (pcmk__str_eq("-l", option_name, pcmk__str_casei) || pcmk__str_eq("--list", option_name, pcmk__str_casei)) {
@@ -122,14 +127,17 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError 
 }
 
 gboolean
-name_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+name_cb(const char *option_name, const char *optarg, void *data, GError **error)
+{
     options.command = 'N';
     pcmk__scan_min_int(optarg, &(options.nodeid), 0);
     return TRUE;
 }
 
 gboolean
-remove_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+remove_cb(const char *option_name, const char *optarg, void *data,
+          GError **error)
+{
     if (optarg == NULL) {
         g_set_error(error, PCMK__EXITC_ERROR, CRM_EX_INVALID_PARAM, "-R option requires an argument");
         return FALSE;
@@ -322,8 +330,8 @@ static pcmk__message_entry_t fmt_functions[] = {
     { NULL, NULL, NULL }
 };
 
-static gint
-sort_node(gconstpointer a, gconstpointer b)
+static int
+sort_node(const void *a, const void *b)
 {
     const pcmk_controld_api_node_t *node_a = a;
     const pcmk_controld_api_node_t *node_b = b;

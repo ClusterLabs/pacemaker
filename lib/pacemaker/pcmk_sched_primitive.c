@@ -1638,7 +1638,7 @@ shutdown_time(pcmk_node_t *node)
  * \param[in,out] user_data  Resource to check
  */
 static void
-ban_if_not_locked(gpointer data, gpointer user_data)
+ban_if_not_locked(void *data, void *user_data)
 {
     const pcmk_node_t *node = (const pcmk_node_t *) data;
     pcmk_resource_t *rsc = (pcmk_resource_t *) user_data;

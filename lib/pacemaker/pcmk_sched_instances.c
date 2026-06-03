@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -139,7 +139,7 @@ new_node_table(pcmk_node_t *node)
     GHashTable *table = pcmk__strkey_table(NULL, pcmk__free_node_copy);
 
     node = pe__copy_node(node);
-    g_hash_table_insert(table, (gpointer) node->priv->id, node);
+    g_hash_table_insert(table, (void *) node->priv->id, node);
     return table;
 }
 
@@ -308,8 +308,8 @@ node_is_allowed(const pcmk_resource_t *rsc, pcmk_node_t **node)
  *         a positive number if \p b's instance number is lower,
  *         or 0 if their instance numbers are the same
  */
-gint
-pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
+int
+pcmk__cmp_instance_number(const void *a, const void *b)
 {
     const pcmk_resource_t *instance1 = (const pcmk_resource_t *) a;
     const pcmk_resource_t *instance2 = (const pcmk_resource_t *) b;
@@ -329,7 +329,7 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
     }
     pcmk__assert((div1 != NULL) && (div2 != NULL));
 
-    return (gint) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
+    return (int) (strtol(div1 + 1, NULL, 10) - strtol(div2 + 1, NULL, 10));
 }
 
 /*!
@@ -357,8 +357,8 @@ pcmk__cmp_instance_number(gconstpointer a, gconstpointer b)
  *         a positive number if \p b should be assigned first,
  *         or 0 if assignment order doesn't matter
  */
-gint
-pcmk__cmp_instance(gconstpointer a, gconstpointer b)
+int
+pcmk__cmp_instance(const void *a, const void *b)
 {
     int rc = 0;
     pcmk_node_t *node1 = NULL;
@@ -733,7 +733,7 @@ reset_allowed_node_counts(pcmk_resource_t *rsc)
     GHashTableIter iter;
 
     g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         node->assign->count = 0;
         if (pcmk__node_available(node, false, false)) {
             available_nodes++;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@ int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
     char *ns = NULL;
-    guint result = 0U;
+    unsigned int result = 0;
 
     if (size > 0) {
         ns = pcmk__assert_alloc(size + 1, sizeof(char));

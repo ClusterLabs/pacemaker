@@ -131,7 +131,7 @@ typedef struct {
 struct timer_rec_s {
     int call_id;
     int timeout;
-    guint ref;
+    unsigned int ref;
     cib_t *cib;
 };
 
@@ -204,7 +204,7 @@ int cib__create_op(cib_t *cib, const char *op, const char *host,
 int cib__extend_transaction(cib_t *cib, xmlNode *request);
 
 void cib_native_callback(cib_t * cib, xmlNode * msg, int call_id, int rc);
-void cib_native_notify(gpointer data, gpointer user_data);
+void cib_native_notify(void *data, void *user_data);
 
 int cib__get_operation(const char *op, const cib__operation_t **operation);
 

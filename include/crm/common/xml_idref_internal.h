@@ -14,8 +14,8 @@
 #ifndef PCMK__CRM_COMMON_XML_IDREF_INTERNAL__H
 #define PCMK__CRM_COMMON_XML_IDREF_INTERNAL__H
 
-#include <glib.h>           // gboolean, gpointer, GList, GHashTable
-#include <libxml/tree.h>    // xmlNode
+#include <glib.h>           // GList, GHashTable
+#include <libxml/tree.h>    // xmlDoc, xmlNode
 
 // An XML ID and references to it (used for tags and templates)
 typedef struct {
@@ -24,7 +24,7 @@ typedef struct {
 } pcmk__idref_t;
 
 void pcmk__add_idref(GHashTable *table, const char *id, const char *referrer);
-void pcmk__free_idref(gpointer data);
+void pcmk__free_idref(void *data);
 xmlNode *pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc);
 GList *pcmk__xe_dereference_children(const xmlNode *xml,
                                      const char *element_name, xmlDoc *doc);

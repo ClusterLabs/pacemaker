@@ -110,7 +110,7 @@ typedef struct svc_action_s {
     char *action;
 
     //! Action interval for recurring resource actions, otherwise 0
-    guint interval_ms;
+    unsigned int interval_ms;
 
     //! Resource standard for resource actions, otherwise NULL
     char *standard;
@@ -225,8 +225,9 @@ gboolean resources_agent_exists(const char *standard, const char *provider,
  */
 svc_action_t *resources_action_create(const char *name, const char *standard,
                                       const char *provider, const char *agent,
-                                      const char *action, guint interval_ms,
-                                      int timeout, GHashTable *params,
+                                      const char *action,
+                                      unsigned int interval_ms, int timeout,
+                                      GHashTable *params,
                                       enum svc_action_flags flags);
 
 /*!
@@ -239,7 +240,7 @@ svc_action_t *resources_action_create(const char *name, const char *standard,
  * \return TRUE on success, otherwise FALSE
  */
 gboolean services_action_kick(const char *name, const char *action,
-                              guint interval_ms);
+                              unsigned int interval_ms);
 
 const char *resources_find_service_class(const char *agent);
 
@@ -332,7 +333,7 @@ gboolean services_action_async(svc_action_t *op,
                                void (*action_callback) (svc_action_t *));
 
 gboolean services_action_cancel(const char *name, const char *action,
-                                guint interval_ms);
+                                unsigned int interval_ms);
 
 /* functions for alert agents */
 svc_action_t *services_alert_create(const char *id, const char *exec,

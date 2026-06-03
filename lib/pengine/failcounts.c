@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * This source code is licensed under the GNU Lesser General Public License
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
@@ -7,17 +7,30 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <sys/types.h>
-#include <regex.h>
+#include <errno.h>                      // EINVAL
+#include <regex.h>                      // regex_t, REG_*, etc.
+#include <stdbool.h>                    // bool
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <string.h>                    // strdup
+#include <time.h>                       // time_t
 
-#include <glib.h>
-#include <libxml/xpath.h>           // xmlXPathObject, etc.
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <libxml/xpath.h>               // xmlXPathObject, xmlXPathFreeObject
+#include <qb/qbdefs.h>                  // QB_MAX
+#include <qb/qblog.h>                   // QB_XS
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/common/util.h>
-#include <crm/pengine/internal.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_CLEAR_FAILCOUNT
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // pcmk_parse_score, pcmk_readable_score
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
 
 static gboolean
 is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
@@ -27,8 +40,8 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
     const char *conf_op_name = NULL;
     const char *lrm_op_task = NULL;
     const char *conf_op_interval_spec = NULL;
-    guint conf_op_interval_ms = 0;
-    guint lrm_op_interval_ms = 0;
+    unsigned int conf_op_interval_ms = 0;
+    unsigned int lrm_op_interval_ms = 0;
     const char *lrm_op_id = NULL;
     char *last_failure_key = NULL;
 
@@ -43,7 +56,7 @@ is_matched_failure(const char *rsc_id, const xmlNode *conf_op_xml,
 
     // Get name and interval from op history entry
     lrm_op_task = pcmk__xe_get(lrm_op_xml, PCMK_XA_OPERATION);
-    pcmk__xe_get_guint(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
+    pcmk__xe_get_uint(lrm_op_xml, PCMK_META_INTERVAL, &lrm_op_interval_ms);
 
     if ((conf_op_interval_ms != lrm_op_interval_ms)
         || !pcmk__str_eq(conf_op_name, lrm_op_task, pcmk__str_casei)) {
@@ -120,7 +133,7 @@ block_failure(const pcmk_node_t *node, pcmk_resource_t *rsc,
             } else {
                 const char *conf_op_name = NULL;
                 const char *conf_op_interval_spec = NULL;
-                guint conf_op_interval_ms = 0;
+                unsigned int conf_op_interval_ms = 0;
                 pcmk_scheduler_t *scheduler = rsc->priv->scheduler;
                 char *lrm_op_xpath = NULL;
                 xmlXPathObject *lrm_op_xpathObj = NULL;
@@ -288,7 +301,7 @@ struct failcount_data {
  * \param[in] user_data  Fail count data to update
  */
 static void
-update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
+update_failcount_for_attr(void *key, void *value, void *user_data)
 {
     struct failcount_data *fc_data = user_data;
 
@@ -336,7 +349,7 @@ update_failcount_for_attr(gpointer key, gpointer value, gpointer user_data)
  * \param[in] user_data  Fail count data to update
  */
 static void
-update_launched_failcount(gpointer data, gpointer user_data)
+update_launched_failcount(void *data, void *user_data)
 {
     pcmk_resource_t *launched = data;
     struct failcount_data *fc_data = user_data;
@@ -406,7 +419,8 @@ pe_get_failcount(const pcmk_node_t *node, pcmk_resource_t *rsc,
         && (rsc->priv->failure_expiration_ms > 0)) {
 
         time_t now = pcmk__scheduler_epoch_time(rsc->priv->scheduler);
-        const guint expiration = pcmk__timeout_ms2s(rsc->priv->failure_expiration_ms);
+        const unsigned int expiration =
+            pcmk__timeout_ms2s(rsc->priv->failure_expiration_ms);
 
         if (now > (fc_data.last_failure + expiration)) {
             pcmk__rsc_debug(rsc, "Failcount for %s on %s expired after %s",

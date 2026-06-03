@@ -763,8 +763,7 @@ pcmk__apply_location(pcmk_resource_t *rsc, pcmk__location_t *location)
         if (allowed_node == NULL) {
             allowed_node = pe__copy_node(node);
             g_hash_table_insert(rsc->priv->allowed_nodes,
-                                (gpointer) allowed_node->priv->id,
-                                allowed_node);
+                                (void *) allowed_node->priv->id, allowed_node);
         } else {
             allowed_node->assign->score =
                 pcmk__add_scores(allowed_node->assign->score,

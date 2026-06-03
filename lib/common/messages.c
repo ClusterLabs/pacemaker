@@ -184,12 +184,12 @@ pcmk__register_handlers(const pcmk__server_command_t handlers[])
         int i;
 
         for (i = 0; handlers[i].command != NULL; ++i) {
-            g_hash_table_insert(commands, (gpointer) handlers[i].command,
+            g_hash_table_insert(commands, (void *) handlers[i].command,
                                 handlers[i].handler);
         }
         if (handlers[i].handler != NULL) {
             // g_str_hash() can't handle NULL, so use empty string for default
-            g_hash_table_insert(commands, (gpointer) "", handlers[i].handler);
+            g_hash_table_insert(commands, (void *) "", handlers[i].handler);
         }
     }
     return commands;

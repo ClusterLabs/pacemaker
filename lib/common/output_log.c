@@ -59,12 +59,14 @@ typedef struct {
 
 static void
 log_subprocess_output(pcmk__output_t *out, int exit_status,
-                      const char *proc_stdout, const char *proc_stderr) {
+                      const char *proc_stdout, const char *proc_stderr)
+{
     /* This function intentionally left blank */
 }
 
 static void
-log_free_priv(pcmk__output_t *out) {
+log_free_priv(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     if (out == NULL || out->priv == NULL) {
@@ -78,7 +80,8 @@ log_free_priv(pcmk__output_t *out) {
 }
 
 static bool
-log_init(pcmk__output_t *out) {
+log_init(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert(out != NULL);
@@ -102,12 +105,15 @@ log_init(pcmk__output_t *out) {
 }
 
 static void
-log_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+log_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print,
+           void **copy_dest)
+{
     /* This function intentionally left blank */
 }
 
 static void
-log_reset(pcmk__output_t *out) {
+log_reset(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 
     out->dest = freopen(NULL, "w", out->dest);
@@ -149,7 +155,8 @@ log_err(pcmk__output_t *out, const char *format, ...)
 }
 
 static void
-log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
+log_output_xml(pcmk__output_t *out, const char *name, const char *buf)
+{
     xmlNodePtr node = NULL;
     private_data_t *priv = NULL;
 
@@ -164,8 +171,9 @@ log_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
 G_GNUC_PRINTF(4, 5)
 static void
-log_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
-               const char *format, ...) {
+log_begin_list(pcmk__output_t *out, const char *singular_noun,
+               const char *plural_noun, const char *format, ...)
+{
     int len = 0;
     va_list ap;
     char* buffer = NULL;
@@ -227,7 +235,8 @@ log_list_item(pcmk__output_t *out, const char *name, const char *format, ...)
 }
 
 static void
-log_end_list(pcmk__output_t *out) {
+log_end_list(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
@@ -280,27 +289,32 @@ log_transient(pcmk__output_t *out, const char *format, ...)
 }
 
 static bool
-log_is_quiet(pcmk__output_t *out) {
+log_is_quiet(pcmk__output_t *out)
+{
     return false;
 }
 
 static void
-log_spacer(pcmk__output_t *out) {
+log_spacer(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 
 static void
-log_progress(pcmk__output_t *out, bool end) {
+log_progress(pcmk__output_t *out, bool end)
+{
     /* This function intentionally left blank */
 }
 
 static void
-log_prompt(const char *prompt, bool echo, char **dest) {
+log_prompt(const char *prompt, bool echo, char **dest)
+{
     /* This function intentionally left blank */
 }
 
 pcmk__output_t *
-pcmk__mk_log_output(char **argv) {
+pcmk__mk_log_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {

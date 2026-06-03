@@ -10,7 +10,7 @@
 #ifndef PCMK__CRM_COMMON_NVPAIR__H
 #define PCMK__CRM_COMMON_NVPAIR__H
 
-#include <glib.h>         // GHashTable, gpointer, GSList
+#include <glib.h>         // GHashTable, GSList
 #include <libxml/tree.h>  // xmlNode
 
 #ifdef __cplusplus
@@ -34,9 +34,9 @@ void pcmk_free_nvpairs(GSList *nvpairs);
 
 xmlNode *crm_create_nvpair_xml(xmlNode *parent, const char *id,
                                const char *name, const char *value);
-void hash2field(gpointer key, gpointer value, gpointer user_data);
-void hash2metafield(gpointer key, gpointer value, gpointer user_data);
-void hash2smartfield(gpointer key, gpointer value, gpointer user_data);
+void hash2field(void *key, void *value, void *user_data);
+void hash2metafield(void *key, void *value, void *user_data);
+void hash2smartfield(void *key, void *value, void *user_data);
 GHashTable *xml2list(const xmlNode *parent);
 
 char *crm_meta_name(const char *field);

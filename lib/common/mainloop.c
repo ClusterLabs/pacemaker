@@ -28,13 +28,13 @@ struct trigger_s {
     gboolean running;
     gboolean trigger;
     void *user_data;
-    guint id;
+    unsigned int id;
 
 };
 
 struct mainloop_timer_s {
-        guint id;
-        guint period_ms;
+        unsigned int id;
+        unsigned int period_ms;
         bool repeat;
         char *name;
         GSourceFunc cb;
@@ -42,7 +42,7 @@ struct mainloop_timer_s {
 };
 
 static gboolean
-crm_trigger_prepare(GSource * source, gint * timeout)
+crm_trigger_prepare(GSource *source, int *timeout)
 {
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
@@ -87,7 +87,7 @@ crm_trigger_check(GSource * source)
  * \return G_SOURCE_REMOVE to remove source, G_SOURCE_CONTINUE to keep it
  */
 static gboolean
-crm_trigger_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
+crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
 {
     gboolean rc = G_SOURCE_CONTINUE;
     crm_trigger_t *trig = (crm_trigger_t *) source;
@@ -125,8 +125,8 @@ static GSourceFuncs crm_trigger_funcs = {
 };
 
 static crm_trigger_t *
-mainloop_setup_trigger(GSource * source, int priority, int (*dispatch) (gpointer user_data),
-                       gpointer userdata)
+mainloop_setup_trigger(GSource * source, int priority,
+                       int (*dispatch)(void *user_data), void *userdata)
 {
     crm_trigger_t *trigger = NULL;
 
@@ -167,8 +167,8 @@ mainloop_trigger_complete(crm_trigger_t * trig)
  * \return Newly allocated mainloop source for trigger
  */
 crm_trigger_t *
-mainloop_add_trigger(int priority, int (*dispatch) (gpointer user_data),
-                     gpointer userdata)
+mainloop_add_trigger(int priority, int (*dispatch) (void *user_data),
+                     void *userdata)
 {
     GSource *source = NULL;
 
@@ -233,7 +233,7 @@ static crm_signal_t *crm_signals[NSIG];
  * \param[in] userdata  (ignored)
  */
 static gboolean
-crm_signal_dispatch(GSource *source, GSourceFunc callback, gpointer userdata)
+crm_signal_dispatch(GSource *source, GSourceFunc callback, void *userdata)
 {
     crm_signal_t *sig = (crm_signal_t *) source;
 
@@ -415,7 +415,7 @@ mainloop_cleanup(void)
  */
 struct gio_to_qb_poll {
     int32_t is_used;
-    guint source;
+    unsigned int source;
     int32_t events;
     void *data;
     qb_ipcs_dispatch_fn_t fn;
@@ -423,10 +423,10 @@ struct gio_to_qb_poll {
 };
 
 static gboolean
-gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
+gio_read_socket(GIOChannel * gio, GIOCondition condition, void *data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
-    gint fd = g_io_channel_unix_get_fd(gio);
+    int fd = g_io_channel_unix_get_fd(gio);
 
     pcmk__trace("%p.%d %d", data, fd, condition);
 
@@ -438,7 +438,7 @@ gio_read_socket(GIOChannel * gio, GIOCondition condition, gpointer data)
 }
 
 static void
-gio_poll_destroy(gpointer data)
+gio_poll_destroy(void *data)
 {
     struct gio_to_qb_poll *adaptor = (struct gio_to_qb_poll *)data;
 
@@ -459,7 +459,7 @@ gio_poll_destroy(gpointer data)
  *
  * \return  best matching GLib's priority
  */
-static gint
+static int
 conv_prio_libqb2glib(enum qb_loop_priority prio)
 {
     switch (prio) {
@@ -675,14 +675,13 @@ struct mainloop_io_s {
     void *userdata;
 
     int fd;
-    guint source;
+    unsigned int source;
     crm_ipc_t *ipc;
     GIOChannel *channel;
 
-    int (*dispatch_fn_ipc) (const char *buffer, ssize_t length, gpointer userdata);
-    int (*dispatch_fn_io) (gpointer userdata);
-    void (*destroy_fn) (gpointer userdata);
-
+    int (*dispatch_fn_ipc)(const char *buffer, ssize_t length, void *userdata);
+    int (*dispatch_fn_io)(void *userdata);
+    void (*destroy_fn)(void *userdata);
 };
 
 /*!
@@ -696,7 +695,7 @@ struct mainloop_io_s {
  * \return G_SOURCE_REMOVE to remove source, G_SOURCE_CONTINUE to keep it
  */
 static gboolean
-mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
+mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 {
     gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
@@ -797,7 +796,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, gpointer data)
 }
 
 static void
-mainloop_gio_destroy(gpointer c)
+mainloop_gio_destroy(void *c)
 {
     mainloop_io_t *client = c;
     char *c_name = strdup(client->name);
@@ -812,7 +811,7 @@ mainloop_gio_destroy(gpointer c)
     }
 
     if (client->destroy_fn) {
-        void (*destroy_fn) (gpointer userdata) = client->destroy_fn;
+        void (*destroy_fn)(void *userdata) = client->destroy_fn;
 
         client->destroy_fn = NULL;
         destroy_fn(client->userdata);
@@ -897,7 +896,7 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
  *
  * \return Period in ms
  */
-guint
+unsigned int
 pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer)
 {
     if (timer) {
@@ -1077,7 +1076,7 @@ child_kill_helper(mainloop_child_t *child)
 }
 
 static gboolean
-child_timeout_callback(gpointer p)
+child_timeout_callback(void *p)
 {
     mainloop_child_t *child = p;
     int rc = 0;
@@ -1182,7 +1181,7 @@ child_death_dispatch(int signal)
 }
 
 static gboolean
-child_signal_init(gpointer p)
+child_signal_init(void *p)
 {
     pcmk__trace("Installed SIGCHLD handler");
     /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
@@ -1290,7 +1289,7 @@ mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
 }
 
 static gboolean
-mainloop_timer_cb(gpointer user_data)
+mainloop_timer_cb(void *user_data)
 {
     int id = 0;
     bool repeat = FALSE;
@@ -1349,10 +1348,10 @@ mainloop_timer_stop(mainloop_timer_t *t)
     }
 }
 
-guint
-mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
+unsigned int
+mainloop_timer_set_period(mainloop_timer_t *t, unsigned int period_ms)
 {
-    guint last = 0;
+    unsigned int last = 0;
 
     if(t) {
         last = t->period_ms;
@@ -1366,7 +1365,8 @@ mainloop_timer_set_period(mainloop_timer_t *t, guint period_ms)
 }
 
 mainloop_timer_t *
-mainloop_timer_add(const char *name, guint period_ms, bool repeat, GSourceFunc cb, void *userdata)
+mainloop_timer_add(const char *name, unsigned int period_ms, bool repeat,
+                   GSourceFunc cb, void *userdata)
 {
     mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
@@ -1400,7 +1400,7 @@ mainloop_timer_del(mainloop_timer_t *t)
  */
 
 static gboolean
-drain_timeout_cb(gpointer user_data)
+drain_timeout_cb(void *user_data)
 {
     bool *timeout_popped = (bool*) user_data;
 
@@ -1444,10 +1444,11 @@ pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n)
  *       passed the remaining timeout in milliseconds.
  */
 void
-pcmk_drain_main_loop(GMainLoop *mloop, guint timer_ms, bool (*check)(guint))
+pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
+                     bool (*check)(unsigned int))
 {
     bool timeout_popped = FALSE;
-    guint timer = 0;
+    unsigned int timer = 0;
     GMainContext *ctx = NULL;
 
     CRM_CHECK(mloop && check, return);

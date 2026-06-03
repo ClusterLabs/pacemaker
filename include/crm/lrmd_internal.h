@@ -12,7 +12,7 @@
 
 #include <stdint.h>                     // uint32_t
 
-#include <glib.h>                       // GList, GHashTable, gpointer
+#include <glib.h>                       // GList, GHashTable
 #include <gnutls/gnutls.h>              // gnutls_datum_t
 #include <libxml/tree.h>                // xmlNode
 

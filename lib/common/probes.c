@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 
 #include <stdio.h>                  // NULL
 #include <stdbool.h>                // bool, true, false
-#include <glib.h>                   // guint
+
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/common/options.h>     // PCMK_META_INTERVAL
@@ -28,7 +28,7 @@
  *         otherwise false
  */
 bool
-pcmk_is_probe(const char *task, guint interval_ms)
+pcmk_is_probe(const char *task, unsigned int interval_ms)
 {
     // @COMPAT This should be made inline at an API compatibility break
     return (interval_ms == 0)

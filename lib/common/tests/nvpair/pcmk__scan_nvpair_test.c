@@ -1,5 +1,5 @@
 /*
- * Copyright 2025 the Pacemaker project contributors
+ * Copyright 2025-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,8 +14,8 @@
 #include <crm/common/unittest_internal.h>
 
 static void
-assert_scan_nvpair(const gchar *input, int expected_rc,
-                   const gchar *expected_name, const gchar *expected_value)
+assert_scan_nvpair(const char *input, int expected_rc,
+                   const char *expected_name, const char *expected_value)
 {
     gchar *name = NULL;
     gchar *value = NULL;
@@ -42,7 +42,7 @@ assert_scan_nvpair(const gchar *input, int expected_rc,
 static void
 null_asserts(void **state)
 {
-    const gchar *input = "key=value";
+    const char *input = "key=value";
     gchar *name = NULL;
     gchar *value = NULL;
 
@@ -54,7 +54,7 @@ null_asserts(void **state)
 static void
 already_allocated_asserts(void **state)
 {
-    const gchar *input = "key=value";
+    const char *input = "key=value";
     gchar *buf_null = NULL;
     gchar *buf_allocated = g_strdup("allocated string");
 

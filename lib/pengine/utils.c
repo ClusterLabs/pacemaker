@@ -9,16 +9,34 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t, uint64_t
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strchr, strcmp, strdup
+#include <time.h>                       // time_t
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // LOG_TRACE, qb_log_*
 
-#include "pe_status_private.h"
+#include <crm/common/actions.h>         // parse_op_key, PCMK_ACTION_ON
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/nvpair.h>          // pcmk_unpack_nvpair_blocks
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*, etc.
+#include <crm/common/probes.h>          // pcmk_xe_mask_probe_failure
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // pe_find_*, rsc_printable_id
 
-gboolean ghash_free_str_str(gpointer key, gpointer value, gpointer user_data);
+#include "pe_status_private.h"          // pe__cmp_rsc_priority
+
+gboolean ghash_free_str_str(void *key, void *value, void *user_data);
 
 /*!
  * \internal
@@ -157,7 +175,7 @@ pe__node_list2table(const GList *list)
         pcmk_node_t *new_node = NULL;
 
         new_node = pe__copy_node((const pcmk_node_t *) gIter->data);
-        g_hash_table_insert(result, (gpointer) new_node->priv->id, new_node);
+        g_hash_table_insert(result, (void *) new_node->priv->id, new_node);
     }
     return result;
 }
@@ -177,8 +195,8 @@ pe__node_list2table(const GList *list)
  * \retval  0 \c a and \c b are equal (or both are \c NULL)
  * \retval  1 \c a comes after \c b (or \c b is \c NULL and \c a is not)
  */
-gint
-pe__cmp_node_name(gconstpointer a, gconstpointer b)
+int
+pe__cmp_node_name(const void *a, const void *b)
 {
     const pcmk_node_t *node1 = (const pcmk_node_t *) a;
     const pcmk_node_t *node2 = (const pcmk_node_t *) b;
@@ -327,8 +345,8 @@ pe__show_node_scores_as(const char *file, const char *function, int line,
  * \retval  0 a's priority == b's priority (or both \c a and \c b are \c NULL)
  * \retval  1 a's priority < b's priority (or \c a is \c NULL and \c b is not)
  */
-gint
-pe__cmp_rsc_priority(gconstpointer a, gconstpointer b)
+int
+pe__cmp_rsc_priority(const void *a, const void *b)
 {
     const pcmk_resource_t *resource1 = (const pcmk_resource_t *)a;
     const pcmk_resource_t *resource2 = (const pcmk_resource_t *)b;
@@ -382,8 +400,8 @@ resource_node_score(pcmk_resource_t *rsc, const pcmk_node_t *node, int score,
     match = g_hash_table_lookup(rsc->priv->allowed_nodes, node->priv->id);
     if (match == NULL) {
         match = pe__copy_node(node);
-        g_hash_table_insert(rsc->priv->allowed_nodes,
-                            (gpointer) match->priv->id, match);
+        g_hash_table_insert(rsc->priv->allowed_nodes, (void *) match->priv->id,
+                            match);
     }
     match->assign->score = pcmk__add_scores(match->assign->score, score);
     pcmk__rsc_trace(rsc,
@@ -526,7 +544,7 @@ order_actions(pcmk_action_t *first, pcmk_action_t *then, uint32_t flags)
 }
 
 void
-destroy_ticket(gpointer data)
+destroy_ticket(void *data)
 {
     pcmk__ticket_t *ticket = data;
 

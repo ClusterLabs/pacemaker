@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -298,7 +298,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
 
 /*!
  * \internal
- * \brief Parse a guint from a string stored in a hash table
+ * \brief Parse an <tt>unsigned int</tt> from a string stored in a hash table
  *
  * \param[in]     table        Hash table to search
  * \param[in]     key          Hash table key to use to retrieve string
@@ -308,8 +308,8 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
-                      guint *result)
+pcmk__uint_from_hash(GHashTable *table, const char *key,
+                     unsigned int default_val, unsigned int *result)
 {
     const char *value;
     long long value_ll;
@@ -334,7 +334,7 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
         return rc;
     }
 
-    if ((value_ll < 0) || (value_ll > G_MAXUINT)) {
+    if ((value_ll < 0) || (value_ll > UINT_MAX)) {
         pcmk__warn("Using default (%u) for %s because '%s' is not in valid "
                    "range",
                    default_val, key, value);
@@ -342,7 +342,7 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
     }
 
     if (result != NULL) {
-        *result = (guint) value_ll;
+        *result = (unsigned int) value_ll;
     }
     return pcmk_rc_ok;
 }
@@ -361,7 +361,7 @@ pcmk__guint_from_hash(GHashTable *table, const char *key, guint default_val,
  * \return Standard Pacemaker return code
  */
 int
-pcmk_parse_interval_spec(const char *input, guint *result_ms)
+pcmk_parse_interval_spec(const char *input, unsigned int *result_ms)
 {
     long long msec = PCMK__PARSE_INT_DEFAULT;
     int rc = pcmk_rc_ok;
@@ -376,7 +376,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
 
         if (period_s != NULL) {
             msec = crm_time_get_seconds(period_s);
-            msec = QB_MIN(msec, G_MAXUINT / 1000) * 1000;
+            msec = QB_MIN(msec, UINT_MAX / 1000) * 1000;
             crm_time_free(period_s);
         }
 
@@ -397,7 +397,7 @@ pcmk_parse_interval_spec(const char *input, guint *result_ms)
 
 done:
     if (result_ms != NULL) {
-        *result_ms = (msec >= G_MAXUINT)? G_MAXUINT : (guint) msec;
+        *result_ms = (msec >= UINT_MAX)? UINT_MAX : (unsigned int) msec;
     }
     return rc;
 }
@@ -421,8 +421,8 @@ done:
  * appears to have some minor impact on the ordering of a few pseudo_event IDs
  * in the transition graph.
  */
-static guint
-pcmk__str_hash(gconstpointer v)
+static unsigned int
+pcmk__str_hash(const void *v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -472,13 +472,13 @@ pcmk__insert_dup(GHashTable *table, const char *name, const char *value)
 
 /* used with hash tables where case does not matter */
 static gboolean
-pcmk__strcase_equal(gconstpointer a, gconstpointer b)
+pcmk__strcase_equal(const void *a, const void *b)
 {
     return pcmk__str_eq((const char *)a, (const char *)b, pcmk__str_casei);
 }
 
-static guint
-pcmk__strcase_hash(gconstpointer v)
+static unsigned int
+pcmk__strcase_hash(const void *v)
 {
     const signed char *p;
     guint32 h = 0;
@@ -509,7 +509,7 @@ pcmk__strikey_table(GDestroyNotify key_destroy_func,
 }
 
 static void
-copy_str_table_entry(gpointer key, gpointer value, gpointer user_data)
+copy_str_table_entry(void *key, void *value, void *user_data)
 {
     if (key && value && user_data) {
         pcmk__insert_dup((GHashTable *) user_data,
@@ -723,9 +723,9 @@ pcmk__parse_ll_range(const char *text, long long *start, long long *end)
     long long local_start = 0;
     long long local_end = 0;
     gchar **split = NULL;
-    guint length = 0;
-    const gchar *start_s = NULL;
-    const gchar *end_s = NULL;
+    unsigned int length = 0;
+    const char *start_s = NULL;
+    const char *end_s = NULL;
 
     // Do not free
     char *remainder = NULL;
@@ -943,8 +943,8 @@ struct str_in_list_data {
  *         if \p a comes after \p b->str, or 0 if \p a is equal to \p b->str
  *         (according to \p b->flags)
  */
-static gint
-cmp_str_in_list(gconstpointer a, gconstpointer b)
+static int
+cmp_str_in_list(const void *a, const void *b)
 {
     const char *element = a;
     const struct str_in_list_data *data = b;
@@ -984,7 +984,7 @@ pcmk__str_in_list(const char *str, const GList *list, uint32_t flags)
  * \return \c true if \p str is an element of \p strv, or \c false otherwise
  */
 bool
-pcmk__g_strv_contains(gchar **strv, const gchar *str)
+pcmk__g_strv_contains(char **strv, const char *str)
 {
     // @COMPAT Replace with calls to g_strv_contains() when we require glib 2.44
     CRM_CHECK((strv != NULL) && (str != NULL), return false);

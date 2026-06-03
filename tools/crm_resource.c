@@ -148,7 +148,7 @@ struct {
     char *prop_name;              // Attribute name
     gchar *prop_set;              // --set-name (attribute block XML ID)
     gchar *prop_value;            // --parameter-value (attribute value)
-    guint timeout_ms;             // Parsed from --timeout value
+    unsigned int timeout_ms;      // Parsed from --timeout value
     char *agent_spec;             // Standard and/or provider and/or agent
     int check_level;              // Optional value of --validate or --force-check
 
@@ -200,7 +200,7 @@ quit_main_loop(crm_exit_t ec)
 }
 
 static gboolean
-resource_ipc_timeout(gpointer data)
+resource_ipc_timeout(void *data)
 {
     // Start with newline because "Waiting for ..." message doesn't have one
     if (error != NULL) {
@@ -310,7 +310,7 @@ build_constraint_list(xmlNode *root)
 }
 
 static gboolean
-validate_opt_list(const gchar *optarg)
+validate_opt_list(const char *optarg)
 {
     if (pcmk__str_eq(optarg, PCMK_VALUE_FENCING, pcmk__str_none)) {
         options.opt_list = pcmk__opt_fencing;
@@ -328,8 +328,9 @@ validate_opt_list(const gchar *optarg)
 // GOptionArgFunc callback functions
 
 static gboolean
-attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
-                 GError **error) {
+attr_set_type_cb(const char *option_name, const char *optarg, void *data,
+                 GError **error)
+{
     if (pcmk__str_any_of(option_name, "-m", "--meta", NULL)) {
         options.attr_set_type = PCMK_XE_META_ATTRIBUTES;
     } else if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
@@ -355,7 +356,7 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data,
  *         error occurred, in which case \p *error is set
  */
 static gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     // Sorted by enum rsc_command name
@@ -493,7 +494,7 @@ command_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+option_cb(const char *option_name, const char *optarg, void *data,
           GError **error)
 {
     gchar *name = NULL;
@@ -518,7 +519,7 @@ option_cb(const gchar *option_name, const gchar *optarg, gpointer data,
 }
 
 static gboolean
-timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
+timeout_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
     long long timeout_ms = 0;
@@ -527,7 +528,7 @@ timeout_cb(const gchar *option_name, const gchar *optarg, gpointer data,
         || (timeout_ms < 0)) {
         return FALSE;
     }
-    options.timeout_ms = (guint) QB_MIN(timeout_ms, UINT_MAX);
+    options.timeout_ms = (unsigned int) QB_MIN(timeout_ms, UINT_MAX);
     return TRUE;
 }
 
@@ -1561,7 +1562,7 @@ handle_list_resources(pcmk_resource_t *rsc, pcmk_node_t *node, cib_t *cib_conn,
                       pcmk_scheduler_t *scheduler, pcmk_ipc_api_t *controld_api,
                       xmlNode *cib_xml_orig)
 {
-    GList *all = g_list_prepend(NULL, (gpointer) "*");
+    GList *all = g_list_prepend(NULL, (void *) "*");
     int rc = out->message(out, "resource-list", scheduler,
                           pcmk_show_inactive_rscs
                           |pcmk_show_rsc_only
@@ -2104,7 +2105,7 @@ main(int argc, char **argv)
         // Commands that use positional arguments will create override_params
         if (options.override_params == NULL) {
             GString *msg = g_string_sized_new(128);
-            guint len = g_strv_length(options.remainder);
+            unsigned int len = g_strv_length(options.remainder);
 
             g_string_append(msg, "non-option ARGV-elements:");
 

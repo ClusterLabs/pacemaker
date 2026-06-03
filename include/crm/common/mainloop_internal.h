@@ -16,7 +16,7 @@
 
 #include <sys/types.h>              // pid_t
 
-#include <glib.h>                   // gboolean, guint
+#include <glib.h>                   // gboolean
 
 #include <crm/common/ipc.h>         // crm_ipc_t
 #include <crm/common/mainloop.h>    // ipc_client_callbacks, mainloop_*
@@ -41,7 +41,7 @@ struct mainloop_child_s {
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
-guint pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
+unsigned int pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 #ifdef __cplusplus
 }

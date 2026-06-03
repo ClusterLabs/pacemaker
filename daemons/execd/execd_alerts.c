@@ -48,7 +48,7 @@ static int
 max_inflight_timeout(void)
 {
     GHashTableIter iter;
-    gpointer timeout;
+    void *timeout;
     int max_timeout = 0;
 
     if (inflight_alerts) {
@@ -166,10 +166,10 @@ err:
 }
 
 static bool
-drain_check(guint remaining_timeout_ms)
+drain_check(unsigned int remaining_timeout_ms)
 {
     if (inflight_alerts != NULL) {
-        guint count = g_hash_table_size(inflight_alerts);
+        unsigned int count = g_hash_table_size(inflight_alerts);
 
         if (count > 0) {
             pcmk__trace("%d alerts pending (%.3fs timeout remaining)",
@@ -184,7 +184,7 @@ void
 lrmd_drain_alerts(GMainLoop *mloop)
 {
     if (inflight_alerts != NULL) {
-        guint timer_ms = max_inflight_timeout() + 5000;
+        unsigned int timer_ms = max_inflight_timeout() + 5000;
 
         pcmk__trace("Draining in-flight alerts (timeout %.3fs)",
                     (timer_ms / 1000.0));

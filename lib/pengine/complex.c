@@ -9,14 +9,30 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <errno.h>                      // EINVAL, ENOMEM
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strdup
 
-#include <libxml/tree.h>                    // xmlNode
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // LOG_TRACE
 
-#include <crm/pengine/internal.h>
-#include <crm/common/xml.h>
+#include <crm/common/agents.h>          // PCMK_RESOURCE_CLASS_STONITH
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*, etc.
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // pcmk_parse_score, PCMK_SCORE_INFINITY
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/complex.h>        // pe_rsc_params, etc.
+#include <crm/pengine/internal.h>       // clone_*, native_*, pe__*, etc.
 
-#include "pe_status_private.h"
+#include "pe_status_private.h"          // pe__{bundle,group}_*, etc.
 
 void populate_hash(xmlNode * nvpair_list, GHashTable * hash, const char **attrs, int attrs_length);
 
@@ -106,7 +122,7 @@ get_resource_type(const char *name)
  *       values.
  */
 static void
-dup_attr(gpointer key, gpointer value, gpointer user_data)
+dup_attr(void *key, void *value, void *user_data)
 {
     GHashTable *table = user_data;
 

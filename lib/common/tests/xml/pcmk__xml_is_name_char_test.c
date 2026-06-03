@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 
 #include <stdbool.h>
 
-#include <glib.h>                           // gchar, g_ascii_isalnum(), etc.
+#include <glib.h>                           // g_*
 
 #include <crm/common/unittest_internal.h>
 
@@ -28,7 +28,7 @@
 static void
 assert_name_char(int c, bool reference)
 {
-    gchar utf8_buf[6] = { 0, };
+    char utf8_buf[6] = { 0, };
     int len = 4;
     int ref_len = g_unichar_to_utf8(c, utf8_buf);
     bool result = pcmk__xml_is_name_char(utf8_buf, &len);

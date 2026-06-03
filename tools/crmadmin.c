@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -30,7 +30,7 @@ static enum {
 
 struct {
     gboolean health;
-    guint timeout;
+    unsigned int timeout;
     char *optarg;
     char *ipc_name;
     gboolean bash_export;
@@ -41,7 +41,8 @@ struct {
     .bash_export = FALSE
 };
 
-gboolean command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error);
+gboolean command_cb(const char *option_name, const char *optarg, void *data,
+                    GError **error);
 
 static GOptionEntry command_options[] = {
     { "status", 'S', 0, G_OPTION_ARG_CALLBACK, command_cb,
@@ -96,7 +97,8 @@ static GOptionEntry additional_options[] = {
 };
 
 gboolean
-command_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error)
+command_cb(const char *option_name, const char *optarg, void *data,
+           GError **error)
 {
     if (!strcmp(option_name, "--status") || !strcmp(option_name, "-S")) {
         command = cmd_health;

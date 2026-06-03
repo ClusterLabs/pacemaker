@@ -120,7 +120,7 @@ cli_resource_print(pcmk_resource_t *rsc, bool expanded)
 
     scheduler = rsc->priv->scheduler;
     out = scheduler->priv->out;
-    all = g_list_prepend(all, (gpointer) "*");
+    all = g_list_prepend(all, (void *) "*");
 
     out->begin_list(out, NULL, NULL, "Resource Config");
     out->message(out, (const char *) rsc->priv->xml->name, pcmk_show_pending,
@@ -392,7 +392,8 @@ resource_agent_action_default(pcmk__output_t *out, va_list args) {
         out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &name,
+                                      (void **) &value)) {
             out->message(out, "override", rsc_name, name, value);
         }
 
@@ -467,7 +468,8 @@ resource_agent_action_xml(pcmk__output_t *out, va_list args) {
         out->begin_list(out, NULL, NULL, PCMK_XE_OVERRIDES);
 
         g_hash_table_iter_init(&iter, overrides);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &name, (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &name,
+                                      (void **) &value)) {
             out->message(out, "override", rsc_name, name, value);
         }
 
@@ -576,12 +578,12 @@ resource_check_list_xml(pcmk__output_t *out, va_list args) {
     return pcmk_rc_ok;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const char *")
 static int
 resource_search_list_default(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    const gchar *requested_name = va_arg(args, const gchar *);
+    const char *requested_name = va_arg(args, const char *);
 
     bool printed = false;
     int rc = pcmk_rc_no_output;
@@ -620,12 +622,12 @@ resource_search_list_default(pcmk__output_t *out, va_list args)
     return rc;
 }
 
-PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const gchar *")
+PCMK__OUTPUT_ARGS("resource-search-list", "GList *", "const char *")
 static int
 resource_search_list_xml(pcmk__output_t *out, va_list args)
 {
     GList *nodes = va_arg(args, GList *);
-    const gchar *requested_name = va_arg(args, const gchar *);
+    const char *requested_name = va_arg(args, const char *);
 
     pcmk__output_xml_create_parent(out, PCMK_XE_NODES,
                                    PCMK_XA_RESOURCE, requested_name,

@@ -9,15 +9,36 @@
 
 #include <crm_internal.h>
 
-#include <ctype.h>
+#include <stdarg.h>                     // va_arg, va_list
 #include <stdbool.h>                    // bool, true, false
-#include <stdint.h>
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdio.h>                      // sscanf
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp, strdup, strlen
 
-#include <crm/pengine/status.h>
-#include <crm/pengine/internal.h>
-#include <crm/common/xml.h>
-#include <crm/common/output.h>
-#include <pe_status_private.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qblog.h>                   // LOG_TRACE
+
+#include <crm/common/actions.h>         // crm_create_op_xml, PCMK_ACTION_*
+#include <crm/common/agents.h>          // PCMK_RESOURCE_CLASS_OCF
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/nvpair.h>          // crm_create_nvpair_xml
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/output.h>          // pcmk_show_implicit_rscs
+#include <crm/common/results.h>         // pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_unknown, rsc_role_e
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // CRM_ATTR_KIND
+#include <crm/lrmd.h>                   // DEFAULT_REMOTE_*
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // pe_bundle_replicas, etc.
+
+#include "pe_status_private.h"          // pe__bundle_*, pe__unpack_resource
 
 enum pe__bundle_mount_flags {
     pe__bundle_mount_none       = 0x00,
@@ -614,14 +635,13 @@ done:
 static void
 disallow_node(pcmk_resource_t *rsc, const char *uname)
 {
-    gpointer match = g_hash_table_lookup(rsc->priv->allowed_nodes, uname);
+    void *match = g_hash_table_lookup(rsc->priv->allowed_nodes, uname);
 
     if (match) {
         ((pcmk_node_t *) match)->assign->score = -PCMK_SCORE_INFINITY;
         ((pcmk_node_t *) match)->assign->probe_mode = pcmk__probe_never;
     }
-    g_list_foreach(rsc->priv->children, (GFunc) disallow_node,
-                   (gpointer) uname);
+    g_list_foreach(rsc->priv->children, (GFunc) disallow_node, (void *) uname);
 }
 
 static int
@@ -2071,8 +2091,8 @@ pe__bundle_active_node(const pcmk_resource_t *rsc, unsigned int *count_all,
             node = node_iter->data;
 
             // If insert returns true, we haven't counted this node yet
-            if (g_hash_table_insert(nodes, (gpointer) node->details,
-                                    (gpointer) node)
+            if (g_hash_table_insert(nodes, (void *) node->details,
+                                    (void *) node)
                 && !pe__count_active_node(rsc, node, &active, count_all,
                                           count_clean)) {
                 goto done;

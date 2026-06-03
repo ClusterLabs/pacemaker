@@ -131,7 +131,7 @@ log_fsa_input(fsa_data_t *stored_msg)
 }
 
 static void
-log_fsa_data(gpointer data, gpointer user_data)
+log_fsa_data(void *data, void *user_data)
 {
     fsa_data_t *fsa_data = data;
     unsigned int *offset = user_data;
@@ -506,7 +506,7 @@ static void
 check_join_counts(fsa_data_t *msg_data)
 {
     int count;
-    guint npeers;
+    unsigned int npeers = 0;
 
     count = crmd_join_phase_count(controld_join_finalized);
     if (count > 0) {

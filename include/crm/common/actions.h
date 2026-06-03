@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,7 +11,7 @@
 #define PCMK__CRM_COMMON_ACTIONS__H
 
 #include <stdbool.h>                    // bool
-#include <glib.h>                       // gboolean, guint
+#include <glib.h>                       // gboolean
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/lrmd_events.h>            // lrmd_event_data_t
@@ -68,7 +68,7 @@ extern "C" {
 
 // For parsing various action-related string specifications
 gboolean parse_op_key(const char *key, char **rsc_id, char **op_type,
-                      guint *interval_ms);
+                      unsigned int *interval_ms);
 gboolean decode_transition_key(const char *key, char **uuid, int *transition_id,
                                int *action_id, int *target_rc);
 gboolean decode_transition_magic(const char *magic, char **uuid,

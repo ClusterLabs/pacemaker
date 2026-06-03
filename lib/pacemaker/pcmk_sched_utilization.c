@@ -1,5 +1,5 @@
 /*
- * Copyright 2014-2025 the Pacemaker project contributors
+ * Copyright 2014-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -67,7 +67,7 @@ struct compare_data {
  * \param[in,out] user_data  Comparison data (as struct compare_data*)
  */
 static void
-compare_utilization_value(gpointer key, gpointer value, gpointer user_data)
+compare_utilization_value(void *key, void *value, void *user_data)
 {
     int node1_capacity = 0;
     int node2_capacity = 0;
@@ -145,7 +145,7 @@ struct calculate_data {
  * \param[in,out] user_data  Calculation data (as struct calculate_data *)
  */
 static void
-update_utilization_value(gpointer key, gpointer value, gpointer user_data)
+update_utilization_value(void *key, void *value, void *user_data)
 {
     struct calculate_data *data = user_data;
     const char *current = g_hash_table_lookup(data->current_utilization, key);
@@ -221,7 +221,7 @@ struct capacity_data {
  * \param[in,out] user_data  Capacity data (as struct capacity_data *)
  */
 static void
-check_capacity(gpointer key, gpointer value, gpointer user_data)
+check_capacity(void *key, void *value, void *user_data)
 {
     int required = 0;
     int remaining = 0;

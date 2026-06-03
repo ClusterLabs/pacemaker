@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2025 the Pacemaker project contributors
+ * Copyright 2015-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -103,7 +103,7 @@ config_query_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 }
 
 gboolean
-attrd_read_options(gpointer user_data)
+attrd_read_options(void *user_data)
 {
     int call_id;
 

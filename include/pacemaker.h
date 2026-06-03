@@ -1,5 +1,5 @@
 /*
- * Copyright 2019-2025 the Pacemaker project contributors
+ * Copyright 2019-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -50,31 +50,33 @@ enum pcmk_sim_flags {
 /*!
  * \brief Synthetic cluster events that can be injected into the cluster
  *        for running simulations.
+ *
+ * \note This struct should typically be freed using \c pcmk_free_injections().
  */
 typedef struct {
-    /*! A list of node names (gchar *) to simulate bringing online */
+    /*! A list of node names (char *) to simulate bringing online */
     GList *node_up;
-    /*! A list of node names (gchar *) to simulate bringing offline */
+    /*! A list of node names (char *) to simulate bringing offline */
     GList *node_down;
-    /*! A list of node names (gchar *) to simulate failing */
+    /*! A list of node names (char *) to simulate failing */
     GList *node_fail;
-    /*! A list of operations (gchar *) to inject.  The format of these strings
+    /*! A list of operations (char *) to inject.  The format of these strings
      * is described in the "Operation Specification" section of crm_simulate
      * help output.
      */
     GList *op_inject;
-    /*! A list of operations (gchar *) that should return a given error code
+    /*! A list of operations (char *) that should return a given error code
      * if they fail.  The format of these strings is described in the
      * "Operation Specification" section of crm_simulate help output.
      */
     GList *op_fail;
-    /*! A list of tickets (gchar *) to simulate granting */
+    /*! A list of tickets (char *) to simulate granting */
     GList *ticket_grant;
-    /*! A list of tickets (gchar *) to simulate revoking */
+    /*! A list of tickets (char *) to simulate revoking */
     GList *ticket_revoke;
-    /*! A list of tickets (gchar *) to simulate putting on standby */
+    /*! A list of tickets (char *) to simulate putting on standby */
     GList *ticket_standby;
-    /*! A list of tickets (gchar *) to simulate activating */
+    /*! A list of tickets (char *) to simulate activating */
     GList *ticket_activate;
     /*! Does the cluster have an active watchdog device? */
     char *watchdog;
@@ -211,7 +213,8 @@ int pcmk_pacemakerd_status(xmlNodePtr *xml, const char *ipc_name,
  *       or if \p rsc_type is incorrect for \p rsc_id (deleting something
  *       that doesn't exist always succeeds).
  */
-int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_type);
+int pcmk_resource_delete(xmlNode **xml, const char *rsc_id,
+                         const char *rsc_type);
 
 /*!
  * \brief Calculate and output resource operation digests
@@ -223,7 +226,7 @@ int pcmk_resource_delete(xmlNodePtr *xml, const char *rsc_id, const char *rsc_ty
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_resource_digests(xmlNodePtr *xml, pcmk_resource_t *rsc,
+int pcmk_resource_digests(xmlNode **xml, pcmk_resource_t *rsc,
                           const pcmk_node_t *node, GHashTable *overrides);
 
 /*!
@@ -294,7 +297,7 @@ int pcmk_list_nodes(xmlNode **xml, const char *types);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_status(xmlNodePtr *xml);
+int pcmk_status(xmlNode **xml);
 
 /*!
  * \brief Check whether each rule in a list is in effect
@@ -308,7 +311,7 @@ int pcmk_status(xmlNodePtr *xml);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
+int pcmk_check_rules(xmlNode **xml, xmlNode *input, const crm_time_t *date,
                      const char **rule_ids);
 
 /*!
@@ -323,7 +326,7 @@ int pcmk_check_rules(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
  * \return Standard Pacemaker return code
  */
 static inline int
-pcmk_check_rule(xmlNodePtr *xml, xmlNodePtr input, const crm_time_t *date,
+pcmk_check_rule(xmlNode **xml, xmlNode *input, const crm_time_t *date,
                 const char *rule_id)
 {
     const char *rule_ids[] = {rule_id, NULL};
@@ -462,7 +465,7 @@ int pcmk_list_primitive_meta(xmlNode **xml, bool all);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
+int pcmk_ticket_constraints(xmlNode **xml, const char *ticket_id);
 
 
 /*!
@@ -475,7 +478,7 @@ int pcmk_ticket_constraints(xmlNodePtr *xml, const char *ticket_id);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
+int pcmk_ticket_delete(xmlNode **xml, const char *ticket_id, bool force);
 
 /*!
  * \brief Return the value of a ticket's attribute
@@ -488,7 +491,7 @@ int pcmk_ticket_delete(xmlNodePtr *xml, const char *ticket_id, bool force);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
+int pcmk_ticket_get_attr(xmlNode **xml, const char *ticket_id,
                          const char *attr_name, const char *attr_default);
 
 /*!
@@ -500,7 +503,7 @@ int pcmk_ticket_get_attr(xmlNodePtr *xml, const char *ticket_id,
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
+int pcmk_ticket_info(xmlNode **xml, const char *ticket_id);
 
 /*!
  * \brief Remove the given attribute(s) from a ticket
@@ -514,8 +517,8 @@ int pcmk_ticket_info(xmlNodePtr *xml, const char *ticket_id);
  *
  * \return Standard Pacemaker return code
  */
-int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_delete,
-                            bool force);
+int pcmk_ticket_remove_attr(xmlNode **xml, const char *ticket_id,
+                            GList *attr_delete, bool force);
 
 /*!
  * \brief Set the given attribute(s) on a ticket
@@ -534,8 +537,8 @@ int pcmk_ticket_remove_attr(xmlNodePtr *xml, const char *ticket_id, GList *attr_
  * \note If no \p ticket_id attribute exists but \p attr_set is non-NULL, the
  *       ticket will be created with the given attributes.
  */
-int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *attr_set,
-                         bool force);
+int pcmk_ticket_set_attr(xmlNode **xml, const char *ticket_id,
+                         GHashTable *attr_set, bool force);
 
 /*!
  * \brief Return a ticket's state XML
@@ -549,7 +552,7 @@ int pcmk_ticket_set_attr(xmlNodePtr *xml, const char *ticket_id, GHashTable *att
  * \note If \p ticket_id is not \c NULL and more than one ticket exists with
  *       that ID, this function returns \c pcmk_rc_duplicate_id.
  */
-int pcmk_ticket_state(xmlNodePtr *xml, const char *ticket_id);
+int pcmk_ticket_state(xmlNode **xml, const char *ticket_id);
 
 /*!
  * \brief Ask the cluster to perform fencing

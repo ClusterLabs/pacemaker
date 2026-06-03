@@ -28,7 +28,7 @@ static int pending_rsc_update = 0;
  * \param[in] user_data  CIB connection that dropped
  */
 static void
-handle_cib_disconnect(gpointer user_data)
+handle_cib_disconnect(void *user_data)
 {
     CRM_LOG_ASSERT(user_data == controld_globals.cib_conn);
 
@@ -126,7 +126,7 @@ do_cib_control(long long action, enum crmd_fsa_cause cause,
 
     cib_t *cib_conn = controld_globals.cib_conn;
 
-    void (*dnotify_fn)(gpointer user_data) = handle_cib_disconnect;
+    void (*dnotify_fn)(void *user_data) = handle_cib_disconnect;
     void (*update_cb)(const char *event, xmlNodePtr msg) = do_cib_updated;
 
     int rc = pcmk_ok;
@@ -974,7 +974,7 @@ controld_delete_action_history(const lrmd_event_data_t *op)
  */
 void
 controld_cib_delete_last_failure(const char *rsc_id, const char *node,
-                                 const char *action, guint interval_ms)
+                                 const char *action, unsigned int interval_ms)
 {
     char *xpath = NULL;
     char *last_failure_key = NULL;

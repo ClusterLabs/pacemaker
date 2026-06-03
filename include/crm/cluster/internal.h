@@ -241,7 +241,7 @@ void pcmk__reap_unseen_nodes(uint64_t ring_id);
 
 void pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
                                                         gboolean),
-                                   void (*destroy) (gpointer));
+                                   void (*destroy)(void *));
 
 bool pcmk__cluster_send_message(const pcmk__node_status_t *node,
                                 enum pcmk_ipc_server service,

@@ -621,8 +621,8 @@ typedef struct {
     xmlNode *match;
 } xml_change_obj_t;
 
-static gint
-sort_change_obj_by_position(gconstpointer a, gconstpointer b)
+static int
+sort_change_obj_by_position(const void *a, const void *b)
 {
     const xml_change_obj_t *change_obj_a = a;
     const xml_change_obj_t *change_obj_b = b;

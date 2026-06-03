@@ -27,8 +27,8 @@
 
 static GHashTable *cib_op_callback_table = NULL;
 
-static gint
-ciblib_GCompareFunc(gconstpointer a, gconstpointer b)
+static int
+ciblib_GCompareFunc(const void *a, const void *b)
 {
     int rc = 0;
     const cib_notify_client_t *a_client = a;
@@ -152,7 +152,7 @@ cib_client_del_notify_callback(cib_t *cib, const char *event,
 }
 
 static gboolean
-cib_async_timeout_handler(gpointer data)
+cib_async_timeout_handler(void *data)
 {
     struct timer_rec_s *timer = data;
 
@@ -416,7 +416,7 @@ cib_client_set_user(cib_t *cib, const char *user)
 }
 
 static void
-cib_destroy_op_callback(gpointer data)
+cib_destroy_op_callback(void *data)
 {
     cib_callback_client_t *blob = data;
 
@@ -730,7 +730,7 @@ num_cib_op_callbacks(void)
 }
 
 static void
-cib_dump_pending_op(gpointer key, gpointer value, gpointer user_data)
+cib_dump_pending_op(void *key, void *value, void *user_data)
 {
     int call = GPOINTER_TO_INT(key);
     cib_callback_client_t *blob = value;

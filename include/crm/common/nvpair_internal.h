@@ -15,7 +15,7 @@
 #define PCMK__CRM_COMMON_NVPAIR_INTERNAL__H
 
 #include <stdbool.h>                        // bool
-#include <glib.h>                           // gboolean, gpointer, GHashTable
+#include <glib.h>                           // gboolean, GHashTable
 #include <libxml/tree.h>                    // xmlNode
 
 #include <crm/common/rules.h>               // pcmk_rule_input_t
@@ -44,10 +44,9 @@ typedef struct {
     crm_time_t *next_change;
 } pcmk__nvpair_unpack_t;
 
-gint pcmk__cmp_nvpair_blocks(gconstpointer a, gconstpointer b,
-                             gpointer user_data);
+int pcmk__cmp_nvpair_blocks(const void *a, const void *b, void *user_data);
 
-void pcmk__unpack_nvpair_block(gpointer data, gpointer user_data);
+void pcmk__unpack_nvpair_block(void *data, void *user_data);
 
 void pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                                 const char *first_id,
@@ -55,7 +54,7 @@ void pcmk__unpack_nvpair_blocks(const xmlNode *xml, const char *element_name,
                                 GHashTable *values, crm_time_t *next_change,
                                 xmlDoc *doc);
 
-int pcmk__scan_nvpair(const gchar *input, gchar **name, gchar **value);
+int pcmk__scan_nvpair(const char *input, gchar **name, gchar **value);
 char *pcmk__format_nvpair(const char *name, const char *value,
                           const char *units);
 

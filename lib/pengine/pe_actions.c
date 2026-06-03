@@ -9,16 +9,37 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
+#include <limits.h>                     // INT_MAX, UINT_MAX
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // free
+#include <string.h>                     // strdup, strstr
+#include <syslog.h>                     // LOG_WARNING
+#include <time.h>                       // time_t
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
-#include "pe_status_private.h"
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode, xmlAttrPtr
+#include <qb/qbdefs.h>                  // QB_MAX, QB_MIN
+
+#include <crm/common/actions.h>         // PCMK_ACTION_*, etc.
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps, etc.
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT, do_crm_log
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*, etc.
+#include <crm/common/probes.h>          // pcmk_is_probe
+#include <crm/common/results.h>         // pcmk_rc_ok
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/rules.h>           // pcmk_rule_input_t
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/internal.h>       // pe__*, etc.
+
+#include "pe_status_private.h"          // pe__compare_fencing_digest
 
 static void unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
-                             guint interval_ms);
+                             unsigned int interval_ms);
 
 static void
 add_singleton(pcmk_scheduler_t *scheduler, pcmk_action_t *action)
@@ -88,7 +109,7 @@ find_existing_action(const char *key, const pcmk_resource_t *rsc,
  */
 static xmlNode *
 find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
-                         guint interval_ms, bool include_disabled)
+                         unsigned int interval_ms, bool include_disabled)
 {
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
                                                    PCMK_XE_OP, NULL, NULL);
@@ -97,7 +118,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
         bool enabled = false;
         const char *config_name = NULL;
         const char *interval_spec = NULL;
-        guint tmp_ms = 0U;
+        unsigned int tmp_ms = 0;
 
         // @TODO This does not consider meta-attributes, rules, defaults, etc.
         if (!include_disabled
@@ -134,7 +155,7 @@ find_exact_action_config(const pcmk_resource_t *rsc, const char *action_name,
  */
 xmlNode *
 pcmk__find_action_config(const pcmk_resource_t *rsc, const char *action_name,
-                         guint interval_ms, bool include_disabled)
+                         unsigned int interval_ms, bool include_disabled)
 {
     xmlNode *action_config = NULL;
 
@@ -199,7 +220,7 @@ new_action(char *key, const char *task, pcmk_resource_t *rsc,
     if (rsc == NULL) {
         action->meta = pcmk__strkey_table(free, free);
     } else {
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
 
         parse_op_key(key, NULL, NULL, &interval_ms);
         action->op_entry = pcmk__find_action_config(rsc, task, interval_ms,
@@ -431,7 +452,7 @@ validate_on_fail(const pcmk_resource_t *rsc, const char *action_name,
     const char *role = NULL;
     const char *interval_spec = NULL;
     const char *value = g_hash_table_lookup(meta, PCMK_META_ON_FAIL);
-    guint interval_ms = 0U;
+    unsigned int interval_ms = 0;
 
     // Stop actions can only use certain on-fail values
     if (pcmk__str_eq(action_name, PCMK_ACTION_STOP, pcmk__str_none)
@@ -550,11 +571,11 @@ unpack_timeout(const char *value)
 // true if value contains valid, non-NULL interval origin for recurring op
 static bool
 unpack_interval_origin(const char *value, const xmlNode *xml_obj,
-                       guint interval_ms, const crm_time_t *now,
+                       unsigned int interval_ms, const crm_time_t *now,
                        long long *start_delay)
 {
     long long result = 0;
-    guint interval_sec = pcmk__timeout_ms2s(interval_ms);
+    unsigned int interval_sec = pcmk__timeout_ms2s(interval_ms);
     crm_time_t *origin = NULL;
 
     // Ignore unspecified values and non-recurring operations
@@ -623,7 +644,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
 static xmlNode *
 most_frequent_monitor(const pcmk_resource_t *rsc)
 {
-    guint min_interval_ms = G_MAXUINT;
+    unsigned int min_interval_ms = UINT_MAX;
     xmlNode *op = NULL;
 
     for (xmlNode *operation = pcmk__xe_first_child(rsc->priv->ops_xml,
@@ -631,7 +652,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
          operation != NULL; operation = pcmk__xe_next(operation, PCMK_XE_OP)) {
 
         bool enabled = false;
-        guint interval_ms = 0U;
+        unsigned int interval_ms = 0;
         const char *interval_spec = pcmk__xe_get(operation, PCMK_META_INTERVAL);
 
         // We only care about enabled recurring monitors
@@ -678,7 +699,7 @@ most_frequent_monitor(const pcmk_resource_t *rsc)
  */
 GHashTable *
 pcmk__unpack_action_meta(pcmk_resource_t *rsc, const pcmk_node_t *node,
-                         const char *action_name, guint interval_ms,
+                         const char *action_name, unsigned int interval_ms,
                          const xmlNode *action_config)
 {
     GHashTable *meta = NULL;
@@ -856,7 +877,7 @@ pcmk__action_requires(const pcmk_resource_t *rsc, const char *action_name)
  */
 enum pcmk__on_fail
 pcmk__parse_on_fail(const pcmk_resource_t *rsc, const char *action_name,
-                    guint interval_ms, const char *value)
+                    unsigned int interval_ms, const char *value)
 {
     const char *desc = NULL;
     bool needs_remote_reset = false;
@@ -1049,7 +1070,7 @@ pcmk__role_after_failure(const pcmk_resource_t *rsc, const char *action_name,
  */
 static void
 unpack_operation(pcmk_action_t *action, const xmlNode *xml_obj,
-                 guint interval_ms)
+                 unsigned int interval_ms)
 {
     const char *value = NULL;
 
@@ -1699,8 +1720,8 @@ pe__is_newer_op(const xmlNode *xml_a, const xmlNode *xml_b)
     CRM_CHECK(FALSE, sort_return(0, "default"));
 }
 
-gint
-sort_op_by_callid(gconstpointer a, gconstpointer b)
+int
+sort_op_by_callid(const void *a, const void *b)
 {
     return pe__is_newer_op((const xmlNode *) a, (const xmlNode *) b);
 }

@@ -18,7 +18,7 @@
 #include <stdbool.h>    // bool
 #include <stdint.h>     // uint32_t, UINT32_C()
 
-#include <glib.h>       // gpointer, GList, GHashTable
+#include <glib.h>       // GList, GHashTable
 #include <crm/common/nodes.h>
 
 #ifdef __cplusplus
@@ -156,7 +156,7 @@ pcmk_node_t *pcmk__find_node_in_list(const GList *nodes, const char *node_name);
             (node)->priv->flags, (flags_to_clear), #flags_to_clear);        \
     } while (0)
 
-void pcmk__free_node(gpointer user_data);
+void pcmk__free_node(void *user_data);
 
 /*!
  * \internal

@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2023 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -18,7 +18,7 @@ basic(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("Fencing_monitor_60000", &rsc, &ty, &ms));
     assert_string_equal(rsc, "Fencing");
@@ -49,7 +49,7 @@ rsc_just_underbars(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("__monitor_1000", &rsc, &ty, &ms));
     assert_string_equal(rsc, "_");
@@ -78,7 +78,7 @@ colon_in_rsc(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("ClusterIP:0_start_0", &rsc, &ty, &ms));
     assert_string_equal(rsc, "ClusterIP:0");
@@ -100,7 +100,7 @@ dashes_in_rsc(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("httpd-bundle-0_monitor_30000", &rsc, &ty, &ms));
     assert_string_equal(rsc, "httpd-bundle-0");
@@ -122,7 +122,7 @@ migrate_to_from(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("vm_migrate_from_0", &rsc, &ty, &ms));
     assert_string_equal(rsc, "vm");
@@ -151,7 +151,7 @@ pre_post(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("rsc_drbd_7788:1_post_notify_start_0", &rsc, &ty, &ms));
     assert_string_equal(rsc, "rsc_drbd_7788:1");
@@ -187,7 +187,7 @@ static void
 skip_rsc(void **state)
 {
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("Fencing_monitor_60000", NULL, &ty, &ms));
     assert_string_equal(ty, "monitor");
@@ -199,7 +199,7 @@ static void
 skip_ty(void **state)
 {
     char *rsc = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_true(parse_op_key("Fencing_monitor_60000", &rsc, NULL, &ms));
     assert_string_equal(rsc, "Fencing");
@@ -225,7 +225,7 @@ empty_input(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_false(parse_op_key("", &rsc, &ty, &ms));
     assert_null(rsc);
@@ -243,7 +243,7 @@ malformed_input(void **state)
 {
     char *rsc = NULL;
     char *ty = NULL;
-    guint ms = 0;
+    unsigned int ms = 0;
 
     assert_false(parse_op_key("httpd-bundle-0", &rsc, &ty, &ms));
     assert_null(rsc);

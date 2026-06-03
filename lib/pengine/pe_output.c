@@ -9,16 +9,37 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <stdint.h>
+#include <limits.h>                     // INT_MIN
+#include <stdarg.h>                     // va_arg, va_list, va_end, va_start
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t, uint64_t
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcat, strlen, strcmp, strdup, etc.
+#include <syslog.h>                     // LOG_DEBUG
+#include <time.h>                       // time_t, ctime
 
-#include <glib.h>                           // g_strchomp()
-#include <libxml/tree.h>                    // xmlNode
+#include <glib.h>                       // g_*
+#include <libxml/tree.h>                // xmlNode
 
-#include <crm/common/output.h>
-#include <crm/cib/util.h>
-#include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
+#include <crm/common/actions.h>         // parse_op_key, PCMK_ACTION_*
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps, etc.
+#include <crm/common/cib.h>             // pcmk_find_cib_element
+#include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_*
+#include <crm/common/iso8601.h>         // crm_time_*
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/nodes.h>           // PCMK_NODE_ATTR_*
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_OPT_*, PCMK_VALUE_*
+#include <crm/common/output.h>          // pcmk_show_*
+#include <crm/common/probes.h>          // pcmk_xe_mask_probe_failure
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*, etc.
+#include <crm/common/roles.h>           // PCMK_ROLE_PROMOTED, rsc_role_e
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/crm.h>                    // CRM_ATTR_FEATURE_SET
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // pe_find_*, rsc_printable_id
 
 const char *
 pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
@@ -39,7 +60,7 @@ pe__resource_description(const pcmk_resource_t *rsc, uint32_t show_opts)
                      PCMK_NODE_ATTR_STANDBY, "#", NULL }
 
 static int
-compare_attribute(gconstpointer a, gconstpointer b)
+compare_attribute(const void *a, const void *b)
 {
     int rc;
 
@@ -177,7 +198,7 @@ get_operation_list(xmlNode *rsc_entry) {
 }
 
 static void
-add_dump_node(gpointer key, gpointer value, gpointer user_data)
+add_dump_node(void *key, void *value, void *user_data)
 {
     xmlNodePtr node = user_data;
 
@@ -186,7 +207,7 @@ add_dump_node(gpointer key, gpointer value, gpointer user_data)
 }
 
 static void
-append_dump_text(gpointer key, gpointer value, gpointer user_data)
+append_dump_text(void *key, void *value, void *user_data)
 {
     char **dump_text = user_data;
     char *new_text = pcmk__assert_asprintf("%s %s=%s",
@@ -1432,7 +1453,7 @@ failed_action_friendly(pcmk__output_t *out, const xmlNode *xml_op,
 {
     char *rsc_id = NULL;
     char *task = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     time_t last_change_epoch = 0;
     GString *str = NULL;
 
@@ -1645,14 +1666,14 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         const char *queue_time = pcmk__xe_get(xml_op, PCMK_XA_QUEUE_TIME);
         const char *exec = pcmk__xe_get(xml_op, PCMK_XA_EXEC_TIME);
         const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
                                           crm_time_log_date
                                           |crm_time_log_timeofday
                                           |crm_time_log_with_timezone);
 
-        pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
+        pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);
 
         pcmk__xe_set_props(node,
@@ -2369,7 +2390,7 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
 
         GList *attr_list = NULL;
         GHashTableIter iter;
-        gpointer key;
+        void *key = NULL;
 
         if (!node || !node->details || !node->details->online) {
             continue;
@@ -3409,7 +3430,7 @@ ticket_list(pcmk__output_t *out, va_list args) {
     bool details = va_arg(args, int);
 
     GHashTableIter iter;
-    gpointer value;
+    void *value = NULL;
 
     if (g_hash_table_size(tickets) == 0) {
         return pcmk_rc_no_output;

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 the Pacemaker project contributors
+ * Copyright 2011-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -141,8 +141,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
 
     // Some params are sent with operations, so we cannot cache secret params
     g_hash_table_iter_init(&iter, params);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &param,
-                                  (gpointer *) &value)) {
+    while (g_hash_table_iter_next(&iter, (void **) &param, (void **) &value)) {
         char *secret_value = NULL;
         int hash_rc = pcmk_rc_ok;
 
@@ -185,7 +184,7 @@ pcmk__substitute_secrets(const char *rsc_id, GHashTable *params)
             continue;
         }
 
-        g_hash_table_iter_replace(&iter, (gpointer) secret_value);
+        g_hash_table_iter_replace(&iter, (void *) secret_value);
     }
 
     if (filename != NULL) {

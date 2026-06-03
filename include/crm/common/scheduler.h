@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,7 +13,7 @@
 #include <stdbool.h>
 #include <sys/types.h>                  // time_t
 #include <libxml/tree.h>                // xmlNode
-#include <glib.h>                       // guint, GList, GHashTable
+#include <glib.h>                       // GList, GHashTable
 
 #include <crm/common/iso8601.h>         // crm_time_t
 

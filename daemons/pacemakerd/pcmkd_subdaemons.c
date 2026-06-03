@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -102,12 +102,12 @@ GMainLoop *mainloop = NULL;
 static bool fatal_error = false;
 
 static int child_liveness(pcmkd_child_t *child);
-static gboolean escalate_shutdown(gpointer data);
+static gboolean escalate_shutdown(void *data);
 static int start_child(pcmkd_child_t *child);
 static void pcmk_child_exit(mainloop_child_t *p, int core, int signo,
                             int exitcode);
 static void pcmk_process_exit(pcmkd_child_t *child);
-static gboolean pcmk_shutdown_worker(gpointer user_data);
+static gboolean pcmk_shutdown_worker(void *user_data);
 static void stop_child(pcmkd_child_t *child, int signal);
 
 static void
@@ -145,7 +145,7 @@ pcmkd_cluster_connected(void)
 }
 
 static gboolean
-check_next_subdaemon(gpointer user_data)
+check_next_subdaemon(void *user_data)
 {
     static int next_child = 0;
 
@@ -236,7 +236,7 @@ check_next_subdaemon(gpointer user_data)
 }
 
 static gboolean
-escalate_shutdown(gpointer data)
+escalate_shutdown(void *data)
 {
     pcmkd_child_t *child = data;
 
@@ -350,7 +350,7 @@ pcmk_process_exit(pcmkd_child_t * child)
 }
 
 static gboolean
-pcmk_shutdown_worker(gpointer user_data)
+pcmk_shutdown_worker(void *user_data)
 {
     static int phase = PCMK__NELEM(pcmk_children) - 1;
     static time_t next_log = 0;

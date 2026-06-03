@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -77,10 +77,10 @@ pcmk__copy_node_table(GHashTable *nodes)
     }
     new_table = pcmk__strkey_table(NULL, pcmk__free_node_copy);
     g_hash_table_iter_init(&iter, nodes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         pcmk_node_t *new_node = pe__copy_node(node);
 
-        g_hash_table_insert(new_table, (gpointer) new_node->priv->id,
+        g_hash_table_insert(new_table, (void *) new_node->priv->id,
                             new_node);
     }
     return new_table;
@@ -95,7 +95,7 @@ pcmk__copy_node_table(GHashTable *nodes)
  * \note This is a \c GDestroyNotify wrapper for \c g_hash_table_destroy().
  */
 static void
-destroy_node_tables(gpointer data)
+destroy_node_tables(void *data)
 {
     g_hash_table_destroy((GHashTable *) data);
 }
@@ -207,8 +207,8 @@ pcmk__copy_node_list(const GList *list, bool reset)
  * \return -1 if \p a is preferred, +1 if \p b is preferred, or 0 if they are
  *         equally preferred
  */
-static gint
-compare_nodes(gconstpointer a, gconstpointer b, gpointer data)
+static int
+compare_nodes(const void *a, const void *b, void *data)
 {
     const pcmk_node_t *node1 = (const pcmk_node_t *) a;
     const pcmk_node_t *node2 = (const pcmk_node_t *) b;

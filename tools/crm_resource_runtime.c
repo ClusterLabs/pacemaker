@@ -72,7 +72,7 @@ struct rsc_node_info {
  * \note This is suitable for use with \c g_list_foreach().
  */
 static void
-prepend_node_info(gpointer data, gpointer user_data)
+prepend_node_info(void *data, void *user_data)
 {
     const pcmk_node_t *node = data;
     struct rsc_node_info *rni = user_data;
@@ -410,7 +410,7 @@ resources_with_attr(pcmk__output_t *out, cib_t *cib, pcmk_resource_t *rsc,
 }
 
 static void
-free_attr_update_data(gpointer data)
+free_attr_update_data(void *data)
 {
     attr_update_data_t *ud = data;
 
@@ -895,7 +895,7 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
 
     // Normalize interval to milliseconds for comparison to history entry
     if (operation) {
-        guint interval_ms = 0U;
+        unsigned int interval_ms = 0;
 
         pcmk_parse_interval_spec(interval_spec, &interval_ms);
         interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);
@@ -945,13 +945,13 @@ clear_rsc_failures(pcmk__output_t *out, pcmk_ipc_api_t *controld_api,
             }
         }
 
-        g_hash_table_add(rscs, (gpointer) failed_id);
+        g_hash_table_add(rscs, (void *) failed_id);
     }
 
     free(interval_ms_s);
 
     g_hash_table_iter_init(&iter, rscs);
-    while (g_hash_table_iter_next(&iter, (gpointer *) &failed_id, NULL)) {
+    while (g_hash_table_iter_next(&iter, (void **) &failed_id, NULL)) {
         pcmk_resource_t *rsc = NULL;
 
         pcmk__debug("Erasing failures of %s on %s", failed_id,
@@ -1033,10 +1033,9 @@ cli_resource_delete(pcmk_ipc_api_t *controld_api, pcmk_resource_t *rsc,
                 GHashTableIter iter;
 
                 g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
-                while (g_hash_table_iter_next(&iter, NULL,
-                                              (gpointer *) &node)) {
+                while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
                     if ((node != NULL) && (node->assign->score >= 0)) {
-                        nodes = g_list_prepend(nodes, (gpointer *) node);
+                        nodes = g_list_prepend(nodes, (void **) node);
                     }
                 }
 
@@ -1319,7 +1318,8 @@ generate_resource_params(pcmk_resource_t *rsc)
     params = pe_rsc_params(rsc, NULL, rsc->priv->scheduler);
     if (params != NULL) {
         g_hash_table_iter_init(&iter, params);
-        while (g_hash_table_iter_next(&iter, (gpointer *) & key, (gpointer *) & value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &key,
+                                      (void **) &value)) {
             pcmk__insert_dup(combined, key, value);
         }
     }
@@ -1576,11 +1576,11 @@ update_dataset(cib_t *cib, pcmk_scheduler_t *scheduler, xmlNode **cib_xml_orig,
  *
  * \return Maximum stop timeout for \p rsc (in milliseconds)
  */
-static guint
+static unsigned int
 max_rsc_stop_timeout(pcmk_resource_t *rsc)
 {
     long long result_ll;
-    guint max_delay = 0;
+    unsigned int max_delay = 0;
     xmlNode *config = NULL;
     GHashTable *meta = NULL;
 
@@ -1595,7 +1595,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
              iter != NULL; iter = iter->next) {
 
             pcmk_resource_t *child = iter->data;
-            guint delay = max_rsc_stop_timeout(child);
+            unsigned int delay = max_rsc_stop_timeout(child);
 
             if (delay > max_delay) {
                 pcmk__rsc_trace(rsc,
@@ -1619,7 +1619,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
     meta = pcmk__unpack_action_meta(rsc, NULL, PCMK_ACTION_STOP, 0, config);
     if ((pcmk__scan_ll(g_hash_table_lookup(meta, PCMK_META_TIMEOUT),
                        &result_ll, -1LL) == pcmk_rc_ok) && (result_ll >= 0)) {
-        max_delay = (guint) QB_MIN(result_ll, UINT_MAX);
+        max_delay = (unsigned int) QB_MIN(result_ll, UINT_MAX);
     }
     g_hash_table_destroy(meta);
 
@@ -1641,16 +1641,16 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
  *       throttling, or any demotions needed. It checks the stop timeout, even
  *       if the resources in question are actually being started.
  */
-static guint
+static unsigned int
 wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 {
-    guint max_delay = 0U;
+    unsigned int max_delay = 0;
 
     // Find maximum stop timeout in milliseconds
     for (const GList *item = resources; item != NULL; item = item->next) {
         pcmk_resource_t *rsc = pe_find_resource(scheduler->priv->resources,
                                                 (const char *) item->data);
-        guint delay = max_rsc_stop_timeout(rsc);
+        unsigned int delay = max_rsc_stop_timeout(rsc);
 
         if (delay > max_delay) {
             pcmk__rsc_trace(rsc,
@@ -1690,17 +1690,17 @@ wait_time_estimate(pcmk_scheduler_t *scheduler, const GList *resources)
 int
 cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
                      const pcmk_node_t *node, const char *move_lifetime,
-                     guint timeout_ms, cib_t *cib, bool promoted_role_only,
-                     bool force)
+                     unsigned int timeout_ms, cib_t *cib,
+                     bool promoted_role_only, bool force)
 {
     /* @TODO Due to this sleep interval, a timeout <2s will cause problems and
      * should be rejected
      */
-    static const guint sleep_interval = 2U;
+    static const unsigned int sleep_interval = 2;
 
     int rc = pcmk_rc_ok;
-    guint step_timeout_s = 0;
-    guint timeout = pcmk__timeout_ms2s(timeout_ms);
+    unsigned int step_timeout_s = 0;
+    unsigned int timeout = pcmk__timeout_ms2s(timeout_ms);
 
     bool stop_via_ban = false;
     char *rsc_id = NULL;
@@ -1869,7 +1869,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     step_timeout_s = timeout / sleep_interval;
     while (list_delta != NULL) {
-        guint before = g_list_length(list_delta);
+        unsigned int before = g_list_length(list_delta);
 
         if(timeout_ms == 0) {
             step_timeout_s = wait_time_estimate(scheduler, list_delta)
@@ -1947,7 +1947,7 @@ cli_resource_restart(pcmk__output_t *out, pcmk_resource_t *rsc,
 
     step_timeout_s = timeout / sleep_interval;
     while (waiting_for_starts(list_delta, rsc, host)) {
-        guint before = g_list_length(list_delta);
+        unsigned int before = g_list_length(list_delta);
 
         if(timeout_ms == 0) {
             step_timeout_s = wait_time_estimate(scheduler, list_delta)
@@ -2212,7 +2212,7 @@ pending_actions_in_cib(pcmk_scheduler_t *scheduler)
  * \return Standard Pacemaker return code
  */
 int
-wait_till_stable(pcmk__output_t *out, guint timeout_ms, cib_t * cib)
+wait_till_stable(pcmk__output_t *out, unsigned int timeout_ms, cib_t *cib)
 {
     // @FIXME This should bail out when run with CIB_file
     pcmk_scheduler_t *scheduler = NULL;
@@ -2318,8 +2318,8 @@ get_action(const char *rsc_action) {
  * \param[in]     verbosity    Verbosity level
  */
 static void
-set_agent_environment(GHashTable *params, guint timeout_ms, int check_level,
-                      int verbosity)
+set_agent_environment(GHashTable *params, unsigned int timeout_ms,
+                      int check_level, int verbosity)
 {
     g_hash_table_insert(params, crm_meta_name(PCMK_META_TIMEOUT),
                         pcmk__assert_asprintf("%u", timeout_ms));
@@ -2361,8 +2361,8 @@ apply_overrides(GHashTable *params, GHashTable *overrides)
         char *value = NULL;
 
         g_hash_table_iter_init(&iter, overrides);
-        while (g_hash_table_iter_next(&iter, (gpointer *) &name,
-                                      (gpointer *) &value)) {
+        while (g_hash_table_iter_next(&iter, (void **) &name,
+                                      (void **) &value)) {
             pcmk__insert_dup(params, name, value);
         }
     }
@@ -2376,7 +2376,7 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
                                  const char *rsc_class, const char *rsc_prov,
                                  const char *rsc_type, const char *rsc_action,
                                  GHashTable *params, GHashTable *override_hash,
-                                 guint timeout_ms, int resource_verbose,
+                                 unsigned int timeout_ms, int resource_verbose,
                                  bool force, int check_level)
 {
     const char *class = rsc_class;
@@ -2448,7 +2448,7 @@ done:
  * \param[in] rsc     Resource that action is for
  * \param[in] action  Name of action
  */
-static guint
+static unsigned int
 get_action_timeout(pcmk_resource_t *rsc, const char *action)
 {
     long long timeout_ms = -1LL;
@@ -2461,14 +2461,14 @@ get_action_timeout(pcmk_resource_t *rsc, const char *action)
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
     g_hash_table_destroy(meta);
-    return (guint) QB_MIN(timeout_ms, UINT_MAX);
+    return (unsigned int) QB_MIN(timeout_ms, UINT_MAX);
 }
 
 // Does not modify override_hash or its contents
 crm_exit_t
 cli_resource_execute(pcmk_resource_t *rsc, const char *requested_name,
                      const char *rsc_action, GHashTable *override_hash,
-                     guint timeout_ms, cib_t *cib, int resource_verbose,
+                     unsigned int timeout_ms, cib_t *cib, int resource_verbose,
                      bool force, int check_level)
 {
     pcmk_scheduler_t *scheduler = NULL;

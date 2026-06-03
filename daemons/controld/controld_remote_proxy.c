@@ -52,7 +52,7 @@ typedef struct {
 static GHashTable *proxy_table = NULL;
 
 static void
-remote_proxy_free(gpointer data)
+remote_proxy_free(void *data)
 {
     remote_proxy_t *proxy = data;
 
@@ -115,7 +115,7 @@ remote_proxy_relay_event(remote_proxy_t *proxy, xmlNode *msg)
 }
 
 static int
-remote_proxy_dispatch(const char *buffer, ssize_t length, gpointer userdata)
+remote_proxy_dispatch(const char *buffer, ssize_t length, void *userdata)
 {
     // Async responses from servers to clients via the remote executor
     xmlNode *xml = NULL;
@@ -157,7 +157,7 @@ remote_proxy_notify_destroy(lrmd_t *lrmd, const char *session_id)
 }
 
 static void
-remote_proxy_disconnected(gpointer userdata)
+remote_proxy_disconnected(void *userdata)
 {
     remote_proxy_t *proxy = userdata;
 
@@ -622,7 +622,7 @@ find_proxy_by_node(const char *node_name)
 
     g_hash_table_iter_init(&gIter, proxy_table);
 
-    while (g_hash_table_iter_next(&gIter, NULL, (gpointer *) &proxy)) {
+    while (g_hash_table_iter_next(&gIter, NULL, (void **) &proxy)) {
         if (proxy->source
             && pcmk__str_eq(node_name, proxy->node_name, pcmk__str_casei)) {
             return proxy;

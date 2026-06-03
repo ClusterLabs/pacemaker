@@ -19,7 +19,7 @@
 
 extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
-                            const char *operation, guint interval_ms);
+                            const char *operation, unsigned int interval_ms);
 void controld_invoke_execd(fsa_data_t *msg_data);
 
 void lrm_op_callback(lrmd_event_data_t * op);
@@ -40,7 +40,7 @@ typedef struct {
     GHashTable *stop_params;
 } rsc_history_t;
 
-void history_free(gpointer data);
+void history_free(void *data);
 
 enum active_op_e {
     active_op_remove    = (UINT32_C(1) << 0),
@@ -49,7 +49,7 @@ enum active_op_e {
 
 // In-flight action (recurring or pending)
 typedef struct {
-    guint interval_ms;
+    unsigned int interval_ms;
     int call_id;
     uint32_t flags; // bitmask of active_op_e
     time_t start_time;
@@ -140,10 +140,10 @@ int lrm_state_get_metadata(lrm_state_t * lrm_state,
                            const char *provider,
                            const char *agent, char **output, enum lrmd_call_options options);
 int lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                     const char *action, guint interval_ms);
+                     const char *action, unsigned int interval_ms);
 int controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
                                     const char *action, const char *userdata,
-                                    guint interval_ms, int timeout_ms,
+                                    unsigned int interval_ms, int timeout_ms,
                                     int start_delay_ms,
                                     GHashTable *parameters, int *call_id);
 lrmd_rsc_info_t *lrm_state_get_rsc_info(lrm_state_t * lrm_state,
@@ -160,11 +160,11 @@ void remote_lrm_op_callback(lrmd_event_data_t * op);
 gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *id);
 lrmd_rsc_info_t *remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id);
 int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                     const char *action, guint interval_ms);
+                     const char *action, unsigned int interval_ms);
 int controld_execute_remote_agent(const lrm_state_t *lrm_state,
                                   const char *rsc_id, const char *action,
                                   const char *userdata,
-                                  guint interval_ms, int timeout_ms,
+                                  unsigned int interval_ms, int timeout_ms,
                                   int start_delay_ms, lrmd_key_value_t *params,
                                   int *call_id);
 void remote_ra_cleanup(lrm_state_t * lrm_state);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2025 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -593,7 +593,7 @@ struct tcp_async_cb_data {
 
 // \return TRUE if timer should be rescheduled, FALSE otherwise
 static gboolean
-check_connect_finished(gpointer userdata)
+check_connect_finished(void *userdata)
 {
     struct tcp_async_cb_data *cb_data = userdata;
     int rc;

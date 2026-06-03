@@ -21,7 +21,7 @@
 #include <sys/socket.h>             // sockaddr{,_storage}, AF_INET, etc.
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // gboolean, gpointer, g_source_remove, etc.
+#include <glib.h>                   // gboolean, g_source_remove, etc.
 #include <gnutls/gnutls.h>          // gnutls_bye, gnutls_deinit
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
@@ -70,7 +70,7 @@ int remote_tls_fd = 0;
  * \return \c G_SOURCE_REMOVE (to destroy the timeout)
  */
 static gboolean
-remote_auth_timeout_cb(gpointer data)
+remote_auth_timeout_cb(void *data)
 {
     pcmk__client_t *client = data;
 
@@ -397,7 +397,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
 }
 
 static int
-cib_remote_msg(gpointer data)
+cib_remote_msg(void *data)
 {
     xmlNode *command = NULL;
     pcmk__client_t *client = data;
@@ -503,7 +503,7 @@ cib_remote_msg(gpointer data)
 }
 
 static void
-based_remote_client_destroy(gpointer user_data)
+based_remote_client_destroy(void *user_data)
 {
     pcmk__client_t *client = user_data;
     int csock = -1;
@@ -547,7 +547,7 @@ based_remote_client_destroy(gpointer user_data)
 }
 
 static int
-cib_remote_listen(gpointer data)
+cib_remote_listen(void *data)
 {
     int csock = -1;
     unsigned laddr;
@@ -621,7 +621,7 @@ cib_remote_listen(gpointer data)
 }
 
 static void
-based_remote_listener_destroy(gpointer user_data)
+based_remote_listener_destroy(void *user_data)
 {
     pcmk__info("No longer listening for remote connections");
 }
@@ -774,7 +774,7 @@ try_clear_port:
  * \param[in]     user_data  Ignored
  */
 static void
-drop_client_if_remote(gpointer key, gpointer value, gpointer user_data)
+drop_client_if_remote(void *key, void *value, void *user_data)
 {
     pcmk__client_t *client = value;
 

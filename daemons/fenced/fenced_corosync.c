@@ -13,7 +13,7 @@
 #include <stdlib.h>                           // NULL, free, size_t
 
 #include <corosync/cpg.h>                     // cpg_handle_t, cpg_name
-#include <glib.h>                             // gpointer
+#include <glib.h>                             // g_clear_pointer
 #include <libxml/tree.h>                      // xmlNode
 
 #include <crm/cluster.h>                      // pcmk_cluster_connect
@@ -167,7 +167,7 @@ fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
  * \param[in] unused Unused
  */
 static void
-fenced_cpg_destroy(gpointer unused)
+fenced_cpg_destroy(void *unused)
 {
     pcmk__crit("Lost connection to cluster layer, shutting down");
     stonith_shutdown(0);

@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,12 +9,26 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>
-#include <stdbool.h>
+#include <limits.h>                     // UINT_MAX
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdio.h>                      // printf
+#include <stdlib.h>                     // calloc, free
+#include <string.h>                     // strcmp, strdup, strstr
 
-#include <crm/crm.h>
+#include <glib.h>                       // g_*, etc.
+
+#include <crm/common/agents.h>          // pcmk_get_ra_caps, pcmk_ra_caps, etc.
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/nvpair.h>          // hash2field, hash2metafield
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_REMOTE_RA_ADDR
+#include <crm/common/results.h>         // pcmk_rc_ok
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
 #include <crm/common/xml.h>
-#include <crm/pengine/internal.h>
+#include <crm/crm.h>                    // CRM_ATTR_*, CRM_FEATURE_SET, CRM_META
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/internal.h>       // pe__*, etc.
+
 #include "pe_status_private.h"
 
 /*!
@@ -23,11 +37,11 @@
  *
  * \param[in,out] ptr  Pointer to cache entry to free
  *
- * \note The argument is a gpointer so this can be used as a hash table
+ * \note The argument is a <tt>void *</tt> so this can be used as a hash table
  *       free function.
  */
 void
-pe__free_digests(gpointer ptr)
+pe__free_digests(void *ptr)
 {
     pcmk__op_digest_t *data = ptr;
 
@@ -79,7 +93,7 @@ attr_not_in_strv(xmlAttrPtr a, void *user_data)
 static void
 calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
                       const pcmk_node_t *node, GHashTable *params,
-                      const char *task, guint *interval_ms,
+                      const char *task, unsigned int *interval_ms,
                       const xmlNode *xml_op, const char *op_version,
                       GHashTable *overrides, pcmk_scheduler_t *scheduler)
 {
@@ -102,8 +116,8 @@ calculate_main_digest(pcmk__op_digest_t *data, pcmk_resource_t *rsc,
             long long value_ll;
 
             if ((pcmk__scan_ll(interval_s, &value_ll, 0LL) == pcmk_rc_ok)
-                && (value_ll >= 0) && (value_ll <= G_MAXUINT)) {
-                *interval_ms = (guint) value_ll;
+                && (value_ll >= 0) && (value_ll <= UINT_MAX)) {
+                *interval_ms = (unsigned int) value_ll;
             }
         }
 
@@ -293,7 +307,7 @@ calculate_restart_digest(pcmk__op_digest_t *data, const xmlNode *xml_op,
  */
 pcmk__op_digest_t *
 pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
-                      guint *interval_ms, const pcmk_node_t *node,
+                      unsigned int *interval_ms, const pcmk_node_t *node,
                       const xmlNode *xml_op, GHashTable *overrides,
                       bool calc_secure, pcmk_scheduler_t *scheduler)
 {
@@ -350,9 +364,10 @@ pe__calculate_digests(pcmk_resource_t *rsc, const char *task,
  * \return Pointer to node's digest cache entry
  */
 static pcmk__op_digest_t *
-rsc_action_digest(pcmk_resource_t *rsc, const char *task, guint interval_ms,
-                  pcmk_node_t *node, const xmlNode *xml_op,
-                  bool calc_secure, pcmk_scheduler_t *scheduler)
+rsc_action_digest(pcmk_resource_t *rsc, const char *task,
+                  unsigned int interval_ms, pcmk_node_t *node,
+                  const xmlNode *xml_op, bool calc_secure,
+                  pcmk_scheduler_t *scheduler)
 {
     pcmk__op_digest_t *data = NULL;
     char *key = pcmk__op_key(rsc->id, task, interval_ms);
@@ -384,7 +399,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
                       pcmk_node_t *node, pcmk_scheduler_t *scheduler)
 {
     pcmk__op_digest_t *data = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     const char *op_version;
     const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
@@ -397,7 +412,7 @@ rsc_action_digest_cmp(pcmk_resource_t *rsc, const xmlNode *xml_op,
     digest_all = pcmk__xe_get(xml_op, PCMK__XA_OP_DIGEST);
     digest_restart = pcmk__xe_get(xml_op, PCMK__XA_OP_RESTART_DIGEST);
 
-    pcmk__xe_get_guint(xml_op, PCMK_META_INTERVAL, &interval_ms);
+    pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &interval_ms);
     data = rsc_action_digest(rsc, task, interval_ms, node, xml_op,
                              pcmk__is_set(scheduler->flags,
                                           pcmk__sched_sanitized),

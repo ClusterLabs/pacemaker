@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -168,7 +168,7 @@ struct member_data {
  * \param[in,out] user_data  Member data (struct member_data *)
  */
 static void
-member_internal_constraints(gpointer data, gpointer user_data)
+member_internal_constraints(void *data, void *user_data)
 {
     pcmk_resource_t *member = (pcmk_resource_t *) data;
     struct member_data *member_data = (struct member_data *) user_data;
@@ -747,7 +747,7 @@ pcmk__group_colocated_resources(const pcmk_resource_t *rsc,
          * add every child's colocated resources to the list. The first and last
          * members will include the group's own colocations.
          */
-        colocated_rscs = g_list_prepend(colocated_rscs, (gpointer) rsc);
+        colocated_rscs = g_list_prepend(colocated_rscs, (void *) rsc);
 
         for (const GList *iter = rsc->priv->children;
              iter != NULL; iter = iter->next) {

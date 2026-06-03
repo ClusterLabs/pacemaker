@@ -206,7 +206,7 @@ get_fencing_watchdog_timeout(xmlNode *cib)
  * \note This function is suitable for use with \c g_hash_table_foreach().
  */
 static void
-mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
+mark_dirty_if_cib_registered(void *key, void *value, void *user_data)
 {
     fenced_device_t *device = value;
 
@@ -229,7 +229,7 @@ mark_dirty_if_cib_registered(gpointer key, gpointer value, gpointer user_data)
  *       \c g_hash_table_foreach_remove().
  */
 static gboolean
-device_is_dirty(gpointer key, gpointer value, gpointer user_data)
+device_is_dirty(void *key, void *value, void *user_data)
 {
     fenced_device_t *device = value;
 
@@ -584,7 +584,7 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 }
 
 static void
-cib_connection_destroy(gpointer user_data)
+cib_connection_destroy(void *user_data)
 {
     if (stonith_shutdown_flag) {
         pcmk__info("Connection to the CIB manager closed");

@@ -27,7 +27,7 @@ static int last_cib_op_done = 0;
 static void write_attribute(attribute_t *a, bool ignore_delay);
 
 static void
-attrd_cib_destroy_cb(gpointer user_data)
+attrd_cib_destroy_cb(void *user_data)
 {
     cib_t *cib = user_data;
 
@@ -235,7 +235,7 @@ attrd_cib_init(void)
 }
 
 static gboolean
-attribute_timer_cb(gpointer data)
+attribute_timer_cb(void *data)
 {
     attribute_t *a = data;
     pcmk__trace("Dampen interval expired for %s", a->id);
@@ -287,7 +287,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
                call_id, a->id, pcmk_strerror(rc), rc);
 
     g_hash_table_iter_init(&iter, a->values);
-    while (g_hash_table_iter_next(&iter, (gpointer *) & peer, (gpointer *) & v)) {
+    while (g_hash_table_iter_next(&iter, (void **) &peer, (void **) &v)) {
         if (rc == pcmk_ok) {
             pcmk__info("* Wrote %s[%s]=%s", a->id, peer,
                        pcmk__s(v->requested, "(unset)"));
@@ -447,7 +447,7 @@ send_alert_attributes_value(attribute_t *a, GHashTable *t)
 
     g_hash_table_iter_init(&vIter, t);
 
-    while (g_hash_table_iter_next(&vIter, NULL, (gpointer *) & at)) {
+    while (g_hash_table_iter_next(&vIter, NULL, (void **) &at)) {
         const char *node_xml_id = attrd_get_node_xml_id(at->nodename);
         const char *failed_s = NULL;
 
@@ -572,7 +572,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
     /* Iterate over each peer value of this attribute */
     g_hash_table_iter_init(&iter, a->values);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) &v)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &v)) {
         const char *node_xml_id = NULL;
         const char *prev_xml_id = NULL;
 
@@ -692,7 +692,7 @@ attrd_write_attributes(uint32_t options)
     pcmk__debug("Writing out %s attributes",
                 pcmk__is_set(options, attrd_write_all)? "all" : "changed");
     g_hash_table_iter_init(&iter, attributes);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & a)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &a)) {
         if (!pcmk__is_set(options, attrd_write_all)
             && pcmk__is_set(a->flags, attrd_attr_node_unknown)) {
             // Try writing this attribute again, in case peer ID was learned

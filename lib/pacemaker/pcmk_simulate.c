@@ -70,10 +70,10 @@ create_action_name(const pcmk_action_t *action, bool verbose)
 
     if (history_id != NULL) {
         char *key = NULL;
-        guint interval_ms = 0;
+        unsigned int interval_ms = 0;
 
-        if (pcmk__guint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
-                                  &interval_ms) != pcmk_rc_ok) {
+        if (pcmk__uint_from_hash(action->meta, PCMK_META_INTERVAL, 0,
+                                 &interval_ms) != pcmk_rc_ok) {
             interval_ms = 0;
         }
 
@@ -152,7 +152,7 @@ print_cluster_status(pcmk_scheduler_t *scheduler, uint32_t show_opts,
     section_opts |= pcmk_section_nodes | pcmk_section_resources;
     show_opts |= pcmk_show_inactive_rscs | pcmk_show_failed_detail;
 
-    all = g_list_prepend(all, (gpointer) "*");
+    all = g_list_prepend(all, (void *) "*");
 
     PCMK__OUTPUT_SPACER_IF(out, print_spacer);
     out->begin_list(out, NULL, NULL, "%s", title);
@@ -618,8 +618,7 @@ simulate_resource_action(pcmk__graph_t *graph, pcmk__graph_action_t *action)
     // Certain actions need to be displayed but don't need history entries
     if (pcmk__strcase_any_of(operation, PCMK_ACTION_DELETE,
                              PCMK_ACTION_META_DATA, NULL)) {
-        out->message(out, "inject-rsc-action", resource, operation, node,
-                     (guint) 0);
+        out->message(out, "inject-rsc-action", resource, operation, node, 0);
         goto done; // Confirm action and update graph
     }
 

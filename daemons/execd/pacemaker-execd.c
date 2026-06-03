@@ -177,7 +177,7 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
 static void
 exit_executor(void)
 {
-    const guint nclients = pcmk__ipc_client_count();
+    const unsigned int nclients = pcmk__ipc_client_count();
 
     pcmk__info("Terminating with %d client%s", nclients,
                pcmk__plural_s(nclients));

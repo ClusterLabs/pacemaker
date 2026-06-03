@@ -127,7 +127,8 @@ add_root_node(pcmk__output_t *out)
 }
 
 static void
-xml_free_priv(pcmk__output_t *out) {
+xml_free_priv(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     if (out == NULL || out->priv == NULL) {
@@ -150,7 +151,8 @@ xml_free_priv(pcmk__output_t *out) {
 }
 
 static bool
-xml_init(pcmk__output_t *out) {
+xml_init(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert(out != NULL);
@@ -173,7 +175,8 @@ xml_init(pcmk__output_t *out) {
 }
 
 static void
-add_error_node(gpointer data, gpointer user_data) {
+add_error_node(void *data, void *user_data)
+{
     const char *str = (const char *) data;
     xmlNodePtr node = (xmlNodePtr) user_data;
 
@@ -182,7 +185,9 @@ add_error_node(gpointer data, gpointer user_data) {
 }
 
 static void
-xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print,
+           void **copy_dest)
+{
     private_data_t *priv = NULL;
     xmlNodePtr node;
 
@@ -217,7 +222,7 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 
         if (g_slist_length(priv->errors) > 0) {
             xmlNodePtr errors_node = pcmk__xe_create(node, PCMK_XE_ERRORS);
-            g_slist_foreach(priv->errors, add_error_node, (gpointer) errors_node);
+            g_slist_foreach(priv->errors, add_error_node, (void *) errors_node);
         }
 
         free(rc_as_str);
@@ -233,7 +238,8 @@ xml_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_
 }
 
 static void
-xml_reset(pcmk__output_t *out) {
+xml_reset(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 
     out->dest = freopen(NULL, "w", out->dest);
@@ -245,7 +251,8 @@ xml_reset(pcmk__output_t *out) {
 
 static void
 xml_subprocess_output(pcmk__output_t *out, int exit_status,
-                      const char *proc_stdout, const char *proc_stderr) {
+                      const char *proc_stdout, const char *proc_stderr)
+{
     xmlNodePtr node, child_node;
     char *rc_as_str = NULL;
 
@@ -290,7 +297,8 @@ xml_version(pcmk__output_t *out)
 
 G_GNUC_PRINTF(2, 3)
 static void
-xml_err(pcmk__output_t *out, const char *format, ...) {
+xml_err(pcmk__output_t *out, const char *format, ...)
+{
     private_data_t *priv = NULL;
     int len = 0;
     char *buf = NULL;
@@ -311,12 +319,14 @@ xml_err(pcmk__output_t *out, const char *format, ...) {
 
 G_GNUC_PRINTF(2, 3)
 static int
-xml_info(pcmk__output_t *out, const char *format, ...) {
+xml_info(pcmk__output_t *out, const char *format, ...)
+{
     return pcmk_rc_no_output;
 }
 
 static void
-xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
+xml_output_xml(pcmk__output_t *out, const char *name, const char *buf)
+{
     xmlNodePtr parent = NULL;
     xmlNodePtr cdata_node = NULL;
 
@@ -333,8 +343,9 @@ xml_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 
 G_GNUC_PRINTF(4, 5)
 static void
-xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plural_noun,
-               const char *format, ...) {
+xml_begin_list(pcmk__output_t *out, const char *singular_noun,
+               const char *plural_noun, const char *format, ...)
+{
     va_list ap;
     char *name = NULL;
     char *buf = NULL;
@@ -374,7 +385,8 @@ xml_begin_list(pcmk__output_t *out, const char *singular_noun, const char *plura
 
 G_GNUC_PRINTF(3, 4)
 static void
-xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
+xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...)
+{
     xmlNodePtr item_node = NULL;
     va_list ap;
     char *buf = NULL;
@@ -397,12 +409,14 @@ xml_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 }
 
 static void
-xml_increment_list(pcmk__output_t *out) {
+xml_increment_list(pcmk__output_t *out)
+{
     /* This function intentially left blank */
 }
 
 static void
-xml_end_list(pcmk__output_t *out) {
+xml_end_list(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
@@ -424,22 +438,26 @@ xml_end_list(pcmk__output_t *out) {
 }
 
 static bool
-xml_is_quiet(pcmk__output_t *out) {
+xml_is_quiet(pcmk__output_t *out)
+{
     return false;
 }
 
 static void
-xml_spacer(pcmk__output_t *out) {
+xml_spacer(pcmk__output_t *out)
+{
     /* This function intentionally left blank */
 }
 
 static void
-xml_progress(pcmk__output_t *out, bool end) {
+xml_progress(pcmk__output_t *out, bool end)
+{
     /* This function intentionally left blank */
 }
 
 pcmk__output_t *
-pcmk__mk_xml_output(char **argv) {
+pcmk__mk_xml_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -478,7 +496,8 @@ pcmk__mk_xml_output(char **argv) {
 }
 
 xmlNodePtr
-pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...) {
+pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...)
+{
     va_list args;
     xmlNodePtr node = NULL;
 
@@ -496,7 +515,8 @@ pcmk__output_xml_create_parent(pcmk__output_t *out, const char *name, ...) {
 }
 
 void
-pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node) {
+pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node)
+{
     private_data_t *priv = NULL;
     xmlNodePtr parent = NULL;
 
@@ -515,7 +535,8 @@ pcmk__output_xml_add_node_copy(pcmk__output_t *out, xmlNodePtr node) {
 }
 
 xmlNodePtr
-pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
+pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...)
+{
     xmlNodePtr node = NULL;
     private_data_t *priv = NULL;
     va_list args;
@@ -536,7 +557,9 @@ pcmk__output_create_xml_node(pcmk__output_t *out, const char *name, ...) {
 }
 
 xmlNodePtr
-pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const char *content) {
+pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name,
+                                  const char *content)
+{
     xmlNodePtr node = NULL;
 
     pcmk__assert(out != NULL);
@@ -548,7 +571,8 @@ pcmk__output_create_xml_text_node(pcmk__output_t *out, const char *name, const c
 }
 
 void
-pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
+pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL) && (parent != NULL));
@@ -562,7 +586,8 @@ pcmk__output_xml_push_parent(pcmk__output_t *out, xmlNodePtr parent) {
 }
 
 void
-pcmk__output_xml_pop_parent(pcmk__output_t *out) {
+pcmk__output_xml_pop_parent(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
@@ -578,7 +603,8 @@ pcmk__output_xml_pop_parent(pcmk__output_t *out) {
 }
 
 xmlNodePtr
-pcmk__output_xml_peek_parent(pcmk__output_t *out) {
+pcmk__output_xml_peek_parent(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));

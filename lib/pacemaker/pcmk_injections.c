@@ -98,7 +98,7 @@ inject_transient_attr(pcmk__output_t *out, xmlNode *cib_node,
 void
 pcmk__inject_failcount(pcmk__output_t *out, cib_t *cib_conn, xmlNode *cib_node,
                        const char *resource, const char *task,
-                       guint interval_ms, int exit_status, bool infinity)
+                       unsigned int interval_ms, int exit_status, bool infinity)
 {
     char *name = NULL;
     char *value = NULL;
@@ -192,8 +192,8 @@ create_node_entry(cib_t *cib_conn, const char *node)
  *       lrmd_free_event().
  */
 static lrmd_event_data_t *
-create_op(const xmlNode *cib_resource, const char *task, guint interval_ms,
-          int outcome)
+create_op(const xmlNode *cib_resource, const char *task,
+          unsigned int interval_ms, int outcome)
 {
     lrmd_event_data_t *op = NULL;
     xmlNode *xop = NULL;
@@ -568,7 +568,7 @@ inject_action(pcmk__output_t *out, const char *spec, cib_t *cib,
 {
     int rc;
     int outcome = PCMK_OCF_OK;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
 
     char *key = NULL;
     char *node = NULL;
@@ -685,7 +685,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->node_up; iter != NULL; iter = iter->next) {
-        const char *node = (const char *) iter->data;
+        const char *node = iter->data;
 
         out->message(out, "inject-modify-node", "Online", node);
 
@@ -698,7 +698,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->node_down; iter != NULL; iter = iter->next) {
-        const char *node = (const char *) iter->data;
+        const char *node = iter->data;
         char *xpath = NULL;
 
         out->message(out, "inject-modify-node", "Offline", node);
@@ -726,7 +726,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->node_fail; iter != NULL; iter = iter->next) {
-        const char *node = (const char *) iter->data;
+        const char *node = iter->data;
 
         out->message(out, "inject-modify-node", "Failing", node);
 
@@ -740,7 +740,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->ticket_grant; iter != NULL; iter = iter->next) {
-        const char *ticket_id = (const char *) iter->data;
+        const char *ticket_id = iter->data;
 
         out->message(out, "inject-modify-ticket", "Granting", ticket_id);
 
@@ -749,7 +749,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->ticket_revoke; iter != NULL; iter = iter->next) {
-        const char *ticket_id = (const char *) iter->data;
+        const char *ticket_id = iter->data;
 
         out->message(out, "inject-modify-ticket", "Revoking", ticket_id);
 
@@ -759,7 +759,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->ticket_standby; iter != NULL; iter = iter->next) {
-        const char *ticket_id = (const char *) iter->data;
+        const char *ticket_id = iter->data;
 
         out->message(out, "inject-modify-ticket", "Standby", ticket_id);
 
@@ -768,7 +768,7 @@ pcmk__inject_scheduler_input(pcmk_scheduler_t *scheduler, cib_t *cib,
     }
 
     for (iter = injections->ticket_activate; iter != NULL; iter = iter->next) {
-        const char *ticket_id = (const char *) iter->data;
+        const char *ticket_id = iter->data;
 
         out->message(out, "inject-modify-ticket", "Activating", ticket_id);
 
@@ -792,15 +792,15 @@ pcmk_free_injections(pcmk_injections_t *injections)
         return;
     }
 
-    g_list_free_full(injections->node_up, g_free);
-    g_list_free_full(injections->node_down, g_free);
-    g_list_free_full(injections->node_fail, g_free);
-    g_list_free_full(injections->op_fail, g_free);
-    g_list_free_full(injections->op_inject, g_free);
-    g_list_free_full(injections->ticket_grant, g_free);
-    g_list_free_full(injections->ticket_revoke, g_free);
-    g_list_free_full(injections->ticket_standby, g_free);
-    g_list_free_full(injections->ticket_activate, g_free);
+    g_list_free_full(injections->node_up, free);
+    g_list_free_full(injections->node_down, free);
+    g_list_free_full(injections->node_fail, free);
+    g_list_free_full(injections->op_fail, free);
+    g_list_free_full(injections->op_inject, free);
+    g_list_free_full(injections->ticket_grant, free);
+    g_list_free_full(injections->ticket_revoke, free);
+    g_list_free_full(injections->ticket_standby, free);
+    g_list_free_full(injections->ticket_activate, free);
     free(injections->quorum);
     free(injections->watchdog);
 

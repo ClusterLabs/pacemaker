@@ -30,7 +30,7 @@
  * \param[in,out] user_data  Action to free
  */
 static void
-free_graph_action(gpointer user_data)
+free_graph_action(void *user_data)
 {
     pcmk__graph_action_t *action = user_data;
 
@@ -50,7 +50,7 @@ free_graph_action(gpointer user_data)
  * \param[in,out] user_data  Synapse to free
  */
 static void
-free_graph_synapse(gpointer user_data)
+free_graph_synapse(void *user_data)
 {
     pcmk__graph_synapse_t *synapse = user_data;
 
@@ -596,8 +596,8 @@ unpack_action(pcmk__graph_synapse_t *parent, xmlNode *xml_action)
         action->timeout += start_delay;
     }
 
-    if (pcmk__guint_from_hash(action->params, CRM_META "_" PCMK_META_INTERVAL,
-                              0, &(action->interval_ms)) != pcmk_rc_ok) {
+    if (pcmk__uint_from_hash(action->params, CRM_META "_" PCMK_META_INTERVAL,
+                             0, &(action->interval_ms)) != pcmk_rc_ok) {
         action->interval_ms = 0;
     }
 
@@ -635,7 +635,7 @@ unpack_synapse(pcmk__graph_t *new_graph, const xmlNode *xml_synapse)
     pcmk__scan_min_int(value, &(new_synapse->priority), 0);
 
     CRM_CHECK(new_synapse->id >= 0,
-              free_graph_synapse((gpointer) new_synapse); return NULL);
+              free_graph_synapse((void *) new_synapse); return NULL);
 
     new_graph->num_synapses++;
 

@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,7 @@ svc_action_t *services__create_resource_action(const char *name,
                                                const char *provider,
                                                const char *agent,
                                                const char *action,
-                                               guint interval_ms,
+                                               unsigned int interval_ms,
                                                int timeout, GHashTable *params,
                                                enum svc_action_flags flags);
 

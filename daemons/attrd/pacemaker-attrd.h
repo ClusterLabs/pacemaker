@@ -89,7 +89,7 @@ int attrd_expand_value(const char *value, const char *old_value);
 #define ATTRD_RE_CLEAR_OP ATTRD_RE_CLEAR_ALL "%s#%s_%u$"
 
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
-                        guint interval_ms);
+                        unsigned int interval_ms);
 
 extern cib_t *the_cib;
 extern crm_exit_t attrd_exit_status;
@@ -100,7 +100,7 @@ extern lrmd_t *the_lrmd;
 extern crm_trigger_t *attrd_config_read;
 
 void attrd_lrmd_disconnect(void);
-gboolean attrd_read_options(gpointer user_data);
+gboolean attrd_read_options(void *user_data);
 int attrd_send_attribute_alert(const char *node, const char *node_xml_id,
                                const char *attr, const char *value);
 
@@ -216,8 +216,8 @@ gboolean attrd_send_message(const pcmk__node_status_t *node, xmlNode *data,
 xmlNode *attrd_add_value_xml(xmlNode *parent, const attribute_t *a,
                              const attribute_value_t *v, bool force_write);
 void attrd_clear_value_seen(void);
-void attrd_free_attribute(gpointer data);
-void attrd_free_attribute_value(gpointer data);
+void attrd_free_attribute(void *data);
+void attrd_free_attribute_value(void *data);
 attribute_t *attrd_populate_attribute(xmlNode *xml, const char *attr);
 char *attrd_set_id(const attribute_t *attr, const char *node_state_id);
 char *attrd_nvpair_id(const attribute_t *attr, const char *node_state_id);

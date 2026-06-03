@@ -39,7 +39,7 @@ stop_te_timer(pcmk__graph_action_t *action)
 }
 
 static gboolean
-te_graph_trigger(gpointer user_data)
+te_graph_trigger(void *user_data)
 {
     if (controld_globals.transition_graph == NULL) {
         pcmk__debug("Nothing to do");
@@ -124,14 +124,14 @@ controld_trigger_graph_as(const char *fn, int line)
 
 static struct abort_timer_s {
     bool aborted;
-    guint id;
+    unsigned int id;
     int priority;
     enum pcmk__graph_next action;
     const char *text;
 } abort_timer = { 0, };
 
 static gboolean
-abort_timer_popped(gpointer data)
+abort_timer_popped(void *data)
 {
     struct abort_timer_s *abort_timer = (struct abort_timer_s *) data;
 
@@ -151,7 +151,7 @@ abort_timer_popped(gpointer data)
  */
 void
 abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
-                  const char *abort_text, guint delay_ms)
+                  const char *abort_text, unsigned int delay_ms)
 {
     if (abort_timer.id) {
         // Timer already in progress, stop and reschedule
@@ -165,7 +165,7 @@ abort_after_delay(int abort_priority, enum pcmk__graph_next abort_action,
 }
 
 static void
-free_node_pending_timer(gpointer data)
+free_node_pending_timer(void *data)
 {
     struct abort_timer_s *node_pending_timer = (struct abort_timer_s *) data;
 
@@ -178,7 +178,7 @@ free_node_pending_timer(gpointer data)
 }
 
 static gboolean
-node_pending_timer_popped(gpointer key)
+node_pending_timer_popped(void *key)
 {
     struct abort_timer_s *node_pending_timer = NULL;
 
@@ -205,7 +205,7 @@ node_pending_timer_popped(gpointer key)
 }
 
 static void
-init_node_pending_timer(const pcmk__node_status_t *node, guint timeout)
+init_node_pending_timer(const pcmk__node_status_t *node, unsigned int timeout)
 {
     struct abort_timer_s *node_pending_timer = NULL;
     char *key = NULL;

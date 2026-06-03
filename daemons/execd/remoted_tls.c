@@ -18,7 +18,7 @@
 #include <sys/socket.h>                 // setsockopt, AF_INET6, bind
 #include <unistd.h>                     // close
 
-#include <glib.h>                       // gpointer, TRUE, FALSE
+#include <glib.h>                       // TRUE, FALSE
 #include <gnutls/gnutls.h>              // gnutls_bye, gnutls_datum_t
 #include <libxml/tree.h>                // xmlNode
 #include <qb/qblog.h>                   // QB_XS
@@ -85,7 +85,7 @@ remoted__read_handshake_data(pcmk__client_t *client)
 }
 
 static int
-lrmd_remote_client_msg(gpointer data)
+lrmd_remote_client_msg(void *data)
 {
     int rc = pcmk_rc_ok;
     xmlNode *msg = NULL;
@@ -157,7 +157,7 @@ done:
 }
 
 static void
-lrmd_remote_client_destroy(gpointer user_data)
+lrmd_remote_client_destroy(void *user_data)
 {
     pcmk__client_t *client = user_data;
 
@@ -188,7 +188,7 @@ lrmd_remote_client_destroy(gpointer user_data)
 }
 
 static gboolean
-lrmd_auth_timeout_cb(gpointer data)
+lrmd_auth_timeout_cb(void *data)
 {
     pcmk__client_t *client = data;
 
@@ -207,7 +207,7 @@ lrmd_auth_timeout_cb(gpointer data)
 
 // Dispatch callback for remote server socket
 static int
-lrmd_remote_listen(gpointer data)
+lrmd_remote_listen(void *data)
 {
     int csock = -1;
     gnutls_session_t session = NULL;
@@ -250,7 +250,7 @@ lrmd_remote_listen(gpointer data)
 }
 
 static void
-tls_server_dropped(gpointer user_data)
+tls_server_dropped(void *user_data)
 {
     pcmk__notice("TLS server session ended");
 }

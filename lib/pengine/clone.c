@@ -9,14 +9,31 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>                        // bool, true, false
-#include <stdint.h>
+#include <stdarg.h>                     // va_arg, va_list
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdint.h>                     // uint32_t
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp, strchr
 
-#include <crm/pengine/status.h>
-#include <crm/pengine/internal.h>
-#include <pe_status_private.h>
-#include <crm/common/xml.h>
-#include <crm/common/output.h>
+#include <glib.h>                       // g_*, etc.
+#include <libxml/tree.h>                // xmlNode
+#include <qb/qbdefs.h>                  // QB_MAX, QB_MIN
+#include <qb/qblog.h>                   // LOG_TRACE
+
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/logging.h>         // CRM_CHECK
+#include <crm/common/options.h>         // PCMK_META_*
+#include <crm/common/output.h>          // pcmk_show_*
+#include <crm/common/results.h>         // crm_exit_str, pcmk_rc_*
+#include <crm/common/roles.h>           // pcmk_role_*, PCMK_ROLE_*, etc.
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/common/xml.h>             // PCMK_XA_*, PCMK_XE_*, etc.
+#include <crm/pengine/internal.h>       // pe__*, etc.
+#include <crm/pengine/status.h>         // rsc_printable_id
+
+#include "pe_status_private.h"          // pe__action_notif_pseudo_ops, etc.
 
 typedef struct {
     int clone_max;
@@ -115,7 +132,8 @@ sorted_hash_table_values(GHashTable *table)
 {
     GList *retval = NULL;
     GHashTableIter iter;
-    gpointer key, value;
+    void *key = NULL;
+    void *value = NULL;
 
     g_hash_table_iter_init(&iter, table);
     while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -133,7 +151,8 @@ nodes_with_status(GHashTable *table, const char *status)
 {
     GList *retval = NULL;
     GHashTableIter iter;
-    gpointer key, value;
+    void *key = NULL;
+    void *value = NULL;
 
     g_hash_table_iter_init(&iter, table);
     while (g_hash_table_iter_next(&iter, &key, &value)) {
@@ -554,7 +573,7 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
                            && pcmk__str_in_list(rsc->id, only_rsc,
                                                 pcmk__str_star_matches));
 
-    all = g_list_prepend(all, (gpointer) "*");
+    all = g_list_prepend(all, (void *) "*");
 
     for (GList *gIter = rsc->priv->children;
          gIter != NULL; gIter = gIter->next) {
@@ -745,7 +764,7 @@ pe__clone_default(pcmk__output_t *out, va_list args)
             clone_header(out, &rc, rsc, clone_data, desc);
 
             /* Print every resource that's a child of this clone. */
-            all = g_list_prepend(all, (gpointer) "*");
+            all = g_list_prepend(all, (void *) "*");
             out->message(out, (const char *) child_rsc->priv->xml->name,
                          show_opts, child_rsc, only_node, all);
             g_list_free(all);

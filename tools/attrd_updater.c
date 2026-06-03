@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -52,7 +52,9 @@ struct {
 };
 
 static gboolean
-command_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+command_cb(const char *option_name, const char *optarg, void *data,
+           GError **err)
+{
     pcmk__str_update(&options.attr_value, optarg);
 
     if (pcmk__str_any_of(option_name, "--update-both", "-B", NULL)) {
@@ -73,13 +75,17 @@ command_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static gboolean
-private_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+private_cb(const char *option_name, const char *optarg, void *data,
+           GError **err)
+{
     pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_private);
     return TRUE;
 }
 
 static gboolean
-section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+section_cb(const char *option_name, const char *optarg, void *data,
+           GError **err)
+{
     if (pcmk__str_any_of(optarg, PCMK_XE_NODES, "forever", NULL)) {
         pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_perm);
     } else if (pcmk__str_any_of(optarg, PCMK_XE_STATUS, PCMK_VALUE_REBOOT,
@@ -95,7 +101,9 @@ section_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError
 }
 
 static gboolean
-attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, GError **error) {
+attr_set_type_cb(const char *option_name, const char *optarg, void *data,
+                 GError **error)
+{
     if (pcmk__str_any_of(option_name, "-z", "--utilization", NULL)) {
         pcmk__set_node_attr_flags(options.attr_options, pcmk__node_attr_utilization);
     }
@@ -104,7 +112,8 @@ attr_set_type_cb(const gchar *option_name, const gchar *optarg, gpointer data, G
 }
 
 static gboolean
-wait_cb (const gchar *option_name, const gchar *optarg, gpointer data, GError **err) {
+wait_cb(const char *option_name, const char *optarg, void *data, GError **err)
+{
     if (pcmk__str_eq(optarg, "no", pcmk__str_none)) {
         pcmk__clear_node_attr_flags(options.attr_options, pcmk__node_attr_sync_local | pcmk__node_attr_sync_cluster);
         return TRUE;

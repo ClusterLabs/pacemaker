@@ -24,7 +24,6 @@
 #include <stdio.h>                          // NULL
 #include <string.h>                         // strcmp()
 
-#include <glib.h>                           // guint
 #include <libxml/tree.h>                    // xmlNode, etc.
 
 #include <crm/common/iso8601.h>             // crm_time_t
@@ -151,8 +150,8 @@ int pcmk__xe_get_datetime(const xmlNode *xml, const char *attr, crm_time_t **t);
 int pcmk__xe_get_flags(const xmlNode *xml, const char *name, uint32_t *dest,
                        uint32_t default_value);
 
-int pcmk__xe_get_guint(const xmlNode *xml, const char *attr, guint *dest);
-void pcmk__xe_set_guint(xmlNode *xml, const char *attr, guint value);
+int pcmk__xe_get_uint(const xmlNode *xml, const char *attr, unsigned int *dest);
+void pcmk__xe_set_uint(xmlNode *xml, const char *attr, unsigned int value);
 
 int pcmk__xe_get_int(const xmlNode *xml, const char *name, int *dest);
 void pcmk__xe_set_int(xmlNode *xml, const char *attr, int value);

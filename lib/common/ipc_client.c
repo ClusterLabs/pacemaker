@@ -153,7 +153,7 @@ pcmk__call_ipc_callback(pcmk_ipc_api_t *api, enum pcmk_ipc_event event_type,
  * \note This function can be used as a main loop IPC destroy callback.
  */
 static void
-ipc_post_disconnect(gpointer user_data)
+ipc_post_disconnect(void *user_data)
 {
     pcmk_ipc_api_t *api = user_data;
 
@@ -347,7 +347,7 @@ dispatch_ipc_data(const char *buffer, pcmk_ipc_api_t *api)
  * \note This function can be used as a main loop IPC dispatch callback.
  */
 static int
-dispatch_ipc_source_data(const char *buffer, ssize_t length, gpointer user_data)
+dispatch_ipc_source_data(const char *buffer, ssize_t length, void *user_data)
 {
     pcmk_ipc_api_t *api = user_data;
 

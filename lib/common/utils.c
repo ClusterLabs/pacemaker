@@ -375,8 +375,8 @@ pcmk__sleep_ms(unsigned int ms)
  *       \c g_timeout_add_seconds_full()), so only the timeout is destroyed.
  *       \p data is left intact.
  */
-guint
-pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
+unsigned int
+pcmk__create_timer(unsigned int interval_ms, GSourceFunc fn, void *data)
 {
     pcmk__assert(interval_ms != 0 && fn != NULL);
 
@@ -399,10 +399,11 @@ pcmk__create_timer(guint interval_ms, GSourceFunc fn, gpointer data)
  * \return If \p timeout_ms is 0, return 0.  Otherwise, return the number of
  *         seconds, rounded to the nearest integer, with a minimum of 1.
  */
-guint
-pcmk__timeout_ms2s(guint timeout_ms)
+unsigned int
+pcmk__timeout_ms2s(unsigned int timeout_ms)
 {
-    guint quot, rem;
+    unsigned int quot = 0;
+    unsigned int rem = 0;
 
     if (timeout_ms == 0) {
         return 0;

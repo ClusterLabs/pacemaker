@@ -603,7 +603,7 @@ handle_failcount_op(xmlNode * stored_msg)
     const char *uname = NULL;
     const char *op = NULL;
     char *interval_spec = NULL;
-    guint interval_ms = 0;
+    unsigned int interval_ms = 0;
     gboolean is_remote_node = FALSE;
 
     xmlNode *wrapper = pcmk__xe_first_child(stored_msg, PCMK__XE_CRM_XML, NULL,
@@ -622,9 +622,9 @@ handle_failcount_op(xmlNode * stored_msg)
         if (xml_attrs) {
             op = pcmk__xe_get(xml_attrs,
                               CRM_META "_" PCMK__META_CLEAR_FAILURE_OP);
-            pcmk__xe_get_guint(xml_attrs,
-                               CRM_META "_" PCMK__META_CLEAR_FAILURE_INTERVAL,
-                               &interval_ms);
+            pcmk__xe_get_uint(xml_attrs,
+                              CRM_META "_" PCMK__META_CLEAR_FAILURE_INTERVAL,
+                              &interval_ms);
         }
     }
     uname = pcmk__xe_get(xml_op, PCMK__META_ON_NODE);
@@ -838,7 +838,7 @@ handle_node_list(const xmlNode *request)
     // Create message data for reply
     reply_data = pcmk__xe_create(NULL, PCMK_XE_NODES);
     g_hash_table_iter_init(&iter, pcmk__peer_cache);
-    while (g_hash_table_iter_next(&iter, NULL, (gpointer *) & node)) {
+    while (g_hash_table_iter_next(&iter, NULL, (void **) &node)) {
         xmlNode *xml = pcmk__xe_create(reply_data, PCMK_XE_NODE);
 
         pcmk__xe_set_ll(xml, PCMK_XA_ID,

@@ -78,7 +78,8 @@ typedef struct {
 } private_data_t;
 
 static void
-html_free_priv(pcmk__output_t *out) {
+html_free_priv(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     if (out == NULL || out->priv == NULL) {
@@ -98,7 +99,8 @@ html_free_priv(pcmk__output_t *out) {
 }
 
 static bool
-html_init(pcmk__output_t *out) {
+html_init(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert(out != NULL);
@@ -130,14 +132,17 @@ html_init(pcmk__output_t *out) {
 }
 
 static void
-add_error_node(gpointer data, gpointer user_data) {
+add_error_node(void *data, void *user_data)
+{
     char *str = (char *) data;
     pcmk__output_t *out = (pcmk__output_t *) user_data;
     out->list_item(out, NULL, "%s", str);
 }
 
 static void
-html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy_dest) {
+html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print,
+            void **copy_dest)
+{
     private_data_t *priv = NULL;
     htmlNodePtr head_node = NULL;
     htmlNodePtr charset_node = NULL;
@@ -199,7 +204,7 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 
     if (g_slist_length(priv->errors) > 0) {
         out->begin_list(out, "Errors", NULL, NULL);
-        g_slist_foreach(priv->errors, add_error_node, (gpointer) out);
+        g_slist_foreach(priv->errors, add_error_node, (void *) out);
         out->end_list(out);
     }
 
@@ -216,7 +221,8 @@ html_finish(pcmk__output_t *out, crm_exit_t exit_status, bool print, void **copy
 }
 
 static void
-html_reset(pcmk__output_t *out) {
+html_reset(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
 
     out->dest = freopen(NULL, "w", out->dest);
@@ -228,7 +234,8 @@ html_reset(pcmk__output_t *out) {
 
 static void
 html_subprocess_output(pcmk__output_t *out, int exit_status,
-                       const char *proc_stdout, const char *proc_stderr) {
+                       const char *proc_stdout, const char *proc_stderr)
+{
     char *rc_buf = NULL;
 
     pcmk__assert(out != NULL);
@@ -273,7 +280,8 @@ html_version(pcmk__output_t *out)
 
 G_GNUC_PRINTF(2, 3)
 static void
-html_err(pcmk__output_t *out, const char *format, ...) {
+html_err(pcmk__output_t *out, const char *format, ...)
+{
     private_data_t *priv = NULL;
     int len = 0;
     char *buf = NULL;
@@ -292,12 +300,14 @@ html_err(pcmk__output_t *out, const char *format, ...) {
 
 G_GNUC_PRINTF(2, 3)
 static int
-html_info(pcmk__output_t *out, const char *format, ...) {
+html_info(pcmk__output_t *out, const char *format, ...)
+{
     return pcmk_rc_no_output;
 }
 
 static void
-html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
+html_output_xml(pcmk__output_t *out, const char *name, const char *buf)
+{
     htmlNodePtr node = NULL;
 
     pcmk__assert(out != NULL);
@@ -309,7 +319,8 @@ html_output_xml(pcmk__output_t *out, const char *name, const char *buf) {
 G_GNUC_PRINTF(4, 5)
 static void
 html_begin_list(pcmk__output_t *out, const char *singular_noun,
-                const char *plural_noun, const char *format, ...) {
+                const char *plural_noun, const char *format, ...)
+{
     int q_len = 0;
     private_data_t *priv = NULL;
     xmlNodePtr node = NULL;
@@ -351,7 +362,8 @@ html_begin_list(pcmk__output_t *out, const char *singular_noun,
 
 G_GNUC_PRINTF(3, 4)
 static void
-html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
+html_list_item(pcmk__output_t *out, const char *name, const char *format, ...)
+{
     htmlNodePtr item_node = NULL;
     va_list ap;
     char *buf = NULL;
@@ -373,12 +385,14 @@ html_list_item(pcmk__output_t *out, const char *name, const char *format, ...) {
 }
 
 static void
-html_increment_list(pcmk__output_t *out) {
+html_increment_list(pcmk__output_t *out)
+{
     /* This function intentially left blank */
 }
 
 static void
-html_end_list(pcmk__output_t *out) {
+html_end_list(pcmk__output_t *out)
+{
     private_data_t *priv = NULL;
 
     pcmk__assert((out != NULL) && (out->priv != NULL));
@@ -397,23 +411,27 @@ html_end_list(pcmk__output_t *out) {
 }
 
 static bool
-html_is_quiet(pcmk__output_t *out) {
+html_is_quiet(pcmk__output_t *out)
+{
     return false;
 }
 
 static void
-html_spacer(pcmk__output_t *out) {
+html_spacer(pcmk__output_t *out)
+{
     pcmk__assert(out != NULL);
     pcmk__output_create_xml_node(out, "br", NULL);
 }
 
 static void
-html_progress(pcmk__output_t *out, bool end) {
+html_progress(pcmk__output_t *out, bool end)
+{
     /* This function intentially left blank */
 }
 
 pcmk__output_t *
-pcmk__mk_html_output(char **argv) {
+pcmk__mk_html_output(char **argv)
+{
     pcmk__output_t *retval = calloc(1, sizeof(pcmk__output_t));
 
     if (retval == NULL) {
@@ -452,8 +470,10 @@ pcmk__mk_html_output(char **argv) {
 }
 
 xmlNodePtr
-pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name, const char *id,
-                              const char *class_name, const char *text) {
+pcmk__output_create_html_node(pcmk__output_t *out, const char *element_name,
+                              const char *id, const char *class_name,
+                              const char *text)
+{
     htmlNodePtr node = NULL;
 
     pcmk__assert(out != NULL);
@@ -506,7 +526,8 @@ pcmk__html_set_title(const char *name)
 }
 
 void
-pcmk__html_add_header(const char *name, ...) {
+pcmk__html_add_header(const char *name, ...)
+{
     htmlNodePtr header_node;
     va_list ap;
 

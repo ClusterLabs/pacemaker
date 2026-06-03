@@ -9,12 +9,22 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <stdbool.h>                    // bool, true, false
+#include <stddef.h>                     // NULL
+#include <stdlib.h>                     // free
+#include <string.h>                     // strcmp
 
-#include <crm/common/xml.h>
+#include <glib.h>                       // g_*, etc.
 
-#include <crm/pengine/internal.h>
-#include <pacemaker-internal.h>
+#include <crm/common/actions.h>         // PCMK_ACTION_*
+#include <crm/common/logging.h>         // CRM_CHECK, CRM_LOG_ASSERT
+#include <crm/common/nvpair.h>          // pcmk_nvpair_t, etc.
+#include <crm/common/options.h>         // PCMK_META_*, PCMK_VALUE_*
+#include <crm/common/roles.h>           // pcmk_role_*
+#include <crm/common/scheduler.h>       // pcmk_node_t, pcmk_scheduler_t, etc.
+#include <crm/common/scores.h>          // PCMK_SCORE_INFINITY
+#include <crm/pengine/complex.h>        // uber_parent
+#include <crm/pengine/internal.h>       // pe__*, etc.
 
 #include "pe_status_private.h"
 
@@ -36,8 +46,8 @@ typedef struct {
  *
  * \return -1 if \p a sorts before \p b, 0 if they are equal, otherwise 1
  */
-static gint
-compare_notify_entries(gconstpointer a, gconstpointer b)
+static int
+compare_notify_entries(const void *a, const void *b)
 {
     int tmp;
     const notify_entry_t *entry_a = a;
@@ -252,7 +262,7 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
  * \param[in,out] user_data  Notify action to copy into
  */
 static void
-copy_meta_to_notify(gpointer key, gpointer value, gpointer user_data)
+copy_meta_to_notify(void *key, void *value, void *user_data)
 {
     pcmk_action_t *notify = (pcmk_action_t *) user_data;
 

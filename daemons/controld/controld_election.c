@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -42,7 +42,7 @@ void
 controld_configure_election(GHashTable *options)
 {
     const char *value = g_hash_table_lookup(options, PCMK_OPT_ELECTION_TIMEOUT);
-    guint interval_ms = 0U;
+    unsigned int interval_ms = 0;
 
     pcmk_parse_interval_spec(value, &interval_ms);
     election_timeout_set_period(controld_globals.cluster, interval_ms);

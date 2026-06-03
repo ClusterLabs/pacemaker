@@ -20,7 +20,6 @@
 #include <sys/time.h>
 #include <time.h>
 
-#include <glib.h>
 #include <crm/common/iso8601.h>
 
 #ifdef __cplusplus
@@ -32,7 +31,7 @@ void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
 char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
 char *pcmk__epoch2str(const time_t *source, uint32_t flags);
 char *pcmk__timespec2str(const struct timespec *ts, uint32_t flags);
-const char *pcmk__readable_interval(guint interval_ms);
+const char *pcmk__readable_interval(unsigned int interval_ms);
 crm_time_t *pcmk__copy_timet(time_t source_sec);
 
 void pcmk__time_log_as(const char *file, const char *function, int line,
