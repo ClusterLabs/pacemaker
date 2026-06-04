@@ -233,6 +233,8 @@ pe__foreach_bundle_replica(pcmk_resource_t *bundle,
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
 
+    pcmk__assert(fn != NULL);
+
     get_bundle_variant_data(bundle_data, bundle);
     for (GList *iter = bundle_data->replicas; iter != NULL; iter = iter->next) {
         if (!fn((pcmk__bundle_replica_t *) iter->data, user_data)) {
@@ -257,6 +259,8 @@ pe__foreach_const_bundle_replica(const pcmk_resource_t *bundle,
                                  void *user_data)
 {
     const pe__bundle_variant_data_t *bundle_data = NULL;
+
+    pcmk__assert(fn != NULL);
 
     get_bundle_variant_data(bundle_data, bundle);
     for (const GList *iter = bundle_data->replicas; iter != NULL;

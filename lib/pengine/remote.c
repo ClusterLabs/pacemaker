@@ -100,7 +100,10 @@ pe_foreach_guest_node(const pcmk_scheduler_t *scheduler,
 {
     GList *iter;
 
-    CRM_CHECK(scheduler && host && host->details && helper, return);
+    pcmk__assert(helper != NULL);
+    CRM_CHECK((scheduler != NULL) && (host != NULL) && (host->details != NULL),
+               return);
+
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
         return;
     }

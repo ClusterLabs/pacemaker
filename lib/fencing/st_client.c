@@ -250,6 +250,8 @@ stonith__watchdog_fencing_enabled_for_node(const char *node)
 static void
 foreach_notify_entry(stonith_private_t *private, GFunc func, void *user_data)
 {
+    pcmk__assert(func != NULL);
+
     private->notify_refcnt++;
     g_list_foreach(private->notify_list, func, user_data);
     private->notify_refcnt--;
