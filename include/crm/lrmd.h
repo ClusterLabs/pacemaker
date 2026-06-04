@@ -16,7 +16,6 @@
 #include <glib.h>                   // guint, GList
 
 #include <crm_config.h>
-#include <crm/common/internal.h>    // pcmk__compare_versions()
 #include <crm/lrmd_events.h>
 #include <crm/services.h>
 
@@ -52,7 +51,7 @@ typedef struct lrmd_key_value_s {
  */
 #define LRMD_PROTOCOL_VERSION "1.2"
 
-#define LRMD_SUPPORTS_SCHEMA_XFER(x) (pcmk__compare_versions((x), "1.2") >= 0)
+#define LRMD_SUPPORTS_SCHEMA_XFER(x) (lrmd_compare_versions((x), "1.2") >= 0)
 
 /* The major protocol version the client and server both need to support for
  * the connection to be successful.  This should only ever be the major
@@ -516,6 +515,9 @@ lrmd_event_type2str(enum lrmd_callback_event type)
     }
     return "unknown";
 }
+
+//! \deprecated Do not use
+int lrmd_compare_versions(const char *version1, const char *version2);
 
 #ifdef __cplusplus
 }
