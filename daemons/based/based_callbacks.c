@@ -571,12 +571,13 @@ cib_process_command(xmlNode *request, const cib__operation_t *operation,
                              || pcmk__is_set(operation->flags,
                                              cib__op_attr_writes_through);
 
-        const char *feature_set = pcmk__xe_get(the_cib,
-                                               PCMK_XA_CRM_FEATURE_SET);
+        const char *feature_set = NULL;
 
         if (result_cib != the_cib) {
             rc = based_activate_cib(result_cib, to_disk, op);
         }
+
+        feature_set = pcmk__xe_get(the_cib, PCMK_XA_CRM_FEATURE_SET);
 
         /* @COMPAT Nodes older than feature set 3.19.0 don't support
          * transactions. In a mixed-version cluster with nodes <3.19.0, we must
