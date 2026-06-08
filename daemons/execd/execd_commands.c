@@ -32,6 +32,7 @@
 #include <crm/common/mainloop.h>
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
+#include <crm/lrmd_internal.h>          // lrmd__supports_schema_request
 
 #include "pacemaker-execd.h"
 
@@ -1560,8 +1561,9 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
             /* If this was a register operation, also ask for new schema files but
              * only if it's supported by the protocol version.
              */
-            if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none) &&
-                LRMD_SUPPORTS_SCHEMA_XFER(protocol_version)) {
+            if (pcmk__str_eq(op, CRM_OP_REGISTER, pcmk__str_none)
+                && lrmd__supports_schema_request(protocol_version)) {
+
                 remoted_request_cib_schema_files();
             }
         } else {

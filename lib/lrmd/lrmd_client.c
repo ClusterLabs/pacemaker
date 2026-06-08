@@ -2505,3 +2505,18 @@ lrmd__proxy_send(lrmd_t *lrmd, xmlNode *msg)
 
     return lrmd_send_xml_no_reply(lrmd, msg);
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/lrmd_compat.h>
+
+// @COMPAT This exists only as a helper for LRMD_SUPPORTS_SCHEMA_XFER()
+int
+lrmd_compare_versions(const char *version1, const char *version2)
+{
+    return pcmk__compare_versions(version1, version2);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

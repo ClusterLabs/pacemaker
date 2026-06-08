@@ -16,7 +16,6 @@
 #include <glib.h>                   // GList
 
 #include <crm_config.h>
-#include <crm/common/internal.h>    // pcmk__compare_versions()
 #include <crm/lrmd_events.h>
 #include <crm/services.h>
 
@@ -51,8 +50,6 @@ typedef struct lrmd_key_value_s {
  *   1.2       2.1.8    PCMK__CIB_REQUEST_SCHEMAS
  */
 #define LRMD_PROTOCOL_VERSION "1.2"
-
-#define LRMD_SUPPORTS_SCHEMA_XFER(x) (pcmk__compare_versions((x), "1.2") >= 0)
 
 /* The major protocol version the client and server both need to support for
  * the connection to be successful.  This should only ever be the major
@@ -522,5 +519,9 @@ lrmd_event_type2str(enum lrmd_callback_event type)
 #ifdef __cplusplus
 }
 #endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/lrmd_compat.h>
+#endif  // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #endif  // PCMK__CRM_LRMD__H
