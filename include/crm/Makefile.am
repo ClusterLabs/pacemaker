@@ -17,6 +17,7 @@ header_HEADERS += cluster.h
 header_HEADERS += crm.h
 header_HEADERS += crm_compat.h
 header_HEADERS += lrmd.h
+header_HEADERS += lrmd_compat.h
 header_HEADERS += lrmd_events.h
 header_HEADERS += msg_xml.h
 header_HEADERS += msg_xml_compat.h

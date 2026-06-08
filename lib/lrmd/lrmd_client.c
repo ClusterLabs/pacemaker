@@ -2532,3 +2532,18 @@ lrmd__node_start_state(lrmd_t *lrmd)
         return native->remote->start_state;
     }
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/lrmd_compat.h>
+
+// @COMPAT This exists only as a helper for LRMD_SUPPORTS_SCHEMA_XFER()
+int
+lrmd_compare_versions(const char *version1, const char *version2)
+{
+    return pcmk__compare_versions(version1, version2);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

@@ -27,6 +27,19 @@
 extern "C" {
 #endif
 
+/*!
+ * \internal
+ * \brief Check whether an LRMD protocol version supports schema requests
+ *
+ * LRMD protocol version 1.2 added support for a remote node to request CIB
+ * schemas from the executor on a cluster node via proxied connection.
+ */
+static inline bool
+lrmd__supports_schema_request(const char *protocol_version)
+{
+    return pcmk__compare_versions(protocol_version, "1.2") >= 0;
+}
+
 int lrmd__new(lrmd_t **api, const char *nodename, const char *server, int port);
 
 int lrmd_send_attribute_alert(lrmd_t *lrmd, const GList *alert_list,
