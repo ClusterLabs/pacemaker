@@ -181,6 +181,7 @@ cib__client_triggers_refresh(const char *name)
                                 "crm_attribute",
                                 "crm_node",
                                 "crm_resource",
+                                "crm_shadow_status",
                                 "crm_ticket",
                                 NULL);
 }

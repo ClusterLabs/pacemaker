@@ -77,6 +77,7 @@ static struct {
     gboolean force;
     gboolean batch;
     gboolean full_upload;
+    gboolean update_status;
     gchar *validate_with;
 } options = {
     .cmd_options = cib_sync_call,
@@ -679,6 +680,12 @@ commit_shadow_file(GError **error)
         return;
     }
 
+    if (options.update_status) {
+        options.full_upload = TRUE;
+        free(crm_system_name);
+        crm_system_name = strdup("crm_shadow_status");
+    }
+
     filename = get_shadow_file(options.instance);
     if (check_file_exists(filename, true, error) != pcmk_rc_ok) {
         goto done;
@@ -1138,6 +1145,11 @@ static GOptionEntry addl_entries[] = {
     { "validate-with", 'v', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
       &options.validate_with,
       "(Advanced) Create an older configuration version", NULL },
+
+    { "update-status", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.update_status,
+      "(Advanced) Upload entire CIB with --commit, without triggering a "
+      "controller refresh", NULL },
 
     { NULL }
 };
