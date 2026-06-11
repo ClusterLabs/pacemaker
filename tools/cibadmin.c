@@ -137,6 +137,7 @@ static struct {
     gboolean input_stdin;
     gboolean allow_create;
     gboolean force;
+    gboolean update_status;
     gboolean get_node_path;
     gboolean no_children;
     gboolean score_update;
@@ -431,6 +432,11 @@ cibadmin_handle_command(pcmk__output_t *out,
         out->err(out,
                  "Invalid value '%s' for '--scope'. Operation will apply to the "
                  "entire CIB", options.cib_section);
+    }
+
+    if (options.update_status) {
+        free(crm_system_name);
+        crm_system_name = strdup("cibadmin_status");
     }
 
     rc = cib__create_signon(&cib_conn);
@@ -805,6 +811,11 @@ static GOptionEntry addl_entries[] = {
       &options.no_children,
       "(Advanced) When querying an object, do not include its children in the "
       "result",
+      NULL },
+
+    { "update-status", 'u', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &options.update_status,
+      "(Advanced) Apply CIB update without triggering a controller refresh",
       NULL },
 
     // @COMPAT Deprecated since 3.0.0
