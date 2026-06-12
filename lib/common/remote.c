@@ -388,15 +388,16 @@ handle_compressed_payload(struct remote_header_v0 *header,
     rc = pcmk__bzlib2rc(rc);
 
     if (rc != pcmk_rc_ok) {
-        pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
-                  pcmk_rc_str(rc), rc);
+        pcmk__err("Decompression failed: %s " QB_XS " rc=%d", pcmk_rc_str(rc),
+                  rc);
         free(uncompressed);
         return rc;
     }
 
     pcmk__assert(size_u == header->payload_uncompressed);
 
-    memcpy(uncompressed, remote->buffer, header->payload_offset);       /* Preserve the header */
+    /* Copy the header to the front of the uncompressed buffer */
+    memcpy(uncompressed, remote->buffer, header->payload_offset);
     remote->buffer_size = header->payload_offset + size_u;
 
     free(remote->buffer);
