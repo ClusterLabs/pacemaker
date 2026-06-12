@@ -3,7 +3,7 @@
 # ocf:pacemaker:ClusterMon resource agent
 #
 # Original copyright 2004 SUSE LINUX AG, Lars Marowsky-Br<E9>e
-# Later changes copyright 2008-2023 the Pacemaker project contributors
+# Later changes copyright 2008-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -121,6 +121,10 @@ ClusterMon_start() {
     else
         eval $CMON_CMD
     fi
+
+    pid=$(ps -eo pid,args | grep "crm_mon.*$OCF_RESKEY_htmlfile" | grep -v grep | awk '{print $1}')
+    echo $pid > "$OCF_RESKEY_pidfile"
+
     ClusterMon_exit $?
 }
 
@@ -151,7 +155,7 @@ ClusterMon_monitor() {
             header=$(echo $CMON_CMD | tr 'crmon, \t' 'xxxxxxxx')
 
             ps $USERARG -o "args=${header}" -p $pid 2>/dev/null | \
-                grep -qE "[c]rm_mon.*${OCF_RESKEY_pidfile}"
+                grep -qE "[c]rm_mon.*${OCF_RESKEY_htmlfile}"
 
             case $? in
                 0) exit $OCF_SUCCESS;;
@@ -249,7 +253,7 @@ if [ ${OCF_RESKEY_update} -ge 1000 ]; then
     OCF_RESKEY_update=$(( $OCF_RESKEY_update / 1000 ))
 fi
 
-CMON_CMD="${HA_SBIN_DIR}/crm_mon -p \"$OCF_RESKEY_pidfile\" -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options --output-as=html --output-to=\"$OCF_RESKEY_htmlfile\""
+CMON_CMD="${HA_SBIN_DIR}/crm_mon -d -i $OCF_RESKEY_update $OCF_RESKEY_extra_options --output-as=html --output-to=\"$OCF_RESKEY_htmlfile\""
 
 case "$__OCF_ACTION" in
 meta-data)      meta_data
