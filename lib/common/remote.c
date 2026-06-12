@@ -328,6 +328,90 @@ done:
     return rc;
 }
 
+static int
+handle_compressed_payload(struct remote_header_v0 *header,
+                          pcmk__remote_t *remote)
+{
+    int rc = 0;
+    unsigned int size_u = 0;
+    char *uncompressed = NULL;
+    size_t buffer_size = 0;
+
+#if (UINT32_MAX < UINT_MAX)
+    if (header->payload_uncompressed >= UINT_MAX) {
+        pcmk__err("Couldn't decompress message because uncompressed "
+                  "payload size (%" PRIu32 ") is greater than UINT_MAX "
+                  "(%u)", header->payload_uncompressed, UINT_MAX);
+        return EMSGSIZE;
+    }
+#endif
+
+    /* @TODO Is the extra byte for the null terminator?
+     * pcmk__remote_send_xml() also adds one byte to the iov length.
+     * (However, we do need to account for the possibility of receiving a
+     * message from an untrusted sender.)
+     */
+    size_u = 1 + header->payload_uncompressed;
+
+    /* Header and uncompressed payload must fit in the destination buffer.
+     * We do not need to separately check the header size here since
+     * localized_remote_header will return NULL if it's incorrect.
+     */
+#if (UINT_MAX >= SIZE_MAX)
+    if ((size_u >= SIZE_MAX)
+        || (header->payload_offset > (SIZE_MAX - size_u))) {
+#else
+    if (header->payload_offset > (SIZE_MAX - size_u)) {
+#endif
+        pcmk__err("Couldn't decompress message because the required buffer "
+                  "size (%" PRIu32 " + %u) is greater than SIZE_MAX (%zu)",
+                  header->payload_offset, size_u, SIZE_MAX);
+        return EMSGSIZE;
+    }
+
+    buffer_size = (size_t) header->payload_offset + size_u;
+    if (buffer_size > PCMK__REMOTE_MSG_MAX_SIZE) {
+        pcmk__err("Message size %zu is larger than max allowed %u bytes",
+                  buffer_size, PCMK__REMOTE_MSG_MAX_SIZE);
+        return EMSGSIZE;
+    }
+
+    pcmk__trace("Decompressing message data %" PRIu32 " bytes into %u "
+                "bytes", header->payload_compressed, size_u);
+
+    uncompressed = pcmk__assert_alloc(buffer_size, sizeof(char));
+
+    rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset,
+                                    &size_u,
+                                    remote->buffer + header->payload_offset,
+                                    header->payload_compressed, 1, 0);
+    rc = pcmk__bzlib2rc(rc);
+
+    if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
+        pcmk__warn("Couldn't decompress v%d message, we only understand "
+                   "v%d",
+                   header->version, REMOTE_MSG_VERSION);
+        free(uncompressed);
+        return EPROTO;
+
+    } else if (rc != pcmk_rc_ok) {
+        pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
+                  pcmk_rc_str(rc), rc);
+        free(uncompressed);
+        return rc;
+    }
+
+    pcmk__assert(size_u == header->payload_uncompressed);
+
+    memcpy(uncompressed, remote->buffer, header->payload_offset);       /* Preserve the header */
+    remote->buffer_size = header->payload_offset + size_u;
+
+    free(remote->buffer);
+    remote->buffer = uncompressed;
+    header = localized_remote_header(remote);
+    return pcmk_rc_ok;
+}
+
 /*!
  * \internal
  * \brief Obtain the XML from the currently buffered remote connection message
@@ -351,83 +435,11 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
 
     /* Support compression on the receiving end now, in case we ever want to add it later */
     if (header->payload_compressed != 0) {
-        int rc = 0;
-        unsigned int size_u = 0;
-        char *uncompressed = NULL;
-        size_t buffer_size = 0;
+        int rc = handle_compressed_payload(header, remote);
 
-#if (UINT32_MAX < UINT_MAX)
-        if (header->payload_uncompressed >= UINT_MAX) {
-            pcmk__err("Couldn't decompress message because uncompressed "
-                      "payload size (%" PRIu32 ") is greater than UINT_MAX "
-                      "(%u)", header->payload_uncompressed, UINT_MAX);
+        if (rc != pcmk_rc_ok) {
             return NULL;
         }
-#endif
-
-        /* @TODO Is the extra byte for the null terminator?
-         * pcmk__remote_send_xml() also adds one byte to the iov length.
-         * (However, we do need to account for the possibility of receiving a
-         * message from an untrusted sender.)
-         */
-        size_u = 1 + header->payload_uncompressed;
-
-        /* Header and uncompressed payload must fit in the destination buffer.
-         * We do not need to separately check the header size here since
-         * localized_remote_header will return NULL if it's incorrect.
-         */
-#if (UINT_MAX >= SIZE_MAX)
-        if ((size_u >= SIZE_MAX)
-            || (header->payload_offset > (SIZE_MAX - size_u))) {
-#else
-        if (header->payload_offset > (SIZE_MAX - size_u)) {
-#endif
-            pcmk__err("Couldn't decompress message because the required buffer "
-                      "size (%" PRIu32 " + %u) is greater than SIZE_MAX (%zu)",
-                      header->payload_offset, size_u, SIZE_MAX);
-            return NULL;
-        }
-
-        buffer_size = (size_t) header->payload_offset + size_u;
-        if (buffer_size > PCMK__REMOTE_MSG_MAX_SIZE) {
-            pcmk__err("Message size %zu is larger than max allowed %u bytes",
-                      buffer_size, PCMK__REMOTE_MSG_MAX_SIZE);
-            return NULL;
-        }
-
-        pcmk__trace("Decompressing message data %" PRIu32 " bytes into %u "
-                    "bytes", header->payload_compressed, size_u);
-
-        uncompressed = pcmk__assert_alloc(buffer_size, sizeof(char));
-
-        rc = BZ2_bzBuffToBuffDecompress(uncompressed + header->payload_offset,
-                                        &size_u,
-                                        remote->buffer + header->payload_offset,
-                                        header->payload_compressed, 1, 0);
-        rc = pcmk__bzlib2rc(rc);
-
-        if (rc != pcmk_rc_ok && header->version > REMOTE_MSG_VERSION) {
-            pcmk__warn("Couldn't decompress v%d message, we only understand "
-                       "v%d",
-                       header->version, REMOTE_MSG_VERSION);
-            free(uncompressed);
-            return NULL;
-
-        } else if (rc != pcmk_rc_ok) {
-            pcmk__err("Decompression failed: %s " QB_XS " rc=%d",
-                      pcmk_rc_str(rc), rc);
-            free(uncompressed);
-            return NULL;
-        }
-
-        pcmk__assert(size_u == header->payload_uncompressed);
-
-        memcpy(uncompressed, remote->buffer, header->payload_offset);       /* Preserve the header */
-        remote->buffer_size = header->payload_offset + size_u;
-
-        free(remote->buffer);
-        remote->buffer = uncompressed;
-        header = localized_remote_header(remote);
     }
 
     /* take ownership of the buffer */
