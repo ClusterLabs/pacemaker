@@ -113,8 +113,8 @@ show_xml_element(pcmk__output_t *out, GString *buffer, const char *prefix,
             const char *p_value = pcmk__xml_attr_value(attr);
             gchar *p_value_disp = NULL;
 
-            if ((nodepriv == NULL)
-                || pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
+            if ((nodepriv != NULL)
+                && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
                 continue;
             }
 
