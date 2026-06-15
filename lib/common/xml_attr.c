@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -77,6 +77,31 @@ remove:
     return pcmk_rc_ok;
 }
 
+/*!
+ * \internal
+ * \brief Add an attribute to a hash table of name-value pairs
+ *
+ * Insert a copy of the attribute's name as the key and a copy of the
+ * attribute's value as the value, using \c pcmk__insert_dup().
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Name-value pair table (<tt>GHashTable *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
+ */
+bool
+pcmk__xa_insert_dup(const xmlAttr *attr, void *user_data)
+{
+    GHashTable *table = user_data;
+    const char *name = (const char *) attr->name;
+    const char *value = pcmk__xml_attr_value(attr);
+
+    pcmk__insert_dup(table, name, value);
+    return true;
+}
+
 void
 pcmk__mark_xml_attr_dirty(xmlAttr *a) 
 {
@@ -105,34 +130,40 @@ pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data)
  * \internal
  * \brief Append an XML attribute to a buffer
  *
- * \param[in]     attr     Attribute to append
- * \param[in,out] buffer   Where to append the content (must not be \p NULL)
+ * Append the attribute in the form <tt>" NAME=\"VALUE\""</tt>, where any XML-
+ * special characters in the value are escaped.
+ *
+ * \param[in]     attr       XML attribute
+ * \param[in,out] user_data  Buffer (<tt>GString *</tt>)
+ *
+ * \return \c true (to continue iterating)
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_const_attr().
  */
-void
-pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
+bool
+pcmk__dump_xml_attr(const xmlAttr *attr, void *user_data)
 {
-    const char *name = NULL;
+    GString *buffer = user_data;
     const char *value = NULL;
     gchar *value_esc = NULL;
-    xml_node_private_t *nodepriv = NULL;
+    const xml_node_private_t *nodepriv = NULL;
 
-    if (attr == NULL || attr->children == NULL) {
-        return;
+    if (attr == NULL) {
+        return true;
     }
 
     nodepriv = attr->_private;
     if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_deleted)) {
-        return;
+        return true;
     }
 
-    name = (const char *) attr->name;
-    value = (const char *) attr->children->content;
+    value = pcmk__xml_attr_value(attr);
     if (value == NULL) {
         /* Don't print anything for unset attribute. Any null-indicator value,
          * including the empty string, could also be a real value that needs to
-         * be treated differently from "unset".
+         * be treated differently from an unset value.
          */
-        return;
+        return true;
     }
 
     if (pcmk__xml_needs_escape(value, pcmk__xml_escape_attr)) {
@@ -140,6 +171,8 @@ pcmk__dump_xml_attr(const xmlAttr *attr, GString *buffer)
         value = value_esc;
     }
 
-    pcmk__g_strcat(buffer, " ", name, "=\"", value, "\"", NULL);
+    pcmk__g_strcat(buffer, " ", (const char *) attr->name, "=\"", value, "\"",
+                   NULL);
     g_free(value_esc);
+    return true;
 }
