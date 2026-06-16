@@ -498,31 +498,33 @@ static void
 set_effective_date(pcmk_scheduler_t *scheduler, bool print_original,
                    const char *use_date)
 {
+    static const uint32_t flags = crm_time_log_date|crm_time_log_timeofday;
+
     pcmk__output_t *out = scheduler->priv->out;
     time_t original_date = 0;
 
     pcmk__assert(out != NULL);
 
-    pcmk__xe_get_time(scheduler->input, PCMK_XA_EXECUTION_DATE,
-                      &original_date);
-
     if (use_date) {
         scheduler->priv->now = crm_time_new(use_date);
         out->info(out, "Setting effective cluster time: %s", use_date);
         pcmk__time_log(LOG_NOTICE, "Pretending 'now' is", scheduler->priv->now,
-                       crm_time_log_date|crm_time_log_timeofday);
+                       flags);
+        return;
+    }
 
-    } else if (original_date != 0) {
-        scheduler->priv->now = pcmk__copy_timet(original_date);
+    if (pcmk__xe_get_time(scheduler->input, PCMK_XA_EXECUTION_DATE,
+                          &original_date) != pcmk_rc_ok) {
+        return;
+    }
 
-        if (print_original) {
-            char *when = crm_time_as_string(scheduler->priv->now,
-                                            crm_time_log_date
-                                            |crm_time_log_timeofday);
+    scheduler->priv->now = pcmk__copy_timet(original_date);
 
-            out->info(out, "Using the original execution date of: %s", when);
-            free(when);
-        }
+    if (print_original) {
+        char *when = crm_time_as_string(scheduler->priv->now, flags);
+
+        out->info(out, "Using the original execution date of: %s", when);
+        free(when);
     }
 }
 

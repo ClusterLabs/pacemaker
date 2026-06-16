@@ -47,7 +47,9 @@ of the following types:
        :ref:`timeout <timeout>` or an
        `ISO 8601 duration <https://en.wikipedia.org/wiki/ISO_8601#Durations>`_.
        A duration may be up to approximately 49 days but is intended for much
-       smaller time periods.
+       smaller time periods. If the months field is specified within an ISO 8601
+       duration, each month is treated as 30 days, regardless of the start date.
+
    * - .. _enumeration:
 
        .. index::

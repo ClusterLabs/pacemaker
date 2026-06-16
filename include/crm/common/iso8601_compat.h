@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -28,6 +28,13 @@ extern "C" {
  *             header, and the header itself, will be removed in a future
  *             release.
  */
+
+//! \deprecated Do not use
+typedef struct crm_time_period_s {
+    crm_time_t *start;
+    crm_time_t *end;
+    crm_time_t *diff;
+} crm_time_period_t;
 
 //! \deprecated Do not use
 bool crm_time_leapyear(int year);
@@ -65,6 +72,12 @@ int crm_time_get_isoweek(const crm_time_t *dt, uint32_t *y, uint32_t *w,
 void crm_time_log_alias(int log_level, const char *file, const char *function,
                         int line, const char *prefix,
                         const crm_time_t *date_time, int flags);
+
+//! \deprecated Do not use
+void crm_time_free_period(crm_time_period_t *period);
+
+//! \deprecated Do not use
+crm_time_period_t *crm_time_parse_period(const char *period_str);
 
 #ifdef __cplusplus
 }
