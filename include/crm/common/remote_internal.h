@@ -29,6 +29,9 @@
 extern "C" {
 #endif
 
+// The maximum payload size for a remote message (in bytes)
+#define PCMK__REMOTE_MSG_MAX_SIZE (20 * 1024 * 1024)
+
 // internal functions from remote.c
 
 typedef struct {
