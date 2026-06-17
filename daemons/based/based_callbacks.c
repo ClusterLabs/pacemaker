@@ -411,7 +411,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         }
     }
 
-    *process = true;
     *needs_reply = false;
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
@@ -715,7 +714,6 @@ based_process_request(xmlNode *request, bool privileged,
          * CIB copy, and we don't notify for individual requests because the
          * entire transaction is atomic.
          */
-        process = true;
         needs_reply = false;
         local_notify = false;
 
