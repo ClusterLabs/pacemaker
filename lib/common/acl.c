@@ -976,6 +976,7 @@ pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source, xmlNode *xml)
     pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
     filter_unreadable_nodes(&result, false);
 
+    // coverity[check_after_deref : FALSE] Doesn't understand g_clear_pointer
     if (result == NULL) {
         // Entire document was freed, so don't free docpriv->acls here
         pcmk__trace("ACLs deny user '%s' access to entire XML document", user);
