@@ -346,8 +346,6 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        *local_notify = false;
-
         if (reply_to == NULL) {
             return true;
         }
@@ -715,7 +713,6 @@ based_process_request(xmlNode *request, bool privileged,
          * entire transaction is atomic.
          */
         needs_reply = false;
-        local_notify = false;
 
         pcmk__trace("Processing %s op from %s/%s on %s locally because it's "
                     "part of a transaction", op, client_name, call_id,
