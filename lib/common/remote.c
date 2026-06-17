@@ -620,6 +620,7 @@ xmlNode *
 pcmk__remote_message_xml(pcmk__remote_t *remote)
 {
     xmlNode *xml = NULL;
+    size_t data_size = 0;
     struct remote_header_v0 *header = localized_remote_header(remote);
 
     if (header == NULL) {
@@ -709,7 +710,18 @@ pcmk__remote_message_xml(pcmk__remote_t *remote)
     /* take ownership of the buffer */
     remote->buffer_offset = 0;
 
-    CRM_LOG_ASSERT(remote->buffer[sizeof(struct remote_header_v0) + header->payload_uncompressed - 1] == 0);
+    data_size = (size_t) header->payload_offset + header->payload_uncompressed;
+
+    // Ensure the buffer is as big as it should be
+    CRM_CHECK(remote->buffer_size >= data_size, return NULL);
+
+    /* Ensure the buffer is null-terminated (see
+     * pcmk__read_available_remote_data()).
+     *
+     * Note that payload_uncompressed contains the payload size including the
+     * null byte (see pcmk__remote_send_xml()).
+     */
+    CRM_CHECK(remote->buffer[data_size] == '\0', return NULL);
 
     xml = pcmk__xml_parse(remote->buffer + header->payload_offset);
     if (xml == NULL && header->version > REMOTE_MSG_VERSION) {
