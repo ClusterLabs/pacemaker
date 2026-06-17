@@ -409,23 +409,22 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
         }
     }
 
-    *needs_reply = false;
     *local_notify = pcmk__str_eq(delegated, OUR_NODENAME, pcmk__str_casei);
 
     if (pcmk__str_eq(host, OUR_NODENAME, pcmk__str_casei)) {
         pcmk__trace("Processing %s request sent to us from %s", op, originator);
-        *needs_reply = true;
         return true;
     }
 
     if (host != NULL) {
         pcmk__trace("Ignoring %s request intended for CIB manager on %s", op,
                     host);
+        *needs_reply = false;
         return false;
     }
 
-    if (!is_reply && pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
-        *needs_reply = true;
+    if (is_reply || !pcmk__str_eq(op, CRM_OP_PING, pcmk__str_none)) {
+        *needs_reply = false;
     }
 
     pcmk__trace("Processing %s request broadcast by %s call %s on %s "
