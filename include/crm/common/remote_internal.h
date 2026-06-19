@@ -1,5 +1,5 @@
 /*
- * Copyright 2008-2024 the Pacemaker project contributors
+ * Copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,6 +14,9 @@
 
 #include <crm/common/nodes.h>           // pcmk_node_variant_remote
 #include <crm/common/scheduler_types.h> // pcmk_node_t
+
+// The maximum payload size for a remote message (in bytes)
+#define PCMK__REMOTE_MSG_MAX_SIZE (20 * 1024 * 1024)
 
 // internal functions from remote.c
 
