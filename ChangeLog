@@ -1,3 +1,19 @@
+* Mon Jun 22 2026 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.11-rc1
+- 18 commits with 27 files changed, 279 insertions(+), 104 deletions(-)
+
+- Fixes since Pacemaker-2.1.10
+  + Important security fix for CVE-2026-10649
+  + build: Add a configure test for how strftime handles bare percents.
+  + build: Add a configure test for if strftime supports field width.
+  + build: Handle CMocka deprecations
+  + build: Add CMocka required includes
+  + libcrmcommon: Add additional checks to pcmk__remote_message_xml.
+  + libcrmcommon: Fix an integer overflow in pcmk__remote_send_xml.
+  + libcrmcommon: Fix integer overflow in remote message code.
+  + libcrmcommon: Limit the max size of a remote message.
+  + libcrmcommon: Add sanity checks to localized_remote_header.
+  + libcrmcommon, libpacemaker: Don't assign const char * to char *
+
 * Fri Jul 18 2025 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.10
 - 102 commits with 86 files changed, 1295 insertions(+), 608 deletions(-)
 
