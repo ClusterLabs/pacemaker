@@ -217,7 +217,6 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     const char *op = NULL;
     const char *section = NULL;
     const char *user = NULL;
-    uint32_t call_options = cib_none;
 
     xmlNode *cib = NULL;
     xmlNode *cib_filtered = NULL;
@@ -231,13 +230,11 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
     op = pcmk__xe_get(req, PCMK__XA_CIB_OP);
     section = pcmk__xe_get(req, PCMK__XA_CIB_SECTION);
     user = pcmk__xe_get(req, PCMK__XA_CIB_USER);
-    pcmk__xe_get_flags(req, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
 
     cib = *current_cib;
 
-    if (cib_acl_enabled(*current_cib, user)
-        && xml_acl_filtered_copy(user, *current_cib, *current_cib,
-                                 &cib_filtered)) {
+    if (cib_acl_enabled(cib, user)
+        && xml_acl_filtered_copy(user, cib, cib, &cib_filtered)) {
 
         if (cib_filtered == NULL) {
             pcmk__debug("Pre-filtered the entire cib");
@@ -277,14 +274,8 @@ cib__perform_op_ro(cib__op_fn_t fn, xmlNode *req, xmlNode **current_cib,
         goto done;
     }
 
-    if (*output == *current_cib) {
-        // Trust the caller to check this and not free *output
-        goto done;
-    }
-
     if ((*output)->doc == (*current_cib)->doc) {
-        // Give the caller a copy that it can free
-        *output = pcmk__xml_copy(NULL, *output);
+        // Trust the caller to check this and not free *output
         goto done;
     }
 
@@ -680,7 +671,6 @@ done:
     }
 
     pcmk__xml_free(top);
-    pcmk__trace("Done");
     return rc;
 }
 
@@ -866,8 +856,10 @@ cib_internal_op(cib_t * cib, const char *op, const char *host,
                 const char *section, xmlNode * data,
                 xmlNode ** output_data, int call_options, const char *user_name)
 {
-    /* Note: *output_data gets set only for create and query requests. There are
-     * a lot of opportunities to clean up, clarify, check/enforce things, etc.
+    /* @COMPAT *output_data gets set only for create and query requests. Setting
+     * it for create requests is deprecated since 2.1.8. When that behavior is
+     * removed, we can restrict freeing it to read-only operations
+     * (cib__perform_op_ro()).
      */
     int (*delegate)(cib_t *cib, const char *op, const char *host,
                     const char *section, xmlNode *data, xmlNode **output_data,
