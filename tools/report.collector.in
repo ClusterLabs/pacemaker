@@ -813,7 +813,7 @@ case $cluster in
 	;;
 esac
 
-dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $3}'`
+dc=`crm_mon -1 2>/dev/null | awk '/Current DC/ {print $4}'`
 if [ "$REPORT_TARGET" = "$dc" ]; then
     echo "$REPORT_TARGET" > DC
 fi
