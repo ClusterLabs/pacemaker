@@ -133,7 +133,6 @@ run_cmdline(pcmk__output_t *out, char **argv, char **standard_out)
      * and is replaced with g_spawn_check_wait_status.
      */
     success = g_spawn_check_exit_status(status, &error);
-
     if (!success) {
         out->err(out, "%s",  error->message);
         out->subprocess_output(out, WEXITSTATUS(status), sout, serr);
@@ -309,12 +308,10 @@ scp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 static gchar **
 reachable_hosts(pcmk__output_t *out, GList *all)
 {
-    GPtrArray *reachable = NULL;
+    GPtrArray *reachable = g_ptr_array_new();
     gchar *path = NULL;
 
     path = g_find_program_in_path("fping");
-
-    reachable = g_ptr_array_new();
 
     if ((path == NULL) || (geteuid() != 0)) {
         for (GList *host = all; host != NULL; host = host->next) {
@@ -509,18 +506,18 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
         sign_path = pcmk__assert_asprintf("%s.sign", path);
         rc = rcp_fn(out, peers, dirname, sign_path);
         free(sign_path);
-
-    } else {
-        g_strfreev(argv);
-        argv = g_new0(gchar *, 5);
-
-        argv[0] = g_strdup("rm");
-        argv[1] = g_strdup("-f");
-        argv[2] = g_strdup(path);
-        argv[3] = g_strdup_printf("%s.sign", path);
-
-        rc = rsh_fn(out, peers, argv);
+        goto done;
     }
+
+    g_strfreev(argv);
+    argv = g_new0(gchar *, 5);
+
+    argv[0] = g_strdup("rm");
+    argv[1] = g_strdup("-f");
+    argv[2] = g_strdup(path);
+    argv[3] = g_strdup_printf("%s.sign", path);
+
+    rc = rsh_fn(out, peers, argv);
 
 done:
     g_free(dirname);
@@ -587,27 +584,24 @@ get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
     argv[5] = g_strdup("--output-as=xml");
 
     rc = run_cmdline(out, argv, &standard_out);
-
     if (rc != pcmk_rc_ok) {
         goto done;
     }
 
     xml = pcmk__xml_parse(standard_out);
-
     if (xml == NULL) {
         goto done;
     }
 
     xpath = pcmk__assert_asprintf("//" PCMK_XE_ITEM "[@" PCMK_XA_NAME "='%s']",
                                   param);
-    node = pcmk__xpath_find_one(xml->doc, xpath, LOG_DEBUG);
 
+    node = pcmk__xpath_find_one(xml->doc, xpath, LOG_DEBUG);
     if (node == NULL) {
         goto done;
     }
 
     content = xmlNodeGetContent(node);
-
     if (content != NULL) {
         retval = pcmk__str_copy((char *) content);
         xmlFree(content);
@@ -723,7 +717,6 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     argv[3] = g_strdup_printf("%s.sign", lf_file);
 
     rc = run_cmdline(out, argv, NULL);
-
     if (rc == pcmk_rc_ok) {
         rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
     }
