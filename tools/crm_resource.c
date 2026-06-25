@@ -25,6 +25,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <libgen.h>
+#include <locale.h>                         // setlocale
 #include <time.h>
 
 #include <libxml/xpath.h>                   // xmlXPathObject, etc.
@@ -2064,6 +2065,9 @@ main(int argc, char **argv)
     args = pcmk__new_common_args(SUMMARY);
     processed_args = pcmk__cmdline_preproc(argv, "GHINSTdginpstuvx");
     context = build_arg_context(args, &output_group);
+
+    // Load locale information for the local host from the environment
+    setlocale(LC_ALL, "");
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {

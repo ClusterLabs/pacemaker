@@ -10,6 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>              // EINVAL, ENODEV, ENOENT, ENOTCONN
+#include <locale.h>             // setlocale
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdlib.h>             // setenv, unsetenv
@@ -33,7 +34,6 @@
 #define SUMMARY "cibsecret - manage sensitive information in Pacemaker CIB"
 
 #define LRM_MAGIC "lrm://"
-#define SSH_OPTS "-o StrictHostKeyChecking=no"
 
 static gchar **remainder = NULL;
 static gboolean no_cib = FALSE;
@@ -56,13 +56,13 @@ static GOptionEntry entries[] = {
  *
  * \param[in,out] out     Output object
  * \param[in]     nodes   A list of remote hosts
- * \param[in]     cmdline The command line to run
+ * \param[in]     argv    The list of command line arguments to run
  *
  * \return Standard Pacemaker return code
  *
  * \note On error, \p out->err() will be called to record stderr of the process
  */
-typedef int (*rsh_fn_t)(pcmk__output_t *out, char **nodes, const char *cmdline);
+typedef int (*rsh_fn_t)(pcmk__output_t *out, char **nodes, char **argv);
 
 /*!
  * \internal
@@ -98,7 +98,7 @@ struct subcommand_entry {
  * \brief Run a command line process
  *
  * \param[in,out] out          Output object
- * \param[in]     cmdline      The command line to execute
+ * \param[in]     argv         The list of command line arguments to run
  * \param[out]    standard_out If not NULL, where to save stdout of the process
  *
  * \return Standard Pacemaker return code
@@ -106,7 +106,7 @@ struct subcommand_entry {
  * \note On error, \p out->err() will be called to record stderr of the process
  */
 static int
-run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
+run_cmdline(pcmk__output_t *out, char **argv, char **standard_out)
 {
     int rc = pcmk_rc_ok;
     gboolean success = FALSE;
@@ -118,7 +118,8 @@ run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
     /* A failure here is a failure starting the program (for example, it doesn't
      * exist on the $PATH), not that it ran but exited with an error code.
      */
-    success = g_spawn_command_line_sync(cmdline, &sout, &serr, &status, &error);
+    success = g_spawn_sync(NULL, argv, NULL, G_SPAWN_SEARCH_PATH, NULL, NULL,
+                           &sout, &serr, &status, &error);
     if (!success) {
         out->err(out, "%s", error->message);
         rc = pcmk_rc_error;
@@ -132,7 +133,6 @@ run_cmdline(pcmk__output_t *out, const char *cmdline, char **standard_out)
      * and is replaced with g_spawn_check_wait_status.
      */
     success = g_spawn_check_exit_status(status, &error);
-
     if (!success) {
         out->err(out, "%s",  error->message);
         out->subprocess_output(out, WEXITSTATUS(status), sout, serr);
@@ -150,54 +150,85 @@ done:
 }
 
 static int
-pssh(pcmk__output_t *out, char **nodes, const char *cmdline)
+pssh(pcmk__output_t *out, char **nodes, char **cmd)
 {
     int rc = pcmk_rc_ok;
-    char *s = NULL;
-    gchar *hosts = g_strjoinv(" ", nodes);
+    int cmd_len = g_strv_length(cmd);
 
-    s = pcmk__assert_asprintf("pssh -i -H \"%s\" -x \"" SSH_OPTS "\" -- \"%s\"",
-                              hosts, cmdline);
-    rc = run_cmdline(out, s, NULL);
+    // Length of our args, plus the length of cmd, plus 1 for terminating NULL
+    int total_len = 7 + cmd_len + 1;
+    gchar **argv = g_new0(gchar *, total_len);
 
-    free(s);
-    g_free(hosts);
+    argv[0] = g_strdup("pssh");
+    argv[1] = g_strdup("-i");
+    argv[2] = g_strdup("-H");
+    argv[3] = g_strjoinv(" ", nodes);
+    argv[4] = g_strdup("-O");
+    argv[5] = g_strdup("StrictHostKeyChecking=no");
+    argv[6] = g_strdup("--");
+
+    // Append passed in args to argv
+    for (int i = 0; i < cmd_len; i++) {
+        argv[i + 7] = g_strdup(cmd[i]);
+    }
+
+    rc = run_cmdline(out, argv, NULL);
+    g_strfreev(argv);
     return rc;
 }
 
 static int
-pdsh(pcmk__output_t *out, char **nodes, const char *cmdline)
+pdsh(pcmk__output_t *out, char **nodes, char **cmd)
 {
     int rc = pcmk_rc_ok;
-    char *s = NULL;
-    gchar *hosts = g_strjoinv(",", nodes);
+    int cmd_len = g_strv_length(cmd);
 
-    s = pcmk__assert_asprintf("pdsh -w \"%s\" -- \"%s\"", hosts, cmdline);
-    setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
-    rc = run_cmdline(out, s, NULL);
+    int total_len = 4 + cmd_len + 1;
+    gchar **argv = g_new0(gchar *, total_len);
+
+    argv[0] = g_strdup("pdsh");
+    argv[1] = g_strdup("-w");
+    argv[2] = g_strjoinv(",", nodes);
+    argv[3] = g_strdup("--");
+
+    for (int i = 0; i < cmd_len; i++) {
+        argv[i + 4] = g_strdup(cmd[i]);
+    }
+
+    setenv("PDSH_SSH_ARGS_APPEND", "-o StrictHostKeyChecking=no", 1);
+    rc = run_cmdline(out, argv, NULL);
     unsetenv("PDSH_SSH_ARGS_APPEND");
 
-    free(s);
-    g_free(hosts);
+    g_strfreev(argv);
     return rc;
 }
 
 static int
-ssh(pcmk__output_t *out, char **nodes, const char *cmdline)
+ssh(pcmk__output_t *out, char **nodes, char **cmd)
 {
+    int cmd_len = g_strv_length(cmd);
+    int total_len = 5 + cmd_len + 1;
     int rc = pcmk_rc_ok;
 
     for (char **node = nodes; *node != NULL; node++) {
-        char *s = pcmk__assert_asprintf("ssh " SSH_OPTS " \"%s\" -- \"%s\"",
-                                        *node, cmdline);
+        gchar **argv = g_new0(gchar *, total_len);
 
-        rc = run_cmdline(out, s, NULL);
-        free(s);
+        argv[0] = g_strdup("ssh");
+        argv[1] = g_strdup("-o");
+        argv[2] = g_strdup("StrictHostKeyChecking=no");
+        argv[3] = g_strdup(*node);
+        argv[4] = g_strdup("--");
+
+        for (int i = 0; i < cmd_len; i++) {
+            argv[i + 5] = g_strdup(cmd[i]);
+        }
+
+        rc = run_cmdline(out, argv, NULL);
+        g_strfreev(argv);
 
         if (rc != pcmk_rc_ok) {
             return rc;
         }
-
     }
 
     return rc;
@@ -207,16 +238,22 @@ static int
 pscp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 {
     int rc = pcmk_rc_ok;
-    char *s = NULL;
-    gchar *hosts = g_strjoinv(" ", nodes);
+    gchar **argv = g_new0(gchar *, 11);
 
-    s = pcmk__assert_asprintf("pscp.pssh -H \"%s\" -x \"-pr\" "
-                              "-x \"" SSH_OPTS "\" -- \"%s\" \"%s\"",
-                              hosts, from, to);
-    rc = run_cmdline(out, s, NULL);
+    argv[0] = g_strdup("pscp.pssh");
+    argv[1] = g_strdup("-H");
+    argv[2] = g_strjoinv(" ", nodes);
+    argv[3] = g_strdup("-x");
+    argv[4] = g_strdup("-pr");
+    argv[5] = g_strdup("-O");
+    argv[6] = g_strdup("StrictHostKeyChecking=no");
+    argv[7] = g_strdup("--");
+    argv[8] = g_strdup(from);
+    argv[9] = g_strdup(to);
 
-    free(s);
-    g_free(hosts);
+    rc = run_cmdline(out, argv, NULL);
+
+    g_strfreev(argv);
     return rc;
 }
 
@@ -224,17 +261,21 @@ static int
 pdcp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 {
     int rc = pcmk_rc_ok;
-    char *s = NULL;
-    gchar *hosts = g_strjoinv(",", nodes);
+    gchar **argv = g_new0(gchar *, 8);
 
-    s = pcmk__assert_asprintf("pdcp -pr -w \"%s\" -- \"%s\" \"%s\"", hosts,
-                              from, to);
-    setenv("PDSH_SSH_ARGS_APPEND", SSH_OPTS, 1);
-    rc = run_cmdline(out, s, NULL);
+    argv[0] = g_strdup("pdcp");
+    argv[1] = g_strdup("-pr");
+    argv[2] = g_strdup("-w");
+    argv[3] = g_strjoinv(",", nodes);
+    argv[4] = g_strdup("--");
+    argv[5] = g_strdup(from);
+    argv[6] = g_strdup(to);
+
+    setenv("PDSH_SSH_ARGS_APPEND", "-o StrictHostKeyChecking=no", 1);
+    rc = run_cmdline(out, argv, NULL);
     unsetenv("PDSH_SSH_ARGS_APPEND");
 
-    free(s);
-    g_free(hosts);
+    g_strfreev(argv);
     return rc;
 }
 
@@ -244,17 +285,21 @@ scp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
     int rc = pcmk_rc_ok;
 
     for (char **node = nodes; *node != NULL; node++) {
-        char *s = pcmk__assert_asprintf("scp -pqr " SSH_OPTS " \"%s\" "
-                                        "\"%s:%s\"",
-                                        from, *node, to);
+        gchar **argv = g_new0(gchar *, 7);
 
-        rc = run_cmdline(out, s, NULL);
-        free(s);
+        argv[0] = g_strdup("scp");
+        argv[1] = g_strdup("-pqr");
+        argv[2] = g_strdup("-o");
+        argv[3] = g_strdup("StrictHostKeyChecking=no");
+        argv[4] = g_strdup(from);
+        argv[5] = g_strdup_printf("%s:%s", *node, to);
+
+        rc = run_cmdline(out, argv, NULL);
+        g_strfreev(argv);
 
         if (rc != pcmk_rc_ok) {
             return rc;
         }
-
     }
 
     return rc;
@@ -263,22 +308,24 @@ scp(pcmk__output_t *out, char **nodes, const char *to, const char *from)
 static gchar **
 reachable_hosts(pcmk__output_t *out, GList *all)
 {
-    GPtrArray *reachable = NULL;
+    GPtrArray *reachable = g_ptr_array_new();
     gchar *path = NULL;
 
     path = g_find_program_in_path("fping");
 
-    reachable = g_ptr_array_new();
-
     if ((path == NULL) || (geteuid() != 0)) {
         for (GList *host = all; host != NULL; host = host->next) {
             int rc = pcmk_rc_ok;
-            char *cmdline = pcmk__assert_asprintf("ping -c 2 -q %s",
-                                                  (char *) host->data);
+            gchar **argv = g_new0(gchar *, 6);
 
-            rc = run_cmdline(out, cmdline, NULL);
+            argv[0] = g_strdup("ping");
+            argv[1] = g_strdup("-c");
+            argv[2] = g_strdup("2");
+            argv[3] = g_strdup("-q");
+            argv[4] = g_strdup(host->data);
 
-            free(cmdline);
+            rc = run_cmdline(out, argv, NULL);
+            g_strfreev(argv);
 
             if (rc == pcmk_rc_ok) {
                 g_ptr_array_add(reachable, g_strdup(host->data));
@@ -286,17 +333,22 @@ reachable_hosts(pcmk__output_t *out, GList *all)
         }
 
     } else {
-        GString *all_str = g_string_sized_new(64);
         gchar **parts = NULL;
+        int i = 3;
+        gchar **argv = g_new0(gchar *, i + g_list_length(all) + 1);
         char *standard_out = NULL;
-        char *cmdline = NULL;
+
+        argv[0] = g_strdup("fping");
+        argv[1] = g_strdup("-a");
+        argv[2] = g_strdup("-q");
 
         for (GList *host = all; host != NULL; host = host->next) {
-            pcmk__add_word(&all_str, 64, host->data);
+            argv[i] = g_strdup(host->data);
+            i++;
         }
 
-        cmdline = pcmk__assert_asprintf("fping -a -q %s", all_str->str);
-        run_cmdline(out, cmdline, &standard_out);
+        run_cmdline(out, argv, &standard_out);
+        g_strfreev(argv);
 
         parts = g_strsplit(standard_out, "\n", 0);
         for (gchar **p = parts; *p != NULL; p++) {
@@ -307,9 +359,7 @@ reachable_hosts(pcmk__output_t *out, GList *all)
             g_ptr_array_add(reachable, g_strdup(*p));
         }
 
-        free(cmdline);
         free(standard_out);
-        g_string_free(all_str, TRUE);
         g_strfreev(parts);
     }
 
@@ -419,10 +469,10 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
     gchar *dirname = NULL;
     gchar **peers = get_live_peers(out);
     gchar *peer_str = NULL;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 4);
 
     if (peers == NULL) {
-        return pcmk_rc_ok;
+        goto done;
     }
 
     peer_str = g_strjoinv(" ", peers);
@@ -435,8 +485,12 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 
     dirname = g_path_get_dirname(path);
 
-    cmdline = pcmk__assert_asprintf("mkdir -p %s", dirname);
-    rc = rsh_fn(out, peers, cmdline);
+    argv[0] = g_strdup("mkdir");
+    argv[1] = g_strdup("-p");
+    argv[2] = g_strdup(dirname);
+
+    rc = rsh_fn(out, peers, argv);
+
     if (rc != pcmk_rc_ok) {
         goto done;
     }
@@ -452,16 +506,22 @@ sync_one_file(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
         sign_path = pcmk__assert_asprintf("%s.sign", path);
         rc = rcp_fn(out, peers, dirname, sign_path);
         free(sign_path);
-
-    } else {
-        free(cmdline);
-        cmdline = pcmk__assert_asprintf("rm -f %s %s.sign", path, path);
-        rc = rsh_fn(out, peers, cmdline);
+        goto done;
     }
 
+    g_strfreev(argv);
+    argv = g_new0(gchar *, 5);
+
+    argv[0] = g_strdup("rm");
+    argv[1] = g_strdup("-f");
+    argv[2] = g_strdup(path);
+    argv[3] = g_strdup_printf("%s.sign", path);
+
+    rc = rsh_fn(out, peers, argv);
+
 done:
-    free(cmdline);
     g_free(dirname);
+    g_strfreev(argv);
     g_strfreev(peers);
     g_free(peer_str);
     return rc;
@@ -471,16 +531,21 @@ static int
 check_cib_rsc(pcmk__output_t *out, const char *rsc)
 {
     int rc = pcmk_rc_ok;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 5);
 
     if (no_cib) {
-        return rc;
+        goto done;
     }
 
-    cmdline = pcmk__assert_asprintf("crm_resource -r %s -W", rsc);
-    rc = run_cmdline(out, cmdline, NULL);
+    argv[0] = g_strdup("crm_resource");
+    argv[1] = g_strdup("-r");
+    argv[2] = g_strdup(rsc);
+    argv[3] = g_strdup("-W");
 
-    free(cmdline);
+    rc = run_cmdline(out, argv, NULL);
+
+done:
+    g_strfreev(argv);
     return rc;
 }
 
@@ -499,7 +564,7 @@ static char *
 get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
 {
     int rc = pcmk_rc_ok;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 7);
     char *standard_out = NULL;
     char *retval = NULL;
     char *xpath = NULL;
@@ -508,42 +573,44 @@ get_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
     xmlChar *content = NULL;
 
     if (no_cib) {
-        return NULL;
+        goto done;
     }
 
-    cmdline = pcmk__assert_asprintf("crm_resource -r %s -g %s --output-as=xml",
-                                    rsc, param);
-    rc = run_cmdline(out, cmdline, &standard_out);
+    argv[0] = g_strdup("crm_resource");
+    argv[1] = g_strdup("-r");
+    argv[2] = g_strdup(rsc);
+    argv[3] = g_strdup("-g");
+    argv[4] = g_strdup(param);
+    argv[5] = g_strdup("--output-as=xml");
 
+    rc = run_cmdline(out, argv, &standard_out);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
 
     xml = pcmk__xml_parse(standard_out);
-
     if (xml == NULL) {
         goto done;
     }
 
     xpath = pcmk__assert_asprintf("//" PCMK_XE_ITEM "[@" PCMK_XA_NAME "='%s']",
                                   param);
-    node = pcmk__xpath_find_one(xml->doc, xpath, LOG_DEBUG);
 
+    node = pcmk__xpath_find_one(xml->doc, xpath, LOG_DEBUG);
     if (node == NULL) {
         goto done;
     }
 
     content = xmlNodeGetContent(node);
-
     if (content != NULL) {
         retval = pcmk__str_copy((char *) content);
         xmlFree(content);
     }
 
 done:
-    free(cmdline);
     free(standard_out);
     free(xpath);
+    g_strfreev(argv);
     pcmk__xml_free(xml);
     return retval;
 }
@@ -552,15 +619,22 @@ static int
 remove_cib_param(pcmk__output_t *out, const char *rsc, const char *param)
 {
     int rc = pcmk_rc_ok;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 6);
 
     if (no_cib) {
-        return rc;
+        goto done;
     }
 
-    cmdline = pcmk__assert_asprintf("crm_resource -r %s -d %s", rsc, param);
-    rc = run_cmdline(out, cmdline, NULL);
-    free(cmdline);
+    argv[0] = g_strdup("crm_resource");
+    argv[1] = g_strdup("-r");
+    argv[2] = g_strdup(rsc);
+    argv[3] = g_strdup("-d");
+    argv[4] = g_strdup(param);
+
+    rc = run_cmdline(out, argv, NULL);
+
+done:
+    g_strfreev(argv);
     return rc;
 }
 
@@ -569,16 +643,24 @@ set_cib_param(pcmk__output_t *out, const char *rsc, const char *param,
               const char *value)
 {
     int rc = pcmk_rc_ok;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 8);
 
     if (no_cib) {
-        return rc;
+        goto done;
     }
 
-    cmdline = pcmk__assert_asprintf("crm_resource -r %s -p %s -v %s", rsc,
-                                    param, value);
-    rc = run_cmdline(out, cmdline, NULL);
-    free(cmdline);
+    argv[0] = g_strdup("crm_resource");
+    argv[1] = g_strdup("-r");
+    argv[2] = g_strdup(rsc);
+    argv[3] = g_strdup("-p");
+    argv[4] = g_strdup(param);
+    argv[5] = g_strdup("-v");
+    argv[6] = g_strdup(value);
+
+    rc = run_cmdline(out, argv, NULL);
+
+done:
+    g_strfreev(argv);
     return rc;
 }
 
@@ -625,19 +707,22 @@ local_files_remove(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn,
 {
     int rc = pcmk_rc_ok;
     char *lf_file = NULL;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 5);
 
     lf_file = pcmk__assert_asprintf(PCMK__CIB_SECRETS_DIR "/%s/%s", rsc, param);
 
-    cmdline = pcmk__assert_asprintf("rm -f %s %s.sign", lf_file, lf_file);
-    rc = run_cmdline(out, cmdline, NULL);
+    argv[0] = g_strdup("rm");
+    argv[1] = g_strdup("-f");
+    argv[2] = g_strdup(lf_file);
+    argv[3] = g_strdup_printf("%s.sign", lf_file);
 
+    rc = run_cmdline(out, argv, NULL);
     if (rc == pcmk_rc_ok) {
         rc = sync_one_file(out, rsh_fn, rcp_fn, lf_file);
     }
 
     free(lf_file);
-    free(cmdline);
+    g_strfreev(argv);
     return rc;
 }
 
@@ -874,12 +959,12 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 {
     int rc = pcmk_rc_ok;
     gchar *dirname = NULL;
-    char *cmdline = NULL;
+    gchar **argv = g_new0(gchar *, 4);
     gchar **peers = get_live_peers(out);
     gchar *peer_str = NULL;
 
     if (peers == NULL) {
-        return pcmk_rc_ok;
+        goto done;
     }
 
     peer_str = g_strjoinv(" ", peers);
@@ -889,15 +974,23 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
 
     dirname = g_path_get_dirname(PCMK__CIB_SECRETS_DIR);
 
-    rc = rsh_fn(out, peers, "rm -rf " PCMK__CIB_SECRETS_DIR);
+    argv[0] = g_strdup("rm");
+    argv[1] = g_strdup("-rf");
+    argv[2] = g_strdup(PCMK__CIB_SECRETS_DIR);
+
+    rc = rsh_fn(out, peers, argv);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
 
-    cmdline = pcmk__assert_asprintf("mkdir -p %s", dirname);
-    rc = rsh_fn(out, peers, cmdline);
-    free(cmdline);
+    g_strfreev(argv);
+    argv = g_new0(gchar *, 4);
 
+    argv[0] = g_strdup("mkdir");
+    argv[1] = g_strdup("-p");
+    argv[2] = g_strdup(dirname);
+
+    rc = rsh_fn(out, peers, argv);
     if (rc != pcmk_rc_ok) {
         goto done;
     }
@@ -905,6 +998,7 @@ subcommand_sync(pcmk__output_t *out, rsh_fn_t rsh_fn, rcp_fn_t rcp_fn)
     rc = rcp_fn(out, peers, dirname, PCMK__CIB_SECRETS_DIR);
 
 done:
+    g_strfreev(argv);
     g_strfreev(peers);
     g_free(dirname);
     return rc;
@@ -1103,6 +1197,9 @@ main(int argc, char **argv)
     struct subcommand_entry cmd;
     rsh_fn_t rsh_fn;
     rcp_fn_t rcp_fn;
+
+    // Load locale information for the local host from the environment
+    setlocale(LC_ALL, "");
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
