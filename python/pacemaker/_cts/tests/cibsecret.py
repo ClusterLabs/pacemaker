@@ -41,7 +41,7 @@ class CibsecretTest(CTSTest):
         self.name = "Cibsecret"
 
         self._secret = "passwd"
-        self._secret_val = "SecreT_PASS"
+        self._secret_val = "SečreT PASS"
 
         self._rid = "secretDummy"
         self._startall = SimulStartLite(cm)
@@ -87,7 +87,7 @@ class CibsecretTest(CTSTest):
 
     def _check_cib_value(self, node, expected):
         """Check that the secret has the expected value."""
-        (rc, lines) = self._rsh(node, f"crm_resource -r {self._rid} -g {self._secret}",
+        (rc, lines) = self._rsh(node, f"crm_resource -r '{self._rid}' -g '{self._secret}'",
                                 verbose=1)
         s = " ".join(lines).strip()
 
@@ -99,7 +99,7 @@ class CibsecretTest(CTSTest):
 
     def _test_check(self, node):
         """Test the 'cibsecret check' subcommand."""
-        (rc, _) = self._rsh(node, f"cibsecret check {self._rid} {self._secret}",
+        (rc, _) = self._rsh(node, f"cibsecret check '{self._rid}' '{self._secret}'",
                             verbose=1)
         if rc != 0:
             return self.failure("Failed to check secret")
@@ -109,7 +109,7 @@ class CibsecretTest(CTSTest):
 
     def _test_delete(self, node):
         """Test the 'cibsecret delete' subcommand."""
-        (rc, _) = self._rsh(node, f"cibsecret delete {self._rid} {self._secret}",
+        (rc, _) = self._rsh(node, f"cibsecret delete '{self._rid}' '{self._secret}'",
                             verbose=1)
         if rc != 0:
             return self.failure("Failed to delete secret")
@@ -119,7 +119,7 @@ class CibsecretTest(CTSTest):
 
     def _test_get(self, node, expected):
         """Test the 'cibsecret get' subcommand."""
-        (rc, lines) = self._rsh(node, f"cibsecret get {self._rid} {self._secret}",
+        (rc, lines) = self._rsh(node, f"cibsecret get '{self._rid}' '{self._secret}'",
                                 verbose=1)
         s = " ".join(lines).strip()
 
@@ -131,7 +131,7 @@ class CibsecretTest(CTSTest):
 
     def _test_set(self, node):
         """Test the 'cibsecret set' subcommand."""
-        (rc, _) = self._rsh(node, f"cibsecret set {self._rid} {self._secret} {self._secret_val}",
+        (rc, _) = self._rsh(node, f"cibsecret set '{self._rid}' '{self._secret}' '{self._secret_val}'",
                             verbose=1)
         if rc != 0:
             return self.failure("Failed to set secret")
@@ -141,7 +141,7 @@ class CibsecretTest(CTSTest):
 
     def _test_stash(self, node):
         """Test the 'cibsecret stash' subcommand."""
-        (rc, _) = self._rsh(node, f"cibsecret stash {self._rid} {self._secret}",
+        (rc, _) = self._rsh(node, f"cibsecret stash '{self._rid}' '{self._secret}'",
                             verbose=1)
         if rc != 0:
             return self.failure(f"Failed to stash secret {self._secret}")
@@ -160,7 +160,7 @@ class CibsecretTest(CTSTest):
 
     def _test_unstash(self, node):
         """Test the 'cibsecret unstash' subcommand."""
-        (rc, _) = self._rsh(node, f"cibsecret unstash {self._rid} {self._secret}",
+        (rc, _) = self._rsh(node, f"cibsecret unstash '{self._rid}' '{self._secret}'",
                             verbose=1)
         if rc != 0:
             return self.failure(f"Failed to unstash secret {self._secret}")
