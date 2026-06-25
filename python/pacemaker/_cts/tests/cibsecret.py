@@ -41,7 +41,7 @@ class CibsecretTest(CTSTest):
         self.name = "Cibsecret"
 
         self._secret = "passwd"
-        self._secret_val = "SecreT_PASS"
+        self._secret_val = "SečreT PASS"
 
         self._rid = "secretDummy"
         self._startall = SimulStartLite(cm)
