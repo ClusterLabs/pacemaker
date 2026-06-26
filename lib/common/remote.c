@@ -8,31 +8,36 @@
  */
 
 #include <crm_internal.h>
-#include <crm/crm.h>
 
-#include <sys/param.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
-#include <netinet/tcp.h>
-#include <netdb.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <inttypes.h>   // PRIu32, PRIx32
+#include <arpa/inet.h>              // htons, inet_ntop
+#include <errno.h>                  // errno, EAGAIN, EINTR, EINVAL
+#include <inttypes.h>               // PRIu32, uint32_t, SIZE_MAX
+#include <limits.h>                 // UINT_MAX
+#include <netdb.h>                  // addrinfo, freeaddrinfo, getaddrinfo
+#include <netinet/in.h>             // INET6_ADDRSTRLEN, sockaddr_in
+#include <netinet/tcp.h>            // TCP_USER_TIMEOUT, SOL_TCP
+#include <poll.h>                   // pollfd, poll, POLLIN
+#include <stdbool.h>                // true, bool, false
+#include <stdlib.h>                 // NULL, free, size_t, strtol
+#include <string.h>                 // memset, memcpy, strcpy
+#include <sys/select.h>             // FD_ISSET, fd_set, select
+#include <sys/socket.h>             // connect, socklen_t, AF_INET6
+#include <sys/time.h>               // timeval
+#include <sys/types.h>              // ssize_t, time_t
+#include <sys/uio.h>                // iovec
+#include <time.h>                   // time
+#include <unistd.h>                 // close, read, write
 
-#include <glib.h>
-#include <bzlib.h>
+#include <bzlib.h>                  // BZ2_bzBuffToBuffDecompress
+#include <glib.h>                   // GUINT32_SWAP_LE_BE, g_string_*
+#include <gnutls/gnutls.h>          // gnutls_strerror, GNUTLS_E_AGAIN
+#include <libxml/parser.h>          // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/common/xml.h>
-#include <crm/common/mainloop.h>
-
-#include <gnutls/gnutls.h>
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/common/util.h>        // crm_default_remote_port
+#include <crm/common/xml.h>         // pcmk__xml_*
 
 #define REMOTE_MSG_VERSION 1
 #define ENDIAN_LOCAL 0xBADADBBD
