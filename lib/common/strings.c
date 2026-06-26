@@ -595,9 +595,9 @@ pcmk__compress(const char *data, unsigned int length, char **result,
                unsigned int *result_len)
 {
     unsigned int max = (length * 1.01) + 601;   // Size guaranteed to hold result
-    int rc;
+    int rc = pcmk_rc_ok;
     char *compressed = NULL;
-    char *uncompressed = strdup(data);
+    char *uncompressed = NULL;
 #ifdef CLOCK_MONOTONIC
     struct timespec after_t;
     struct timespec before_t;
@@ -608,6 +608,7 @@ pcmk__compress(const char *data, unsigned int length, char **result,
 #endif
 
     compressed = pcmk__assert_alloc((size_t) max, sizeof(char));
+    uncompressed = strdup(data);
 
     *result_len = max;
     rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
