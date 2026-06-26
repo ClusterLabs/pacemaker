@@ -585,16 +585,16 @@ pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
  *
  * \param[in]  data        Data to compress
  * \param[in]  length      Number of characters of data to compress
- * \param[in]  max         Maximum size of compressed data (or 0 to estimate)
  * \param[out] result      Where to store newly allocated compressed result
  * \param[out] result_len  Where to store actual compressed length of result
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__compress(const char *data, unsigned int length, unsigned int max,
-               char **result, unsigned int *result_len)
+pcmk__compress(const char *data, unsigned int length, char **result,
+               unsigned int *result_len)
 {
+    unsigned int max = (length * 1.01) + 601;   // Size guaranteed to hold result
     int rc;
     char *compressed = NULL;
     char *uncompressed = strdup(data);
@@ -602,10 +602,6 @@ pcmk__compress(const char *data, unsigned int length, unsigned int max,
     struct timespec after_t;
     struct timespec before_t;
 #endif
-
-    if (max == 0) {
-        max = (length * 1.01) + 601; // Size guaranteed to hold result
-    }
 
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &before_t);
