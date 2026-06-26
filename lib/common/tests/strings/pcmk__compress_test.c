@@ -23,7 +23,7 @@ static void
 simple_compress(void **state)
 {
     char *result = pcmk__assert_alloc(1024, sizeof(char));
-    unsigned int len;
+    size_t len;
 
     assert_int_equal(pcmk__compress(SIMPLE_DATA, 40, &result, &len), pcmk_rc_ok);
     assert_memory_equal(result, SIMPLE_COMPRESSED, 13);
@@ -32,7 +32,7 @@ simple_compress(void **state)
 static void
 calloc_fails(void **state) {
     char *result = pcmk__assert_alloc(1024, sizeof(char));
-    unsigned int len;
+    size_t len;
 
     pcmk__assert_exits(
         CRM_EX_OSERR,

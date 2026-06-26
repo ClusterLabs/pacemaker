@@ -591,10 +591,10 @@ pcmk__add_separated_word(GString **list, size_t init_size, const char *word,
  * \return Standard Pacemaker return code
  */
 int
-pcmk__compress(const char *data, unsigned int length, char **result,
-               unsigned int *result_len)
+pcmk__compress(const char *data, size_t length, char **result, size_t *result_len)
 {
-    unsigned int max = (length * 1.01) + 601;   // Size guaranteed to hold result
+    size_t max = (length * 1.01) + 601;     // Max size of the compressed result
+    unsigned int dest_len = 0;              // Where bz2 should store the actual size
     int rc = pcmk_rc_ok;
     char *compressed = NULL;
     char *uncompressed = NULL;
@@ -603,16 +603,33 @@ pcmk__compress(const char *data, unsigned int length, char **result,
     struct timespec before_t;
 #endif
 
+    /* Did the max calculation overflow? */
+    if (max < length) {
+        return EINVAL;
+    }
+
+    /* BZ2_bzBuffToBuffCompress wants unsigned ints, not size_t.  This function
+     * takes size_t arguments to simplify checking in its callers.  Make sure
+     * we're not passing BZ2_bzBuffToBuffCompress something that's too large.
+     */
+#if (SIZE_MAX > UINT_MAX)
+    if (max > UINT_MAX) {
+        return EINVAL;
+    }
+#endif
+
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &before_t);
 #endif
 
-    compressed = pcmk__assert_alloc((size_t) max, sizeof(char));
+    compressed = pcmk__assert_alloc(max, sizeof(char));
     uncompressed = strdup(data);
 
-    *result_len = max;
-    rc = BZ2_bzBuffToBuffCompress(compressed, result_len, uncompressed, length,
+    dest_len = max;
+    rc = BZ2_bzBuffToBuffCompress(compressed, &dest_len, uncompressed, length,
                                   PCMK__BZ2_BLOCKS, 0, PCMK__BZ2_WORK);
+    *result_len = dest_len;
+
     rc = pcmk__bzlib2rc(rc);
 
     free(uncompressed);
@@ -627,13 +644,11 @@ pcmk__compress(const char *data, unsigned int length, char **result,
 #ifdef CLOCK_MONOTONIC
     clock_gettime(CLOCK_MONOTONIC, &after_t);
 
-    pcmk__trace("Compressed %d bytes into %d (ratio %d:1) in %.0fms", length,
-                *result_len, (length / *result_len),
+    pcmk__trace("Compressed %zu bytes into %zu in %.0fms", length, *result_len,
                 (((after_t.tv_sec - before_t.tv_sec) * 1000)
                  + ((after_t.tv_nsec - before_t.tv_nsec) / 1e6)));
 #else
-    pcmk__trace("Compressed %d bytes into %d (ratio %d:1)", length, *result_len,
-                (length / *result_len));
+    pcmk__trace("Compressed %zu bytes into %zu", length, *result_len);
 #endif
 
     *result = compressed;
