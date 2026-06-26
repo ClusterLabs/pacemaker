@@ -917,7 +917,7 @@ connect_socket_once(int sock, const struct sockaddr *addr, socklen_t addrlen)
         return rc;
     }
 
-    return pcmk_ok;
+    return pcmk_rc_ok;
 }
 
 /*!
