@@ -1,4 +1,4 @@
-* Mon Jun 22 2026 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.11-rc1
+* Mon Jun 29 2026 Chris Lumens <clumens@redhat.com> Pacemaker-2.1.11
 - 18 commits with 27 files changed, 279 insertions(+), 104 deletions(-)
 
 - Fixes since Pacemaker-2.1.10
