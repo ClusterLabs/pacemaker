@@ -771,11 +771,11 @@ pcmk__ipc_send_iov(pcmk__client_t *c, struct iovec *iov, uint32_t flags)
 
             pcmk__trace("Sending a copy to %p[%d]", c->ipcs, c->pid);
             iov_copy[0].iov_len = iov[0].iov_len;
-            iov_copy[0].iov_base = malloc(iov[0].iov_len);
+            iov_copy[0].iov_base = pcmk__assert_alloc(1, iov[0].iov_len);
             memcpy(iov_copy[0].iov_base, iov[0].iov_base, iov[0].iov_len);
 
             iov_copy[1].iov_len = iov[1].iov_len;
-            iov_copy[1].iov_base = malloc(iov[1].iov_len);
+            iov_copy[1].iov_base = pcmk__assert_alloc(1, iov[1].iov_len);
             memcpy(iov_copy[1].iov_base, iov[1].iov_base, iov[1].iov_len);
 
             add_event(c, iov_copy);
