@@ -11,7 +11,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Pacemaker 2\n"
 "Report-Msgid-Bugs-To: developers@clusterlabs.org\n"
-"POT-Creation-Date: 2026-04-16 10:33-0400\n"
+"POT-Creation-Date: 2026-06-25 14:50-0400\n"
 "PO-Revision-Date: 2021-11-08 11:04+0800\n"
 "Last-Translator: Vivi <developers@clusterlabs.org>\n"
 "Language-Team: CHINESE <wangluwei@uniontech.org>\n"
@@ -1176,45 +1176,45 @@ msgid ""
 "for the implicit remote connection resource (ocf:pacemaker:remote)."
 msgstr ""
 
-#: lib/common/cmdline.c:72
+#: lib/common/cmdline.c:71
 msgid "Display software version and exit"
 msgstr "显示软件版本信息"
 
-#: lib/common/cmdline.c:75
+#: lib/common/cmdline.c:74
 msgid "Increase debug output (may be specified multiple times)"
 msgstr "显示更多调试信息（可多次指定）"
 
-#: lib/common/cmdline.c:94
+#: lib/common/cmdline.c:93
 msgid "FORMAT"
 msgstr "格式"
 
-#: lib/common/cmdline.c:96
+#: lib/common/cmdline.c:95
 msgid "Specify file name for output (or \"-\" for stdout)"
 msgstr "指定输出的文件名 或指定'-' 表示标准输出"
 
-#: lib/common/cmdline.c:96
+#: lib/common/cmdline.c:95
 msgid "DEST"
 msgstr "目标"
 
-#: lib/common/cmdline.c:102
+#: lib/common/cmdline.c:101
 msgid "Output Options:"
 msgstr "输出选项"
 
-#: lib/common/cmdline.c:102
+#: lib/common/cmdline.c:101
 msgid "Show output help"
 msgstr "显示输出帮助"
 
-#: tools/crm_resource.c:211
+#: tools/crm_resource.c:212
 #, c-format
 msgid "Aborting because no messages received in %d seconds"
 msgstr "中止，因为在%d秒内没有接收到消息"
 
-#: tools/crm_resource.c:411
+#: tools/crm_resource.c:422
 #, c-format
 msgid "Invalid check level setting: %s"
 msgstr "无效的检查级别设置：%s"
 
-#: tools/crm_resource.c:894
+#: tools/crm_resource.c:905
 #, c-format
 msgid ""
 "Resource '%s' not moved: active in %d locations (promoted in %d).\n"
@@ -1226,7 +1226,7 @@ msgstr ""
 "若要阻止'%s'在特定位置运行，请指定一个节点。若要防止'%s'在指定位置升级，指定"
 "一个节点并使用--promoted选项"
 
-#: tools/crm_resource.c:905
+#: tools/crm_resource.c:916
 #, c-format
 msgid ""
 "Resource '%s' not moved: active in %d locations.\n"
@@ -1235,149 +1235,149 @@ msgstr ""
 "资源%s未移动:在%d个位置运行\n"
 "若要防止'%s'运行在特定位置，指定一个节点"
 
-#: tools/crm_resource.c:1013
+#: tools/crm_resource.c:1024
 #, c-format
 msgid "No cluster connection to Pacemaker Remote node %s detected"
 msgstr "未检测到至pacemaker远程节点%s的集群连接"
 
-#: tools/crm_resource.c:1103
+#: tools/crm_resource.c:1114
 #, fuzzy
 msgid "--class, --agent, and --provider cannot be used with -r/--resource"
 msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
 
-#: tools/crm_resource.c:1127
+#: tools/crm_resource.c:1138
 msgid ""
 "--class, --agent, and --provider can only be used with --validate and --"
 "force-*"
 msgstr "--class, --agent和--provider只能被用于--validate和--force-*"
 
-#: tools/crm_resource.c:1136
+#: tools/crm_resource.c:1147
 msgid "--provider and --agent are required with --class=ocf"
 msgstr ""
 
-#: tools/crm_resource.c:1144
+#: tools/crm_resource.c:1155
 msgid "--provider is supported only with --class=ocf"
 msgstr ""
 
-#: tools/crm_resource.c:1151
+#: tools/crm_resource.c:1162
 msgid "--agent is required with --class"
 msgstr ""
 
-#: tools/crm_resource.c:1156
+#: tools/crm_resource.c:1167
 msgid "--class is required with --agent"
 msgstr ""
 
-#: tools/crm_resource.c:1166
+#: tools/crm_resource.c:1177
 #, fuzzy, c-format
 msgid "%s is not a known fencing agent"
 msgstr "%s 不是一个已知stonith代理"
 
-#: tools/crm_resource.c:1174
+#: tools/crm_resource.c:1185
 #, fuzzy, c-format
 msgid "%s:%s:%s is not a known resource agent"
 msgstr "%s:%s:%s 不是一个已知资源"
 
-#: tools/crm_resource.c:1178
+#: tools/crm_resource.c:1189
 #, fuzzy, c-format
 msgid "%s:%s is not a known resource agent"
 msgstr "%s:%s:%s 不是一个已知资源"
 
-#: tools/crm_resource.c:1272
+#: tools/crm_resource.c:1286
 #, fuzzy, c-format
 msgid "Could not get modified CIB: %s"
 msgstr "无法获得修改的CIB：%s\n"
 
-#: tools/crm_resource.c:1334
+#: tools/crm_resource.c:1345
 msgid "You need to specify a resource type with -t"
 msgstr "需要使用-t指定资源类型"
 
-#: tools/crm_resource.c:1342
+#: tools/crm_resource.c:1353
 #, fuzzy, c-format
 msgid "Could not delete resource %s: %s"
 msgstr "无法删除资源：%s：%s"
 
-#: tools/crm_resource.c:1621
+#: tools/crm_resource.c:1625
 msgid "Could not create executor connection"
 msgstr "无法创建到pacemaker-execd守护进程的连接"
 
-#: tools/crm_resource.c:1649
+#: tools/crm_resource.c:1653
 #, fuzzy, c-format
 msgid "Metadata query for %s failed: %s"
 msgstr "，查询%s的元数据失败: %s\n"
 
-#: tools/crm_resource.c:1655
+#: tools/crm_resource.c:1659
 #, c-format
 msgid "'%s' is not a valid agent specification"
 msgstr "'%s' 是一个无效的代理"
 
-#: tools/crm_resource.c:1754
+#: tools/crm_resource.c:1758
 msgid "You need to supply a value with the -v option"
 msgstr "需要使用-v选项提供一个值"
 
-#: tools/crm_resource.c:2091
+#: tools/crm_resource.c:2098
 #, c-format
 msgid "Error creating output format %s: %s"
 msgstr "创建输出格式错误 %s:%s"
 
-#: tools/crm_resource.c:2112
+#: tools/crm_resource.c:2119
 msgid "--expired requires --clear or -U"
 msgstr "--expired需要和--clear或-U一起使用"
 
-#: tools/crm_resource.c:2142
+#: tools/crm_resource.c:2149
 #, c-format
 msgid "Error parsing '%s' as a name=value pair"
 msgstr "'%s'解析错误，格式为name=value"
 
-#: tools/crm_resource.c:2189
+#: tools/crm_resource.c:2196
 #, fuzzy, c-format
 msgid "Bug: Unimplemented command: %d"
 msgstr "无效的命令：%d"
 
-#: tools/crm_resource.c:2206
+#: tools/crm_resource.c:2213
 msgid "--option must be used with --validate and without -r"
 msgstr ""
 
-#: tools/crm_resource.c:2219
+#: tools/crm_resource.c:2226
 #, fuzzy
 msgid "Must supply a resource ID with -r/--resource"
 msgstr "必须使用-r指定资源id"
 
-#: tools/crm_resource.c:2229
+#: tools/crm_resource.c:2236
 #, fuzzy
 msgid "Must supply a node name with -N/--node"
 msgstr "必须使用-N指定节点名称"
 
-#: tools/crm_resource.c:2241
+#: tools/crm_resource.c:2248
 #, c-format
 msgid "Could not connect to the CIB: %s"
 msgstr "不能连接到CIB：%s"
 
-#: tools/crm_resource.c:2266
+#: tools/crm_resource.c:2273
 #, c-format
 msgid "Error connecting to the controller: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:2277
+#: tools/crm_resource.c:2284
 #, fuzzy, c-format
 msgid "Error connecting to %s: %s"
 msgstr "连接到控制器错误：%s"
 
-#: tools/crm_resource.c:2301
+#: tools/crm_resource.c:2308
 #, c-format
 msgid "Node '%s' not found"
 msgstr "没有发现%s节点"
 
-#: tools/crm_resource.c:2328
+#: tools/crm_resource.c:2335
 #, c-format
 msgid "Resource '%s' not found"
 msgstr "没有发现'%s'资源"
 
-#: tools/crm_resource.c:2338
+#: tools/crm_resource.c:2345
 #, c-format
 msgid "Cannot operate on clone resource instance '%s'"
 msgstr "不能操作克隆资源实例'%s'"
 
-#: tools/crm_resource.c:2360
+#: tools/crm_resource.c:2367
 #, c-format
 msgid "Error performing operation: %s"
 msgstr "执行操作错误：%s"
