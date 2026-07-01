@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2025 the Pacemaker project contributors
+# Copyright 2008-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -266,8 +266,8 @@ BuildRequires: %{python_name}-devel
 BuildRequires: %{python_name}-setuptools
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb >= 1.0.1
-BuildRequires: pkgconfig(libqb) >= 1.0.1
+Requires:      libqb >= 2.0.8
+BuildRequires: pkgconfig(libqb) >= 2.0.8
 
 # Required basic build tools
 BuildRequires: autoconf
@@ -281,32 +281,32 @@ BuildRequires: libtool
 BuildRequires: %{?pkgname_libtool_devel}
 %endif
 BuildRequires: make
-BuildRequires: pkgconfig >= 0.28
+BuildRequires: pkgconfig >= 2.1.0
 BuildRequires: sed
 
 # Required for core functionality
-BuildRequires: pkgconfig(glib-2.0) >= 2.42
-BuildRequires: pkgconfig(gnutls) >= 3.4.6
-BuildRequires: pkgconfig(libxml-2.0) >= 2.9.2
+BuildRequires: pkgconfig(glib-2.0) >= 2.80
+BuildRequires: pkgconfig(gnutls) >= 3.8.9
+BuildRequires: pkgconfig(libxml-2.0) >= 2.12.5
 BuildRequires: pkgconfig(systemd)
 BuildRequires: libxslt-devel
 BuildRequires: pkgconfig(uuid)
 BuildRequires: %{pkgname_bzip2_devel}
 
 # Enables optional functionality
-BuildRequires: pkgconfig(dbus-1) >= 1.5.12
+BuildRequires: pkgconfig(dbus-1) >= 1.14.10
 BuildRequires: %{pkgname_docbook_xsl}
 BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
-BuildRequires: %{pkgname_gettext} >= 0.18
+BuildRequires: %{pkgname_gettext} >= 0.22
 
 # Required for "make check"
 BuildRequires: libcmocka-devel >= 1.1.0
 BuildRequires: %{python_name}-psutil
 
-Requires:      corosync >= 2.0.0
-BuildRequires: corosync-devel >= 2.0.0
+Requires:      corosync >= 3.1.9
+BuildRequires: corosync-devel >= 3.1.9
 
 %if %{with linuxha}
 BuildRequires: %{pkgname_glue_libs}-devel
@@ -426,14 +426,14 @@ Summary:       Pacemaker development package
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{pkgname_bzip2_devel}%{?_isa}
-Requires:      corosync-devel >= 2.0.0
+Requires:      corosync-devel >= 3.1.9
 Requires:      glib2-devel%{?_isa}
-Requires:      libqb-devel%{?_isa} >= 1.0.1
+Requires:      libqb-devel%{?_isa} >= 2.0.8
 %if %{defined pkgname_libtool_devel_arch}
 Requires:      %{?pkgname_libtool_devel_arch}
 %endif
 Requires:      libuuid-devel%{?_isa}
-Requires:      libxml2-devel%{?_isa} >= 2.9.2
+Requires:      libxml2-devel%{?_isa} >= 2.12.5
 Requires:      libxslt-devel%{?_isa}
 
 %description -n %{pkgname_pcmk_libs}-devel

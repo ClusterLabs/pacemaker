@@ -47,14 +47,14 @@ dnl   - Should not include HAVE_* defines
 dnl   - Safe to include anywhere
 AC_CONFIG_HEADERS([include/config.h include/crm_config.h])
 
-dnl 1.13:           minimum automake version required
+dnl 1.16:           minimum automake version required
 dnl foreign:        don't require GNU-standard top-level files
 dnl tar-ustar:      use (older) POSIX variant of generated tar rather than v7
 dnl subdir-objects: keep .o's with their .c's (no-op in 2.0+)
-AM_INIT_AUTOMAKE([1.13 foreign tar-ustar subdir-objects])
+AM_INIT_AUTOMAKE([1.16 foreign tar-ustar subdir-objects])
 
 dnl Require minimum version of pkg-config
-PKG_PROG_PKG_CONFIG(0.28)
+PKG_PROG_PKG_CONFIG(2.1.0)
 AS_IF([test x"${PKG_CONFIG}" != x""], [],
       [AC_MSG_FAILURE([Could not find required build tool pkg-config (0.28 or later)])])
 PKG_INSTALLDIR
@@ -72,7 +72,7 @@ dnl C++ is needed only to run maintainer utilities, not to build
 AC_PROG_CXX
 
 dnl Use at least C99 if possible (automatic for autoconf >= 2.70)
-m4_version_prereq([2.70], [:], [AC_PROG_CC_STDC])
+m4_version_prereq([2.71], [:], [AC_PROG_CC_STDC])
 
 # cc_supports_flag <compiler-flag>
 #  Return success if the C compiler supports the given flag
@@ -517,7 +517,7 @@ dnl If PYTHON was specified, ensure it is an absolute path
 AS_IF([test x"${PYTHON}" != x""], [AC_PATH_PROG([PYTHON], [$PYTHON])])
 
 dnl Require a minimum Python version
-AM_PATH_PYTHON([3.6])
+AM_PATH_PYTHON([3.12.11])
 
 AC_PROG_LN_S
 AC_PROG_MKDIR_P
@@ -1072,14 +1072,14 @@ PKG_CHECK_MODULES([UUID], [uuid],
                    LIBS="${LIBS} ${UUID_LIBS}"])
 
 # Require minimum glib version
-PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.42.0],
+PKG_CHECK_MODULES([GLIB], [glib-2.0 >= 2.80.0],
                   [CPPFLAGS="${CPPFLAGS} ${GLIB_CFLAGS}"
                    LIBS="${LIBS} ${GLIB_LIBS}"])
 
 # Check whether high-resolution sleep function is available
 AC_CHECK_FUNCS([nanosleep usleep])
 
-PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.9.2],
+PKG_CHECK_MODULES(LIBXML2, [libxml-2.0 >= 2.12.5],
                   [CPPFLAGS="${CPPFLAGS} ${LIBXML2_CFLAGS}"
                    LIBS="${LIBS} ${LIBXML2_LIBS}"])
 
@@ -1407,7 +1407,7 @@ dnl ========================================================================
 dnl    Cluster infrastructure - LibQB
 dnl ========================================================================
 
-PKG_CHECK_MODULES([libqb], [libqb >= 1.0.1])
+PKG_CHECK_MODULES([libqb], [libqb >= 2.0.8])
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
@@ -1450,7 +1450,7 @@ dnl ===============================
 
 HAVE_dbus=0
 PC_NAME_DBUS=""
-PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.5.12],
+PKG_CHECK_MODULES([DBUS],[dbus-1 >= 1.14.10],
                   [
                       HAVE_dbus=1
                       PC_NAME_DBUS="dbus-1"
@@ -1615,7 +1615,7 @@ dnl ========================================================================
 dnl    GnuTLS
 dnl ========================================================================
 
-PKG_CHECK_MODULES(GNUTLS, [gnutls >= 3.4.6],
+PKG_CHECK_MODULES(GNUTLS, [gnutls >= 3.8.9],
                   [CPPFLAGS="${CPPFLAGS} ${GNUTLS_CFLAGS}"
                    LIBS="${LIBS} ${GNUTLS_LIBS}"])
 
