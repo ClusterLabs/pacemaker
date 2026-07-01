@@ -388,44 +388,62 @@ pcmk__notify_key(const char *rsc_id, const char *notify_type,
  *       for freeing the memory for *uuid using free().
  */
 gboolean
-decode_transition_magic(const char *magic, char **uuid, int *transition_id, int *action_id,
-                        int *op_status, int *op_rc, int *target_rc)
+decode_transition_magic(const char *magic, char **uuid, int *transition_id,
+                        int *action_id, int *op_status, int *op_rc,
+                        int *target_rc)
 {
-    int res = 0;
-    char *key = NULL;
-    gboolean result = TRUE;
-    int local_op_status = -1;
-    int local_op_rc = -1;
+    GRegex *regex = NULL;
+    GMatchInfo *match_info = NULL;
+    char **matches = NULL;
 
-    CRM_CHECK(magic != NULL, return FALSE);
+    long long status_ll = 0;
+    long long rc_ll = 0;
+    bool result = false;
 
-#ifdef HAVE_SSCANF_M
-    res = sscanf(magic, "%d:%d;%ms", &local_op_status, &local_op_rc, &key);
-#else
-    // magic must have >=4 other characters
-    key = pcmk__assert_alloc(strlen(magic) - 3, sizeof(char));
-    res = sscanf(magic, "%d:%d;%s", &local_op_status, &local_op_rc, key);
-#endif
-    if (res == EOF) {
-        pcmk__err("Could not decode transition information '%s': %s", magic,
-                  pcmk_rc_str(errno));
-        result = FALSE;
-    } else if (res < 3) {
-        pcmk__warn("Transition information '%s' incomplete (%d of 3 expected "
-                   "items)",
-                   magic, res);
-        result = FALSE;
-    } else {
-        if (op_status) {
-            *op_status = local_op_status;
-        }
-        if (op_rc) {
-            *op_rc = local_op_rc;
-        }
-        result = decode_transition_key(key, uuid, transition_id, action_id,
-                                       target_rc);
+    CRM_CHECK(magic != NULL, goto done);
+
+    regex = g_regex_new("^(-?\\d+):(-?\\d+);(.*)$", 0, 0, NULL);
+    pcmk__assert(regex != NULL);
+
+    if (!g_regex_match(regex, magic, 0, &match_info)) {
+        pcmk__err("Could not decode transition information '%s': does not "
+                  "match pattern 'STATUS:RC;KEY'", magic);
+        goto done;
     }
-    free(key);
+
+    matches = g_match_info_fetch_all(match_info);
+
+    if ((pcmk__scan_ll(matches[1], &status_ll, 0) != pcmk_rc_ok)
+        || (status_ll < INT_MIN) || (status_ll > INT_MAX)) {
+
+        pcmk__err("Could not decode transition information '%s': op status "
+                  "'%s' is not a valid int", magic, matches[1]);
+        goto done;
+    }
+
+    if ((pcmk__scan_ll(matches[2], &rc_ll, 0) != pcmk_rc_ok)
+        || (rc_ll < INT_MIN) || (rc_ll > INT_MAX)) {
+
+        pcmk__err("Could not decode transition information '%s': op rc '%s' is "
+                  "not a valid int", magic, matches[2]);
+        goto done;
+    }
+
+    if (op_status != NULL) {
+        *op_status = status_ll;
+    }
+
+    if (op_rc != NULL) {
+        *op_rc = rc_ll;
+    }
+
+    result = decode_transition_key(matches[3], uuid, transition_id, action_id,
+                                   target_rc);
+
+done:
+    g_regex_unref(regex);
+    g_match_info_unref(match_info);
+    g_strfreev(matches);
     return result;
 }
 
@@ -510,9 +528,9 @@ rsc_op_expected_rc(const lrmd_event_data_t *op)
 }
 
 gboolean
-did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
+did_rsc_op_fail(const lrmd_event_data_t *event, int target_rc)
 {
-    switch (op->op_status) {
+    switch (event->op_status) {
         case PCMK_EXEC_CANCELLED:
         case PCMK_EXEC_PENDING:
             return FALSE;
@@ -527,7 +545,7 @@ did_rsc_op_fail(lrmd_event_data_t * op, int target_rc)
             return TRUE;
 
         default:
-            if (target_rc != op->rc) {
+            if (target_rc != event->rc) {
                 return TRUE;
             }
     }

@@ -746,11 +746,13 @@ stonith_api_history(stonith_t * stonith, int call_options, const char *node,
 
             pcmk__xe_get_ll(op, PCMK__XA_ST_DATE_NSEC, &completed_nsec);
 
-            // Coverity complains here if long is the same size as long long
-            // coverity[result_independent_of_operands:FALSE]
-            if ((completed_nsec >= LONG_MIN) && (completed_nsec <= LONG_MAX)) {
-                kvp->completed_nsec = (long) completed_nsec;
+#if (LLONG_MIN < LONG_MIN)
+            if ((completed_nsec < LONG_MIN) || (completed_nsec > LONG_MAX)) {
+                completed_nsec = 0;
             }
+#endif // (LLONG_MIN < LONG_MIN)
+
+            kvp->completed_nsec = completed_nsec;
 
             pcmk__xe_get_int(op, PCMK__XA_ST_STATE, &kvp->state);
             kvp->exit_reason = pcmk__xe_get_copy(op, PCMK_XA_EXIT_REASON);
@@ -1558,14 +1560,14 @@ stonith_send_notification(void *data, void *user_data)
         return;
 
     } else if (!pcmk__str_eq(entry->event, event, pcmk__str_none)) {
-        pcmk__trace("Skipping callback - event mismatch %p/%s vs. %s", entry, entry->event, event);
+        pcmk__trace("Skipping callback - event mismatch %s vs. %s",
+                    entry->event, event);
         return;
     }
 
     st_event = xml_to_event(blob->xml);
 
-    pcmk__trace("Invoking callback for %p/%s event...", entry, event);
-    // coverity[null_field]
+    pcmk__trace("Invoking callback for %s event...", event);
     entry->notify(blob->stonith, st_event);
     pcmk__trace("Callback invoked...");
 

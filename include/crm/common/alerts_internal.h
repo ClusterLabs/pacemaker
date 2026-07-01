@@ -80,7 +80,6 @@ enum pcmk__alert_keys_e {
 
 extern const char *pcmk__alert_keys[PCMK__ALERT_INTERNAL_KEY_MAX];
 
-pcmk__alert_t *pcmk__dup_alert(const pcmk__alert_t *entry);
 pcmk__alert_t *pcmk__alert_new(const char *id, const char *path);
 void pcmk__free_alert(pcmk__alert_t *entry);
 void pcmk__add_alert_key(GHashTable *table, enum pcmk__alert_keys_e name,

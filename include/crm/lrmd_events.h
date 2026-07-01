@@ -43,11 +43,11 @@ typedef struct lrmd_event_data_s {
     enum lrmd_callback_event type;
 
     /*! The resource this event occurred on. */
-    const char *rsc_id;
+    char *rsc_id;
     /*! The action performed, start, stop, monitor... */
-    const char *op_type;
+    char *op_type;
     /*! The user data passed by caller of exec() API function */
-    const char *user_data;
+    char *user_data;
 
     /*! The client api call id associated with this event */
     int call_id;
@@ -71,7 +71,7 @@ typedef struct lrmd_event_data_s {
     int op_status;
 
     /*! stdout from resource agent operation */
-    const char *output;
+    char *output;
 
     /*! Timestamp of when op ran */
     time_t t_run;
@@ -95,15 +95,15 @@ typedef struct lrmd_event_data_s {
     /*! client node name associated with this connection
      * (used to match actions to the proper client when there are multiple)
      */
-    const char *remote_nodename;
+    char *remote_nodename;
 
     /*! exit failure reason string from resource agent operation */
-    const char *exit_reason;
+    char *exit_reason;
 } lrmd_event_data_t;
 
 lrmd_event_data_t *lrmd_new_event(const char *rsc_id, const char *task,
                                   unsigned int interval_ms);
-lrmd_event_data_t *lrmd_copy_event(lrmd_event_data_t *event);
+lrmd_event_data_t *lrmd_copy_event(const lrmd_event_data_t *event);
 void lrmd_free_event(lrmd_event_data_t *event);
 
 #ifdef __cplusplus

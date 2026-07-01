@@ -1221,19 +1221,6 @@ AC_RUN_IFELSE([AC_LANG_PROGRAM([[
               [AC_MSG_ERROR([strerror() is not C99-compliant])],
               [AC_MSG_ERROR([strerror() is not C99-compliant])])
 
-AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <stdio.h>]], [[
-    const char *s = "some-command-line-arg";
-    char *name = NULL;
-    int n = sscanf(s, "%ms", &name);
-    return n != 1;
-                               ]])],
-              [have_sscanf_m="yes"],
-              [have_sscanf_m="no"],
-              [have_sscanf_m="no"])
-AS_IF([test x"$have_sscanf_m" = x"yes"],
-      [AC_DEFINE([HAVE_SSCANF_M], [1],
-                 [Define to 1 if sscanf %m modifier is available])])
-
 AC_RUN_IFELSE([AC_LANG_PROGRAM([[#include <time.h>]], [[
     char s[200];
     time_t t;
@@ -1292,31 +1279,41 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <signal.h>]], [[sighandler_t *f;]]
 dnl ========================================================================
 dnl   ncurses
 dnl ========================================================================
-dnl
-dnl A few OSes (e.g. Linux) deliver a default "ncurses" alongside "curses".
-dnl Many non-Linux deliver "curses"; sites may add "ncurses".
-dnl
-dnl However, the source-code recommendation for both is to #include "curses.h"
-dnl (i.e. "ncurses" still wants the include to be simple, no-'n', "curses.h").
-dnl
-dnl ncurses takes precedence.
-dnl
-AC_CHECK_HEADERS([curses.h curses/curses.h ncurses.h ncurses/ncurses.h])
+
+found_ncurses_header=0
+
+m4_foreach(
+    [header], [[ncurses.h], [ncurses/ncurses.h]],
+    [AS_IF(
+        [test "$found_ncurses_header" -eq 0],
+        [AC_CHECK_HEADER(
+            header,
+            [
+                found_ncurses_header=1
+                AC_DEFINE([PCMK__NCURSES_H], [<header>], [Ncurses header file])
+            ]
+        )]
+    )]
+)
 
 save_LIBS="$LIBS"
-found_curses=0
-CURSES_LIBS=""
+found_ncurses=0
+NCURSES_LIBS=""
 LIBS=""
-AC_SEARCH_LIBS([printw], [ncurses curses],
-               [test "$ac_cv_search_printw" = "none required" || CURSES_LIBS="$LIBS"
-                found_curses=1],
-               [found_curses=0])
+AC_SEARCH_LIBS(
+    [printw], [ncurses],
+    [
+        test "$ac_cv_search_printw" = "none required" || NCURSES_LIBS="$LIBS"
+        found_ncurses=1
+    ],
+    [found_ncurses=0]
+)
 LIBS="$save_LIBS"
 
 dnl Check for printw() prototype compatibility
-AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
+AS_IF([test $found_ncurses -eq 1 && cc_supports_flag -Wcast-qual], [
     ac_save_LIBS="$LIBS"
-    LIBS="$CURSES_LIBS"
+    LIBS="$NCURSES_LIBS"
 
     # avoid broken test because of hardened build environment in Fedora 23+
     # - https://fedoraproject.org/wiki/Changes/Harden_All_Packages
@@ -1325,31 +1322,26 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
           [cc_temp_flags "-Wcast-qual $WERROR -fPIC"],
           [cc_temp_flags "-Wcast-qual $WERROR"])
 
-    AC_MSG_CHECKING([whether curses library is compatible])
+    AC_MSG_CHECKING([whether ncurses library is compatible])
     AC_LINK_IFELSE(
-        [AC_LANG_PROGRAM([
-#if defined(HAVE_NCURSES_H)
-#  include <ncurses.h>
-#elif defined(HAVE_NCURSES_NCURSES_H)
-#  include <ncurses/ncurses.h>
-#elif defined(HAVE_CURSES_H)
-#  include <curses.h>
-#elif defined(HAVE_CURSES_CURSES_H)
-#  include <curses/curses.h>
-#endif
-                         ],
-                         [printw((const char *)"Test");]
+        [AC_LANG_PROGRAM(
+            [
+                #ifdef PCMK__NCURSES_H
+                #include PCMK__NCURSES_H
+                #endif
+            ],
+            [printw((NCURSES_CONST char *) "Test");]
         )],
         [AC_MSG_RESULT([yes])
          PCMK_FEATURES="$PCMK_FEATURES ncurses"
         ],
         [
-            found_curses=0
-            CURSES_LIBS=""
+            found_ncurses=0
+            NCURSES_LIBS=""
             AC_MSG_RESULT([no])
-            AC_MSG_WARN(m4_normalize([Disabling curses because the printw()
-                                      function of your (n)curses library is old.
-                                      If you wish to enable curses, update to a
+            AC_MSG_WARN(m4_normalize([Disabling ncurses because the printw()
+                                      function of your ncurses library is old.
+                                      If you wish to enable ncurses, update to a
                                       newer version (ncurses 5.4 or later is
                                       recommended, available from
                                       https://invisible-island.net/ncurses/)
@@ -1361,8 +1353,9 @@ AS_IF([test $found_curses -eq 1 && cc_supports_flag -Wcast-qual], [
     cc_restore_flags
 ])
 
-AC_DEFINE_UNQUOTED([PCMK__ENABLE_CURSES], [$found_curses], [have ncurses library])
-AC_SUBST(CURSES_LIBS)
+AC_DEFINE_UNQUOTED([PCMK__ENABLE_CURSES], [$found_ncurses],
+                   [have ncurses library])
+AC_SUBST(NCURSES_LIBS)
 
 dnl ========================================================================
 dnl    Profiling and GProf

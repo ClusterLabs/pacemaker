@@ -607,11 +607,7 @@ cib_new_variant(void)
 {
     cib_t *new_cib = NULL;
 
-    new_cib = calloc(1, sizeof(cib_t));
-
-    if (new_cib == NULL) {
-        return NULL;
-    }
+    new_cib = pcmk__assert_alloc(1, sizeof(cib_t));
 
     remove_cib_op_callback(0, TRUE); /* remove all */
 
@@ -624,12 +620,7 @@ cib_new_variant(void)
     new_cib->notify_list = NULL;
 
     /* the rest will get filled in by the variant constructor */
-    new_cib->cmds = calloc(1, sizeof(cib_api_operations_t));
-
-    if (new_cib->cmds == NULL) {
-        free(new_cib);
-        return NULL;
-    }
+    new_cib->cmds = pcmk__assert_alloc(1, sizeof(cib_api_operations_t));
 
     new_cib->cmds->add_notify_callback = cib_client_add_notify_callback;
     new_cib->cmds->del_notify_callback = cib_client_del_notify_callback;

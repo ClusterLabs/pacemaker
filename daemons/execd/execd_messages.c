@@ -49,20 +49,20 @@ handle_ipc_fwd_request(pcmk__request_t *request)
     }
 
     rc = ipc_proxy_forward_client(request->ipc_client, request->xml);
-#else
-    rc = EPROTONOSUPPORT;
-#endif
 
     if (rc == pcmk_rc_ok) {
-        /* Coverity gets confused by the #ifdef above and thinks this block
-         * is unreachable due to rc always being EPROTONOSUPPORT.
-         */
-        // coverity[dead_error_line]
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
     } else {
         pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
                          pcmk_rc_str(rc));
     }
+
+#else
+    rc = EPROTONOSUPPORT;
+    pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
+                     pcmk_rc_str(rc));
+#endif
 
     pcmk__xe_get_int(request->xml, PCMK__XA_LRMD_CALLID, &call_id);
 

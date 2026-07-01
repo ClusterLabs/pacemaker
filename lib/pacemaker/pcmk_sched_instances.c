@@ -1114,7 +1114,7 @@ pcmk__instance_matches(const pcmk_resource_t *instance, const pcmk_node_t *node,
         return false;
     }
 
-    if (!is_set_recursive(instance, pcmk__rsc_blocked, true)) {
+    if (!pcmk__is_set_recursive(instance, pcmk__rsc_blocked)) {
         uint32_t target = pcmk__rsc_node_assigned;
 
         if (current) {

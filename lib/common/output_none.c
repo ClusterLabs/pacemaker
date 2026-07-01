@@ -122,7 +122,7 @@ none_progress(pcmk__output_t *out, bool end)
 }
 
 static void
-none_prompt(const char *prompt, bool echo, char **dest)
+none_prompt(const char *prompt, char **dest)
 {
     /* This function intentionally left blank */
 }

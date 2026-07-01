@@ -43,10 +43,10 @@ pe__resource_contains_guest_node(const pcmk_scheduler_t *scheduler,
     if ((rsc != NULL) && (scheduler != NULL)
         && pcmk__is_set(scheduler->flags, pcmk__sched_have_remote_nodes)) {
 
-        for (GList *gIter = rsc->priv->launched;
-             gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = rsc->priv->launched; iter != NULL;
+             iter = iter->next) {
 
-            pcmk_resource_t *launched = gIter->data;
+            pcmk_resource_t *launched = iter->data;
 
             if (pcmk__is_set(launched->flags, pcmk__rsc_is_remote_connection)) {
                 return launched;

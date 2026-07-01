@@ -287,7 +287,7 @@ done:
     pcmk__call_ipc_callback(api, pcmk_ipc_event_reply, status, &reply_data);
 
     // Free any reply data that was allocated
-    if (pcmk__str_eq(value, PCMK__CONTROLD_CMD_NODES, pcmk__str_casei)) {
+    if (reply_data.reply_type == pcmk_controld_reply_nodes) {
         g_list_free_full(reply_data.data.nodes, free);
     }
 
@@ -623,8 +623,11 @@ pcmk_controld_api_refresh(pcmk_ipc_api_t *api, const char *target_node,
 unsigned int
 pcmk_controld_api_replies_expected(const pcmk_ipc_api_t *api)
 {
-    struct controld_api_private_s *private = api->api_data;
+    struct controld_api_private_s *private = NULL;
 
+    CRM_CHECK(api != NULL, return 0);
+
+    private = api->api_data;
     return private->replies_expected;
 }
 

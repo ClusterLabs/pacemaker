@@ -956,46 +956,42 @@ pcmk__connect_generic_ipc(crm_ipc_t *ipc)
 }
 
 void
-crm_ipc_close(crm_ipc_t * client)
+crm_ipc_close(crm_ipc_t *client)
 {
-    if (client) {
-        if (client->ipc) {
-            qb_ipcc_connection_t *ipc = client->ipc;
-
-            client->ipc = NULL;
-            qb_ipcc_disconnect(ipc);
-        }
+    if (client == NULL) {
+        return;
     }
+
+    g_clear_pointer(&client->ipc, qb_ipcc_disconnect);
 }
 
 void
-crm_ipc_destroy(crm_ipc_t * client)
+crm_ipc_destroy(crm_ipc_t *client)
 {
-    if (client) {
-        if (client->ipc && qb_ipcc_is_connected(client->ipc)) {
-            pcmk__notice("Destroying active %s IPC connection",
-                         client->server_name);
-            /* The next line is basically unsafe
-             *
-             * If this connection was attached to mainloop and mainloop is active,
-             *   the 'disconnected' callback will end up back here and we'll end
-             *   up free'ing the memory twice - something that can still happen
-             *   even without this if we destroy a connection and it closes before
-             *   we call exit
-             */
-            /* crm_ipc_close(client); */
-        } else {
-            pcmk__trace("Destroying inactive %s IPC connection",
-                        client->server_name);
-        }
-
-        if (client->buffer != NULL) {
-            pcmk__ipc_free_client_buffer(client);
-        }
-
-        free(client->server_name);
-        free(client);
+    if (client == NULL) {
+        return;
     }
+
+    if (qb_ipcc_is_connected(client->ipc)) {
+        pcmk__notice("Destroying active %s IPC connection",
+                     client->server_name);
+        /* The next line is basically unsafe
+         *
+         * If this connection was attached to mainloop and mainloop is active,
+         *   the 'disconnected' callback will end up back here and we'll end
+         *   up free'ing the memory twice - something that can still happen
+         *   even without this if we destroy a connection and it closes before
+         *   we call exit
+         */
+        /* crm_ipc_close(client); */
+    } else {
+        pcmk__trace("Destroying inactive %s IPC connection",
+                    client->server_name);
+    }
+
+    pcmk__ipc_free_client_buffer(client);
+    free(client->server_name);
+    free(client);
 }
 
 /*!
@@ -1526,7 +1522,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
 
     g_string_free(iov_buffer, TRUE);
     pcmk_free_ipc_event(iov);
-    // coverity[return_overflow]
     return rc;
 }
 

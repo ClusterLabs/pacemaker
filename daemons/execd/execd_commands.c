@@ -1018,8 +1018,8 @@ action_complete(svc_action_t * action)
 #endif
 
 finalize:
-    pcmk__set_result_output(&(cmd->result), services__grab_stdout(action),
-                            services__grab_stderr(action));
+    cmd->result.action_stdout = pcmk__str_copy(action->stdout_data);
+    cmd->result.action_stderr = pcmk__str_copy(action->stderr_data);
     cmd_finalize(cmd, rsc);
 }
 

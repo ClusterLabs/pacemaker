@@ -295,43 +295,35 @@ curses_progress(pcmk__output_t *out, bool end) {
     }
 }
 
+/* @TODO Make the behavior here match that of pcmk__text_prompt(), which stores
+ * the entire line. scanw() here stores only the first 1023 non-whitespace
+ * characters.
+ */
 static void
-curses_prompt(const char *prompt, bool do_echo, char **dest)
+curses_prompt(const char *prompt, char **dest)
 {
-    int rc = OK;
+    int rc = 0;
 
-    pcmk__assert((prompt != NULL) && (dest != NULL));
+    pcmk__assert((prompt != NULL) && (dest != NULL) && (*dest == NULL));
 
-    /* This is backwards from the text version of this function on purpose.  We
-     * disable echo by default in curses_init, so we need to enable it here if
-     * asked for.
+    printw("%s: ", prompt);
+
+    *dest = pcmk__assert_alloc(1024, sizeof(char));
+
+    /* On older systems, scanw is defined as taking a char * for its first
+     * argument, while newer systems rightly want a const char *. Accommodate
+     * both here due to building with -Werror.
+     *
+     * @COMPAT The prototype was updated to use const in X/Open Curses Issue 7,
+     * and ncurses was updated to reflect it on 2018-04-07:
+     * * https://pubs.opengroup.org/onlinepubs/9699909599/toc.pdf
+     * * https://invisible-island.net/ncurses/NEWS.html#index-t20180407
      */
-    if (do_echo) {
-        rc = echo();
-    }
-
-    if (rc == OK) {
-        printw("%s: ", prompt);
-
-        if (*dest != NULL) {
-            free(*dest);
-        }
-
-        *dest = pcmk__assert_alloc(1024, sizeof(char));
-        /* On older systems, scanw is defined as taking a char * for its first argument,
-         * while newer systems rightly want a const char *.  Accomodate both here due
-         * to building with -Werror.
-         */
-        rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
-        addch('\n');
-    }
+    rc = scanw((NCURSES_CONST char *) "%1023s", *dest);
+    addch('\n');
 
     if (rc < 1) {
         g_clear_pointer(dest, free);
-    }
-
-    if (do_echo) {
-        noecho();
     }
 }
 

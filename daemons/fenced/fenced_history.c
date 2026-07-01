@@ -282,10 +282,9 @@ stonith_xml_history_to_list(const xmlNode *history)
         }
         pcmk__set_result(&op->result, exit_status, execution_status,
                          pcmk__xe_get(xml_op, PCMK_XA_EXIT_REASON));
-        pcmk__set_result_output(&op->result,
-                                pcmk__xe_get_copy(xml_op, PCMK__XA_ST_OUTPUT),
-                                NULL);
 
+        op->result.action_stdout = pcmk__xe_get_copy(xml_op,
+                                                     PCMK__XA_ST_OUTPUT);
 
         g_hash_table_replace(rv, id, op);
         CRM_LOG_ASSERT(g_hash_table_lookup(rv, id) != NULL);

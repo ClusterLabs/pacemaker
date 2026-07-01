@@ -499,7 +499,7 @@ replica_apply_coloc_score(const pcmk__bundle_replica_t *replica,
     chosen = container->priv->fns->location(container, NULL,
                                             pcmk__rsc_node_assigned);
     if ((chosen == NULL)
-        || is_set_recursive(container, pcmk__rsc_blocked, true)) {
+        || pcmk__is_set_recursive(container, pcmk__rsc_blocked)) {
         return true;
     }
 

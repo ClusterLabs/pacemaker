@@ -1958,40 +1958,6 @@ fenced_unregister_level(xmlNode *msg, pcmk__action_result_t *result)
     pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
-static char *
-list_to_string(GList *list, const char *delim, gboolean terminate_with_delim)
-{
-    int max = g_list_length(list);
-    size_t delim_len = delim?strlen(delim):0;
-    size_t alloc_size = 1 + (max?((max-1+(terminate_with_delim?1:0))*delim_len):0);
-    char *rv;
-
-    char *pos = NULL;
-    const char *lead_delim = "";
-
-    for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *value = (const char *) iter->data;
-
-        alloc_size += strlen(value);
-    }
-
-    rv = pcmk__assert_alloc(alloc_size, sizeof(char));
-    pos = rv;
-
-    for (const GList *iter = list; iter != NULL; iter = iter->next) {
-        const char *value = (const char *) iter->data;
-
-        pos = &pos[sprintf(pos, "%s%s", lead_delim, value)];
-        lead_delim = delim;
-    }
-
-    if ((max != 0) && terminate_with_delim) {
-        sprintf(pos, "%s", delim);
-    }
-
-    return rv;
-}
-
 /*!
  * \internal
  * \brief Execute a fence agent action directly (and asynchronously)
@@ -2034,16 +2000,25 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
             pcmk__set_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                              "Watchdog fence device not configured");
             return;
+        }
 
-        } else if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
+        if (pcmk__str_eq(action, PCMK_ACTION_LIST, pcmk__str_none)) {
+            GString *buf = g_string_sized_new(64);
+
+            for (const GList *iter = stonith_watchdog_targets; iter != NULL;
+                 iter = iter->next) {
+
+                g_string_append(buf, iter->data);
+                g_string_append_c(buf, '\n');
+            }
+
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
-            pcmk__set_result_output(result,
-                                    list_to_string(stonith_watchdog_targets,
-                                                   "\n", TRUE),
-                                    NULL);
+            result->action_stdout = pcmk__str_copy(buf->str);
+            g_string_free(buf, TRUE);
             return;
+        }
 
-        } else if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_none)) {
+        if (pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_none)) {
             pcmk__set_result(result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
             return;
         }
@@ -2057,9 +2032,11 @@ execute_agent_action(xmlNode *msg, pcmk__action_result_t *result)
         pcmk__format_result(result, CRM_EX_ERROR, PCMK_EXEC_NO_FENCE_DEVICE,
                             "'%s' not found", id);
         return;
+    }
 
-    } else if (!pcmk__is_set(device->flags, fenced_df_api_registered)
-               && (strcmp(action, PCMK_ACTION_MONITOR) == 0)) {
+    if (!pcmk__is_set(device->flags, fenced_df_api_registered)
+        && pcmk__str_eq(action, PCMK_ACTION_MONITOR, pcmk__str_none)) {
+
         // Monitors may run only on "started" (API-registered) devices
         pcmk__info("Ignoring API '%s' action request because device %s not "
                    "active",

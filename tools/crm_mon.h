@@ -18,22 +18,9 @@
 #include <crm/common/scheduler.h>
 #include <crm/stonith-ng.h>
 
-/*
- * The man pages for both curses and ncurses suggest inclusion of "curses.h".
- * We believe the following to be acceptable and portable.
- */
-
-#  if PCMK__ENABLE_CURSES
-#    if defined(HAVE_NCURSES_H)
-#      include <ncurses.h>
-#    elif defined(HAVE_NCURSES_NCURSES_H)
-#      include <ncurses/ncurses.h>
-#    elif defined(HAVE_CURSES_H)
-#      include <curses.h>
-#    elif defined(HAVE_CURSES_CURSES_H)
-#      include <curses/curses.h>
-#    endif
-#  endif
+#if (PCMK__ENABLE_CURSES && defined(PCMK__NCURSES_H))
+#include PCMK__NCURSES_H
+#endif  // (PCMK__ENABLE_CURSES && defined(PCMK__NCURSES_H))
 
 typedef enum {
     mon_output_unset,

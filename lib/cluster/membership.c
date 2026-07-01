@@ -927,7 +927,6 @@ remove_conflicting_peer(pcmk__node_status_t *node)
  *
  * \return (Possibly newly created) cluster node cache entry
  */
-/* coverity[-alloc] Memory is referenced in one or both hashtables */
 pcmk__node_status_t *
 pcmk__get_node(unsigned int id, const char *uname, const char *xml_id,
                uint32_t flags)

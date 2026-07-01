@@ -849,7 +849,6 @@ gboolean
 unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
 {
     xmlNode *xml_obj = NULL;
-    GList *gIter = NULL;
 
     scheduler->priv->templates = pcmk__strkey_table(free, pcmk__free_idref);
 
@@ -889,10 +888,10 @@ unpack_resources(const xmlNode *xml_resources, pcmk_scheduler_t *scheduler)
         pcmk__rsc_trace(new_rsc, "Added resource %s", new_rsc->id);
     }
 
-    for (gIter = scheduler->priv->resources;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = scheduler->priv->resources; iter != NULL;
+         iter = iter->next) {
 
-        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
+        pcmk_resource_t *rsc = iter->data;
 
         unpack_launcher(rsc, scheduler);
         link_rsc2remotenode(scheduler, rsc);
@@ -1505,8 +1504,8 @@ unpack_status(xmlNode *status, pcmk_scheduler_t *scheduler)
      * we can stop connections for node shutdowns, and check the online status
      * of remote/guest nodes that didn't have any node history to unpack.
      */
-    for (GList *gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *this_node = gIter->data;
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *this_node = iter->data;
 
         if (!pcmk__is_pacemaker_remote_node(this_node)) {
             continue;
@@ -2628,10 +2627,9 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
     } else {
         GList *possible_matches = pe__resource_actions(rsc, node,
                                                        PCMK_ACTION_STOP, FALSE);
-        GList *gIter = possible_matches;
 
-        for (; gIter != NULL; gIter = gIter->next) {
-            pcmk_action_t *stop = (pcmk_action_t *) gIter->data;
+        for (GList *iter = possible_matches; iter != NULL; iter = iter->next) {
+            pcmk_action_t *stop = iter->data;
 
             pcmk__set_action_flags(stop, pcmk__action_optional);
         }
@@ -2660,14 +2658,13 @@ process_recurring(pcmk_node_t *node, pcmk_resource_t *rsc,
     int counter = -1;
     const char *task = NULL;
     const char *status = NULL;
-    GList *gIter = sorted_op_list;
 
     pcmk__assert(rsc != NULL);
     pcmk__rsc_trace(rsc, "%s: Start index %d, stop index = %d",
                     rsc->id, start_index, stop_index);
 
-    for (; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
+    for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        xmlNode *rsc_op = iter->data;
 
         unsigned int interval_ms = 0;
         char *key = NULL;
@@ -2807,7 +2804,6 @@ static pcmk_resource_t *
 unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
                     pcmk_scheduler_t *scheduler)
 {
-    GList *gIter = NULL;
     int stop_index = -1;
     int start_index = -1;
     enum rsc_role_e req_role = pcmk_role_unknown;
@@ -2872,8 +2868,8 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     rsc->priv->orig_role = pcmk_role_unknown;
     sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
-    for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
+    for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        xmlNode *rsc_op = iter->data;
 
         unpack_rsc_op(rsc, node, rsc_op, &last_failure, &on_fail);
     }
@@ -5069,7 +5065,6 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
     xmlNode *rsc_op = NULL;
 
-    GList *gIter = NULL;
     GList *op_list = NULL;
     GList *sorted_op_list = NULL;
 
@@ -5102,8 +5097,8 @@ extract_operations(const char *node, const char *rsc, xmlNode * rsc_entry, gbool
 
     calculate_active_ops(sorted_op_list, &start_index, &stop_index);
 
-    for (gIter = sorted_op_list; gIter != NULL; gIter = gIter->next) {
-        xmlNode *rsc_op = (xmlNode *) gIter->data;
+    for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
+        xmlNode *rsc_op = iter->data;
 
         counter++;
 

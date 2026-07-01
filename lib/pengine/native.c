@@ -84,10 +84,10 @@ native_priority_to_node(pcmk_resource_t *rsc, pcmk_node_t *node,
         const pcmk_resource_t *launcher = NULL;
 
         launcher = node->priv->remote->priv->launcher;
-        for (GList *gIter = launcher->priv->active_nodes;
-             gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = launcher->priv->active_nodes; iter != NULL;
+             iter = iter->next) {
 
-            pcmk_node_t *a_node = gIter->data;
+            pcmk_node_t *a_node = iter->data;
 
             a_node->priv->priority += priority;
             pcmk__rsc_trace(rsc,
@@ -109,10 +109,10 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     CRM_CHECK(node != NULL, return);
 
-    for (GList *gIter = rsc->priv->active_nodes;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->priv->active_nodes; iter != NULL;
+         iter = iter->next) {
 
-        pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
+        pcmk_node_t *a_node = iter->data;
 
         if (pcmk__same_node(a_node, node)) {
             return;
@@ -155,7 +155,7 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
         switch (rsc->priv->multiply_active_policy) {
             case pcmk__multiply_active_stop:
                 {
-                    GHashTableIter gIter;
+                    GHashTableIter iter;
                     pcmk_node_t *local_node = NULL;
 
                     /* make sure it doesn't come up again */
@@ -163,8 +163,11 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                                     g_hash_table_destroy);
                     rsc->priv->allowed_nodes =
                         pe__node_list2table(scheduler->nodes);
-                    g_hash_table_iter_init(&gIter, rsc->priv->allowed_nodes);
-                    while (g_hash_table_iter_next(&gIter, NULL, (void **)&local_node)) {
+                    g_hash_table_iter_init(&iter, rsc->priv->allowed_nodes);
+
+                    while (g_hash_table_iter_next(&iter, NULL,
+                                                  (void **) &local_node)) {
+
                         local_node->assign->score = -PCMK_SCORE_INFINITY;
                     }
                 }
@@ -181,9 +184,10 @@ native_add_running(pcmk_resource_t *rsc, pcmk_node_t *node,
                     && (parent->priv->multiply_active_policy
                         == pcmk__multiply_active_block)) {
 
-                    for (GList *gIter = parent->priv->children;
-                         gIter != NULL; gIter = gIter->next) {
-                        pcmk_resource_t *child = gIter->data;
+                    for (GList *iter = parent->priv->children; iter != NULL;
+                         iter = iter->next) {
+
+                        pcmk_resource_t *child = iter->data;
 
                         pcmk__clear_rsc_flags(child, pcmk__rsc_managed);
                         pcmk__set_rsc_flags(child, pcmk__rsc_blocked);
@@ -329,10 +333,8 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
         return rsc;
     }
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child = iter->data;
 
         result = rsc->priv->fns->find_rsc(child, id, on_node, flags);
         if (result) {
@@ -345,10 +347,10 @@ native_find_rsc(pcmk_resource_t *rsc, const char *id,
 bool
 native_active(const pcmk_resource_t *rsc, bool all)
 {
-    for (GList *gIter = rsc->priv->active_nodes;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->priv->active_nodes; iter != NULL;
+         iter = iter->next) {
 
-        pcmk_node_t *a_node = (pcmk_node_t *) gIter->data;
+        pcmk_node_t *a_node = iter->data;
 
         if (a_node->details->unclean) {
             pcmk__rsc_trace(rsc, "Resource %s: %s is unclean",
@@ -822,10 +824,10 @@ pe__resource_xml(pcmk__output_t *out, va_list args)
 
     pcmk__assert(rc == pcmk_rc_ok);
 
-    for (GList *gIter = rsc->priv->active_nodes;
-         gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->priv->active_nodes; iter != NULL;
+         iter = iter->next) {
 
-        pcmk_node_t *node = (pcmk_node_t *) gIter->data;
+        pcmk_node_t *node = iter->data;
         const char *cached = pcmk__btoa(node->details->online);
 
         rc = pe__name_and_nvpairs_xml(out, false, PCMK_XE_NODE,
@@ -928,10 +930,10 @@ native_location(const pcmk_resource_t *rsc, GList **list, uint32_t target)
 
     if (rsc->priv->children != NULL) {
 
-        for (GList *gIter = rsc->priv->children;
-             gIter != NULL; gIter = gIter->next) {
+        for (GList *iter = rsc->priv->children; iter != NULL;
+             iter = iter->next) {
 
-            pcmk_resource_t *child = (pcmk_resource_t *) gIter->data;
+            pcmk_resource_t *child = iter->data;
 
             child->priv->fns->location(child, &result, target);
         }
@@ -956,10 +958,8 @@ native_location(const pcmk_resource_t *rsc, GList **list, uint32_t target)
     }
 
     if (list) {
-        GList *gIter = result;
-
-        for (; gIter != NULL; gIter = gIter->next) {
-            pcmk_node_t *node = (pcmk_node_t *) gIter->data;
+        for (GList *iter = result; iter != NULL; iter = iter->next) {
+            pcmk_node_t *node = iter->data;
 
             if ((*list == NULL)
                 || (pe_find_node_id(*list, node->priv->id) == NULL)) {
@@ -975,10 +975,8 @@ native_location(const pcmk_resource_t *rsc, GList **list, uint32_t target)
 static void
 get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_table)
 {
-    GList *gIter = rsc_list;
-
-    for (; gIter != NULL; gIter = gIter->next) {
-        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *rsc = iter->data;
 
         const char *class = pcmk__xe_get(rsc->priv->xml, PCMK_XA_CLASS);
         const char *kind = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
@@ -1016,10 +1014,10 @@ get_rscs_brief(GList *rsc_list, GHashTable * rsc_table, GHashTable * active_tabl
         }
 
         if (active_table) {
-            for (GList *gIter2 = rsc->priv->active_nodes;
-                 gIter2 != NULL; gIter2 = gIter2->next) {
+            for (GList *iter2 = rsc->priv->active_nodes; iter2 != NULL;
+                 iter2 = iter2->next) {
 
-                pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
+                pcmk_node_t *node = iter2->data;
                 GHashTable *node_table = NULL;
 
                 if (!node->details->unclean && !node->details->online
@@ -1073,8 +1071,8 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
     sorted_rscs = g_hash_table_get_keys(rsc_table);
     sorted_rscs = g_list_sort(sorted_rscs, (GCompareFunc) strcmp);
 
-    for (GList *gIter = sorted_rscs; gIter; gIter = gIter->next) {
-        char *type = (char *) gIter->data;
+    for (GList *iter = sorted_rscs; iter != NULL; iter = iter->next) {
+        char *type = iter->data;
         int *rsc_counter = g_hash_table_lookup(rsc_table, type);
 
         GList *sorted_nodes = NULL;
@@ -1087,8 +1085,8 @@ pe__rscs_brief_output(pcmk__output_t *out, GList *rsc_list, uint32_t show_opts)
         sorted_nodes = g_hash_table_get_keys(active_table);
         sorted_nodes = g_list_sort(sorted_nodes, (GCompareFunc) pcmk__numeric_strcasecmp);
 
-        for (GList *gIter2 = sorted_nodes; gIter2; gIter2 = gIter2->next) {
-            char *node_name = (char *) gIter2->data;
+        for (GList *iter2 = sorted_nodes; iter2 != NULL; iter2 = iter2->next) {
+            char *node_name = iter2->data;
             GHashTable *node_table = g_hash_table_lookup(active_table, node_name);
             int *active_counter = NULL;
 

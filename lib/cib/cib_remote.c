@@ -584,9 +584,9 @@ cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
             /* If no pcmk__output_t is set, just assume that a text prompt
              * is good enough.
              */
-            pcmk__text_prompt("Password", false, &(private->passwd));
+            pcmk__text_prompt("Password", &private->passwd);
         } else {
-            private->out->prompt("Password", false, &(private->passwd));
+            private->out->prompt("Password", &private->passwd);
         }
     }
 
@@ -714,19 +714,9 @@ cib_t *
 cib_remote_new(const char *server, const char *user, const char *passwd, int port,
                gboolean encrypted)
 {
-    cib_remote_opaque_t *private = NULL;
     cib_t *cib = cib_new_variant();
-
-    if (cib == NULL) {
-        return NULL;
-    }
-
-    private = calloc(1, sizeof(cib_remote_opaque_t));
-
-    if (private == NULL) {
-        free(cib);
-        return NULL;
-    }
+    cib_remote_opaque_t *private =
+        pcmk__assert_alloc(1, sizeof(cib_remote_opaque_t));
 
     cib->variant = cib_remote;
     cib->variant_opaque = private;

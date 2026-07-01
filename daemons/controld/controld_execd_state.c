@@ -55,31 +55,28 @@ free_recurring_op(void *value)
 static gboolean
 fail_pending_op(void *key, void *value, void *user_data)
 {
-    lrmd_event_data_t event = { 0, };
     lrm_state_t *lrm_state = user_data;
     active_op_t *op = value;
+    lrmd_event_data_t *event = lrmd_new_event(op->rsc_id, op->op_type,
+                                              op->interval_ms);
 
     pcmk__trace("Pre-emptively failing " PCMK__OP_FMT " on %s (call=%s, %s)",
                 op->rsc_id, op->op_type, op->interval_ms,
                 lrm_state->node_name, (const char *) key, op->user_data);
 
-    event.type = lrmd_event_exec_complete;
-    event.rsc_id = op->rsc_id;
-    event.op_type = op->op_type;
-    event.user_data = op->user_data;
-    event.timeout = 0;
-    event.interval_ms = op->interval_ms;
-    lrmd__set_result(&event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
+    event->type = lrmd_event_exec_complete;
+    event->user_data = pcmk__str_copy(op->user_data);
+    lrmd__set_result(event, PCMK_OCF_UNKNOWN_ERROR, PCMK_EXEC_NOT_CONNECTED,
                      "Action was pending when executor connection was dropped");
-    event.t_run = op->start_time;
-    event.t_rcchange = op->start_time;
+    event->t_run = op->start_time;
+    event->t_rcchange = op->start_time;
 
-    event.call_id = op->call_id;
-    event.remote_nodename = lrm_state->node_name;
-    event.params = op->params;
+    event->call_id = op->call_id;
+    event->remote_nodename = pcmk__str_copy(lrm_state->node_name);
+    event->params = op->params;
 
-    process_lrm_event(lrm_state, &event, op, NULL);
-    lrmd__reset_result(&event);
+    process_lrm_event(lrm_state, event, op, NULL);
+    lrmd_free_event(event);
     return TRUE;
 }
 

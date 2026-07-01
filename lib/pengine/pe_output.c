@@ -89,10 +89,8 @@ add_extra_info(const pcmk_node_t *node, GList *rsc_list,
                pcmk_scheduler_t *scheduler, const char *attrname,
                int *expected_score)
 {
-    GList *gIter = NULL;
-
-    for (gIter = rsc_list; gIter != NULL; gIter = gIter->next) {
-        pcmk_resource_t *rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc_list; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *rsc = iter->data;
         const char *type = g_hash_table_lookup(rsc->priv->meta,
                                                PCMK_XA_TYPE);
         const char *name = NULL;
@@ -400,9 +398,11 @@ static bool
 is_mixed_version(pcmk_scheduler_t *scheduler)
 {
     const char *feature_set = NULL;
-    for (GList *gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *node = gIter->data;
+
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *node = iter->data;
         const char *node_feature_set = get_node_feature_set(node);
+
         if (node_feature_set != NULL) {
             if (feature_set == NULL) {
                 feature_set = node_feature_set;
@@ -751,13 +751,13 @@ ban_list(pcmk__output_t *out, va_list args) {
     uint32_t show_opts = va_arg(args, uint32_t);
     bool print_spacer = va_arg(args, int);
 
-    GList *gIter, *gIter2;
     int rc = pcmk_rc_no_output;
 
     /* Print each ban */
-    for (gIter = scheduler->priv->location_constraints;
-         gIter != NULL; gIter = gIter->next) {
-        pcmk__location_t *location = gIter->data;
+    for (GList *iter = scheduler->priv->location_constraints; iter != NULL;
+         iter = iter->next) {
+
+        pcmk__location_t *location = iter->data;
         const pcmk_resource_t *rsc = location->rsc;
 
         if (prefix != NULL && !g_str_has_prefix(location->id, prefix)) {
@@ -771,8 +771,10 @@ ban_list(pcmk__output_t *out, va_list args) {
             continue;
         }
 
-        for (gIter2 = location->nodes; gIter2 != NULL; gIter2 = gIter2->next) {
-            pcmk_node_t *node = (pcmk_node_t *) gIter2->data;
+        for (GList *iter2 = location->nodes; iter2 != NULL;
+             iter2 = iter2->next) {
+
+            pcmk_node_t *node = iter2->data;
 
             if (node->assign->score < 0) {
                 PCMK__OUTPUT_LIST_HEADER(out, print_spacer, rc, "Negative Location Constraints");
@@ -2000,13 +2002,13 @@ node_text(pcmk__output_t *out, va_list args) {
                 }
 
             } else {
-                GList *gIter2 = NULL;
-
                 out->begin_list(out, NULL, NULL, "%s", str->str);
                 out->begin_list(out, NULL, NULL, "Resources");
 
-                for (gIter2 = node->details->running_rsc; gIter2 != NULL; gIter2 = gIter2->next) {
-                    pcmk_resource_t *rsc = (pcmk_resource_t *) gIter2->data;
+                for (GList *iter2 = node->details->running_rsc; iter2 != NULL;
+                     iter2 = iter2->next) {
+
+                    pcmk_resource_t *rsc = iter2->data;
 
                     show_opts |= pcmk_show_rsc_only;
                     out->message(out, (const char *) rsc->priv->xml->name,
@@ -2385,8 +2387,8 @@ node_attribute_list(pcmk__output_t *out, va_list args) {
     int rc = pcmk_rc_no_output;
 
     /* Display each node's attributes */
-    for (GList *gIter = scheduler->nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *node = gIter->data;
+    for (GList *iter = scheduler->nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *node = iter->data;
 
         GList *attr_list = NULL;
         GHashTableIter iter;
@@ -2587,8 +2589,8 @@ node_list_html(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) gIter->data;
+    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *node = iter->data;
 
         if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
@@ -2622,8 +2624,8 @@ node_list_text(pcmk__output_t *out, va_list args) {
 
     int rc = pcmk_rc_no_output;
 
-    for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) gIter->data;
+    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *node = iter->data;
         char *node_name =
             pe__node_display_name(node,
                                   pcmk__is_set(show_opts, pcmk_show_node_id));
@@ -2726,8 +2728,8 @@ node_list_xml(pcmk__output_t *out, va_list args) {
      * value of the list's PCMK_XA_NAME attribute.
      */
     out->begin_list(out, NULL, NULL, PCMK_XE_NODES);
-    for (GList *gIter = nodes; gIter != NULL; gIter = gIter->next) {
-        pcmk_node_t *node = (pcmk_node_t *) gIter->data;
+    for (GList *iter = nodes; iter != NULL; iter = iter->next) {
+        pcmk_node_t *node = iter->data;
 
         if (!pcmk__str_in_list(node->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
@@ -3193,12 +3195,11 @@ resource_operation_list(pcmk__output_t *out, va_list args)
     GList *op_list = va_arg(args, GList *);
     uint32_t show_opts = va_arg(args, uint32_t);
 
-    GList *gIter = NULL;
     int rc = pcmk_rc_no_output;
 
     /* Print each operation */
-    for (gIter = op_list; gIter != NULL; gIter = gIter->next) {
-        xmlNode *xml_op = (xmlNode *) gIter->data;
+    for (GList *iter = op_list; iter != NULL; iter = iter->next) {
+        xmlNode *xml_op = iter->data;
         const char *task = pcmk__xe_get(xml_op, PCMK_XA_OPERATION);
         const char *interval_ms_s = pcmk__xe_get(xml_op, PCMK_META_INTERVAL);
         const char *op_rc = pcmk__xe_get(xml_op, PCMK__XA_RC_CODE);

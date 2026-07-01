@@ -71,7 +71,7 @@ crmd_alert_fencing_op(stonith_event_t * e)
 }
 
 void
-crmd_alert_resource_op(const char *node, lrmd_event_data_t * op)
+crmd_alert_resource_op(const char *node, const lrmd_event_data_t *op)
 {
     lrm_state_t *lrm_state;
 

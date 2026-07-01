@@ -269,16 +269,24 @@ static void
 start_mainloop(pcmk_ipc_api_t *capi)
 {
     // @TODO See if we can avoid setting exit_code as a global variable
-    unsigned int count = pcmk_controld_api_replies_expected(capi);
+    unsigned int count = 0;
 
-    if (count > 0) {
-        out->info(out, "Waiting for %u %s from the controller",
-                  count, pcmk__plural_alt(count, "reply", "replies"));
-        exit_code = CRM_EX_DISCONNECT; // For unexpected disconnects
-        mainloop = g_main_loop_new(NULL, FALSE);
-        pcmk__create_timer(MESSAGE_TIMEOUT_S * 1000, resource_ipc_timeout, NULL);
-        g_main_loop_run(mainloop);
+    if (capi == NULL) {
+        // Should happen only during a dry run due to CIB_file being set
+        return;
     }
+
+    count = pcmk_controld_api_replies_expected(capi);
+    if (count == 0) {
+        return;
+    }
+
+    out->info(out, "Waiting for %u %s from the controller", count,
+              pcmk__plural_alt(count, "reply", "replies"));
+    exit_code = CRM_EX_DISCONNECT;  // For unexpected disconnects
+    mainloop = g_main_loop_new(NULL, false);
+    pcmk__create_timer((MESSAGE_TIMEOUT_S * 1000), resource_ipc_timeout, NULL);
+    g_main_loop_run(mainloop);
 }
 
 static GList *

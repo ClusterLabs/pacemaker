@@ -524,12 +524,10 @@ struct pcmk__output_s {
      *       to display.
      *
      * \param[in]  prompt The prompt to display.  This is required.
-     * \param[in]  echo   If true, echo the user's input to the screen.  Set
-     *                    to false for password entry.
      * \param[out] dest   Where to store the user's response.  This is
      *                    required.
      */
-    void (*prompt) (const char *prompt, bool echo, char **dest);
+    void (*prompt) (const char *prompt, char **dest);
 };
 
 /*!
@@ -730,12 +728,10 @@ pcmk__formatted_vprintf(pcmk__output_t *out, const char *format, va_list args) G
  * \brief Prompt the user for input.
  *
  * \param[in]  prompt The prompt to display
- * \param[in]  echo   If true, echo the user's input to the screen.  Set
- *                    to false for password entry.
  * \param[out] dest   Where to store the user's response.
  */
 void
-pcmk__text_prompt(const char *prompt, bool echo, char **dest);
+pcmk__text_prompt(const char *prompt, char **dest);
 
 uint8_t
 pcmk__output_get_log_level(const pcmk__output_t *out);

@@ -799,37 +799,32 @@ static void
 mainloop_gio_destroy(void *c)
 {
     mainloop_io_t *client = c;
-    char *c_name = strdup(client->name);
 
-    /* client->source is valid but about to be destroyed (ref_count == 0) in gmain.c
-     * client->channel will still have ref_count > 0... should be == 1
+    /* client->source is valid but about to be destroyed (ref_count == 0) in
+     * gmain.c. client->channel will still have ref_count > 0 (should be == 1).
      */
-    pcmk__trace("Destroying client %s[%p]", c_name, c);
+    pcmk__trace("Destroying client %s[%p]", client->name, client);
 
-    if (client->ipc) {
-        crm_ipc_close(client->ipc);
+    // @TODO Would it be safe to call this immediately before crm_ipc_destroy()?
+    crm_ipc_close(client->ipc);
+
+    if (client->destroy_fn != NULL) {
+        client->destroy_fn(client->userdata);
     }
 
-    if (client->destroy_fn) {
-        void (*destroy_fn)(void *userdata) = client->destroy_fn;
+    crm_ipc_destroy(client->ipc);
 
-        client->destroy_fn = NULL;
-        destroy_fn(client->userdata);
-    }
+    pcmk__trace("Destroyed client %s[%p]", client->name, client);
 
-    if (client->ipc) {
-        crm_ipc_t *ipc = client->ipc;
-
-        client->ipc = NULL;
-        crm_ipc_destroy(ipc);
-    }
-
-    pcmk__trace("Destroyed client %s[%p]", c_name, c);
+    /* This is the destructor corresponding to mainloop_add_fd(). There,
+     * g_io_channel_unix_new() created client->channel and added a reference to
+     * it, so we drop a reference here. The channel will be freed when the
+     * reference count drops to zero.
+     */
+    g_io_channel_unref(client->channel);
 
     free(client->name);
     free(client);
-
-    free(c_name);
 }
 
 /*!
@@ -971,17 +966,6 @@ mainloop_add_fd(const char *name, int priority, int fd, void *userdata,
     client->source = g_io_add_watch_full(client->channel, priority, condition,
                                          mainloop_gio_callback, client,
                                          mainloop_gio_destroy);
-
-    /* Now that mainloop now holds a reference to channel, thanks to
-     * g_io_add_watch_full(), drop ours from g_io_channel_unix_new().
-     *
-     * This means that channel will be free'd by:
-     * g_main_context_dispatch() or g_source_remove()
-     *  -> g_source_destroy_internal()
-     *      -> g_source_callback_unref()
-     * shortly after mainloop_gio_destroy() completes
-     */
-    g_io_channel_unref(client->channel);
 
     pcmk__trace("Added connection %d for %s[%p].%d", client->source,
                 client->name, client, fd);

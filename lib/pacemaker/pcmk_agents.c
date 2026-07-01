@@ -38,6 +38,7 @@ pcmk__list_alternatives(pcmk__output_t *out, const char *agent_spec)
     }
 
     lrmd_api_delete(lrmd_conn);
+    lrmd_list_freeall(list);
     return rc;
 }
 
@@ -104,6 +105,7 @@ pcmk__list_agents(pcmk__output_t *out, char *agent_spec)
     }
 
     lrmd_api_delete(lrmd_conn);
+    lrmd_list_freeall(list);
     return rc;
 }
 
@@ -156,6 +158,7 @@ pcmk__list_providers(pcmk__output_t *out, const char *agent_spec)
     }
 
     lrmd_api_delete(lrmd_conn);
+    lrmd_list_freeall(list);
     return rc;
 }
 
@@ -203,6 +206,7 @@ pcmk__list_standards(pcmk__output_t *out)
     }
 
     lrmd_api_delete(lrmd_conn);
+    lrmd_list_freeall(list);
     return rc;
 }
 

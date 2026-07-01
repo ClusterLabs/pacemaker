@@ -47,8 +47,6 @@ svc_action_t *services__create_resource_action(const char *name,
                                                enum svc_action_flags flags);
 
 const char *services__exit_reason(const svc_action_t *action);
-char *services__grab_stdout(svc_action_t *action);
-char *services__grab_stderr(svc_action_t *action);
 
 void services__set_result(svc_action_t *action, int agent_status,
                           enum pcmk_exec_status exec_status,

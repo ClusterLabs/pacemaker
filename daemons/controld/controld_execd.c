@@ -152,7 +152,8 @@ history_free(void *data)
 }
 
 static void
-update_history_cache(lrm_state_t * lrm_state, lrmd_rsc_info_t * rsc, lrmd_event_data_t * op)
+update_history_cache(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
+                     const lrmd_event_data_t *op)
 {
     int target_rc = 0;
     rsc_history_t *entry = NULL;
@@ -269,7 +270,7 @@ send_task_ok_ack(const lrm_state_t *lrm_state, const ha_msg_input_t *input,
 }
 
 static inline const char *
-op_node_name(lrmd_event_data_t *op)
+op_node_name(const lrmd_event_data_t *op)
 {
     return pcmk__s(op->remote_nodename,
                    controld_globals.cluster->priv->node_name);
@@ -1728,11 +1729,13 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     pcmk__node_status_t *peer = NULL;
 
     CRM_CHECK(op != NULL, return);
+
     if (op->rsc_id == NULL) {
-        // op->rsc_id is a (const char *) but lrmd_free_event() frees it
-        pcmk__assert(rsc_id != NULL);
         op->rsc_id = pcmk__str_copy(rsc_id);
     }
+
+    pcmk__assert(op->rsc_id != NULL);
+
     if (to_sys == NULL) {
         to_sys = CRM_SYSTEM_TENGINE;
     }

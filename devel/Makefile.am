@@ -44,14 +44,33 @@ COVTAR		= $(abs_top_builddir)/$(PACKAGE)-coverity-$(TAG).tgz
 COVEMACS	= $(abs_top_builddir)/$(TAG).coverity
 COVHTML		= $(COVERITY_DIR)/output/errors
 
+# File with #nodef directives to suppress macro expansions
+COV_NODEFS	= $(abs_top_builddir)/devel/cov_nodefs.h
+
+# Custom function models
+COV_MODEL_SRC	= $(abs_top_builddir)/devel/cov_models.c
+COV_MODEL_OUT	= $(COVERITY_DIR)/cov_models.xmldb
+
 # Coverity outputs are phony so they get rebuilt every invocation
 
+# Coverity (as of version 2026.3) doesn't work correctly with C23. In
+# particular, it doesn't recognize the predefined identifiers bool, true, and
+# false, and it doesn't handle va_start() correctly. Here we tie compilation to
+# C99 as a workaround. Case 03702771 was opened with Black Duck (Coverity
+# vendor) to address this. That case is closed, and their engineering team is
+# investigating further under issue STGCOV-8389.
+#
+# @COMPAT Improvements are expected in Coverity 2026.9.
 .PHONY: $(COVERITY_DIR)
 $(COVERITY_DIR): coverity-clean
 	$(MAKE) $(AM_MAKEFLAGS) -C $(top_builddir) init core-clean
 	$(AM_V_GEN)cd $(top_builddir)					\
-		&& cov-build --dir "$@" $(MAKE) $(AM_MAKEFLAGS) 	\
-			CFLAGS="-std=c99 $(CFLAGS)" core
+		&& cov-build --dir "$@"					\
+			--add-arg --preinclude_macros="$(COV_NODEFS)"	\
+			$(MAKE) $(AM_MAKEFLAGS)				\
+			CFLAGS="-std=c99 $(CFLAGS)" core		\
+		&& cov-make-library --output-file "$(COV_MODEL_OUT)"	\
+			"$(COV_MODEL_SRC)"
 
 # Public coverity instance
 
@@ -79,7 +98,7 @@ coverity-analyze: $(COVERITY_DIR)
 	@echo "Analyzing (waiting for coverity license if necessary) ..."
 	cd $(top_builddir) && cov-analyze --dir "$<" --wait-for-license	\
 		--security --aggressiveness-level "$(COVLEVEL)"		\
-		--disable INCONSISTENT_UNION_ACCESS
+		--model-file "$(COV_MODEL_OUT)"
 
 .PHONY: $(COVEMACS)
 $(COVEMACS): coverity-analyze

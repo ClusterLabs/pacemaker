@@ -12,7 +12,7 @@
 #include <stdarg.h>                     // va_arg, va_list
 #include <stdbool.h>                    // bool, true, false
 #include <stddef.h>                     // NULL
-#include <stdint.h>                     // uint32_t
+#include <stdint.h>                     // uint32_t, uint64_t
 #include <stdlib.h>                     // free
 #include <string.h>                     // strcmp, strchr
 
@@ -464,10 +464,8 @@ clone_unpack(pcmk_resource_t *rsc)
 bool
 clone_active(const pcmk_resource_t *rsc, bool all)
 {
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
         bool child_active = child_rsc->priv->fns->active(child_rsc, all);
 
         if (all == FALSE && child_active) {
@@ -516,36 +514,53 @@ configured_role(pcmk_resource_t *rsc)
     return role;
 }
 
-bool
-is_set_recursive(const pcmk_resource_t *rsc, long long flag, bool any)
+/*!
+ * \internal
+ * \brief Check whether a resource and all of its descendants are managed
+ *
+ * \param[in] rsc  Resource
+ *
+ * \return \c true if \p rsc and all of its descendants are managed, or \c false
+ *         otherwise
+ */
+static bool
+rsc_managed_recursive(const pcmk_resource_t *rsc)
 {
-    bool all = !any;
+    if (!pcmk__is_set(rsc->flags, pcmk__rsc_managed)) {
+        return false;
+    }
 
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
+
+        const pcmk_resource_t *child_rsc = iter->data;
+
+        if (!rsc_managed_recursive(child_rsc)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool
+pcmk__is_set_recursive(const pcmk_resource_t *rsc, uint64_t flag)
+{
     if (pcmk__is_set(rsc->flags, flag)) {
-        if(any) {
-            return TRUE;
-        }
-    } else if(all) {
-        return FALSE;
+        return true;
     }
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
+    for (const GList *iter = rsc->priv->children; iter != NULL;
+         iter = iter->next) {
 
-        if(is_set_recursive(gIter->data, flag, any)) {
-            if(any) {
-                return TRUE;
-            }
+        const pcmk_resource_t *child_rsc = iter->data;
 
-        } else if(all) {
-            return FALSE;
+        if (pcmk__is_set_recursive(child_rsc, flag)) {
+            return true;
         }
     }
 
-    if(all) {
-        return TRUE;
-    }
-    return FALSE;
+    return false;
 }
 
 PCMK__OUTPUT_ARGS("clone", "uint32_t", "pcmk_resource_t *", "GList *",
@@ -575,10 +590,8 @@ pe__clone_xml(pcmk__output_t *out, va_list args)
 
     all = g_list_prepend(all, (void *) "*");
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
             continue;
@@ -649,7 +662,6 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     GList *promoted_list = NULL;
     GList *started_list = NULL;
-    GList *gIter = NULL;
 
     const char *desc = NULL;
 
@@ -672,9 +684,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                            && pcmk__str_in_list(rsc->id, only_rsc,
                                                 pcmk__str_star_matches));
 
-    for (gIter = rsc->priv->children; gIter != NULL; gIter = gIter->next) {
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
         gboolean print_full = FALSE;
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+        pcmk_resource_t *child_rsc = iter->data;
         bool partially_active = child_rsc->priv->fns->active(child_rsc, false);
 
         if (pcmk__rsc_filtered_by_node(child_rsc, only_node)) {
@@ -717,9 +729,9 @@ pe__clone_default(pcmk__output_t *out, va_list args)
                 pcmk__insert_dup(stopped, child_rsc->id, "Stopped");
             }
 
-        } else if (is_set_recursive(child_rsc, pcmk__rsc_removed, TRUE)
-                   || !is_set_recursive(child_rsc, pcmk__rsc_managed, FALSE)
-                   || is_set_recursive(child_rsc, pcmk__rsc_failed, TRUE)) {
+        } else if (pcmk__is_set_recursive(child_rsc, pcmk__rsc_removed)
+                   || !rsc_managed_recursive(child_rsc)
+                   || pcmk__is_set_recursive(child_rsc, pcmk__rsc_failed)) {
 
             // Print individual instance when active removed/unmanaged/failed
             print_full = TRUE;
@@ -781,8 +793,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     /* Promoted */
     promoted_list = g_list_sort(promoted_list, pe__cmp_node_name);
-    for (gIter = promoted_list; gIter; gIter = gIter->next) {
-        pcmk_node_t *host = gIter->data;
+    for (GList *iter = promoted_list; iter != NULL; iter = iter->next) {
+        pcmk_node_t *host = iter->data;
 
         if (!pcmk__str_in_list(host->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
@@ -804,8 +816,8 @@ pe__clone_default(pcmk__output_t *out, va_list args)
 
     /* Started/Unpromoted */
     started_list = g_list_sort(started_list, pe__cmp_node_name);
-    for (gIter = started_list; gIter; gIter = gIter->next) {
-        pcmk_node_t *host = gIter->data;
+    for (GList *iter = started_list; iter != NULL; iter = iter->next) {
+        pcmk_node_t *host = iter->data;
 
         if (!pcmk__str_in_list(host->priv->name, only_node,
                                pcmk__str_star_matches|pcmk__str_casei)) {
@@ -968,10 +980,8 @@ clone_resource_state(const pcmk_resource_t *rsc, bool current)
 {
     enum rsc_role_e clone_role = pcmk_role_unknown;
 
-    for (GList *gIter = rsc->priv->children;
-         gIter != NULL; gIter = gIter->next) {
-
-        pcmk_resource_t *child_rsc = (pcmk_resource_t *) gIter->data;
+    for (GList *iter = rsc->priv->children; iter != NULL; iter = iter->next) {
+        pcmk_resource_t *child_rsc = iter->data;
         enum rsc_role_e a_role = child_rsc->priv->fns->state(child_rsc,
                                                              current);
 

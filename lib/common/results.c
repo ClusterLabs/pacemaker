@@ -134,7 +134,6 @@ log_assertion_as(const char *file, const char *function, int line,
               line, assert_condition);
 }
 
-/* coverity[+kill] */
 /*!
  * \internal
  * \brief Log a failed assertion and abort
@@ -154,7 +153,6 @@ pcmk__abort_as(const char *file, const char *function, int line,
     abort();
 }
 
-/* coverity[+kill] */
 /*!
  * \internal
  * \brief Handle a failed assertion
@@ -212,7 +210,6 @@ fail_assert_as(const char *file, const char *function, int line,
     }
 }
 
-/* coverity[+kill] */
 void
 crm_abort(const char *file, const char *function, int line,
           const char *assert_condition, gboolean do_core, gboolean do_fork)
@@ -1209,11 +1206,7 @@ pcmk__set_result(pcmk__action_result_t *result, int exit_status,
 
     result->exit_status = exit_status;
     result->execution_status = exec_status;
-
-    if (!pcmk__str_eq(result->exit_reason, exit_reason, pcmk__str_none)) {
-        free(result->exit_reason);
-        result->exit_reason = (exit_reason == NULL)? NULL : strdup(exit_reason);
-    }
+    pcmk__str_update(&result->exit_reason, exit_reason);
 }
 
 
@@ -1257,33 +1250,6 @@ pcmk__format_result(pcmk__action_result_t *result, int exit_status,
 
 /*!
  * \internal
- * \brief Set the output of an action
- *
- * \param[out] result         Action result to set output for
- * \param[in]  out            Action output to set (must be dynamically
- *                            allocated)
- * \param[in]  err            Action error output to set (must be dynamically
- *                            allocated)
- *
- * \note \p result will take ownership of \p out and \p err, so the caller
- *       should not free them.
- */
-void
-pcmk__set_result_output(pcmk__action_result_t *result, char *out, char *err)
-{
-    if (result == NULL) {
-        return;
-    }
-
-    free(result->action_stdout);
-    result->action_stdout = out;
-
-    free(result->action_stderr);
-    result->action_stderr = err;
-}
-
-/*!
- * \internal
  * \brief Clear a result's exit reason, output, and error output
  *
  * \param[in,out] result  Result to reset
@@ -1314,6 +1280,20 @@ pcmk__copy_result(const pcmk__action_result_t *src, pcmk__action_result_t *dst)
     dst->exit_status = src->exit_status;
     dst->execution_status = src->execution_status;
     dst->exit_reason = pcmk__str_copy(src->exit_reason);
+
+    /* Even with our custom function model and macro suppression for
+     * g_clear_pointer(), Coverity fails to identify pcmk__reset_result() as the
+     * deallocator of pcmk__action_result_t. Instead, it thinks
+     * pcmk__format_result() is the deallocator. The issue is definitely with
+     * Coverity misunderstanding g_clear_pointer(), because it identifies
+     * pcmk__reset_result() correctly if we call free() and set the fields to
+     * NULL directly. There is an issue filed with Black Duck (Coverity vendor):
+     * case 03702994.
+     */
+
+    // coverity[INCOMPLETE_DEALLOCATOR : FALSE]
     dst->action_stdout = pcmk__str_copy(src->action_stdout);
+
+    // coverity[INCOMPLETE_DEALLOCATOR : FALSE]
     dst->action_stderr = pcmk__str_copy(src->action_stderr);
 }

@@ -473,43 +473,46 @@ pcmk__indented_printf(pcmk__output_t *out, const char *format, ...)
 }
 
 void
-pcmk__text_prompt(const char *prompt, bool echo, char **dest)
+pcmk__text_prompt(const char *prompt, char **dest)
 {
     int rc = 0;
     struct termios settings;
     tcflag_t orig_c_lflag = 0;
+    size_t buf_size = 0;
+    ssize_t nread = 0;
 
-    pcmk__assert((prompt != NULL) && (dest != NULL));
+    pcmk__assert((prompt != NULL) && (dest != NULL) && (*dest == NULL));
 
-    if (!echo) {
-        rc = tcgetattr(0, &settings);
-        if (rc == 0) {
-            orig_c_lflag = settings.c_lflag;
-            settings.c_lflag &= ~ECHO;
-            rc = tcsetattr(0, TCSANOW, &settings);
-        }
+    rc = tcgetattr(0, &settings);
+    if (rc != 0) {
+        return;
     }
 
-    if (rc == 0) {
-        fprintf(stderr, "%s: ", prompt);
+    orig_c_lflag = settings.c_lflag;
+    settings.c_lflag &= ~ECHO;
 
+    rc = tcsetattr(0, TCSANOW, &settings);
+    if (rc != 0) {
+        return;
+    }
+
+    fprintf(stderr, "%s: ", prompt);
+
+    nread = getline(dest, &buf_size, stdin);
+
+    if (nread < 2) {
+        // Error or empty line ("\n")
         g_clear_pointer(dest, free);
 
-#if HAVE_SSCANF_M
-        rc = scanf("%ms", dest);
-#else
-        *dest = pcmk__assert_alloc(1024, sizeof(char));
-        rc = scanf("%1023s", *dest);
-#endif
-        fprintf(stderr, "\n");
+    } else {
+        // Strip the trailing newline but no other whitespace
+        (*dest)[nread - 1] = '\0';
     }
 
-    if (rc < 1) {
-        g_clear_pointer(dest, free);
-    }
+    fprintf(stderr, "\n");
 
     if (orig_c_lflag != 0) {
         settings.c_lflag = orig_c_lflag;
-        /* rc = */ tcsetattr(0, TCSANOW, &settings);
+        tcsetattr(0, TCSANOW, &settings);
     }
 }

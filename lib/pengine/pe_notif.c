@@ -211,8 +211,8 @@ notify_entries_to_strings(GList *list, GString **rsc_names,
     // Sort input list for user-friendliness (and ease of filtering duplicates)
     list = g_list_sort(list, compare_notify_entries);
 
-    for (GList *gIter = list; gIter != NULL; gIter = gIter->next) {
-        notify_entry_t *entry = (notify_entry_t *) gIter->data;
+    for (GList *iter = list; iter != NULL; iter = iter->next) {
+        notify_entry_t *entry = iter->data;
 
         // Entry must have a resource (with ID)
         CRM_LOG_ASSERT((entry != NULL) && (entry->rsc != NULL)
