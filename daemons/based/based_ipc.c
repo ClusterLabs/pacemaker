@@ -28,9 +28,9 @@
 
 #include "pacemaker-based.h"
 
-qb_ipcs_service_t *ipcs_ro = NULL;
-qb_ipcs_service_t *ipcs_rw = NULL;
-qb_ipcs_service_t *ipcs_shm = NULL;
+static qb_ipcs_service_t *ipcs_ro = NULL;
+static qb_ipcs_service_t *ipcs_rw = NULL;
+static qb_ipcs_service_t *ipcs_shm = NULL;
 
 /*!
  * \internal
@@ -45,7 +45,7 @@ qb_ipcs_service_t *ipcs_shm = NULL;
 static int32_t
 based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    if (cib_shutdown_flag) {
+    if (based_shutting_down()) {
         pcmk__info("Ignoring new IPC client [%d] during shutdown",
                    pcmk__client_pid(c));
         return -ECONNREFUSED;
@@ -282,7 +282,7 @@ based_ipc_destroy(qb_ipcs_connection_t *c)
     based_ipc_closed(c);
 }
 
-struct qb_ipcs_service_handlers ipc_ro_callbacks = {
+static struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_accept = based_ipc_accept,
     .connection_created = NULL,
     .msg_process = based_ipc_dispatch_ro,
@@ -290,10 +290,50 @@ struct qb_ipcs_service_handlers ipc_ro_callbacks = {
     .connection_destroyed = based_ipc_destroy,
 };
 
-struct qb_ipcs_service_handlers ipc_rw_callbacks = {
+static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
     .connection_accept = based_ipc_accept,
     .connection_created = NULL,
     .msg_process = based_ipc_dispatch_rw,
     .connection_closed = based_ipc_closed,
     .connection_destroyed = based_ipc_destroy,
 };
+
+/*!
+ * \internal
+ * \brief Set up \c based IPC communication
+ */
+void
+based_ipc_init(void)
+{
+    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
+                          &ipc_rw_callbacks);
+}
+
+/*!
+ * \internal
+ * \brief Clean up \c based IPC communication
+ */
+void
+based_ipc_cleanup(void)
+{
+    pcmk__drop_all_clients(ipcs_ro);
+    g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
+
+    pcmk__drop_all_clients(ipcs_rw);
+    g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
+
+    pcmk__drop_all_clients(ipcs_shm);
+    g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
+
+    /* Drop remote clients here because they're part of the IPC client table and
+     * must be dropped before \c pcmk__client_cleanup()
+     */
+    based_drop_remote_clients();
+
+    /* @TODO This is where we would call a based_unregister_handlers() to align
+     * with other daemons' IPC cleanup functions. Such a function does not yet
+     * exist; based doesn't use pcmk__request_t yet.
+     */
+
+    pcmk__client_cleanup();
+}

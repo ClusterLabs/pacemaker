@@ -29,10 +29,6 @@
 
 #include "pacemaker-based.h"
 
-bool based_is_primary = false;
-
-xmlNode *the_cib = NULL;
-
 /*!
  * \internal
  * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
@@ -83,7 +79,7 @@ int
 based_process_is_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     // @COMPAT Pacemaker Remote clients <3.0.0 may send this
-    return (based_is_primary? pcmk_rc_ok : EPERM);
+    return (based_get_local_node_dc()? pcmk_rc_ok : EPERM);
 }
 
 // @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
@@ -97,7 +93,7 @@ int
 based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
     /* existing_cib and *cib should be identical. In the absence of ACL
-     * filtering, they should also match the_cib. However, they may be copies
+     * filtering, they should also match based_cib. However, they may be copies
      * filtered based on the current CIB user's ACLs. In that case, our log
      * messages can use info from the full CIB, and the answer can include the
      * digest of the full CIB. But the answer should hide the version attributes
@@ -105,7 +101,7 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
      */
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
     const char *seq = pcmk__xe_get(req, PCMK__XA_CIB_PING_ID);
-    char *digest = pcmk__digest_xml(the_cib, true);
+    char *digest = pcmk__digest_xml(based_cib, true);
     xmlNode *shallow = NULL;
 
     *answer = pcmk__xe_create(NULL, PCMK__XE_PING_RESPONSE);
@@ -122,9 +118,9 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 
     pcmk__info("Reporting our current digest to %s: %s for %s.%s.%s",
                host, digest,
-               pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-               pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-               pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES));
+               pcmk__xe_get(based_cib, PCMK_XA_ADMIN_EPOCH),
+               pcmk__xe_get(based_cib, PCMK_XA_EPOCH),
+               pcmk__xe_get(based_cib, PCMK_XA_NUM_UPDATES));
 
     free(digest);
 
@@ -134,9 +130,9 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    if (!based_is_primary) {
+    if (!based_get_local_node_dc()) {
         pcmk__info("We are now in R/W mode");
-        based_is_primary = true;
+        based_set_local_node_dc(true);
 
     } else {
         pcmk__debug("We are still in R/W mode");
@@ -190,9 +186,9 @@ based_process_schemas(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_secondary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    if (based_is_primary) {
+    if (based_get_local_node_dc()) {
         pcmk__info("We are now in R/O mode");
-        based_is_primary = false;
+        based_set_local_node_dc(false);
 
     } else {
         pcmk__debug("We are still in R/O mode");
@@ -204,20 +200,10 @@ based_process_secondary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_shutdown(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-
-    if (pcmk__xe_get(req, PCMK__XA_CIB_ISREPLYTO) == NULL) {
-        pcmk__info("Peer %s is requesting to shut down", host);
-        return pcmk_rc_ok;
-    }
-
-    if (!cib_shutdown_flag) {
-        pcmk__err("Peer %s mistakenly thinks we wanted to shut down", host);
-        return EINVAL;
-    }
-
-    pcmk__info("Exiting after %s acknowledged our shutdown request", host);
-    based_terminate(CRM_EX_OK);
+    /* @COMPAT Remove when PCMK__CIB_REQUEST_SHUTDOWN is removed. Nodes with
+     * Pacemaker versions earlier than 3.0.2 send a shutdown request and expect
+     * a reply.
+     */
     return pcmk_rc_ok;
 }
 
@@ -380,10 +366,10 @@ sync_our_cib(const xmlNode *request, bool all)
     pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_UPDATE, true);
 
     pcmk__xe_set(replace_request, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
-    digest = pcmk__digest_xml(the_cib, true);
+    digest = pcmk__digest_xml(based_cib, true);
     pcmk__xe_set(replace_request, PCMK_XA_DIGEST, digest);
 
-    cib__set_calldata(replace_request, the_cib);
+    cib__set_calldata(replace_request, based_cib);
 
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);

@@ -48,8 +48,8 @@
 
 static pcmk__tls_t *tls = NULL;
 
-int remote_fd = 0;
-int remote_tls_fd = 0;
+static int remote_fd = -1;
+static int remote_tls_fd = -1;
 
 // @TODO This is rather short for someone to type their password
 #define REMOTE_AUTH_TIMEOUT 10000
@@ -697,7 +697,7 @@ based_remote_init(void)
     int rc = pcmk_rc_ok;
     bool have_psk = false;
 
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_TLS_PORT);
+    port_s = pcmk__xe_get(based_cib, PCMK_XA_REMOTE_TLS_PORT);
 
     if ((pcmk__scan_port(port_s, &port) != pcmk_rc_ok) || (port <= 0)) {
         goto try_clear_port;
@@ -751,13 +751,35 @@ try_clear_port:
     /* Regardless of whether or not we successfully enabled remote-tls-port,
      * we also want to try to enable remote-clear-port as well.
      */
-    port_s = pcmk__xe_get(the_cib, PCMK_XA_REMOTE_CLEAR_PORT);
+    port_s = pcmk__xe_get(based_cib, PCMK_XA_REMOTE_CLEAR_PORT);
 
     if ((pcmk__scan_port(port_s, &port) == pcmk_rc_ok) && (port > 0)) {
         pcmk__warn("Starting clear-text listener on port %d. This is insecure "
                    "and will be removed in a future release. Use "
                    PCMK_XA_REMOTE_TLS_PORT " instead.", port);
         remote_fd = init_remote_listener(port);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Stop remote listeners
+ *
+ * \note Remote clients are dropped in \c based_ipc_cleanup() rather than here,
+ *       because they're part of the IPC client table and must be dropped before
+ *       we call \c pcmk__client_cleanup().
+ */
+void
+based_remote_cleanup(void)
+{
+    if (remote_fd >= 0) {
+        close(remote_fd);
+        remote_fd = -1;
+    }
+
+    if (remote_tls_fd >= 0) {
+        close(remote_tls_fd);
+        remote_tls_fd = -1;
     }
 }
 

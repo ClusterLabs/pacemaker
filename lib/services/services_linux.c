@@ -645,8 +645,7 @@ finish_op_output(svc_action_t *op, bool is_stderr)
         if (op->synchronous) {
             close(fd);
         } else {
-            mainloop_del_fd(*source);
-            *source = NULL;
+            g_clear_pointer(source, mainloop_del_fd);
         }
     }
 }

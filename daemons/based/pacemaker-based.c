@@ -14,17 +14,14 @@
 #include <signal.h>                 // SIGTERM
 #include <stdbool.h>
 #include <stddef.h>                 // NULL, size_t
-#include <stdlib.h>                 // free
 #include <syslog.h>                 // LOG_INFO
 #include <sys/types.h>              // gid_t, uid_t
 #include <unistd.h>                 // setgid, setuid
 
-#include <corosync/cpg.h>           // cpg_*
 #include <glib.h>                   // g_*, G_*, etc.
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
-#include <crm/cluster.h>            // pcmk_cluster_*
 #include <crm/cluster/internal.h>   // pcmk__node_update, etc.
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // crm_log_*
@@ -35,19 +32,80 @@
 
 #define SUMMARY "daemon for managing the configuration of a Pacemaker cluster"
 
-bool cib_shutdown_flag = false;
-int cib_status = pcmk_rc_ok;
+/*
+ * \internal
+ * \brief The CIB manager's global, in-memory copy of the current CIB
+ *
+ * This should reflect our most current, authoritative view of the cluster
+ * state. It may point to a tentative, "working" CIB copy while committing a
+ * transaction, but transactions are atomic. Either the transaction succeeds and
+ * we replace \c based_cib with the resulting CIB, or the transaction fails and
+ * we restore a saved version of the pre-transaction CIB.
+ *
+ * We write this in-memory CIB to disk during CIB manager startup and after a
+ * successful CIB operation that modifies the \c PCMK_XE_CONFIGURATION section.
+ */
+xmlNode *based_cib = NULL;
 
-pcmk_cluster_t *crm_cluster = NULL;
+int cib_status = pcmk_rc_ok;
 
 GMainLoop *mainloop = NULL;
 gchar *cib_root = NULL;
 
-gboolean stand_alone = FALSE;
-
-static void cib_init(void);
-
+static bool local_node_dc = false;
+static bool shutting_down = false;
+static gboolean stand_alone = FALSE;
 static crm_exit_t exit_code = CRM_EX_OK;
+
+/*!
+ * \internal
+ * \brief Check whether local node is DC
+ *
+ * \return \c true if local node is DC, or \c false otherwise
+ */
+bool
+based_get_local_node_dc(void)
+{
+    return local_node_dc;
+}
+
+/*!
+ * \internal
+ * \brief Record whether local node is DC
+ *
+ * \param[in] value  \c true if local node is DC, or \c false otherwise
+ */
+void
+based_set_local_node_dc(bool value)
+{
+    local_node_dc = value;
+}
+
+/*!
+ * \internal
+ * \brief Check whether local CIB manager is shutting down
+ *
+ * \return \c true if local CIB manager has begun shutting down, or \c false
+ *         otherwise
+ */
+bool
+based_shutting_down(void)
+{
+    return shutting_down;
+}
+
+/*!
+ * \internal
+ * \brief Check whether local CIB manager is running in stand-alone mode
+ *
+ * \return \c true if local CIB manager is in stand-alone mode, or \c false
+ *         otherwise
+ */
+bool
+based_stand_alone(void)
+{
+    return stand_alone;
+}
 
 /*!
  * \internal
@@ -63,6 +121,8 @@ setup_stand_alone(GError **error)
     uid_t uid = 0;
     gid_t gid = 0;
     int rc = pcmk_rc_ok;
+
+    based_set_local_node_dc(true);
 
     rc = pcmk__daemon_user(&uid, &gid);
     if (rc != pcmk_rc_ok) {
@@ -161,6 +221,18 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+static void
+based_shutdown(int nsig)
+{
+    if (based_shutting_down()) {
+        // Already shutting down
+        return;
+    }
+
+    shutting_down = true;
+    based_terminate(CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -200,8 +272,6 @@ main(int argc, char **argv)
 
     mainloop_add_signal(SIGTERM, based_shutdown);
 
-    based_io_init();
-
     if ((g_strv_length(processed_args) >= 2)
         && pcmk__str_eq(processed_args[1], "metadata", pcmk__str_none)) {
 
@@ -239,7 +309,7 @@ main(int argc, char **argv)
     // Not up or not authentic; we'll proceed either way
     g_clear_pointer(&old_instance, crm_ipc_destroy);
 
-    if (stand_alone) {
+    if (based_stand_alone()) {
         rc = setup_stand_alone(&error);
         if (rc != pcmk_rc_ok) {
             goto done;
@@ -261,9 +331,32 @@ main(int argc, char **argv)
     }
 
     pcmk__cluster_init_node_caches();
+    based_io_init();
 
-    // Read initial CIB, connect to cluster, and start IPC servers
-    cib_init();
+    /* Read initial CIB. based_read_cib() returns new, non-NULL XML, so this
+     * should always succeed.
+     */
+    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
+        exit_code = CRM_EX_SOFTWARE;
+        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                    "Bug: failed to activate CIB. Terminating %s.",
+                    pcmk__server_log_name(pcmk_ipc_based));
+        goto done;
+    }
+
+    based_ipc_init();
+    based_remote_init();
+
+    if (!based_stand_alone()) {
+        if (based_cluster_connect() != pcmk_rc_ok) {
+            exit_code = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                        "Could not connect to the cluster");
+            goto done;
+        }
+
+        pcmk__info("Cluster connection active");
+    }
 
     // Run the main loop
     mainloop = g_main_loop_new(NULL, FALSE);
@@ -271,19 +364,12 @@ main(int argc, char **argv)
                  "connections");
     g_main_loop_run(mainloop);
 
-    /* If main loop returned, clean up and exit. We disconnect in case
-     * based_terminate(-1) was called.
-     */
-    pcmk_cluster_disconnect(crm_cluster);
-    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
-
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    pcmk__cluster_destroy_node_caches();
     pcmk__client_cleanup();
-    pcmk_cluster_free(crm_cluster);
+    based_cluster_disconnect();
     g_free(cib_root);
 
     pcmk__output_and_clear_error(&error, out);
@@ -294,102 +380,4 @@ done:
     }
     pcmk__unregister_formats();
     crm_exit(exit_code);
-}
-
-#if SUPPORT_COROSYNC
-static void
-cib_cs_dispatch(cpg_handle_t handle,
-                 const struct cpg_name *groupName,
-                 uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
-{
-    xmlNode *xml = NULL;
-    const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
-
-    if(data == NULL) {
-        return;
-    }
-
-    xml = pcmk__xml_parse(data);
-    if (xml == NULL) {
-        pcmk__err("Invalid XML: '%.120s'", data);
-        free(data);
-        return;
-    }
-    pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    based_peer_callback(xml, NULL);
-
-    pcmk__xml_free(xml);
-    free(data);
-}
-
-static void
-cib_cs_destroy(void *user_data)
-{
-    if (cib_shutdown_flag) {
-        pcmk__info("Corosync disconnection complete");
-    } else {
-        pcmk__crit("Exiting immediately after losing connection to cluster "
-                   "layer");
-        based_terminate(CRM_EX_DISCONNECT);
-    }
-}
-#endif
-
-static void
-cib_peer_update_callback(enum pcmk__node_update type,
-                         pcmk__node_status_t *node, const void *data)
-{
-    switch (type) {
-        case pcmk__node_update_name:
-        case pcmk__node_update_state:
-            if (cib_shutdown_flag && (pcmk__cluster_num_active_nodes() < 2)
-                && (pcmk__ipc_client_count() == 0)) {
-
-                pcmk__info("Exiting after no more peers or clients remain");
-                based_terminate(-1);
-            }
-            break;
-
-        default:
-            break;
-    }
-}
-
-static void
-cib_init(void)
-{
-    // based_read_cib() returns new, non-NULL XML, so this should always succeed
-    if (based_activate_cib(based_read_cib(), true, "start") != pcmk_rc_ok) {
-        pcmk__crit("Bug: failed to activate CIB. Terminating %s.",
-                   pcmk__server_log_name(pcmk_ipc_based));
-        crm_exit(CRM_EX_SOFTWARE);
-    }
-
-    based_remote_init();
-    crm_cluster = pcmk_cluster_new();
-
-#if SUPPORT_COROSYNC
-    if (pcmk_get_cluster_layer() == pcmk_cluster_layer_corosync) {
-        pcmk_cluster_set_destroy_fn(crm_cluster, cib_cs_destroy);
-        pcmk_cpg_set_deliver_fn(crm_cluster, cib_cs_dispatch);
-        pcmk_cpg_set_confchg_fn(crm_cluster, pcmk__cpg_confchg_cb);
-    }
-#endif // SUPPORT_COROSYNC
-
-    if (!stand_alone) {
-        pcmk__cluster_set_status_callback(&cib_peer_update_callback);
-
-        if (pcmk_cluster_connect(crm_cluster) != pcmk_rc_ok) {
-            pcmk__crit("Cannot sign in to the cluster... terminating");
-            crm_exit(CRM_EX_FATAL);
-        }
-    }
-
-    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipcs_shm, &ipc_ro_callbacks,
-                          &ipc_rw_callbacks);
-
-    if (stand_alone) {
-        based_is_primary = true;
-    }
 }

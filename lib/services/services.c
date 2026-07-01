@@ -526,15 +526,8 @@ services_action_cleanup(svc_action_t * op)
     }
 #endif
 
-    if (op->opaque->stderr_gsource) {
-        mainloop_del_fd(op->opaque->stderr_gsource);
-        op->opaque->stderr_gsource = NULL;
-    }
-
-    if (op->opaque->stdout_gsource) {
-        mainloop_del_fd(op->opaque->stdout_gsource);
-        op->opaque->stdout_gsource = NULL;
-    }
+    g_clear_pointer(&op->opaque->stderr_gsource, mainloop_del_fd);
+    g_clear_pointer(&op->opaque->stdout_gsource, mainloop_del_fd);
 }
 
 /*!

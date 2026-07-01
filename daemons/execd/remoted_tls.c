@@ -198,8 +198,7 @@ lrmd_auth_timeout_cb(void *data)
         return FALSE;
     }
 
-    mainloop_del_fd(client->remote->source);
-    client->remote->source = NULL;
+    g_clear_pointer(&client->remote->source, mainloop_del_fd);
     pcmk__err("Remote client authentication timed out");
 
     return FALSE;

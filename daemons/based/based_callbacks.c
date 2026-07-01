@@ -16,28 +16,23 @@
 #include <stdlib.h>                 // free
 #include <syslog.h>                 // LOG_INFO, LOG_DEBUG
 #include <time.h>                   // time_t
-#include <unistd.h>                 // close
 
 #include <glib.h>                   // gboolean, g_*, etc.
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbipcs.h>              // qb_ipcs_connection_t
 #include <qb/qblog.h>               // LOG_TRACE
 
 #include <crm/cib.h>                // cib_call_options values
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/cluster.h>            // pcmk_cluster_disconnect
 #include <crm/cluster/internal.h>   // pcmk__cluster_send_message
 #include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
 #include <crm/common/mainloop.h>    // mainloop_*
-#include <crm/common/results.h>     // pcmk_rc_*
+#include <crm/common/results.h>     // CRM_EX_OK, crm_exit_t, pcmk_rc_*
 #include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
 #include <crm/crm.h>                // CRM_OP_*
 
 #include "pacemaker-based.h"
-
-#define EXIT_ESCALATION_MS 10000
 
 static mainloop_timer_t *digest_timer = NULL;
 static long long ping_seq = 0;
@@ -183,7 +178,7 @@ digest_timer_cb(void *data)
 {
     xmlNode *ping = NULL;
 
-    if (!based_is_primary) {
+    if (!based_get_local_node_dc()) {
         // Only the DC sends a ping
         return G_SOURCE_REMOVE;
     }
@@ -245,7 +240,7 @@ process_ping_reply(const xmlNode *reply)
         return;
     }
 
-    if (!based_is_primary) {
+    if (!based_get_local_node_dc()) {
         pcmk__trace("Ignoring ping reply %lld from %s because we are no longer "
                     "DC", seq, host);
         return;
@@ -270,7 +265,7 @@ process_ping_reply(const xmlNode *reply)
     }
 
     if (ping_digest == NULL) {
-        ping_digest = pcmk__digest_xml(the_cib, true);
+        ping_digest = pcmk__digest_xml(based_cib, true);
     }
 
     pcmk__trace("Processing ping reply %lld from %s (%s)", seq, host, digest);
@@ -280,9 +275,10 @@ process_ping_reply(const xmlNode *reply)
     }
 
     pcmk__notice("Local CIB %s.%s.%s.%s differs from %s: %s.%s.%s.%s",
-                 pcmk__xe_get(the_cib, PCMK_XA_ADMIN_EPOCH),
-                 pcmk__xe_get(the_cib, PCMK_XA_EPOCH),
-                 pcmk__xe_get(the_cib, PCMK_XA_NUM_UPDATES), ping_digest, host,
+                 pcmk__xe_get(based_cib, PCMK_XA_ADMIN_EPOCH),
+                 pcmk__xe_get(based_cib, PCMK_XA_EPOCH),
+                 pcmk__xe_get(based_cib, PCMK_XA_NUM_UPDATES),
+                 ping_digest, host,
                  pcmk__xe_get(remote_versions, PCMK_XA_ADMIN_EPOCH),
                  pcmk__xe_get(remote_versions, PCMK_XA_EPOCH),
                  pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES), digest);
@@ -313,7 +309,7 @@ log_local_options(const pcmk__client_t *client,
         return;
     }
 
-    if (stand_alone) {
+    if (based_stand_alone()) {
         pcmk__trace("Processing %s op from client %s (stand-alone)", op,
                     pcmk__client_name(client));
 
@@ -346,13 +342,12 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
     }
 
     if (pcmk__str_eq(op, PCMK__CIB_REQUEST_SHUTDOWN, pcmk__str_none)) {
-        if (reply_to == NULL) {
-            return true;
-        }
-
-        // @TODO Is this possible?
-        pcmk__debug("Ignoring shutdown request from %s because reply_to=%s",
-                    originator, reply_to);
+        /* @COMPAT We stopped sending shutdown requests as of 3.0.2. During a
+         * rolling upgrade, the requesting node expects a reply. We might as
+         * well continue sending one until we no longer support rolling upgrades
+         * from versions earlier than 3.0.2. (If the requesting node doesn't
+         * receive a reply, it simply exits with CRM_EX_ERROR after 10 seconds.)
+         */
         return true;
     }
 
@@ -387,7 +382,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
 
         pcmk__trace("Parsing upgrade %s for %s with max=%s and upgrade_rc=%s",
                     (is_reply? "reply" : "request"),
-                    (based_is_primary? "primary" : "secondary"),
+                    (based_get_local_node_dc()? "DC" : "non-DC node"),
                     pcmk__s(max, "none"), pcmk__s(upgrade_rc, "none"));
 
         if (upgrade_rc != NULL) {
@@ -403,7 +398,7 @@ parse_peer_options(const cib__operation_t *operation, xmlNode *request,
             return true;
         }
 
-        if ((max == NULL) && !based_is_primary) {
+        if ((max == NULL) && !based_get_local_node_dc()) {
             // Ignore broadcast client requests when we're not the DC
             return false;
         }
@@ -463,7 +458,7 @@ static int
 based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
                     cib__op_fn_t op_function, xmlNode **output)
 {
-    xmlNode *result_cib = the_cib;
+    xmlNode *result_cib = based_cib;
     xmlNode *cib_diff = NULL;
 
     const char *feature_set = NULL;
@@ -488,21 +483,21 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
      * or notification that we will send.
      */
     if (rc == pcmk_rc_schema_validation) {
-        pcmk__assert((result_cib != the_cib) && (*output == NULL));
+        pcmk__assert((result_cib != based_cib) && (*output == NULL));
         *output = result_cib;
         goto done;
     }
 
     // Discard result for failure or dry run
     if ((rc != pcmk_rc_ok) || pcmk__any_flags_set(call_options, cib_dryrun)) {
-        if (result_cib != the_cib) {
+        if (result_cib != based_cib) {
             pcmk__xml_free(result_cib);
         }
 
         goto done;
     }
 
-    if (result_cib != the_cib) {
+    if (result_cib != based_cib) {
         /* Always write to disk for successful ops with the writes-through flag
          * set. This also avoids the need to detect ordering changes.
          *
@@ -517,7 +512,7 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         rc = based_activate_cib(result_cib, to_disk, op);
     }
 
-    feature_set = pcmk__xe_get(the_cib, PCMK_XA_CRM_FEATURE_SET);
+    feature_set = pcmk__xe_get(based_cib, PCMK_XA_CRM_FEATURE_SET);
 
     /* @COMPAT Nodes older than feature set 3.19.0 don't support transactions.
      * In a mixed-version cluster with nodes <3.19.0, we must sync the updated
@@ -592,13 +587,13 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
     originator = pcmk__s(originator, "local");
     client_name = pcmk__s(client_name, "client");
 
-    /* @FIXME the_cib should always be non-NULL, but that's currently not the
+    /* @FIXME based_cib should always be non-NULL, but that's currently not the
      * case during shutdown
      */
-    if (the_cib != NULL) {
-        pcmk__xe_get_int(the_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
-        pcmk__xe_get_int(the_cib, PCMK_XA_EPOCH, &epoch);
-        pcmk__xe_get_int(the_cib, PCMK_XA_NUM_UPDATES, &num_updates);
+    if (based_cib != NULL) {
+        pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
+        pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
+        pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
     }
 
     do_crm_log(level,
@@ -751,7 +746,7 @@ based_process_request(xmlNode *request, bool privileged,
                   "(please repair and restart): %s", pcmk_rc_str(rc));
 
         if (!pcmk__is_set(call_options, cib_discard_reply)) {
-            reply = create_cib_reply(request, rc, the_cib);
+            reply = create_cib_reply(request, rc, based_cib);
         }
 
         goto done;
@@ -769,7 +764,7 @@ based_process_request(xmlNode *request, bool privileged,
         rc = EACCES;
 
     } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
-        rc = cib__perform_op_ro(op_function, request, &the_cib, &output);
+        rc = cib__perform_op_ro(op_function, request, &based_cib, &output);
 
     } else {
         rc = based_perform_op_rw(request, operation, op_function, &output);
@@ -781,13 +776,13 @@ based_process_request(xmlNode *request, bool privileged,
         reply = create_cib_reply(request, rc, output);
     }
 
-    if ((output != NULL) && (output->doc != the_cib->doc)) {
+    if ((output != NULL) && (output->doc != based_cib->doc)) {
         pcmk__xml_free(output);
     }
 
 done:
     if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)
-        && needs_reply && !stand_alone && (client == NULL)) {
+        && needs_reply && !based_stand_alone() && (client == NULL)) {
 
         send_peer_reply(reply, originator);
     }
@@ -802,132 +797,34 @@ done:
     return rc;
 }
 
-void
-based_peer_callback(xmlNode *msg, void *private_data)
-{
-    const char *reason = NULL;
-    const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
-
-    if (pcmk__peer_cache == NULL) {
-        reason = "membership not established";
-        goto bail;
-    }
-
-    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
-    }
-
-    based_process_request(msg, true, NULL);
-    return;
-
-  bail:
-    if (reason) {
-        const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
-
-        pcmk__warn("Discarding %s message from %s: %s", op, originator, reason);
-    }
-}
-
-static gboolean
-cib_force_exit(void *data)
-{
-    pcmk__notice("Exiting immediately after %s without shutdown acknowledgment",
-                 pcmk__readable_interval(EXIT_ESCALATION_MS));
-    based_terminate(CRM_EX_ERROR);
-    return FALSE;
-}
-
-void
-based_shutdown(int nsig)
-{
-    int active = 0;
-    xmlNode *notification = NULL;
-
-    if (cib_shutdown_flag) {
-        // Already shutting down
-        return;
-    }
-
-    cib_shutdown_flag = true;
-
-    pcmk__drop_all_clients(ipcs_ro);
-    g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
-
-    pcmk__drop_all_clients(ipcs_rw);
-    g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
-
-    pcmk__drop_all_clients(ipcs_shm);
-    g_clear_pointer(&ipcs_shm, qb_ipcs_destroy);
-
-    based_drop_remote_clients();
-
-    active = pcmk__cluster_num_active_nodes();
-    if (active < 2) {
-        pcmk__info("Exiting without sending shutdown request (no active "
-                   "peers)");
-        based_terminate(CRM_EX_OK);
-        return;
-    }
-
-    pcmk__info("Sending shutdown request to %d peers", active);
-
-    notification = pcmk__xe_create(NULL, PCMK__XE_EXIT_NOTIFICATION);
-    pcmk__xe_set(notification, PCMK__XA_T, PCMK__VALUE_CIB);
-    pcmk__xe_set(notification, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_SHUTDOWN);
-
-    pcmk__cluster_send_message(NULL, pcmk_ipc_based, notification);
-    pcmk__xml_free(notification);
-
-    pcmk__create_timer(EXIT_ESCALATION_MS, cib_force_exit, NULL);
-}
-
 /*!
  * \internal
  * \brief Close remote sockets, free the global CIB and quit
  *
- * \param[in] exit_status  What exit status to use (if -1, use CRM_EX_OK, but
- *                         skip disconnecting from the cluster layer)
+ * \param[in] exit_status  Exit code
  */
 void
-based_terminate(int exit_status)
+based_terminate(crm_exit_t exit_status)
 {
-    if (remote_fd > 0) {
-        close(remote_fd);
-        remote_fd = 0;
-    }
-    if (remote_tls_fd > 0) {
-        close(remote_tls_fd);
-        remote_tls_fd = 0;
-    }
+    based_ipc_cleanup();
+    based_remote_cleanup();
 
     g_clear_pointer(&digest_timer, mainloop_timer_del);
     g_clear_pointer(&ping_digest, free);
-    g_clear_pointer(&the_cib, pcmk__xml_free);
+    g_clear_pointer(&based_cib, pcmk__xml_free);
 
     // Exit immediately on error
-    if (exit_status > CRM_EX_OK) {
-        pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
+    if (exit_status != CRM_EX_OK) {
         crm_exit(exit_status);
         return;
     }
 
+    based_cluster_disconnect();
+
     if ((mainloop != NULL) && g_main_loop_is_running(mainloop)) {
-        /* Quit via returning from the main loop. If exit_status has the special
-         * value -1, we skip the disconnect here, and it will be done when the
-         * main loop returns (this allows the peer status callback to avoid
-         * messing with the peer caches).
-         */
-        if (exit_status == CRM_EX_OK) {
-            pcmk_cluster_disconnect(crm_cluster);
-        }
         g_main_loop_quit(mainloop);
         return;
     }
 
-    /* Exit cleanly. Even the peer status callback can disconnect here, because
-     * we're not returning control to the caller.
-     */
-    pcmk_cluster_disconnect(crm_cluster);
-    pcmk__stop_based_ipc(ipcs_ro, ipcs_rw, ipcs_shm);
     crm_exit(CRM_EX_OK);
 }
