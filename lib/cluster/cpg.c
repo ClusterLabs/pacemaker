@@ -982,11 +982,9 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     } else {
         char *compressed = NULL;
-        unsigned int new_size = 0;
+        size_t new_size = 0;
 
-        if (pcmk__compress(data, (unsigned int) msg->size, 0, &compressed,
-                           &new_size) == pcmk_rc_ok) {
-
+        if (pcmk__compress(data, msg->size, &compressed, &new_size) == pcmk_rc_ok) {
             msg->header.size = sizeof(pcmk__cpg_msg_t) + new_size;
             msg = pcmk__realloc(msg, msg->header.size);
             memcpy(msg->data, compressed, new_size);
