@@ -9,10 +9,10 @@ ______________________
 
 Download the latest |CFS_DISTRO| |CFS_DISTRO_VER| DVD ISO by navigating to
 the |CFS_DISTRO| `mirrors list <https://mirrors.almalinux.org/isos.html>`_,
-selecting the latest 9.x version for your machine's architecture, selecting a
-download mirror that's close to you, and finally selecting the latest .iso file
-that has “dvd” in its name. Use the image to boot a virtual machine, or burn it
-to a DVD or USB drive and boot a physical server from that.
+selecting the latest |CFS_DISTRO_VER|.x version for your machine's architecture,
+selecting a download mirror that's close to you, and finally selecting the latest
+.iso file that has “dvd” in its name. Use the image to boot a virtual machine, or
+burn it to a DVD or USB drive and boot a physical server from that.
 
 After starting the installation, select your language and keyboard layout at
 the welcome screen.
@@ -89,9 +89,9 @@ Enter the **INSTALLATION DESTINATION** section and select the disk where you
 want to install the OS. Then under **Storage Configuration**, select **Custom**
 and press **Done**.
 
-.. figure:: images/ManualPartitioning.png
+.. figure:: images/InstallationDestination.png
     :align: center
-    :alt: Installation Destination Screen
+    :alt: Screen
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Installation Destination Screen
 
@@ -144,21 +144,34 @@ settings (such as time zone or NTP server), you can do this in the
 
     |CFS_DISTRO| |CFS_DISTRO_VER| Time & Date Screen
 
-
-Root Password
+Root Account
 ______________________________
 
-In order to continue to the next step, a **Root Password** must be set. Be sure
-to check the box marked **Allow root SSH login with password**.
+In the **ROOT ACCOUNT** section, it is highly recommended to disable the root
+account.  We'll use a local user to perform administration tasks with sudo.
 
 .. figure:: images/RootPassword.png
     :align: center
-    :alt: Root Password Screen
+    :alt: Root Account Screen
 
-    |CFS_DISTRO| |CFS_DISTRO_VER| Root Password Screen
+    |CFS_DISTRO| |CFS_DISTRO_VER| Root Account Screen
 
-Press **Done**. (Depending on the password you chose, you may need to do so
-twice.)
+Press **Done**.
+
+Create User
+______________________________
+
+In the **CREATE USER** section, create a new user with a secure password.  Make
+sure to select **Add administrative privileges to the user account (wheel group
+membership)** so the user can administer the system.
+
+.. figure:: images/CreateUser.png
+    :align: center
+    :alt: Create User Screen
+
+    |CFS_DISTRO| |CFS_DISTRO_VER| Create User Screen
+
+Press **Done**.
 
 Finish Install
 ______________
@@ -219,7 +232,7 @@ Next, ensure that the routes are as expected:
 .. code-block:: console
 
     [root@pcmk-1 ~]# ip route
-    default via 192.168.122.1 dev enp1s0 proto static metric 100
+    default via 192.168.122.1 dev enp1s0 proto static 192.168.122.101 metric 100
     192.168.122.0/24 dev enp1s0 proto kernel scope link src 192.168.122.101 metric 100
 
 If there is no line beginning with ``default via``, then use ``nmcli`` to add a
@@ -266,7 +279,7 @@ From another host, check whether we can see the new host at all:
 
 .. code-block:: console
 
-    [gchin@gchin ~]$ ping -c 1 192.168.122.101
+    [chris@laptop ~]$ ping -c 1 192.168.122.101
     PING 192.168.122.101 (192.168.122.101) 56(84) bytes of data.
     64 bytes from 192.168.122.101: icmp_seq=1 ttl=64 time=0.344 ms
 
@@ -274,18 +287,25 @@ From another host, check whether we can see the new host at all:
     1 packets transmitted, 1 received, 0% packet loss, time 0ms
     rtt min/avg/max/mdev = 0.344/0.344/0.344/0.000 ms
 
-Next, login as ``root`` via SSH.
+Next, login as the user you created during installation via SSH.
 
 .. code-block:: console
 
-    [gchin@gchin ~]$ ssh root@192.168.122.101
+    [chris@laptop~]$ ssh 192.168.122.101
     The authenticity of host '192.168.122.101 (192.168.122.101)' can't be established.
     ECDSA key fingerprint is SHA256:NBvcRrPDLIt39Rf0Tz4/f2Rd/FA5wUiDOd9bZ9QWWjo.
+    This key is not known by any other names.
     Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
     Warning: Permanently added '192.168.122.101' (ECDSA) to the list of known hosts.
-    root@192.168.122.101's password:
-    Last login: Tue Jan 10 20:46:30 2021
-    [root@pcmk-1 ~]#
+    chris@192.168.122.101's password:
+    Last login: Tue Feb 24 13:03:51 2026
+    [chris@pcmk-1 ~]#
+
+.. NOTE::
+
+    From here on, you'll need to be ``root`` to administer the system.  The
+    ``sudo`` command can be used to switch from the user you created during
+    installation to the ``root`` user.
 
 Apply Updates
 _____________
@@ -410,46 +430,42 @@ Create a new key and allow anyone with that key to log in:
 
    .. code-block:: console
 
-        [root@pcmk-1 ~]# ssh-keygen -f ~/.ssh/id_rsa -N ""
-        Generating public/private rsa key pair.
-        Your identification has been saved in /root/.ssh/id_rsa
-        Your public key has been saved in /root/.ssh/id_rsa.pub
+        [root@pcmk-1 ~]# ssh-keygen -f ~/.ssh/id_ed25519 -N ""
+        Generating public/private ed25519 key pair.
+        Your identification has been saved in /root/.ssh/id_ed25519
+        Your public key has been saved in /root/.ssh/id_ed25519.pub
         The key fingerprint is:
-        SHA256:h5AFPmXsGU4woOxRLYHW9lnU2wIQVOxpSRrsXbo/AX8 root@pcmk-1
+        SHA256:BhlHJU3REGOpO0FA7Mqvp60WaB/2unQOZki+0mZKfee8 root@pcmk-1
         The key's randomart image is:
-        +---[RSA 3072]----+
-        |   o+*BX*.       |
-        | .oo+.+*O o      |
-        | .+. +=% O o     |
-        | . .  =o%.o .    |
-        |  .    .S+..     |
-        |        ..o E    |
-        |         . o     |
-        |          o      |
-        |           .     |
-        +----[SHA256]-----+
+        +--[ED255219 256]--+
+        |     .o=++=+      |
+        |      o.*..       |
+        |     + B          |
+        |    . * o         |
+        |   ..+oo S        |
+        |   +B++ .         |
+        |  o=*o.o          |
+        |o.==oo..          |
+        | +B+.+E.          |
+        +----[SHA256]------+
 
-        [root@pcmk-1 ~]# cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+        [root@pcmk-1 ~]# cat ~/.ssh/id_25519.pub >> ~/.ssh/authorized_keys
+        [root@pcmk-1 ~]# chmod 600 ~/.ssh/authorized_keys
 
-Install the key on the other node:
+Install the key on the other node.  Because you can't login as root on the
+console or over SSH yet (that's what we're setting up now), the easiest way
+to do this is as follows:
 
-.. code-block:: console
-
-    [root@pcmk-1 ~]# ssh-copy-id pcmk-2
-    /usr/bin/ssh-copy-id: INFO: Source of key(s) to be installed: "/root/.ssh/id_rsa.pub"
-    The authenticity of host 'pcmk-2 (192.168.122.102)' can't be established.
-    ED25519 key fingerprint is SHA256:QkJnJ3fmszY7kAuuZ7wxUC5CC+eQThSCF13XYWnZJPo.
-    This host key is known by the following other names/addresses:
-        ~/.ssh/known_hosts:1: 192.168.122.102
-    Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-    /usr/bin/ssh-copy-id: INFO: attempting to log in with the new key(s), to filter out any that are already installed
-    /usr/bin/ssh-copy-id: INFO: 1 key(s) remain to be installed -- if you are prompted now it is to install the new keys
-    root@pcmk-2's password:
-
-    Number of key(s) added: 1
-
-    Now try logging into the machine, with:   "ssh 'pcmk-2'"
-    and check to make sure that only the key(s) you wanted were added.
+#. SSH into both nodes as the regular user.
+#. Use ``sudo`` to become ``root`` on each node.
+#. On ``pcmk-1``, cat the ``/root/.ssh/id_ed25519`` file and copy its contents
+   with the mouse.
+#. On ``pcmk-2``, paste those contents into ``/root/.ssh/id_ed25519``.
+#. ``chmod 600 /root/.ssh/id_ed25519``.
+#. On ``pcmk-1``, cat the ``/root/.ssh/id_25519.pub`` file and copy its
+   contents with the mouse.
+#. On ``pcmk-2``, paste those contents into ``/root/.ssh/authorized_keys``.
+#. ``chmod 600 /root/.ssh/authorized_keys``
 
 Test that you can now run commands remotely, without being prompted:
 
@@ -458,9 +474,8 @@ Test that you can now run commands remotely, without being prompted:
     [root@pcmk-1 ~]# ssh pcmk-2 -- uname -n
     pcmk-2
 
-Finally, repeat this same process on the other node. For convenience, you can
-also generate an SSH key on your administrative machine and use ``ssh-copy-id``
-to copy it to both cluster nodes.
+It may also be handy to generate an SSH key on your administrative machine
+as your regular user and use ``ssh-copy-id`` to copy it to both cluster nodes.
 
 .. [#] You can also avoid this SPOF by specifying an ``addr`` option for each
        node when creating the cluster. We will discuss this in a later section.
