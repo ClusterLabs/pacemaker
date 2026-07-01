@@ -75,20 +75,6 @@
          && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
 /*!
- * \brief Allocate memory for an uninitialized time object
- *
- * \return Newly allocated time object (guaranteed not to be \c NULL)
- *
- * \note The caller is responsible for freeing the return value using
- *       \c crm_time_free().
- */
-crm_time_t *
-crm_time_new_undefined(void)
-{
-    return pcmk__assert_alloc(1, sizeof(crm_time_t));
-}
-
-/*!
  * \internal
  * \brief Check whether a year is positive and representable by four digits
  *
@@ -454,7 +440,7 @@ valid_time(const crm_time_t *dt)
 static crm_time_t *
 parse_date(const char *date_str)
 {
-    const uint32_t flags = crm_time_log_date|crm_time_log_timeofday;
+    const uint32_t flags = pcmk__time_fmt_date|pcmk__time_fmt_time;
     const char *time_s = NULL;
     crm_time_t *dt = NULL;
 
@@ -482,7 +468,7 @@ parse_date(const char *date_str)
         goto parse_time_segment;
     }
 
-    dt = crm_time_new_undefined();
+    dt = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     if ((strncasecmp(PCMK__VALUE_EPOCH, date_str, 5) == 0)
         && ((date_str[5] == '\0')
@@ -633,14 +619,14 @@ invalid:
 static crm_time_t *
 copy_time_to_utc(const crm_time_t *dt)
 {
-    const uint32_t flags = crm_time_log_date
-                           |crm_time_log_timeofday
-                           |crm_time_log_with_timezone;
+    const uint32_t flags = pcmk__time_fmt_date
+                           |pcmk__time_fmt_time
+                           |pcmk__time_fmt_timezone;
     crm_time_t *utc = NULL;
 
     pcmk__assert(dt != NULL);
 
-    utc = crm_time_new_undefined();
+    utc = pcmk__assert_alloc(1, sizeof(crm_time_t));
     utc->years = dt->years;
     utc->days = dt->days;
     utc->seconds = dt->seconds;
@@ -672,16 +658,21 @@ crm_time_new(const char *date_time)
 /*!
  * \brief Check whether a time object has been initialized yet
  *
- * \param[in] t  Time object to check
+ * \param[in] dt  Time object to check
  *
- * \return \c true if time object has been initialized, \c false otherwise
+ * \return \c true if time object has been initialized, or \c false otherwise
  */
 bool
-crm_time_is_defined(const crm_time_t *t)
+pcmk__time_is_initialized(const crm_time_t *dt)
 {
-    // Any nonzero member indicates something has been done to t
-    return (t != NULL) && (t->years || t->months || t->days || t->seconds
-                           || t->offset || t->duration);
+    // Any nonzero member indicates something has been done to dt
+    return (dt != NULL)
+           && ((dt->years != 0)
+               || (dt->months != 0)
+               || (dt->days != 0)
+               || (dt->seconds != 0)
+               || (dt->offset != 0)
+               || (dt->duration));
 }
 
 void
@@ -698,7 +689,7 @@ pcmk__time_log_as(const char *file, const char *function, int line,
                   uint8_t level, const char *prefix, const crm_time_t *dt,
                   uint32_t flags)
 {
-    char *date_s = crm_time_as_string(dt, flags);
+    char *date_s = pcmk__time_text(dt, flags);
 
     if (prefix != NULL) {
         char *old = date_s;
@@ -715,18 +706,19 @@ pcmk__time_log_as(const char *file, const char *function, int line,
     free(date_s);
 }
 
-int
-crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
-                       uint32_t *s)
+void
+pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
+                         uint32_t *minute, uint32_t *second)
 {
-    pcmk__assert((dt != NULL) && (h != NULL) && (m != NULL) && (s != NULL));
+    pcmk__assert((dt != NULL) && (hour != NULL) && (minute != NULL)
+                 && (second != NULL));
 
-    seconds_to_hms(dt->seconds, h, m, s);
-    return TRUE;
+    seconds_to_hms(dt->seconds, hour, minute, second);
 }
 
+// Time in seconds since 0000-01-01 00:00:00Z
 long long
-crm_time_get_seconds(const crm_time_t *dt)
+pcmk__time_get_seconds(const crm_time_t *dt)
 {
     crm_time_t *utc = NULL;
     long long days = 0;
@@ -768,21 +760,22 @@ crm_time_get_seconds(const crm_time_t *dt)
     return seconds;
 }
 
-#define EPOCH_SECONDS 62135596800ULL    /* Calculated using crm_time_get_seconds() */
+#define EPOCH_SECONDS 62135596800ULL // Calculated using pcmk__time_get_seconds
 long long
 crm_time_get_seconds_since_epoch(const crm_time_t *dt)
 {
-    return (dt == NULL)? 0 : (crm_time_get_seconds(dt) - EPOCH_SECONDS);
+    return (dt == NULL)? 0 : (pcmk__time_get_seconds(dt) - EPOCH_SECONDS);
 }
 
-int
-crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
-                       uint32_t *d)
+void
+pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
+                   uint32_t *day)
 {
     int months = 0;
     int days = dt->days;
 
-    pcmk__assert((dt != NULL) && (y != NULL) && (m != NULL) && (d != NULL));
+    pcmk__assert((dt != NULL) && (year != NULL) && (month != NULL)
+                 && (day != NULL));
 
     if(dt->years != 0) {
         for (months = 1; months <= 12 && days > 0; months++) {
@@ -803,22 +796,9 @@ crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
         /* This is a duration not including months, still don't convert the days field */
     }
 
-    *y = dt->years;
-    *m = months;
-    *d = days;
-    pcmk__trace("%.4d-%.3d -> %.4d-%.2d-%.2d", dt->years, dt->days, dt->years,
-                months, days);
-    return TRUE;
-}
-
-int
-crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
-{
-    pcmk__assert((dt != NULL) && (y != NULL) && (d != NULL));
-
-    *y = dt->years;
-    *d = dt->days;
-    return TRUE;
+    *year = dt->years;
+    *month = months;
+    *day = days;
 }
 
 void
@@ -1001,7 +981,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
     GString *buf = NULL;
     char *result = NULL;
 
-    if (!crm_time_is_defined(dt)) {
+    if (!pcmk__time_is_initialized(dt)) {
         return pcmk__str_copy("<undefined time>");
     }
 
@@ -1013,21 +993,23 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
      * These never depend on time zone.
      */
 
-    if (pcmk__is_set(flags, crm_time_log_duration)) {
-        duration_as_string(dt, usec, pcmk__is_set(flags, crm_time_usecs), buf);
+    if (pcmk__is_set(flags, pcmk__time_fmt_duration)) {
+        duration_as_string(dt, usec, pcmk__is_set(flags, pcmk__time_fmt_usecs),
+                           buf);
         goto done;
     }
 
-    if (pcmk__any_flags_set(flags, crm_time_seconds|crm_time_epoch)) {
+    if (pcmk__any_flags_set(flags,
+                            pcmk__time_fmt_seconds|pcmk__time_fmt_epoch)) {
         long long seconds = 0;
 
-        if (pcmk__is_set(flags, crm_time_seconds)) {
-            seconds = crm_time_get_seconds(dt);
+        if (pcmk__is_set(flags, pcmk__time_fmt_seconds)) {
+            seconds = pcmk__time_get_seconds(dt);
         } else {
             seconds = crm_time_get_seconds_since_epoch(dt);
         }
 
-        if (pcmk__is_set(flags, crm_time_usecs)) {
+        if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
             sec_usec_as_string(seconds, usec, buf);
         } else {
             g_string_append_printf(buf, "%lld", seconds);
@@ -1036,15 +1018,15 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
     }
 
     // Convert to UTC if local timezone was not requested
-    if ((dt->offset != 0) && !pcmk__is_set(flags, crm_time_log_with_timezone)) {
+    if ((dt->offset != 0) && !pcmk__is_set(flags, pcmk__time_fmt_timezone)) {
         utc = copy_time_to_utc(dt);
         dt = utc;
     }
 
     // As readable string
 
-    if (pcmk__is_set(flags, crm_time_log_date)) {
-        if (pcmk__is_set(flags, crm_time_weeks)) { // YYYY-WW-D
+    if (pcmk__is_set(flags, pcmk__time_fmt_date)) {
+        if (pcmk__is_set(flags, pcmk__time_fmt_weeks)) { // YYYY-WW-D
             if (dt->days > 0) {
                 uint32_t y = 0;
                 uint32_t w = 0;
@@ -1056,47 +1038,37 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
                                        y, w, d);
             }
 
-        } else if (pcmk__is_set(flags, crm_time_ordinal)) { // YYYY-DDD
-            uint32_t y = 0;
-            uint32_t d = 0;
-
-            if (crm_time_get_ordinal(dt, &y, &d)) {
-                g_string_append_printf(buf, "%" PRIu32 "-%.3" PRIu32, y, d);
-            }
+        } else if (pcmk__is_set(flags, pcmk__time_fmt_ordinal)) { // YYYY-DDD
+            g_string_append_printf(buf, "%d-%.3d", dt->years, dt->days);
 
         } else { // YYYY-MM-DD
             uint32_t y = 0;
             uint32_t m = 0;
             uint32_t d = 0;
 
-            if (crm_time_get_gregorian(dt, &y, &m, &d)) {
-                g_string_append_printf(buf,
-                                       "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
-                                       y, m, d);
-            }
+            pcmk__time_get_ymd(dt, &y, &m, &d);
+            g_string_append_printf(buf,
+                                   "%.4" PRIu32 "-%.2" PRIu32 "-%.2" PRIu32,
+                                   y, m, d);
         }
     }
 
-    if (pcmk__is_set(flags, crm_time_log_timeofday)) {
+    if (pcmk__is_set(flags, pcmk__time_fmt_time)) {
         uint32_t h = 0, m = 0, s = 0;
 
         if (buf->len > 0) {
             g_string_append_c(buf, ' ');
         }
 
-        if (crm_time_get_timeofday(dt, &h, &m, &s)) {
-            g_string_append_printf(buf,
-                                   "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
-                                   h, m, s);
+        pcmk__time_get_timeofday(dt, &h, &m, &s);
+        g_string_append_printf(buf, "%.2" PRIu32 ":%.2" PRIu32 ":%.2" PRIu32,
+                               h, m, s);
 
-            if (pcmk__is_set(flags, crm_time_usecs)) {
-                g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
-            }
+        if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
+            g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
         }
 
-        if (pcmk__is_set(flags, crm_time_log_with_timezone)
-            && (dt->offset != 0)) {
-
+        if (pcmk__is_set(flags, pcmk__time_fmt_timezone) && (dt->offset != 0)) {
             seconds_to_hms(dt->offset, &h, &m, NULL);
             g_string_append_printf(buf, " %c%.2" PRIu32 ":%.2" PRIu32,
                                    ((dt->offset < 0)? '-' : '+'), h, m);
@@ -1114,15 +1086,16 @@ done:
 }
 
 /*!
- * \brief Get a string representation of a \p crm_time_t object
+ * \internal
+ * \brief Get a string representation of a \c crm_time_t object
  *
- * \param[in]  dt      Time to convert to string
- * \param[in]  flags   Group of \p crm_time_* string format options
+ * \param[in]  dt     Time to convert to string
+ * \param[in]  flags  Group of \c crm_time_* string format options
  *
- * \note The caller is responsible for freeing the return value using \p free().
+ * \note The caller is responsible for freeing the return value using \c free().
  */
 char *
-crm_time_as_string(const crm_time_t *dt, int flags)
+pcmk__time_text(const crm_time_t *dt, int flags)
 {
     return time_as_string_common(dt, 0, flags);
 }
@@ -1282,18 +1255,19 @@ parse_duration_element(const char **element, const char *duration_s,
 }
 
 /*!
+ * \internal
  * \brief Parse a time duration from an ISO 8601 duration specification
  *
  * \param[in] period_s  ISO 8601 duration specification (optionally followed by
  *                      whitespace, after which the rest of the string will be
  *                      ignored)
  *
- * \return New time object on success, NULL (and set errno) otherwise
- * \note It is the caller's responsibility to return the result using
- *       crm_time_free().
+ * \return New time object on success, or \c NULL (and set \c errno) otherwise
+ * \note It is the caller's responsibility to free the result using
+ *       \c crm_time_free().
  */
 crm_time_t *
-crm_time_parse_duration(const char *period_s)
+pcmk__time_parse_duration(const char *period_s)
 {
     bool is_time = false;
     crm_time_t *diff = NULL;
@@ -1315,7 +1289,7 @@ crm_time_parse_duration(const char *period_s)
         goto invalid;
     }
 
-    diff = crm_time_new_undefined();
+    diff = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     for (const char *current = period_s + 1;
          current[0] && (current[0] != '/') && !isspace(current[0]);
@@ -1337,17 +1311,20 @@ crm_time_parse_duration(const char *period_s)
         }
     }
 
-    if (!crm_time_is_defined(diff)) {
+    if (!pcmk__time_is_initialized(diff)) {
         pcmk__err("'%s' is not a valid ISO 8601 time duration because no "
                   "amounts and units given",
                   period_s);
         goto invalid;
     }
 
-    diff->duration = TRUE;
+    diff->duration = true;
     return diff;
 
 invalid:
+    /* @COMPAT Setting errno is required only for backward compatibility with
+     * crm_time_parse_duration()
+     */
     crm_time_free(diff);
     errno = EINVAL;
     return NULL;
@@ -1363,14 +1340,14 @@ invalid:
 void
 pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 {
-    const int flags = crm_time_log_date
-                      |crm_time_log_timeofday
-                      |crm_time_log_with_timezone;
+    const int flags = pcmk__time_fmt_date
+                      |pcmk__time_fmt_time
+                      |pcmk__time_fmt_timezone;
 
     if ((target == NULL)
         || (source == NULL)
-        || (crm_time_is_defined(target)
-            && (crm_time_compare(source, target) >= 0))) {
+        || (pcmk__time_is_initialized(target)
+            && (pcmk__time_compare(source, target) >= 0))) {
 
         return;
     }
@@ -1383,7 +1360,7 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
 crm_time_t *
 pcmk_copy_time(const crm_time_t *source)
 {
-    crm_time_t *target = crm_time_new_undefined();
+    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     *target = *source;
     return target;
@@ -1404,7 +1381,7 @@ crm_time_t *
 pcmk__copy_timet(time_t source_sec)
 {
     const struct tm *source = localtime(&source_sec);
-    crm_time_t *target = crm_time_new_undefined();
+    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     int h_offset = 0;
     int m_offset = 0;
@@ -1635,12 +1612,6 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
 }
 
 crm_time_t *
-crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
-{
-    return subtract_time(dt, value, true);
-}
-
-crm_time_t *
 crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
     return subtract_time(dt, value, false);
@@ -1660,7 +1631,7 @@ crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
     }
 
 int
-crm_time_compare(const crm_time_t *a, const crm_time_t *b)
+pcmk__time_compare(const crm_time_t *a, const crm_time_t *b)
 {
     int rc = 0;
     crm_time_t *t1 = NULL;
@@ -1765,7 +1736,7 @@ crm_time_add_months(crm_time_t *dt, int value)
     uint32_t day = 0;
     int days_in_month = 0;
 
-    crm_time_get_gregorian(dt, &year, &month, &day);
+    pcmk__time_get_ymd(dt, &year, &month, &day);
 
     if (value > 0) {
         for (int i = value; i > 0; i--) {
@@ -2109,7 +2080,7 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
     }
 
     dt = pcmk__copy_timet(epoch_time);
-    result = crm_time_as_string(dt, flags);
+    result = pcmk__time_text(dt, flags);
 
     crm_time_free(dt);
     return result;
@@ -2120,8 +2091,8 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
  * \brief Return a human-friendly string corresponding to seconds-and-
  *        nanoseconds value
  *
- * Time is shown with microsecond resolution if \p crm_time_usecs is in \p
- * flags.
+ * Time is shown with microsecond resolution if \c pcmk__time_fmt_usecs is in
+ * \p flags.
  *
  * \param[in]  ts     Time in seconds and nanoseconds (or \p NULL for current
  *                    time)
@@ -2251,9 +2222,9 @@ crm_time_january1_weekday(int year)
 void
 crm_time_set(crm_time_t *target, const crm_time_t *source)
 {
-    const uint32_t flags = crm_time_log_date
-                           |crm_time_log_timeofday
-                           |crm_time_log_with_timezone;
+    const uint32_t flags = pcmk__time_fmt_date
+                           |pcmk__time_fmt_time
+                           |pcmk__time_fmt_timezone;
 
     pcmk__trace("target=%p, source=%p", target, source);
 
@@ -2335,7 +2306,7 @@ crm_time_parse_period(const char *period_str)
     period = pcmk__assert_alloc(1, sizeof(crm_time_period_t));
 
     if (period_str[0] == 'P') {
-        period->diff = crm_time_parse_duration(period_str);
+        period->diff = pcmk__time_parse_duration(period_str);
         if (period->diff == NULL) {
             goto invalid;
         }
@@ -2356,7 +2327,7 @@ crm_time_parse_period(const char *period_str)
                           original);
                 goto invalid;
             }
-            period->diff = crm_time_parse_duration(period_str);
+            period->diff = pcmk__time_parse_duration(period_str);
             if (period->diff == NULL) {
                 goto invalid;
             }
@@ -2410,6 +2381,74 @@ invalid:
     errno = EINVAL;
     crm_time_free_period(period);
     return NULL;
+}
+
+crm_time_t *
+crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
+{
+    return subtract_time(dt, value, true);
+}
+
+crm_time_t *
+crm_time_parse_duration(const char *period_s)
+{
+    return pcmk__time_parse_duration(period_s);
+}
+
+crm_time_t *
+crm_time_new_undefined(void)
+{
+    return pcmk__assert_alloc(1, sizeof(crm_time_t));
+}
+
+bool
+crm_time_is_defined(const crm_time_t *t)
+{
+    return pcmk__time_is_initialized(t);
+}
+
+char *
+crm_time_as_string(const crm_time_t *dt, int flags)
+{
+    return pcmk__time_text(dt, flags);
+}
+
+int
+crm_time_compare(const crm_time_t *a, const crm_time_t *b)
+{
+    return pcmk__time_compare(a, b);
+}
+
+int
+crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
+                       uint32_t *s)
+{
+    pcmk__time_get_timeofday(dt, h, m, s);
+    return TRUE;
+}
+
+int
+crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
+                       uint32_t *d)
+{
+    pcmk__time_get_ymd(dt, y, m, d);
+    return TRUE;
+}
+
+int
+crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d)
+{
+    pcmk__assert((dt != NULL) && (y != NULL) && (d != NULL));
+
+    *y = dt->years;
+    *d = dt->days;
+    return TRUE;
+}
+
+long long
+crm_time_get_seconds(const crm_time_t *dt)
+{
+    return pcmk__time_get_seconds(dt);
 }
 
 // LCOV_EXCL_STOP

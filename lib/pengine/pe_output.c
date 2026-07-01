@@ -1669,9 +1669,9 @@ failed_action_xml(pcmk__output_t *out, va_list args) {
         unsigned int interval_ms = 0;
         char *interval_ms_s = NULL;
         char *rc_change = pcmk__epoch2str(&epoch,
-                                          crm_time_log_date
-                                          |crm_time_log_timeofday
-                                          |crm_time_log_with_timezone);
+                                          pcmk__time_fmt_date
+                                          |pcmk__time_fmt_time
+                                          |pcmk__time_fmt_timezone);
 
         pcmk__xe_get_uint(xml_op, PCMK_META_INTERVAL, &interval_ms);
         interval_ms_s = pcmk__assert_asprintf("%u", interval_ms);

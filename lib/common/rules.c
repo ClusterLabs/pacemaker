@@ -184,15 +184,15 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     }
 
     // Year, month, day
-    crm_time_get_gregorian(now, &(ranges[0].value), &(ranges[1].value),
-                           &(ranges[2].value));
+    pcmk__time_get_ymd(now, &(ranges[0].value), &(ranges[1].value),
+                       &(ranges[2].value));
 
     // Hour, minute, second
-    crm_time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
-                           &(ranges[5].value));
+    pcmk__time_get_timeofday(now, &(ranges[3].value), &(ranges[4].value),
+                             &(ranges[5].value));
 
-    // Year (redundant) and day of year
-    crm_time_get_ordinal(now, &(ranges[0].value), &(ranges[6].value));
+    // Day of year
+    ranges[6].value = now->days;
 
     // Week year, week of week year, day of week
     pcmk__time_get_ywd(now, &(ranges[7].value), &(ranges[8].value),
@@ -332,7 +332,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
         }
     }
 
-    if ((start != NULL) && (crm_time_compare(now, start) < 0)) {
+    if ((start != NULL) && (pcmk__time_compare(now, start) < 0)) {
         pcmk__set_time_if_earlier(next_change, start);
         crm_time_free(start);
         crm_time_free(end);
@@ -340,7 +340,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
     }
 
     if (end != NULL) {
-        if (crm_time_compare(now, end) > 0) {
+        if (pcmk__time_compare(now, end) > 0) {
             crm_time_free(start);
             crm_time_free(end);
             return pcmk_rc_after_range;
@@ -392,7 +392,7 @@ evaluate_gt(const xmlNode *date_expression, const char *id,
         return pcmk_rc_unpack_error;
     }
 
-    if (crm_time_compare(now, start) > 0) {
+    if (pcmk__time_compare(now, start) > 0) {
         crm_time_free(start);
         return pcmk_rc_within_range;
     }
@@ -437,7 +437,7 @@ evaluate_lt(const xmlNode *date_expression, const char *id,
         return pcmk_rc_unpack_error;
     }
 
-    if (crm_time_compare(now, end) < 0) {
+    if (pcmk__time_compare(now, end) < 0) {
         pcmk__set_time_if_earlier(next_change, end);
         crm_time_free(end);
         return pcmk_rc_within_range;

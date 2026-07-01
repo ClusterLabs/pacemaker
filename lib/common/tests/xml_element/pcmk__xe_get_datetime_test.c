@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -51,7 +51,7 @@ static void
 nonnull_time_invalid(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(REFERENCE_XML);
-    crm_time_t *t = crm_time_new_undefined();
+    crm_time_t *t = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), EINVAL);
 
@@ -79,7 +79,7 @@ attr_valid(void **state)
     crm_time_t *reference = crm_time_new(REFERENCE_ISO8601);
 
     assert_int_equal(pcmk__xe_get_datetime(xml, ATTR_PRESENT, &t), pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);

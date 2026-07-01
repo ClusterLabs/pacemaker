@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -27,7 +27,7 @@ assert_add_seconds(const char *orig_date_time, int seconds,
     assert_non_null(expected);
 
     crm_time_add_seconds(orig, seconds);
-    assert_int_equal(crm_time_compare(orig, expected), 0);
+    assert_int_equal(pcmk__time_compare(orig, expected), 0);
 
     crm_time_free(orig);
     crm_time_free(expected);

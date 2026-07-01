@@ -42,7 +42,7 @@ static void
 null_invalid(void **state)
 {
     xmlNode *xml = NULL;
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk__evaluate_condition(NULL, NULL, next_change), EINVAL);
 
@@ -63,7 +63,7 @@ static void
 invalid_expression(void **state)
 {
     xmlNode *xml = pcmk__xml_parse(EXPR_INVALID);
-    crm_time_t *next_change = crm_time_new_undefined();
+    crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
 
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
@@ -130,7 +130,7 @@ date_expression(void **state)
     rule_input.now = now;
     assert_int_equal(pcmk__evaluate_condition(xml, &rule_input, next_change),
                      pcmk_rc_before_range);
-    assert_int_equal(crm_time_compare(next_change, reference), 0);
+    assert_int_equal(pcmk__time_compare(next_change, reference), 0);
     rule_input.now = NULL;
 
     crm_time_free(reference);

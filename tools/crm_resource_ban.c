@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -24,14 +24,14 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     crm_time_t *now = NULL;
     crm_time_t *later = NULL;
     crm_time_t *duration = NULL;
-    const uint32_t duration_flags = crm_time_log_date|crm_time_log_timeofday;
-    const uint32_t time_flags = duration_flags|crm_time_log_with_timezone;
+    const uint32_t duration_flags = pcmk__time_fmt_date|pcmk__time_fmt_time;
+    const uint32_t time_flags = duration_flags|pcmk__time_fmt_timezone;
 
     if (move_lifetime == NULL) {
         return NULL;
     }
 
-    duration = crm_time_parse_duration(move_lifetime);
+    duration = pcmk__time_parse_duration(move_lifetime);
     if (duration == NULL) {
         out->err(out, "Invalid duration specified: %s\n"
                       "Please refer to https://en.wikipedia.org/wiki/ISO_8601#Durations "
@@ -53,7 +53,7 @@ parse_cli_lifetime(pcmk__output_t *out, const char *move_lifetime)
     pcmk__time_log(LOG_INFO, "now     ", now, time_flags);
     pcmk__time_log(LOG_INFO, "later   ", later, time_flags);
     pcmk__time_log(LOG_INFO, "duration", duration, duration_flags);
-    later_s = crm_time_as_string(later, time_flags);
+    later_s = pcmk__time_text(later, time_flags);
     out->info(out, "Migration will take effect until: %s", later_s);
 
     crm_time_free(duration);
@@ -496,7 +496,7 @@ cli_resource_clear_all_expired(xmlNode *root, cib_t *cib_conn, const char *rsc,
             continue; // Treat as unexpired
         }
 
-        if (crm_time_compare(now, end) == 1) {
+        if (pcmk__time_compare(now, end) > 0) {
             xmlNode *fragment = NULL;
             xmlNode *location = NULL;
 

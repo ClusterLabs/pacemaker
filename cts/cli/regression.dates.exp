@@ -64,7 +64,7 @@ iso8601: Invalid interval specified: P1Y/2019-02-29 00:00:00Z
 =#=#=#= End test: Invalid period - [P1Y/2019-02-29 00:00:00Z] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [P1Y/2019-02-29 00:00:00Z]
 =#=#=#= Begin test: Invalid period - [2019-01-01 00:00:00Z/P] =#=#=#=
-crm_time_parse_duration 	error: 'P' is not a valid ISO 8601 time duration because nothing follows 'P'
+pcmk__time_parse_duration 	error: 'P' is not a valid ISO 8601 time duration because nothing follows 'P'
 iso8601: Invalid interval specified: 2019-01-01 00:00:00Z/P
 =#=#=#= End test: Invalid period - [2019-01-01 00:00:00Z/P] - Invalid parameter (2) =#=#=#=
 * Passed: iso8601               - Invalid period - [2019-01-01 00:00:00Z/P]

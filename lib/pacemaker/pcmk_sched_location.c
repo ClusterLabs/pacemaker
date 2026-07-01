@@ -362,7 +362,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         location->role_filter = role;
 
     } else {
-        crm_time_t *next_change = crm_time_new_undefined();
+        crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
         xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE, NULL,
                                                  NULL);
         pcmk_rule_input_t rule_input = {
@@ -379,7 +379,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         /* If there is a point in the future when the evaluation of a rule will
          * change, make sure the scheduler is re-run by that time.
          */
-        if (crm_time_is_defined(next_change)) {
+        if (pcmk__time_is_initialized(next_change)) {
             time_t t = (time_t) crm_time_get_seconds_since_epoch(next_change);
 
             pcmk__update_recheck_time(t, rsc->priv->scheduler,

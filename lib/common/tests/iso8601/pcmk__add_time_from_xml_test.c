@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -45,7 +45,7 @@ null_xml_ok(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, NULL),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -70,7 +70,7 @@ missing_attr(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_months, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -86,7 +86,7 @@ invalid_attr(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml),
                      pcmk_rc_unpack_error);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -102,12 +102,12 @@ out_of_range_attr(void **state)
 
     xml = pcmk__xml_parse(YEARS_TOO_BIG);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
     pcmk__xml_free(xml);
 
     xml = pcmk__xml_parse(YEARS_TOO_SMALL);
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml), ERANGE);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
     pcmk__xml_free(xml);
 
     crm_time_free(t);
@@ -123,7 +123,7 @@ add_years(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_years, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -139,7 +139,7 @@ add_months(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_months, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -155,7 +155,7 @@ add_weeks(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_weeks, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -171,7 +171,7 @@ add_days(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_days, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -187,7 +187,7 @@ add_hours(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_hours, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -203,7 +203,7 @@ add_minutes(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_minutes, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);
@@ -219,7 +219,7 @@ add_seconds(void **state)
 
     assert_int_equal(pcmk__add_time_from_xml(t, pcmk__time_seconds, xml),
                      pcmk_rc_ok);
-    assert_int_equal(crm_time_compare(t, reference), 0);
+    assert_int_equal(pcmk__time_compare(t, reference), 0);
 
     crm_time_free(t);
     crm_time_free(reference);

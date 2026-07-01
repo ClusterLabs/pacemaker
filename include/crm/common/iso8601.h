@@ -52,37 +52,7 @@ typedef struct crm_time_s crm_time_t;
  *   A timezone of 'Z' denotes UTC time
  */
 crm_time_t *crm_time_new(const char *string);
-crm_time_t *crm_time_new_undefined(void);
 void crm_time_free(crm_time_t * dt);
-
-bool crm_time_is_defined(const crm_time_t *t);
-char *crm_time_as_string(const crm_time_t *dt, int flags);
-
-#define crm_time_log_date          0x001
-#define crm_time_log_timeofday     0x002
-#define crm_time_log_with_timezone 0x004
-#define crm_time_log_duration      0x008
-
-#define crm_time_ordinal           0x010
-#define crm_time_weeks             0x020
-#define crm_time_seconds           0x100
-#define crm_time_epoch             0x200
-#define crm_time_usecs             0x400
-
-crm_time_t *crm_time_parse_duration(const char *duration_str);
-crm_time_t *crm_time_calculate_duration(const crm_time_t *dt,
-                                        const crm_time_t *value);
-
-int crm_time_compare(const crm_time_t *a, const crm_time_t *b);
-
-int crm_time_get_timeofday(const crm_time_t *dt, uint32_t *h, uint32_t *m,
-                           uint32_t *s);
-int crm_time_get_gregorian(const crm_time_t *dt, uint32_t *y, uint32_t *m,
-                           uint32_t *d);
-int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
-
-/* Time in seconds since 0000-01-01 00:00:00Z */
-long long crm_time_get_seconds(const crm_time_t *dt);
 
 /* Time in seconds since 1970-01-01 00:00:00Z */
 long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);

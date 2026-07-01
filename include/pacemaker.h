@@ -16,6 +16,7 @@
 #  include <glib.h>
 #  include <libxml/tree.h>
 
+#  include <crm/common/iso8601.h>       // crm_time_t
 #  include <crm/common/scheduler.h>
 #  include <crm/cib/cib_types.h>
 
