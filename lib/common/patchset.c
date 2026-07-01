@@ -312,34 +312,61 @@ add_changes_to_patchset(xmlNode *xml, xmlNode *patchset)
     }
 }
 
-static bool
-is_config_change(xmlNode *xml)
+/*!
+ * \internal
+ * \brief Check whether a deleted object path contains the configuration element
+ *
+ * \param[in] data     Deleted object (<tt>const pcmk__deleted_xml_t *</tt>)
+ * \param[in] ignored  Ignored
+ *
+ * \retval 0 if \p data->path contains
+ *           <tt>"/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION</tt>
+ * \retval 1 otherwise
+ *
+ * \note This is a \c GCompareFunc.
+ */
+static int
+config_in_deleted_obj_path(const void *data, const void *ignored)
 {
-    GList *gIter = NULL;
+    const pcmk__deleted_xml_t *deleted_obj = data;
+
+    if (strstr(deleted_obj->path,
+               "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
+
+        return 0;
+    }
+
+    return 1;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a CIB XML tree contains a configuration change
+ *
+ * \param[in] xml  XML tree
+ *
+ * \return \c true if \p xml contains a dirty or deleted configuration element,
+ *         or \c false otherwise
+ */
+static bool
+is_config_change(const xmlNode *xml)
+{
     xml_node_private_t *nodepriv = NULL;
-    xml_doc_private_t *docpriv;
+    xml_doc_private_t *docpriv = xml->doc->_private;
     xmlNode *config = pcmk__xe_first_child(xml, PCMK_XE_CONFIGURATION, NULL,
                                            NULL);
 
-    if (config) {
+    if (config != NULL) {
         nodepriv = config->_private;
     }
+
+    // Arbitrary xml may come from the public API, so NULL-check nodepriv
     if ((nodepriv != NULL) && pcmk__is_set(nodepriv->flags, pcmk__xf_dirty)) {
-        return TRUE;
+        return true;
     }
 
-    if ((xml->doc != NULL) && (xml->doc->_private != NULL)) {
-        docpriv = xml->doc->_private;
-        for (gIter = docpriv->deleted_objs; gIter; gIter = gIter->next) {
-            pcmk__deleted_xml_t *deleted_obj = gIter->data;
-
-            if (strstr(deleted_obj->path,
-                       "/" PCMK_XE_CIB "/" PCMK_XE_CONFIGURATION) != NULL) {
-                return TRUE;
-            }
-        }
-    }
-    return FALSE;
+    return (g_list_find_custom(docpriv->deleted_objs, NULL,
+                               config_in_deleted_obj_path) != NULL);
 }
 
 // Guaranteed to return non-NULL

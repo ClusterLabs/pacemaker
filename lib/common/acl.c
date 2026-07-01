@@ -819,142 +819,172 @@ attr_is_id(const xmlAttr *attr, void *user_data)
  * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
  */
 static bool
-attr_is_not_id(xmlAttr *attr, void *user_data)
+attr_is_not_id(const xmlAttr *attr, void *user_data)
 {
     return !attr_is_id(attr, user_data);
 }
 
 /*!
  * \internal
- * \brief Rid XML tree of all unreadable nodes and node properties
+ * \brief Filter out nodes that are unreadable by the current ACL user
  *
- * \param[in,out] xml   Root XML node to be purged of attributes
+ * Access or denial via ACLs is inherited, with more specific ACLs (those that
+ * match the node directly or match a more recent ancestor) taking precedence
+ * over less specific ones (those that match a less recent ancestor). Access is
+ * denied by default, if no ACL matches a node or any of its ancestors.
  *
- * \return true if this node or any of its children are readable
- *         if false is returned, xml will be freed
+ * For each node in the tree, check whether any ACL matched the node. If so,
+ * then use that ACL for the current node. If not, then the current node
+ * inherits read access or denial from its parent.
  *
- * \note This function is recursive
+ * Filter each child. Each child inherits read access or denial from the current
+ * node, unless an ACL matched the child directly.
+ *
+ * If the current node is readable, don't modify it. If it's unreadable but has
+ * at least one readable descendant, then remove all of its attributes other
+ * than \c PCMK_XA_ID. If it's unreadable and has no readable descendants,
+ * remove it.
+ *
+ * \param[in,out] xml                  XML tree (will be set to \c NULL if
+ *                                     freed)
+ * \param[in]     in_readable_context  If \c true, the parent of \p xml is
+ *                                     readable
+ *
+ * \note This function assumes that \c pcmk__apply_acls() has already been
+ *       called for \p *xml->doc.
+ * \note This function is recursive.
  */
-static bool
-purge_xml_attributes(xmlNode *xml)
+static void
+filter_unreadable_nodes(xmlNode **xml, bool in_readable_context)
 {
+    const xml_node_private_t *nodepriv = (*xml)->_private;
+    bool direct = false;
+    const char *how = NULL;
+    const char *name = (const char *) (*xml)->name;
+    const char *id = pcmk__s(pcmk__xe_id(*xml), "(unset)");
     xmlNode *child = NULL;
-    bool readable_children = false;
-    xml_node_private_t *nodepriv = xml->_private;
 
+    /* If an ACL matched xml directly, update the context for xml and its
+     * descendants. Otherwise, keep the access that we inherited.
+     */
     if (is_mode_allowed(nodepriv->flags, pcmk__xf_acl_read)) {
-        pcmk__trace("%s[@" PCMK_XA_ID "=%s] is readable", xml->name,
-                    pcmk__xe_id(xml));
-        return true;
+        in_readable_context = true;
+        direct = true;
+
+    } else if (pcmk__is_set(nodepriv->flags, pcmk__xf_acl_deny)) {
+        in_readable_context = false;
+        direct = true;
     }
 
-    pcmk__xe_remove_matching_attrs(xml, true, attr_is_not_id, NULL);
+    if (direct) {
+        how = "directly";
 
-    child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
+    } else if (*xml == xmlDocGetRootElement((*xml)->doc)) {
+        how = "by default";
+
+    } else {
+        how = "by inheritance";
+    }
+
+    pcmk__trace("ACLs %s read access to %s[@" PCMK_XA_ID "='%s'] %s",
+                (in_readable_context? "allow" : "deny"), name, id, how);
+
+    // Filter children recursively
+    child = pcmk__xml_first_child(*xml);
     while (child != NULL) {
-        xmlNode *tmp = child;
+        xmlNode *next = pcmk__xml_next(child);
 
-        child = pcmk__xe_next(child, NULL);
-
-        if (purge_xml_attributes(tmp)) {
-            readable_children = true;
-        }
+        filter_unreadable_nodes(&child, in_readable_context);
+        child = next;
     }
 
-    if (!readable_children) {
-        // Nothing readable under here, so purge completely
-        pcmk__xml_free(xml);
+    if (in_readable_context) {
+        // This node is readable, either directly or by inheritance
+        return;
     }
-    return readable_children;
+
+    if ((*xml)->children != NULL) {
+        /* At least one descendant is readable, but this node is not.
+         *
+         * Remove all attributes except PCMK_XA_ID. Keep this node as a bare
+         * "scaffolding" element for structure, so that the path from the root
+         * to any readable descendant remains intact. Removing this node would
+         * also remove its readable descendants.
+         */
+        pcmk__xe_remove_matching_attrs(*xml, true, attr_is_not_id, NULL);
+        return;
+    }
+
+    // This node and all its descendants are unreadable, so remove it
+    g_clear_pointer(xml, pcmk__xml_free);
 }
 
 /*!
- * \brief Copy ACL-allowed portions of specified XML
+ * \internal
+ * \brief Copy XML, filtering out portions that are unreadable based on ACLs
  *
- * \param[in]  user        Username whose ACLs should be used
- * \param[in]  acl_source  XML containing ACLs
- * \param[in]  xml         XML to be copied
- * \param[out] result      Copy of XML portions readable via ACLs
+ * Access or denial via ACLs is inherited, with more specific ACLs (those that
+ * match the node directly or match a more recent ancestor) taking precedence
+ * over less specific ones (those that match a less recent ancestor). Access is
+ * denied by default, if no ACL matches a node or any of its ancestors.
  *
- * \return \c true if \p acl_source and \p xml are non-<tt>NULL</tt> and ACLs
- *         are required for \p user, or \c false otherwise
+ * If the user's ACLs grant read access to a node (either directly or through
+ * the most recent ancestor node matched by an ACL), then that node is kept
+ * intact.
  *
- * \note If this returns true, caller should use \p result rather than \p xml
+ * If the user's ACLs deny read access to a node (either directly, through the
+ * most recent ancestor node matched by an ACL, or by default), then:
+ * - If the current node has at least one readable descendant, then all of the
+ *   current node's attributes are removed other than \c PCMK_XA_ID.
+ * - Otherwise, the current node is removed.
+ *
+ * \param[in] user        User whose ACLs to use
+ * \param[in] acl_source  XML document whose ACL definitions to use
+ * \param[in] xml         XML to copy
+ *
+ * \return Newly allocated ACL-filtered copy of \p xml, or \c NULL if the entire
+ *         document is filtered out
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__xml_free().
  */
-bool
-xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
-                      xmlNode **result)
+xmlNode *
+pcmk__acl_filtered_copy(const char *user, xmlDoc *acl_source, xmlNode *xml)
 {
-    xmlNode *target = NULL;
+    xmlNode *result = NULL;
     xml_doc_private_t *docpriv = NULL;
 
-    *result = NULL;
-    if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
-        || !pcmk_acl_required(user)) {
+    pcmk__assert((acl_source != NULL) && (xml != NULL));
 
-        return false;
+    result = pcmk__xml_copy(NULL, xml);
+
+    if (!pcmk_acl_required(user)) {
+        // Return an unfiltered copy
+        return result;
     }
 
-    target = pcmk__xml_copy(NULL, xml);
-    docpriv = target->doc->_private;
+    pcmk__enable_acls(acl_source->doc, result->doc, user);
 
-    pcmk__enable_acls(acl_source->doc, target->doc, user);
-
-    pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
-
-    for (const GList *iter = docpriv->acls; iter != NULL; iter = iter->next) {
-        const xml_acl_t *acl = iter->data;
-        xmlXPathObject *xpath_obj = NULL;
-        int num_results = 0;
-
-        if ((acl->mode != pcmk__xf_acl_deny) || (acl->xpath == NULL)) {
-            continue;
-        }
-
-        xpath_obj = pcmk__xpath_search(target->doc, acl->xpath);
-        num_results = pcmk__xpath_num_results(xpath_obj);
-
-        for (int i = 0; i < num_results; i++) {
-            xmlNode *match = pcmk__xpath_result(xpath_obj, i);
-
-            if (match == NULL) {
-                continue;
-            }
-
-            // @COMPAT See COMPAT comment in pcmk__apply_acls()
-            match = pcmk__xpath_match_element(match);
-            if (match == NULL) {
-                continue;
-            }
-
-            if (!purge_xml_attributes(match) && (match == target)) {
-                pcmk__trace("ACLs deny user '%s' access to entire XML document",
-                            user);
-                xmlXPathFreeObject(xpath_obj);
-                return true;
-            }
-        }
-        pcmk__trace("ACLs deny user '%s' access to %s (%d match%s)", user,
-                    acl->xpath, num_results,
-                    pcmk__plural_alt(num_results, "", "es"));
-        xmlXPathFreeObject(xpath_obj);
-    }
-
-    if (!purge_xml_attributes(target)) {
-        pcmk__trace("ACLs deny user '%s' access to entire XML document", user);
-        return true;
-    }
-
+    docpriv = result->doc->_private;
     if (docpriv->acls == NULL) {
         pcmk__trace("User '%s' without ACLs denied access to entire XML "
                     "document", user);
-        pcmk__xml_free(target);
-        return true;
+        pcmk__xml_free(result);
+        return NULL;
+    }
+
+    pcmk__trace("Filtering XML copy using user '%s' ACLs", user);
+    filter_unreadable_nodes(&result, false);
+
+    // coverity[check_after_deref : FALSE] Doesn't understand g_clear_pointer
+    if (result == NULL) {
+        // Entire document was freed, so don't free docpriv->acls here
+        pcmk__trace("ACLs deny user '%s' access to entire XML document", user);
+        return NULL;
     }
 
     g_clear_pointer(&docpriv->acls, pcmk__free_acls);
-    *result = target;
-    return true;
+    return result;
 }
 
 /*!
@@ -989,76 +1019,62 @@ implicitly_allowed(const xmlNode *xml)
     return true;
 }
 
-#define display_id(xml) pcmk__s(pcmk__xe_id(xml), "<unset>")
+/*!
+ * \internal
+ * \brief Check whether ACLs allow creation of an XML node
+ *
+ * "Scaffolding" elements (those that aren't in the ACLs section and don't have
+ * any attributes other than \c PCMK_XA_ID) are always allowed.
+ *
+ * \param[in,out] xml  XML node
+ *
+ * \return \c true if \p xml is newly created and ACLs disallow its creation, or
+ *         \c false otherwise
+ *
+ * \note This is compatible with \c pcmk__xml_tree_foreach_remove().
+ */
+static bool
+check_creation_disallowed(xmlNode *xml)
+{
+    const char *type = (const char *) xml->name;
+    const char *id = pcmk__s(pcmk__xe_id(xml), "<unset>");
+    xml_node_private_t *nodepriv = xml->_private;
+
+    if (!pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
+        return false;
+    }
+
+    if (implicitly_allowed(xml)) {
+        pcmk__trace("Creation of <%s> scaffolding with " PCMK_XA_ID "=\"%s\" "
+                    "is implicitly allowed", type, id);
+        return false;
+    }
+
+    if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
+        pcmk__trace("ACLs allow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
+                    type, id);
+        return false;
+    }
+
+    pcmk__trace("ACLs disallow creation of <%s> with " PCMK_XA_ID "=\"%s\"",
+                type, id);
+    return true;
+}
 
 /*!
  * \internal
- * \brief Drop XML nodes created in violation of ACLs
+ * \brief Remove XML nodes created in violation of ACLs
  *
- * Given an XML element, free all of its descendant nodes created in violation
- * of ACLs, with the exception of allowing "scaffolding" elements (i.e. those
- * that aren't in the ACL section and don't have any attributes other than
- * \c PCMK_XA_ID).
+ * Given an XML tree, free all nodes created in violation of ACLs, with the
+ * exception of allowing "scaffolding" elements (those that aren't in the ACLs
+ * section and don't have any attributes other than \c PCMK_XA_ID).
  *
- * \param[in,out] xml        XML to check
- * \param[in]     check_top  Whether to apply checks to argument itself
- *                           (if true, xml might get freed)
- *
- * \note This function is recursive
+ * \param[in,out] xml  XML tree
  */
 void
-pcmk__apply_creation_acl(xmlNode *xml, bool check_top)
+pcmk__check_creation_acls(xmlNode *xml)
 {
-    xml_node_private_t *nodepriv = xml->_private;
-
-    if (pcmk__is_set(nodepriv->flags, pcmk__xf_created)) {
-        if (implicitly_allowed(xml)) {
-            pcmk__trace("Creation of <%s> scaffolding with "
-                        PCMK_XA_ID "=\"%s\" is implicitly allowed",
-                        xml->name, display_id(xml));
-
-        } else if (pcmk__check_acl(xml, NULL, pcmk__xf_acl_write)) {
-            pcmk__trace("ACLs allow creation of <%s> with "
-                        PCMK_XA_ID "=\"%s\"",
-                        xml->name, display_id(xml));
-
-        } else if (check_top) {
-            /* is_root=true should be impossible with check_top=true, but check
-             * for sanity
-             */
-            bool is_root = (xmlDocGetRootElement(xml->doc) == xml);
-            xml_doc_private_t *docpriv = xml->doc->_private;
-
-            pcmk__trace("ACLs disallow creation of %s<%s> with "
-                        PCMK_XA_ID "=\"%s\"",
-                        (is_root? "root element " : ""), xml->name,
-                        display_id(xml));
-
-            // pcmk__xml_free() checks ACLs if enabled, which would fail
-            pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
-            pcmk__xml_free(xml);
-
-            if (!is_root) {
-                // If root, the document was freed. Otherwise re-enable ACLs.
-                pcmk__set_xml_flags(docpriv, pcmk__xf_acl_enabled);
-            }
-            return;
-
-        } else {
-            const bool is_root = (xml == xmlDocGetRootElement(xml->doc));
-
-            pcmk__notice("ACLs would disallow creation of %s<%s> with "
-                         PCMK_XA_ID "=\"%s\"",
-                         (is_root? "root element " : ""), xml->name,
-                         display_id(xml));
-        }
-    }
-
-    for (xmlNode *cIter = pcmk__xml_first_child(xml); cIter != NULL; ) {
-        xmlNode *child = cIter;
-        cIter = pcmk__xml_next(cIter); /* In case it is free'd */
-        pcmk__apply_creation_acl(child, true);
-    }
+    pcmk__xml_tree_foreach_remove(xml, check_creation_disallowed);
 }
 
 /*!
@@ -1089,7 +1105,20 @@ xml_acl_disable(xmlNode *xml)
 
         /* Catch anything that was created but shouldn't have been */
         pcmk__apply_acls(xml->doc);
-        pcmk__apply_creation_acl(xml, false);
+
+        /* Be sure not to free xml itself.
+         *
+         * @TODO Maybe we should free xml if it's newly created and the creation
+         * is disallowed, but we would need a way to inform the caller. This is
+         * public API.
+         */
+        xml = pcmk__xml_first_child(xml);
+        while (xml != NULL) {
+            xmlNode *next = pcmk__xml_next(xml);
+
+            pcmk__check_creation_acls(xml);
+            xml = next;
+        }
         pcmk__clear_xml_flags(docpriv, pcmk__xf_acl_enabled);
     }
 }
@@ -1329,6 +1358,20 @@ xml_acl_enabled(const xmlNode *xml)
         return pcmk__is_set(docpriv->flags, pcmk__xf_acl_enabled);
     }
     return false;
+}
+
+bool
+xml_acl_filtered_copy(const char *user, xmlNode *acl_source, xmlNode *xml,
+                      xmlNode **result)
+{
+    if ((acl_source == NULL) || (acl_source->doc == NULL) || (xml == NULL)
+        || !pcmk_acl_required(user)) {
+
+        return false;
+    }
+
+    *result = pcmk__acl_filtered_copy(user, acl_source->doc, xml);
+    return true;
 }
 
 // LCOV_EXCL_STOP

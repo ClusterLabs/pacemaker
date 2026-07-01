@@ -114,6 +114,9 @@ G_GNUC_INTERNAL
 const char *pcmk__xml_element_type_text(xmlElementType type);
 
 G_GNUC_INTERNAL
+void pcmk__xml_tree_foreach_remove(xmlNode *xml, bool (*fn)(xmlNode *));
+
+G_GNUC_INTERNAL
 bool pcmk__xml_reset_node_flags(xmlNode *xml, void *user_data);
 
 G_GNUC_INTERNAL
@@ -154,7 +157,7 @@ G_GNUC_INTERNAL
 void pcmk__apply_acls(xmlDoc *doc);
 
 G_GNUC_INTERNAL
-void pcmk__apply_creation_acl(xmlNode *xml, bool check_top);
+void pcmk__check_creation_acls(xmlNode *xml);
 
 G_GNUC_INTERNAL
 int pcmk__xa_remove(xmlAttr *attr, bool force);
@@ -171,9 +174,6 @@ G_GNUC_PRINTF(2, 3);
 
 G_GNUC_INTERNAL
 void pcmk__mark_xml_node_dirty(xmlNode *xml);
-
-G_GNUC_INTERNAL
-bool pcmk__marked_as_deleted(xmlAttrPtr a, void *user_data);
 
 G_GNUC_INTERNAL
 bool pcmk__dump_xml_attr(const xmlAttr *attr, void *user_data);

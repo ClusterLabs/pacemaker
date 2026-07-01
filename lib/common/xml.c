@@ -72,16 +72,19 @@ pcmk__xml_element_type_text(xmlElementType type)
 
 /*!
  * \internal
- * \brief Apply a function to each XML node in a tree (pre-order, depth-first)
+ * \brief Call a function for each XML node in a tree (pre-order, depth-first)
  *
  * \param[in,out] xml        XML tree to traverse
- * \param[in,out] fn         Function to call for each node (returns \c true to
+ * \param[in]     fn         Function to call for each node (returns \c true to
  *                           continue traversing the tree or \c false to stop)
  * \param[in,out] user_data  Argument to \p fn
  *
  * \return \c false if any \p fn call returned \c false, or \c true otherwise
  *
  * \note This function is recursive.
+ * \note \c fn may not free or unlink its XML argument or any of that node's
+ *       ancestors. \c fn may unlink the descendants of that node, and it may
+ *       free them as long as it also unlinks them.
  */
 bool
 pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
@@ -105,6 +108,50 @@ pcmk__xml_tree_foreach(xmlNode *xml, bool (*fn)(xmlNode *, void *),
         }
     }
     return true;
+}
+
+/*!
+ * \internal
+ * \brief Remove XML nodes for which a given function returns \c true
+ *
+ * Call a function for each XML node in a tree (pre-order, depth-first). If the
+ * function returns true, remove the node. This means to free the entire
+ * document if the node is the document root, or to unlink and free the node and
+ * its subtree otherwise. ACLs and change tracking are ignored.
+ *
+ * \param[in,out] xml  XML tree to traverse
+ * \param[in]     fn   Function to call for each node (returns \c true to remove
+ *                     its argument or \c false to recurse down its argument's
+ *                     subtree)
+ *
+ * \note This function is recursive.
+ */
+void
+pcmk__xml_tree_foreach_remove(xmlNode *xml, bool (*fn)(xmlNode *))
+{
+    if (xml == NULL) {
+        return;
+    }
+
+    if (fn(xml)) {
+        if (xml == xmlDocGetRootElement(xml->doc)) {
+            pcmk__xml_free_doc(xml->doc);
+
+        } else {
+            pcmk__xml_free_node(xml);
+        }
+
+        return;
+    }
+
+    xml = pcmk__xml_first_child(xml);
+
+    while (xml != NULL) {
+        xmlNode *next = pcmk__xml_next(xml);
+
+        pcmk__xml_tree_foreach_remove(xml, fn);
+        xml = next;
+    }
 }
 
 void
@@ -534,6 +581,26 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
 
 /*!
  * \internal
+ * \brief Check whether an attribute is marked as deleted
+ *
+ * \param[in] attr       XML attribute
+ * \param[in] user_data  Ignored
+ *
+ * \return \c true if \c pcmk__xf_deleted is set for \p attr, or \c false
+ *         otherwise
+ *
+ * \note This is compatible with \c pcmk__xe_remove_matching_attrs().
+ */
+static bool
+marked_as_deleted(const xmlAttr *attr, void *user_data)
+{
+    const xml_node_private_t *nodepriv = attr->_private;
+
+    return pcmk__is_set(nodepriv->flags, pcmk__xf_deleted);
+}
+
+/*!
+ * \internal
  * \brief Remove all attributes marked as deleted from an XML node
  *
  * \param[in,out] xml        XML node whose deleted attributes to remove
@@ -547,7 +614,7 @@ static bool
 commit_attr_deletions(xmlNode *xml, void *user_data)
 {
     pcmk__xml_reset_node_flags(xml, NULL);
-    pcmk__xe_remove_matching_attrs(xml, true, pcmk__marked_as_deleted, NULL);
+    pcmk__xe_remove_matching_attrs(xml, true, marked_as_deleted, NULL);
     return true;
 }
 
@@ -1819,7 +1886,7 @@ pcmk__xml_mark_changes(xmlNode *old_xml, xmlNode *new_xml)
         mark_xml_tree_dirty_created(new_child);
 
         // Check whether creation was allowed (may free new_child)
-        pcmk__apply_creation_acl(new_child, true);
+        pcmk__check_creation_acls(new_child);
     }
 }
 
