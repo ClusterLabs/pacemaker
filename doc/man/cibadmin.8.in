@@ -1,0 +1,328 @@
+.TH CIBADMIN "8" "@BUILD_DATE@" "@PACKAGE@ @VERSION@" "Pacemaker Manual"
+.SH "NAME"
+cibadmin \- query and edit the cluster information base
+.
+.SH "SYNOPSIS"
+.SY cibadmin
+.B <command>
+.RI [ option\~ ...]
+.YS
+.
+.SH "DESCRIPTION"
+.B cibadmin
+is used to query, add, remove, update or replace any part of the cluster
+information base (CIB).  It can operate on the CIB currently in use in the
+cluster, or it can operate on a file that can later be loaded into the cluster.
+It is a highly flexible tool with a large number of command line options.
+.P
+This is a low-level tool for expert users.  Most users should use
+.B pcs
+instead.
+.
+.SH "OPTIONS"
+.SS "Commands"
+One of the following commands must be provided.  These options are mutually
+exclusive.
+.TP
+.BR \-5 ", " \-\-md5\-sum
+Calculate the on\-disk CIB digest.
+.TP
+.BR \-6 ", " \-\-md5\-sum\-versioned
+Calculate an on\-the\-wire versioned CIB digest.
+.TP
+.BR \-a ", " \-\-empty =\fR[\fISCHEMA\fR]
+Output an empty CIB. Accepts an optional \fISCHEMA\fR name argument to use as
+the validate\-with value. If no schema is given, the latest will be used.
+.TP
+.BR \-B ", " \-\-bump
+Increase the CIB's epoch value by 1.
+.TP
+.BR \-C ", " \-\-create
+Create an object in the CIB (will fail if object already exists).
+.TP
+.BR \-D ", " \-\-delete
+Delete the first object matching supplied criteria (for example,
+\fB<op id="rsc1_op1" name="monitor"/>)\fR.  The XML element name and all
+attributes must match in order for the element to be deleted.
+.TP
+.BR \-d ", " \-\-delete\-all
+When used with \fB\-\-xpath\fR, remove all matching objects in the configuration
+instead of just the first one.
+.TP
+.BR \-E ", " \-\-erase
+Erase the contents of the whole CIB.
+.TP
+.BR \-M ", " \-\-modify
+Find object somewhere in CIB's XML tree and update it (fails if object does not
+exist unless \fB\-c\fR is also specified).
+.TP
+.BR \-P ", " \-\-patch
+Supply an update in the form of an XML diff (see
+.MR crm_diff 8 ).
+.TP
+.BR \-Q ", " \-\-query
+Query the contents of the CIB.
+.TP
+.BR \-R ", " \-\-replace
+Recursively replace an object in the CIB.
+.TP
+.BR \-u ", " \-\-upgrade
+Upgrade the configuration to the latest syntax.
+.
+.SS "Data options"
+.TP
+.BR \-p ", " \-\-xml\-pipe
+Retrieve XML from stdin. Currently \fB\-\-xml\-file\fR and \fB\-\-xml\-text\fR
+override this. In a future release, the last one specified will be used.
+.TP
+.BR \-X ", " \-\-xml\-text =\fISTRING\fR
+Retrieve XML from the supplied string. Currently this takes precedence over
+\fB\-\-xml\-pipe\fR, but \fB\-\-xml\-file\fR overrides this. In a future
+release, the last one specified will be used.
+.TP
+.BR \-x ", " \-\-xml\-file =\fIFILE\fR
+Retrieve XML from the named file. Currently this takes precedence over
+\fB\-\-xml\-text\fR and \fB\-\-xml\-pipe\fR. In a future release, the last one
+specified will be used.
+.
+.SS "Additional options"
+.TP
+.BR \-A ", " \-\-xpath =\fISTRING\fR
+Use the XPath \fISTRING\fR instead of \fB\-\-scope\fR/\fB\-o\fR.  If both
+\fB\-\-scope\fR/\fB\-o\fR and \fB\-\-xpath\fR/\fB\-A\fR are specified, the
+last one to appear takes effect.
+.TP
+.BR \-c ", " \-\-allow\-create
+(Advanced) Allow target of \fB\-\-modify\fR/\fB\-M\fR to be created if it
+does not exist.
+.TP
+.BR \-f ", " \-\-force
+Force the action to be performed.
+.TP
+.BR \-n ", " \-\-no\-children
+(Advanced) When querying an object, do not include its children in the result.
+.TP
+.BR \-o ", " \-\-scope =\fISCOPE\fR
+Limit scope of operation to specific section of CIB.  \fISCOPE\fR may be one
+of: \fIacls\fR, \fIalerts\fR, \fIconfiguration\fR, \fIconstraints\fR,
+\fIcrm_config\fR, \fIfencing\-topology\fR, \fInodes\fR, \fIop_defaults\fR,
+\fIresources\fR, \fIrsc_defaults\fR, \fIstatus\fR, or \fItags\fR.  If both
+\fB\-\-scope\fR/\fB\-o\fR and \fB\-\-xpath\fR/\fB\-A\fR are specified, the
+last one to appear takes effect.
+.TP
+.BR \-S ", " \-\-show\-access =\fIVALUE\fR
+How to use syntax highlighting for ACLs (with \fB\-\-query\fR/\fB\-Q\fR and
+\fB\-\-user\fR/\fB\-U\fR).  Values are:
+.RS
+.IP \fIcolor\fR
+Use color to indicate readable, writeable, and denied sections of the CIB
+(default for interactive terminals).
+.IP \fItext\fR
+Annotate readable, writeable, and denied sections of the CIB with plain text
+markings (default for non\-interactive use).
+.IP \fInamespace\fR
+Annotate readable, writeable, and denied sections of the CIB with special
+XML tags.
+.IP \fIauto\fR
+Determine the value to use based on the environment.
+.RE
+.TP
+.BR \-t ", " \-\-timeout =\fISECONDS\fR
+Time to wait before declaring the operation failed.
+.TP
+.BR \-U ", " \-\-user =\fIUSERNAME\fR
+Run the command with permissions of the named user (valid only for the root and
+@CRM_DAEMON_USER@ accounts).
+.TP
+.B \-\-score
+.RS
+Treat new attribute values as atomic score updates where possible (with
+\fB\-\-modify\fR/\fB\-M\fR). This currently happens by default and cannot be
+disabled, but this default behavior is deprecated and will be removed in a
+future release. Set this flag if this behavior is desired. This option takes
+effect when updating XML attributes. For an attribute named \fIname\fR, if the
+new value is \fBname++\fR or \fBname+=X\fR for some score \fIX\fR, the new
+value is set as follows:
+.IP \(bu
+If attribute \fBname\fR is not already set to some value in the element being
+updated, the new value is set as a literal string.
+.IP \(bu
+If the new value is \fBname++\fR, then the attribute is set to its existing
+value (parsed as a score) plus 1.
+.IP \(bu
+If the new value is \fBname+=X\fR for some score \fIX\fR, then the attribute
+is set to its existing value plus \fIX\fR, where the existing value and
+\fIX\fR are parsed and added as scores.
+.P
+Scores are integer values capped at \fBINFINITY\fR and \fB\-INFINITY\fR.  See
+the \fIHost-Local Configuration\fR chapter of \fIPacemaker Explained\fR for more
+details on scores, including how they are parsed and added.
+.RE
+.
+.SS "Output options"
+.
+.TP
+.BI \-\-output\-as= FORMAT
+Specify output format as one of: text (default), xml.
+.TP
+.BI \-\-output\-to= DEST
+Specify file name for output (or "\-" for stdout).
+.
+.SS "Help options"
+.TP
+.BR \-h ", " \-\-help
+Show basic help options.
+.TP
+.B \-\-help\-additional
+Show additional options.
+.TP
+.B \-\-help\-all
+Show all help options.
+.TP
+.B \-\-help\-command
+Show program commands.
+.TP
+.B \-\-help\-data
+Show data options.
+.TP
+.B \-\-help\-output
+Show output-related help options.
+.
+.SS "Application options"
+.TP
+.BR \-$ ", " \-\-version
+Display software version and exit.
+.TP
+.BR \-V ", " \-\-verbose
+Increase debug output (may be specified multiple times).
+.
+.SH "EXIT STATUS"
+This is not an exhaustive list of exit statuses for \fBcibadmin\fR.  See
+.MR crm_error 8
+for more information on converting between error codes and their names.
+.TP
+.B CRM_EX_CONFIG
+The given XML is invalid, or results in an invalid CIB when applied.
+.TP
+.B CRM_EX_INSUFFICIENT_PRIV
+The given command is not allowed by the ACLs for the given user.
+.TP
+.B CRM_EX_UNSAFE
+The given command is unsafe and requires \fB\-\-force\fR to be used.
+.TP
+.B ENOTCONN, ECONNREFUSED
+\fBcibadmin\fR had problems connecting to or communicating with
+\fBpacemaker-based\fR.
+.
+.SH "ENVIRONMENT"
+.TP
+.BR CIB_shadow ", " CIB_shadow_dir
+If \fBCIB_shadow\fR is set, use its value as the suffix of a CIB file named
+\fBshadow.<suffix>\fR.  If this file does not already exist, create it as a
+blank CIB.  If \fBCIB_shadow_dir\fR is set, look for (or create the new CIB)
+file in that directory.  Otherwise, use a directory specific to the current
+user instead.
+.TP
+.BR CIB_file
+If set, use the given file as the CIB.
+.TP
+.BR CIB_encrypted ", " CIB_port ", " CIB_server ", " CIB_user ", " CIB_passwd
+If set, use these values to access the CIB remotely.  If a password is required
+but \fBCIB_passwd\fR is not given, the user will be prompted for it.
+.
+.SH "EXAMPLES"
+.EX
+# \fBcibadmin \-\-query
+.EE
+.RS
+Query the configuration.
+.RE
+.P
+.
+.EX
+# \fBcibadmin \-\-query \-\-scope crm_config
+.EE
+.RS
+Query just the cluster options configuration.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-query \-\-xpath "//nvpair[@name='target\-role']"
+.EE
+.RS
+Query all \fBtarget\-role\fR settings.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-delete\-all \-\-xpath "//nvpair[@name='is\-managed']"
+.EE
+.RS
+Remove all \fBis\-managed\fR settings.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-delete \-\-xml\-text '<primitive id="old"/>'
+.EE
+.RS
+Remove the resource named \fBold\fR.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-replace \-\-scope resources \-\-xml\-text '<resources/>'
+.EE
+.RS
+Remove all resources from the configuration.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-replace \-\-xml\-file $HOME/pacemaker.xml
+.EE
+.RS
+Replace complete configuration with contents of \fB$HOME/pacemaker.xml\fR.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-replace \-\-scope constraints \-\-xml\-file $HOME/constraints.xml
+.EE
+.RS
+Replace constraints section of configuration with contents of
+\fB$HOME/constraints.xml\fR.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-modify \-\-score \-\-xml\-text '<cib admin_epoch="admin_epoch++"/>'
+.EE
+.RS
+Increase configuration version to prevent old configurations from being loaded
+accidentally.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-query > $HOME/local.xml
+# \fB$EDITOR $HOME/local.xml
+# \fBcibadmin \-\-replace \-\-xml\-file $HOME/local.xml
+.EE
+.RS
+Edit the configuration with your favorite \fB$EDITOR\fR.
+.RE
+.P
+.EX
+# \fBcibadmin \-\-show\-access=color \-\-query \-\-user tony | less \-r
+.EE
+.RS
+Assuming terminal, render configuration in color (green for writable, blue for
+readable, red for denied) to visualize permissions for user tony.
+.RE
+.SH "REPORTING BUGS"
+Report bugs to https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker
+.
+.SH "COPYRIGHT"
+Copyright © 2004-2026 the Pacemaker project contributors.
+.P
+This program is licensed under the GNU General Public License version 2 or
+later (GPLv2+) WITHOUT ANY WARRANTY.
+.
+.SH "SEE ALSO"
+.BR crm_diff (8),
+.BR crm_shadow (8),
+.BR pcs (8)

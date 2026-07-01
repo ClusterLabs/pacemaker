@@ -610,6 +610,8 @@ api_schemas="$(schemas_for_make "xml/api")"
 CONFIG_STATUS_DEPENDENCIES="$cib_schemas $api_schemas"
 AC_SUBST(CONFIG_STATUS_DEPENDENCIES)
 
+AC_SUBST(BUILD_DATE, [$(date +"%Y-%m-%d")])
+
 
 dnl ==============================================
 dnl Process simple options
@@ -2028,6 +2030,10 @@ AC_CONFIG_FILES(Makefile                                            \
                 devel/Makefile                                      \
                 doc/Doxyfile                                        \
                 doc/Makefile                                        \
+                doc/man/Makefile                                    \
+                doc/man/attrd_updater.8                             \
+                doc/man/cibadmin.8                                  \
+                doc/man/crm_attribute.8                             \
                 doc/sphinx/Makefile                                 \
                 etc/Makefile                                        \
                 etc/init.d/pacemaker                                \

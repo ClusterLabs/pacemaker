@@ -660,40 +660,35 @@ static GOptionEntry command_entries[] = {
       "Increase the CIB's epoch value by 1", NULL },
 
     { "create", 'C', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Create an object in the CIB (will fail if object already exists)",
+      "Create an object in the CIB",
       NULL },
 
     { "modify", 'M', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Find object somewhere in CIB's XML tree and update it (fails if object "
-      "does not exist unless -c is also specified)",
+      "Find object somewhere in CIB's XML tree and update it",
       NULL },
 
     { "patch", 'P', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Supply an update in the form of an XML diff (see crm_diff(8))", NULL },
+      "Supply an update in the form of an XML diff", NULL },
 
     { "replace", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Recursively replace an object in the CIB", NULL },
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Delete first object matching supplied criteria (for example, "
-      "<" PCMK_XE_OP " " PCMK_XA_ID "=\"rsc1_op1\" "
-          PCMK_XA_NAME "=\"monitor\"/>).\n"
-      INDENT "The XML element name and all attributes must match in order for "
-      "the element to be deleted.",
+      "Delete first object matching supplied criteria",
       NULL },
 
     { "delete-all", 'd', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK,
       command_cb,
-      "When used with --xpath, remove all matching objects in the "
-      "configuration instead of just the first one",
+      "When used with --xpath, remove all matching objects\n"
+      INDENT "in the configuration instead of just the\n"
+      INDENT "first one",
       NULL },
 
     { "empty", 'a', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       command_cb,
-      "Output an empty CIB. Accepts an optional schema name argument to use as "
-      "the " PCMK_XA_VALIDATE_WITH " value.\n"
-      INDENT "If no schema is given, the latest will be used.",
-      "[schema]" },
+      "Output an empty CIB conforming to the optional schema\n"
+      INDENT "name",
+      "[SCHEMA]" },
 
     { "md5-sum", '5', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
       "Calculate the on-disk CIB digest", NULL },
@@ -707,24 +702,13 @@ static GOptionEntry command_entries[] = {
 static GOptionEntry data_entries[] = {
     // @COMPAT These arguments should be last-one-wins
     { "xml-file", 'x', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME,
-      &options.input_file,
-      "Retrieve XML from the named file. Currently this takes precedence\n"
-      INDENT "over --xml-text and --xml-pipe. In a future release, the last\n"
-      INDENT "one specified will be used.",
-      "FILE" },
+      &options.input_file, "Retrieve XML from the named file", "FILE" },
 
     { "xml-text", 'X', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING,
-      &options.input_string,
-      "Retrieve XML from the supplied string. Currently this takes precedence\n"
-      INDENT "over --xml-pipe, but --xml-file overrides this. In a future\n"
-      INDENT "release, the last one specified will be used.",
-      "STRING" },
+      &options.input_string, "Retrieve XML from the supplied string", "STRING" },
 
     { "xml-pipe", 'p', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.input_stdin,
-      "Retrieve XML from stdin. Currently --xml-file and --xml-text override\n"
-      INDENT "this. In a future release, the last one specified will be used.",
-      NULL },
+      &options.input_stdin, "Retrieve XML from stdin", NULL },
 
     { NULL }
 };
@@ -735,76 +719,44 @@ static GOptionEntry addl_entries[] = {
 
     { "timeout", 't', G_OPTION_FLAG_NONE, G_OPTION_ARG_INT,
       &options.timeout_sec,
-      "Time (in seconds) to wait before declaring the operation failed",
-      "value" },
+      "Time to wait before declaring the operation failed",
+      "SECONDS" },
 
     { "user", 'U', G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING, &options.cib_user,
-      "Run the command with permissions of the named user (valid only for the "
-      "root and " CRM_DAEMON_USER " accounts)", "value" },
+      "Run the command with permissions of the named user", "USER" },
 
     { "scope", 'o', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
-      "Limit scope of operation to specific section of CIB\n"
-      INDENT "Valid values: " PCMK_XE_CONFIGURATION ", " PCMK_XE_NODES
-      ", " PCMK_XE_RESOURCES ", " PCMK_XE_CONSTRAINTS
-      ", " PCMK_XE_CRM_CONFIG ", " PCMK_XE_RSC_DEFAULTS ",\n"
-      INDENT "              " PCMK_XE_OP_DEFAULTS ", " PCMK_XE_ACLS
-      ", " PCMK_XE_FENCING_TOPOLOGY ", " PCMK_XE_TAGS ", " PCMK_XE_ALERTS
-      ", " PCMK_XE_STATUS "\n"
-      INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "
-      "appear takes effect",
-      "value" },
+      "Limit scope of operation to specific section of CIB",
+      "SCOPE" },
 
     { "xpath", 'A', G_OPTION_FLAG_NONE, G_OPTION_ARG_CALLBACK, section_cb,
-      "A valid XPath to use instead of --scope/-o\n"
-      INDENT "If both --scope/-o and --xpath/-a are specified, the last one to "
-      "appear takes effect",
-      "value" },
+      "A valid XPath to use instead of --scope/-o",
+      "STRING" },
 
     { "show-access", 'S', G_OPTION_FLAG_OPTIONAL_ARG, G_OPTION_ARG_CALLBACK,
       show_access_cb,
-      "Whether to use syntax highlighting for ACLs (with -Q/--query and "
-      "-U/--user)\n"
-      INDENT "Allowed values: 'color' (default for terminal), 'text' (plain text, "
-      "default for non-terminal),\n"
-      INDENT "                'namespace', or 'auto' (use default value)\n"
-      INDENT "Default value: 'auto'",
-      "[value]" },
+      "Whether to use syntax highlighting for ACLs\n"
+      INDENT "Values: 'color' (default), 'text', 'namespace',\n"
+      INDENT "        'auto'\n"
+      INDENT "(with -Q/--query and -U/--user)",
+      "[VALUE]" },
 
     { "score", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &options.score_update,
-      "Treat new attribute values as atomic score updates where possible "
-      "(with --modify/-M).\n"
-
-      INDENT "This currently happens by default and cannot be disabled, but\n"
-      INDENT "this default behavior is deprecated and will be removed in a\n"
-      INDENT "future release. Set this flag if this behavior is desired.\n"
-
-      INDENT "This option takes effect when updating XML attributes. For an\n"
-      INDENT "attribute named \"name\", if the new value is \"name++\" or\n"
-      INDENT "\"name+=X\" for some score X, the new value is set as follows:\n"
-      INDENT "If attribute \"name\" is not already set to some value in\n"
-      INDENT "the element being updated, the new value is set as a literal\n"
-      INDENT "string.\n"
-      INDENT "If the new value is \"name++\", then the attribute is set to \n"
-      INDENT "its existing value (parsed as a score) plus 1.\n"
-      INDENT "If the new value is \"name+=X\" for some score X, then the\n"
-      INDENT "attribute is set to its existing value plus X, where the\n"
-      INDENT "existing value and X are parsed and added as scores.\n"
-
-      INDENT "Scores are integer values capped at INFINITY and -INFINITY.\n"
-      INDENT "Refer to Pacemaker Explained for more details on scores,\n"
-      INDENT "including how they are parsed and added.",
+      "Treat new attribute values as atomic score updates\n"
+      INDENT "where possible\n"
+      INDENT "(with --modify/-M)",
       NULL },
 
     { "allow-create", 'c', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.allow_create,
-      "(Advanced) Allow target of --modify/-M to be created if it does not "
-      "exist",
+      "(Advanced) Allow target of --modify/-M to be created\n"
+      INDENT "if it does not exist",
       NULL },
 
     { "no-children", 'n', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
       &options.no_children,
-      "(Advanced) When querying an object, do not include its children in the "
-      "result",
+      "(Advanced) When querying an object, do not include\n"
+      INDENT "its children in the result",
       NULL },
 
     // @COMPAT Deprecated since 3.0.0
@@ -947,56 +899,10 @@ static const pcmk__message_entry_t fmt_functions[] = {
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
-    const char *desc = NULL;
     GOptionContext *context = NULL;
-
-    desc = "Examples:\n\n"
-           "Query the configuration:\n\n"
-           "\t# cibadmin --query\n\n"
-           "or just:\n\n"
-           "\t# cibadmin\n\n"
-           "Query just the cluster options configuration:\n\n"
-           "\t# cibadmin --query --scope " PCMK_XE_CRM_CONFIG "\n\n"
-           "Query all '" PCMK_META_TARGET_ROLE "' settings:\n\n"
-           "\t# cibadmin --query --xpath "
-               "\"//" PCMK_XE_NVPAIR
-               "[@" PCMK_XA_NAME "='" PCMK_META_TARGET_ROLE"']\"\n\n"
-           "Remove all '" PCMK_META_IS_MANAGED "' settings:\n\n"
-           "\t# cibadmin --delete-all --xpath "
-               "\"//" PCMK_XE_NVPAIR
-               "[@" PCMK_XA_NAME "='" PCMK_META_IS_MANAGED "']\"\n\n"
-           "Remove the resource named 'old':\n\n"
-           "\t# cibadmin --delete --xml-text "
-               "'<" PCMK_XE_PRIMITIVE " " PCMK_XA_ID "=\"old\"/>'\n\n"
-           "Remove all resources from the configuration:\n\n"
-           "\t# cibadmin --replace --scope " PCMK_XE_RESOURCES
-               " --xml-text '<" PCMK_XE_RESOURCES "/>'\n\n"
-           "Replace complete configuration with contents of "
-               "$HOME/pacemaker.xml:\n\n"
-           "\t# cibadmin --replace --xml-file $HOME/pacemaker.xml\n\n"
-           "Replace " PCMK_XE_CONSTRAINTS " section of configuration with "
-               "contents of $HOME/constraints.xml:\n\n"
-           "\t# cibadmin --replace --scope " PCMK_XE_CONSTRAINTS
-               " --xml-file $HOME/constraints.xml\n\n"
-           "Increase configuration version to prevent old configurations from "
-               "being loaded accidentally:\n\n"
-           "\t# cibadmin --modify --score --xml-text "
-               "'<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH
-                   "=\"" PCMK_XA_ADMIN_EPOCH "++\"/>'\n\n"
-           "Edit the configuration with your favorite $EDITOR:\n\n"
-           "\t# cibadmin --query > $HOME/local.xml\n\n"
-           "\t# $EDITOR $HOME/local.xml\n\n"
-           "\t# cibadmin --replace --xml-file $HOME/local.xml\n\n"
-           "Assuming terminal, render configuration in color (green for "
-               "writable, blue for readable, red for\n"
-               "denied) to visualize permissions for user tony:\n\n"
-           "\t# cibadmin --show-access=color --query --user tony | less -r\n\n"
-           "SEE ALSO:\n"
-           " crm(8), pcs(8), crm_shadow(8), crm_diff(8)\n";
 
     context = pcmk__build_arg_context(args, "text (default), xml", group,
                                       "[<command>]");
-    g_option_context_set_description(context, desc);
 
     pcmk__add_arg_group(context, "commands", "Commands:", "Show command help",
                         command_entries);
