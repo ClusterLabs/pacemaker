@@ -30,7 +30,7 @@
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
 
-gboolean stand_alone = FALSE;
+static gboolean stand_alone = false;
 gchar **log_files = NULL;
 
 static GOptionEntry entries[] = {
@@ -55,6 +55,19 @@ static pcmk__supported_format_t formats[] = {
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
+
+/*!
+ * \internal
+ * \brief Check whether local attribute manager is running in stand-alone mode
+ *
+ * \return \c true if local attribute manager is in stand-alone mode, or
+ *         \c false otherwise
+ */
+bool
+attrd_stand_alone(void)
+{
+    return stand_alone;
+}
 
 static bool
 ipc_already_running(void)
@@ -131,7 +144,7 @@ main(int argc, char **argv)
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     pcmk__notice("Starting Pacemaker node attribute manager%s",
-                 (stand_alone ? " in standalone mode" : ""));
+                 (attrd_stand_alone() ? " in standalone mode" : ""));
 
     if (ipc_already_running()) {
         attrd_exit_status = CRM_EX_OK;
@@ -150,7 +163,7 @@ main(int argc, char **argv)
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (!stand_alone) {
+    if (!attrd_stand_alone()) {
         if (attrd_cib_connect(30) != pcmk_ok) {
             attrd_exit_status = CRM_EX_FATAL;
             g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
@@ -172,7 +185,7 @@ main(int argc, char **argv)
     // Initialization that requires the cluster to be connected
     attrd_election_init();
 
-    if (!stand_alone) {
+    if (!attrd_stand_alone()) {
         attrd_cib_init();
     }
 
@@ -195,7 +208,7 @@ main(int argc, char **argv)
         attrd_ipc_cleanup();
         attrd_lrmd_disconnect();
 
-        if (!stand_alone) {
+        if (!attrd_stand_alone()) {
             attrd_cib_disconnect();
         }
 
