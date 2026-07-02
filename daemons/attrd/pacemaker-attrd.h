@@ -61,8 +61,9 @@ void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
 void attrd_free_waitlist(void);
-bool attrd_shutting_down(void);
 void attrd_shutdown(int nsig);
+bool attrd_shutting_down(void);
+bool attrd_stand_alone(void);
 void attrd_ipc_init(void);
 void attrd_ipc_cleanup(void);
 
@@ -258,8 +259,6 @@ void attrd_handle_confirmation(int callid, const char *host);
 void attrd_remove_client_from_waitlist(pcmk__client_t *client);
 const char *attrd_request_sync_point(xmlNode *xml);
 bool attrd_request_has_sync_point(xmlNode *xml);
-
-extern gboolean stand_alone;
 
 // Node utilities (from attrd_nodes.c)
 const char *attrd_get_node_xml_id(const char *node_name);

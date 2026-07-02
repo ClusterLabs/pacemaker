@@ -518,7 +518,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     // Private attributes (or any in standalone mode) are not written to the CIB
-    if (stand_alone || pcmk__is_set(a->flags, attrd_attr_is_private)) {
+    if (attrd_stand_alone() || pcmk__is_set(a->flags, attrd_attr_is_private)) {
         should_write = false;
     }
 
