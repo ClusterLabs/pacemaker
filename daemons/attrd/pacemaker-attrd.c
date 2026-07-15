@@ -31,7 +31,10 @@
 #define SUMMARY "daemon for managing Pacemaker node attributes"
 
 static gboolean stand_alone = false;
-gchar **log_files = NULL;
+
+static gchar **log_files = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
@@ -102,17 +105,28 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+attrd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&log_files, g_strfreev);
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
 
     GError *error = NULL;
-
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+
+    atexit(attrd_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, &output_group);
 
     attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
@@ -212,10 +226,6 @@ main(int argc, char **argv)
     attrd_cleanup_xml_ids();
 
     g_clear_pointer(&attributes, g_hash_table_destroy);
-
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
-    g_strfreev(log_files);
 
     pcmk__output_and_clear_error(&error, out);
 
