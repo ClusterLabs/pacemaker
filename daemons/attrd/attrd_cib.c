@@ -154,7 +154,10 @@ cleanup:
 void
 attrd_cib_disconnect(void)
 {
-    CRM_CHECK(the_cib != NULL, return);
+    if (the_cib == NULL) {
+        return;
+    }
+
     the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);

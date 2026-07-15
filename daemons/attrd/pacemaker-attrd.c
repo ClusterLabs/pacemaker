@@ -108,7 +108,6 @@ main(int argc, char **argv)
     int rc = pcmk_rc_ok;
 
     GError *error = NULL;
-    bool initialized = false;
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
@@ -155,8 +154,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    initialized = true;
-
     attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
     /* Connect to the CIB before connecting to the cluster or listening for IPC.
@@ -202,28 +199,22 @@ main(int argc, char **argv)
     attrd_run_mainloop();
 
   done:
-    if (initialized) {
-        pcmk__info("Shutting down attribute manager");
+    pcmk__info("Shutting down attribute manager");
 
-        attrd_ipc_cleanup();
-        attrd_lrmd_disconnect();
+    attrd_ipc_cleanup();
+    attrd_lrmd_disconnect();
+    attrd_unregister_handlers();
+    attrd_cib_disconnect();
+    attrd_cluster_disconnect();
 
-        if (!attrd_stand_alone()) {
-            attrd_cib_disconnect();
-        }
-
-        attrd_free_removed_peers();
-        attrd_free_waitlist();
-        attrd_cluster_disconnect();
-        attrd_unregister_handlers();
-        g_hash_table_destroy(attributes);
-    }
-
+    attrd_free_removed_peers();
+    attrd_free_waitlist();
     attrd_cleanup_xml_ids();
+
+    g_clear_pointer(&attributes, g_hash_table_destroy);
 
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
-
     g_strfreev(log_files);
 
     pcmk__output_and_clear_error(&error, out);
