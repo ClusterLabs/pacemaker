@@ -45,6 +45,9 @@ static stonith_t *fencer_api = NULL;
 time_t start_time;
 crm_exit_t exit_code = CRM_EX_OK;
 
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
+
 static struct {
     gchar **log_files;
 #ifdef PCMK__COMPILE_REMOTE
@@ -316,6 +319,17 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+static void
+execd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&options.log_files, g_strfreev);
+#ifdef PCMK__COMPILE_REMOTE
+    g_clear_pointer(&options.port, g_free);
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
@@ -329,8 +343,8 @@ main(int argc, char **argv)
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = NULL;
-    gchar **processed_args = NULL;
-    GOptionContext *context = NULL;
+
+    atexit(execd_cleanup_cmdline);
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
@@ -447,14 +461,6 @@ main(int argc, char **argv)
     exit_executor();
 
 done:
-    g_strfreev(options.log_files);
-#ifdef PCMK__COMPILE_REMOTE
-    g_free(options.port);
-#endif  // PCMK__COMPILE_REMOTE
-
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
-
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
