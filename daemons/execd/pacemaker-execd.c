@@ -193,10 +193,7 @@ exit_executor(void)
     ipc_proxy_cleanup();
 #endif
 
-    if (mainloop) {
-        lrmd_drain_alerts(mainloop);
-    }
-
+    lrmd_drain_alerts(mainloop);
     execd_unregister_handlers();
     g_hash_table_destroy(rsc_list);
 
@@ -216,40 +213,40 @@ lrmd_shutdown(int nsig)
 #ifdef PCMK__COMPILE_REMOTE
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
 
+    if (ipc_proxy == NULL) {
+        exit_executor();
+    }
+
     /* If there are active proxied IPC providers, then we may be running
      * resources, so notify the cluster that we wish to shut down.
      */
-    if (ipc_proxy) {
-        if (shutting_down) {
-            pcmk__notice("Waiting for cluster to stop resources before "
-                         "exiting");
-            return;
-        }
-
-        pcmk__info("Sending shutdown request to cluster");
-        if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
-            pcmk__crit("Shutdown request failed, exiting immediately");
-
-        } else {
-            /* We requested a shutdown. Now, we need to wait for an
-             * acknowledgement from the proxy host, then wait for all proxy
-             * hosts to disconnect (which ensures that all resources have been
-             * stopped).
-             */
-            shutting_down = TRUE;
-
-            /* Stop accepting new proxy connections */
-            execd_stop_tls_server();
-
-            /* Currently, we let the OS kill us if the clients don't disconnect
-             * in a reasonable time. We could instead set a long timer here
-             * (shorter than what the OS is likely to use) and exit immediately
-             * if it pops.
-             */
-            return;
-        }
+    if (shutting_down) {
+        pcmk__notice("Waiting for cluster to stop resources before exiting");
+        return;
     }
+
+    pcmk__info("Sending shutdown request to cluster");
+    if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
+        pcmk__crit("Shutdown request failed, exiting immediately");
+        exit_executor();
+    }
+
+    /* We requested a shutdown. Now, we need to wait for an acknowledgement
+     * from the proxy host, then wait for all proxy hosts to disconnect (which
+     * ensures that all resources have been stopped).
+     */
+    shutting_down = TRUE;
+
+    /* Stop accepting new proxy connections */
+    execd_stop_tls_server();
+
+    /* Currently, we let the OS kill us if the clients don't disconnect in a
+     * reasonable time. We could instead set a long timer here (shorter than
+     * what the OS is likely to use) and exit immediately if it pops.
+     */
+    return;
 #endif
+
     exit_executor();
 }
 
