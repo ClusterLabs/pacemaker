@@ -15,6 +15,7 @@
 #define PCMK__CRM_COMMON_DAEMON_INTERNAL__H
 
 #include <stdbool.h>            // bool
+#include <time.h>               // time_t
 
 #include <glib.h>               // GMainLoop
 
@@ -79,6 +80,9 @@ struct pcmk__daemon_s {
     // NOTE: This is set by glib command line processing, hence gboolean
     //! Is the daemon running in stand alone mode?
     gboolean stand_alone;
+
+    //! When did the daemon start running?
+    time_t start_time;
 
     //! What is the exit code of the daemon?
     crm_exit_t ec;

@@ -12,7 +12,6 @@
 
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // uint32_t
-#include <time.h>                   // time_t
 
 #include <glib.h>                   // GList, GHashTable, GMainLoop
 #include <libxml/tree.h>            // xmlNode
@@ -23,7 +22,6 @@
 
 extern GHashTable *rsc_list;
 extern pcmk__daemon_t execd;
-extern time_t start_time;
 
 typedef struct {
     char *rsc_id;

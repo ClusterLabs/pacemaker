@@ -53,7 +53,6 @@ pcmk__daemon_t execd = {
 };
 
 static stonith_t *fencer_api = NULL;
-time_t start_time;
 
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
@@ -444,8 +443,6 @@ main(int argc, char **argv)
         pcmk__set_env_option(PCMK__ENV_REMOTE_PORT, options.port, false);
     }
 #endif  // PCMK__COMPILE_REMOTE
-
-    start_time = time(NULL);
 
     pcmk__notice("Starting Pacemaker " EXECD_TYPE " executor");
 

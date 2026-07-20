@@ -1580,7 +1580,7 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     pcmk__xe_set(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
     pcmk__xe_set(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     pcmk__xe_set(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
-    pcmk__xe_set_time(*reply, PCMK__XA_UPTIME, now - start_time);
+    pcmk__xe_set_time(*reply, PCMK__XA_UPTIME, now - execd.start_time);
 
     if (start_state) {
         pcmk__xe_set(*reply, PCMK__XA_NODE_START_STATE, start_state);
