@@ -420,8 +420,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__info("Cluster connection active");
-
     fenced_set_local_node(fenced_cluster->priv->node_name);
 
     if (!fenced.stand_alone) {

@@ -198,7 +198,10 @@ fenced_cluster_connect(void)
     pcmk__cluster_set_status_callback(&fenced_peer_change_cb);
 
     rc = pcmk_cluster_connect(fenced_cluster);
-    if (rc != pcmk_rc_ok) {
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__info("Cluster connection active");
+    } else {
         pcmk__err("Cluster connection failed");
     }
 

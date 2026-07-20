@@ -115,7 +115,10 @@ based_cluster_connect(void)
 #endif // SUPPORT_COROSYNC
 
     rc = pcmk_cluster_connect(cluster);
-    if (rc != pcmk_rc_ok) {
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__info("Cluster connection active");
+    } else {
         pcmk__err("Cluster connection failed");
     }
 

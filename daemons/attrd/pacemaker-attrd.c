@@ -193,8 +193,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__info("Cluster connection active");
-
     // Initialization that requires the cluster to be connected
     attrd_election_init();
 

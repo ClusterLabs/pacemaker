@@ -510,7 +510,10 @@ attrd_cluster_connect(void)
     pcmk__cluster_set_status_callback(&attrd_peer_change_cb);
 
     rc = pcmk_cluster_connect(attrd_cluster);
-    if (rc != pcmk_rc_ok) {
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__info("Cluster connection active");
+    } else {
         pcmk__err("Cluster connection failed");
     }
 
