@@ -47,6 +47,8 @@ static GMainLoop *mainloop = NULL;
 gboolean stonith_shutdown_flag = FALSE;
 
 static pcmk__output_t *out = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -348,6 +350,14 @@ ipc_already_running(void)
     return true;
 }
 
+static void
+fenced_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&options.log_files, g_strfreev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -356,9 +366,13 @@ main(int argc, char **argv)
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "l");
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+
+    atexit(fenced_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, "l");
+    context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
 
@@ -448,11 +462,6 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
-
-    g_strfreev(options.log_files);
-
     stonith_cleanup();
     fenced_cluster_disconnect();
     fenced_unregister_handlers();
