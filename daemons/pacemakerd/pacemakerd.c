@@ -47,6 +47,8 @@ struct {
 } options;
 
 static pcmk__output_t *out = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -339,6 +341,13 @@ done:
     return rc;
 }
 
+static void
+pacemakerd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -348,9 +357,13 @@ main(int argc, char **argv)
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "p");
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t * args = NULL;
+
+    atexit(pacemakerd_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, "p");
+    context = build_arg_context(args, &output_group);
 
     subdaemon_check_progress = time(NULL);
 
@@ -486,8 +499,6 @@ main(int argc, char **argv)
 #endif
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
 
     pcmk__output_and_clear_error(&error, out);
 
