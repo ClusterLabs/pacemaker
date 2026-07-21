@@ -155,7 +155,7 @@ pacemakerd_chown(const char *path, uid_t uid, gid_t gid)
     }
 }
 
-static void
+static int
 create_pcmk_dirs(void)
 {
     uid_t pcmk_uid = 0;
@@ -174,7 +174,7 @@ create_pcmk_dirs(void)
     if (pcmk__daemon_user(&pcmk_uid, &pcmk_gid) != pcmk_rc_ok) {
         pcmk__err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
                   "Pacemaker startup");
-        crm_exit(CRM_EX_NOUSER);
+        return EINVAL;
     }
 
     // Used by some resource agents
@@ -195,6 +195,8 @@ create_pcmk_dirs(void)
             pacemakerd_chown(dirs[i], pcmk_uid, pcmk_gid);
         }
     }
+
+    return pcmk_rc_ok;
 }
 
 static void
@@ -444,7 +446,10 @@ main(int argc, char **argv)
     mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
-    create_pcmk_dirs();
+    if (create_pcmk_dirs() != pcmk_rc_ok) {
+        exit_code = CRM_EX_NOUSER;
+        goto done;
+    }
     pacemakerd_ipc_init();
 
 #if SUPPORT_COROSYNC
