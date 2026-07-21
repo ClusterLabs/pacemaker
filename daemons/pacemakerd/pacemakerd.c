@@ -427,7 +427,8 @@ main(int argc, char **argv)
 
 #if SUPPORT_COROSYNC
     if (!pcmkd_read_config()) {
-        crm_exit(CRM_EX_UNAVAILABLE);
+        exit_code = CRM_EX_UNAVAILABLE;
+        goto done;
     }
 #endif
 
@@ -504,7 +505,6 @@ main(int argc, char **argv)
 #endif
 
 done:
-
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
