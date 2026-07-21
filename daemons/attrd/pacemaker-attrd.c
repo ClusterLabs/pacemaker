@@ -209,7 +209,10 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    attrd_ipc_init();
+    if (!attrd_ipc_init()) {
+        attrd.ec = CRM_EX_FATAL;
+        goto done;
+    }
 
     rc = pcmk__daemon_init(&attrd);
     if (rc != pcmk_rc_ok) {

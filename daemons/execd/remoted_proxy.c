@@ -514,23 +514,29 @@ ipc_proxy_remove_provider(pcmk__client_t *ipc_proxy)
     g_list_free(remove_these);
 }
 
-void
+bool
 ipc_proxy_init(void)
 {
     ipc_clients = pcmk__strkey_table(NULL, NULL);
 
     pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_proxy_callbacks_ro,
                           &cib_proxy_callbacks_rw);
+
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
+    if (attrd_ipcs == NULL) {
+        exit_code = CRM_EX_FATAL;
+        return false;
+    }
 
     pcmk__serve_controld_ipc(&controld_ipcs, &crmd_proxy_callbacks);
     if (controld_ipcs == NULL) {
-        // Error already logged
-        crm_exit(CRM_EX_FATAL);
+        exit_code = CRM_EX_FATAL;
+        return false;
     }
 
     pcmk__serve_fenced_ipc(&fencer_ipcs, &fencer_proxy_callbacks);
     pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
+    return true;
 }
 
 void

@@ -43,6 +43,7 @@
 static GMainLoop *mainloop = NULL;
 static stonith_t *fencer_api = NULL;
 time_t start_time;
+crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
     gchar **log_files;
@@ -319,7 +320,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_exit_t exit_code = CRM_EX_OK;
 
     const char *option = NULL;
 
@@ -430,7 +430,10 @@ main(int argc, char **argv)
         exit_code = CRM_EX_FATAL;
         goto done;
     }
-    ipc_proxy_init();
+
+    if (!ipc_proxy_init()) {
+        goto done;
+    }
 #endif
 
     mainloop_add_signal(SIGTERM, lrmd_shutdown);

@@ -649,8 +649,9 @@ attrd_ipc_cleanup(void)
  * \internal
  * \brief Set up attrd IPC communication
  */
-void
+bool
 attrd_ipc_init(void)
 {
     pcmk__serve_attrd_ipc(&ipcs, &ipc_callbacks);
+    return ipcs != NULL;
 }

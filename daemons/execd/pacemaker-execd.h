@@ -23,6 +23,7 @@
 
 extern GHashTable *rsc_list;
 extern time_t start_time;
+extern crm_exit_t exit_code;
 
 typedef struct {
     char *rsc_id;
@@ -86,7 +87,7 @@ stonith_t *execd_get_fencer_connection(void);
 void execd_fencer_connection_failed(void);
 
 #ifdef PCMK__COMPILE_REMOTE
-void ipc_proxy_init(void);
+bool ipc_proxy_init(void);
 void ipc_proxy_cleanup(void);
 void ipc_proxy_add_provider(pcmk__client_t *client);
 void ipc_proxy_remove_provider(pcmk__client_t *client);
