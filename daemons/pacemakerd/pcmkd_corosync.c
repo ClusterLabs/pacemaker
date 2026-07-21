@@ -98,13 +98,14 @@ cluster_reconnect_cb(void *data)
     if (cluster_connect_cfg()) {
         g_clear_pointer(&reconnect_timer, mainloop_timer_del);
         pcmk__notice("Cluster reconnect succeeded");
-        pacemakerd_read_config();
+        pcmkd_read_config();
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
-    } else {
-        pcmk__info("Cluster reconnect failed (connection will be reattempted "
-                   "once per second)");
     }
+
+    pcmk__info("Cluster reconnect failed (connection will be reattempted "
+               "once per second)");
+
     /*
      * In theory this will continue forever. In practice the CIB connection from
      * attrd will timeout and shut down Pacemaker when it gets bored.
@@ -275,8 +276,8 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
     return rc;
 }
 
-gboolean
-pacemakerd_read_config(void)
+bool
+pcmkd_read_config(void)
 {
     cs_error_t rc = CS_OK;
     int retries = 0;
@@ -293,23 +294,21 @@ pacemakerd_read_config(void)
     // There can be only one possibility
     do {
         rc = pcmk__init_cmap(&local_handle);
-        if (rc != CS_OK) {
-            retries++;
-            pcmk__info("Could not connect to Corosync CMAP: %s "
-                       "(retrying in %ds) " QB_XS " rc=%d",
-                       pcmk_rc_str(pcmk__corosync2rc(rc)), retries, rc);
-            sleep(retries);
-
-        } else {
+        if (rc == CS_OK) {
             break;
         }
 
+        retries++;
+        pcmk__info("Could not connect to Corosync CMAP: %s "
+                   "(retrying in %ds) " QB_XS " rc=%d",
+                   pcmk_rc_str(pcmk__corosync2rc(rc)), retries, rc);
+        sleep(retries);
     } while (retries < 5);
 
     if (rc != CS_OK) {
         pcmk__crit("Could not connect to Corosync CMAP: %s "
                    QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
-        return FALSE;
+        return false;
     }
 
     rc = cmap_fd_get(local_handle, &fd);
@@ -317,23 +316,26 @@ pacemakerd_read_config(void)
         pcmk__crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
                    pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
         cmap_finalize(local_handle);
-        return FALSE;
+        return false;
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                            &found_uid, &found_gid))) {
+    rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
+                                      &found_uid, &found_gid);
+    if (rv == 0) {
         pcmk__crit("Rejecting Corosync CMAP provider because process %lld "
                    "is running as uid %lld gid %lld, not root",
                    (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                    (long long) found_uid, (long long) found_gid);
         cmap_finalize(local_handle);
-        return FALSE;
-    } else if (rv < 0) {
+        return false;
+    }
+
+    if (rv < 0) {
         pcmk__crit("Could not authenticate Corosync CMAP provider: %s "
                    QB_XS " rc=%d", strerror(-rv), -rv);
         cmap_finalize(local_handle);
-        return FALSE;
+        return false;
     }
 
     cluster_layer = pcmk_get_cluster_layer();
@@ -343,7 +345,7 @@ pacemakerd_read_config(void)
         pcmk__crit("Expected Corosync cluster layer but detected %s "
                    QB_XS " cluster_layer=%d",
                    cluster_layer_s, cluster_layer);
-        return FALSE;
+        return false;
     }
 
     pcmk__info("Reading configuration for %s cluster layer", cluster_layer_s);
@@ -369,8 +371,9 @@ pacemakerd_read_config(void)
         free(debug_enabled);
     }
 
-    if(local_handle){
+    if (local_handle) {
         gid_t gid = 0;
+
         if (pcmk__daemon_user(NULL, &gid) != pcmk_rc_ok) {
             pcmk__warn("Could not authorize group with Corosync "
                        QB_XS " No group found for user " CRM_DAEMON_USER);
@@ -389,7 +392,7 @@ pacemakerd_read_config(void)
             }
         }
     }
-    cmap_finalize(local_handle);
 
-    return TRUE;
+    cmap_finalize(local_handle);
+    return true;
 }
