@@ -223,9 +223,11 @@ main(int argc, char **argv)
 
     attrd_free_removed_peers();
     attrd_free_waitlist();
+    attrd_free_confirmations();
     attrd_cleanup_xml_ids();
 
     g_clear_pointer(&attributes, g_hash_table_destroy);
+    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
 
     pcmk__output_and_clear_error(&error, out);
 
