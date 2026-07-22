@@ -257,6 +257,13 @@ main(int argc, char **argv)
     pcmk__daemon_run(&attrd);
 
   done:
+    /* If we got here through any of the "goto done" calls instead of by the
+     * main loop quitting on SIGTERM, shutting_down will still be false.  Set
+     * it here so attrd_cleanup -> attrd_cib_disconnect -> attrd_cib_destroy_cb
+     * doesn't call pcmk__daemon_quit with no main loop.
+     */
+    attrd.shutting_down = true;
+
     attrd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);

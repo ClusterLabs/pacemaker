@@ -33,7 +33,7 @@ attrd_cib_destroy_cb(void *user_data)
 
     cib->cmds->signoff(cib);
 
-    if (attrd_shutting_down()) {
+    if (attrd.shutting_down) {
         pcmk__info("Disconnected from the CIB manager");
         return;
     }
@@ -55,7 +55,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     }
 
     if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)) {
-        if (attrd_shutting_down()) {
+        if (attrd.shutting_down) {
             pcmk__debug("Ignoring alerts change in CIB during shutdown");
         } else {
             mainloop_set_trigger(attrd_config_read);
@@ -80,7 +80,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     if (status_changed
         || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
 
-        if (attrd_shutting_down()) {
+        if (attrd.shutting_down) {
             pcmk__debug("Ignoring node change in CIB during shutdown");
             return;
         }

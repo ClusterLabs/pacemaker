@@ -24,37 +24,22 @@
 
 cib_t *the_cib = NULL;
 
-static bool shutting_down = false;
-
 /* A hash table storing information on the protocol version of each peer attrd.
  * The key is the peer's uname, and the value is the protocol version number.
  */
 GHashTable *peer_protocol_vers = NULL;
 
-/*!
- * \internal
- * \brief Check whether local attribute manager is shutting down
- *
- * \return \c true if local attribute manager has begun shutdown sequence,
- *         otherwise \c false
- */
-bool
-attrd_shutting_down(void)
-{
-    return shutting_down;
-}
-
 void
 attrd_quit_main_loop(crm_exit_t ec)
 {
-    if (attrd_shutting_down()) {
+    if (attrd.shutting_down) {
         return;
     }
 
     pcmk__info("Shutting down attribute manager");
 
     // Tell various functions not to do anything
-    shutting_down = true;
+    attrd.shutting_down = true;
 
     attrd_exit_status = ec;
 

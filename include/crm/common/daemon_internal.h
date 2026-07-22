@@ -14,6 +14,8 @@
 #ifndef PCMK__CRM_COMMON_DAEMON_INTERNAL__H
 #define PCMK__CRM_COMMON_DAEMON_INTERNAL__H
 
+#include <stdbool.h>            // bool
+
 #include <glib.h>               // GMainLoop
 
 #include <crm/common/ipc.h>     // pcmk_ipc_server
@@ -29,6 +31,9 @@ extern "C" {
 typedef struct {
     //! Daemon type, indexed by the IPC enum
     enum pcmk_ipc_server type;
+
+    //! Is the daemon currently shutting down?
+    bool shutting_down;
 
     //! Main loop
     GMainLoop *mainloop;
