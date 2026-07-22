@@ -132,7 +132,7 @@ attrd_cleanup(void)
 static void
 attrd_shutdown(int nsig)
 {
-    attrd_quit_main_loop(CRM_EX_OK);
+    pcmk__daemon_quit(&attrd, CRM_EX_OK);
 }
 
 int

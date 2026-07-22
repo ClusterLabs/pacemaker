@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <signal.h>                 // SIG*
 #include <stdbool.h>                // false
 #include <stddef.h>                 // NULL
 
@@ -36,11 +37,31 @@ pcmk__daemon_init(pcmk__daemon_t *d)
  * \internal
  * \brief Quit the daemon's main loop
  *
- * \param[in,out] d The daemon object
+ * \param[in,out] d  The daemon object
+ * \param[in]     ec The exit code to assign to the daemon
  */
 void
-pcmk__daemon_quit(pcmk__daemon_t *d)
+pcmk__daemon_quit(pcmk__daemon_t *d, crm_exit_t ec)
 {
+    if (d->shutting_down) {
+        return;
+    }
+
+    pcmk__info("Shutting down %s", pcmk__server_log_name(d->type));
+
+    // Tell various functions not to do anything
+    d->shutting_down = true;
+
+    d->ec = ec;
+
+    // Don't respond to signals while shutting down
+    mainloop_destroy_signal(SIGTERM);
+    mainloop_destroy_signal(SIGCHLD);
+    mainloop_destroy_signal(SIGPIPE);
+    mainloop_destroy_signal(SIGUSR1);
+    mainloop_destroy_signal(SIGUSR2);
+    mainloop_destroy_signal(SIGTRAP);
+
     CRM_CHECK((d->mainloop != NULL) && g_main_loop_is_running(d->mainloop),
               return);
 

@@ -40,7 +40,7 @@ attrd_cib_destroy_cb(void *user_data)
 
     // @TODO This should trigger a reconnect, not a shutdown
     pcmk__crit("Lost connection to the CIB manager, shutting down");
-    attrd_quit_main_loop(CRM_EX_DISCONNECT);
+    pcmk__daemon_quit(&attrd, CRM_EX_DISCONNECT);
 }
 
 static void

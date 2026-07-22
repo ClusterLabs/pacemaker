@@ -29,31 +29,6 @@ cib_t *the_cib = NULL;
  */
 GHashTable *peer_protocol_vers = NULL;
 
-void
-attrd_quit_main_loop(crm_exit_t ec)
-{
-    if (attrd.shutting_down) {
-        return;
-    }
-
-    pcmk__info("Shutting down attribute manager");
-
-    // Tell various functions not to do anything
-    attrd.shutting_down = true;
-
-    attrd.ec = ec;
-
-    // Don't respond to signals while shutting down
-    mainloop_destroy_signal(SIGTERM);
-    mainloop_destroy_signal(SIGCHLD);
-    mainloop_destroy_signal(SIGPIPE);
-    mainloop_destroy_signal(SIGUSR1);
-    mainloop_destroy_signal(SIGUSR2);
-    mainloop_destroy_signal(SIGTRAP);
-
-    pcmk__daemon_quit(&attrd);
-}
-
 /* strlen("value") */
 #define plus_plus_len (5)
 

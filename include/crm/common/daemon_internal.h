@@ -50,7 +50,7 @@ typedef struct {
 // Mainloop management functions
 
 int pcmk__daemon_init(pcmk__daemon_t *d);
-void pcmk__daemon_quit(pcmk__daemon_t *d);
+void pcmk__daemon_quit(pcmk__daemon_t *d, crm_exit_t ec);
 void pcmk__daemon_run(pcmk__daemon_t *d);
 
 #ifdef __cplusplus

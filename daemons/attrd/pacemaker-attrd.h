@@ -58,7 +58,6 @@
                        CRM_EX_INDETERMINATE)
 
 void attrd_free_waitlist(void);
-void attrd_quit_main_loop(crm_exit_t ec);
 void attrd_ipc_init(void);
 void attrd_ipc_cleanup(void);
 
