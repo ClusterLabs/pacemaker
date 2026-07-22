@@ -56,6 +56,7 @@ if BUILD_CIBSECRETS
 libcrmcommon_la_SOURCES	+= cib_secrets.c
 endif
 libcrmcommon_la_SOURCES	+= cmdline.c
+libcrmcommon_la_SOURCES	+= daemon.c
 libcrmcommon_la_SOURCES	+= digest.c
 libcrmcommon_la_SOURCES	+= health.c
 libcrmcommon_la_SOURCES	+= io.c

@@ -30,6 +30,10 @@
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
 
+pcmk__daemon_t attrd = {
+    .type = pcmk_ipc_attrd,
+};
+
 static gboolean stand_alone = false;
 
 static gchar **log_files = NULL;
@@ -160,9 +164,7 @@ main(int argc, char **argv)
     processed_args = pcmk__cmdline_preproc(argv, NULL);
     context = build_arg_context(args, &output_group);
 
-    attrd_init_mainloop();
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGTERM, attrd_shutdown);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
@@ -240,9 +242,19 @@ main(int argc, char **argv)
     attrd_send_protocol(NULL);
 
     attrd_ipc_init();
-    pcmk__notice("Pacemaker node attribute manager successfully started and "
-                 "accepting connections");
-    attrd_run_mainloop();
+
+    rc = pcmk__daemon_init(&attrd);
+    if (rc != pcmk_rc_ok) {
+        attrd_exit_status = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    mainloop_add_signal(SIGTERM, attrd_shutdown);
+
+    pcmk__daemon_run(&attrd);
 
   done:
     attrd_cleanup();

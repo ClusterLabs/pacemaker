@@ -25,7 +25,6 @@
 cib_t *the_cib = NULL;
 
 static bool shutting_down = false;
-static GMainLoop *mloop = NULL;
 
 /* A hash table storing information on the protocol version of each peer attrd.
  * The key is the peer's uname, and the value is the protocol version number.
@@ -67,33 +66,7 @@ attrd_quit_main_loop(crm_exit_t ec)
     mainloop_destroy_signal(SIGUSR2);
     mainloop_destroy_signal(SIGTRAP);
 
-    /* There's no way to get to this function without the main loop running,
-     * but check just in case someone adds one in the future
-     */
-    CRM_CHECK((mloop != NULL) && g_main_loop_is_running(mloop), return);
-
-    g_main_loop_quit(mloop);
-    g_main_loop_unref(mloop);
-}
-
-/*!
- * \internal
- * \brief Create a main loop for attrd
- */
-void
-attrd_init_mainloop(void)
-{
-    mloop = g_main_loop_new(NULL, FALSE);
-}
-
-/*!
- * \internal
- * \brief Run attrd main loop
- */
-void
-attrd_run_mainloop(void)
-{
-    g_main_loop_run(mloop);
+    pcmk__daemon_quit(&attrd);
 }
 
 /* strlen("value") */
