@@ -113,6 +113,24 @@ attrd_cleanup_cmdline(void)
     g_clear_pointer(&log_files, g_strfreev);
 }
 
+static void
+attrd_cleanup(void)
+{
+    attrd_ipc_cleanup();
+    attrd_lrmd_disconnect();
+    attrd_unregister_handlers();
+    attrd_cib_disconnect();
+    attrd_cluster_disconnect();
+
+    attrd_free_removed_peers();
+    attrd_free_waitlist();
+    attrd_free_confirmations();
+    attrd_cleanup_xml_ids();
+
+    g_clear_pointer(&attributes, g_hash_table_destroy);
+    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -215,19 +233,7 @@ main(int argc, char **argv)
   done:
     pcmk__info("Shutting down attribute manager");
 
-    attrd_ipc_cleanup();
-    attrd_lrmd_disconnect();
-    attrd_unregister_handlers();
-    attrd_cib_disconnect();
-    attrd_cluster_disconnect();
-
-    attrd_free_removed_peers();
-    attrd_free_waitlist();
-    attrd_free_confirmations();
-    attrd_cleanup_xml_ids();
-
-    g_clear_pointer(&attributes, g_hash_table_destroy);
-    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
+    attrd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
