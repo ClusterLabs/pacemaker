@@ -19,6 +19,7 @@
 #include <glib.h>               // GMainLoop
 
 #include <crm/common/ipc.h>     // pcmk_ipc_server
+#include <crm/common/results.h> // crm_exit_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,9 @@ typedef struct {
     // NOTE: This is set by glib command line processing, hence gboolean
     //! Is the daemon running in stand alone mode?
     gboolean stand_alone;
+
+    //! What is the exit code of the daemon?
+    crm_exit_t ec;
 
     //! Main loop
     GMainLoop *mainloop;

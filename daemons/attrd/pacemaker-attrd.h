@@ -88,7 +88,6 @@ int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         unsigned int interval_ms);
 
 extern cib_t *the_cib;
-extern crm_exit_t attrd_exit_status;
 
 /* Alerts */
 

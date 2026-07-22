@@ -41,7 +41,7 @@ attrd_quit_main_loop(crm_exit_t ec)
     // Tell various functions not to do anything
     attrd.shutting_down = true;
 
-    attrd_exit_status = ec;
+    attrd.ec = ec;
 
     // Don't respond to signals while shutting down
     mainloop_destroy_signal(SIGTERM);

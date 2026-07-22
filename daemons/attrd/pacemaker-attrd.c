@@ -32,6 +32,7 @@
 
 pcmk__daemon_t attrd = {
     .type = pcmk_ipc_attrd,
+    .ec = CRM_EX_OK,
 };
 
 static gchar **log_files = NULL;
@@ -60,7 +61,6 @@ static pcmk__supported_format_t formats[] = {
 
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
-crm_exit_t attrd_exit_status = CRM_EX_OK;
 
 static bool
 ipc_already_running(void)
@@ -154,14 +154,14 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        attrd_exit_status = CRM_EX_USAGE;
+        attrd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        attrd_exit_status = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+        attrd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
@@ -180,8 +180,8 @@ main(int argc, char **argv)
                  (attrd.stand_alone ? " in standalone mode" : ""));
 
     if (ipc_already_running()) {
-        attrd_exit_status = CRM_EX_OK;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+        attrd.ec = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Aborting start-up because an attribute manager "
                     "instance is already active");
         pcmk__crit("%s", error->message);
@@ -196,8 +196,8 @@ main(int argc, char **argv)
      */
     if (!attrd.stand_alone) {
         if (attrd_cib_connect(30) != pcmk_ok) {
-            attrd_exit_status = CRM_EX_FATAL;
-            g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+            attrd.ec = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                         "Could not connect to the CIB");
             goto done;
         }
@@ -205,8 +205,8 @@ main(int argc, char **argv)
     }
 
     if (attrd_cluster_connect() != pcmk_rc_ok) {
-        attrd_exit_status = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+        attrd.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Could not connect to the cluster");
         goto done;
     }
@@ -231,8 +231,8 @@ main(int argc, char **argv)
 
     rc = pcmk__daemon_init(&attrd);
     if (rc != pcmk_rc_ok) {
-        attrd_exit_status = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+        attrd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));
         goto done;
@@ -255,9 +255,9 @@ main(int argc, char **argv)
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, attrd_exit_status, true, NULL);
+        out->finish(out, attrd.ec, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
-    crm_exit(attrd_exit_status);
+    crm_exit(attrd.ec);
 }
