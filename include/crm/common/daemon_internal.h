@@ -25,11 +25,30 @@
 extern "C" {
 #endif
 
+typedef struct pcmk__daemon_s pcmk__daemon_t;
+
+/*!
+ * \internal
+ * \brief Daemon-specific IPC operations
+ */
+typedef struct {
+    /*!
+     * \internal
+     * \brief Determine if an instance of an IPC server is already running
+     *
+     * \param[in,out] d The daemon object
+     *
+     * \return \c true if an instance of the daemon is already running, and
+     *         \c false if not
+     */
+    bool (*already_running)(pcmk__daemon_t *);
+} pcmk__daemon_ipc_fns_t;
+
 /*!
  * \internal
  * \brief This structure describes and manages a single pacemaker daemon
  */
-typedef struct {
+struct pcmk__daemon_s {
     //! Daemon type, indexed by the IPC enum
     enum pcmk_ipc_server type;
 
@@ -45,7 +64,13 @@ typedef struct {
 
     //! Main loop
     GMainLoop *mainloop;
-} pcmk__daemon_t;
+
+    pcmk__daemon_ipc_fns_t *ipc_fns;
+};
+
+// IPC functions
+
+bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
 
 // Mainloop management functions
 

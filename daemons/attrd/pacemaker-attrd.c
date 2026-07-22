@@ -30,9 +30,14 @@
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .already_running = pcmk__daemon_ipc_running,
+};
+
 pcmk__daemon_t attrd = {
     .type = pcmk_ipc_attrd,
     .ec = CRM_EX_OK,
+    .ipc_fns = &ipc_fns,
 };
 
 static gchar **log_files = NULL;
@@ -61,30 +66,6 @@ static pcmk__supported_format_t formats[] = {
 
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
-
-static bool
-ipc_already_running(void)
-{
-    pcmk_ipc_api_t *old_instance = NULL;
-    int rc = pcmk_rc_ok;
-
-    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_attrd);
-    if (rc != pcmk_rc_ok) {
-        return false;
-    }
-
-    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
-    if (rc != pcmk_rc_ok) {
-        pcmk__debug("No existing %s instance found: %s",
-                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
-        pcmk_free_ipc_api(old_instance);
-        return false;
-    }
-
-    pcmk_disconnect_ipc(old_instance);
-    pcmk_free_ipc_api(old_instance);
-    return true;
-}
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
@@ -176,10 +157,8 @@ main(int argc, char **argv)
     pcmk__add_logfiles(log_files, out);
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    pcmk__notice("Starting Pacemaker node attribute manager%s",
-                 (attrd.stand_alone ? " in standalone mode" : ""));
 
-    if (ipc_already_running()) {
+    if (attrd.ipc_fns->already_running(&attrd)) {
         attrd.ec = CRM_EX_OK;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Aborting start-up because an attribute manager "
@@ -187,6 +166,9 @@ main(int argc, char **argv)
         pcmk__crit("%s", error->message);
         goto done;
     }
+
+    pcmk__notice("Starting Pacemaker node attribute manager%s",
+                 (attrd.stand_alone ? " in standalone mode" : ""));
 
     attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
