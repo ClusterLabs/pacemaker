@@ -78,20 +78,6 @@ attrd_quit_main_loop(crm_exit_t ec)
 
 /*!
  * \internal
- * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
- *
- * \param[in] nsig  Ignored
- *
- * \note This is a main loop signal handler function.
- */
-void
-attrd_shutdown(int nsig)
-{
-    attrd_quit_main_loop(CRM_EX_OK);
-}
-
-/*!
- * \internal
  * \brief Create a main loop for attrd
  */
 void

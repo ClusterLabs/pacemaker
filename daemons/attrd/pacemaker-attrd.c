@@ -131,6 +131,20 @@ attrd_cleanup(void)
     g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
 }
 
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+attrd_shutdown(int nsig)
+{
+    attrd_quit_main_loop(CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {

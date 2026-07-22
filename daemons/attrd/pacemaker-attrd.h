@@ -61,7 +61,6 @@ void attrd_init_mainloop(void);
 void attrd_run_mainloop(void);
 
 void attrd_free_waitlist(void);
-void attrd_shutdown(int nsig);
 void attrd_quit_main_loop(crm_exit_t ec);
 bool attrd_shutting_down(void);
 bool attrd_stand_alone(void);
