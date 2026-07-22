@@ -59,7 +59,6 @@
 
 void attrd_free_waitlist(void);
 void attrd_quit_main_loop(crm_exit_t ec);
-bool attrd_stand_alone(void);
 void attrd_ipc_init(void);
 void attrd_ipc_cleanup(void);
 

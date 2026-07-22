@@ -35,6 +35,10 @@ typedef struct {
     //! Is the daemon currently shutting down?
     bool shutting_down;
 
+    // NOTE: This is set by glib command line processing, hence gboolean
+    //! Is the daemon running in stand alone mode?
+    gboolean stand_alone;
+
     //! Main loop
     GMainLoop *mainloop;
 } pcmk__daemon_t;

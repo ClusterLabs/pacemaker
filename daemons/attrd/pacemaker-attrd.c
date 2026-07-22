@@ -34,14 +34,13 @@ pcmk__daemon_t attrd = {
     .type = pcmk_ipc_attrd,
 };
 
-static gboolean stand_alone = false;
-
 static gchar **log_files = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 
 static GOptionEntry entries[] = {
-    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &attrd.stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
@@ -62,19 +61,6 @@ static pcmk__supported_format_t formats[] = {
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 crm_exit_t attrd_exit_status = CRM_EX_OK;
-
-/*!
- * \internal
- * \brief Check whether local attribute manager is running in stand-alone mode
- *
- * \return \c true if local attribute manager is in stand-alone mode, or
- *         \c false otherwise
- */
-bool
-attrd_stand_alone(void)
-{
-    return stand_alone;
-}
 
 static bool
 ipc_already_running(void)
@@ -191,7 +177,7 @@ main(int argc, char **argv)
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     pcmk__notice("Starting Pacemaker node attribute manager%s",
-                 (attrd_stand_alone() ? " in standalone mode" : ""));
+                 (attrd.stand_alone ? " in standalone mode" : ""));
 
     if (ipc_already_running()) {
         attrd_exit_status = CRM_EX_OK;
@@ -208,7 +194,7 @@ main(int argc, char **argv)
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (!attrd_stand_alone()) {
+    if (!attrd.stand_alone) {
         if (attrd_cib_connect(30) != pcmk_ok) {
             attrd_exit_status = CRM_EX_FATAL;
             g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
@@ -230,7 +216,7 @@ main(int argc, char **argv)
     // Initialization that requires the cluster to be connected
     attrd_election_init();
 
-    if (!attrd_stand_alone()) {
+    if (!attrd.stand_alone) {
         attrd_cib_init();
     }
 
