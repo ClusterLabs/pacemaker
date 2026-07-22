@@ -35,13 +35,12 @@ attrd_cib_destroy_cb(void *user_data)
 
     if (attrd_shutting_down()) {
         pcmk__info("Disconnected from the CIB manager");
-
-    } else {
-        // @TODO This should trigger a reconnect, not a shutdown
-        pcmk__crit("Lost connection to the CIB manager, shutting down");
-        attrd_exit_status = CRM_EX_DISCONNECT;
-        attrd_shutdown(0);
+        return;
     }
+
+    // @TODO This should trigger a reconnect, not a shutdown
+    pcmk__crit("Lost connection to the CIB manager, shutting down");
+    attrd_quit_main_loop(CRM_EX_DISCONNECT);
 }
 
 static void

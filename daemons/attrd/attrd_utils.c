@@ -45,17 +45,19 @@ attrd_shutting_down(void)
     return shutting_down;
 }
 
-/*!
- * \internal
- * \brief  Exit (using mainloop or not, as appropriate)
- *
- * \param[in] nsig  Ignored
- */
 void
-attrd_shutdown(int nsig)
+attrd_quit_main_loop(crm_exit_t ec)
 {
-    // Tell various functions not to do anthing
+    if (attrd_shutting_down()) {
+        return;
+    }
+
+    pcmk__info("Shutting down attribute manager");
+
+    // Tell various functions not to do anything
     shutting_down = true;
+
+    attrd_exit_status = ec;
 
     // Don't respond to signals while shutting down
     mainloop_destroy_signal(SIGTERM);
@@ -65,15 +67,27 @@ attrd_shutdown(int nsig)
     mainloop_destroy_signal(SIGUSR2);
     mainloop_destroy_signal(SIGTRAP);
 
-    if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
-        /* If there's no main loop active, just exit. This should be possible
-         * only if we get SIGTERM in brief windows at start-up and shutdown.
-         */
-        crm_exit(CRM_EX_OK);
-    } else {
-        g_main_loop_quit(mloop);
-        g_main_loop_unref(mloop);
-    }
+    /* There's no way to get to this function without the main loop running,
+     * but check just in case someone adds one in the future
+     */
+    CRM_CHECK((mloop != NULL) && g_main_loop_is_running(mloop), return);
+
+    g_main_loop_quit(mloop);
+    g_main_loop_unref(mloop);
+}
+
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+void
+attrd_shutdown(int nsig)
+{
+    attrd_quit_main_loop(CRM_EX_OK);
 }
 
 /*!

@@ -181,12 +181,11 @@ attrd_cpg_destroy(void *unused)
 {
     if (attrd_shutting_down()) {
         pcmk__info("Disconnected from Corosync process group");
-
-    } else {
-        pcmk__crit("Lost connection to Corosync process group, shutting down");
-        attrd_exit_status = CRM_EX_DISCONNECT;
-        attrd_shutdown(0);
+        return;
     }
+
+    pcmk__crit("Lost connection to Corosync process group, shutting down");
+    attrd_quit_main_loop(CRM_EX_DISCONNECT);
 }
 #endif // SUPPORT_COROSYNC
 

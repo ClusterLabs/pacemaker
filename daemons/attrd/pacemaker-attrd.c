@@ -231,8 +231,6 @@ main(int argc, char **argv)
     attrd_run_mainloop();
 
   done:
-    pcmk__info("Shutting down attribute manager");
-
     attrd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
