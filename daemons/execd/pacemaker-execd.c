@@ -40,12 +40,18 @@
 #  define SUMMARY "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 
+static bool execd_quit(pcmk__daemon_t *d);
+
+static pcmk__daemon_fns_t fns = {
+    .quit = execd_quit,
+};
+
 pcmk__daemon_t execd = {
     .type = pcmk_ipc_execd,
     .ec = CRM_EX_OK,
+    .fns = &fns,
 };
 
-static GMainLoop *mainloop = NULL;
 static stonith_t *fencer_api = NULL;
 time_t start_time;
 
@@ -58,9 +64,6 @@ static struct {
     gchar *port;
 #endif  // PCMK__COMPILE_REMOTE
 } options;
-
-static void execd_cleanup(void);
-static void execd_quit_main_loop(crm_exit_t ec);
 
 static void
 fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
@@ -126,7 +129,9 @@ lrmd_client_destroy(pcmk__client_t *client)
      * shutting down.
      */
     if (execd.shutting_down && (ipc_proxy_get_provider() == NULL)) {
-        execd_quit_main_loop(CRM_EX_OK);
+        // Unset shutting_down so pcmk__daemon_quit does something
+        execd.shutting_down = false;
+        pcmk__daemon_quit(&execd, CRM_EX_OK);
     }
 #endif
 }
@@ -195,7 +200,6 @@ execd_cleanup(void)
     ipc_proxy_cleanup();
 #endif
 
-    lrmd_drain_alerts(mainloop);
     execd_unregister_handlers();
     g_clear_pointer(&rsc_list, g_hash_table_destroy);
 }
@@ -299,8 +303,8 @@ execd_cleanup_cmdline(void)
 #endif
 }
 
-static void
-execd_quit_main_loop(crm_exit_t ec)
+static bool
+execd_quit(pcmk__daemon_t *d)
 {
 #ifdef PCMK__COMPILE_REMOTE
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
@@ -314,7 +318,7 @@ execd_quit_main_loop(crm_exit_t ec)
      */
     if (execd.shutting_down) {
         pcmk__notice("Waiting for cluster to stop resources before exiting");
-        return;
+        return false;
     }
 
     pcmk__info("Sending shutdown request to cluster");
@@ -336,17 +340,13 @@ execd_quit_main_loop(crm_exit_t ec)
      * reasonable time. We could instead set a long timer here (shorter than
      * what the OS is likely to use) and exit immediately if it pops.
      */
-    return;
+    return false;
 
 done:
 #endif
 
-    /* There's no way to get to this function without the main loop running,
-     * but check just in case someone adds one in the future
-     */
-    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop), return);
-
-    g_main_loop_quit(mainloop);
+    lrmd_drain_alerts(execd.mainloop);
+    return true;
 }
 
 /*!
@@ -360,7 +360,7 @@ done:
 static void
 execd_shutdown(int nsig)
 {
-    execd_quit_main_loop(CRM_EX_OK);
+    pcmk__daemon_quit(&execd, CRM_EX_OK);
 }
 
 int
@@ -483,13 +483,18 @@ main(int argc, char **argv)
     }
 #endif
 
+    rc = pcmk__daemon_init(&execd);
+    if (rc != pcmk_rc_ok) {
+        execd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
     mainloop_add_signal(SIGTERM, execd_shutdown);
-    mainloop = g_main_loop_new(NULL, FALSE);
-    pcmk__notice("Pacemaker " EXECD_TYPE " executor successfully started and "
-                 "accepting connections");
-    pcmk__notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
-    g_main_loop_run(mainloop);
-    g_clear_pointer(&mainloop, g_main_loop_unref);
+
+    pcmk__daemon_run(&execd);
 
 done:
     execd_cleanup();
