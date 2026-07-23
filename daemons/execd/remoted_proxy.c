@@ -176,8 +176,7 @@ ipc_proxy_forward_client(pcmk__client_t *ipc_proxy, xmlNode *xml)
     }
 
     if (pcmk__str_eq(msg_type, LRMD_IPC_OP_SHUTDOWN_NACK, pcmk__str_casei)) {
-        handle_shutdown_nack();
-        return rc;
+        return handle_shutdown_nack();
     }
 
     ipc_client = pcmk__find_client_by_id(session);

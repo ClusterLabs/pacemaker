@@ -71,7 +71,7 @@ void execd_free_rsc(void *data);
 
 void handle_shutdown_ack(void);
 
-void handle_shutdown_nack(void);
+int handle_shutdown_nack(void);
 
 void lrmd_client_destroy(pcmk__client_t *client);
 

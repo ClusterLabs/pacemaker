@@ -217,23 +217,45 @@ handle_shutdown_ack(void)
                 "provider");
 }
 
+#ifdef PCMK__COMPILE_REMOTE
+static bool
+execd_quit_on_nack(pcmk__daemon_t *d)
+{
+    lrmd_drain_alerts(execd.mainloop);
+    return true;
+}
+#endif
+
 /*!
  * \internal
  * \brief Handle rejection of shutdown request
+ *
+ * \return Standard Pacemaker return code
  */
-void
+int
 handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
     if (execd.shutting_down) {
         pcmk__info("Exiting immediately after IPC proxy provider indicated no "
                    "resources will be stopped");
-        execd_cleanup();
-        crm_exit(CRM_EX_OK);
+
+        /* Avoid calling the original quit function because that can potentially
+         * just lead us right back to this point.  However, we still want to do
+         * everything in pcmk__daemon_quit (most importantly, kill the main loop)
+         * as well as drain alerts.
+         */
+        execd.shutting_down = false;
+        execd.fns->quit = execd_quit_on_nack;
+        pcmk__daemon_quit(&execd, CRM_EX_OK);
+
+        return ESHUTDOWN;
     }
 #endif
+
     pcmk__debug("Ignoring unexpected shutdown rejection from IPC proxy "
                 "provider");
+    return pcmk_rc_ok;
 }
 
 static GOptionEntry entries[] = {
