@@ -203,57 +203,6 @@ execd_cleanup(void)
 
 /*!
  * \internal
- * \brief Request cluster shutdown if appropriate, otherwise exit immediately
- *
- * \param[in] nsig  Signal that caused invocation (ignored)
- */
-static void
-lrmd_shutdown(int nsig)
-{
-#ifdef PCMK__COMPILE_REMOTE
-    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
-
-    if (ipc_proxy == NULL) {
-        goto done;
-    }
-
-    /* If there are active proxied IPC providers, then we may be running
-     * resources, so notify the cluster that we wish to shut down.
-     */
-    if (shutting_down) {
-        pcmk__notice("Waiting for cluster to stop resources before exiting");
-        return;
-    }
-
-    pcmk__info("Sending shutdown request to cluster");
-    if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
-        pcmk__crit("Shutdown request failed, exiting immediately");
-        goto done;
-    }
-
-    /* We requested a shutdown. Now, we need to wait for an acknowledgement
-     * from the proxy host, then wait for all proxy hosts to disconnect (which
-     * ensures that all resources have been stopped).
-     */
-    shutting_down = TRUE;
-
-    /* Stop accepting new proxy connections */
-    execd_stop_tls_server();
-
-    /* Currently, we let the OS kill us if the clients don't disconnect in a
-     * reasonable time. We could instead set a long timer here (shorter than
-     * what the OS is likely to use) and exit immediately if it pops.
-     */
-    return;
-
-done:
-#endif
-
-    execd_quit_main_loop(CRM_EX_OK);
-}
-
-/*!
- * \internal
  * \brief Log a shutdown acknowledgment
  */
 void
@@ -332,12 +281,65 @@ execd_cleanup_cmdline(void)
 static void
 execd_quit_main_loop(crm_exit_t ec)
 {
+#ifdef PCMK__COMPILE_REMOTE
+    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
+
+    if (ipc_proxy == NULL) {
+        goto done;
+    }
+
+    /* If there are active proxied IPC providers, then we may be running
+     * resources, so notify the cluster that we wish to shut down.
+     */
+    if (shutting_down) {
+        pcmk__notice("Waiting for cluster to stop resources before exiting");
+        return;
+    }
+
+    pcmk__info("Sending shutdown request to cluster");
+    if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
+        pcmk__crit("Shutdown request failed, exiting immediately");
+        goto done;
+    }
+
+    /* We requested a shutdown. Now, we need to wait for an acknowledgement
+     * from the proxy host, then wait for all proxy hosts to disconnect (which
+     * ensures that all resources have been stopped).
+     */
+    shutting_down = TRUE;
+
+    /* Stop accepting new proxy connections */
+    execd_stop_tls_server();
+
+    /* Currently, we let the OS kill us if the clients don't disconnect in a
+     * reasonable time. We could instead set a long timer here (shorter than
+     * what the OS is likely to use) and exit immediately if it pops.
+     */
+    return;
+
+done:
+#endif
+
     /* There's no way to get to this function without the main loop running,
      * but check just in case someone adds one in the future
      */
     CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop), return);
 
     g_main_loop_quit(mainloop);
+}
+
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+execd_shutdown(int nsig)
+{
+    execd_quit_main_loop(CRM_EX_OK);
 }
 
 int
@@ -460,7 +462,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    mainloop_add_signal(SIGTERM, lrmd_shutdown);
+    mainloop_add_signal(SIGTERM, execd_shutdown);
     mainloop = g_main_loop_new(NULL, FALSE);
     pcmk__notice("Pacemaker " EXECD_TYPE " executor successfully started and "
                  "accepting connections");
