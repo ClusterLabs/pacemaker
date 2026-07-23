@@ -60,7 +60,7 @@ static struct {
 static gboolean shutting_down = FALSE;
 #endif
 
-static void exit_executor(void);
+static void execd_cleanup(void);
 
 static void
 fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
@@ -120,7 +120,7 @@ lrmd_client_destroy(pcmk__client_t *client)
      * if there are no more proxied IPC providers
      */
     if (shutting_down && (ipc_proxy_get_provider() == NULL)) {
-        exit_executor();
+        execd_cleanup();
     }
 #endif
 }
@@ -174,12 +174,8 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
     return ENOTCONN;
 }
 
-/*!
- * \internal
- * \brief Clean up and exit immediately
- */
 static void
-exit_executor(void)
+execd_cleanup(void)
 {
     const unsigned int nclients = pcmk__ipc_client_count();
 
@@ -195,7 +191,7 @@ exit_executor(void)
 
     lrmd_drain_alerts(mainloop);
     execd_unregister_handlers();
-    g_hash_table_destroy(rsc_list);
+    g_clear_pointer(&rsc_list, g_hash_table_destroy);
 
     // @TODO End mainloop instead so all cleanup is done
     crm_exit(CRM_EX_OK);
@@ -214,7 +210,7 @@ lrmd_shutdown(int nsig)
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
 
     if (ipc_proxy == NULL) {
-        exit_executor();
+        execd_cleanup();
     }
 
     /* If there are active proxied IPC providers, then we may be running
@@ -228,7 +224,7 @@ lrmd_shutdown(int nsig)
     pcmk__info("Sending shutdown request to cluster");
     if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
         pcmk__crit("Shutdown request failed, exiting immediately");
-        exit_executor();
+        execd_cleanup();
     }
 
     /* We requested a shutdown. Now, we need to wait for an acknowledgement
@@ -247,7 +243,7 @@ lrmd_shutdown(int nsig)
     return;
 #endif
 
-    exit_executor();
+    execd_cleanup();
 }
 
 /*!
@@ -278,7 +274,7 @@ handle_shutdown_nack(void)
     if (shutting_down) {
         pcmk__info("Exiting immediately after IPC proxy provider indicated no "
                    "resources will be stopped");
-        exit_executor();
+        execd_cleanup();
         return;
     }
 #endif
@@ -455,7 +451,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
     /* should never get here */
-    exit_executor();
+    execd_cleanup();
 
 done:
     pcmk__output_and_clear_error(&error, out);
