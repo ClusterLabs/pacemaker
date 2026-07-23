@@ -117,11 +117,17 @@ lrmd_client_destroy(pcmk__client_t *client)
     pcmk__free_client(client);
 
 #ifdef PCMK__COMPILE_REMOTE
-    /* If we were waiting to shut down, we can now safely do so
-     * if there are no more proxied IPC providers
+    /* If we were waiting to shut down, we can now safely do so if there are
+     * no more proxied IPC providers
+     *
+     * This kills the main loop and cleans everything up.  Control flow will
+     * eventually make it back up to lrmd_remote_client_destroy or
+     * execd_ipc_closed, which were both called directly from the main loop.
+     * After that, we'll return to the done label in main() and finish
+     * shutting down.
      */
     if (shutting_down && (ipc_proxy_get_provider() == NULL)) {
-        execd_cleanup();
+        execd_quit_main_loop(CRM_EX_OK);
     }
 #endif
 }
@@ -193,11 +199,6 @@ execd_cleanup(void)
     lrmd_drain_alerts(mainloop);
     execd_unregister_handlers();
     g_clear_pointer(&rsc_list, g_hash_table_destroy);
-
-#ifdef PCMK__COMPILE_REMOTE
-    // @TODO End mainloop instead so all cleanup is done
-    crm_exit(CRM_EX_OK);
-#endif
 }
 
 /*!
@@ -213,7 +214,7 @@ lrmd_shutdown(int nsig)
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
 
     if (ipc_proxy == NULL) {
-        execd_cleanup();
+        goto done;
     }
 
     /* If there are active proxied IPC providers, then we may be running
@@ -227,7 +228,7 @@ lrmd_shutdown(int nsig)
     pcmk__info("Sending shutdown request to cluster");
     if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
         pcmk__crit("Shutdown request failed, exiting immediately");
-        execd_cleanup();
+        goto done;
     }
 
     /* We requested a shutdown. Now, we need to wait for an acknowledgement
@@ -244,6 +245,8 @@ lrmd_shutdown(int nsig)
      * what the OS is likely to use) and exit immediately if it pops.
      */
     return;
+
+done:
 #endif
 
     execd_quit_main_loop(CRM_EX_OK);
@@ -278,7 +281,7 @@ handle_shutdown_nack(void)
         pcmk__info("Exiting immediately after IPC proxy provider indicated no "
                    "resources will be stopped");
         execd_cleanup();
-        return;
+        crm_exit(CRM_EX_OK);
     }
 #endif
     pcmk__debug("Ignoring unexpected shutdown rejection from IPC proxy "
