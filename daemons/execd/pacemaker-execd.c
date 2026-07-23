@@ -59,11 +59,6 @@ static struct {
 #endif  // PCMK__COMPILE_REMOTE
 } options;
 
-#ifdef PCMK__COMPILE_REMOTE
-/* whether shutdown request has been sent */
-static gboolean shutting_down = FALSE;
-#endif
-
 static void execd_cleanup(void);
 static void execd_quit_main_loop(crm_exit_t ec);
 
@@ -130,7 +125,7 @@ lrmd_client_destroy(pcmk__client_t *client)
      * After that, we'll return to the done label in main() and finish
      * shutting down.
      */
-    if (shutting_down && (ipc_proxy_get_provider() == NULL)) {
+    if (execd.shutting_down && (ipc_proxy_get_provider() == NULL)) {
         execd_quit_main_loop(CRM_EX_OK);
     }
 #endif
@@ -213,7 +208,7 @@ void
 handle_shutdown_ack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
-    if (shutting_down) {
+    if (execd.shutting_down) {
         pcmk__info("IPC proxy provider acknowledged shutdown request");
         return;
     }
@@ -230,7 +225,7 @@ void
 handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
-    if (shutting_down) {
+    if (execd.shutting_down) {
         pcmk__info("Exiting immediately after IPC proxy provider indicated no "
                    "resources will be stopped");
         execd_cleanup();
@@ -295,7 +290,7 @@ execd_quit_main_loop(crm_exit_t ec)
     /* If there are active proxied IPC providers, then we may be running
      * resources, so notify the cluster that we wish to shut down.
      */
-    if (shutting_down) {
+    if (execd.shutting_down) {
         pcmk__notice("Waiting for cluster to stop resources before exiting");
         return;
     }
@@ -310,7 +305,7 @@ execd_quit_main_loop(crm_exit_t ec)
      * from the proxy host, then wait for all proxy hosts to disconnect (which
      * ensures that all resources have been stopped).
      */
-    shutting_down = TRUE;
+    execd.shutting_down = true;
 
     /* Stop accepting new proxy connections */
     execd_stop_tls_server();
