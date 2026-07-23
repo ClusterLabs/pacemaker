@@ -61,6 +61,7 @@ static gboolean shutting_down = FALSE;
 #endif
 
 static void execd_cleanup(void);
+static void execd_quit_main_loop(crm_exit_t ec);
 
 static void
 fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
@@ -193,8 +194,10 @@ execd_cleanup(void)
     execd_unregister_handlers();
     g_clear_pointer(&rsc_list, g_hash_table_destroy);
 
+#ifdef PCMK__COMPILE_REMOTE
     // @TODO End mainloop instead so all cleanup is done
     crm_exit(CRM_EX_OK);
+#endif
 }
 
 /*!
@@ -243,7 +246,7 @@ lrmd_shutdown(int nsig)
     return;
 #endif
 
-    execd_cleanup();
+    execd_quit_main_loop(CRM_EX_OK);
 }
 
 /*!
@@ -321,6 +324,17 @@ execd_cleanup_cmdline(void)
 #ifdef PCMK__COMPILE_REMOTE
     g_clear_pointer(&options.port, g_free);
 #endif
+}
+
+static void
+execd_quit_main_loop(crm_exit_t ec)
+{
+    /* There's no way to get to this function without the main loop running,
+     * but check just in case someone adds one in the future
+     */
+    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop), return);
+
+    g_main_loop_quit(mainloop);
 }
 
 int
@@ -449,11 +463,11 @@ main(int argc, char **argv)
                  "accepting connections");
     pcmk__notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
     g_main_loop_run(mainloop);
-
-    /* should never get here */
-    execd_cleanup();
+    g_clear_pointer(&mainloop, g_main_loop_unref);
 
 done:
+    execd_cleanup();
+
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
