@@ -468,7 +468,10 @@ main(int argc, char **argv)
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
 
-    execd_ipc_init();
+    if (!execd_ipc_init()) {
+        execd.ec = CRM_EX_FATAL;
+        goto done;
+    }
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {

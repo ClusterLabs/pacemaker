@@ -105,7 +105,7 @@ void lrmd_drain_alerts(GMainLoop *mloop);
 bool execd_invalid_msg(xmlNode *msg);
 void execd_handle_request(pcmk__request_t *request);
 
-void execd_ipc_init(void);
+bool execd_ipc_init(void);
 void execd_ipc_cleanup(void);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
