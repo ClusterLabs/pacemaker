@@ -29,6 +29,27 @@ typedef struct pcmk__daemon_s pcmk__daemon_t;
 
 /*!
  * \internal
+ * \brief Daemon-specific general operations
+ */
+typedef struct {
+    /*!
+     * \internal
+     * \brief Perform daemon-specific quitting tasks
+     *
+     * This function should not perform any cleanup or memory freeing tasks.
+     * It is meant to terminate anything that needs to happen before the
+     * main loop quits, as well as to determine whether or not that happens
+     * at all.
+     *
+     * \param[in,out] d The daemon object
+     *
+     * \return \c true if quitting should continue, and \c false if not
+     */
+    bool (*quit)(pcmk__daemon_t *);
+} pcmk__daemon_fns_t;
+
+/*!
+ * \internal
  * \brief Daemon-specific IPC operations
  */
 typedef struct {
@@ -64,6 +85,8 @@ struct pcmk__daemon_s {
 
     //! Main loop
     GMainLoop *mainloop;
+
+    pcmk__daemon_fns_t *fns;
 
     pcmk__daemon_ipc_fns_t *ipc_fns;
 };

@@ -87,6 +87,12 @@ pcmk__daemon_quit(pcmk__daemon_t *d, crm_exit_t ec)
         return;
     }
 
+    if ((d->fns != NULL) && (d->fns->quit != NULL)) {
+        if (!d->fns->quit(d)) {
+            return;
+        }
+    }
+
     pcmk__info("Shutting down %s", pcmk__server_log_name(d->type));
 
     // Tell various functions not to do anything
