@@ -22,8 +22,8 @@
 #include <crm/stonith-ng.h>         // stonith_t
 
 extern GHashTable *rsc_list;
+extern pcmk__daemon_t execd;
 extern time_t start_time;
-extern crm_exit_t exit_code;
 
 typedef struct {
     char *rsc_id;

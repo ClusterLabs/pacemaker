@@ -524,13 +524,13 @@ ipc_proxy_init(void)
 
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
     if (attrd_ipcs == NULL) {
-        exit_code = CRM_EX_FATAL;
+        execd.ec = CRM_EX_FATAL;
         return false;
     }
 
     pcmk__serve_controld_ipc(&controld_ipcs, &crmd_proxy_callbacks);
     if (controld_ipcs == NULL) {
-        exit_code = CRM_EX_FATAL;
+        execd.ec = CRM_EX_FATAL;
         return false;
     }
 

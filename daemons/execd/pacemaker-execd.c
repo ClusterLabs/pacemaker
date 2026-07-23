@@ -40,10 +40,14 @@
 #  define SUMMARY "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 
+pcmk__daemon_t execd = {
+    .type = pcmk_ipc_execd,
+    .ec = CRM_EX_OK,
+};
+
 static GMainLoop *mainloop = NULL;
 static stonith_t *fencer_api = NULL;
 time_t start_time;
-crm_exit_t exit_code = CRM_EX_OK;
 
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
@@ -375,14 +379,14 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        execd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        execd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,
                     "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
@@ -453,7 +457,7 @@ main(int argc, char **argv)
     if (lrmd_init_remote_tls_server() < 0) {
         pcmk__err("Failed to create TLS listener: shutting down and staying "
                   "down");
-        exit_code = CRM_EX_FATAL;
+        execd.ec = CRM_EX_FATAL;
         goto done;
     }
 
@@ -476,9 +480,9 @@ done:
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, execd.ec, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(execd.ec);
 }
