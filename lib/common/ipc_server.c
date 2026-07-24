@@ -1169,8 +1169,6 @@ pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
@@ -1186,7 +1184,6 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                    pcmk__server_log_name(pcmk_ipc_fenced));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-        crm_exit(CRM_EX_FATAL);
     }
 }
 

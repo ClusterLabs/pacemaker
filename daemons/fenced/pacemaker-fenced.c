@@ -428,7 +428,11 @@ main(int argc, char **argv)
 
     fenced_init_device_table();
     init_topology_list();
-    fenced_ipc_init();
+
+    if (!fenced_ipc_init()) {
+        fenced.ec = CRM_EX_FATAL;
+        goto done;
+    }
 
     rc = pcmk__daemon_init(&fenced);
     if (rc != pcmk_rc_ok) {

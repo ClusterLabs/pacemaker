@@ -276,8 +276,9 @@ fenced_ipc_cleanup(void)
  * \internal
  * \brief Set up fenced IPC communication
  */
-void
+bool
 fenced_ipc_init(void)
 {
     pcmk__serve_fenced_ipc(&ipcs, &ipc_callbacks);
+    return ipcs != NULL;
 }

@@ -534,6 +534,11 @@ ipc_proxy_init(void)
     }
 
     pcmk__serve_fenced_ipc(&fencer_ipcs, &fencer_proxy_callbacks);
+    if (fencer_ipcs == NULL) {
+        execd.ec = CRM_EX_FATAL;
+        return false;
+    }
+
     pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
     return true;
 }

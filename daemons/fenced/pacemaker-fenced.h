@@ -373,7 +373,7 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
-void fenced_ipc_init(void);
+bool fenced_ipc_init(void);
 void fenced_ipc_cleanup(void);
 
 int fenced_cluster_connect(void);
