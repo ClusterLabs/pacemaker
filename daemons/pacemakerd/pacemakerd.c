@@ -39,6 +39,11 @@
 
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
+pcmk__daemon_t pacemakerd = {
+    .type = pcmk_ipc_pacemakerd,
+    .ec = CRM_EX_OK,
+};
+
 struct {
     gboolean features;
     gboolean foreground;
@@ -372,7 +377,6 @@ int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_exit_t exit_code = CRM_EX_OK;
 
     GError *error = NULL;
 
@@ -395,14 +399,15 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        pacemakerd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+        pacemakerd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
@@ -411,7 +416,7 @@ main(int argc, char **argv)
 
     if (options.features) {
         out->message(out, "features");
-        exit_code = CRM_EX_OK;
+        pacemakerd.ec = CRM_EX_OK;
         goto done;
     }
 
@@ -430,22 +435,22 @@ main(int argc, char **argv)
     if ((rc == pcmk_rc_ok) && options.shutdown) {
         goto done;
     } else if (rc == pcmk_rc_already) {
-        exit_code = CRM_EX_FATAL;
+        pacemakerd.ec = CRM_EX_FATAL;
         goto done;
     } else if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
+        pacemakerd.ec = pcmk_rc2exitc(rc);
         goto done;
     }
 
     /* Don't allow any accidental output after this point. */
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, pacemakerd.ec, true, NULL);
         g_clear_pointer(&out, pcmk__output_free);
     }
 
 #if SUPPORT_COROSYNC
     if (!pcmkd_read_config()) {
-        exit_code = CRM_EX_UNAVAILABLE;
+        pacemakerd.ec = CRM_EX_UNAVAILABLE;
         goto done;
     }
 #endif
@@ -466,7 +471,7 @@ main(int argc, char **argv)
 
     remove_core_file_limit();
     if (create_pcmk_dirs() != pcmk_rc_ok) {
-        exit_code = CRM_EX_NOUSER;
+        pacemakerd.ec = CRM_EX_NOUSER;
         goto done;
     }
     pacemakerd_ipc_init();
@@ -474,7 +479,7 @@ main(int argc, char **argv)
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
-        exit_code = CRM_EX_PROTOCOL;
+        pacemakerd.ec = CRM_EX_PROTOCOL;
         goto done;
     }
 #endif
@@ -487,10 +492,10 @@ main(int argc, char **argv)
         case pcmk_rc_ok:
             break;
         case pcmk_rc_ipc_unauthorized:
-            exit_code = CRM_EX_CANTCREAT;
+            pacemakerd.ec = CRM_EX_CANTCREAT;
             goto done;
         default:
-            exit_code = CRM_EX_FATAL;
+            pacemakerd.ec = CRM_EX_FATAL;
             goto done;
     };
 
@@ -522,9 +527,9 @@ done:
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, pacemakerd.ec, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(pacemakerd.ec);
 }
