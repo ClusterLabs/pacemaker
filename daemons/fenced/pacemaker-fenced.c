@@ -47,8 +47,6 @@ long long fencing_watchdog_timeout_ms = 0;
 
 GList *stonith_watchdog_targets = NULL;
 
-static GMainLoop *mainloop = NULL;
-
 static pcmk__output_t *out = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
@@ -260,16 +258,6 @@ node_does_watchdog_fencing(const char *node)
             pcmk__str_in_list(node, stonith_watchdog_targets, pcmk__str_casei));
 }
 
-void
-stonith_shutdown(int nsig)
-{
-    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
-    fenced.shutting_down = true;
-    if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
-        g_main_loop_quit(mainloop);
-    }
-}
-
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
  * crm_resource --list-options=fencing instead of querying daemon metadata.
  *
@@ -343,6 +331,21 @@ fenced_cleanup_cmdline(void)
     g_clear_pointer(&processed_args, g_strfreev);
     g_clear_pointer(&context, g_option_context_free);
     g_clear_pointer(&options.log_files, g_strfreev);
+}
+
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+fenced_shutdown(int nsig)
+{
+    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
+    pcmk__daemon_quit(&fenced, CRM_EX_OK);
 }
 
 static void
@@ -425,8 +428,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    mainloop_add_signal(SIGTERM, stonith_shutdown);
-
     pcmk__cluster_init_node_caches();
 
     rc = fenced_scheduler_init();
@@ -456,11 +457,18 @@ main(int argc, char **argv)
     init_topology_list();
     fenced_ipc_init();
 
-    // Create the mainloop and run it...
-    mainloop = g_main_loop_new(NULL, FALSE);
-    pcmk__notice("Pacemaker fencer successfully started and accepting "
-                 "connections");
-    g_main_loop_run(mainloop);
+    rc = pcmk__daemon_init(&fenced);
+    if (rc != pcmk_rc_ok) {
+        fenced.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    mainloop_add_signal(SIGTERM, fenced_shutdown);
+
+    pcmk__daemon_run(&fenced);
 
 done:
     /* If we got here through any of the "goto done" calls instead of by the

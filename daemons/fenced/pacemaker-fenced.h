@@ -295,8 +295,6 @@ typedef struct {
 
 } stonith_topology_t;
 
-void stonith_shutdown(int nsig);
-
 void fenced_init_device_table(void);
 void fenced_free_device_table(void);
 bool fenced_has_watchdog_device(void);

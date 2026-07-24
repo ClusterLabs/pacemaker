@@ -367,10 +367,9 @@ watchdog_device_update(void)
             rc = fenced_device_register(xml, true);
             pcmk__xml_free(xml);
             if (rc != pcmk_rc_ok) {
-                fenced.ec = CRM_EX_FATAL;
                 pcmk__crit("Cannot register watchdog pseudo fence agent: %s",
                            pcmk_rc_str(rc));
-                stonith_shutdown(0);
+                pcmk__daemon_quit(&fenced, CRM_EX_FATAL);
             }
         }
 
@@ -597,7 +596,7 @@ cib_connection_destroy(void *user_data)
         cib_api->cmds->signoff(cib_api);
     }
 
-    stonith_shutdown(0);
+    pcmk__daemon_quit(&fenced, CRM_EX_DISCONNECT);
 }
 
 /*!
