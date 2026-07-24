@@ -586,15 +586,17 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
 static void
 cib_connection_destroy(void *user_data)
 {
-    if (stonith_shutdown_flag) {
+    if (fenced.shutting_down) {
         pcmk__info("Connection to the CIB manager closed");
         return;
-    } else {
-        pcmk__crit("Lost connection to the CIB manager, shutting down");
     }
+
+    pcmk__crit("Lost connection to the CIB manager, shutting down");
+
     if (cib_api) {
         cib_api->cmds->signoff(cib_api);
     }
+
     stonith_shutdown(0);
 }
 

@@ -49,8 +49,6 @@ GList *stonith_watchdog_targets = NULL;
 
 static GMainLoop *mainloop = NULL;
 
-gboolean stonith_shutdown_flag = FALSE;
-
 static pcmk__output_t *out = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
@@ -267,7 +265,7 @@ void
 stonith_shutdown(int nsig)
 {
     pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
-    stonith_shutdown_flag = TRUE;
+    fenced.shutting_down = true;
     if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
         g_main_loop_quit(mainloop);
     }
@@ -466,6 +464,13 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
+    /* If we got here through any of the "goto done" calls instead of by the
+     * main loop quitting on SIGTERM, shutting_down will still be false.  Set
+     * it here so fenced_cleanup -> fenced_cib_cleanup -> cib_connection_destroy
+     * doesn't call pcmk__daemon_quit with no main loop.
+     */
+    fenced.shutting_down = true;
+
     fenced_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
