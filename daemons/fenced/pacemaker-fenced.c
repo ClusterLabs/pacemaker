@@ -64,8 +64,6 @@ static struct {
 
 crm_exit_t exit_code = CRM_EX_OK;
 
-static void stonith_cleanup(void);
-
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
                int call_options)
@@ -272,17 +270,6 @@ stonith_shutdown(int nsig)
     }
 }
 
-static void
-stonith_cleanup(void)
-{
-    fenced_cib_cleanup();
-    fenced_ipc_cleanup();
-    free_stonith_remote_op_list();
-    free_topology_list();
-    fenced_free_device_table();
-    free_metadata_cache();
-}
-
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
  * crm_resource --list-options=fencing instead of querying daemon metadata.
  *
@@ -356,6 +343,21 @@ fenced_cleanup_cmdline(void)
     g_clear_pointer(&processed_args, g_strfreev);
     g_clear_pointer(&context, g_option_context_free);
     g_clear_pointer(&options.log_files, g_strfreev);
+}
+
+static void
+fenced_cleanup(void)
+{
+    fenced_cib_cleanup();
+    fenced_ipc_cleanup();
+    fenced_unregister_handlers();
+    fenced_cluster_disconnect();
+    fenced_scheduler_cleanup();
+
+    free_stonith_remote_op_list();
+    free_topology_list();
+    fenced_free_device_table();
+    free_metadata_cache();
 }
 
 int
@@ -462,10 +464,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
-    stonith_cleanup();
-    fenced_cluster_disconnect();
-    fenced_unregister_handlers();
-    fenced_scheduler_cleanup();
+    fenced_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
