@@ -50,6 +50,7 @@ GList *stonith_watchdog_targets = NULL;
 static pcmk__output_t *out = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
+static gchar **log_files = NULL;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -57,10 +58,6 @@ pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
-
-static struct {
-    gchar **log_files;
-} options;
 
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
@@ -283,7 +280,7 @@ static GOptionEntry entries[] = {
       NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
-      &options.log_files, N_("Send logs to the additional named logfile"), NULL },
+      &log_files, N_("Send logs to the additional named logfile"), NULL },
 
     { NULL }
 };
@@ -330,7 +327,7 @@ fenced_cleanup_cmdline(void)
 {
     g_clear_pointer(&processed_args, g_strfreev);
     g_clear_pointer(&context, g_option_context_free);
-    g_clear_pointer(&options.log_files, g_strfreev);
+    g_clear_pointer(&log_files, g_strfreev);
 }
 
 /*!
@@ -414,7 +411,7 @@ main(int argc, char **argv)
     }
 
     // Open additional log files
-    pcmk__add_logfiles(options.log_files, out);
+    pcmk__add_logfiles(log_files, out);
 
     crm_log_init(NULL, LOG_INFO + args->verbosity, TRUE,
                  (args->verbosity > 0), argc, argv, FALSE);
