@@ -247,12 +247,8 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 {
     pcmk_pacemakerd_api_reply_t *reply = event_data;
 
-    switch (event_type) {
-        case pcmk_ipc_event_reply:
-            break;
-
-        default:
-            return;
+    if (event_type != pcmk_ipc_event_reply) {
+        return;
     }
 
     if (status != CRM_EX_OK) {
