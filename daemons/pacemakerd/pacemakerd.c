@@ -350,6 +350,17 @@ pacemakerd_cleanup_cmdline(void)
     g_clear_pointer(&context, g_option_context_free);
 }
 
+static void
+pacemakerd_cleanup(void)
+{
+    pacemakerd_ipc_cleanup();
+    pacemakerd_unregister_handlers();
+
+#if SUPPORT_COROSYNC
+    cluster_disconnect_cfg();
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
@@ -496,15 +507,11 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker daemon successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
-    pacemakerd_ipc_cleanup();
-    pacemakerd_unregister_handlers();
-
     g_main_loop_unref(mainloop);
-#if SUPPORT_COROSYNC
-    cluster_disconnect_cfg();
-#endif
 
 done:
+    pacemakerd_cleanup();
+
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
