@@ -16,7 +16,7 @@
 
 #include <glib.h>                   // g_clear_pointer, g_main_loop_*
 
-#include <crm/common/ipc.h>         // pcmk_ipc_api_t, pcmk_*_ipc_api
+#include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_api_t, pcmk_*_ipc_api
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // CRM_EX_*, crm_exit, pcmk_rc_*
 
@@ -130,4 +130,44 @@ pcmk__daemon_run(pcmk__daemon_t *d)
                  pcmk__server_log_name(d->type));
     g_main_loop_run(d->mainloop);
     g_clear_pointer(&d->mainloop, g_main_loop_unref);
+}
+
+/*!
+ * \internal
+ * \brief Determine if an instance of an IPC server is already running
+ *
+ * \param[in,out] d The daemon object
+ *
+ * \return \c true if an instance of \p d is already running, and \c false if not
+ *
+ * \note This function only works for older daemons that have not yet been
+ *       converted to use the \c pcmk_ipc_api_t client interface.  Once all have
+ *       been updated, this function can be removed.
+ */
+bool
+pcmk__generic_ipc_running(pcmk__daemon_t *d)
+{
+    const char *ipc_name = pcmk__server_ipc_name(d->type);
+    crm_ipc_t *old_instance = NULL;
+    int rc = pcmk_rc_ok;
+
+    old_instance = crm_ipc_new(ipc_name, 0);
+    if (old_instance == NULL) {
+        /* This is an error - memory allocation failed, etc. - but crm_ipc_new
+         * will have already logged an error message.
+         */
+        return false;
+    }
+
+    rc = pcmk__connect_generic_ipc(old_instance);
+    if (rc != pcmk_rc_ok) {
+        pcmk__debug("No existing %s instance found: %s", ipc_name,
+                    pcmk_rc_str(rc));
+        crm_ipc_destroy(old_instance);
+        return false;
+    }
+
+    crm_ipc_close(old_instance);
+    crm_ipc_destroy(old_instance);
+    return true;
 }

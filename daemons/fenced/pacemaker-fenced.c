@@ -37,9 +37,14 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .already_running = pcmk__generic_ipc_running,
+};
+
 pcmk__daemon_t fenced = {
     .type = pcmk_ipc_fenced,
     .ec = CRM_EX_OK,
+    .ipc_fns = &ipc_fns,
 };
 
 // @TODO This should be unsigned int
@@ -295,33 +300,6 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
-static bool
-ipc_already_running(void)
-{
-    crm_ipc_t *old_instance = NULL;
-    int rc = pcmk_rc_ok;
-
-    old_instance = crm_ipc_new("stonith-ng", 0);
-    if (old_instance == NULL) {
-        /* This is an error - memory allocation failed, etc. - but crm_ipc_new
-         * will have already logged an error message.
-         */
-        return false;
-    }
-
-    rc = pcmk__connect_generic_ipc(old_instance);
-    if (rc != pcmk_rc_ok) {
-        pcmk__debug("No existing stonith-ng instance found: %s",
-                    pcmk_rc_str(rc));
-        crm_ipc_destroy(old_instance);
-        return false;
-    }
-
-    crm_ipc_close(old_instance);
-    crm_ipc_destroy(old_instance);
-    return true;
-}
-
 static void
 fenced_cleanup_cmdline(void)
 {
@@ -416,14 +394,14 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO + args->verbosity, TRUE,
                  (args->verbosity > 0), argc, argv, FALSE);
 
-    pcmk__notice("Starting Pacemaker fencer");
-
-    if (ipc_already_running()) {
+    if (fenced.ipc_fns->already_running(&fenced)) {
         g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Aborting start-up because a fencer instance is already active");
         pcmk__crit("%s", error->message);
         goto done;
     }
+
+    pcmk__notice("Starting Pacemaker fencer");
 
     pcmk__cluster_init_node_caches();
 
