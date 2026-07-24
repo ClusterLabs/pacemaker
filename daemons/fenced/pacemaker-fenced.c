@@ -37,6 +37,11 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
+pcmk__daemon_t fenced = {
+    .type = pcmk_ipc_fenced,
+    .ec = CRM_EX_OK,
+};
+
 // @TODO This should be unsigned int
 long long fencing_watchdog_timeout_ms = 0;
 
@@ -61,8 +66,6 @@ static struct {
     gboolean stand_alone;
     gchar **log_files;
 } options;
-
-crm_exit_t exit_code = CRM_EX_OK;
 
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
@@ -380,14 +383,14 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        fenced.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        fenced.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
@@ -403,8 +406,8 @@ main(int argc, char **argv)
 
         rc = fencer_metadata();
         if (rc != pcmk_rc_ok) {
-            exit_code = CRM_EX_FATAL;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+            fenced.ec = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                         "Unable to display metadata: %s", pcmk_rc_str(rc));
         }
         goto done;
@@ -419,8 +422,7 @@ main(int argc, char **argv)
     pcmk__notice("Starting Pacemaker fencer");
 
     if (ipc_already_running()) {
-        exit_code = CRM_EX_OK;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Aborting start-up because a fencer instance is already active");
         pcmk__crit("%s", error->message);
         goto done;
@@ -432,15 +434,15 @@ main(int argc, char **argv)
 
     rc = fenced_scheduler_init();
     if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        fenced.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Error initializing scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
 
     if (fenced_cluster_connect() != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        fenced.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Could not connect to the cluster");
         goto done;
     }
@@ -469,10 +471,10 @@ done:
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, fenced.ec, true, NULL);
         pcmk__output_free(out);
     }
 
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(fenced.ec);
 }

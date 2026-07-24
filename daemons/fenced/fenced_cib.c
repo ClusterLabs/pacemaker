@@ -367,7 +367,7 @@ watchdog_device_update(void)
             rc = fenced_device_register(xml, true);
             pcmk__xml_free(xml);
             if (rc != pcmk_rc_ok) {
-                exit_code = CRM_EX_FATAL;
+                fenced.ec = CRM_EX_FATAL;
                 pcmk__crit("Cannot register watchdog pseudo fence agent: %s",
                            pcmk_rc_str(rc));
                 stonith_shutdown(0);

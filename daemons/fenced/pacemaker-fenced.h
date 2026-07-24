@@ -405,6 +405,6 @@ extern GHashTable *topology;
 extern long long fencing_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
-extern crm_exit_t exit_code;
 extern gboolean stonith_shutdown_flag;
 extern pcmk_cluster_t *fenced_cluster;
+extern pcmk__daemon_t fenced;
