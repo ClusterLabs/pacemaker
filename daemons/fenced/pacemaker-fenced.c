@@ -61,7 +61,6 @@ pcmk__supported_format_t formats[] = {
 };
 
 static struct {
-    gboolean stand_alone;
     gchar **log_files;
 } options;
 
@@ -292,7 +291,7 @@ fencer_metadata(void)
 
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.stand_alone, N_("Intended for use in regression testing only"),
+      &fenced.stand_alone, N_("Intended for use in regression testing only"),
       NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
@@ -449,7 +448,7 @@ main(int argc, char **argv)
 
     fenced_set_local_node(fenced_cluster->priv->node_name);
 
-    if (!options.stand_alone) {
+    if (!fenced.stand_alone) {
         setup_cib();
     }
 
