@@ -7,12 +7,13 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#include <crm_internal.h>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
 
 #include <crm/common/util.h>
-#include <crm/common/internal.h>
 
 int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)

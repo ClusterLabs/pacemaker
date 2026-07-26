@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
+#include <inttypes.h>               // PRIu32
 #include <stddef.h>                 // NULL, size_t
 #include <stdint.h>                 // uint32_t
 #include <stdlib.h>                 // free
@@ -20,8 +20,6 @@
 
 #include <crm_config.h>             // SUPPORT_COROSYNC
 #include <crm/cluster.h>            // pcmk_cluster_*
-#include <crm/cluster/internal.h>   // pcmk__cluster_*, etc.
-#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_free, etc.
 #include <crm/common/results.h>     // CRM_EX_DISCONNECT, pcmk_rc_ok
 
 #include "pacemaker-based.h"
@@ -29,32 +27,61 @@
 static pcmk_cluster_t *cluster = NULL;
 
 static void
-based_peer_callback(xmlNode *msg, void *private_data)
+based_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
-    const char *reason = NULL;
-    const char *originator = pcmk__xe_get(msg, PCMK__XA_SRC);
+    int rc = pcmk_rc_ok;
 
-    if (pcmk__peer_cache == NULL) {
-        reason = "membership not established";
-        goto bail;
-    }
+    if (based_shutting_down()) {
+        pcmk__info("Ignoring CPG message from %s[%" PRIu32 "] during shutdown",
+                   peer->name, peer->cluster_layer_id);
+        return;
 
-    if (pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME) == NULL) {
-        pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, originator);
-    }
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = NULL,
+            .ipc_id         = 0,
+            .ipc_flags      = 0,
+            .peer           = peer->name,
+            .xml            = xml,
+            .call_options   = cib_none,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
 
-    based_process_request(msg, true, NULL);
-    return;
+        rc = pcmk__xe_get_flags(xml, PCMK__XA_CIB_CALLOPT,
+                                (uint32_t *) &request.call_options, cib_none);
+        if (rc != pcmk_rc_ok) {
+            pcmk__warn("Couldn't parse options from request: %s",
+                       pcmk_rc_str(rc));
+        }
 
-  bail:
-    if (reason) {
-        const char *op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CIB_OP);
+        CRM_CHECK(request.op != NULL, return);
 
-        pcmk__warn("Discarding %s message from %s: %s", op, originator, reason);
+        if (pcmk__is_set(request.call_options, cib_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        if (pcmk__xe_get(request.xml, PCMK__XA_CIB_CLIENTNAME) == NULL) {
+            pcmk__xe_set(request.xml, PCMK__XA_CIB_CLIENTNAME,
+                         pcmk__xe_get(request.xml, PCMK__XA_SRC));
+        }
+
+        based_handle_request(&request);
     }
 }
 
 #if SUPPORT_COROSYNC
+/*!
+ * \internal
+ * \brief Callback for when a peer message is received
+ *
+ * \param[in]     handle      Cluster connection
+ * \param[in]     group_name  Group that \p nodeid is a member of
+ * \param[in]     nodeid      Peer node that sent \p msg
+ * \param[in]     pid         Process that sent \p msg
+ * \param[in,out] msg         Received message
+ * \param[in]     msg_len     Length of \p msg
+ */
 static void
 based_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
                    uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
@@ -69,12 +96,15 @@ based_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
 
     xml = pcmk__xml_parse(data);
     if (xml == NULL) {
-        pcmk__err("Invalid XML: '%.120s'", data);
-        free(data);
-        return;
+        pcmk__err("Bad message received from %s[%" PRIu32 "]: '%.120s'", from,
+                  nodeid, data);
+
+    } else {
+        pcmk__xe_set(xml, PCMK__XA_SRC, from);
+        based_peer_message(pcmk__get_node(nodeid, from, NULL,
+                                          pcmk__node_search_cluster_member),
+                           xml);
     }
-    pcmk__xe_set(xml, PCMK__XA_SRC, from);
-    based_peer_callback(xml, NULL);
 
     pcmk__xml_free(xml);
     free(data);
@@ -88,8 +118,8 @@ based_cpg_destroy(void *user_data)
         return;
     }
 
-    pcmk__crit("Exiting immediately after losing connection to cluster layer");
-    based_terminate(CRM_EX_DISCONNECT);
+    pcmk__crit("Exiting after losing connection to cluster layer");
+    based_quit_main_loop(CRM_EX_DISCONNECT);
 }
 #endif
 

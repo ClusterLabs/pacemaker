@@ -10,7 +10,6 @@
 #include <crm_internal.h>
 
 #include <errno.h>                      // ECONNREFUSED, ENOMEM
-#include <stdbool.h>
 #include <stddef.h>                     // NULL, size_t
 #include <stdint.h>                     // int32_t, uint32_t
 #include <sys/types.h>                  // gid_t, uid_t
@@ -20,7 +19,6 @@
 #include <qb/qbipcs.h>                  // qb_ipcs_*
 
 #include <crm/cib.h>                    // cib_none, cib_sync_call
-#include <crm/common/internal.h>        // pcmk__client_*, pcmk__trace, etc.
 #include <crm/common/ipc.h>             // crm_ipc_client_response
 #include <crm/common/logging.h>         // CRM_CHECK(), CRM_LOG_ASSERT()
 #include <crm/common/results.h>         // CRM_EX_PROTOCOL, pcmk_rc_*
@@ -28,8 +26,7 @@
 
 #include "pacemaker-based.h"
 
-static qb_ipcs_service_t *ipcs_ro = NULL;
-static qb_ipcs_service_t *ipcs_rw = NULL;
+static qb_ipcs_service_t *ipcs = NULL;
 
 /*!
  * \internal
@@ -61,17 +58,16 @@ based_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
  * \internal
  * \brief Handle a message from an IPC connection
  *
- * \param[in,out] c           Established IPC connection
- * \param[in]     data        The message data read from the connection - this
- *                            can be a complete IPC message or just a part of
- *                            one if it's very large
- * \param[in]     privileged  If \c true, operations with
- *                            \c cib__op_attr_privileged can be run
+ * \param[in,out] c     Established IPC connection
+ * \param[in]     data  The message data read from the connection - this can be
+ *                      a complete IPC message or just a part of one if it's
+ *                      very large
+ * \param[in]     size  Unused
  *
  * \return 0 in all cases
  */
 static int32_t
-dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
+based_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
     uint32_t id = 0;
@@ -82,20 +78,18 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
     const char *op = NULL;
 
     // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(client != NULL, return 0);
+    CRM_CHECK(client != NULL, goto cleanup);
+
     if (data == NULL) {
         pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
+        goto cleanup;
     }
-
-    pcmk__trace("Dispatching %sprivileged request from client %s",
-                (privileged? "" : "un"), client->id);
 
     rc = pcmk__ipc_msg_append(&client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
-        return 0;
+        goto cleanup;
 
     } else if (rc == pcmk_rc_ok) {
         /* We've read the complete message and there's already a header on
@@ -116,30 +110,18 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
             client->buffer = NULL;
         }
 
-        return 0;
+        goto cleanup;
     }
 
     if (msg == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
-        return 0;
-    }
-
-    if (client->name == NULL) {
-        const char *value = pcmk__xe_get(msg, PCMK__XA_CIB_CLIENTNAME);
-
-        if (value == NULL) {
-            client->name = pcmk__itoa(client->pid);
-        } else {
-            client->name = pcmk__str_copy(value);
-        }
+        goto cleanup;
     }
 
     rc = pcmk__xe_get_flags(msg, PCMK__XA_CIB_CALLOPT, &call_options, cib_none);
     if (rc != pcmk_rc_ok) {
-        pcmk__warn("Couldn't parse options from request from IPC client %s: %s",
-                   client->name, pcmk_rc_str(rc));
-        pcmk__log_xml_info(msg, "bad-call-opts");
+        pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
     /* Requests with cib_transaction set should not be sent to based directly
@@ -149,12 +131,11 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         pcmk__warn("Ignoring CIB request from IPC client %s with "
                    "cib_transaction flag set outside of any transaction",
                    client->name);
-        pcmk__log_xml_info(msg, "no-transaction");
         goto cleanup;
     }
 
     if (pcmk__is_set(call_options, cib_sync_call)) {
-        CRM_LOG_ASSERT(flags & crm_ipc_client_response);
+        CRM_LOG_ASSERT(pcmk__is_set(flags, crm_ipc_client_response));
 
         // If false, the client has two synchronous events in flight
         CRM_LOG_ASSERT(client->request_id == 0);
@@ -162,14 +143,6 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         // Reply only to the last one
         client->request_id = id;
     }
-
-    pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTID, client->id);
-    pcmk__xe_set(msg, PCMK__XA_CIB_CLIENTNAME, client->name);
-
-    CRM_LOG_ASSERT(client->user != NULL);
-    pcmk__update_acl_user(msg, PCMK__XA_CIB_USER, client->user);
-
-    pcmk__log_xml_trace(msg, "ipc-request");
 
     op = pcmk__xe_get(msg, PCMK__XA_CIB_OP);
 
@@ -184,9 +157,31 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         pcmk__xe_set(reply, PCMK__XA_CIB_OP, CRM_OP_REGISTER);
         pcmk__xe_set(reply, PCMK__XA_CIB_CLIENTID, client->id);
         pcmk__ipc_send_xml(client, id, reply, flags);
+        pcmk__xml_free(reply);
+
+        if (client->name != NULL) {
+            /* client->name is set if and only if we've processed a register
+             * request from the client
+             */
+            pcmk__warn("Received register request from IPC client %s that is "
+                       "already registered", pcmk__client_name(client));
+            goto cleanup;
+        }
 
         client->request_id = 0;
-        pcmk__xml_free(reply);
+
+        client->name = pcmk__xe_get_copy(msg, PCMK__XA_CIB_CLIENTNAME);
+        if (client->name == NULL) {
+            // Fall back to PID for logging purposes
+            client->name = pcmk__itoa(client->pid);
+        }
+
+        goto cleanup;
+    }
+
+    if (client->name == NULL) {
+        pcmk__warn("Ignoring CIB request from unregistered client %s",
+                   pcmk__client_name(client));
         goto cleanup;
     }
 
@@ -199,50 +194,37 @@ dispatch_common(qb_ipcs_connection_t *c, void *data, bool privileged)
         }
 
         pcmk__ipc_send_ack(client, id, flags, NULL, status);
-        goto cleanup;
-    }
 
-    based_process_request(msg, privileged, client);
+    } else {
+        pcmk__request_t request = {
+            .ipc_client     = client,
+            .ipc_id         = id,
+            .ipc_flags      = flags,
+            .peer           = NULL,
+            .xml            = msg,
+            .call_options   = call_options,
+            .result         = PCMK__UNKNOWN_RESULT,
+        };
+
+        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CIB_OP);
+        CRM_CHECK(request.op != NULL, goto cleanup);
+
+        if (pcmk__is_set(request.call_options, cib_sync_call)) {
+            pcmk__set_request_flags(&request, pcmk__request_sync);
+        }
+
+        pcmk__xe_set(request.xml, PCMK__XA_CIB_CLIENTID, client->id);
+        pcmk__xe_set(request.xml, PCMK__XA_CIB_CLIENTNAME, client->name);
+
+        CRM_LOG_ASSERT(client->user != NULL);
+        pcmk__update_acl_user(request.xml, PCMK__XA_CIB_USER, client->user);
+
+        based_handle_request(&request);
+    }
 
 cleanup:
     pcmk__xml_free(msg);
     return 0;
-}
-
-/*!
- * \internal
- * \brief Handle a message from a read-only IPC connection
- *
- * \param[in,out] c     Established IPC connection
- * \param[in]     data  The message data read from the connection - this can be
- *                      a complete IPC message or just a part of one if it's
- *                      very large
- * \param[in]     size  Unused
- *
- * \return 0 in all cases
- */
-static int32_t
-based_ipc_dispatch_ro(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    return dispatch_common(c, data, false);
-}
-
-/*!
- * \internal
- * \brief Handle a message from a read/write IPC connection
- *
- * \param[in,out] c     Established IPC connection
- * \param[in]     data  The message data read from the connection - this can be
- *                      a complete IPC message or just a part of one if it's
- *                      very large
- * \param[in]     size  Unused
- *
- * \return 0 in all cases
- */
-static int32_t
-based_ipc_dispatch_rw(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    return dispatch_common(c, data, true);
 }
 
 /*!
@@ -281,18 +263,10 @@ based_ipc_destroy(qb_ipcs_connection_t *c)
     based_ipc_closed(c);
 }
 
-static struct qb_ipcs_service_handlers ipc_ro_callbacks = {
+static struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = based_ipc_accept,
     .connection_created = NULL,
-    .msg_process = based_ipc_dispatch_ro,
-    .connection_closed = based_ipc_closed,
-    .connection_destroyed = based_ipc_destroy,
-};
-
-static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
-    .connection_accept = based_ipc_accept,
-    .connection_created = NULL,
-    .msg_process = based_ipc_dispatch_rw,
+    .msg_process = based_ipc_dispatch,
     .connection_closed = based_ipc_closed,
     .connection_destroyed = based_ipc_destroy,
 };
@@ -304,8 +278,7 @@ static struct qb_ipcs_service_handlers ipc_rw_callbacks = {
 void
 based_ipc_init(void)
 {
-    pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipc_ro_callbacks,
-                          &ipc_rw_callbacks);
+    pcmk__serve_based_ipc(&ipcs, &ipc_callbacks);
 }
 
 /*!
@@ -315,11 +288,8 @@ based_ipc_init(void)
 void
 based_ipc_cleanup(void)
 {
-    pcmk__drop_all_clients(ipcs_ro);
-    g_clear_pointer(&ipcs_ro, qb_ipcs_destroy);
-
-    pcmk__drop_all_clients(ipcs_rw);
-    g_clear_pointer(&ipcs_rw, qb_ipcs_destroy);
+    pcmk__drop_all_clients(ipcs);
+    g_clear_pointer(&ipcs, qb_ipcs_destroy);
 
     /* Drop remote clients here because they're part of the IPC client table and
      * must be dropped before \c pcmk__client_cleanup()

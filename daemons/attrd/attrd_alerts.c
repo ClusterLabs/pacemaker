@@ -8,12 +8,12 @@
  */
 
 #include <crm_internal.h>
+
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
-#include <crm/cluster/internal.h>
-#include <crm/cluster/election_internal.h>
 #include <crm/common/xml.h>
 #include <crm/lrmd_internal.h>
+
 #include "pacemaker-attrd.h"
 
 static GList *attrd_alert_list = NULL;

@@ -7,6 +7,11 @@
  * version 2.1 or later (LGPLv2.1+) WITHOUT ANY WARRANTY.
  */
 
+#ifndef PCMK__INCLUDED_CRM_CLUSTER_INTERNAL_H
+#error "Include <crm/cluster/internal.h> instead of <election_internal.h> " \
+       "directly"
+#endif
+
 #ifndef PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
 #define PCMK__CRM_CLUSTER_ELECTION_INTERNAL__H
 

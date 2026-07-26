@@ -31,7 +31,6 @@
 #include <qb/qblog.h>               // LOG_TRACE, qb_log_*
 
 #include <crm_config.h>             // CRM_DAEMON_USER, CRM_*_DIR
-#include <crm/common/internal.h>    // pcmk__env_*, pcmk__output_*, etc.
 #include <crm/common/logging.h>     // do_crm_log, CRM_CHECK, etc.
 #include <crm/common/mainloop.h>    // crm_signal_handler, mainloop_add_signal
 #include <crm/common/options.h>     // PCMK_VALUE_NONE

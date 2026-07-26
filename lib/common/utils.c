@@ -63,35 +63,62 @@ pcmk_common_cleanup(void)
     xmlCleanupParser();
 }
 
+/*!
+ * \internal
+ * \brief Check whether a given user is a member of a given group
+ *
+ * \param[in] user   User name
+ * \param[in] group  Group name
+ *
+ * \return \c true if \p user is a member of \p group, or \c false otherwise
+ */
 bool
 pcmk__is_user_in_group(const char *user, const char *group)
 {
-    struct group *grent;
-    char **gr_mem;
+    int rc = pcmk_rc_ok;
+    gid_t gid = 0;
+    const struct group *group_entry = NULL;
 
-    if (user == NULL || group == NULL) {
+    pcmk__assert((user != NULL) && (group != NULL));
+
+    /* group->gr_mem only contains those users that are listed in /etc/group.
+     * It won't list the user if the group is their primary (that is, it's in
+     * the GID field in /etc/passwd (or passwd->pw_gid as returned by getpwent).
+     * So, we first need to perform a primary group check.
+     */
+    rc = pcmk__lookup_user(user, NULL, &gid);
+    if (rc != pcmk_rc_ok) {
+        pcmk__info("Could not find user '%s': %s", user, pcmk_rc_str(rc));
         return false;
     }
-    
-    setgrent();
-    while ((grent = getgrent()) != NULL) {
-        if (grent->gr_mem == NULL) {
-            continue;
-        }
 
-        if(strcmp(group, grent->gr_name) != 0) {
-            continue;
-        }
+    errno = 0;
+    group_entry = getgrnam(group);
+    if (errno != 0) {
+        pcmk__info("Could not find group '%s': %s", group, strerror(errno));
+        return false;
+    }
 
-        gr_mem = grent->gr_mem;
-        while (*gr_mem != NULL) {
-            if (!strcmp(user, *gr_mem++)) {
-                endgrent();
-                return true;
-            }
+    if (group_entry == NULL) {
+        pcmk__info("Could not find group '%s'", group);
+        return false;
+    }
+
+    if (group_entry->gr_gid == gid) {
+        return true;
+    }
+
+    /* If the primary group didn't match, check if group is a secondary group
+     * for the user
+     */
+    for (const char *const *member = (const char *const *) group_entry->gr_mem;
+         *member != NULL; member++) {
+
+        if (pcmk__str_eq(user, *member, pcmk__str_none)) {
+            return true;
         }
     }
-    endgrent();
+
     return false;
 }
 

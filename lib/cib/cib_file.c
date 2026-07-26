@@ -9,24 +9,29 @@
  */
 
 #include <crm_internal.h>
-#include <unistd.h>
-#include <limits.h>
+
+#include <errno.h>                  // errno, EINVAL, ENOENT, ENXIO, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
-#include <pwd.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t, UINT32_C
+#include <stdio.h>                  // fprintf, rename, stderr
+#include <stdlib.h>                 // calloc, free, getenv, mkstemp
+#include <string.h>                 // strcmp, strdup, strerror, strrchr
+#include <sys/stat.h>               // fchmod, stat, umask, S_*
+#include <sys/types.h>              // gid_t, uid_t
+#include <unistd.h>                 // chown, close, fchown, link, unlink, etc.
 
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*
+#include <crm/cib/internal.h>       // cib__*
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_err_*, etc.
+#include <crm/common/xml.h>         // PCMK_XA_*, PCMK_XE_*
+#include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
 
 #define CIB_SERIES "cib"
 #define CIB_SERIES_MAX 100
@@ -145,7 +150,6 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
     const char *op = pcmk__xe_get(request, PCMK__XA_CIB_OP);
 
     bool changed = false;
-    bool read_only = false;
     xmlNode *result_cib = NULL;
     xmlNode *cib_diff = NULL;
     xmlNode *local_output = NULL;
@@ -166,9 +170,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
-    read_only = !pcmk__is_set(operation->flags, cib__op_attr_modifies);
-
-    if (read_only) {
+    if (!operation->modifies_cib) {
         rc = cib__perform_op_ro(op_function, request, &private->cib_xml,
                                 &local_output);
     } else {
@@ -188,7 +190,7 @@ process_request(cib_t *cib, xmlNode *request, xmlNode **output)
         // Show validation errors to stderr
         pcmk__validate_xml(result_cib, NULL, NULL);
 
-    } else if ((rc == pcmk_rc_ok) && !read_only) {
+    } else if ((rc == pcmk_rc_ok) && operation->modifies_cib) {
         if (result_cib != private->cib_xml) {
             pcmk__xml_free(private->cib_xml);
             private->cib_xml = result_cib;
@@ -521,11 +523,21 @@ load_file_cib(const char *filename, xmlNode **output)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Sign on a native client to the CIB API
+ *
+ * \param[in,out] cib   CIB connection (client)
+ * \param[in]     name  Ignored
+ * \param[in]     type  Ignored
+ */
 static int
 file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     file_opaque_t *private = cib->variant_opaque;
+
+    name = pcmk__s(crm_system_name, "client");
 
     if (private->filename == NULL) {
         rc = -EINVAL;
@@ -535,15 +547,13 @@ file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (rc == pcmk_ok) {
         pcmk__debug("Opened connection to local file '%s' for %s",
-                    private->filename, pcmk__s(name, "client"));
+                    private->filename, name);
         cib->state = cib_connected_command;
-        cib->type = cib_command;
         register_client(cib);
 
     } else {
         pcmk__info("Connection to local file '%s' for %s (client %s) failed: "
-                   "%s",
-                   private->filename, pcmk__s(name, "client"), private->id,
+                   "%s", private->filename, name, private->id,
                    pcmk_strerror(rc));
     }
     return rc;
@@ -648,7 +658,6 @@ file_signoff(cib_t *cib)
 
     pcmk__debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
     unregister_client(cib);
     cib->cmds->end_transaction(cib, false, cib_none);
 

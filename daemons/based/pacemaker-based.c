@@ -22,8 +22,6 @@
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm_config.h>             // CRM_CONFIG_DIR, CRM_DAEMON_USER
-#include <crm/cluster/internal.h>   // pcmk__node_update, etc.
-#include <crm/common/internal.h>    // PCMK__EXITC_ERROR, pcmk__err, etc.
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // crm_log_*
 #include <crm/common/mainloop.h>    // mainloop_add_signal
@@ -229,6 +227,7 @@ static void
 based_cleanup(void)
 {
     based_callbacks_cleanup();
+    based_cluster_disconnect();
     based_io_cleanup();
     based_ipc_cleanup();
     based_remote_cleanup();
@@ -239,48 +238,39 @@ based_cleanup(void)
 
 /*!
  * \internal
- * \brief Clean up data structures and exit
+ * \brief Set an exit code and quit the main loop
  *
- * \param[in] exit_status  Exit code
+ * \param[in] ec  Exit code
  */
 void
-based_terminate(crm_exit_t exit_status)
+based_quit_main_loop(crm_exit_t ec)
 {
-    shutting_down = true;
-    based_cleanup();
-
-    if (exit_status != CRM_EX_OK) {
-        /* After calling g_main_loop_quit(), sources that have already been
-         * dispatched are still executed. On error, skip that and exit
-         * immediately after cleaning up data structures.
-         *
-         * @TODO Is this necessary? It would be nice to do the cleanup at the
-         * end of main(). If so, then one (complicated) option would be to keep
-         * track of all main loop sources and destroy them so that
-         * g_main_dispatch() ignores them.
-         */
-        crm_exit(exit_status);
-    }
-
-    based_cluster_disconnect();
-
-    // There should be no way to get here without the main loop running
-    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop),
-              crm_exit(exit_status));
-
-    g_main_loop_quit(mainloop);
-}
-
-static void
-based_shutdown(int nsig)
-{
-    if (based_shutting_down()) {
-        // Already shutting down
+    if (shutting_down) {
         return;
     }
 
     shutting_down = true;
-    based_terminate(CRM_EX_OK);
+    exit_code = ec;
+
+    // There should be no way to get here without the main loop running
+    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop),
+              crm_exit(exit_code));
+
+    g_main_loop_quit(mainloop);
+}
+
+/*!
+ * \internal
+ * \brief Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+based_shutdown(int nsig)
+{
+    based_quit_main_loop(CRM_EX_OK);
 }
 
 int
@@ -338,7 +328,7 @@ main(int argc, char **argv)
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
     pcmk__notice("Starting Pacemaker CIB manager");
 
-    old_instance = crm_ipc_new(PCMK__SERVER_BASED_RO, 0);
+    old_instance = crm_ipc_new(PCMK__SERVER_BASED_RW, 0);
     if (old_instance == NULL) {
         /* crm_ipc_new() will have already logged an error message with
          * pcmk__err()
@@ -380,7 +370,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    pcmk__cluster_init_node_caches();
     based_callbacks_init();
     based_io_init();
 
@@ -414,12 +403,12 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker CIB manager successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 
 done:
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);
 
-    based_cluster_disconnect();
     based_cleanup();
 
     pcmk__output_and_clear_error(&error, out);

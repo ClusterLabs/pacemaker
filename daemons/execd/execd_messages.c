@@ -19,7 +19,6 @@
 #include <qb/qblog.h>                       // QB_XS
 
 #include <crm/crm.h>                        // CRM_OP_*, CRM_SYSTEM_LRMD
-#include <crm/common/internal.h>            // pcmk__process_request, pcmk__xml_free
 #include <crm/common/results.h>             // pcmk_exec_status, pcmk_rc_*, pcmk_rc_str
 #include <crm/lrmd.h>                       // LRMD_OP_*
 

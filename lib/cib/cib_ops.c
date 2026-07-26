@@ -9,124 +9,80 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                  // EEXIST, EINVAL, ENXIO
 #include <stdbool.h>
-#include <stdint.h>                     // uint32_t
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <time.h>
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // free
 
-#include <sys/param.h>
-#include <sys/types.h>
+#include <glib.h>                   // g_*, GHashTable, gpointer
+#include <libxml/tree.h>            // xmlGetNodePath, xmlNode, XML_ELEMENT_NODE
+#include <libxml/xmlstring.h>       // xmlChar
+#include <libxml/xpath.h>           // xmlXPathObject, xmlXPathFreeObject
 
-#include <glib.h>
-#include <libxml/tree.h>
-#include <libxml/xpath.h>               // xmlXPathObject, etc.
-
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, createEmptyCib
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_*
+#include <crm/common/cib.h>         // pcmk_cib_*, pcmk_find_cib_element
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_legacy2rc
+#include <crm/common/xml.h>         // xml_apply_patchset, PCMK_XA_, PCMK_XE_*
+#include <crm/crm.h>                // CRM_OP_PING
 
 // @TODO: Free this via crm_exit() when libcib gets merged with libcrmcommon
 static GHashTable *operation_table = NULL;
 
 static const cib__operation_t cib_ops[] = {
     {
-        PCMK__CIB_REQUEST_ABS_DELETE, cib__op_abs_delete,
-        cib__op_attr_modifies|cib__op_attr_privileged
+        PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch, true
     },
     {
-        PCMK__CIB_REQUEST_APPLY_PATCH, cib__op_apply_patch,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_BUMP, cib__op_bump, true
     },
     {
-        PCMK__CIB_REQUEST_BUMP, cib__op_bump,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact, true
     },
     {
-        PCMK__CIB_REQUEST_COMMIT_TRANSACT, cib__op_commit_transact,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_replaces
-        |cib__op_attr_writes_through
+        PCMK__CIB_REQUEST_CREATE, cib__op_create, true
     },
     {
-        PCMK__CIB_REQUEST_CREATE, cib__op_create,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_DELETE, cib__op_delete, true
     },
     {
-        PCMK__CIB_REQUEST_DELETE, cib__op_delete,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_ERASE, cib__op_erase, true
     },
     {
-        PCMK__CIB_REQUEST_ERASE, cib__op_erase,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_replaces
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_MODIFY, cib__op_modify, true
     },
     {
-        PCMK__CIB_REQUEST_IS_PRIMARY, cib__op_is_primary,
-        cib__op_attr_privileged
+        PCMK__CIB_REQUEST_NOOP, cib__op_noop, false
     },
     {
-        PCMK__CIB_REQUEST_MODIFY, cib__op_modify,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_transaction
+        CRM_OP_PING, cib__op_ping, false
     },
     {
-        PCMK__CIB_REQUEST_NOOP, cib__op_noop, cib__op_attr_none
+        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary, false
     },
     {
-        CRM_OP_PING, cib__op_ping, cib__op_attr_none
+        PCMK__CIB_REQUEST_QUERY, cib__op_query, false
     },
     {
-        // @COMPAT: Drop cib__op_attr_modifies when we drop legacy mode support
-        PCMK__CIB_REQUEST_PRIMARY, cib__op_primary,
-        cib__op_attr_modifies|cib__op_attr_privileged|cib__op_attr_local
+        PCMK__CIB_REQUEST_REPLACE, cib__op_replace, true
     },
     {
-        PCMK__CIB_REQUEST_QUERY, cib__op_query, cib__op_attr_none
+        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, false
     },
     {
-        PCMK__CIB_REQUEST_REPLACE, cib__op_replace,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_replaces
-        |cib__op_attr_writes_through
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary, false
     },
     {
-        PCMK__CIB_REQUEST_SCHEMAS, cib__op_schemas, cib__op_attr_local
+        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, false
     },
     {
-        PCMK__CIB_REQUEST_SECONDARY, cib__op_secondary,
-        cib__op_attr_privileged|cib__op_attr_local
+        PCMK__CIB_REQUEST_SYNC, cib__op_sync, false
     },
     {
-        PCMK__CIB_REQUEST_SHUTDOWN, cib__op_shutdown, cib__op_attr_privileged
-    },
-    {
-        PCMK__CIB_REQUEST_SYNC, cib__op_sync, cib__op_attr_privileged
-    },
-    {
-        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade,
-        cib__op_attr_modifies
-        |cib__op_attr_privileged
-        |cib__op_attr_writes_through
-        |cib__op_attr_transaction
+        PCMK__CIB_REQUEST_UPGRADE, cib__op_upgrade, true
     },
 };
 
@@ -1010,7 +966,7 @@ cib__process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
     // pcmk__update_schema() may free the original validate-with string
     original_schema = pcmk__xe_get_copy(*cib, PCMK_XA_VALIDATE_WITH);
 
-    rc = pcmk__update_schema(&updated, max_schema, true,
+    rc = pcmk__update_schema(&updated, max_schema,
                              !pcmk__is_set(options, cib_verbose));
     *cib = pcmk__xml_replace_with_copy(*cib, updated);
     pcmk__xml_free(updated);

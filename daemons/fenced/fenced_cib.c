@@ -17,8 +17,6 @@
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 
-#include <crm/cluster/internal.h>
-
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 

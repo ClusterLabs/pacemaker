@@ -25,7 +25,6 @@
 #include <libxml/xmlstring.h>   // xmlChar
 
 #include <crm/cib/internal.h>   // cib__clean_up_connection, cib__signon_query
-#include <crm/common/internal.h>
 #include <crm/common/results.h>
 #include <crm/common/xml.h>     // crm_element_value, PCMK_XA_*
 

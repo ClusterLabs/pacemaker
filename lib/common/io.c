@@ -252,6 +252,7 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
                      pcmk_rc_str(rc));
         return false;
     }
+
     if (target_stat->st_uid != daemon_uid) {
         pcmk__notice("%s is not owned by user " CRM_DAEMON_USER " "
                      QB_XS " uid %lld != %lld",
@@ -259,13 +260,15 @@ pcmk__daemon_user_can_write(const char *target_name, struct stat *target_stat)
                      (long long) target_stat->st_uid);
         return false;
     }
-    if ((target_stat->st_mode & (S_IRUSR | S_IWUSR)) == 0) {
+
+    if (!pcmk__any_flags_set(target_stat->st_mode, S_IRUSR|S_IWUSR)) {
         pcmk__notice("%s is not readable and writable by user %s "
                      QB_XS " st_mode=0%lo",
                      target_name, CRM_DAEMON_USER,
                      (unsigned long) target_stat->st_mode);
         return false;
     }
+
     return true;
 }
 
@@ -289,13 +292,14 @@ pcmk__daemon_group_can_write(const char *target_name, struct stat *target_stat)
         return false;
     }
 
-    if ((target_stat->st_mode & (S_IRGRP | S_IWGRP)) == 0) {
+    if (!pcmk__any_flags_set(target_stat->st_mode, S_IRGRP|S_IWGRP)) {
         pcmk__notice("%s is not readable and writable by group %s "
                      QB_XS " st_mode=0%lo",
                      target_name, CRM_DAEMON_GROUP,
                      (unsigned long) target_stat->st_mode);
         return false;
     }
+
     return true;
 }
 

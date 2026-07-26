@@ -10,22 +10,23 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <crm_internal.h>
-#include <unistd.h>
+#include <errno.h>                  // ECOMM, EINVAL, ENOMSG, ENOTCONN, etc.
 #include <stdbool.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
+#include <stddef.h>                 // NULL
+#include <stdlib.h>                 // calloc, free
+#include <sys/types.h>              // ssize_t
 
-#include <glib.h>
+#include <glib.h>                   // gpointer, g_*, G_*, FALSE, TRUE
+#include <libxml/tree.h>            // xmlNode
 
-#include <crm/crm.h>
-#include <crm/cib/internal.h>
-
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm/cib.h>                // cib_*, remove_cib_op_callback
+#include <crm/cib/internal.h>       // cib__*, PCMK__CIB_REQUEST_QUERY
+#include <crm/common/internal.h>    // pcmk__err, pcmk__xml_*, etc.
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, crm_log_xml_explicit
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_ok, pcmk_ok, pcmk_strerror, etc.
+#include <crm/crm.h>                // CRM_OP_REGISTER, crm_system_name
 
 typedef struct {
     char *token;
@@ -76,7 +77,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         return -EINVAL;
     }
 
-    if (call_options & cib_sync_call) {
+    if (pcmk__is_set(call_options, cib_sync_call)) {
         pcmk__set_ipc_flags(ipc_flags, "client", crm_ipc_client_response);
     }
 
@@ -104,9 +105,9 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
         goto done;
     }
 
-    /* The only reason we can receive an ACK here is if dispatch_common ->
+    /* The only reason we can receive an ACK here is if based_ipc_dispatch ->
      * pcmk__client_data2xml processed something that's not valid XML.
-     * dispatch_common does not return ACK, unlike other daemons.
+     * based_ipc_dispatch does not return ACK, unlike other daemons.
      */
     if (pcmk__xe_is(op_reply, PCMK__XE_ACK) && ack_is_failure(op_reply)) {
         rc = -EPROTO;
@@ -115,7 +116,7 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
 
     pcmk__log_xml_trace(op_reply, "Reply");
 
-    if (!(call_options & cib_sync_call)) {
+    if (!pcmk__is_set(call_options, cib_sync_call)) {
         pcmk__trace("Async call, returning %d", cib->call_id);
         CRM_CHECK(cib->call_id != 0,
                   rc = -ENOMSG; goto done);
@@ -133,8 +134,11 @@ cib_native_perform_op_delegate(cib_t *cib, const char *op, const char *host,
             rc = -EPROTO;
         }
 
-        if (output_data == NULL || (call_options & cib_discard_reply)) {
+        if ((output_data == NULL)
+            || pcmk__is_set(call_options, cib_discard_reply)) {
+
             pcmk__trace("Discarding reply");
+
         } else {
             *output_data = pcmk__xml_copy(NULL, tmp);
         }
@@ -273,115 +277,98 @@ cib_native_signoff(cib_t *cib)
 
     cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
 
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Sign on a native client to the CIB API
+ *
+ * \param[in,out] cib   CIB connection (client)
+ * \param[in]     name  Ignored
+ * \param[in]     type  Ignored
+ */
 static int
 cib_native_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
-    const char *channel = NULL;
     cib_native_opaque_t *native = cib->variant_opaque;
     xmlNode *hello = NULL;
+    xmlNode *reply = NULL;
+    const char *msg_type = NULL;
 
     struct ipc_client_callbacks cib_callbacks = {
         .dispatch = cib_native_dispatch_internal,
-        .destroy = cib_native_destroy
+        .destroy = cib_native_destroy,
     };
 
-    if (name == NULL) {
-        name = pcmk__s(crm_system_name, "client");
-    }
+    name = pcmk__s(crm_system_name, "client");
 
     cib->call_timeout = PCMK__IPC_TIMEOUT;
 
-    switch (type) {
-        case cib_command:
-        case cib_command_nonblocking:
-            // @COMPAT cib_command_nonblocking is deprecated since 3.0.2
-            cib->state = cib_connected_command;
-            channel = PCMK__SERVER_BASED_RW;
-            break;
-
-        case cib_query:
-            cib->state = cib_connected_query;
-            channel = PCMK__SERVER_BASED_RO;
-            break;
-
-        default:
-            return -ENOTCONN;
-    }
-
-    pcmk__trace("Connecting %s channel", channel);
-
-    native->source = mainloop_add_ipc_client(channel, G_PRIORITY_HIGH, 0, cib,
+    native->source = mainloop_add_ipc_client(PCMK__SERVER_BASED_RW,
+                                             G_PRIORITY_HIGH, 0, cib,
                                              &cib_callbacks);
     native->ipc = mainloop_get_ipc_client(native->source);
 
-    if (rc != pcmk_ok || native->ipc == NULL || !crm_ipc_connected(native->ipc)) {
+    if ((native->ipc == NULL) || !crm_ipc_connected(native->ipc)) {
         pcmk__info("Could not connect to CIB manager for %s", name);
         rc = -ENOTCONN;
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL,
-                            cib_sync_call, NULL, name, &hello);
-        rc = pcmk_rc2legacy(rc);
+    rc = cib__create_op(cib, CRM_OP_REGISTER, NULL, NULL, NULL, cib_sync_call,
+                        NULL, name, &hello);
+    rc = pcmk_rc2legacy(rc);
+    if (rc != pcmk_ok) {
+        goto done;
     }
 
-    if (rc == pcmk_ok) {
-        xmlNode *reply = NULL;
-        const char *msg_type = NULL;
-
-        if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
-                         &reply) <= 0) {
-            rc = -ECOMM;
-            goto done;
-        }
-
-        /* The only reason we can receive an ACK here is if dispatch_common ->
-         * pcmk__client_data2xml processed something that's not valid XML.
-         * dispatch_common does not return ACK, unlike other daemons.
-         */
-        if (pcmk__xe_is(reply, PCMK__XE_ACK) && ack_is_failure(reply)) {
-            rc = -EPROTO;
-            pcmk__xml_free(reply);
-            goto done;
-        }
-
-        msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
-
-        pcmk__log_xml_trace(reply, "reg-reply");
-
-        if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
-            pcmk__info("Reply to CIB registration message has unknown type "
-                       "'%s'",
-                       msg_type);
-            rc = -EPROTO;
-
-        } else {
-            native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
-            if (native->token == NULL) {
-                rc = -EPROTO;
-            }
-        }
-
-        pcmk__xml_free(reply);
+    if (crm_ipc_send(native->ipc, hello, crm_ipc_client_response, -1,
+                     &reply) <= 0) {
+        rc = -ECOMM;
+        goto done;
     }
+
+    /* The only reason we can receive an ACK here is if based_ipc_dispatch ->
+     * pcmk__client_data2xml processed something that's not valid XML.
+     * based_ipc_dispatch does not return ACK, unlike other daemons.
+     */
+    if (pcmk__xe_is(reply, PCMK__XE_ACK) && ack_is_failure(reply)) {
+        rc = -EPROTO;
+        goto done;
+    }
+
+    pcmk__log_xml_trace(reply, "reg-reply");
+    msg_type = pcmk__xe_get(reply, PCMK__XA_CIB_OP);
+
+    if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
+        pcmk__info("Reply to CIB registration message has unknown type '%s'",
+                   msg_type);
+        rc = -EPROTO;
+        goto done;
+    }
+
+    native->token = pcmk__xe_get_copy(reply, PCMK__XA_CIB_CLIENTID);
+    if (native->token == NULL) {
+        rc = -EPROTO;
+        goto done;
+    }
+
+    pcmk__info("Successfully connected to CIB manager for %s", name);
+    cib->state = cib_connected_command;
 
 done:
     pcmk__xml_free(hello);
+    pcmk__xml_free(reply);
 
-    if (rc == pcmk_ok) {
-        pcmk__info("Successfully connected to CIB manager for %s", name);
-        return pcmk_ok;
+    if (rc != pcmk_ok) {
+        pcmk__info("Connection to CIB manager for %s failed: %s", name,
+                   pcmk_strerror(rc));
+        cib_native_signoff(cib);
     }
 
-    pcmk__info("Connection to CIB manager for %s failed: %s", name,
-               pcmk_strerror(rc));
-    cib_native_signoff(cib);
     return rc;
 }
 

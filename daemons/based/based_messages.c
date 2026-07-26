@@ -19,8 +19,6 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm/cib/internal.h>       // PCMK__CIB_REQUEST_UPGRADE
-#include <crm/cluster/internal.h>   // pcmk__cluster_send_message
-#include <crm/common/internal.h>    // pcmk__info, pcmk__xml_free, etc.
 #include <crm/common/ipc.h>         // pcmk_ipc_server
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_err, pcmk_ok, pcmk_rc*
@@ -28,27 +26,6 @@
 #include <crm/crm.h>                // CRM_FEATURE_SET
 
 #include "pacemaker-based.h"
-
-/*!
- * \internal
- * \brief Process a \c PCMK__CIB_REQUEST_ABS_DELETE
- *
- * \param[in] req      Ignored
- * \param[in] cib      Ignored
- * \param[in] answer   Ignored
- *
- * \return \c EINVAL
- *
- * \note This is unimplemented and simply returns an error.
- */
-int
-based_process_abs_delete(xmlNode *req, xmlNode **cib, xmlNode **answer)
-{
-    /* @COMPAT Remove when PCMK__CIB_REQUEST_ABS_DELETE is removed. Note that
-     * external clients with Pacemaker versions < 3.0.0 can send it.
-     */
-    return EINVAL;
-}
 
 int
 based_process_commit_transact(xmlNode *req, xmlNode **cib, xmlNode **answer)
@@ -73,13 +50,6 @@ based_process_commit_transact(xmlNode *req, xmlNode **cib, xmlNode **answer)
     }
 
     return rc;
-}
-
-int
-based_process_is_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
-{
-    // @COMPAT Pacemaker Remote clients <3.0.0 may send this
-    return (based_get_local_node_dc()? pcmk_rc_ok : EPERM);
 }
 
 // @COMPAT: Remove when PCMK__CIB_REQUEST_NOOP is removed
@@ -130,6 +100,9 @@ based_process_ping(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_primary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
+    // This should always be processed locally and never addressed to any host
+    CRM_CHECK(pcmk__xe_get(req, PCMK__XA_CIB_HOST) == NULL, return EOPNOTSUPP);
+
     if (!based_get_local_node_dc()) {
         pcmk__info("We are now in R/W mode");
         based_set_local_node_dc(true);
@@ -149,6 +122,9 @@ based_process_schemas(xmlNode *req, xmlNode **cib, xmlNode **answer)
     const char *after_ver = NULL;
     GList *schemas = NULL;
     GList *already_included = NULL;
+
+    // This should always be processed locally and never addressed to any host
+    CRM_CHECK(pcmk__xe_get(req, PCMK__XA_CIB_HOST) == NULL, return EOPNOTSUPP);
 
     *answer = pcmk__xe_create(NULL, PCMK__XA_SCHEMAS);
 
@@ -186,6 +162,9 @@ based_process_schemas(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_secondary(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
+    // This should always be processed locally and never addressed to any host
+    CRM_CHECK(pcmk__xe_get(req, PCMK__XA_CIB_HOST) == NULL, return EOPNOTSUPP);
+
     if (based_get_local_node_dc()) {
         pcmk__info("We are now in R/O mode");
         based_set_local_node_dc(false);
@@ -220,9 +199,6 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
 
     xmlNode *scratch = NULL;
     const char *host = pcmk__xe_get(req, PCMK__XA_SRC);
-    const char *client_id = pcmk__xe_get(req, PCMK__XA_CIB_CLIENTID);
-    const char *call_opts = pcmk__xe_get(req, PCMK__XA_CIB_CALLOPT);
-    const char *call_id = pcmk__xe_get(req, PCMK__XA_CIB_CALLID);
     const char *original_schema = NULL;
     const char *new_schema = NULL;
     pcmk__node_status_t *origin = NULL;
@@ -236,8 +212,6 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
         return cib__process_upgrade(req, cib, answer);
     }
 
-    scratch = pcmk__xml_copy(NULL, *cib);
-
     original_schema = pcmk__xe_get(*cib, PCMK_XA_VALIDATE_WITH);
     if (original_schema == NULL) {
         pcmk__info("Rejecting upgrade request from %s: No "
@@ -245,26 +219,18 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
         return pcmk_rc_cib_corrupt;
     }
 
-    rc = pcmk__update_schema(&scratch, NULL, true, true);
+    scratch = pcmk__xml_copy(NULL, *cib);
+
+    rc = pcmk__update_schema(&scratch, NULL, true);
     new_schema = pcmk__xe_get(scratch, PCMK_XA_VALIDATE_WITH);
 
     if (pcmk__cmp_schemas_by_name(new_schema, original_schema) > 0) {
-        xmlNode *up = pcmk__xe_create(NULL, __func__);
-
         rc = pcmk_rc_ok;
         pcmk__notice("Upgrade request from %s verified", host);
 
-        pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
-        pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-        pcmk__xe_set(up, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
-        pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
-        pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
-
-        pcmk__cluster_send_message(NULL, pcmk_ipc_based, up);
-
-        pcmk__xml_free(up);
+        pcmk__xe_set(req, PCMK__XA_CIB_DELEGATED_FROM, host);
+        pcmk__xe_set(req, PCMK__XA_CIB_SCHEMA_MAX, new_schema);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_based, req);
         goto done;
     }
 
@@ -281,20 +247,10 @@ based_process_upgrade(xmlNode *req, xmlNode **cib, xmlNode **answer)
                ((origin != NULL)? origin->name : "lost"));
 
     if (origin != NULL) {
-        xmlNode *up = pcmk__xe_create(NULL, __func__);
-
-        pcmk__xe_set(up, PCMK__XA_T, PCMK__VALUE_CIB);
-        pcmk__xe_set(up, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_UPGRADE);
-        pcmk__xe_set(up, PCMK__XA_CIB_DELEGATED_FROM, host);
-        pcmk__xe_set(up, PCMK__XA_CIB_ISREPLYTO, host);
-        pcmk__xe_set(up, PCMK__XA_CIB_CLIENTID, client_id);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLOPT, call_opts);
-        pcmk__xe_set(up, PCMK__XA_CIB_CALLID, call_id);
-        pcmk__xe_set_int(up, PCMK__XA_CIB_UPGRADE_RC, pcmk_rc2legacy(rc));
-        if (!pcmk__cluster_send_message(origin, pcmk_ipc_based, up)) {
-            pcmk__warn("Could not send CIB upgrade result to %s", host);
-        }
-        pcmk__xml_free(up);
+        pcmk__xe_set(req, PCMK__XA_CIB_DELEGATED_FROM, host);
+        pcmk__xe_set(req, PCMK__XA_CIB_ISREPLYTO, host);
+        pcmk__xe_set_int(req, PCMK__XA_CIB_UPGRADE_RC, pcmk_rc2legacy(rc));
+        pcmk__cluster_send_message(origin, pcmk_ipc_based, req);
     }
 
 done:
@@ -305,6 +261,7 @@ done:
 static xmlNode *
 cib_msg_copy(const xmlNode *msg)
 {
+    // @FIXME Copying CIB_CALLOPT seems problematic if it has cib_discard_reply
     static const char *field_list[] = {
         PCMK__XA_T,
         PCMK__XA_CIB_CLIENTID,
@@ -374,9 +331,9 @@ sync_our_cib(const xmlNode *request, bool all)
     if (!all) {
         peer = pcmk__get_node(0, host, NULL, pcmk__node_search_cluster_member);
     }
-    if (!pcmk__cluster_send_message(peer, pcmk_ipc_based, replace_request)) {
-        rc = ENOTCONN;
-    }
+
+    pcmk__cluster_send_message(peer, pcmk_ipc_based, replace_request);
+
     pcmk__xml_free(replace_request);
     free(digest);
     return rc;

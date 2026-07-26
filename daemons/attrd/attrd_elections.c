@@ -12,7 +12,6 @@
 #include <stdbool.h>
 
 #include <crm/cluster.h>
-#include <crm/cluster/election_internal.h>
 #include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"

@@ -20,7 +20,6 @@
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
 
-#include <crm/common/internal.h>    // pcmk__client_t, etc.
 #include <crm/common/ipc.h>         // pcmk_free_ipc_event
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT
 #include <crm/common/results.h>     // pcmk_rc_*

@@ -1388,7 +1388,7 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
         private->op_callback = callback;
 
     } else if (call_id < 0) { // Call failed immediately, so call callback now
-        if (!(options & st_opt_report_only_success)) {
+        if (!pcmk__is_set(options, st_opt_report_only_success)) {
             pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 
             pcmk__trace("Call failed, calling %s: %s", callback_name,
@@ -1405,10 +1405,10 @@ stonith_api_add_callback(stonith_t * stonith, int call_id, int timeout, int opti
 
     blob = pcmk__assert_alloc(1, sizeof(stonith_callback_client_t));
     blob->id = callback_name;
-    blob->only_success = (options & st_opt_report_only_success) ? TRUE : FALSE;
+    blob->only_success = pcmk__is_set(options, st_opt_report_only_success);
     blob->user_data = user_data;
     blob->callback = callback;
-    blob->allow_timeout_updates = (options & st_opt_timeout_updates) ? TRUE : FALSE;
+    blob->allow_timeout_updates = pcmk__is_set(options, st_opt_timeout_updates);
 
     if (timeout > 0) {
         set_callback_timeout(blob, stonith, call_id, timeout);
@@ -1637,7 +1637,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
     {
         enum crm_ipc_flags ipc_flags = crm_ipc_flags_none;
 
-        if (call_options & st_opt_sync_call) {
+        if (pcmk__is_set(call_options, st_opt_sync_call)) {
             pcmk__set_ipc_flags(ipc_flags, "fencing command",
                                 crm_ipc_client_response);
         }
@@ -1660,7 +1660,7 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
 
     pcmk__log_xml_trace(op_reply, "Reply");
 
-    if (!(call_options & st_opt_sync_call)) {
+    if (!pcmk__is_set(call_options, st_opt_sync_call)) {
         pcmk__trace("Async call %d, returning", stonith->call_id);
         pcmk__xml_free(op_reply);
         return stonith->call_id;
@@ -1677,7 +1677,9 @@ stonith_send_command(stonith_t * stonith, const char *op, xmlNode * data, xmlNod
         rc = pcmk_rc2legacy(stonith__result2rc(&result));
         pcmk__reset_result(&result);
 
-        if ((call_options & st_opt_discard_reply) || output_data == NULL) {
+        if (pcmk__is_set(call_options, st_opt_discard_reply)
+            || (output_data == NULL)) {
+
             pcmk__trace("Discarding reply");
 
         } else {

@@ -22,7 +22,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
@@ -606,6 +605,7 @@ mainloop_tests(void)
     pcmk__info("Starting");
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 }
 
 static GOptionContext *

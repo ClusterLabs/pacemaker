@@ -27,7 +27,6 @@
 
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/internal.h>
 #include "crmcluster_private.h"
 
 /*!
@@ -204,24 +203,21 @@ pcmk_cluster_set_destroy_fn(pcmk_cluster_t *cluster, void (*fn)(void *))
  * \param[in] node     Cluster node to send message to
  * \param[in] service  Message type to use in message host info
  * \param[in] data     XML message to send
- *
- * \return \c true on success, or \c false otherwise
  */
-bool
+void
 pcmk__cluster_send_message(const pcmk__node_status_t *node,
                            enum pcmk_ipc_server service, const xmlNode *data)
 {
-    // @TODO Return standard Pacemaker return code
     switch (pcmk_get_cluster_layer()) {
 #if SUPPORT_COROSYNC
         case pcmk_cluster_layer_corosync:
-            return pcmk__cpg_send_xml(data, node, service);
+            pcmk__cpg_send_xml(data, node, service);
+            return;
 #endif  // SUPPORT_COROSYNC
 
         default:
-            break;
+            return;
     }
-    return false;
 }
 
 /*!

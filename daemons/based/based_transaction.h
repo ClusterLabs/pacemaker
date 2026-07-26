@@ -1,5 +1,5 @@
 /*
- * Copyright 2023-2025 the Pacemaker project contributors
+ * Copyright 2023-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -17,7 +17,7 @@
 char *based_transaction_source_str(const pcmk__client_t *client,
                                    const char *origin);
 
-int based_commit_transaction(xmlNode *transaction, const pcmk__client_t *client,
+int based_commit_transaction(xmlNode *transaction, pcmk__client_t *client,
                              const char *origin, xmlNode **result_cib);
 
 #endif // BASED_TRANSACTION__H

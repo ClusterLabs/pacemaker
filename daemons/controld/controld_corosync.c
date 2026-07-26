@@ -18,7 +18,6 @@
 #include <sys/stat.h>
 
 #include <crm/crm.h>
-#include <crm/cluster/internal.h>
 #include <crm/common/xml.h>
 
 #include <pacemaker-controld.h>

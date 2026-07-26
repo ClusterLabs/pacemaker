@@ -14,7 +14,6 @@
 
 #include <glib.h>
 
-#include <crm/cluster/internal.h>   // pcmk__get_node()
 #include <crm/common/xml.h>
 
 #include "pacemaker-attrd.h"
@@ -349,7 +348,7 @@ attrd_send_protocol(const pcmk__node_status_t *peer)
     pcmk__xml_free(attrd_op);
 }
 
-gboolean
+void
 attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
     const char *op = pcmk__xe_get(data, PCMK_XA_TASK);
@@ -366,5 +365,5 @@ attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
     }
 
     attrd_xml_add_writer(data);
-    return pcmk__cluster_send_message(node, pcmk_ipc_attrd, data);
+    pcmk__cluster_send_message(node, pcmk_ipc_attrd, data);
 }

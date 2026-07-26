@@ -29,66 +29,72 @@
  * members, and libqb IPC server endpoints for both the old and new names, and
  * could drop the old names only after we no longer supported connections with
  * older nodes.
+ *
+ * @TODO It would be easy to use system_names[0] as a server's IPC name.
+ * Everything would automatically use the new names except for proxied
+ * connections from *older* Pacemaker Remote nodes. We would just have to map
+ * the old names to the new names in remote_proxy_new(), the same as we're
+ * currently mapping PCMK__SERVER_BASED_RO to PCMK__SERVER_BASED_RW there.
  */
 static struct {
     const char *log_name;         // Readable server name for use in logs
     const char *system_names[2];  // crm_system_name values (subdaemon names)
-    const char *ipc_names[2];     // libqb IPC names used to contact server
+    const char *ipc_name;         // libqb IPC name used to contact server
     const char *message_types[3]; // IPC/cluster message types sent to server
 } server_info[] = {
     [pcmk_ipc_unknown] = {
         NULL,
         { NULL, NULL, },
-        { NULL, NULL, },
+        NULL,
         { NULL, NULL, NULL, },
     },
 
     [pcmk_ipc_attrd] = {
         "attribute manager",
         { PCMK__SERVER_ATTRD, NULL, },
-        { PCMK__VALUE_ATTRD, NULL, },
+        PCMK__VALUE_ATTRD,
         { PCMK__VALUE_ATTRD, NULL, NULL, },
     },
 
     [pcmk_ipc_based] = {
         "CIB manager",
         { PCMK__SERVER_BASED, NULL, },
-        { PCMK__SERVER_BASED_RW, PCMK__SERVER_BASED_RO, },
+        PCMK__SERVER_BASED_RW,
         { CRM_SYSTEM_CIB, NULL, NULL, },
     },
 
     [pcmk_ipc_controld] = {
         "controller",
         { PCMK__SERVER_CONTROLD, NULL, },
-        { PCMK__VALUE_CRMD, NULL, },
+        PCMK__VALUE_CRMD,
         { PCMK__VALUE_CRMD, CRM_SYSTEM_DC, CRM_SYSTEM_TENGINE, },
     },
 
     [pcmk_ipc_execd] = {
         "executor",
         { PCMK__SERVER_EXECD, PCMK__SERVER_REMOTED, },
-        { PCMK__VALUE_LRMD, NULL, },
+        PCMK__VALUE_LRMD,
         { PCMK__VALUE_LRMD, NULL, NULL, },
     },
 
     [pcmk_ipc_fenced] = {
         "fencer",
         { PCMK__SERVER_FENCED, NULL, },
-        { PCMK__VALUE_STONITH_NG, NULL, },
+        PCMK__VALUE_STONITH_NG,
         { PCMK__VALUE_STONITH_NG, NULL, NULL, },
     },
 
     [pcmk_ipc_pacemakerd] = {
         "launcher",
         { PCMK__SERVER_PACEMAKERD, NULL, },
-        { CRM_SYSTEM_MCP, NULL, },
+        CRM_SYSTEM_MCP,
         { CRM_SYSTEM_MCP, NULL, NULL, },
     },
 
     [pcmk_ipc_schedulerd] = {
         "scheduler",
         { PCMK__SERVER_SCHEDULERD, NULL, },
-        { CRM_SYSTEM_PENGINE, NULL, },
+        CRM_SYSTEM_PENGINE,
         { CRM_SYSTEM_PENGINE, NULL, NULL, },
     },
 };
@@ -131,7 +137,7 @@ pcmk__server_log_name(enum pcmk_ipc_server server)
 
 /*!
  * \internal
- * \brief Return the (primary) IPC endpoint name for a server
+ * \brief Return the IPC endpoint name for a server
  *
  * \param[in] server  Server to get IPC endpoint for
  *
@@ -144,7 +150,7 @@ pcmk__server_ipc_name(enum pcmk_ipc_server server)
 {
     CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
               return NULL);
-    return server_info[server].ipc_names[0];
+    return server_info[server].ipc_name;
 }
 
 /*!
@@ -191,13 +197,11 @@ pcmk__parse_server(const char *text)
                 return server;
             }
         }
-        for (name = 0;
-             (name < 2) && (server_info[server].ipc_names[name] != NULL);
-             ++name) {
-            if (strcmp(text, server_info[server].ipc_names[name]) == 0) {
-                return server;
-            }
+
+        if (pcmk__str_eq(text, server_info[server].ipc_name, pcmk__str_none)) {
+            return server;
         }
+
         for (name = 0;
              (name < 3) && (server_info[server].message_types[name] != NULL);
              ++name) {

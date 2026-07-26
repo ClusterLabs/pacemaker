@@ -1090,7 +1090,7 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, void *user_data)
      * Exit with an error, otherwise the process would persist in the
      * background and significantly raise the CPU usage.
      */
-    if ((condition & G_IO_ERR) && (condition & G_IO_HUP)) {
+    if (pcmk__all_flags_set(condition, G_IO_ERR|G_IO_HUP)) {
         rc = G_SOURCE_REMOVE;
         clean_up(CRM_EX_IOERR);
     }
@@ -1098,11 +1098,11 @@ detect_user_input(GIOChannel *channel, GIOCondition condition, void *user_data)
     /* The connection/fd has been closed. Refresh the screen and remove this
      * event source hence ignore stdin.
      */
-    if (condition & (G_IO_HUP | G_IO_NVAL)) {
+    if (pcmk__any_flags_set(condition, G_IO_HUP|G_IO_NVAL)) {
         rc = G_SOURCE_REMOVE;
     }
 
-    if ((condition & G_IO_IN) == 0) {
+    if (!pcmk__is_set(condition, G_IO_IN)) {
         return rc;
     }
 

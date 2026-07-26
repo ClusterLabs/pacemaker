@@ -25,9 +25,12 @@ extern "C" {
 #define PCMK__NELEM(a) ((int) (sizeof(a)/sizeof(a[0])) )
 
 int pcmk__compare_versions(const char *version1, const char *version2);
+
 int pcmk__daemon_user(uid_t *uid, gid_t *gid);
-char *pcmk__generate_uuid(void);
+bool pcmk__is_user_in_group(const char *user, const char *group);
 int pcmk__lookup_user(const char *name, uid_t *uid, gid_t *gid);
+
+char *pcmk__generate_uuid(void);
 void pcmk__panic(const char *reason);
 pid_t pcmk__locate_sbd(void);
 void pcmk__sleep_ms(unsigned int ms);
