@@ -90,6 +90,13 @@ schedulerd_cleanup_cmdline(void)
     g_clear_pointer(&options.remainder, g_strfreev);
 }
 
+static void
+schedulerd_cleanup(void)
+{
+    schedulerd_ipc_cleanup();
+    schedulerd_unregister_handlers();
+}
+
 int
 main(int argc, char **argv)
 {
@@ -180,6 +187,7 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
+    schedulerd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
     pengine_shutdown(0);
@@ -188,9 +196,6 @@ done:
 void
 pengine_shutdown(int nsig)
 {
-    schedulerd_ipc_cleanup();
-    schedulerd_unregister_handlers();
-
     if (logger_out != NULL) {
         logger_out->finish(logger_out, exit_code, true, NULL);
         g_clear_pointer(&logger_out, pcmk__output_free);
