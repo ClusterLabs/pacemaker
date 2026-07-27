@@ -174,7 +174,10 @@ main(int argc, char **argv)
         goto done;
     }
 
-    schedulerd_ipc_init();
+    if (!schedulerd_ipc_init()) {
+        schedulerd.ec = CRM_EX_FATAL;
+        goto done;
+    }
 
     if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         schedulerd.ec = CRM_EX_FATAL;

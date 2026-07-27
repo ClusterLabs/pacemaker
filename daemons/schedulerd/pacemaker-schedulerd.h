@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,7 +14,7 @@
 
 extern pcmk__output_t *logger_out;
 
-void schedulerd_ipc_init(void);
+bool schedulerd_ipc_init(void);
 void schedulerd_ipc_cleanup(void);
 void schedulerd_unregister_handlers(void);
 void schedulerd_handle_request(pcmk__request_t *request);

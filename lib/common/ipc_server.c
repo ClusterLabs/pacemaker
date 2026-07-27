@@ -1217,9 +1217,6 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \return Newly created IPC server
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
@@ -1233,6 +1230,5 @@ pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
                    pcmk__server_log_name(pcmk_ipc_schedulerd));
-        crm_exit(CRM_EX_FATAL);
     }
 }
