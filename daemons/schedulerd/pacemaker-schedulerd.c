@@ -48,8 +48,6 @@ pcmk__supported_format_t formats[] = {
     { NULL, NULL, NULL }
 };
 
-void pengine_shutdown(int nsig);
-
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
  * crm_attribute --list-options=cluster instead of querying daemon metadata.
  *
@@ -97,6 +95,12 @@ schedulerd_cleanup(void)
     schedulerd_unregister_handlers();
 }
 
+static void
+schedulerd_shutdown(int nsig)
+{
+    g_main_loop_quit(mainloop);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -113,7 +117,7 @@ main(int argc, char **argv)
     context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGTERM, pengine_shutdown);
+    mainloop_add_signal(SIGTERM, schedulerd_shutdown);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
@@ -185,17 +189,13 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker scheduler successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
+    g_clear_pointer(&mainloop, g_main_loop_unref);
 
 done:
     schedulerd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
-    pengine_shutdown(0);
-}
 
-void
-pengine_shutdown(int nsig)
-{
     if (logger_out != NULL) {
         logger_out->finish(logger_out, exit_code, true, NULL);
         g_clear_pointer(&logger_out, pcmk__output_free);
