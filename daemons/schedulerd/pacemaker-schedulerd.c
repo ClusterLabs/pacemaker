@@ -29,9 +29,14 @@
 #define SUMMARY PCMK__SERVER_SCHEDULERD " - daemon for calculating a " \
                 "Pacemaker cluster's response to events"
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .already_running = pcmk__daemon_ipc_running,
+};
+
 static pcmk__daemon_t schedulerd = {
     .type = pcmk_ipc_schedulerd,
     .ec = CRM_EX_OK,
+    .ipc_fns = &ipc_fns,
 };
 
 pcmk__output_t *logger_out = NULL;
@@ -162,6 +167,16 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_SCHEDULERD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    if (schedulerd.ipc_fns->already_running(&schedulerd)) {
+        schedulerd.ec = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
+                    "Aborting start-up because a scheduler instance is "
+                    "already active");
+        pcmk__crit("%s", error->message);
+        goto done;
+    }
+
     pcmk__notice("Starting Pacemaker scheduler");
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
