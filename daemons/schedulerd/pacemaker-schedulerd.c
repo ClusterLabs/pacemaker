@@ -36,6 +36,8 @@ struct {
 pcmk__output_t *logger_out = NULL;
 
 static pcmk__output_t *out = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
 
@@ -80,6 +82,14 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+schedulerd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&options.remainder, g_strfreev);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -87,9 +97,13 @@ main(int argc, char **argv)
     int rc = pcmk_rc_ok;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+
+    atexit(schedulerd_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
     mainloop_add_signal(SIGTERM, pengine_shutdown);
@@ -166,9 +180,6 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
-    g_strfreev(options.remainder);
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
 
     pcmk__output_and_clear_error(&error, out);
     pengine_shutdown(0);
