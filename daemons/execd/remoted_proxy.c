@@ -520,6 +520,10 @@ ipc_proxy_init(void)
 
     pcmk__serve_based_ipc(&cib_ro, &cib_rw, &cib_proxy_callbacks_ro,
                           &cib_proxy_callbacks_rw);
+    if ((cib_ro == NULL) || (cib_rw == NULL)) {
+        execd.ec = CRM_EX_FATAL;
+        return false;
+    }
 
     pcmk__serve_attrd_ipc(&attrd_ipcs, &attrd_proxy_callbacks);
     if (attrd_ipcs == NULL) {

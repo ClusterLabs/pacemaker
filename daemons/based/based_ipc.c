@@ -306,6 +306,10 @@ based_ipc_init(void)
 {
     pcmk__serve_based_ipc(&ipcs_ro, &ipcs_rw, &ipc_ro_callbacks,
                           &ipc_rw_callbacks);
+
+    if ((ipcs_ro == NULL) || (ipcs_rw == NULL)) {
+        crm_exit(CRM_EX_FATAL);
+    }
 }
 
 /*!

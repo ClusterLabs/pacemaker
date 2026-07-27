@@ -1065,8 +1065,6 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
  * \param[out] ipcs_rw   New IPC server for read/write CIB manager API
  * \param[in]  ro_cb     IPC callbacks for read-only API
  * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
- *
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
@@ -1087,7 +1085,6 @@ pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
                    pcmk__server_log_name(pcmk_ipc_based));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-        crm_exit(CRM_EX_FATAL);
     }
 }
 
