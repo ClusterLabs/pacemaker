@@ -29,10 +29,6 @@
 #define SUMMARY PCMK__SERVER_SCHEDULERD " - daemon for calculating a " \
                 "Pacemaker cluster's response to events"
 
-struct {
-    gchar **remainder;
-} options;
-
 pcmk__output_t *logger_out = NULL;
 
 static pcmk__output_t *out = NULL;
@@ -40,6 +36,7 @@ static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 static GMainLoop *mainloop = NULL;
 static crm_exit_t exit_code = CRM_EX_OK;
+static gchar **remainder = NULL;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -68,7 +65,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
-        { G_OPTION_REMAINING, 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY, &options.remainder,
+        { G_OPTION_REMAINING, 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY, &remainder,
           NULL,
           NULL },
 
@@ -85,7 +82,7 @@ schedulerd_cleanup_cmdline(void)
 {
     g_clear_pointer(&processed_args, g_strfreev);
     g_clear_pointer(&context, g_option_context_free);
-    g_clear_pointer(&options.remainder, g_strfreev);
+    g_clear_pointer(&remainder, g_strfreev);
 }
 
 static void
@@ -136,9 +133,9 @@ main(int argc, char **argv)
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
 
-    if (options.remainder) {
-        if (g_strv_length(options.remainder) == 1 &&
-            pcmk__str_eq("metadata", options.remainder[0], pcmk__str_casei)) {
+    if (remainder != NULL) {
+        if (g_strv_length(remainder) == 1 &&
+            pcmk__str_eq("metadata", remainder[0], pcmk__str_casei)) {
 
             rc = scheduler_metadata(out);
             if (rc != pcmk_rc_ok) {
