@@ -344,17 +344,6 @@ done:
     return rc;
 }
 
-void
-pacemakerd_quit_main_loop(crm_exit_t ec)
-{
-    /* There's no way to get to this function without the main loop running,
-     * but check just in case someone adds one in the future
-     */
-    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop), return);
-
-    g_main_loop_quit(mainloop);
-}
-
 static void
 pacemakerd_cleanup_cmdline(void)
 {
@@ -394,8 +383,6 @@ main(int argc, char **argv)
     setenv("LC_ALL", "C", 1); // Ensure logs are in a common language
 
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGHUP, pcmk_ignore);
-    mainloop_add_signal(SIGQUIT, pcmk_sigquit);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
@@ -467,7 +454,6 @@ main(int argc, char **argv)
 
     pcmk__notice("Starting Pacemaker " PACEMAKER_VERSION " "
                  QB_XS " build=" BUILD_VERSION " features:" CRM_FEATURES);
-    mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
     if (create_pcmk_dirs() != pcmk_rc_ok) {
@@ -499,9 +485,6 @@ main(int argc, char **argv)
             goto done;
     };
 
-    mainloop_add_signal(SIGTERM, pcmk_shutdown);
-    mainloop_add_signal(SIGINT, pcmk_shutdown);
-
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
         pcmk__notice("Waiting for startup-trigger from SBD");
         pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
@@ -516,10 +499,21 @@ main(int argc, char **argv)
         init_children_processes(NULL);
     }
 
-    pcmk__notice("Pacemaker daemon successfully started and accepting "
-                 "connections");
-    g_main_loop_run(mainloop);
-    g_clear_pointer(&mainloop, g_main_loop_unref);
+    rc = pcmk__daemon_init(&pacemakerd);
+    if (rc != pcmk_rc_ok) {
+        pacemakerd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    mainloop_add_signal(SIGHUP, pcmk_ignore);
+    mainloop_add_signal(SIGINT, pcmk_shutdown);
+    mainloop_add_signal(SIGQUIT, pcmk_sigquit);
+    mainloop_add_signal(SIGTERM, pcmk_shutdown);
+
+    pcmk__daemon_run(&pacemakerd);
 
 done:
     pacemakerd_cleanup();

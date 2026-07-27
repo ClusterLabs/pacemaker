@@ -97,8 +97,6 @@ bool shutdown_complete_state_reported_client_closed = false;
 const char *pacemakerd_state = PCMK__VALUE_INIT;
 bool running_with_sbd = false;
 
-GMainLoop *mainloop = NULL;
-
 static bool fatal_error = false;
 
 static int child_liveness(pcmkd_child_t *child);
@@ -223,7 +221,7 @@ check_next_subdaemon(void *user_data)
             pcmk_process_exit(child);
             break;
         default:
-            pacemakerd_quit_main_loop(CRM_EX_FATAL);
+            pcmk__daemon_quit(&pacemakerd, CRM_EX_FATAL);
             return G_SOURCE_REMOVE;
     }
 
@@ -409,8 +407,8 @@ pcmk_shutdown_worker(void *user_data)
     }
 
     if (fatal_error) {
-        pacemakerd_quit_main_loop(CRM_EX_FATAL);
         pcmk__notice("Shutting down and staying down after fatal error");
+        pcmk__daemon_quit(&pacemakerd, CRM_EX_FATAL);
 
 #if SUPPORT_COROSYNC
         /* @FIXME Should this be moved to pacemakerd_cleanup?  This is the only
@@ -419,7 +417,7 @@ pcmk_shutdown_worker(void *user_data)
         pcmkd_shutdown_corosync();
 #endif
     } else {
-        pacemakerd_quit_main_loop(CRM_EX_OK);
+        pcmk__daemon_quit(&pacemakerd, CRM_EX_OK);
     }
 
     return G_SOURCE_REMOVE;

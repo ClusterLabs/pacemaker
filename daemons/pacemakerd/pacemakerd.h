@@ -16,7 +16,6 @@
 
 #define MAX_RESPAWN		100
 
-extern GMainLoop *mainloop;
 extern const char *pacemakerd_state;
 extern bool running_with_sbd;
 extern bool shutdown_complete_state_reported_client_closed;
@@ -24,12 +23,12 @@ extern unsigned int shutdown_complete_state_reported_to;
 extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
 extern time_t subdaemon_check_progress;
+extern pcmk__daemon_t pacemakerd;
 
 int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void restart_cluster_subdaemons(void);
-void pacemakerd_quit_main_loop(crm_exit_t ec);
 
 void pacemakerd_ipc_init(void);
 void pacemakerd_ipc_cleanup(void);
