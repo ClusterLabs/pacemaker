@@ -29,13 +29,17 @@
 #define SUMMARY PCMK__SERVER_SCHEDULERD " - daemon for calculating a " \
                 "Pacemaker cluster's response to events"
 
+static pcmk__daemon_t schedulerd = {
+    .type = pcmk_ipc_schedulerd,
+    .ec = CRM_EX_OK,
+};
+
 pcmk__output_t *logger_out = NULL;
 
 static pcmk__output_t *out = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 static GMainLoop *mainloop = NULL;
-static crm_exit_t exit_code = CRM_EX_OK;
 static gchar **remainder = NULL;
 
 pcmk__supported_format_t formats[] = {
@@ -118,14 +122,15 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        schedulerd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+        schedulerd.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
@@ -139,14 +144,14 @@ main(int argc, char **argv)
 
             rc = scheduler_metadata(out);
             if (rc != pcmk_rc_ok) {
-                exit_code = CRM_EX_FATAL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                schedulerd.ec = CRM_EX_FATAL;
+                g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                             "Unable to display metadata: %s", pcmk_rc_str(rc));
             }
 
         } else {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+            schedulerd.ec = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                         "Unsupported extra command line parameters");
         }
         goto done;
@@ -164,8 +169,8 @@ main(int argc, char **argv)
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         pcmk__err("Terminating due to bad permissions on "
                   PCMK_SCHEDULER_INPUT_DIR);
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        schedulerd.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                     "ERROR: Bad permissions on %s (see logs for details)",
                     PCMK_SCHEDULER_INPUT_DIR);
         goto done;
@@ -174,7 +179,7 @@ main(int argc, char **argv)
     schedulerd_ipc_init();
 
     if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
+        schedulerd.ec = CRM_EX_FATAL;
         goto done;
     }
     pe__register_messages(logger_out);
@@ -194,15 +199,15 @@ done:
     pcmk__output_and_clear_error(&error, out);
 
     if (logger_out != NULL) {
-        logger_out->finish(logger_out, exit_code, true, NULL);
+        logger_out->finish(logger_out, schedulerd.ec, true, NULL);
         g_clear_pointer(&logger_out, pcmk__output_free);
     }
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, schedulerd.ec, true, NULL);
         g_clear_pointer(&out, pcmk__output_free);
     }
 
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(schedulerd.ec);
 }
