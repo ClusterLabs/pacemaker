@@ -39,7 +39,6 @@ pcmk__output_t *logger_out = NULL;
 static pcmk__output_t *out = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
-static GMainLoop *mainloop = NULL;
 static gchar **remainder = NULL;
 
 pcmk__supported_format_t formats[] = {
@@ -99,7 +98,7 @@ schedulerd_cleanup(void)
 static void
 schedulerd_shutdown(int nsig)
 {
-    g_main_loop_quit(mainloop);
+    pcmk__daemon_quit(&schedulerd, CRM_EX_OK);
 }
 
 int
@@ -118,7 +117,6 @@ main(int argc, char **argv)
     context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGTERM, schedulerd_shutdown);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
@@ -186,12 +184,18 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
-    /* Create the mainloop and run it... */
-    mainloop = g_main_loop_new(NULL, FALSE);
-    pcmk__notice("Pacemaker scheduler successfully started and accepting "
-                 "connections");
-    g_main_loop_run(mainloop);
-    g_clear_pointer(&mainloop, g_main_loop_unref);
+    rc = pcmk__daemon_init(&schedulerd);
+    if (rc != pcmk_rc_ok) {
+        schedulerd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    mainloop_add_signal(SIGTERM, schedulerd_shutdown);
+
+    pcmk__daemon_run(&schedulerd);
 
 done:
     schedulerd_cleanup();
