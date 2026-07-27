@@ -540,6 +540,11 @@ ipc_proxy_init(void)
     }
 
     pcmk__serve_pacemakerd_ipc(&pacemakerd_ipcs, &pacemakerd_proxy_callbacks);
+    if (pacemakerd_ipcs == NULL) {
+        execd.ec = CRM_EX_OSERR;
+        return false;
+    }
+
     return true;
 }
 

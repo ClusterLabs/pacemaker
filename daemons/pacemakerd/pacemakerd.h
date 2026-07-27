@@ -30,7 +30,7 @@ gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void restart_cluster_subdaemons(void);
 
-void pacemakerd_ipc_init(void);
+bool pacemakerd_ipc_init(void);
 void pacemakerd_ipc_cleanup(void);
 void pacemakerd_unregister_handlers(void);
 void pacemakerd_handle_request(pcmk__request_t *request);

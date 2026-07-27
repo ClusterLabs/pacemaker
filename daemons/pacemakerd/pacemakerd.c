@@ -460,7 +460,11 @@ main(int argc, char **argv)
         pacemakerd.ec = CRM_EX_NOUSER;
         goto done;
     }
-    pacemakerd_ipc_init();
+
+    if (!pacemakerd_ipc_init()) {
+        pacemakerd.ec = CRM_EX_OSERR;
+        goto done;
+    }
 
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */

@@ -1193,8 +1193,6 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \note This function exits with CRM_EX_OSERR on error.
  */
 void
 pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
@@ -1210,13 +1208,6 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                    pcmk__server_log_name(pcmk_ipc_pacemakerd));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-
-        /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
-         * if we want to prevent pacemakerd from restarting them.
-         * With pacemakerd we leave the exit-code shown to e.g. systemd
-         * to what it was prior to moving the code here from pacemakerd.c
-         */
-        crm_exit(CRM_EX_OSERR);
     }
 }
 

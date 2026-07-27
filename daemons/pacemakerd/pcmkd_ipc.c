@@ -199,8 +199,9 @@ pacemakerd_ipc_cleanup(void)
  * \internal
  * \brief Set up pacemakerd IPC communication
  */
-void
+bool
 pacemakerd_ipc_init(void)
 {
     pcmk__serve_pacemakerd_ipc(&ipcs, &ipc_callbacks);
+    return ipcs != NULL;
 }
