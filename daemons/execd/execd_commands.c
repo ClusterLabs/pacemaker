@@ -101,7 +101,6 @@ typedef struct {
     GHashTable *params;
 } lrmd_cmd_t;
 
-static void cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc);
 static gboolean execute_resource_action(void *user_data);
 static void cancel_all_recurring(lrmd_rsc_t * rsc, const char *client_id);
 

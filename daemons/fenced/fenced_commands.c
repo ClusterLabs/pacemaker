@@ -69,7 +69,6 @@ struct device_search_s {
     uint32_t support_action_only;
 };
 
-static gboolean stonith_device_dispatch(void *user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
 
