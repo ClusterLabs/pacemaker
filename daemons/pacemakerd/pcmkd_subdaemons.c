@@ -537,9 +537,15 @@ start_child(pcmkd_child_t * child)
         execlp(path, path, (char *) NULL);
     }
 
+    /* If we reach this point, execlp has failed.  It's okay to call crm_exit
+     * here to prevent the fork()ed child process from returning and continuing
+     * to run.
+     */
     free(path);
     pcmk__crit("Could not execute subdaemon %s: %s", name, strerror(errno));
     crm_exit(CRM_EX_FATAL);
+
+    // Never reached, but makes static analysis happy
     return pcmk_rc_ok;  // Never reached
 }
 
