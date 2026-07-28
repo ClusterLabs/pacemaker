@@ -339,6 +339,17 @@ done:
     return rc;
 }
 
+void
+pacemakerd_quit_main_loop(crm_exit_t ec)
+{
+    /* There's no way to get to this function without the main loop running,
+     * but check just in case someone adds one in the future
+     */
+    CRM_CHECK((mainloop != NULL) && g_main_loop_is_running(mainloop), return);
+
+    g_main_loop_quit(mainloop);
+}
+
 static void
 pacemakerd_cleanup_cmdline(void)
 {
@@ -503,7 +514,7 @@ main(int argc, char **argv)
     pcmk__notice("Pacemaker daemon successfully started and accepting "
                  "connections");
     g_main_loop_run(mainloop);
-    g_main_loop_unref(mainloop);
+    g_clear_pointer(&mainloop, g_main_loop_unref);
 
 done:
     pacemakerd_cleanup();

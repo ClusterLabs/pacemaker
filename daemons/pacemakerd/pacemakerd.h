@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -29,6 +29,7 @@ int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void restart_cluster_subdaemons(void);
+void pacemakerd_quit_main_loop(crm_exit_t ec);
 
 void pacemakerd_ipc_init(void);
 void pacemakerd_ipc_cleanup(void);

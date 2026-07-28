@@ -107,7 +107,6 @@ static int start_child(pcmkd_child_t *child);
 static void pcmk_child_exit(mainloop_child_t *p, int core, int signo,
                             int exitcode);
 static void pcmk_process_exit(pcmkd_child_t *child);
-static gboolean pcmk_shutdown_worker(void *user_data);
 static void stop_child(pcmkd_child_t *child, int signal);
 
 static void
@@ -224,8 +223,8 @@ check_next_subdaemon(void *user_data)
             pcmk_process_exit(child);
             break;
         default:
-            crm_exit(CRM_EX_FATAL);
-            break;  /* static analysis/noreturn */
+            pacemakerd_quit_main_loop(CRM_EX_FATAL);
+            return G_SOURCE_REMOVE;
     }
 
     if (++next_child >= PCMK__NELEM(pcmk_children)) {
@@ -409,17 +408,21 @@ pcmk_shutdown_worker(void *user_data)
         return G_SOURCE_CONTINUE;
     }
 
-    g_main_loop_quit(mainloop);
-
     if (fatal_error) {
+        pacemakerd_quit_main_loop(CRM_EX_FATAL);
         pcmk__notice("Shutting down and staying down after fatal error");
+
 #if SUPPORT_COROSYNC
+        /* @FIXME Should this be moved to pacemakerd_cleanup?  This is the only
+         * caller, so maybe not.
+         */
         pcmkd_shutdown_corosync();
 #endif
-        crm_exit(CRM_EX_FATAL);
+    } else {
+        pacemakerd_quit_main_loop(CRM_EX_OK);
     }
 
-    return G_SOURCE_CONTINUE;
+    return G_SOURCE_REMOVE;
 }
 
 /* TODO once libqb is taught to juggle with IPC end-points carried over as
