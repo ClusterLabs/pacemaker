@@ -279,7 +279,7 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 bool
 pcmkd_read_config(void)
 {
-    cs_error_t rc = CS_OK;
+    cs_error_t cs_rc = CS_OK;
     int retries = 0;
     cmap_handle_t local_handle;
     uint64_t config = 0;
@@ -293,28 +293,28 @@ pcmkd_read_config(void)
 
     // There can be only one possibility
     do {
-        rc = pcmk__init_cmap(&local_handle);
-        if (rc == CS_OK) {
+        cs_rc = pcmk__init_cmap(&local_handle);
+        if (cs_rc == CS_OK) {
             break;
         }
 
         retries++;
         pcmk__info("Could not connect to Corosync CMAP: %s "
                    "(retrying in %ds) " QB_XS " rc=%d",
-                   pcmk_rc_str(pcmk__corosync2rc(rc)), retries, rc);
+                   pcmk_rc_str(pcmk__corosync2rc(cs_rc)), retries, cs_rc);
         sleep(retries);
     } while (retries < 5);
 
-    if (rc != CS_OK) {
+    if (cs_rc != CS_OK) {
         pcmk__crit("Could not connect to Corosync CMAP: %s "
-                   QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+                   QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         return false;
     }
 
-    rc = cmap_fd_get(local_handle, &fd);
-    if (rc != CS_OK) {
+    cs_rc = cmap_fd_get(local_handle, &fd);
+    if (cs_rc != CS_OK) {
         pcmk__crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
-                   pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
+                   pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
         cmap_finalize(local_handle);
         return false;
     }
@@ -382,13 +382,13 @@ pcmkd_read_config(void)
             char *key = pcmk__assert_asprintf("uidgid.gid.%lld",
                                               (long long) gid);
 
-            rc = cmap_set_uint8(local_handle, key, 1);
+            cs_rc = cmap_set_uint8(local_handle, key, 1);
             free(key);
 
-            if (rc != CS_OK) {
+            if (cs_rc != CS_OK) {
                 pcmk__warn("Could not authorize group with Corosync: %s "
                            QB_XS " group=%u rc=%d",
-                           pcmk_rc_str(pcmk__corosync2rc(rc)), gid, rc);
+                           pcmk_rc_str(pcmk__corosync2rc(cs_rc)), gid, cs_rc);
             }
         }
     }
