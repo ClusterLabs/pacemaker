@@ -288,6 +288,7 @@ pcmkd_read_config(void)
     gid_t found_gid = 0;
     pid_t found_pid = 0;
     int rv;
+    bool success = false;
     enum pcmk_cluster_layer cluster_layer = pcmk_cluster_layer_unknown;
     const char *cluster_layer_s = NULL;
 
@@ -308,15 +309,14 @@ pcmkd_read_config(void)
     if (cs_rc != CS_OK) {
         pcmk__crit("Could not connect to Corosync CMAP: %s "
                    QB_XS " rc=%d", pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
-        return false;
+        return success;
     }
 
     cs_rc = cmap_fd_get(local_handle, &fd);
     if (cs_rc != CS_OK) {
         pcmk__crit("Could not get Corosync CMAP descriptor: %s " QB_XS " rc=%d",
                    pcmk_rc_str(pcmk__corosync2rc(cs_rc)), cs_rc);
-        cmap_finalize(local_handle);
-        return false;
+        goto done;
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
@@ -327,15 +327,13 @@ pcmkd_read_config(void)
                    "is running as uid %lld gid %lld, not root",
                    (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                    (long long) found_uid, (long long) found_gid);
-        cmap_finalize(local_handle);
-        return false;
+        goto done;
     }
 
     if (rv < 0) {
         pcmk__crit("Could not authenticate Corosync CMAP provider: %s "
                    QB_XS " rc=%d", strerror(-rv), -rv);
-        cmap_finalize(local_handle);
-        return false;
+        goto done;
     }
 
     cluster_layer = pcmk_get_cluster_layer();
@@ -345,7 +343,7 @@ pcmkd_read_config(void)
         pcmk__crit("Expected Corosync cluster layer but detected %s "
                    QB_XS " cluster_layer=%d",
                    cluster_layer_s, cluster_layer);
-        return false;
+        goto done;
     }
 
     pcmk__info("Reading configuration for %s cluster layer", cluster_layer_s);
@@ -393,6 +391,9 @@ pcmkd_read_config(void)
         }
     }
 
+    success = true;
+
+done:
     cmap_finalize(local_handle);
-    return true;
+    return success;
 }
