@@ -25,6 +25,7 @@ WRAPPED = abort 		\
 	  getpid		\
 	  getgrent		\
 	  getpwnam		\
+	  pcmk__add_mainloop_ipc_server \
 	  readlink		\
 	  realloc 		\
 	  setenv		\
