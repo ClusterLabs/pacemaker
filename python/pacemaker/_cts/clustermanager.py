@@ -375,13 +375,13 @@ class ClusterManager(UserDict):
 
         return True
 
-    def stopall(self, verbose=False, force=False):
+    def stopall(self, force=False):
         """Stop the cluster manager on every node in the cluster."""
         ret = True
 
         for node in self.env["nodes"]:
             if self.expected_status[node] == "up" or force:
-                if not self.stop_cm(node, verbose=verbose, force=force):
+                if not self.stop_cm(node, verbose=True, force=force):
                     ret = False
 
         return ret

@@ -385,7 +385,7 @@ class BootCluster(ScenarioComponent):
         self._cm.prepare()
 
         #        Clear out the cobwebs ;-)
-        self._cm.stopall(verbose=True, force=True)
+        self._cm.stopall(force=True)
 
         # Now start the Cluster Manager on all the nodes.
         logging.log("Starting Cluster Manager on all nodes.")
@@ -394,7 +394,7 @@ class BootCluster(ScenarioComponent):
     def teardown(self):
         """Tear down the component."""
         logging.log("Stopping Cluster Manager on all nodes")
-        self._cm.stopall(verbose=True, force=False)
+        self._cm.stopall(force=False)
 
 
 class LeaveBooted(BootCluster):
