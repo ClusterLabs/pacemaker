@@ -159,14 +159,8 @@ class Corosync:
         else:
             killall(["corosync"])
 
-    def start(self, timeout=10):
-        """
-        Start the corosync process, stopping any existing ones first.
-
-        Arguments:
-        timeout    -- If corosync does not start within this many seconds, raise
-                      TimeoutError
-        """
+    def start(self):
+        """Start the corosync process, stopping any existing ones first."""
         self._stop()
 
         self._existing_cfg_file = generate_corosync_cfg(self.logdir,
@@ -176,7 +170,7 @@ class Corosync:
         self._start()
 
         # Wait for corosync to be ready before returning
-        self._ready(logfile, timeout=timeout)
+        self._ready(logfile, timeout=10)
 
     def stop(self):
         """Stop the corosync process."""
