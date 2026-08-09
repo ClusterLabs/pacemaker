@@ -1159,8 +1159,17 @@ void
 pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
                       struct qb_ipcs_service_handlers *cb)
 {
-    *ipcs = mainloop_add_ipc_server(pcmk__server_ipc_name(pcmk_ipc_execd),
-                                    QB_IPC_SHM, cb);
+    uint32_t flags = 0U;
+
+#ifdef HAVE_QB_IPCS_CREATE_2
+    flags = QB_IPCS_REQUIRE_LOCKED_MAPPINGS;
+#else
+    pcmk__warn("Executor IPC ring pages will not be locked because this libqb "
+               "version does not support it");
+#endif
+
+    *ipcs = pcmk__add_mainloop_ipc_server(
+        pcmk__server_ipc_name(pcmk_ipc_execd), cb, flags);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
