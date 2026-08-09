@@ -118,11 +118,11 @@ class Corosync:
         self._env = Environment(["--nodes", "localhost"])
         self._existing_cfg_file = None
 
-    def _ready(self, logfile, timeout=10):
+    def _ready(self, logfile):
         """Return whether corosync is ready."""
         i = 0
 
-        while i < timeout:
+        while i < 10:
             with open(logfile, "r", encoding="utf-8") as corosync_log:
                 for line in corosync_log.readlines():
                     if line.endswith("ready to provide service.\n"):
@@ -170,7 +170,7 @@ class Corosync:
         self._start()
 
         # Wait for corosync to be ready before returning
-        self._ready(logfile, timeout=10)
+        self._ready(logfile)
 
     def stop(self):
         """Stop the corosync process."""
