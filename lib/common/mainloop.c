@@ -23,6 +23,8 @@
 
 #include <qb/qbarray.h>
 
+#include "crmcommon_private.h"
+
 struct trigger_s {
     GSource source;
     gboolean running;

@@ -14,7 +14,6 @@
 #ifndef PCMK__CRM_COMMON_MAINLOOP_INTERNAL__H
 #define PCMK__CRM_COMMON_MAINLOOP_INTERNAL__H
 
-#include <stdint.h>                 // uint32_t
 #include <sys/types.h>              // pid_t
 
 #include <glib.h>                   // gboolean
@@ -56,9 +55,6 @@ struct mainloop_io_s {
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
-qb_ipcs_service_t *pcmk__add_mainloop_ipc_server(
-    const char *name, struct qb_ipcs_service_handlers *callbacks,
-    uint32_t flags);
 unsigned int pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 #ifdef __cplusplus
