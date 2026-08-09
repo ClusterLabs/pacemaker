@@ -519,7 +519,7 @@ class ClusterManager(UserDict):
         logging.log(f"Warn: Node {node} not stable")
         return False
 
-    def _partition_stable(self, nodes, timeout=None):
+    def _partition_stable(self, nodes, timeout):
         """Return whether or not all nodes in the given partition are stable."""
         watchpats = [
             "Current ping state: S_IDLE",
