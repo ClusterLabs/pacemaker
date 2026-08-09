@@ -332,7 +332,7 @@ class ClusterManager(UserDict):
         self.rsh.call_async(node, self.templates["StopCmd"])
         self.expected_status[node] = "down"
 
-    def startall(self, verbose=False, quick=False):
+    def startall(self, quick=False):
         """Start the cluster manager on every node in the cluster."""
         nodelist = self.env["nodes"]
 
@@ -342,7 +342,7 @@ class ClusterManager(UserDict):
 
         if not quick:
             # This is used for "basic sanity checks", so only start one node ...
-            return self.start_cm(nodelist[0], verbose=verbose)
+            return self.start_cm(nodelist[0], verbose=True)
 
         # Approximation of SimulStartList for --boot
         watchpats = [
@@ -362,11 +362,11 @@ class ClusterManager(UserDict):
                            self.env["dead_time"] + 10)
         watch.set_watch()
 
-        if not self.start_cm(nodelist[0], verbose=verbose):
+        if not self.start_cm(nodelist[0], verbose=True):
             return False
 
         for node in nodelist:
-            self.start_cm_async(node, verbose=verbose)
+            self.start_cm_async(node, verbose=True)
 
         watch.look_for_all()
         if watch.unmatched:

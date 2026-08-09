@@ -389,7 +389,7 @@ class BootCluster(ScenarioComponent):
 
         # Now start the Cluster Manager on all the nodes.
         logging.log("Starting Cluster Manager on all nodes.")
-        return self._cm.startall(verbose=True, quick=True)
+        return self._cm.startall(quick=True)
 
     def teardown(self):
         """Tear down the component."""
