@@ -97,7 +97,7 @@ class ClusterManager(UserDict):
         """Return a LogWatcher object that watches for fencing log messages."""
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
-        if self.has_quorum(None):
+        if self.has_quorum():
             logging.debug("Have quorum")
             return None
 
@@ -137,7 +137,7 @@ class ClusterManager(UserDict):
             logging.debug("Nothing to do")
             return peer_list
 
-        q = self.has_quorum(None)
+        q = self.has_quorum()
         if not q and len(self.env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
             logging.debug(f"Quorum: {q} Len: {len(self.env['nodes'])}")
@@ -688,16 +688,9 @@ class ClusterManager(UserDict):
         logging.debug(f"Found partitions: {ccm_partitions!r}")
         return ccm_partitions
 
-    def has_quorum(self, node_list):
+    def has_quorum(self):
         """Return whether or not the cluster has quorum."""
-        # If we are auditing a partition, then one side will
-        #   have quorum and the other not.
-        # So the caller needs to tell us which we are checking
-        # If no value for node_list is specified... assume all nodes
-        if not node_list:
-            node_list = self.env["nodes"]
-
-        for node in node_list:
+        for node in self.env["nodes"]:
             if self.expected_status[node] != "up":
                 continue
 
