@@ -16,23 +16,19 @@ from pacemaker._cts import logging
 class AsyncCmd(Thread):
     """A class for doing the hard work of running a command on another machine."""
 
-    def __init__(self, node, command, proc=None, delegate=None):
+    def __init__(self, node, command, delegate=None):
         """
         Create a new AsyncCmd instance.
 
         Arguments:
         node     -- The remote machine to run on
         command  -- The ssh command string to use for remote execution
-        proc     -- If not None, a process object previously created with Popen.
-                    Instead of spawning a new process, we will then wait on
-                    this process to finish and handle its output.
         delegate -- When the command completes, call the async_complete method
                     on this object
         """
         self._command = command
         self._delegate = delegate
         self._node = node
-        self._proc = proc
 
         Thread.__init__(self)
 
@@ -41,33 +37,32 @@ class AsyncCmd(Thread):
         out = None
         err = None
 
-        if not self._proc:
-            # pylint: disable=consider-using-with
-            self._proc = subprocess.Popen(self._command, stdout=subprocess.PIPE,
-                                          stderr=subprocess.PIPE, close_fds=True,
-                                          shell=True, universal_newlines=True)
+        # pylint: disable=consider-using-with
+        proc = subprocess.Popen(self._command, stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE, close_fds=True,
+                                shell=True, universal_newlines=True)
 
-        logging.debug(f"cmd: async: target={self._node}, pid={self._proc.pid}: {self._command}")
-        self._proc.wait()
+        logging.debug(f"cmd: async: target={self._node}, pid={proc.pid}: {self._command}")
+        proc.wait()
 
         if self._delegate:
-            logging.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode} to {self._delegate!r}")
+            logging.debug(f"cmd: pid {proc.pid} returned {proc.returncode} to {self._delegate!r}")
         else:
-            logging.debug(f"cmd: pid {self._proc.pid} returned {self._proc.returncode}")
+            logging.debug(f"cmd: pid {proc.pid} returned {proc.returncode}")
 
-        if self._proc.stderr:
-            err = self._proc.stderr.readlines()
-            self._proc.stderr.close()
+        if proc.stderr:
+            err = proc.stderr.readlines()
+            proc.stderr.close()
 
             for line in err:
-                logging.debug(f"cmd: stderr[{self._proc.pid}]: {line}")
+                logging.debug(f"cmd: stderr[{proc.pid}]: {line}")
 
-        if self._proc.stdout:
-            out = self._proc.stdout.readlines()
-            self._proc.stdout.close()
+        if proc.stdout:
+            out = proc.stdout.readlines()
+            proc.stdout.close()
 
         if self._delegate:
-            self._delegate.async_complete(self._proc.pid, self._proc.returncode, out, err)
+            self._delegate.async_complete(proc.pid, proc.returncode, out, err)
 
 
 class RemoteExec:
