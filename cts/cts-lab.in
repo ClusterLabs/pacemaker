@@ -26,18 +26,15 @@ scenario = None
 logging.add_stderr()
 
 
-def sig_handler(signum, _frame):
-    """Handle the given signal number."""
+def term_handler(signum, _frame):
+    """Handle a SIGTERM by exiting gracefully."""
     logging.log(f"Interrupted by signal {signum}")
 
     if scenario:
         scenario.summarize()
+        scenario.teardown()
 
-    if signum == 15:
-        if scenario:
-            scenario.teardown()
-
-        sys.exit(1)
+    sys.exit(1)
 
 
 def plural_s(n):
@@ -51,8 +48,7 @@ if __name__ == '__main__':
     iters = lab["iterations"]
 
     # Set the signal handler
-    signal.signal(15, sig_handler)
-    signal.signal(10, sig_handler)
+    signal.signal(15, term_handler)
 
     # Create the Cluster Manager object.
     # Currently Corosync2 is the only available cluster manager.
