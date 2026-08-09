@@ -398,11 +398,8 @@ class ClusterManager(UserDict):
 
         return result
 
-    def isolate_node(self, target, nodes=None):
-        """Break communication between the target node and all other nodes in the cluster, or nodes."""
-        if not nodes:
-            nodes = self.env["nodes"]
-
+    def isolate_node(self, target, nodes):
+        """Break communication between the target node and the given other nodes."""
         for node in nodes:
             if node == target:
                 continue
@@ -416,11 +413,8 @@ class ClusterManager(UserDict):
 
         return True
 
-    def unisolate_node(self, target, nodes=None):
-        """Re-establish communication between the target node and all other nodes in the cluster, or nodes."""
-        if not nodes:
-            nodes = self.env["nodes"]
-
+    def unisolate_node(self, target, nodes):
+        """Re-establish communication between the target node and the given other nodes."""
         for node in nodes:
             if node == target:
                 continue
