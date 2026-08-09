@@ -47,10 +47,6 @@ class ClusterAudit:
         """
         raise NotImplementedError
 
-    def log(self, args):
-        """Log a message."""
-        logging.log(f"audit: {args}")
-
     def debug(self, args):
         """Log a debug message."""
         logging.debug(f"audit: {args}")
