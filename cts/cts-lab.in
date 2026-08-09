@@ -20,8 +20,9 @@ from pacemaker._cts import logging
 from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
 from pacemaker._cts.tests import test_list
 
-# These are globals so they can be used by the signal handler.
+# This is a global so it can be used by the signal handler
 scenario = None
+
 logging.add_stderr()
 
 
@@ -41,10 +42,7 @@ def sig_handler(signum, _frame):
 
 def plural_s(n):
     """Return a string suffix depending on whether or not n is > 1."""
-    if n == 1:
-        return ""
-
-    return "S"
+    return "" if n == 1 else "S"
 
 
 if __name__ == '__main__':
@@ -81,10 +79,7 @@ if __name__ == '__main__':
 
         sys.exit(0)
 
-    elif len(lab["tests"]) == 0:
-        tests = test_list(cm, env, audits)
-
-    else:
+    if lab["tests"]:
         chosen = lab["tests"]
         for test_case in chosen:
             match = None
@@ -96,8 +91,11 @@ if __name__ == '__main__':
             if not match:
                 logging.log("--choose: No applicable/valid tests chosen")
                 sys.exit(1)
-            else:
-                tests.append(match)
+
+            tests.append(match)
+
+    else:
+        tests = test_list(cm, env, audits)
 
     # Scenario selection
     if lab["scenario"] == "all-once":
