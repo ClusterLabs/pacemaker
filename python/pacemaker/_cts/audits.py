@@ -443,43 +443,49 @@ class PrimitiveAudit(ClusterAudit):
 
     def _audit_resource(self, resource, quorum):
         """Perform the audit of a single resource."""
-        rc = True
         active = self._cm.resource_location(resource.id)
 
         if len(active) == 1:
             if quorum:
                 self.debug(f"Resource {resource.id} active on {active!r}")
+                return True
 
-            elif resource.needs_quorum == 1:
+            if resource.needs_quorum == 1:
                 logging.log(f"Resource {resource.id} active without quorum: {active!r}")
-                rc = False
+                return False
 
-        elif not resource.managed:
+            return True
+
+        if not resource.managed:
             logging.log(f"Resource {resource.id} not managed. Active on {active!r}")
+            return True
 
-        elif not resource.unique:
+        if not resource.unique:
             # TODO: Figure out a clever way to actually audit these resource types
             if len(active) > 1:
                 self.debug(f"Non-unique resource {resource.id} is active on: {active!r}")
             else:
                 self.debug(f"Non-unique resource {resource.id} is not active")
 
-        elif len(active) > 1:
+            return True
+
+        if len(active) > 1:
             logging.log(f"Resource {resource.id} is active multiple times: {active!r}")
-            rc = False
+            return False
 
-        elif resource.orphan:
+        if resource.orphan:
             self.debug(f"Resource {resource.id} is an inactive orphan")
+            return True
 
-        elif not self._inactive_nodes:
+        if not self._inactive_nodes:
             logging.log(f"WARN: Resource {resource.id} not served anywhere")
-            rc = False
+            return False
 
-        elif quorum or not resource.needs_quorum:
+        if quorum or not resource.needs_quorum:
             self.debug(f"Resource {resource.id} not served anywhere "
                        f"(Inactive nodes: {self._inactive_nodes!r})")
 
-        return rc
+        return True
 
     def _setup(self):
         """
