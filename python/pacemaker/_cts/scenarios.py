@@ -246,27 +246,23 @@ class Scenario:
 
     def summarize(self):
         """Output scenario results."""
+        # This dict removes duplicates in self.tests while preserving order
+        tests = {test.name: test for test in self.tests}
+
+        summary_keys = ["calls", "failure", "skipped", "auditfail"]
+
         logging.log("****************")
         logging.log("Overall Results:%r" % self.stats)
         logging.log("****************")
 
-        stat_summary = {}
-        summary_keys = ["calls", "failure", "skipped", "auditfail"]
-
         logging.log("Test Summary")
-        for test in self.tests:
-            if test.name not in stat_summary:
-                stat_summary[test.name] = {key: 0 for key in summary_keys}
-
-            for key in summary_keys:
-                stat_summary[test.name][key] += test.stats[key]
-
-        for (name, summary) in stat_summary.items():
+        for (name, test) in tests.items():
+            summary = {key: test.stats[key] for key in summary_keys}
             logging.log(f"{f'Test {name}':<25} {summary!r}")
 
         logging.debug("Detailed Results")
-        for test in self.tests:
-            logging.debug(f"{f'Test {test.name}: ':<25} {test.stats!r}")
+        for (name, test) in tests.items():
+            logging.debug(f"{f'Test {name}: ':<25} {test.stats!r}")
 
         logging.log("<<<<<<<<<<<<<<<< TESTS COMPLETED")
 

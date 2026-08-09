@@ -49,7 +49,6 @@ if __name__ == '__main__':
     env = Environment(sys.argv[1:])
     lab = CtsLab(env)
     iters = lab["iterations"]
-    tests = []
 
     # Set the signal handler
     signal.signal(15, sig_handler)
@@ -69,9 +68,9 @@ if __name__ == '__main__':
                 outputfile.truncate(0)
 
     audits = audit_list(cm)
+    tests = test_list(cm, env, audits)
 
     if lab["ListTests"]:
-        tests = test_list(cm, env, audits)
         logging.log(f"Total {len(tests)} tests")
 
         for test in tests:
@@ -80,22 +79,15 @@ if __name__ == '__main__':
         sys.exit(0)
 
     if lab["tests"]:
-        chosen = lab["tests"]
-        for test_case in chosen:
-            match = None
+        # Get tests corresponding to the names in lab["tests"]
+        test_map = {test.name: test for test in tests}
 
-            for test in test_list(cm, env, audits):
-                if test.name == test_case:
-                    match = test
+        try:
+            tests = [test_map[test] for test in lab["tests"]]
 
-            if not match:
-                logging.log("--choose: No applicable/valid tests chosen")
-                sys.exit(1)
-
-            tests.append(match)
-
-    else:
-        tests = test_list(cm, env, audits)
+        except KeyError as e:
+            logging.log(f"--choose: Test {e} is invalid or not applicable")
+            sys.exit(1)
 
     # Scenario selection
     if lab["scenario"] == "all-once":
