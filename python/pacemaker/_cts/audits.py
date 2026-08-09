@@ -70,14 +70,11 @@ class LogAudit(ClusterAudit):
         ClusterAudit.__init__(self, cm)
         self.name = "LogAudit"
 
-    def _restart_cluster_logging(self, nodes=None):
-        """Restart logging on the given nodes, or all if none are given."""
-        if not nodes:
-            nodes = self._cm.env["nodes"]
+    def _restart_cluster_logging(self):
+        """Restart logging on all nodes."""
+        logging.debug("Restarting logging on all nodes")
 
-        logging.debug(f"Restarting logging on: {nodes!r}")
-
-        for node in nodes:
+        for node in self._cm.env["nodes"]:
             if self._cm.env["have_systemd"]:
                 (rc, _) = self._cm.rsh.call(node, "systemctl stop systemd-journald.socket")
                 if rc != 0:
