@@ -386,14 +386,11 @@ class ClusterManager(UserDict):
 
         return ret
 
-    def statall(self, nodelist=None):
-        """Return the status of the cluster manager on every node in the cluster, or on every node in nodelist."""
+    def statall(self):
+        """Return the status of the cluster manager on every node in the cluster."""
         result = {}
 
-        if not nodelist:
-            nodelist = self.env["nodes"]
-
-        for node in nodelist:
+        for node in self.env["nodes"]:
             if self.stat_cm(node):
                 result[node] = "up"
             else:
