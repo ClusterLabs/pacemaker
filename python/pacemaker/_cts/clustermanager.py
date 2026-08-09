@@ -332,10 +332,9 @@ class ClusterManager(UserDict):
         self.rsh.call_async(node, self.templates["StopCmd"])
         self.expected_status[node] = "down"
 
-    def startall(self, nodelist=None, verbose=False, quick=False):
-        """Start the cluster manager on every node in the cluster, or on every node in nodelist."""
-        if not nodelist:
-            nodelist = self.env["nodes"]
+    def startall(self, verbose=False, quick=False):
+        """Start the cluster manager on every node in the cluster."""
+        nodelist = self.env["nodes"]
 
         for node in nodelist:
             if self.expected_status[node] == "down":
