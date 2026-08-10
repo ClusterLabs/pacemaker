@@ -174,10 +174,7 @@ class Scenario:
 
     def incr(self, name):
         """Increment the given stats key."""
-        if name not in self.stats:
-            self.stats[name] = 0
-
-        self.stats[name] += 1
+        self.stats[name] = self.stats.get(name, 0) + 1
 
     def run(self, iterations):
         """Run all the tests the given number of times."""
