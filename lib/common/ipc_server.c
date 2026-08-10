@@ -226,16 +226,15 @@ client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
 }
 
 /*!
- * \brief Allocate a new pcmk__client_t object and generate its ID
+ * \internal
+ * \brief Create and initialize a \c pcmk__client_t object
  *
- * \param[in] key  What to use as connections hash table key (NULL to use ID)
- *
- * \return Pointer to new pcmk__client_t (asserts on failure)
+ * \return Newly allocated client object (guaranteed not to be \c NULL)
  */
 pcmk__client_t *
-pcmk__new_unauth_client(void *key)
+pcmk__new_unauth_client(void)
 {
-    return client_from_connection(NULL, key, 0);
+    return client_from_connection(NULL, NULL, 0);
 }
 
 pcmk__client_t *
