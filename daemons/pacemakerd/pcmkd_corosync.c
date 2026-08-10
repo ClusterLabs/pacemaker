@@ -95,7 +95,7 @@ close_cfg(void)
 static gboolean
 cluster_reconnect_cb(void *data)
 {
-    if (cluster_connect_cfg()) {
+    if (pacemakerd_corosync_connect_cfg()) {
         g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
         pcmk__notice("Cluster reconnect succeeded");
         pcmkd_read_config();
@@ -149,15 +149,17 @@ cluster_disconnect_cfg(void)
 	}						\
     } while(counter < max)
 
-gboolean
-cluster_connect_cfg(void)
+bool
+pacemakerd_corosync_connect_cfg(void)
 {
-    cs_error_t rc;
-    int fd = -1, retries = 0, rv;
+    cs_error_t rc = CS_OK;
+    int fd = -1;
+    int retries = 0;
+    int rv = 0;
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
-    uint32_t nodeid;
+    uint32_t nodeid = 0;
 
     static struct mainloop_fd_callbacks cfg_fd_callbacks = {
         .dispatch = pcmk_cfg_dispatch,
@@ -169,7 +171,7 @@ cluster_connect_cfg(void)
     if (rc != CS_OK) {
         pcmk__crit("Could not connect to Corosync CFG: %s " QB_XS " rc=%d",
                    pcmk_rc_str(pcmk__corosync2rc(rc)), rc);
-        return FALSE;
+        return false;
     }
 
     rc = corosync_cfg_fd_get(cfg_handle, &fd);
@@ -214,11 +216,11 @@ cluster_connect_cfg(void)
 #endif
 
     mainloop_add_fd("corosync-cfg", G_PRIORITY_DEFAULT, fd, &cfg_handle, &cfg_fd_callbacks);
-    return TRUE;
+    return true;
 
   bail:
     corosync_cfg_finalize(cfg_handle);
-    return FALSE;
+    return false;
 }
 
 void

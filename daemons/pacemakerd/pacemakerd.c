@@ -461,7 +461,7 @@ main(int argc, char **argv)
 
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
-    if (!cluster_connect_cfg()) {
+    if (!pacemakerd_corosync_connect_cfg()) {
         pacemakerd.ec = CRM_EX_PROTOCOL;
         goto done;
     }

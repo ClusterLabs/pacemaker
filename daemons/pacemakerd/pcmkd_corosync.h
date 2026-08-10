@@ -11,7 +11,7 @@
 
 #include <stdbool.h>
 
-gboolean cluster_connect_cfg(void);
+bool pacemakerd_corosync_connect_cfg(void);
 void cluster_disconnect_cfg(void);
 bool pcmkd_read_config(void);
 bool pcmkd_corosync_connected(void);
