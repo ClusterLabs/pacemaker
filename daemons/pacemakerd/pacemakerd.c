@@ -429,7 +429,7 @@ main(int argc, char **argv)
     }
 
 #if SUPPORT_COROSYNC
-    if (!pcmkd_read_config()) {
+    if (!pacemakerd_corosync_read_config()) {
         pacemakerd.ec = CRM_EX_UNAVAILABLE;
         goto done;
     }

@@ -98,7 +98,7 @@ cluster_reconnect_cb(void *data)
     if (pacemakerd_corosync_connect_cfg()) {
         g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
         pcmk__notice("Cluster reconnect succeeded");
-        pcmkd_read_config();
+        pacemakerd_corosync_read_config();
         restart_cluster_subdaemons();
         return G_SOURCE_REMOVE;
     }
@@ -281,17 +281,17 @@ get_config_opt(uint64_t unused, cmap_handle_t object_handle, const char *key, ch
 }
 
 bool
-pcmkd_read_config(void)
+pacemakerd_corosync_read_config(void)
 {
     cs_error_t cs_rc = CS_OK;
     int retries = 0;
-    cmap_handle_t local_handle;
+    cmap_handle_t local_handle = 0;
     uint64_t config = 0;
     int fd = -1;
     uid_t found_uid = 0;
     gid_t found_gid = 0;
     pid_t found_pid = 0;
-    int rv;
+    int rv = 0;
     bool success = false;
     enum pcmk_cluster_layer cluster_layer = pcmk_cluster_layer_unknown;
     const char *cluster_layer_s = NULL;
