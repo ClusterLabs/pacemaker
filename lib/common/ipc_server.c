@@ -232,7 +232,7 @@ pcmk__new_unauth_client(void)
 pcmk__client_t *
 pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client)
 {
-    gid_t uid_cluster = 0;
+    uid_t uid_cluster = 0;
     gid_t gid_cluster = 0;
 
     pcmk__client_t *client = NULL;
