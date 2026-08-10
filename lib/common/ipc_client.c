@@ -40,10 +40,6 @@
 
 #include "crmcommon_private.h"
 
-static int is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
-                                    uid_t refuid, gid_t refgid, pid_t *gotpid,
-                                    uid_t *gotuid, gid_t *gotgid);
-
 /*!
  * \brief Create a new object for using Pacemaker daemon IPC
  *
@@ -948,6 +944,124 @@ crm_ipc_new(const char *name, size_t max_size)
 
 /*!
  * \internal
+ * \brief Ensure an IPC provider has expected user or group
+ *
+ * \param[in]  qb_ipc  libqb client connection if available
+ * \param[in]  sock    Connected Unix socket for IPC
+ * \param[in]  refuid  Expected user ID
+ * \param[in]  refgid  Expected group ID
+ * \param[out] gotpid  If not NULL, where to store provider's actual process ID
+ *                     (or 1 on platforms where ID is not available)
+ * \param[out] gotuid  If not NULL, where to store provider's actual user ID
+ * \param[out] gotgid  If not NULL, where to store provider's actual group ID
+ *
+ * \return Standard Pacemaker return code
+ * \note An actual user ID of 0 (root) will always be considered authorized,
+ *       regardless of the expected values provided. The caller can use the
+ *       output arguments to be stricter than this function.
+ */
+static int
+is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
+                         uid_t refuid, gid_t refgid,
+                         pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
+{
+    int rc = EOPNOTSUPP;
+    pid_t found_pid = 0;
+    uid_t found_uid = 0;
+    gid_t found_gid = 0;
+
+#ifdef HAVE_QB_IPCC_AUTH_GET
+    if (qb_ipc != NULL) {
+        rc = qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid);
+        rc = -rc; // libqb returns 0 or -errno
+        if (rc == pcmk_rc_ok) {
+            goto found;
+        }
+    }
+#endif
+
+#ifdef HAVE_UCRED
+    {
+        struct ucred ucred;
+        socklen_t ucred_len = sizeof(ucred);
+
+        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &ucred, &ucred_len) < 0) {
+            rc = errno;
+        } else if (ucred_len != sizeof(ucred)) {
+            rc = EOPNOTSUPP;
+        } else {
+            found_pid = ucred.pid;
+            found_uid = ucred.uid;
+            found_gid = ucred.gid;
+            goto found;
+        }
+    }
+#endif
+
+#ifdef HAVE_SOCKPEERCRED
+    {
+        struct sockpeercred sockpeercred;
+        socklen_t sockpeercred_len = sizeof(sockpeercred);
+
+        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
+                       &sockpeercred, &sockpeercred_len) < 0) {
+            rc = errno;
+        } else if (sockpeercred_len != sizeof(sockpeercred)) {
+            rc = EOPNOTSUPP;
+        } else {
+            found_pid = sockpeercred.pid;
+            found_uid = sockpeercred.uid;
+            found_gid = sockpeercred.gid;
+            goto found;
+        }
+    }
+#endif
+
+#ifdef HAVE_GETPEEREID // For example, FreeBSD
+    if (getpeereid(sock, &found_uid, &found_gid) < 0) {
+        rc = errno;
+    } else {
+        found_pid = PCMK__SPECIAL_PID;
+        goto found;
+    }
+#endif
+
+#ifdef HAVE_GETPEERUCRED
+    {
+        ucred_t *ucred = NULL;
+
+        if (getpeerucred(sock, &ucred) < 0) {
+            rc = errno;
+        } else {
+            found_pid = ucred_getpid(ucred);
+            found_uid = ucred_geteuid(ucred);
+            found_gid = ucred_getegid(ucred);
+            ucred_free(ucred);
+            goto found;
+        }
+    }
+#endif
+
+    return rc; // If we get here, nothing succeeded
+
+found:
+    if (gotpid != NULL) {
+        *gotpid = found_pid;
+    }
+    if (gotuid != NULL) {
+        *gotuid = found_uid;
+    }
+    if (gotgid != NULL) {
+        *gotgid = found_gid;
+    }
+    if ((found_uid != 0) && (found_uid != refuid) && (found_gid != refgid)) {
+        return pcmk_rc_ipc_unauthorized;
+    }
+    return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
  * \brief Connect a generic (not daemon-specific) IPC object
  *
  * \param[in,out] ipc  Generic IPC object to connect
@@ -1584,123 +1698,6 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
     g_string_free(iov_buffer, TRUE);
     pcmk_free_ipc_event(iov);
     return rc;
-}
-
-/*!
- * \brief Ensure an IPC provider has expected user or group
- *
- * \param[in]  qb_ipc  libqb client connection if available
- * \param[in]  sock    Connected Unix socket for IPC
- * \param[in]  refuid  Expected user ID
- * \param[in]  refgid  Expected group ID
- * \param[out] gotpid  If not NULL, where to store provider's actual process ID
- *                     (or 1 on platforms where ID is not available)
- * \param[out] gotuid  If not NULL, where to store provider's actual user ID
- * \param[out] gotgid  If not NULL, where to store provider's actual group ID
- *
- * \return Standard Pacemaker return code
- * \note An actual user ID of 0 (root) will always be considered authorized,
- *       regardless of the expected values provided. The caller can use the
- *       output arguments to be stricter than this function.
- */
-static int
-is_ipc_provider_expected(qb_ipcc_connection_t *qb_ipc, int sock,
-                         uid_t refuid, gid_t refgid,
-                         pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
-{
-    int rc = EOPNOTSUPP;
-    pid_t found_pid = 0;
-    uid_t found_uid = 0;
-    gid_t found_gid = 0;
-
-#ifdef HAVE_QB_IPCC_AUTH_GET
-    if (qb_ipc != NULL) {
-        rc = qb_ipcc_auth_get(qb_ipc, &found_pid, &found_uid, &found_gid);
-        rc = -rc; // libqb returns 0 or -errno
-        if (rc == pcmk_rc_ok) {
-            goto found;
-        }
-    }
-#endif
-
-#ifdef HAVE_UCRED
-    {
-        struct ucred ucred;
-        socklen_t ucred_len = sizeof(ucred);
-
-        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED, &ucred, &ucred_len) < 0) {
-            rc = errno;
-        } else if (ucred_len != sizeof(ucred)) {
-            rc = EOPNOTSUPP;
-        } else {
-            found_pid = ucred.pid;
-            found_uid = ucred.uid;
-            found_gid = ucred.gid;
-            goto found;
-        }
-    }
-#endif
-
-#ifdef HAVE_SOCKPEERCRED
-    {
-        struct sockpeercred sockpeercred;
-        socklen_t sockpeercred_len = sizeof(sockpeercred);
-
-        if (getsockopt(sock, SOL_SOCKET, SO_PEERCRED,
-                       &sockpeercred, &sockpeercred_len) < 0) {
-            rc = errno;
-        } else if (sockpeercred_len != sizeof(sockpeercred)) {
-            rc = EOPNOTSUPP;
-        } else {
-            found_pid = sockpeercred.pid;
-            found_uid = sockpeercred.uid;
-            found_gid = sockpeercred.gid;
-            goto found;
-        }
-    }
-#endif
-
-#ifdef HAVE_GETPEEREID // For example, FreeBSD
-    if (getpeereid(sock, &found_uid, &found_gid) < 0) {
-        rc = errno;
-    } else {
-        found_pid = PCMK__SPECIAL_PID;
-        goto found;
-    }
-#endif
-
-#ifdef HAVE_GETPEERUCRED
-    {
-        ucred_t *ucred = NULL;
-
-        if (getpeerucred(sock, &ucred) < 0) {
-            rc = errno;
-        } else {
-            found_pid = ucred_getpid(ucred);
-            found_uid = ucred_geteuid(ucred);
-            found_gid = ucred_getegid(ucred);
-            ucred_free(ucred);
-            goto found;
-        }
-    }
-#endif
-
-    return rc; // If we get here, nothing succeeded
-
-found:
-    if (gotpid != NULL) {
-        *gotpid = found_pid;
-    }
-    if (gotuid != NULL) {
-        *gotuid = found_uid;
-    }
-    if (gotgid != NULL) {
-        *gotgid = found_gid;
-    }
-    if ((found_uid != 0) && (found_uid != refuid) && (found_gid != refgid)) {
-        return pcmk_rc_ipc_unauthorized;
-    }
-    return pcmk_rc_ok;
 }
 
 int
