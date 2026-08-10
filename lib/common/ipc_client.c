@@ -1704,19 +1704,20 @@ int
 crm_ipc_is_authentic_process(int sock, uid_t refuid, gid_t refgid,
                              pid_t *gotpid, uid_t *gotuid, gid_t *gotgid)
 {
-    int ret = is_ipc_provider_expected(NULL, sock, refuid, refgid,
-                                       gotpid, gotuid, gotgid);
+    int rc = is_ipc_provider_expected(NULL, sock, refuid, refgid, gotpid,
+                                      gotuid, gotgid);
 
-    /* The old function had some very odd return codes*/
-    if (ret == 0) {
-        return 1;
+    // Strange return codes for public API backward compatibility
+    switch (rc) {
+        case pcmk_rc_ok:
+            return 1;
+
+        case pcmk_rc_ipc_unauthorized:
+            return 0;
+
+        default:
+            return pcmk_rc2legacy(rc);
     }
-
-    if (ret == pcmk_rc_ipc_unauthorized) {
-        return 0;
-    }
-
-    return pcmk_rc2legacy(ret);
 }
 
 int
