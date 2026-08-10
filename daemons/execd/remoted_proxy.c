@@ -81,8 +81,8 @@ ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, const char *ipc_channel)
     xmlNode *msg = NULL;
 
     if (ipc_proxy == NULL) {
-        pcmk__warn("Cannot proxy IPC connection from uid %d to %s because not "
-                   "connected to cluster", uid, ipc_channel);
+        pcmk__warn("Cannot proxy IPC connection from uid %lld to %s because "
+                   "not connected to cluster", (long long) uid, ipc_channel);
         return -EREMOTEIO;
     }
 
@@ -97,8 +97,8 @@ ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, const char *ipc_channel)
     /* This ipc client is bound to a single ipc provider. If the
      * provider goes away, this client is disconnected */
     client->userdata = pcmk__str_copy(ipc_proxy->id);
-    client->name = pcmk__assert_asprintf("proxy-%s-%d-%.8s", ipc_channel,
-                                         client->pid, client->id);
+    client->name = pcmk__assert_asprintf("proxy-%s-%lld-%.8s", ipc_channel,
+                                         (long long) client->pid, client->id);
 
     /* Allow remote executor to distinguish between proxied local clients and
      * actual executor API clients
@@ -113,8 +113,8 @@ ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, const char *ipc_channel)
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
     pcmk__xml_free(msg);
-    pcmk__debug("Accepted IPC proxy connection (session ID %s) from uid %d on "
-                "channel %s", client->id, uid, ipc_channel);
+    pcmk__debug("Accepted IPC proxy connection (session ID %s) from uid %lld "
+                "on channel %s", client->id, (long long) uid, ipc_channel);
     return 0;
 }
 

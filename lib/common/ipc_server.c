@@ -250,8 +250,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client)
     }
 
     if (uid_client != 0) {
-        pcmk__trace("Giving group %u access to new IPC connection",
-                    gid_cluster);
+        pcmk__trace("Giving group %lld access to new IPC connection",
+                    (long long) gid_cluster);
         /* Passing -1 to chown(2) means don't change */
         qb_ipcs_connection_auth_set(c, -1, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
@@ -264,8 +264,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client)
         pcmk__set_client_flags(client, pcmk__client_privileged);
     }
 
-    pcmk__debug("New IPC client %s for PID %u with uid %d", client->id,
-                client->pid, uid_client);
+    pcmk__debug("New IPC client %s for PID %lld with uid %lld", client->id,
+                (long long) client->pid, (long long) uid_client);
     return client;
 }
 
