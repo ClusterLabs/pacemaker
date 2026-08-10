@@ -95,24 +95,21 @@ close_cfg(void)
 static gboolean
 cluster_reconnect_cb(void *data)
 {
-    if (pacemakerd_corosync_connect_cfg()) {
-        g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
-        pcmk__notice("Cluster reconnect succeeded");
-        pacemakerd_corosync_read_config();
-        restart_cluster_subdaemons();
-        return G_SOURCE_REMOVE;
+    if (!pacemakerd_corosync_connect_cfg()) {
+        /* In theory this will continue forever. In practice the CIB connection
+         * from attrd will time out and shut down Pacemaker when it gets bored.
+         */
+        pcmk__info("Cluster reconnect failed (connection will be reattempted "
+                   "once per second)");
+        return G_SOURCE_CONTINUE;
     }
 
-    pcmk__info("Cluster reconnect failed (connection will be reattempted "
-               "once per second)");
-
-    /*
-     * In theory this will continue forever. In practice the CIB connection from
-     * attrd will timeout and shut down Pacemaker when it gets bored.
-     */
-    return G_SOURCE_CONTINUE;
+    g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
+    pcmk__notice("Cluster reconnect succeeded");
+    pacemakerd_corosync_read_config();
+    restart_cluster_subdaemons();
+    return G_SOURCE_REMOVE;
 }
-
 
 static void
 cfg_connection_destroy(void *user_data)
