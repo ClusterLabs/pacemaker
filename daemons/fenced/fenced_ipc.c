@@ -57,7 +57,7 @@ handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
  *
  * \param[in,out] c    New connection
  * \param[in]     uid  Client user id
- * \param[in]     gid  Client group id
+ * \param[in]     gid  Ignored
  *
  * \return 0 on success, -errno otherwise
  */
@@ -71,7 +71,7 @@ fenced_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
         return -ECONNREFUSED;
     }
 
-    if (pcmk__new_client(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid) == NULL) {
         return -ENOMEM;
     }
     return 0;

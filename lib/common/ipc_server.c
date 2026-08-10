@@ -230,7 +230,7 @@ pcmk__new_unauth_client(void)
 }
 
 pcmk__client_t *
-pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
+pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client)
 {
     gid_t uid_cluster = 0;
     gid_t gid_cluster = 0;
@@ -264,8 +264,8 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
         pcmk__set_client_flags(client, pcmk__client_privileged);
     }
 
-    pcmk__debug("New IPC client %s for PID %u with uid %d and gid %d",
-                client->id, client->pid, uid_client, gid_client);
+    pcmk__debug("New IPC client %s for PID %u with uid %d", client->id,
+                client->pid, uid_client);
     return client;
 }
 

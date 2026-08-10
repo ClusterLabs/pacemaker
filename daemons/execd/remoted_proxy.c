@@ -91,7 +91,7 @@ ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid, const char *ipc_
     /* This new client is a local IPC client on a Pacemaker Remote controlled
      * node, needing to access cluster node IPC services.
      */
-    client = pcmk__new_client(c, uid, gid);
+    client = pcmk__new_client(c, uid);
     if (client == NULL) {
         return -ENOMEM;
     }
