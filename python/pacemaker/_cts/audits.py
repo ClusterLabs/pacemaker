@@ -810,7 +810,7 @@ class CIBAudit(ClusterAudit):
 
             else:
                 (rc, result) = self._cm.rsh.call(
-                    node0, f"crm_diff -VV -cf --new {node_xml} --original {node0_xml}", verbose=1)
+                    node0, f"crm_diff -VV -c --new {node_xml} --original {node0_xml}", verbose=1)
 
                 if rc != 0:
                     logging.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
