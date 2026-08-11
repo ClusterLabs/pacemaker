@@ -118,14 +118,15 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
     }
 
     if (pcmk__is_set(header->flags, crm_ipc_multipart_end)) {
+        CRM_CHECK(buffer != NULL && *buffer != NULL && header->part_id != 0,
+                  return EINVAL);
+
         full_header = (void *) (*buffer)->data;
 
         /* This is the end of a multipart IPC message.  Add the payload of the
          * received data (so, don't include the header) to the partial buffer.
          * Remember that this needs to include the null terminating character.
          */
-        CRM_CHECK(buffer != NULL && *buffer != NULL && header->part_id != 0,
-                  return EINVAL);
         CRM_CHECK(full_header->qb.id == header->qb.id, return EBADMSG);
         g_byte_array_append(*buffer, payload, header->size);
 
@@ -155,6 +156,8 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
                                 sizeof(pcmk__ipc_header_t) + header->size - 1);
 
         } else {
+            CRM_CHECK(buffer != NULL && *buffer != NULL, return EINVAL);
+
             full_header = (void *) (*buffer)->data;
 
             /* This is some intermediate part of a multipart message.  Add
@@ -162,7 +165,6 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
              * to the partial buffer and return.  Do not include the null
              * terminating character.
              */
-            CRM_CHECK(buffer != NULL && *buffer != NULL, return EINVAL);
             CRM_CHECK(full_header->qb.id == header->qb.id, return EBADMSG);
             g_byte_array_append(*buffer, payload, header->size - 1);
         }
