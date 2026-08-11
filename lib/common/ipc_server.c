@@ -606,7 +606,8 @@ no_more_retries:
          */
         if ((c->queue_backlog <= 1)
             || (queue_len < c->queue_backlog)
-            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown))) {
+            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown)
+                && pcmk__is_set(c->flags, pcmk__client_privileged))) {
             pcmk__warn("Client with process ID %u has a backlog of %u messages "
                        QB_XS " %p", c->pid, queue_len, c->ipcs);
 
