@@ -546,7 +546,7 @@ class Resource(XmlBase):
 
         for (k, kargs) in self._coloc.items():
             attrs = {"id": f"{self.name}-with-{k}", "rsc": self.name, "with-rsc": k}
-            text += element("rsc_colocation", **attrs)
+            text += element("rsc_colocation", **attrs, **kargs)
 
         text += "</constraints>"
         return text
