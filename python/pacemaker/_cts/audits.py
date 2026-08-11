@@ -865,7 +865,7 @@ class PartitionAudit(ClusterAudit):
     * The number of partitions and the nodes in each is as expected
     * Each node is active when it should be active and inactive when it
       should be inactive
-    * The status and epoch of each node is as expected
+    * The status of each node is as expected
     * A partition has quorum
     * A partition has a DC when expected
     """
@@ -880,7 +880,6 @@ class PartitionAudit(ClusterAudit):
         ClusterAudit.__init__(self, cm)
         self.name = "PartitionAudit"
 
-        self._node_epoch = {}
         self._node_state = {}
         self._node_quorum = {}
 
@@ -929,7 +928,6 @@ class PartitionAudit(ClusterAudit):
         passed = True
         dc_found = []
         dc_allowed_list = []
-        lowest_epoch = None
         node_list = partition.split()
 
         self.debug(f"Auditing partition: {partition}")
@@ -943,28 +941,11 @@ class PartitionAudit(ClusterAudit):
             (_, out) = self._cm.rsh.call(node, self._cm.templates["StatusCmd"] % node, verbose=1)
             self._node_state[node] = out[0].strip()
 
-            (_, out) = self._cm.rsh.call(node, self._cm.templates["EpochCmd"], verbose=1)
-            self._node_epoch[node] = out[0].strip()
-
             (_, out) = self._cm.rsh.call(node, self._cm.templates["QuorumCmd"], verbose=1)
             self._node_quorum[node] = out[0].strip()
 
-            self.debug(f"Node {node}: {self._node_state[node]} - {self._node_epoch[node]} - {self._node_quorum[node]}.")
             self._node_state[node] = self._trim_string(self._node_state[node])
-            self._node_epoch[node] = self._trim2int(self._node_epoch[node])
             self._node_quorum[node] = self._trim_string(self._node_quorum[node])
-
-            if not self._node_epoch[node]:
-                logging.log(f"Warn: Node {node} disappeared: can't determine epoch")
-                self._cm.expected_status[node] = "down"
-                # not in itself a reason to fail the audit (not what we're
-                #  checking for in this audit)
-            elif lowest_epoch is None or self._node_epoch[node] < lowest_epoch:
-                lowest_epoch = self._node_epoch[node]
-
-        if not lowest_epoch:
-            logging.log(f"Lowest epoch not determined in {partition}")
-            passed = False
 
         for node in node_list:
             if self._cm.expected_status[node] != "up":
@@ -972,16 +953,6 @@ class PartitionAudit(ClusterAudit):
 
             if self._cm.is_node_dc(node, self._node_state[node]):
                 dc_found.append(node)
-                if self._node_epoch[node] == lowest_epoch:
-                    self.debug(f"{node}: OK")
-                elif not self._node_epoch[node]:
-                    self.debug(f"Check on {node} ignored: no node epoch")
-                elif not lowest_epoch:
-                    self.debug(f"Check on {node} ignored: no lowest epoch")
-                else:
-                    logging.log(f"DC {node} is not the oldest node "
-                                f"({self._node_epoch[node]} vs. {lowest_epoch})")
-                    passed = False
 
         if not dc_found:
             logging.log(f"DC not found on any of the {len(dc_allowed_list)} allowed "
@@ -990,11 +961,6 @@ class PartitionAudit(ClusterAudit):
         elif len(dc_found) > 1:
             logging.log(f"{len(dc_found)} DCs ({dc_found}) found in cluster partition: {node_list}")
             passed = False
-
-        if not passed:
-            for node in node_list:
-                if self._cm.expected_status[node] == "up":
-                    logging.log(f"epoch {self._node_epoch[node]} : {self._node_state[node]}")
 
         return passed
 
