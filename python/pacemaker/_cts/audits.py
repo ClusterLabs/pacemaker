@@ -540,13 +540,7 @@ class PrimitiveAudit(ClusterAudit):
 
     def is_applicable(self):
         """Return True if this audit is applicable in the current test configuration."""
-        # @TODO Due to long-ago refactoring, this name test would never match,
-        # so this audit (and those derived from it) would never run.
-        # Uncommenting the next lines fixes the name test, but that then
-        # exposes pre-existing bugs that need to be fixed.
-        # if self._cm.name == "crm-corosync":
-        #     return True
-        return False
+        return self._cm.name == "crm-corosync"
 
 
 class GroupAudit(PrimitiveAudit):
@@ -760,13 +754,7 @@ class ControllerStateAudit(ClusterAudit):
 
     def is_applicable(self):
         """Return True if this audit is applicable in the current test configuration."""
-        # @TODO Due to long-ago refactoring, this name test would never match,
-        # so this audit (and those derived from it) would never run.
-        # Uncommenting the next lines fixes the name test, but that then
-        # exposes pre-existing bugs that need to be fixed.
-        # if self._cm.name == "crm-corosync":
-        #     return True
-        return False
+        return self._cm.name == "crm-corosync"
 
 
 class CIBAudit(ClusterAudit):
@@ -865,13 +853,7 @@ class CIBAudit(ClusterAudit):
 
     def is_applicable(self):
         """Return True if this audit is applicable in the current test configuration."""
-        # @TODO Due to long-ago refactoring, this name test would never match,
-        # so this audit (and those derived from it) would never run.
-        # Uncommenting the next lines fixes the name test, but that then
-        # exposes pre-existing bugs that need to be fixed.
-        # if self._cm.name == "crm-corosync":
-        #     return True
-        return False
+        return self._cm.name == "crm-corosync"
 
 
 class PartitionAudit(ClusterAudit):
@@ -1018,13 +1000,7 @@ class PartitionAudit(ClusterAudit):
 
     def is_applicable(self):
         """Return True if this audit is applicable in the current test configuration."""
-        # @TODO Due to long-ago refactoring, this name test would never match,
-        # so this audit (and those derived from it) would never run.
-        # Uncommenting the next lines fixes the name test, but that then
-        # exposes pre-existing bugs that need to be fixed.
-        # if self._cm.name == "crm-corosync":
-        #     return True
-        return False
+        return self._cm.name == "crm-corosync"
 
 
 # pylint: disable=invalid-name
