@@ -33,7 +33,7 @@ struct mainloop_child_s {
     char *desc;                         //!< Description
     unsigned int timer_id;              //!< ID of timer for child timeout
     bool timed_out;                     //!< Whether the child has timed out
-    void *privatedata;                  //!< User data
+    void *user_data;                    //!< User data
 
     //! Group of <tt>enum mainloop_child_flags</tt>
     enum mainloop_child_flags flags;

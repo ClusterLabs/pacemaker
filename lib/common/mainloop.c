@@ -51,7 +51,7 @@ static qb_array_t *gio_map = NULL;
  *
  * \param[in,out] child  Main loop child
  *
- * \note This does not free \p child->privatedata.
+ * \note This does not free \p child->user_data.
  */
 static void
 free_main_loop_child(mainloop_child_t *child)
@@ -1005,13 +1005,13 @@ mainloop_child_timeout(mainloop_child_t * child)
 void *
 mainloop_child_userdata(mainloop_child_t * child)
 {
-    return child->privatedata;
+    return child->user_data;
 }
 
 void
 mainloop_clear_child_userdata(mainloop_child_t * child)
 {
-    child->privatedata = NULL;
+    child->user_data = NULL;
 }
 
 static int
@@ -1254,7 +1254,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
 
     child->pid = pid;
     child->desc = pcmk__str_copy(desc);
-    child->privatedata = user_data;
+    child->user_data = user_data;
     child->flags = flags;
     child->exit_fn = exit_fn;
 
