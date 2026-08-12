@@ -803,6 +803,10 @@ class CIBAudit(ClusterAudit):
                 logging.log(f"Could not perform audit: Failed to get configuration from {node}")
                 return False
 
+            # Ignore differences in cib-last-written
+            lines = [re.sub(r'cib-last-written="[^"]+"', 'cib-last-written=""', line)
+                     for line in lines]
+
             with open(cib_file, "w", encoding="utf-8") as f:
                 f.writelines(lines)
 
