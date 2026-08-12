@@ -999,7 +999,7 @@ mainloop_child_name(mainloop_child_t * child)
 int
 mainloop_child_timeout(mainloop_child_t * child)
 {
-    return child->timeout;
+    return child->timeout? TRUE : FALSE;
 }
 
 void *
@@ -1063,7 +1063,7 @@ child_timeout_callback(void *p)
         return FALSE;
     }
 
-    child->timeout = TRUE;
+    child->timeout = true;
     pcmk__debug("%s process (PID %lld) timed out", child->desc,
                 (long long) child->pid);
 
@@ -1233,7 +1233,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
 
     child->pid = pid;
     child->timerid = 0;
-    child->timeout = FALSE;
+    child->timeout = false;
     child->privatedata = privatedata;
     child->exit_fn = exit_fn;
     child->flags = flags;

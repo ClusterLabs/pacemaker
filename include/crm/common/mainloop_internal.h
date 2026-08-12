@@ -14,9 +14,8 @@
 #ifndef PCMK__CRM_COMMON_MAINLOOP_INTERNAL__H
 #define PCMK__CRM_COMMON_MAINLOOP_INTERNAL__H
 
+#include <stdbool.h>                // bool
 #include <sys/types.h>              // pid_t
-
-#include <glib.h>                   // gboolean
 
 #include <crm/common/ipc.h>         // crm_ipc_t
 #include <crm/common/mainloop.h>    // ipc_client_callbacks, mainloop_*
@@ -29,7 +28,7 @@ struct mainloop_child_s {
     pid_t pid;
     char *desc;
     unsigned timerid;
-    gboolean timeout;
+    bool timeout;
     void *privatedata;
 
     enum mainloop_child_flags flags;
