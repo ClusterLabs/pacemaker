@@ -31,7 +31,7 @@ extern "C" {
 struct mainloop_child_s {
     pid_t pid;                          //!< Child PID
     char *desc;                         //!< Description
-    unsigned int timerid;               //!< ID of timer for child timeout
+    unsigned int timer_id;              //!< ID of timer for child timeout
     bool timeout;                       //!< Whether the child has timed out
     void *privatedata;                  //!< User data
 

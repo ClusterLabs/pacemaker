@@ -56,9 +56,9 @@ static qb_array_t *gio_map = NULL;
 static void
 free_main_loop_child(mainloop_child_t *child)
 {
-    if (child->timerid != 0) {
-        pcmk__trace("Removing timer %d", child->timerid);
-        g_source_remove(child->timerid);
+    if (child->timer_id != 0) {
+        pcmk__trace("Removing timer %u", child->timer_id);
+        g_source_remove(child->timer_id);
     }
 
     free(child->desc);
@@ -1050,7 +1050,7 @@ child_timeout_callback(void *p)
     mainloop_child_t *child = p;
     int rc = pcmk_rc_ok;
 
-    child->timerid = 0;
+    child->timer_id = 0;
     if (child->timeout) {
         pcmk__warn("%s process (PID %lld) will not die!", child->desc,
                    (long long) child->pid);
@@ -1067,7 +1067,7 @@ child_timeout_callback(void *p)
     pcmk__debug("%s process (PID %lld) timed out", child->desc,
                 (long long) child->pid);
 
-    child->timerid = pcmk__create_timer(5000, child_timeout_callback, child);
+    child->timer_id = pcmk__create_timer(5000, child_timeout_callback, child);
     return FALSE;
 }
 
@@ -1259,8 +1259,8 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
     child->exit_fn = exit_fn;
 
     if (timeout_ms > 0) {
-        child->timerid = pcmk__create_timer(timeout_ms, child_timeout_callback,
-                                            child);
+        child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                             child);
     }
 
     child_list = g_list_append(child_list, child);
