@@ -1019,15 +1019,15 @@ child_kill_helper(const mainloop_child_t *child)
 {
     int rc = 0;
 
-    if (pcmk__is_set(child->flags, mainloop_leave_pid_group)) {
-        pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
-                    (long long) child->pid);
-        rc = kill(child->pid, SIGKILL);
-
-    } else {
+    if (child->kill_group) {
         pcmk__debug("Killing PID %lld's entire process group",
                     (long long) child->pid);
         rc = kill(-child->pid, SIGKILL);
+
+    } else {
+        pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
+                    (long long) child->pid);
+        rc = kill(child->pid, SIGKILL);
     }
 
     if (rc == 0) {
@@ -1255,7 +1255,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
     child->pid = pid;
     child->desc = pcmk__str_copy(desc);
     child->user_data = user_data;
-    child->flags = flags;
+    child->kill_group = !pcmk__is_set(flags, mainloop_leave_pid_group);
     child->exit_fn = exit_fn;
 
     if (timeout_ms > 0) {

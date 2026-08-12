@@ -29,14 +29,17 @@ extern "C" {
  * \brief Info about a child process tracked by a main event loop
  */
 struct mainloop_child_s {
-    pid_t pid;                          //!< Child PID
-    char *desc;                         //!< Description
-    unsigned int timer_id;              //!< ID of timer for child timeout
-    bool timed_out;                     //!< Whether the child has timed out
-    void *user_data;                    //!< User data
+    pid_t pid;              //!< Child PID
+    char *desc;             //!< Description
+    unsigned int timer_id;  //!< ID of timer for child timeout
+    bool timed_out;         //!< Whether the child has timed out
+    void *user_data;        //!< User data
 
-    //! Group of <tt>enum mainloop_child_flags</tt>
-    enum mainloop_child_flags flags;
+    /*!
+     * If \c true, kill the child's entire process group on timeout.
+     * If \c false, kill only the child process.
+     */
+    bool kill_group;
 
     //! Callback function called when the child terminates
     pcmk__mainloop_child_exit_fn_t exit_fn;
