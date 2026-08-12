@@ -731,7 +731,7 @@ async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
         log_op_output(op);
         parse_exit_reason_from_stderr(op);
 
-    } else if (mainloop_child_timeout(p)) {
+    } else if (p->timed_out) {
         const char *kind = services__action_kind(op);
 
         pcmk__info("%s %s[%d] timed out after %s", kind, op->id, op->pid,
