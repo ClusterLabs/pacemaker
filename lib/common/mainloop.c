@@ -999,7 +999,7 @@ mainloop_child_name(mainloop_child_t * child)
 int
 mainloop_child_timeout(mainloop_child_t * child)
 {
-    return child->timeout? TRUE : FALSE;
+    return child->timed_out? TRUE : FALSE;
 }
 
 void *
@@ -1051,7 +1051,7 @@ child_timeout_callback(void *p)
     int rc = pcmk_rc_ok;
 
     child->timer_id = 0;
-    if (child->timeout) {
+    if (child->timed_out) {
         pcmk__warn("%s process (PID %lld) will not die!", child->desc,
                    (long long) child->pid);
         return FALSE;
@@ -1063,7 +1063,7 @@ child_timeout_callback(void *p)
         return FALSE;
     }
 
-    child->timeout = true;
+    child->timed_out = true;
     pcmk__debug("%s process (PID %lld) timed out", child->desc,
                 (long long) child->pid);
 
