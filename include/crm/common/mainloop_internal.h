@@ -24,16 +24,21 @@
 extern "C" {
 #endif
 
+/*!
+ * \internal
+ * \brief Info about a child process tracked by a main event loop
+ */
 struct mainloop_child_s {
-    pid_t pid;
-    char *desc;
-    unsigned timerid;
-    bool timeout;
-    void *privatedata;
+    pid_t pid;                          //!< Child PID
+    char *desc;                         //!< Description
+    unsigned int timerid;               //!< ID of timer for child timeout
+    bool timeout;                       //!< Whether the child has timed out
+    void *privatedata;                  //!< User data
 
+    //! Group of <tt>enum mainloop_child_flags</tt>
     enum mainloop_child_flags flags;
 
-    /* Called when a process dies */
+    //! Callback function called when the child terminates
     pcmk__mainloop_child_exit_fn_t exit_fn;
 };
 
