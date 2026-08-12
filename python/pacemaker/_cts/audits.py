@@ -4,7 +4,10 @@ __all__ = ["AuditConstraint", "AuditResource", "ClusterAudit", "audit_list"]
 __copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+import glob
+import os
 import re
+import subprocess
 import time
 import uuid
 
@@ -786,70 +789,62 @@ class CIBAudit(ClusterAudit):
 
         return passed
 
+    def _cleanup_cibs(self):
+        """Remove any fetched CIB files."""
+        for f in glob.glob("/tmp/ctsaudit.*.xml"):
+            os.remove(f)
+
     def _audit_cib_contents(self, hostlist):
         """Perform the CIB audit on the given hosts."""
         passed = True
-        node0 = None
-        node0_xml = None
 
         partition_hosts = hostlist.split()
         for node in partition_hosts:
-            node_xml = self._store_remote_cib(node, node0)
+            node_xml = self._get_remote_cib(node)
 
             if node_xml is None:
+                # If we failed to fetch the CIB from a single node, the audit
+                # will fail.  Clean up anything we did fetch and return.
                 logging.log(f"Could not perform audit: No configuration from {node}")
                 passed = False
+                self._cleanup_cibs()
+                return passed
 
-            elif node0 is None:
-                node0 = node
-                node0_xml = node_xml
+            with open(f"/tmp/ctsaudit.{node}.xml", "w", encoding="utf-8") as f:
+                for line in node_xml:
+                    f.write(line)
 
-            elif node0_xml is None:
-                logging.log(f"Could not perform audit: No configuration from {node0}")
+        (first, rest) = (partition_hosts[0], partition_hosts[1:])
+        first_xml = f"/tmp/ctsaudit.{first}.xml"
+
+        for node in rest:
+            node_xml = f"/tmp/ctsaudit.{node}.xml"
+            proc = subprocess.run(["crm_diff", "-VV", "-c", "--new", node_xml,
+                                   "--original", first_xml],
+                                  check=False, capture_output=True, universal_newlines=True)
+
+            if proc.returncode != 0:
+                logging.log(f"Diff between {first_xml} and {node_xml} failed: {proc.returncode}")
                 passed = False
 
-            else:
-                (rc, result) = self._cm.rsh.call(
-                    node0, f"crm_diff -VV -c --new {node_xml} --original {node0_xml}", verbose=1)
-
-                if rc != 0:
-                    logging.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
+            for line in proc.stdout.splitlines():
+                if not re.search("<diff/>", line):
                     passed = False
+                    self.debug(f"CibDiff[{first}-{node}]: {line}")
+                else:
+                    self.debug(f"CibDiff[{first}-{node}] Ignoring: {line}")
 
-                for line in result:
-                    if not re.search("<diff/>", line):
-                        passed = False
-                        self.debug(f"CibDiff[{node0}-{node}]: {line}")
-                    else:
-                        self.debug(f"CibDiff[{node0}-{node}] Ignoring: {line}")
-
+        self._cleanup_cibs()
         return passed
 
-    def _store_remote_cib(self, node, target):
-        """
-        Store a copy of the given node's CIB on the given target node.
-
-        If no target is given, store the CIB on the given node.
-        """
-        filename = f"/tmp/ctsaudit.{node}.xml"
-
-        if not target:
-            target = node
-
+    def _get_remote_cib(self, node):
+        """Fetch a copy of the given node's CIB and return it as a list."""
         (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
         if rc != 0:
             logging.log("Could not retrieve configuration")
             return None
 
-        self._cm.rsh.call("localhost", f"rm -f {filename}")
-        for line in lines:
-            self._cm.rsh.call("localhost", f"echo \'{line[:-1]}\' >> {filename}", verbose=0)
-
-        if self._cm.rsh.copy(filename, f"root@{target}:{filename}") != 0:
-            logging.log("Could not store configuration")
-            return None
-
-        return filename
+        return lines
 
     def is_applicable(self):
         """Return True if this audit is applicable in the current test configuration."""
