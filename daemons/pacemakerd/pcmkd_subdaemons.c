@@ -253,7 +253,7 @@ escalate_shutdown(void *data)
 static void
 pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
 {
-    pcmkd_child_t *child = mainloop_child_userdata(p);
+    pcmkd_child_t *child = p->user_data;
 
     if (signo) {
         // cts-lab looks for this message

@@ -708,7 +708,7 @@ parse_exit_reason_from_stderr(svc_action_t *op)
 static void
 async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
 {
-    svc_action_t *op = mainloop_child_userdata(p);
+    svc_action_t *op = p->user_data;
 
     mainloop_clear_child_userdata(p);
     CRM_CHECK(op->pid == p->pid,
