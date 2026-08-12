@@ -710,7 +710,8 @@ async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
 {
     svc_action_t *op = p->user_data;
 
-    mainloop_clear_child_userdata(p);
+    p->user_data = NULL;
+
     CRM_CHECK(op->pid == p->pid,
               services__set_result(op, services__generic_error(op),
                                    PCMK_EXEC_ERROR, "Bug in mainloop handling");
