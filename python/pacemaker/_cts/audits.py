@@ -812,6 +812,7 @@ class CIBAudit(ClusterAudit):
 
             with open(f"/tmp/ctsaudit.{node}.xml", "w", encoding="utf-8") as f:
                 for line in node_xml:
+                    line = re.sub(r'cib-last-written="[^"]+"', 'cib-last-written=""', line)
                     f.write(line)
 
         (first, rest) = (partition_hosts[0], partition_hosts[1:])
