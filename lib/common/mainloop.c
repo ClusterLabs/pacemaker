@@ -43,13 +43,22 @@ struct mainloop_timer_s {
 static GList *child_list = NULL;
 static qb_array_t *gio_map = NULL;
 
+/*!
+ * \internal
+ * \brief Free a main loop child
+ *
+ * If the child has an associated timer, remove it.
+ *
+ * \param[in,out] child  Main loop child
+ *
+ * \note This does not free \p child->privatedata.
+ */
 static void
-child_free(mainloop_child_t *child)
+free_main_loop_child(mainloop_child_t *child)
 {
     if (child->timerid != 0) {
         pcmk__trace("Removing timer %d", child->timerid);
         g_source_remove(child->timerid);
-        child->timerid = 0;
     }
 
     free(child->desc);
@@ -424,7 +433,7 @@ mainloop_destroy_signal(int sig)
 void
 mainloop_cleanup(void)
 {
-    g_list_free_full(child_list, (GDestroyNotify) child_free);
+    g_list_free_full(child_list, (GDestroyNotify) free_main_loop_child);
     child_list = NULL;
 
     g_clear_pointer(&gio_map, qb_array_free);
@@ -1138,7 +1147,7 @@ child_death_dispatch(int signal)
                         (long long) child->pid);
             child_list = g_list_remove_link(child_list, saved);
             g_list_free(saved);
-            child_free(child);
+            free_main_loop_child(child);
         }
     }
 }
@@ -1202,7 +1211,7 @@ mainloop_child_kill(pid_t pid)
     }
 
     child_list = g_list_remove(child_list, match);
-    child_free(match);
+    free_main_loop_child(match);
     return TRUE;
 }
 
