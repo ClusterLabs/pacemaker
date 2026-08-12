@@ -1152,16 +1152,29 @@ child_death_dispatch(int signal)
     }
 }
 
+/*!
+ * \internal
+ * \brief Install the main loop \c SIGCHLD handler
+ *
+ * Install \c child_death_dispatch as the \c SIGCHLD handler, and call it for
+ * any children that terminated before the handler was installed.
+ *
+ * \param[in] user_data  Ignored
+ *
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout that triggered this call)
+ *
+ * \note This is a \c GSourceFunc.
+ */
 static gboolean
-child_signal_init(void *p)
+install_sigchld_handler(void *user_data)
 {
-    pcmk__trace("Installed SIGCHLD handler");
-    /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
+    pcmk__trace("Installing SIGCHLD handler");
+
+    // Do NOT use g_child_watch_add() and friends, since they rely on pthreads
     mainloop_add_signal(SIGCHLD, child_death_dispatch);
 
-    /* In case they terminated before the signal handler was installed */
     child_death_dispatch(SIGCHLD);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 gboolean
@@ -1260,7 +1273,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
          * @TODO Understand and document why this matters.
          */
         need_init = false;
-        pcmk__create_timer(1, child_signal_init, NULL);
+        pcmk__create_timer(1, install_sigchld_handler, NULL);
     }
 }
 
