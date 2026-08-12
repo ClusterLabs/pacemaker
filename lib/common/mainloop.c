@@ -1215,51 +1215,75 @@ mainloop_child_kill(pid_t pid)
     return TRUE;
 }
 
-/* Create/Log a new tracked process
- * To track a process group, use -pid
+/*!
+ * \brief Create a new \c mainloop_child_t object and add it to the main loop
  *
- * @TODO Using a non-positive pid (i.e. any child, or process group) would
- *       likely not be useful since we will free the child after the first
- *       completed process.
+ * If the child process has not exited within \p timeout_ms, send it a
+ * \c SIGKILL signal.
+ *
+ * \param[in] pid         Child PID (must be positive for correct behavior)
+ * \param[in] timeout_ms  Timeout in milliseconds
+ * \param[in] desc        Description
+ * \param[in] user_data   User data
+ * \param[in] flags       Group of <tt>enum mainloop_child_flags</tt>
+ * \param[in] exit_fn     Function to call when the child process exits
  */
 void
-mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
-                              void *privatedata,
+mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
+                              void *user_data,
                               enum mainloop_child_flags flags,
                               pcmk__mainloop_child_exit_fn_t exit_fn)
 {
-    static bool need_init = TRUE;
+    // @TODO Make flags argument uint32_t or bool when this is made internal
+    static bool need_init = true;
+
     mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
 
     child->pid = pid;
-    child->timerid = 0;
-    child->timeout = false;
-    child->privatedata = privatedata;
-    child->exit_fn = exit_fn;
-    child->flags = flags;
     child->desc = pcmk__str_copy(desc);
+    child->privatedata = user_data;
+    child->flags = flags;
+    child->exit_fn = exit_fn;
 
-    if (timeout) {
-        child->timerid = pcmk__create_timer(timeout, child_timeout_callback, child);
+    if (timeout_ms > 0) {
+        child->timerid = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                            child);
     }
 
     child_list = g_list_append(child_list, child);
 
-    if(need_init) {
-        need_init = FALSE;
-        /* SIGCHLD processing has to be invoked from mainloop.
-         * We do not want it to be possible to both add a child pid
-         * to mainloop, and have the pid's exit callback invoked within
-         * the same callstack. */
+    if (need_init) {
+        /* Invoke SIGCHLD processing from the main loop. This ensures that we
+         * don't add a child to the main loop and have the exit callback invoked
+         * for the child PID within the same call stack.
+         *
+         * @TODO Understand and document why this matters.
+         */
+        need_init = false;
         pcmk__create_timer(1, child_signal_init, NULL);
     }
 }
 
+/*!
+ * \brief Create a new \c mainloop_child_t object and add it to the main loop
+ *
+ * If the child process has not exited within \p timeout_ms, send it a
+ * \c SIGKILL signal.
+ *
+ * \param[in] pid         Child PID (must be positive for correct behavior)
+ * \param[in] timeout_ms  Timeout in seconds
+ * \param[in] desc        Description
+ * \param[in] user_data   User data
+ * \param[in] exit_fn     Function to call when the child process exits
+ *
+ * \note This is a convenience wrapper for \c mainloop_child_add_with_flags()
+ *       that doesn't set any flags.
+ */
 void
-mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
+mainloop_child_add(pid_t pid, int timeout_ms, const char *desc, void *user_data,
                    pcmk__mainloop_child_exit_fn_t exit_fn)
 {
-    mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, exit_fn);
+    mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, exit_fn);
 }
 
 static gboolean

@@ -171,16 +171,12 @@ mainloop_io_t *mainloop_add_fd(const char *name, int priority, int fd, void *use
 
 void mainloop_del_fd(mainloop_io_t * client);
 
-/*
- * Create a new tracked process
- * To track a process group, use -pid
- */
-void mainloop_child_add(pid_t pid, int timeout, const char *desc,
-                        void *userdata,
+void mainloop_child_add(pid_t pid, int timeout_ms, const char *desc,
+                        void *user_data,
                         pcmk__mainloop_child_exit_fn_t exit_fn);
 
-void mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
-                                   void *userdata, enum mainloop_child_flags,
+void mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
+                                   void *user_data, enum mainloop_child_flags,
                                    pcmk__mainloop_child_exit_fn_t exit_fn);
 
 void *mainloop_child_userdata(mainloop_child_t * child);
