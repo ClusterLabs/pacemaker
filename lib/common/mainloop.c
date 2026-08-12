@@ -1177,37 +1177,64 @@ install_sigchld_handler(void *user_data)
     return G_SOURCE_REMOVE;
 }
 
+/*!
+ * \internal
+ * \brief Compare two mainloop child objects by PID
+ *
+ * \param[in] a  First child to compare (<tt>const mainloop_child_t *</tt>)
+ * \param[in] b  Second child to compare (<tt>const mainloop_child_t *</tt>)
+ *
+ * \retval -1  if \p a->pid is less than \p b->pid
+ * \retval  0  if \p a->pid is equal to \p b->pid
+ * \retval  1  if \p a->pid is greater than \p b->pid
+ *
+ * \note This is a \c GCompareFunc.
+ */
+static int
+compare_children_by_pid(const void *a, const void *b)
+{
+    const mainloop_child_t *child1 = a;
+    const mainloop_child_t *child2 = b;
+
+    if (child1->pid < child2->pid) {
+        return -1;
+    }
+
+    if (child1->pid > child2->pid) {
+        return 1;
+    }
+
+    return 0;
+}
+
 gboolean
 mainloop_child_kill(pid_t pid)
 {
-    GList *iter;
+    const mainloop_child_t cmp_data = { .pid = pid };
+    GList *match = NULL;
     mainloop_child_t *child = NULL;
-    mainloop_child_t *match = NULL;
+
     /* It is impossible to block SIGKILL, this allows us to
      * call waitpid without WNOHANG flag.*/
     int waitflags = 0;
     int rc = pcmk_rc_ok;
 
-    for (iter = child_list; iter != NULL && match == NULL; iter = iter->next) {
-        child = iter->data;
-        if (pid == child->pid) {
-            match = child;
-        }
-    }
-
+    match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
     if (match == NULL) {
         return FALSE;
     }
 
-    rc = child_kill_helper(match);
+    child = match->data;
+
+    rc = child_kill_helper(child);
     if (rc == ESRCH) {
         /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
          * SIGCHLD and let handler clean it up as normal (so we get the correct
          * return code/status). The blocking alternative would be to call
-         * child_waitpid(match, 0).
+         * child_waitpid(child, 0).
          */
         pcmk__trace("Waiting for signal that child process %lld completed",
-                    (long long) match->pid);
+                    (long long) child->pid);
         return TRUE;
     }
 
@@ -1218,13 +1245,13 @@ mainloop_child_kill(pid_t pid)
         waitflags = WNOHANG;
     }
 
-    if (!child_waitpid(match, waitflags)) {
+    if (!child_waitpid(child, waitflags)) {
         /* not much we can do if this occurs */
         return FALSE;
     }
 
-    child_list = g_list_remove(child_list, match);
-    free_main_loop_child(match);
+    child_list = g_list_remove(child_list, child);
+    free_main_loop_child(child);
     return TRUE;
 }
 
