@@ -254,27 +254,25 @@ static void
 pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
 {
     pcmkd_child_t *child = mainloop_child_userdata(p);
-    const char *name = mainloop_child_name(p);
 
     if (signo) {
         // cts-lab looks for this message
         do_crm_log(((signo == SIGKILL)? LOG_WARNING : LOG_ERR),
-                   "%s[%d] terminated with signal %d (%s)%s",
-                   name, p->pid, signo, strsignal(signo),
-                   (core? " and dumped core" : ""));
+                   "%s[%d] terminated with signal %d (%s)%s", p->desc, p->pid,
+                   signo, strsignal(signo), (core? " and dumped core" : ""));
         pcmk_process_exit(child);
         return;
     }
 
     switch(exitcode) {
         case CRM_EX_OK:
-            pcmk__info("%s[%d] exited with status %d (%s)", name, p->pid,
+            pcmk__info("%s[%d] exited with status %d (%s)", p->desc, p->pid,
                        exitcode, crm_exit_str(exitcode));
             break;
 
         case CRM_EX_FATAL:
             pcmk__warn("Shutting cluster down because %s[%d] had fatal failure",
-                       name, p->pid);
+                       p->desc, p->pid);
             child->flags &= ~child_respawn;
             fatal_error = true;
             pcmk_shutdown(SIGTERM);
@@ -287,7 +285,7 @@ pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
                 child->flags &= ~child_respawn;
                 fatal_error = true;
                 msg = pcmk__assert_asprintf("Subdaemon %s[%d] requested panic",
-                                            name, p->pid);
+                                            p->desc, p->pid);
                 pcmk__panic(msg);
 
                 // Should never get here
@@ -298,7 +296,7 @@ pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
 
         default:
             // cts-lab looks for this message
-            pcmk__err("%s[%d] exited with status %d (%s)", name, p->pid,
+            pcmk__err("%s[%d] exited with status %d (%s)", p->desc, p->pid,
                       exitcode, crm_exit_str(exitcode));
             break;
     }
