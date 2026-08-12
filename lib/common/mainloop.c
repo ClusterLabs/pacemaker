@@ -1207,6 +1207,25 @@ compare_children_by_pid(const void *a, const void *b)
     return 0;
 }
 
+/*!
+ * \brief Kill a child process tracked by the main loop
+ *
+ * If a process with PID \p pid is being tracked, send it a \c SIGKILL.
+ *
+ * If this function kills the child process successfully, remove the child from
+ * the tracking data structure and free the child.
+ *
+ * If the process is being tracked but no longer exists, don't remove or free
+ * the child yet. We will do this later when we receive a \c SIGCHLD for the
+ * child process.
+ *
+ * \param[in] pid  Child PID
+ *
+ * \return \c TRUE if the child with ID \p pid was being tracked and either this
+ *         function killed the process successfully or the process has already
+ *         terminated but we have not received a \c SIGCHLD for it; or \c FALSE
+ *         otherwise
+ */
 gboolean
 mainloop_child_kill(pid_t pid)
 {
