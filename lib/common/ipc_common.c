@@ -189,6 +189,14 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
                     header->qb.id, header->qb.size);
     }
 
+    /* Ensure that a complete message always ends with a null terminating
+     * character.
+     */
+    if ((rc == pcmk_rc_ok) && ((*buffer)->data[(*buffer)->len - 1] != '\0')) {
+        const guint8 zero = 0;
+        g_byte_array_append(*buffer, &zero, 1);
+    }
+
     pcmk__trace("Text = %s", payload);
     pcmk__trace("Buffer = %s", (*buffer)->data + sizeof(pcmk__ipc_header_t));
 

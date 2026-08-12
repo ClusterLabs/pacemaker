@@ -400,10 +400,6 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
     pcmk__ipc_header_t *header = (void *) c->buffer->data;
     char *text = (char *) header + sizeof(pcmk__ipc_header_t);
 
-    if (!pcmk__valid_ipc_header(header)) {
-        return NULL;
-    }
-
     if (id != NULL) {
         *id = header->qb.id;
     }
@@ -419,8 +415,6 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
          */
         pcmk__set_client_flags(c, pcmk__client_proxied);
     }
-
-    pcmk__assert(text[header->size - 1] == 0);
 
     xml = pcmk__xml_parse(text);
     pcmk__log_xml_trace(xml, "[IPC received]");
