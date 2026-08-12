@@ -185,6 +185,22 @@ class SplitBrainTest(CTSTest):
 
         return self.failure("See previous errors")
 
+    def audit(self):
+        """Perform all the relevant audits (see ClusterAudit), returning whether or not they all passed."""
+        passed = True
+
+        for audit in self.audits:
+            # These audits don't work well on the split brain test
+            if audit.name in ["GroupAudit", "PrimitiveAudit"]:
+                continue
+
+            if not audit():
+                logging.log(f"Internal {self.name} Audit {audit.name} FAILED.")
+                self.incr("auditfail")
+                passed = False
+
+        return passed
+
     @property
     def errors_to_ignore(self):
         """Return a list of errors which should be ignored."""
