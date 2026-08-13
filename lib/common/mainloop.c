@@ -1091,13 +1091,17 @@ child_timeout_callback(void *user_data)
 }
 
 static bool
-child_waitpid(mainloop_child_t *child, int flags)
+child_waitpid(GList *link, int flags)
 {
+    mainloop_child_t *child = NULL;
     int rc = 0;
     int core = 0;
     int signo = 0;
     int status = 0;
     int exitcode = 0;
+
+    pcmk__assert(link != NULL);
+    child = link->data;
 
     rc = waitpid(child->pid, &status, flags);
 
@@ -1150,6 +1154,11 @@ child_waitpid(mainloop_child_t *child, int flags)
         child->exit_fn(child, core, signo, exitcode);
     }
 
+    pcmk__trace("Removing terminated process %lld from child list",
+                (long long) child->pid);
+    child_list = g_list_delete_link(child_list, link);
+    free_main_loop_child(child);
+
     return true;
 }
 
@@ -1168,16 +1177,9 @@ free_terminated_children(int signal)
     GList *iter = child_list;
 
     while (iter != NULL) {
-        mainloop_child_t *child = iter->data;
         GList *next = iter->next;
 
-        if (child_waitpid(child, WNOHANG)) {
-            pcmk__trace("Removing terminated process %lld from child list",
-                        (long long) child->pid);
-            child_list = g_list_delete_link(child_list, iter);
-            free_main_loop_child(child);
-        }
-
+        child_waitpid(iter, WNOHANG);
         iter = next;
     }
 }
@@ -1280,7 +1282,7 @@ mainloop_child_kill(pid_t pid)
         /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
          * SIGCHLD and let handler clean it up as normal (so we get the correct
          * return code/status). The blocking alternative would be to call
-         * child_waitpid(child, 0).
+         * child_waitpid(iter, 0).
          */
         pcmk__trace("Waiting for signal that child process %lld completed",
                     (long long) child->pid);
@@ -1294,14 +1296,7 @@ mainloop_child_kill(pid_t pid)
         waitflags = WNOHANG;
     }
 
-    if (!child_waitpid(child, waitflags)) {
-        /* not much we can do if this occurs */
-        return FALSE;
-    }
-
-    child_list = g_list_delete_link(child_list, match);
-    free_main_loop_child(child);
-    return TRUE;
+    return child_waitpid(match, waitflags)? TRUE : FALSE;
 }
 
 /*!
