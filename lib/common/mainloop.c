@@ -1059,26 +1059,29 @@ child_timeout_callback(void *user_data)
 {
     mainloop_child_t *child = user_data;
     int rc = pcmk_rc_ok;
+    const char *result_s = NULL;
 
     child->timer_id = 0;
-
-    rc = child_kill_helper(child);
-    if (rc == ESRCH) {
-        // PID no longer exists, so just destroy the timer
-        return G_SOURCE_REMOVE;
-    }
-
     child->timed_out = true;
 
-    if (rc == pcmk_rc_ok) {
-        pcmk__debug("%s process (PID %lld) timed out and was killed "
-                    "successfully", child->desc, (long long) child->pid);
+    rc = child_kill_helper(child);
 
-    } else {
-        pcmk__debug("%s process (PID %lld) timed out and could not be killed",
-                    child->desc, (long long) child->pid);
+    switch (rc) {
+        case pcmk_rc_ok:
+            result_s = "was successfully killed";
+            break;
+
+        case ESRCH:
+            result_s = "has already terminated";
+            break;
+
+        default:
+            result_s = "could not be killed";
+            break;
     }
 
+    pcmk__debug("%s process (PID %lld) timed out and %s", child->desc,
+                (long long) child->pid, result_s);
     return G_SOURCE_REMOVE;
 }
 
