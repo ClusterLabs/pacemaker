@@ -1061,12 +1061,6 @@ child_timeout_callback(void *user_data)
     int rc = pcmk_rc_ok;
 
     child->timer_id = 0;
-    if (child->timed_out) {
-        // @TODO Move this to a separate callback function or drop it
-        pcmk__warn("%s process (PID %lld) will not die!", child->desc,
-                   (long long) child->pid);
-        return G_SOURCE_REMOVE;
-    }
 
     rc = child_kill_helper(child);
     if (rc == ESRCH) {
@@ -1079,14 +1073,11 @@ child_timeout_callback(void *user_data)
     if (rc == pcmk_rc_ok) {
         pcmk__debug("%s process (PID %lld) timed out and was killed "
                     "successfully", child->desc, (long long) child->pid);
-        return G_SOURCE_REMOVE;
+
+    } else {
+        pcmk__debug("%s process (PID %lld) timed out and could not be killed",
+                    child->desc, (long long) child->pid);
     }
-
-    pcmk__debug("%s process (PID %lld) timed out and could not be killed",
-                child->desc, (long long) child->pid);
-
-    // Warn if the child has not terminated after 5 more seconds
-    child->timer_id = pcmk__create_timer(5000, child_timeout_callback, child);
 
     return G_SOURCE_REMOVE;
 }
