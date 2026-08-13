@@ -1091,10 +1091,10 @@ child_timeout_callback(void *user_data)
 }
 
 static bool
-child_waitpid(GList *link, int flags)
+child_waitpid(GList *link, bool no_hang)
 {
     mainloop_child_t *child = NULL;
-    int rc = 0;
+    pid_t rc = 0;
     int core = 0;
     int signo = 0;
     int status = 0;
@@ -1103,9 +1103,10 @@ child_waitpid(GList *link, int flags)
     pcmk__assert(link != NULL);
     child = link->data;
 
-    rc = waitpid(child->pid, &status, flags);
+    rc = waitpid(child->pid, &status, (no_hang? WNOHANG : 0));
 
-    if (rc == 0) { // WNOHANG in flags, and child status is not available
+    if (rc == 0) {
+        // WNOHANG was specified and child->pid exists and has not changed state
         pcmk__trace("Child process %lld (%s) still active",
                     (long long) child->pid, child->desc);
         return false;
@@ -1181,7 +1182,7 @@ free_terminated_children(int signal)
     while (iter != NULL) {
         GList *next = iter->next;
 
-        child_waitpid(iter, WNOHANG);
+        child_waitpid(iter, true);
         iter = next;
     }
 }
@@ -1266,11 +1267,8 @@ mainloop_child_kill(pid_t pid)
     const mainloop_child_t cmp_data = { .pid = pid };
     GList *match = NULL;
     mainloop_child_t *child = NULL;
-
-    /* It is impossible to block SIGKILL, this allows us to
-     * call waitpid without WNOHANG flag.*/
-    int waitflags = 0;
     int rc = pcmk_rc_ok;
+    bool no_hang = false;
 
     match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
     if (match == NULL) {
@@ -1284,7 +1282,7 @@ mainloop_child_kill(pid_t pid)
         /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
          * SIGCHLD and let handler clean it up as normal (so we get the correct
          * return code/status). The blocking alternative would be to call
-         * child_waitpid(iter, 0).
+         * child_waitpid(iter, false).
          */
         pcmk__trace("Waiting for signal that child process %lld completed",
                     (long long) child->pid);
@@ -1294,11 +1292,14 @@ mainloop_child_kill(pid_t pid)
     if (rc != pcmk_rc_ok) {
         /* If kill() failed for some other reason, set the WNOHANG flag, since
          * we can't be certain what happened.
+         *
+         * If kill() succeeded, we don't need the WNOHANG flag because SIGKILL
+         * can't be blocked.
          */
-        waitflags = WNOHANG;
+        no_hang = true;
     }
 
-    return child_waitpid(match, waitflags)? TRUE : FALSE;
+    return child_waitpid(match, no_hang)? TRUE : FALSE;
 }
 
 /*!
