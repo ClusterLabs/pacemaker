@@ -1014,22 +1014,27 @@ mainloop_clear_child_userdata(mainloop_child_t * child)
     child->user_data = NULL;
 }
 
+/*!
+ * \internal
+ * \brief Send \c SIGKILL to a main loop child process or its process group
+ *
+ * If \p child->kill_group is set, kill the child's entire process group.
+ * Otherwise, kill only the child process itself.
+ *
+ * \param[in] child  Main loop child
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if \c kill() returns 0,
+ *         or \c errno after calling \c kill() otherwise)
+ */
 static int
-child_kill_helper(const mainloop_child_t *child)
+kill_child_pid(const mainloop_child_t *child)
 {
+    const pid_t pid = (child->kill_group? -child->pid : child->pid);
     int rc = 0;
 
-    if (child->kill_group) {
-        pcmk__debug("Killing PID %lld's entire process group",
-                    (long long) child->pid);
-        rc = kill(-child->pid, SIGKILL);
+    pcmk__debug("Killing PID %lld", (long long) pid);
 
-    } else {
-        pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
-                    (long long) child->pid);
-        rc = kill(child->pid, SIGKILL);
-    }
-
+    rc = kill(pid, SIGKILL);
     if (rc == 0) {
         return pcmk_rc_ok;
     }
@@ -1039,8 +1044,8 @@ child_kill_helper(const mainloop_child_t *child)
         return rc;
     }
 
-    pcmk__err("kill(%lld, KILL) failed: %s", (long long) child->pid,
-              strerror(rc));
+    pcmk__err("kill(%lld, KILL) failed for child '%s': %s", (long long) pid,
+              pcmk__s(child->desc, ""), strerror(rc));
     return rc;
 }
 
@@ -1064,7 +1069,7 @@ child_timeout_callback(void *user_data)
     child->timer_id = 0;
     child->timed_out = true;
 
-    rc = child_kill_helper(child);
+    rc = kill_child_pid(child);
 
     switch (rc) {
         case pcmk_rc_ok:
@@ -1259,7 +1264,7 @@ mainloop_child_kill(pid_t pid)
 
     child = match->data;
 
-    rc = child_kill_helper(child);
+    rc = kill_child_pid(child);
     if (rc == ESRCH) {
         /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
          * SIGCHLD and let handler clean it up as normal (so we get the correct
