@@ -443,12 +443,7 @@ class PrimitiveAudit(ClusterAudit):
         """
         ClusterAudit.__init__(self, cm)
         self.name = "PrimitiveAudit"
-
-        self._active_nodes = []
-        self._constraints = []
-        self._inactive_nodes = []
-        self._resources = []
-        self._target = None
+        self._reset()
 
     def _audit_resource(self, resource, quorum):
         """Perform the audit of a single resource."""
@@ -490,12 +485,23 @@ class PrimitiveAudit(ClusterAudit):
 
         return rc
 
+    # pylint: disable=attribute-defined-outside-init
+    def _reset(self):
+        """Reset internal lists."""
+        self._active_nodes = []
+        self._constraints = []
+        self._inactive_nodes = []
+        self._resources = []
+        self._target = None
+
     def _setup(self):
         """
         Verify cluster nodes are active.
 
         Collect resource and colocation information used for performing the audit.
         """
+        self._reset()
+
         for node in self._cm.env["nodes"]:
             if self._cm.expected_status[node] == "up":
                 self._active_nodes.append(node)
