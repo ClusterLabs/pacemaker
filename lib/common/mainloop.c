@@ -1250,7 +1250,7 @@ mainloop_child_kill(pid_t pid)
         return FALSE;
     }
 
-    child_list = g_list_remove(child_list, child);
+    child_list = g_list_delete_link(child_list, match);
     free_main_loop_child(child);
     return TRUE;
 }
