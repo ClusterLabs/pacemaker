@@ -1153,21 +1153,32 @@ child_waitpid(mainloop_child_t *child, int flags)
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Free all main loop children whose processes have terminated
+ *
+ * If a child object's process has terminated, remove the child from
+ * \c child_list and free it.
+ *
+ * \param[in] signal  Ignored
+ */
 static void
-child_death_dispatch(int signal)
+free_terminated_children(int signal)
 {
-    for (GList *iter = child_list; iter; ) {
-        GList *saved = iter;
-        mainloop_child_t *child = iter->data;
+    GList *iter = child_list;
 
-        iter = iter->next;
+    while (iter != NULL) {
+        mainloop_child_t *child = iter->data;
+        GList *next = iter->next;
+
         if (child_waitpid(child, WNOHANG)) {
-            pcmk__trace("Removing completed process %lld from child list",
+            pcmk__trace("Removing terminated process %lld from child list",
                         (long long) child->pid);
-            child_list = g_list_remove_link(child_list, saved);
-            g_list_free(saved);
+            child_list = g_list_delete_link(child_list, iter);
             free_main_loop_child(child);
         }
+
+        iter = next;
     }
 }
 
@@ -1175,8 +1186,8 @@ child_death_dispatch(int signal)
  * \internal
  * \brief Install the main loop \c SIGCHLD handler
  *
- * Install \c child_death_dispatch as the \c SIGCHLD handler, and call it for
- * any children that terminated before the handler was installed.
+ * Install \c free_terminated_children() as the \c SIGCHLD handler, and call it
+ * for any children that terminated before the handler was installed.
  *
  * \param[in] user_data  Ignored
  *
@@ -1190,9 +1201,9 @@ install_sigchld_handler(void *user_data)
     pcmk__trace("Installing SIGCHLD handler");
 
     // Do NOT use g_child_watch_add() and friends, since they rely on pthreads
-    mainloop_add_signal(SIGCHLD, child_death_dispatch);
+    mainloop_add_signal(SIGCHLD, free_terminated_children);
 
-    child_death_dispatch(SIGCHLD);
+    free_terminated_children(SIGCHLD);
     return G_SOURCE_REMOVE;
 }
 
