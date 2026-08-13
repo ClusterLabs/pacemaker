@@ -1144,10 +1144,12 @@ child_waitpid(GList *link, int flags)
                   child->desc);
 #endif
 
-    } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
-        pcmk__trace("Child process %lld (%s) stopped or continued",
-                    (long long) child->pid, child->desc);
-        return false;
+    } else {
+        /* We're not using the WUNTRACED or WCONTINUED options. If the process
+         * changed state, it should have either exited or been terminated by a
+         * signal.
+         */
+        CRM_CHECK(false, return false);
     }
 
     if (child->exit_fn != NULL) {
