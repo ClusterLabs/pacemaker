@@ -15,6 +15,8 @@
 #define PCMK__CRM_COMMON_DAEMON_INTERNAL__H
 
 #include <stdbool.h>            // bool
+#include <stdint.h>             // int32_t
+#include <sys/types.h>          // gid_t, uid_t
 #include <time.h>               // time_t
 
 #include <glib.h>               // GMainLoop
@@ -126,6 +128,8 @@ struct pcmk__daemon_s {
 
 // IPC functions
 
+int32_t pcmk__daemon_ipc_accept(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                                uid_t uid, gid_t gid);
 void pcmk__daemon_ipc_cleanup(pcmk__daemon_t *d);
 bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
 bool pcmk__daemon_ipc_init(pcmk__daemon_t *d,
