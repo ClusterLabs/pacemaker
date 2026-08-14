@@ -517,9 +517,9 @@ class PrimitiveAudit(ClusterAudit):
                                        verbose=1)
 
         for line in lines:
-            if re.search("^Resource", line):
+            if line.startswith("Resource"):
                 self._resources.append(AuditResource(self._cm, line))
-            elif re.search("^Constraint", line):
+            elif line.startswith("Constraint"):
                 self._constraints.append(AuditConstraint(self._cm, line))
             else:
                 logging.log(f"Unknown entry: {line}")
@@ -833,11 +833,11 @@ class CIBAudit(ClusterAudit):
                 passed = False
 
             for line in proc.stdout.splitlines():
-                if not re.search("<diff/>", line):
+                if "<diff/>" in line:
+                    self.debug(f"CibDiff[{first}-{node}] Ignoring: {line}")
+                else:
                     passed = False
                     self.debug(f"CibDiff[{first}-{node}]: {line}")
-                else:
-                    self.debug(f"CibDiff[{first}-{node}] Ignoring: {line}")
 
         self._cleanup_cibs()
         return passed
