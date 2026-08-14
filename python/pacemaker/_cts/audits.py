@@ -788,7 +788,7 @@ class CIBAudit(ClusterAudit):
         for partition in ccm_partitions:
             self.debug(f"\tAuditing CIB consistency for: {partition}")
 
-            if self._audit_cib_contents(partition) == 0:
+            if not self._audit_cib_contents(partition):
                 passed = False
 
         return passed
@@ -900,7 +900,7 @@ class PartitionAudit(ClusterAudit):
                 logging.log(f"\t {partition}")
 
         for partition in ccm_partitions:
-            if self._audit_partition(partition) == 0:
+            if not self._audit_partition(partition):
                 passed = False
 
         return passed
