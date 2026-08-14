@@ -18,6 +18,8 @@
 #include <time.h>               // time_t
 
 #include <glib.h>               // GMainLoop
+#include <qb/qbipcs.h>          // qb_ipcs_service_*
+#include <qb/qbloop.h>          // qb_loop_priority
 
 #include <crm/common/ipc.h>     // pcmk_ipc_server
 #include <crm/common/results.h> // crm_exit_t
@@ -64,6 +66,21 @@ typedef struct {
      *         \c false if not
      */
     bool (*already_running)(pcmk__daemon_t *);
+
+    /*!
+     * \internal
+     * \brief Initialize the IPC side of the server
+     *
+     * \param[in,out] d  The daemon object
+     * \param[in,out] cb The IPC callback object
+     *
+     * \note The generic pcmk__daemon_ipc_init function should be assigned
+     *       to this function pointer for most every server
+     *
+     * \return \c true if the IPC server was successfully initialized, and
+     *         \c false if not
+     */
+    bool (*init)(pcmk__daemon_t *, struct qb_ipcs_service_handlers *);
 } pcmk__daemon_ipc_fns_t;
 
 /*!
@@ -90,6 +107,10 @@ struct pcmk__daemon_s {
     //! Main loop
     GMainLoop *mainloop;
 
+    //! IPC server
+    enum qb_loop_priority priority;
+    qb_ipcs_service_t *ipcs;
+
     pcmk__daemon_fns_t *fns;
 
     pcmk__daemon_ipc_fns_t *ipc_fns;
@@ -98,6 +119,8 @@ struct pcmk__daemon_s {
 // IPC functions
 
 bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
+bool pcmk__daemon_ipc_init(pcmk__daemon_t *d,
+                           struct qb_ipcs_service_handlers *cb);
 bool pcmk__generic_ipc_running(pcmk__daemon_t *d);
 
 // Mainloop management functions
