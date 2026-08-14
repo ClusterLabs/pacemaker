@@ -69,6 +69,14 @@ typedef struct {
 
     /*!
      * \internal
+     * \brief Clean up IPC communication
+     *
+     * \param[in,out] d The daemon object
+     */
+    void (*cleanup)(pcmk__daemon_t *);
+
+    /*!
+     * \internal
      * \brief Initialize the IPC side of the server
      *
      * \param[in,out] d  The daemon object
@@ -118,6 +126,7 @@ struct pcmk__daemon_s {
 
 // IPC functions
 
+void pcmk__daemon_ipc_cleanup(pcmk__daemon_t *d);
 bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
 bool pcmk__daemon_ipc_init(pcmk__daemon_t *d,
                            struct qb_ipcs_service_handlers *cb);

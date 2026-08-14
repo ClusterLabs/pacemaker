@@ -32,6 +32,7 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
+    .cleanup = pcmk__daemon_ipc_cleanup,
     .init = pcmk__daemon_ipc_init,
 };
 
@@ -89,7 +90,8 @@ attrd_cleanup_cmdline(void)
 static void
 attrd_cleanup(void)
 {
-    attrd_ipc_cleanup();
+    attrd.ipc_fns->cleanup(&attrd);
+
     attrd_lrmd_disconnect();
     attrd_unregister_handlers();
     attrd_cib_disconnect();
