@@ -501,12 +501,11 @@ class PrimitiveAudit(ClusterAudit):
         for node in self._cm.env["nodes"]:
             if self._cm.expected_status[node] == "up":
                 self._active_nodes.append(node)
+
+                if self._target is None:
+                    self._target = node
             else:
                 self._inactive_nodes.append(node)
-
-        for node in self._cm.env["nodes"]:
-            if self._target is None and self._cm.expected_status[node] == "up":
-                self._target = node
 
         if not self._target:
             # TODO: In Pacemaker 1.0 clusters we'll be able to run crm_resource
