@@ -1418,6 +1418,69 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
 }
 
 /*!
+ * \internal
+ * \brief Kill a child process tracked by the main loop
+ *
+ * If a process with PID \p pid is being tracked, send it a \c SIGKILL.
+ *
+ * If this function kills the child process successfully, remove the child from
+ * the tracking data structure and free the child.
+ *
+ * If the process is being tracked but no longer exists, don't remove or free
+ * the child yet. We will do this later when we receive a \c SIGCHLD for the
+ * child process.
+ *
+ * \param[in] pid  Child PID
+ *
+ * \return \c true if the child with ID \p pid was being tracked and either this
+ *         function killed the process successfully or the process has already
+ *         terminated but we have not received a \c SIGCHLD for it; or \c false
+ *         otherwise
+ */
+bool
+pcmk__main_loop_child_kill(pid_t pid)
+{
+    const mainloop_child_t cmp_data = { .pid = pid };
+    GList *match = NULL;
+    mainloop_child_t *child = NULL;
+    int rc = pcmk_rc_ok;
+    bool no_hang = false;
+
+    pcmk__assert(pid > 0);
+
+    match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
+    if (match == NULL) {
+        return false;
+    }
+
+    child = match->data;
+
+    rc = kill_child_pid(child);
+    if (rc == ESRCH) {
+        /* It's gone but hasn't shown up in waitpid() yet. Wait until we get
+         * SIGCHLD and let handler clean it up as normal (so we get the correct
+         * return code/status). The blocking alternative would be to call
+         * child_waitpid(iter, false).
+         */
+        pcmk__trace("Waiting for signal that child process %lld completed",
+                    (long long) child->pid);
+        return true;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        /* If kill() failed for some other reason, set the WNOHANG flag, since
+         * we can't be certain what happened.
+         *
+         * If kill() succeeded, we don't need the WNOHANG flag because SIGKILL
+         * can't be blocked.
+         */
+        no_hang = true;
+    }
+
+    return child_waitpid(match, no_hang);
+}
+
+/*!
  * \brief Create a new \c mainloop_child_t object and add it to the main loop
  *
  * If the child process has not exited within \p timeout_ms, send it a

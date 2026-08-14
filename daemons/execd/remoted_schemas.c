@@ -248,7 +248,7 @@ remoted_request_cib_schema_files(void)
      * directory.
      */
     if (schema_fetch_pid != 0) {
-        if (mainloop_child_kill(schema_fetch_pid) == FALSE) {
+        if (!pcmk__main_loop_child_kill(schema_fetch_pid)) {
             pcmk__warn("Unable to kill pre-existing schema-fetch process");
             return;
         }

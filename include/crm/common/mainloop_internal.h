@@ -63,6 +63,7 @@ void pcmk__main_loop_child_create(pid_t pid, const char *desc,
                                   unsigned int timeout_ms, void *user_data,
                                   bool kill_group,
                                   pcmk__mainloop_child_exit_fn_t exit_fn);
+bool pcmk__main_loop_child_kill(pid_t pid);
 
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,

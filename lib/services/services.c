@@ -676,7 +676,7 @@ services_action_cancel(const char *name, const char *action,
         pcmk__info("Terminating in-flight op %s[%d] early because it was "
                    "cancelled", id, op->pid);
 
-        cancelled = mainloop_child_kill(op->pid);
+        cancelled = pcmk__main_loop_child_kill(op->pid);
         if (!cancelled) {
             pcmk__err("Termination of %s[%d] failed", id, op->pid);
         }
