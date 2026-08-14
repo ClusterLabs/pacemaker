@@ -1130,7 +1130,7 @@ child_waitpid(GList *link, bool no_hang)
 
     int core = 0;
     int signo = 0;
-    int exitcode = 0;
+    int exit_code = 0;
 
     pcmk__assert(link != NULL);
     child = link->data;
@@ -1146,9 +1146,13 @@ child_waitpid(GList *link, bool no_hang)
 
     if (rc == -1) {
         if (errno == ECHILD) {
-            // @TODO Reevaluate signo and exitcode here
-            signo = SIGCHLD;
-            exitcode = 1;
+            /* This situation should probably never happen in practice. Setting
+             * exit_code to 1 is misleading in that it indicates the child
+             * exited with code 1, and we don't know that to be true. We could
+             * add a mainloop_child_t flag to indicate this case, but it doesn't
+             * seem worth it.
+             */
+            exit_code = 1;
 
             pcmk__err("Wait for child process %lld (%s) failed because process "
                       "does not exist or is not our child",
@@ -1184,9 +1188,9 @@ child_waitpid(GList *link, bool no_hang)
     }
 
     if (WIFEXITED(status)) {
-        exitcode = WEXITSTATUS(status);
+        exit_code = WEXITSTATUS(status);
         pcmk__trace("Child process %lld (%s) exited with status %d",
-                    (long long) child->pid, child->desc, exitcode);
+                    (long long) child->pid, child->desc, exit_code);
         goto terminated;
     }
 
@@ -1215,7 +1219,7 @@ child_waitpid(GList *link, bool no_hang)
 
 terminated:
     if (child->exit_fn != NULL) {
-        child->exit_fn(child, core, signo, exitcode);
+        child->exit_fn(child, core, signo, exit_code);
     }
 
     pcmk__trace("Removing terminated process %lld from child list",
