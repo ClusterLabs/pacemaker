@@ -25,8 +25,6 @@
 
 #include "pacemaker-attrd.h"
 
-static qb_ipcs_service_t *ipcs = NULL;
-
 /*!
  * \internal
  * \brief Build the XML reply to a client query
@@ -624,7 +622,7 @@ done:
     return 0;
 }
 
-static struct qb_ipcs_service_handlers ipc_callbacks = {
+struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = attrd_ipc_accept,
     .connection_created = NULL,
     .msg_process = attrd_ipc_dispatch,
@@ -639,19 +637,8 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
 void
 attrd_ipc_cleanup(void)
 {
-    pcmk__drop_all_clients(ipcs);
-    g_clear_pointer(&ipcs, qb_ipcs_destroy);
+    pcmk__drop_all_clients(attrd.ipcs);
+    g_clear_pointer(&attrd.ipcs, qb_ipcs_destroy);
 
     pcmk__client_cleanup();
-}
-
-/*!
- * \internal
- * \brief Set up attrd IPC communication
- */
-bool
-attrd_ipc_init(void)
-{
-    pcmk__serve_attrd_ipc(&ipcs, &ipc_callbacks);
-    return ipcs != NULL;
 }
