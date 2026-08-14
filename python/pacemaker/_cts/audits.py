@@ -921,7 +921,6 @@ class PartitionAudit(ClusterAudit):
         """Perform the audit of a single partition."""
         passed = True
         dc_found = []
-        dc_allowed_list = []
         node_list = partition.split()
 
         self.debug(f"Auditing partition: {partition}")
@@ -946,8 +945,7 @@ class PartitionAudit(ClusterAudit):
                 dc_found.append(node)
 
         if not dc_found:
-            logging.log(f"DC not found on any of the {len(dc_allowed_list)} allowed "
-                        f"nodes: {dc_allowed_list} (of {node_list})")
+            logging.log("DC not found on any node")
 
         elif len(dc_found) > 1:
             logging.log(f"{len(dc_found)} DCs ({dc_found}) found in cluster partition: {node_list}")
