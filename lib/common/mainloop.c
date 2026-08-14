@@ -1090,6 +1090,35 @@ child_timeout_callback(void *user_data)
     return G_SOURCE_REMOVE;
 }
 
+/*!
+ * \internal
+ * \brief Wait on a child process and free it if terminated
+ *
+ * If the child has terminated, call its exit callback if any, remove it from
+ * \c child_list, and free it.
+ *
+ * Likely bug: If the child object's \c pid field is nonpositive, then we wait
+ * on the corresponding process group as documented in the \c wait(2) man page.
+ * On success, call the exit callback using that PID (not the PID of the actual
+ * child process that changed state). Also remove the child object from
+ * \c child_list and free the child object, even though there may still be other
+ * child processes in the same process group that have not yet been waited on.
+ * This seems incorrect. However, nothing internal creates a child object with
+ * nonpositive PID, and the \c mainloop_child_add() documentation notes that
+ * nonpositive PIDs are not expected to work correctly.
+ *
+ * \param[in,out] link     List element whose data is the child to wait for
+ * \param[in]     no_hang  If \c true, use the \c waitpid() \c WNOHANG option
+ *
+ * \return \c true if the child process (or a child process in the specified
+ *         process group) has terminated, or \c false if the child process is
+ *         still active or its state changed in an unexpected way
+ *
+ * \note Taking the list link rather than the child as an argument allows us to
+ *       delete a terminated child from \c child_list in constant time. If we
+ *       took the child, \c g_list_remove() would have to find the child in the
+ *       list again before removing it.
+ */
 static bool
 child_waitpid(GList *link, bool no_hang)
 {
@@ -1121,6 +1150,7 @@ child_waitpid(GList *link, bool no_hang)
         exitcode = 1;
 
         if (errno == EINTR) {
+            // @TODO Returning true seems incorrect here
             pcmk__notice("Wait for child process %lld (%s) was interrupted by "
                          "a signal", (long long) child->pid, child->desc);
 
@@ -1130,6 +1160,7 @@ child_waitpid(GList *link, bool no_hang)
                       (long long) child->pid, child->desc);
 
         } else {
+            // @TODO Returning true seems incorrect here
             pcmk__err("Bug: Wait for child process %lld (%s) failed: %s "
                       "(waitpid() options: %#x)", (long long) child->pid,
                       child->desc, strerror(errno), options);
