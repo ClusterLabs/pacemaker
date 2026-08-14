@@ -41,6 +41,36 @@ pcmk__daemon_init(pcmk__daemon_t *d)
 
 /*!
  * \internal
+ * \brief Accept a new client IPC connection
+ *
+ * \param[in,out] d   The daemon object
+ * \param[in,out] c   New connection
+ * \param[in]     uid Client user id
+ * \param[in]     gid Client group id
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
+int32_t
+pcmk__daemon_ipc_accept(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                        uid_t uid, gid_t gid)
+{
+    if (d->shutting_down) {
+        pcmk__info("Ignoring new connection from pid %d during shutdown",
+                   pcmk__client_pid(c));
+        return -ECONNREFUSED;
+    }
+
+    pcmk__trace("New client connection %p", c);
+
+    if (pcmk__new_client(c, uid, gid) == NULL) {
+        return -ENOMEM;
+    }
+
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
  * \brief Clean up IPC communication
  *
  * \param[in,out] d The daemon object
