@@ -211,7 +211,7 @@ class DiskAudit(ClusterAudit):
         passed = True
 
         # @TODO Use directory of PCMK_logfile if set on host
-        dfcmd = "df -BM %s | tail -1 | awk '{print $(NF-1)\" \"$(NF-2)}' | tr -d 'M%%'" % BuildOptions.LOG_DIR
+        dfcmd = f"df -BM {BuildOptions.LOG_DIR} | tail -1 | awk '{{print $(NF-1)\" \"$(NF-2)}}' | tr -d 'M%%'"
 
         self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
         for node in self._cm.env["nodes"]:
