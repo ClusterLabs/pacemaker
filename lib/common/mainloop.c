@@ -1145,28 +1145,27 @@ child_waitpid(GList *link, bool no_hang)
     }
 
     if (rc == -1) {
-        // @TODO Reevaluate signo and exitcode here
-        signo = SIGCHLD;
-        exitcode = 1;
+        if (errno == ECHILD) {
+            // @TODO Reevaluate signo and exitcode here
+            signo = SIGCHLD;
+            exitcode = 1;
 
-        if (errno == EINTR) {
-            // @TODO Returning true seems incorrect here
-            pcmk__notice("Wait for child process %lld (%s) was interrupted by "
-                         "a signal", (long long) child->pid, child->desc);
-
-        } else if (errno == ECHILD) {
             pcmk__err("Wait for child process %lld (%s) failed because process "
                       "does not exist or is not our child",
                       (long long) child->pid, child->desc);
-
-        } else {
-            // @TODO Returning true seems incorrect here
-            pcmk__err("Bug: Wait for child process %lld (%s) failed: %s "
-                      "(waitpid() options: %#x)", (long long) child->pid,
-                      child->desc, strerror(errno), options);
+            goto terminated;
         }
 
-        goto terminated;
+        if (errno == EINTR) {
+            pcmk__notice("Wait for child process %lld (%s) was interrupted by "
+                         "a signal", (long long) child->pid, child->desc);
+            return false;
+        }
+
+        pcmk__err("Bug: Wait for child process %lld (%s) failed: %s (waitpid() "
+                  "options: %#x)", (long long) child->pid, child->desc,
+                  strerror(errno), options);
+        return false;
     }
 
     /* At this point, rc is the PID of a child whose state changed. If
