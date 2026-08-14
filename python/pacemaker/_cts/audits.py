@@ -283,6 +283,9 @@ class FileAudit(ClusterAudit):
 
     def _find_core_with_coredumpctl(self, node):
         """Use coredumpctl to find core dumps on the given node."""
+        if not self._cm.env["have_systemd"]:
+            return False
+
         (_, lsout) = self._cm.rsh.call(node, "coredumpctl --no-legend --no-pager")
         return self._output_has_core(lsout, node)
 
@@ -299,13 +302,9 @@ class FileAudit(ClusterAudit):
         self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
 
         for node in self._cm.env["nodes"]:
-            found = False
-
-            # If systemd is present, first see if coredumpctl logged any core dumps.
-            if self._cm.env["have_systemd"]:
-                found = self._find_core_with_coredumpctl(node)
-                if found:
-                    passed = False
+            # First, try to use coredumpctl to find any core dumps.
+            if self._find_core_with_coredumpctl(node):
+                passed = False
 
             # If we didn't find any core dumps, it's for one of three reasons:
             # (1) Nothing crashed
@@ -313,11 +312,9 @@ class FileAudit(ClusterAudit):
             # (3) systemd is present but coredumpctl is not enabled
             #
             # To handle the last two cases, check the other filesystem locations.
-            if not found:
-                found = self._find_core_on_fs(node, ["/var/lib/pacemaker/cores/*",
-                                                     "/var/lib/corosync"])
-                if found:
-                    passed = False
+            elif self._find_core_on_fs(node, ["/var/lib/pacemaker/cores/*",
+                                              "/var/lib/corosync"]):
+                passed = False
 
             if self._cm.expected_status.get(node) == "down":
                 (_, lsout) = self._cm.rsh.call(node, "ls -al /dev/shm | grep qb-", verbose=1)
