@@ -376,17 +376,17 @@ class AuditResource:
     @property
     def unique(self):
         """Return True if this resource is unique."""
-        return self.flags & 0x20
+        return bool(self.flags & 0x20)
 
     @property
     def orphan(self):
         """Return True if this resource is an orphan."""
-        return self.flags & 0x01
+        return bool(self.flags & 0x01)
 
     @property
     def managed(self):
         """Return True if this resource is managed by the cluster."""
-        return self.flags & 0x02
+        return bool(self.flags & 0x02)
 
 
 class AuditConstraint:
