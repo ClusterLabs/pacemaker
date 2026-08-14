@@ -1093,17 +1093,20 @@ child_timeout_callback(void *user_data)
 static bool
 child_waitpid(GList *link, bool no_hang)
 {
+    const int options = no_hang? WNOHANG : 0;
+
     mainloop_child_t *child = NULL;
     pid_t rc = 0;
+    int status = 0;
+
     int core = 0;
     int signo = 0;
-    int status = 0;
     int exitcode = 0;
 
     pcmk__assert(link != NULL);
     child = link->data;
 
-    rc = waitpid(child->pid, &status, (no_hang? WNOHANG : 0));
+    rc = waitpid(child->pid, &status, options);
 
     if (rc == 0) {
         // WNOHANG was specified and child->pid exists and has not changed state
@@ -1112,47 +1115,74 @@ child_waitpid(GList *link, bool no_hang)
         return false;
     }
 
-    if (rc != child->pid) {
-        /* According to POSIX, possible conditions:
-         * - child->pid was non-positive (process group or any child),
-         *   and rc is specific child
-         * - errno ECHILD (pid does not exist or is not child)
-         * - errno EINVAL (invalid flags)
-         * - errno EINTR (caller interrupted by signal)
-         *
-         * @TODO Handle these cases more specifically.
-         */
+    if (rc == -1) {
+        // @TODO Reevaluate signo and exitcode here
         signo = SIGCHLD;
         exitcode = 1;
-        pcmk__notice("Wait for child process %lld (%s) interrupted: %s",
-                     (long long) child->pid, child->desc, strerror(errno));
 
-    } else if (WIFEXITED(status)) {
+        if (errno == EINTR) {
+            pcmk__notice("Wait for child process %lld (%s) was interrupted by "
+                         "a signal", (long long) child->pid, child->desc);
+
+        } else if (errno == ECHILD) {
+            pcmk__err("Wait for child process %lld (%s) failed because process "
+                      "does not exist or is not our child",
+                      (long long) child->pid, child->desc);
+
+        } else {
+            pcmk__err("Bug: Wait for child process %lld (%s) failed: %s "
+                      "(waitpid() options: %#x)", (long long) child->pid,
+                      child->desc, strerror(errno), options);
+        }
+
+        goto terminated;
+    }
+
+    /* At this point, rc is the PID of a child whose state changed. If
+     * child->pid is positive, then rc == child->pid. Otherwise, rc is the PID
+     * of one of the child processes in the process group with ID -child->pid.
+     */
+
+    if (rc != child->pid) {
+        // @TODO Reevaluate signo and exitcode here
+        signo = SIGCHLD;
+        exitcode = 1;
+        pcmk__trace("Child process %lld from group %lld (%s) terminated",
+                    (long long) rc, (long long) -child->pid, child->desc);
+        goto terminated;
+    }
+
+    if (WIFEXITED(status)) {
         exitcode = WEXITSTATUS(status);
         pcmk__trace("Child process %lld (%s) exited with status %d",
                     (long long) child->pid, child->desc, exitcode);
+        goto terminated;
+    }
 
-    } else if (WIFSIGNALED(status)) {
+    if (WIFSIGNALED(status)) {
         signo = WTERMSIG(status);
-        pcmk__trace("Child process %lld (%s) exited with signal %d (%s)",
+        pcmk__trace("Child process %lld (%s) was terminated by signal %d (%s)",
                     (long long) child->pid, child->desc, signo,
                     strsignal(signo));
+        goto terminated;
+    }
 
-#ifdef WCOREDUMP // AIX, SunOS, maybe others
-    } else if (WCOREDUMP(status)) {
+#ifdef WCOREDUMP
+    if (WCOREDUMP(status)) {
         core = 1;
         pcmk__err("Child process %lld (%s) dumped core", (long long) child->pid,
                   child->desc);
-#endif
-
-    } else {
-        /* We're not using the WUNTRACED or WCONTINUED options. If the process
-         * changed state, it should have either exited or been terminated by a
-         * signal.
-         */
-        CRM_CHECK(false, return false);
+        goto terminated;
     }
+#endif  // defined(WCOREDUMP)
 
+    /* We're not using the WUNTRACED or WCONTINUED options. If the process
+     * changed state, it should have either exited or been terminated by a
+     * signal.
+     */
+    CRM_CHECK(false, return false);
+
+terminated:
     if (child->exit_fn != NULL) {
         child->exit_fn(child, core, signo, exitcode);
     }
