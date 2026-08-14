@@ -887,6 +887,10 @@ class PartitionAudit(ClusterAudit):
             if not self._audit_partition(partition):
                 passed = False
 
+        if "1" not in self._node_quorum.values():
+            logging.log("ERROR: No node has quorum")
+            passed = False
+
         return passed
 
     def _trim_string(self, avalue):
