@@ -167,7 +167,6 @@ class LogAudit(ClusterAudit):
         """Perform the audit action."""
         max_attempts = 3
         attempt = 0
-        passed = True
 
         self._cm.ns.wait_for_all_nodes(self._cm.env["nodes"])
         while attempt <= max_attempts and not self._test_logging():
@@ -177,16 +176,13 @@ class LogAudit(ClusterAudit):
 
         if attempt > max_attempts:
             logging.log("ERROR: Cluster logging unrecoverable.")
-            passed = False
-
-        return passed
-
-    def is_applicable(self):
-        """Return True if this audit is applicable in the current test configuration."""
-        if self._cm.env["LogAuditDisabled"]:
             return False
 
         return True
+
+    def is_applicable(self):
+        """Return True if this audit is applicable in the current test configuration."""
+        return not self._cm.env["LogAuditDisabled"]
 
 
 class DiskAudit(ClusterAudit):
