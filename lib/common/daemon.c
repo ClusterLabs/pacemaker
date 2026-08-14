@@ -15,9 +15,11 @@
 #include <time.h>                   // time
 
 #include <glib.h>                   // g_clear_pointer, g_main_loop_*
+#include <qb/qbipcs.h>              // qb_ipcs_service_handlers
 
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_api_t, pcmk_*_ipc_api
 #include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/mainloop.h>    // mainloop_add_ipc_server
 #include <crm/common/results.h>     // CRM_EX_*, crm_exit, pcmk_rc_*
 
 /*!
@@ -35,6 +37,35 @@ pcmk__daemon_init(pcmk__daemon_t *d)
 
     d->mainloop = g_main_loop_new(NULL, false);
     return pcmk_rc_ok;
+}
+
+/*!
+ * \internal
+ * \brief Initialize the IPC side of the server
+ *
+ * This is a generic function that should be good enough for most purposes.
+ * Certain servers may require specialized functionality.
+ *
+ * \param[in,out] d  The daemon object
+ * \param[in,out] cb The IPC callback object
+ */
+bool
+pcmk__daemon_ipc_init(pcmk__daemon_t *d, struct qb_ipcs_service_handlers *cb)
+{
+    pcmk__assert((d->ipcs == NULL) && (cb != NULL));
+
+    d->ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(d->type),
+                                                QB_IPC_SHM, cb, d->priority);
+
+    if (d->ipcs == NULL) {
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(d->type));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
+        return false;
+    }
+
+    return true;
 }
 
 /*!

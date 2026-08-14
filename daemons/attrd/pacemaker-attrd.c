@@ -32,11 +32,13 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
+    .init = pcmk__daemon_ipc_init,
 };
 
 pcmk__daemon_t attrd = {
     .type = pcmk_ipc_attrd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
     .ipc_fns = &ipc_fns,
 };
 
@@ -207,7 +209,7 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    if (!attrd_ipc_init()) {
+    if (!attrd.ipc_fns->init(&attrd, &ipc_callbacks)) {
         attrd.ec = CRM_EX_FATAL;
         goto done;
     }
