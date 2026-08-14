@@ -316,24 +316,23 @@ class FileAudit(ClusterAudit):
                                               "/var/lib/corosync"]):
                 passed = False
 
-            if self._cm.expected_status.get(node) == "down":
-                (_, lsout) = self._cm.rsh.call(node, "ls -al /dev/shm | grep qb-", verbose=1)
-
-                if lsout:
-                    passed = False
-
-                    for line in lsout:
-                        logging.log(f"Warning: Stale IPC file on {node}: {line}")
-
-                    (_, lsout) = self._cm.rsh.call(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
-
-                    for line in lsout:
-                        logging.debug(f"ps[{node}]: {line}")
-
-                    self._cm.rsh.call(node, "rm -rf /dev/shm/qb-*")
-
-            else:
+            if self._cm.expected_status.get(node) != "down":
                 logging.debug(f"Skipping {node}")
+                continue
+
+            (_, lsout) = self._cm.rsh.call(node, "ls -al /dev/shm | grep qb-", verbose=1)
+            if lsout:
+                passed = False
+
+                for line in lsout:
+                    logging.log(f"Warning: Stale IPC file on {node}: {line}")
+
+                (_, lsout) = self._cm.rsh.call(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
+
+                for line in lsout:
+                    logging.debug(f"ps[{node}]: {line}")
+
+                self._cm.rsh.call(node, "rm -rf /dev/shm/qb-*")
 
         return passed
 
