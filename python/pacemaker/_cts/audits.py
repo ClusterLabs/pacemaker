@@ -669,12 +669,14 @@ class ColocationAudit(PrimitiveAudit):
         (rc, lines) = self._cm.rsh.call(self._target,
                                         f"crm_resource --locate -r {resource} -Q",
                                         verbose=1)
+        if rc != 0:
+            return []
+
         hosts = []
 
-        if rc == 0:
-            for line in lines:
-                fields = line.split()
-                hosts.append(fields[0])
+        for line in lines:
+            fields = line.split()
+            hosts.append(fields[0])
 
         return hosts
 
@@ -693,15 +695,16 @@ class ColocationAudit(PrimitiveAudit):
 
             if not source:
                 self.debug(f"Colocation audit ({coloc.id}): {coloc.rsc} not running")
-            else:
-                for node in source:
-                    if node not in target:
-                        passed = False
-                        logging.log(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
-                                    f"on {node} (not in {target!r})")
-                    else:
-                        self.debug(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
-                                   f"on {node} (in {target!r})")
+                continue
+
+            for node in source:
+                if node not in target:
+                    passed = False
+                    logging.log(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
+                                f"on {node} (not in {target!r})")
+                else:
+                    self.debug(f"Colocation audit ({coloc.id}): {coloc.rsc} running "
+                               f"on {node} (in {target!r})")
 
         return passed
 
