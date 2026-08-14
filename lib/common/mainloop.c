@@ -1164,17 +1164,17 @@ child_waitpid(GList *link, bool no_hang)
         pcmk__trace("Child process %lld (%s) was terminated by signal %d (%s)",
                     (long long) child->pid, child->desc, signo,
                     strsignal(signo));
-        goto terminated;
-    }
 
 #ifdef WCOREDUMP
-    if (WCOREDUMP(status)) {
-        core = 1;
-        pcmk__err("Child process %lld (%s) dumped core", (long long) child->pid,
-                  child->desc);
+        if (WCOREDUMP(status)) {
+            core = 1;
+            pcmk__err("Child process %lld (%s) dumped core",
+                      (long long) child->pid, child->desc);
+        }
+#endif  // defined(WCOREDUMP)
+
         goto terminated;
     }
-#endif  // defined(WCOREDUMP)
 
     /* We're not using the WUNTRACED or WCONTINUED options. If the process
      * changed state, it should have either exited or been terminated by a
