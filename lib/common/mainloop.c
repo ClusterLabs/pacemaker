@@ -1144,9 +1144,10 @@ child_waitpid(GList *link, bool no_hang)
      */
 
     if (rc != child->pid) {
-        // @TODO Reevaluate signo and exitcode here
-        signo = SIGCHLD;
-        exitcode = 1;
+        /* @COMPAT Nothing internal creates a nonpositive child->pid, and the
+         * public Doxygen for mainloop_child_add() now notes that nonpositive
+         * PIDs are not expected to work correctly.
+         */
         pcmk__trace("Child process %lld from group %lld (%s) terminated",
                     (long long) rc, (long long) -child->pid, child->desc);
         goto terminated;
