@@ -932,9 +932,19 @@ class PartitionAudit(ClusterAudit):
                 #  checking for in this audit)
 
             (_, out) = self._cm.rsh.call(node, self._cm.templates["StatusCmd"] % node, verbose=1)
+            if not out:
+                logging.log(f"ERROR: Could not determine status for node {node}")
+                passed = False
+                return passed
+
             self._node_state[node] = self._trim_string(out[0])
 
             (_, out) = self._cm.rsh.call(node, self._cm.templates["QuorumCmd"], verbose=1)
+            if not out:
+                logging.log(f"ERROR: Could not determine quorum on node {node}")
+                passed = False
+                return passed
+
             self._node_quorum[node] = self._trim_string(out[0])
 
         for node in node_list:
