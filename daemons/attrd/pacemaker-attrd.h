@@ -58,7 +58,6 @@
                        CRM_EX_INDETERMINATE)
 
 void attrd_free_waitlist(void);
-void attrd_ipc_cleanup(void);
 
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);

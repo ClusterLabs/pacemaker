@@ -629,16 +629,3 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_closed = attrd_ipc_closed,
     .connection_destroyed = attrd_ipc_destroy
 };
-
-/*!
- * \internal
- * \brief Clean up attrd IPC communication
- */
-void
-attrd_ipc_cleanup(void)
-{
-    pcmk__drop_all_clients(attrd.ipcs);
-    g_clear_pointer(&attrd.ipcs, qb_ipcs_destroy);
-
-    pcmk__client_cleanup();
-}
