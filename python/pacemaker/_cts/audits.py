@@ -130,11 +130,14 @@ class LogAudit(ClusterAudit):
             kinds = [LogKind.LOCAL_FILE]
             if self._cm.env["have_systemd"]:
                 kinds.append(LogKind.JOURNAL)
+
             kinds.append(LogKind.REMOTE_FILE)
 
             for k in kinds:
                 watch[k] = self._create_watcher(patterns, k)
+
             logging.log(f"Logging test message with identifier {suffix}")
+
         else:
             watch[watch_pref] = self._create_watcher(patterns, watch_pref)
 
@@ -147,10 +150,12 @@ class LogAudit(ClusterAudit):
                 logging.log(f"Checking for test message in {k} logs")
 
             w.look_for_all(silent=True)
+
             if not w.unmatched:
                 if watch_pref is None:
                     logging.log(f"Found test message in {k} logs")
                     self._cm.env["log_kind"] = k
+
                 return True
 
             for regex in w.unmatched:
