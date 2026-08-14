@@ -287,9 +287,10 @@ remoted_request_cib_schema_files(void)
         default:
             /* parent */
             schema_fetch_pid = pid;
-            mainloop_child_add_with_flags(pid, 5 * 60 * 1000, "schema-fetch", NULL,
-                                          mainloop_leave_pid_group,
-                                          get_schema_files_complete);
+
+            // Five-minute timeout
+            pcmk__main_loop_child_create(pid, "schema-fetch", 300000, NULL,
+                                         false, get_schema_files_complete);
             break;
     }
 }

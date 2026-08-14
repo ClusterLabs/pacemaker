@@ -113,7 +113,8 @@ write_cib_async(void *user_data)
 
     if (pid > 0) {
         // Parent
-        mainloop_child_add(pid, 0, "disk-writer", NULL, write_cib_cb);
+        pcmk__main_loop_child_create(pid, "disk-writer", 0, NULL, true,
+                                     write_cib_cb);
 
         if (blackbox_state == QB_LOG_STATE_ENABLED) {
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);

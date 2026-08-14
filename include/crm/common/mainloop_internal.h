@@ -59,6 +59,11 @@ struct mainloop_io_s {
     void (*destroy_fn)(void *user_data);
 };
 
+void pcmk__main_loop_child_create(pid_t pid, const char *desc,
+                                  unsigned int timeout_ms, void *user_data,
+                                  bool kill_group,
+                                  pcmk__mainloop_child_exit_fn_t exit_fn);
+
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);

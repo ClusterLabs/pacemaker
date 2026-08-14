@@ -1394,14 +1394,11 @@ services__execute_file(svc_action_t *op)
     }
 
     pcmk__trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
-    if (pcmk__is_set(op->flags, SVC_ACTION_LEAVE_GROUP)) {
-        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
-                                      mainloop_leave_pid_group,
-                                      async_action_complete);
-    } else {
-        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op, 0,
-                                      async_action_complete);
-    }
+
+    pcmk__main_loop_child_create(op->pid, op->id, op->timeout, op,
+                                 !pcmk__is_set(op->flags,
+                                               SVC_ACTION_LEAVE_GROUP),
+                                 async_action_complete);
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,

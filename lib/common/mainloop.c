@@ -1368,6 +1368,56 @@ mainloop_child_kill(pid_t pid)
 }
 
 /*!
+ * \internal
+ * \brief Create a new \c mainloop_child_t object and add it to the main loop
+ *
+ * If the child process has not exited within \p timeout_ms, send it a
+ * \c SIGKILL signal.
+ *
+ * \param[in] pid         Child PID
+ * \param[in] desc        Description
+ * \param[in] timeout_ms  Timeout in milliseconds
+ * \param[in] user_data   User data
+ * \param[in] kill group  If \c true, kill the child's entire process group on
+ *                        timeout; otherwise, kill only the child process
+ * \param[in] exit_fn     Function to call when the child process exits
+ */
+void
+pcmk__main_loop_child_create(pid_t pid, const char *desc,
+                             unsigned int timeout_ms, void *user_data,
+                             bool kill_group,
+                             pcmk__mainloop_child_exit_fn_t exit_fn)
+{
+    static bool need_init = true;
+
+    mainloop_child_t *child = NULL;
+
+    pcmk__assert(pid > 0);
+
+    child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
+    child->pid = pid;
+    child->desc = pcmk__str_copy(desc);
+    child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                         child);
+    child->user_data = user_data;
+    child->kill_group = kill_group;
+    child->exit_fn = exit_fn;
+
+    child_list = g_list_append(child_list, child);
+
+    if (need_init) {
+        /* Invoke SIGCHLD processing from the main loop. This ensures that we
+         * don't add a child to the main loop and have the exit callback invoked
+         * for the child PID within the same call stack.
+         *
+         * @TODO Understand and document why this matters.
+         */
+        need_init = false;
+        pcmk__create_timer(1, install_sigchld_handler, NULL);
+    }
+}
+
+/*!
  * \brief Create a new \c mainloop_child_t object and add it to the main loop
  *
  * If the child process has not exited within \p timeout_ms, send it a
@@ -1386,7 +1436,6 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
                               enum mainloop_child_flags flags,
                               pcmk__mainloop_child_exit_fn_t exit_fn)
 {
-    // @TODO Make flags argument uint32_t or bool when this is made internal
     static bool need_init = true;
 
     mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));

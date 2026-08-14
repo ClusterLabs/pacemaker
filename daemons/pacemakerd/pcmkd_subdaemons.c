@@ -478,7 +478,8 @@ start_child(pcmkd_child_t * child)
             valgrind_s = " (valgrind enabled: " PCMK__VALGRIND_EXEC ")";
         }
 
-        mainloop_child_add(child->pid, 0, name, child, pcmk_child_exit);
+        pcmk__main_loop_child_create(child->pid, name, 0, child, true,
+                                     pcmk_child_exit);
 
         pcmk__info("Forked process %lld using user %lld (%s) and group %lld "
                    "for subdaemon %s%s",
