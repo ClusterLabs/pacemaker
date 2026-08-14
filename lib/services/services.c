@@ -649,7 +649,7 @@ gboolean
 services_action_cancel(const char *name, const char *action,
                        unsigned int interval_ms)
 {
-    gboolean cancelled = FALSE;
+    bool cancelled = false;
     char *id = pcmk__op_key(name, action, interval_ms);
     svc_action_t *op = NULL;
 
@@ -674,12 +674,13 @@ services_action_cancel(const char *name, const char *action,
      */
     if (op->pid != 0) {
         pcmk__info("Terminating in-flight op %s[%d] early because it was "
-                   "cancelled",
-                   id, op->pid);
+                   "cancelled", id, op->pid);
+
         cancelled = mainloop_child_kill(op->pid);
-        if (cancelled == FALSE) {
+        if (!cancelled) {
             pcmk__err("Termination of %s[%d] failed", id, op->pid);
         }
+
         goto done;
     }
 
@@ -707,12 +708,12 @@ services_action_cancel(const char *name, const char *action,
 
     blocked_ops = g_list_remove(blocked_ops, op);
     services_action_free(op);
-    cancelled = TRUE;
+    cancelled = true;
     // @TODO Initiate handle_blocked_ops() asynchronously
 
 done:
     free(id);
-    return cancelled;
+    return cancelled? TRUE : FALSE;
 }
 
 gboolean
