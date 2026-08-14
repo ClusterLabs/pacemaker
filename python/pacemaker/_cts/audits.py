@@ -907,6 +907,8 @@ class PartitionAudit(ClusterAudit):
 
     def _trim_string(self, avalue):
         """Remove the last character from a multi-character string."""
+        avalue = avalue.strip()
+
         if not avalue:
             return None
 
@@ -914,14 +916,6 @@ class PartitionAudit(ClusterAudit):
             return avalue[:-1]
 
         return avalue
-
-    def _trim2int(self, avalue):
-        """Remove the last character from a multi-character string and convert the result to an int."""
-        trimmed = self._trim_string(avalue)
-        if trimmed:
-            return int(trimmed)
-
-        return None
 
     def _audit_partition(self, partition):
         """Perform the audit of a single partition."""
@@ -939,13 +933,10 @@ class PartitionAudit(ClusterAudit):
                 #  checking for in this audit)
 
             (_, out) = self._cm.rsh.call(node, self._cm.templates["StatusCmd"] % node, verbose=1)
-            self._node_state[node] = out[0].strip()
+            self._node_state[node] = self._trim_string(out[0])
 
             (_, out) = self._cm.rsh.call(node, self._cm.templates["QuorumCmd"], verbose=1)
-            self._node_quorum[node] = out[0].strip()
-
-            self._node_state[node] = self._trim_string(self._node_state[node])
-            self._node_quorum[node] = self._trim_string(self._node_quorum[node])
+            self._node_quorum[node] = self._trim_string(out[0])
 
         for node in node_list:
             if self._cm.expected_status[node] != "up":
