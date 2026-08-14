@@ -366,7 +366,7 @@ class AuditResource:
         self.rclass = fields[6]
         self.rtype = fields[7]
         self.host = fields[8]
-        self.needs_quorum = fields[9]
+        self.needs_quorum = fields[9] == "1"
         self.flags = int(fields[10])
         self.flags_s = fields[11]
 
@@ -450,7 +450,7 @@ class PrimitiveAudit(ClusterAudit):
             if quorum:
                 self.debug(f"Resource {resource.id} active on {active!r}")
 
-            elif resource.needs_quorum == 1:
+            elif resource.needs_quorum:
                 logging.log(f"Resource {resource.id} active without quorum: {active!r}")
                 rc = False
 
