@@ -320,15 +320,14 @@ class FileAudit(ClusterAudit):
                     passed = False
 
             if self._cm.expected_status.get(node) == "down":
-                clean = False
                 (_, lsout) = self._cm.rsh.call(node, "ls -al /dev/shm | grep qb-", verbose=1)
 
-                for line in lsout:
+                if lsout:
                     passed = False
-                    clean = True
-                    logging.log(f"Warning: Stale IPC file on {node}: {line}")
 
-                if clean:
+                    for line in lsout:
+                        logging.log(f"Warning: Stale IPC file on {node}: {line}")
+
                     (_, lsout) = self._cm.rsh.call(node, "ps axf | grep -e pacemaker -e corosync", verbose=1)
 
                     for line in lsout:
