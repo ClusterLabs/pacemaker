@@ -40,15 +40,15 @@ enum mainloop_child_flags {
 //! \deprecated Do not use
 void mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
                                    void *user_data, enum mainloop_child_flags,
-                                   void (*exit_fn)(mainloop_child_t *child,
-                                                   int core, int signo,
-                                                   int exit_code));
+                                   void (*callback)(mainloop_child_t *child,
+                                                    int core, int signo,
+                                                    int exit_code));
 
 //! \deprecated Do not use
 void mainloop_child_add(pid_t pid, int timeout_ms, const char *desc,
                         void *user_data,
-                        void (*exit_fn)(mainloop_child_t *child, int core,
-                                        int signo, int exit_code));
+                        void (*callback)(mainloop_child_t *child, int core,
+                                         int signo, int exit_code));
 
 //! \deprecated Do not use
 gboolean mainloop_child_kill(pid_t pid);

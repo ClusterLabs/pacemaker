@@ -1177,8 +1177,8 @@ child_waitpid(GList *link, bool no_hang)
     CRM_CHECK(false, return false);
 
 terminated:
-    if (child->exit_fn != NULL) {
-        child->exit_fn(child, core, signo, exit_code);
+    if (child->callback != NULL) {
+        child->callback(child, core, signo, exit_code);
     }
 
     pcmk__trace("Removing terminated process %lld from child list",
@@ -1249,13 +1249,13 @@ install_sigchld_handler(void *user_data)
  * \param[in] user_data   User data
  * \param[in] kill group  If \c true, kill the child's entire process group on
  *                        timeout; otherwise, kill only the child process
- * \param[in] exit_fn     Function to call when the child process exits
+ * \param[in] callback    Function to call when the child process terminates
  */
 void
 pcmk__main_loop_child_create(pid_t pid, const char *desc,
                              unsigned int timeout_ms, void *user_data,
                              bool kill_group,
-                             pcmk__main_loop_child_cb_t exit_fn)
+                             pcmk__main_loop_child_cb_t callback)
 {
     static bool need_init = true;
 
@@ -1270,7 +1270,7 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
                                          child);
     child->user_data = user_data;
     child->kill_group = kill_group;
-    child->exit_fn = exit_fn;
+    child->callback = callback;
 
     child_list = g_list_append(child_list, child);
 
@@ -1589,8 +1589,8 @@ void
 mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
                               void *user_data,
                               enum mainloop_child_flags flags,
-                              void (*exit_fn)(mainloop_child_t *child, int core,
-                                              int signo, int exit_code))
+                              void (*callback)(mainloop_child_t *child, int core,
+                                               int signo, int exit_code))
 {
     static bool need_init = true;
 
@@ -1600,7 +1600,7 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
     child->desc = pcmk__str_copy(desc);
     child->user_data = user_data;
     child->kill_group = !pcmk__is_set(flags, mainloop_leave_pid_group);
-    child->exit_fn = exit_fn;
+    child->callback = callback;
 
     if (timeout_ms > 0) {
         child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
@@ -1617,10 +1617,10 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
 
 void
 mainloop_child_add(pid_t pid, int timeout_ms, const char *desc, void *user_data,
-                   void (*exit_fn)(mainloop_child_t *child, int core, int signo,
-                                   int exit_code))
+                   void (*callback)(mainloop_child_t *child, int core,
+                                    int signo, int exit_code))
 {
-    mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, exit_fn);
+    mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, callback);
 }
 
 gboolean

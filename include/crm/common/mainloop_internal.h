@@ -57,7 +57,7 @@ struct mainloop_child_s {
     bool kill_group;
 
     //! Callback function called when the child terminates
-    pcmk__main_loop_child_cb_t exit_fn;
+    pcmk__main_loop_child_cb_t callback;
 };
 
 struct mainloop_io_s {
@@ -77,7 +77,7 @@ struct mainloop_io_s {
 void pcmk__main_loop_child_create(pid_t pid, const char *desc,
                                   unsigned int timeout_ms, void *user_data,
                                   bool kill_group,
-                                  pcmk__main_loop_child_cb_t exit_fn);
+                                  pcmk__main_loop_child_cb_t callback);
 bool pcmk__main_loop_child_kill(pid_t pid);
 
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
