@@ -1482,7 +1482,7 @@ drain_timeout_cb(void *user_data)
     bool *timeout_popped = (bool*) user_data;
 
     *timeout_popped = TRUE;
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!

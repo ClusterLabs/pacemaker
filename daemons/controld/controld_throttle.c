@@ -202,7 +202,7 @@ static gboolean
 throttle_timer_cb(void *data)
 {
     throttle_send_command(throttle_mode());
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 static void

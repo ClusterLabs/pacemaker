@@ -560,7 +560,7 @@ recurring_action_timer(void *data)
     op->opaque->repeat_timer = 0;
 
     services_action_async(op, NULL);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!

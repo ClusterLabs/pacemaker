@@ -242,7 +242,7 @@ attribute_timer_cb(void *data)
     attribute_t *a = data;
     pcmk__trace("Dampen interval expired for %s", a->id);
     attrd_write_or_elect_attribute(a);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

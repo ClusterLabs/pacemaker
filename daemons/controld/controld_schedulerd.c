@@ -264,7 +264,8 @@ controld_sched_timeout(void *user_data)
          */
         crmd_exit(CRM_EX_FATAL);
     }
-    return FALSE;
+
+    return G_SOURCE_REMOVE;
 }
 
 void

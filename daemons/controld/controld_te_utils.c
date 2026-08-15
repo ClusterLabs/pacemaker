@@ -139,8 +139,9 @@ abort_timer_popped(void *data)
         abort_transition(abort_timer->priority, abort_timer->action,
                          abort_timer->text, NULL);
     }
+
     abort_timer->id = 0;
-    return FALSE; // do not immediately reschedule timer
+    return G_SOURCE_REMOVE; // do not immediately reschedule timer
 }
 
 /*!
@@ -183,12 +184,12 @@ node_pending_timer_popped(void *key)
     struct abort_timer_s *node_pending_timer = NULL;
 
     if (node_pending_timers == NULL) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     node_pending_timer = g_hash_table_lookup(node_pending_timers, key);
     if (node_pending_timer == NULL) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     pcmk__warn("Node with " PCMK_XA_ID " '%s' pending timed out (%us) on "
@@ -201,7 +202,7 @@ node_pending_timer_popped(void *key)
 
     g_hash_table_remove(node_pending_timers, key);
 
-    return FALSE; // do not reschedule timer
+    return G_SOURCE_REMOVE; // do not reschedule timer
 }
 
 static void

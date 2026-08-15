@@ -812,7 +812,7 @@ start_delay_helper(void *data)
         mainloop_set_trigger(device->work);
     }
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

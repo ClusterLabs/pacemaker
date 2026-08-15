@@ -248,7 +248,7 @@ crm_timer_popped(void *data)
 
     controld_trigger_fsa();
 
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 bool

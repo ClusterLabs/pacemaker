@@ -224,7 +224,7 @@ timeout_err(void *data)
 {
     print_result("LISTEN EVENT FAILURE - timeout occurred, never found");
     test_exit(CRM_EX_TIMEOUT);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

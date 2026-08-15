@@ -480,7 +480,7 @@ cib_action_updated(xmlNode * msg, int call_id, int rc, xmlNode * output, void *u
  *
  * \param[in,out] data  Pointer to graph action
  *
- * \return FALSE (indicating that source should be not be re-added)
+ * \return \c G_SOURCE_REMOVE (indicating that source should be not be re-added)
  */
 gboolean
 action_timer_callback(void *data)
@@ -490,7 +490,7 @@ action_timer_callback(void *data)
     const char *on_node = NULL;
     const char *via_node = NULL;
 
-    CRM_CHECK(data != NULL, return FALSE);
+    CRM_CHECK(data != NULL, return G_SOURCE_REMOVE);
 
     stop_te_timer(action);
 
@@ -527,5 +527,5 @@ action_timer_callback(void *data)
         }
     }
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
