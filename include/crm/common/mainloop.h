@@ -30,15 +30,12 @@ extern "C" {
  * \ingroup core
  */
 
-enum mainloop_child_flags {
-    /* don't kill pid group on timeout, only kill the pid */
-    mainloop_leave_pid_group = 0x01,
-};
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct trigger_s crm_trigger_t;
 
 typedef struct mainloop_io_s mainloop_io_t;
+
+//! \deprecated Do not use
 typedef struct mainloop_child_s mainloop_child_t;
 
 // NOTE: sbd (as of at least 1.5.2) uses this
@@ -171,22 +168,6 @@ mainloop_io_t *mainloop_add_fd(const char *name, int priority, int fd, void *use
 
 void mainloop_del_fd(mainloop_io_t * client);
 
-void mainloop_child_add(pid_t pid, int timeout_ms, const char *desc,
-                        void *user_data,
-                        pcmk__mainloop_child_exit_fn_t exit_fn);
-
-void mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
-                                   void *user_data, enum mainloop_child_flags,
-                                   pcmk__mainloop_child_exit_fn_t exit_fn);
-
-void *mainloop_child_userdata(mainloop_child_t * child);
-int mainloop_child_timeout(mainloop_child_t * child);
-const char *mainloop_child_name(mainloop_child_t * child);
-
-pid_t mainloop_child_pid(mainloop_child_t * child);
-void mainloop_clear_child_userdata(mainloop_child_t * child);
-gboolean mainloop_child_kill(pid_t pid);
-
 void pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n);
 void pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
                           bool (*check)(unsigned int));
@@ -196,5 +177,9 @@ void pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
 #ifdef __cplusplus
 }
 #endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/mainloop_compat.h>
+#endif  // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #endif

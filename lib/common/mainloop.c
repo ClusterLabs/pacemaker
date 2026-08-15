@@ -984,36 +984,6 @@ mainloop_del_fd(mainloop_io_t *client)
     g_source_remove(client->source);
 }
 
-pid_t
-mainloop_child_pid(mainloop_child_t * child)
-{
-    return child->pid;
-}
-
-const char *
-mainloop_child_name(mainloop_child_t * child)
-{
-    return child->desc;
-}
-
-int
-mainloop_child_timeout(mainloop_child_t * child)
-{
-    return child->timed_out? TRUE : FALSE;
-}
-
-void *
-mainloop_child_userdata(mainloop_child_t * child)
-{
-    return child->user_data;
-}
-
-void
-mainloop_clear_child_userdata(mainloop_child_t * child)
-{
-    child->user_data = NULL;
-}
-
 /*!
  * \internal
  * \brief Send \c SIGKILL to a main loop child process or its process group
@@ -1308,66 +1278,6 @@ compare_children_by_pid(const void *a, const void *b)
 }
 
 /*!
- * \brief Kill a child process tracked by the main loop
- *
- * If a process with PID \p pid is being tracked, send it a \c SIGKILL.
- *
- * If this function kills the child process successfully, remove the child from
- * the tracking data structure and free the child.
- *
- * If the process is being tracked but no longer exists, don't remove or free
- * the child yet. We will do this later when we receive a \c SIGCHLD for the
- * child process.
- *
- * \param[in] pid  Child PID
- *
- * \return \c TRUE if the child with ID \p pid was being tracked and either this
- *         function killed the process successfully or the process has already
- *         terminated but we have not received a \c SIGCHLD for it; or \c FALSE
- *         otherwise
- */
-gboolean
-mainloop_child_kill(pid_t pid)
-{
-    const mainloop_child_t cmp_data = { .pid = pid };
-    GList *match = NULL;
-    mainloop_child_t *child = NULL;
-    int rc = pcmk_rc_ok;
-    bool no_hang = false;
-
-    match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
-    if (match == NULL) {
-        return FALSE;
-    }
-
-    child = match->data;
-
-    rc = kill_child_pid(child);
-    if (rc == ESRCH) {
-        /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
-         * SIGCHLD and let handler clean it up as normal (so we get the correct
-         * return code/status). The blocking alternative would be to call
-         * child_waitpid(iter, false).
-         */
-        pcmk__trace("Waiting for signal that child process %lld completed",
-                    (long long) child->pid);
-        return TRUE;
-    }
-
-    if (rc != pcmk_rc_ok) {
-        /* If kill() failed for some other reason, set the WNOHANG flag, since
-         * we can't be certain what happened.
-         *
-         * If kill() succeeded, we don't need the WNOHANG flag because SIGKILL
-         * can't be blocked.
-         */
-        no_hang = true;
-    }
-
-    return child_waitpid(match, no_hang)? TRUE : FALSE;
-}
-
-/*!
  * \internal
  * \brief Create a new \c mainloop_child_t object and add it to the main loop
  *
@@ -1478,76 +1388,6 @@ pcmk__main_loop_child_kill(pid_t pid)
     }
 
     return child_waitpid(match, no_hang);
-}
-
-/*!
- * \brief Create a new \c mainloop_child_t object and add it to the main loop
- *
- * If the child process has not exited within \p timeout_ms, send it a
- * \c SIGKILL signal.
- *
- * \param[in] pid         Child PID (must be positive for correct behavior)
- * \param[in] timeout_ms  Timeout in milliseconds
- * \param[in] desc        Description
- * \param[in] user_data   User data
- * \param[in] flags       Group of <tt>enum mainloop_child_flags</tt>
- * \param[in] exit_fn     Function to call when the child process exits
- */
-void
-mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
-                              void *user_data,
-                              enum mainloop_child_flags flags,
-                              pcmk__mainloop_child_exit_fn_t exit_fn)
-{
-    static bool need_init = true;
-
-    mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
-
-    child->pid = pid;
-    child->desc = pcmk__str_copy(desc);
-    child->user_data = user_data;
-    child->kill_group = !pcmk__is_set(flags, mainloop_leave_pid_group);
-    child->exit_fn = exit_fn;
-
-    if (timeout_ms > 0) {
-        child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
-                                             child);
-    }
-
-    child_list = g_list_append(child_list, child);
-
-    if (need_init) {
-        /* Invoke SIGCHLD processing from the main loop. This ensures that we
-         * don't add a child to the main loop and have the exit callback invoked
-         * for the child PID within the same call stack.
-         *
-         * @TODO Understand and document why this matters.
-         */
-        need_init = false;
-        pcmk__create_timer(1, install_sigchld_handler, NULL);
-    }
-}
-
-/*!
- * \brief Create a new \c mainloop_child_t object and add it to the main loop
- *
- * If the child process has not exited within \p timeout_ms, send it a
- * \c SIGKILL signal.
- *
- * \param[in] pid         Child PID (must be positive for correct behavior)
- * \param[in] timeout_ms  Timeout in seconds
- * \param[in] desc        Description
- * \param[in] user_data   User data
- * \param[in] exit_fn     Function to call when the child process exits
- *
- * \note This is a convenience wrapper for \c mainloop_child_add_with_flags()
- *       that doesn't set any flags.
- */
-void
-mainloop_child_add(pid_t pid, int timeout_ms, const char *desc, void *user_data,
-                   pcmk__mainloop_child_exit_fn_t exit_fn)
-{
-    mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, exit_fn);
 }
 
 static gboolean
@@ -1729,3 +1569,107 @@ pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
         g_source_remove(timer);
     }
 }
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/mainloop_compat.h>
+
+void
+mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
+                              void *user_data,
+                              enum mainloop_child_flags flags,
+                              pcmk__mainloop_child_exit_fn_t exit_fn)
+{
+    static bool need_init = true;
+
+    mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
+
+    child->pid = pid;
+    child->desc = pcmk__str_copy(desc);
+    child->user_data = user_data;
+    child->kill_group = !pcmk__is_set(flags, mainloop_leave_pid_group);
+    child->exit_fn = exit_fn;
+
+    if (timeout_ms > 0) {
+        child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                             child);
+    }
+
+    child_list = g_list_append(child_list, child);
+
+    if (need_init) {
+        need_init = false;
+        pcmk__create_timer(1, install_sigchld_handler, NULL);
+    }
+}
+
+void
+mainloop_child_add(pid_t pid, int timeout_ms, const char *desc, void *user_data,
+                   pcmk__mainloop_child_exit_fn_t exit_fn)
+{
+    mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, exit_fn);
+}
+
+gboolean
+mainloop_child_kill(pid_t pid)
+{
+    const mainloop_child_t cmp_data = { .pid = pid };
+    GList *match = NULL;
+    mainloop_child_t *child = NULL;
+    int rc = pcmk_rc_ok;
+    bool no_hang = false;
+
+    match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
+    if (match == NULL) {
+        return FALSE;
+    }
+
+    child = match->data;
+
+    rc = kill_child_pid(child);
+    if (rc == ESRCH) {
+        pcmk__trace("Waiting for signal that child process %lld completed",
+                    (long long) child->pid);
+        return TRUE;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        no_hang = true;
+    }
+
+    return child_waitpid(match, no_hang)? TRUE : FALSE;
+}
+
+pid_t
+mainloop_child_pid(mainloop_child_t *child)
+{
+    return child->pid;
+}
+
+const char *
+mainloop_child_name(mainloop_child_t *child)
+{
+    return child->desc;
+}
+
+int
+mainloop_child_timeout(mainloop_child_t *child)
+{
+    return child->timed_out? TRUE : FALSE;
+}
+
+void *
+mainloop_child_userdata(mainloop_child_t *child)
+{
+    return child->user_data;
+}
+
+void
+mainloop_clear_child_userdata(mainloop_child_t *child)
+{
+    child->user_data = NULL;
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API
