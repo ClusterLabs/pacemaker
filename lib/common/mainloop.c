@@ -43,35 +43,6 @@ struct mainloop_timer_s {
 static GList *child_list = NULL;
 static qb_array_t *gio_map = NULL;
 
-/*!
- * \internal
- * \brief Free a main loop child
- *
- * If the child has an associated timer, remove it.
- *
- * \param[in,out] data  Main loop child (<tt>mainloop_child_t *</tt>)
- *
- * \note This does not free the child's \c user_data field.
- * \note This is a \c GDestroyNotify.
- */
-static void
-free_main_loop_child(void *data)
-{
-    mainloop_child_t *child = data;
-
-    if (child == NULL) {
-        return;
-    }
-
-    if (child->timer_id != 0) {
-        pcmk__trace("Removing timer %u", child->timer_id);
-        g_source_remove(child->timer_id);
-    }
-
-    free(child->desc);
-    free(child);
-}
-
 static gboolean
 crm_trigger_prepare(GSource *source, int *timeout)
 {
@@ -429,25 +400,6 @@ mainloop_destroy_signal(int sig)
     }
     mainloop_destroy_signal_entry(sig);
     return TRUE;
-}
-
-/*!
- * \internal
- * \brief Free data structures used for the mainloop
- *
- * \todo This is incomplete. Free other data structures created in this file.
- */
-void
-mainloop_cleanup(void)
-{
-    g_list_free_full(child_list, free_main_loop_child);
-    child_list = NULL;
-
-    g_clear_pointer(&gio_map, qb_array_free);
-
-    for (int sig = 0; sig < NSIG; ++sig) {
-        mainloop_destroy_signal_entry(sig);
-    }
 }
 
 /*
@@ -1069,6 +1021,35 @@ child_timeout_callback(void *user_data)
 
 /*!
  * \internal
+ * \brief Free a main loop child
+ *
+ * If the child has an associated timer, remove it.
+ *
+ * \param[in,out] data  Main loop child (<tt>mainloop_child_t *</tt>)
+ *
+ * \note This does not free the child's \c user_data field.
+ * \note This is a \c GDestroyNotify.
+ */
+static void
+free_main_loop_child(void *data)
+{
+    mainloop_child_t *child = data;
+
+    if (child == NULL) {
+        return;
+    }
+
+    if (child->timer_id != 0) {
+        pcmk__trace("Removing timer %u", child->timer_id);
+        g_source_remove(child->timer_id);
+    }
+
+    free(child->desc);
+    free(child);
+}
+
+/*!
+ * \internal
  * \brief Wait on a child process and free it if terminated
  *
  * If the child has terminated, call its exit callback if any, remove it from
@@ -1256,36 +1237,6 @@ install_sigchld_handler(void *user_data)
 
 /*!
  * \internal
- * \brief Compare two mainloop child objects by PID
- *
- * \param[in] a  First child to compare (<tt>const mainloop_child_t *</tt>)
- * \param[in] b  Second child to compare (<tt>const mainloop_child_t *</tt>)
- *
- * \retval -1  if \p a->pid is less than \p b->pid
- * \retval  0  if \p a->pid is equal to \p b->pid
- * \retval  1  if \p a->pid is greater than \p b->pid
- *
- * \note This is a \c GCompareFunc.
- */
-static int
-compare_children_by_pid(const void *a, const void *b)
-{
-    const mainloop_child_t *child1 = a;
-    const mainloop_child_t *child2 = b;
-
-    if (child1->pid < child2->pid) {
-        return -1;
-    }
-
-    if (child1->pid > child2->pid) {
-        return 1;
-    }
-
-    return 0;
-}
-
-/*!
- * \internal
  * \brief Create a new \c mainloop_child_t object and add it to the main loop
  *
  * If the child process has not exited within \p timeout_ms, send it a
@@ -1332,6 +1283,36 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
         need_init = false;
         pcmk__create_timer(1, install_sigchld_handler, NULL);
     }
+}
+
+/*!
+ * \internal
+ * \brief Compare two mainloop child objects by PID
+ *
+ * \param[in] a  First child to compare (<tt>const mainloop_child_t *</tt>)
+ * \param[in] b  Second child to compare (<tt>const mainloop_child_t *</tt>)
+ *
+ * \retval -1  if \p a->pid is less than \p b->pid
+ * \retval  0  if \p a->pid is equal to \p b->pid
+ * \retval  1  if \p a->pid is greater than \p b->pid
+ *
+ * \note This is a \c GCompareFunc.
+ */
+static int
+compare_children_by_pid(const void *a, const void *b)
+{
+    const mainloop_child_t *child1 = a;
+    const mainloop_child_t *child2 = b;
+
+    if (child1->pid < child2->pid) {
+        return -1;
+    }
+
+    if (child1->pid > child2->pid) {
+        return 1;
+    }
+
+    return 0;
 }
 
 /*!
@@ -1574,6 +1555,25 @@ pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
     }
     if (!timeout_popped && (timer > 0)) {
         g_source_remove(timer);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Free data structures used for the mainloop
+ *
+ * \todo This is incomplete. Free other data structures created in this file.
+ */
+void
+mainloop_cleanup(void)
+{
+    g_list_free_full(child_list, free_main_loop_child);
+    child_list = NULL;
+
+    g_clear_pointer(&gio_map, qb_array_free);
+
+    for (int sig = 0; sig < NSIG; ++sig) {
+        mainloop_destroy_signal_entry(sig);
     }
 }
 
