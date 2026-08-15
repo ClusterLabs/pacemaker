@@ -24,6 +24,10 @@
 extern "C" {
 #endif
 
+typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *child,
+                                               int core, int signo,
+                                               int exit_code);
+
 /*!
  * \internal
  * \brief Info about a child process tracked by a main event loop

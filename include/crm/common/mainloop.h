@@ -41,10 +41,6 @@ typedef struct mainloop_child_s mainloop_child_t;
 // NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct mainloop_timer_s mainloop_timer_t;
 
-//! \deprecated This has been for internal use only since its creation.
-typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *p, int core,
-                                               int signo, int exitcode);
-
 void mainloop_cleanup(void);
 
 // NOTE: sbd (as of at least 1.5.2) uses this

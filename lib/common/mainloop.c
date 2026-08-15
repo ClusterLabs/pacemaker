@@ -1586,7 +1586,8 @@ void
 mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
                               void *user_data,
                               enum mainloop_child_flags flags,
-                              pcmk__mainloop_child_exit_fn_t exit_fn)
+                              void (*exit_fn)(mainloop_child_t *child, int core,
+                                              int signo, int exit_code))
 {
     static bool need_init = true;
 
@@ -1613,7 +1614,8 @@ mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
 
 void
 mainloop_child_add(pid_t pid, int timeout_ms, const char *desc, void *user_data,
-                   pcmk__mainloop_child_exit_fn_t exit_fn)
+                   void (*exit_fn)(mainloop_child_t *child, int core, int signo,
+                                   int exit_code))
 {
     mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, exit_fn);
 }
