@@ -1360,75 +1360,81 @@ static gboolean
 mainloop_timer_cb(void *user_data)
 {
     int id = 0;
-    bool repeat = FALSE;
-    struct mainloop_timer_s *t = user_data;
+    bool repeat = false;
+    mainloop_timer_t *timer = user_data;
 
-    pcmk__assert(t != NULL);
+    pcmk__assert(timer != NULL);
 
-    id = t->id;
-    t->id = 0; /* Ensure it's unset during callbacks so that
-                * mainloop_timer_running() works as expected
-                */
+    id = timer->id;
+    timer->id = 0; /* Ensure it's unset during callbacks so that
+                    * mainloop_timer_running() works as expected
+                    */
 
-    if(t->cb) {
-        pcmk__trace("Invoking callbacks for timer %s", t->name);
-        repeat = t->repeat;
-        if(t->cb(t->userdata) == FALSE) {
-            pcmk__trace("Timer %s complete", t->name);
-            repeat = FALSE;
+    if (timer->cb != NULL) {
+        pcmk__trace("Invoking callbacks for timer %s", timer->name);
+        repeat = timer->repeat;
+
+        if (!timer->cb(timer->userdata)) {
+            pcmk__trace("Timer %s complete", timer->name);
+            repeat = false;
         }
     }
 
-    if(repeat) {
+    if (repeat) {
         /* Restore if repeating */
-        t->id = id;
+        timer->id = id;
     }
 
     return repeat;
 }
 
 bool
-mainloop_timer_running(mainloop_timer_t *t)
+mainloop_timer_running(mainloop_timer_t *timer)
 {
-    if(t && t->id != 0) {
-        return TRUE;
-    }
-    return FALSE;
+    return (timer != NULL) && (timer->id != 0);
 }
 
 void
-mainloop_timer_start(mainloop_timer_t *t)
+mainloop_timer_start(mainloop_timer_t *timer)
 {
-    mainloop_timer_stop(t);
-    if(t && t->period_ms > 0) {
-        pcmk__trace("Starting timer %s", t->name);
-        t->id = pcmk__create_timer(t->period_ms, mainloop_timer_cb, t);
+    mainloop_timer_stop(timer);
+
+    if ((timer == NULL) || (timer->period_ms == 0)) {
+        return;
     }
+
+    pcmk__trace("Starting timer %s", timer->name);
+    timer->id = pcmk__create_timer(timer->period_ms, mainloop_timer_cb, timer);
 }
 
 void
-mainloop_timer_stop(mainloop_timer_t *t)
+mainloop_timer_stop(mainloop_timer_t *timer)
 {
-    if(t && t->id != 0) {
-        pcmk__trace("Stopping timer %s", t->name);
-        g_source_remove(t->id);
-        t->id = 0;
+    if ((timer == NULL) || (timer->id == 0)) {
+        return;
     }
+
+    pcmk__trace("Stopping timer %s", timer->name);
+    g_source_remove(timer->id);
+    timer->id = 0;
 }
 
 unsigned int
-mainloop_timer_set_period(mainloop_timer_t *t, unsigned int period_ms)
+mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int period_ms)
 {
     unsigned int last = 0;
 
-    if(t) {
-        last = t->period_ms;
-        t->period_ms = period_ms;
+    if (timer == NULL) {
+        return 0;
     }
 
-    if(t && t->id != 0 && last != t->period_ms) {
-        mainloop_timer_start(t);
+    last = timer->period_ms;
+    timer->period_ms = period_ms;
+
+    if ((timer->id != 0) && (timer->period_ms != last)) {
+        mainloop_timer_start(timer);
     }
+
     return last;
 }
 
@@ -1436,31 +1442,37 @@ mainloop_timer_t *
 mainloop_timer_add(const char *name, unsigned int period_ms, bool repeat,
                    GSourceFunc cb, void *userdata)
 {
-    mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
+    mainloop_timer_t *timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
     if (name != NULL) {
-        t->name = pcmk__assert_asprintf("%s-%u-%d", name, period_ms, repeat);
+        timer->name = pcmk__assert_asprintf("%s-%u-%d", name, period_ms,
+                                            repeat);
+
     } else {
-        t->name = pcmk__assert_asprintf("%p-%u-%d", t, period_ms, repeat);
+        timer->name = pcmk__assert_asprintf("%p-%u-%d", timer, period_ms,
+                                            repeat);
     }
-    t->id = 0;
-    t->period_ms = period_ms;
-    t->repeat = repeat;
-    t->cb = cb;
-    t->userdata = userdata;
-    pcmk__trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
-    return t;
+
+    timer->period_ms = period_ms;
+    timer->repeat = repeat;
+    timer->cb = cb;
+    timer->userdata = userdata;
+
+    pcmk__trace("Created timer %s with %p", timer->name, userdata);
+    return timer;
 }
 
 void
-mainloop_timer_del(mainloop_timer_t *t)
+mainloop_timer_del(mainloop_timer_t *timer)
 {
-    if(t) {
-        pcmk__trace("Destroying timer %s", t->name);
-        mainloop_timer_stop(t);
-        free(t->name);
-        free(t);
+    if (timer == NULL) {
+        return;
     }
+
+    pcmk__trace("Destroying timer %s", timer->name);
+    mainloop_timer_stop(timer);
+    free(timer->name);
+    free(timer);
 }
 
 /*

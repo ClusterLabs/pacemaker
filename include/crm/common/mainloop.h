@@ -63,15 +63,15 @@ gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 gboolean mainloop_destroy_signal(int sig);
 
-bool mainloop_timer_running(mainloop_timer_t *t);
+bool mainloop_timer_running(mainloop_timer_t *timer);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-void mainloop_timer_start(mainloop_timer_t *t);
+void mainloop_timer_start(mainloop_timer_t *timer);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-void mainloop_timer_stop(mainloop_timer_t *t);
+void mainloop_timer_stop(mainloop_timer_t *timer);
 
-unsigned int mainloop_timer_set_period(mainloop_timer_t *t,
+unsigned int mainloop_timer_set_period(mainloop_timer_t *timer,
                                        unsigned int period_ms);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
@@ -79,7 +79,7 @@ mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int period_ms,
                                      bool repeat, GSourceFunc cb,
                                      void *userdata);
 
-void mainloop_timer_del(mainloop_timer_t *t);
+void mainloop_timer_del(mainloop_timer_t *timer);
 
 struct ipc_client_callbacks {
     /*!
