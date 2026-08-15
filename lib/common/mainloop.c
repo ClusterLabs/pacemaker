@@ -49,13 +49,20 @@ static qb_array_t *gio_map = NULL;
  *
  * If the child has an associated timer, remove it.
  *
- * \param[in,out] child  Main loop child
+ * \param[in,out] data  Main loop child (<tt>mainloop_child_t *</tt>)
  *
- * \note This does not free \p child->user_data.
+ * \note This does not free the child's \c user_data field.
+ * \note This is a \c GDestroyNotify.
  */
 static void
-free_main_loop_child(mainloop_child_t *child)
+free_main_loop_child(void *data)
 {
+    mainloop_child_t *child = data;
+
+    if (child == NULL) {
+        return;
+    }
+
     if (child->timer_id != 0) {
         pcmk__trace("Removing timer %u", child->timer_id);
         g_source_remove(child->timer_id);
@@ -433,7 +440,7 @@ mainloop_destroy_signal(int sig)
 void
 mainloop_cleanup(void)
 {
-    g_list_free_full(child_list, (GDestroyNotify) free_main_loop_child);
+    g_list_free_full(child_list, free_main_loop_child);
     child_list = NULL;
 
     g_clear_pointer(&gio_map, qb_array_free);
