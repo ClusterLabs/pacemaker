@@ -1255,7 +1255,7 @@ void
 pcmk__main_loop_child_create(pid_t pid, const char *desc,
                              unsigned int timeout_ms, void *user_data,
                              bool kill_group,
-                             pcmk__mainloop_child_exit_fn_t exit_fn)
+                             pcmk__main_loop_child_cb_t exit_fn)
 {
     static bool need_init = true;
 
