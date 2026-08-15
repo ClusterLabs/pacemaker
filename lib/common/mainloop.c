@@ -31,15 +31,6 @@ struct trigger_s {
     unsigned int id;
 };
 
-struct mainloop_timer_s {
-        unsigned int id;
-        unsigned int period_ms;
-        bool repeat;
-        char *name;
-        GSourceFunc cb;
-        void *userdata;
-};
-
 static GList *child_list = NULL;
 static qb_array_t *gio_map = NULL;
 
@@ -835,22 +826,6 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     (*source)->destroy_fn = callbacks->destroy;
     (*source)->dispatch_fn_ipc = callbacks->dispatch;
     return pcmk_rc_ok;
-}
-
-/*!
- * \brief Get period for mainloop timer
- *
- * \param[in]  timer      Timer
- *
- * \return Period in ms
- */
-unsigned int
-pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer)
-{
-    if (timer) {
-        return timer->period_ms;
-    }
-    return 0;
 }
 
 mainloop_io_t *

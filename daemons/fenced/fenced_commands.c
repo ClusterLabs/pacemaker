@@ -628,8 +628,11 @@ static int
 get_agent_metadata_cb(void *data)
 {
     fenced_device_t *device = data;
-    unsigned int period_ms = 0;
-    int rc = get_agent_metadata(device->agent, &device->agent_metadata);
+    int rc = pcmk_rc_ok;
+
+    pcmk__assert(device->timer != NULL);
+
+    rc = get_agent_metadata(device->agent, &device->agent_metadata);
 
     if (rc == pcmk_rc_ok) {
         if (device->agent_metadata != NULL) {
@@ -642,9 +645,9 @@ get_agent_metadata_cb(void *data)
     }
 
     if (rc == EAGAIN) {
-        period_ms = pcmk__mainloop_timer_get_period(device->timer);
-        if (period_ms < 160 * 1000) {
-            mainloop_timer_set_period(device->timer, 2 * period_ms);
+        if (device->timer->period_ms < (160 * 1000)) {
+            mainloop_timer_set_period(device->timer,
+                                      (2 * device->timer->period_ms));
         }
 
         return G_SOURCE_CONTINUE;

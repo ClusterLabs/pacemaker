@@ -60,6 +60,15 @@ struct mainloop_child_s {
     pcmk__main_loop_child_cb_t callback;
 };
 
+struct mainloop_timer_s {
+    unsigned int id;
+    unsigned int period_ms;
+    bool repeat;
+    char *name;
+    GSourceFunc cb;
+    void *userdata;
+};
+
 struct mainloop_io_s {
     char *name;
     void *userdata;
@@ -83,7 +92,6 @@ bool pcmk__main_loop_child_kill(pid_t pid);
 int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
-unsigned int pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer);
 
 #ifdef __cplusplus
 }
