@@ -30,6 +30,9 @@ extern "C" {
  */
 
 //! \deprecated Do not use
+typedef struct mainloop_child_s mainloop_child_t;
+
+//! \deprecated Do not use
 enum mainloop_child_flags {
     mainloop_leave_pid_group = 0x01,
 };

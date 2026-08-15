@@ -45,13 +45,13 @@ static crm_trigger_t *write_trigger = NULL;
  * \internal
  * \brief Process the exit status of a child forked from \c write_cib_async()
  *
- * \param[in] child      Mainloop child data
+ * \param[in] child      Main loop child
  * \param[in] core       If set to 1, the child process dumped core
  * \param[in] signo      Signal that the child process exited with
  * \param[in] exit_code  Child process's exit code
  */
 static void
-write_cib_cb(mainloop_child_t *child, int core, int signo, int exit_code)
+write_cib_cb(pcmk__main_loop_child_t *child, int core, int signo, int exit_code)
 {
     const char *error = "Could not write CIB to disk";
 

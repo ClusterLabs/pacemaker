@@ -706,7 +706,8 @@ parse_exit_reason_from_stderr(svc_action_t *op)
  * \param[in]     exitcode  Exit status of child process
  */
 static void
-async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
+async_action_complete(pcmk__main_loop_child_t *p, int core, int signo,
+                      int exitcode)
 {
     svc_action_t *op = p->user_data;
 

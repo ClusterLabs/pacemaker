@@ -35,9 +35,6 @@ typedef struct trigger_s crm_trigger_t;
 
 typedef struct mainloop_io_s mainloop_io_t;
 
-//! \deprecated Do not use
-typedef struct mainloop_child_s mainloop_child_t;
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct mainloop_timer_s mainloop_timer_t;
 

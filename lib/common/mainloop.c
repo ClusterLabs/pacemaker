@@ -956,7 +956,7 @@ mainloop_del_fd(mainloop_io_t *client)
  *         or \c errno after calling \c kill() otherwise)
  */
 static int
-kill_child_pid(const mainloop_child_t *child)
+kill_child_pid(const pcmk__main_loop_child_t *child)
 {
     const pid_t pid = (child->kill_group? -child->pid : child->pid);
     int rc = 0;
@@ -982,7 +982,8 @@ kill_child_pid(const mainloop_child_t *child)
  * \internal
  * \brief Kill a child process after its timeout has expired
  *
- * \param[in,out] user_data  Main loop child (<tt>mainloop_child_t *</tt>)
+ * \param[in,out] user_data  Main loop child
+ *                           (<tt>pcmk__main_loop_child_t *</tt>)
  *
  * \return \c G_SOURCE_REMOVE (to destroy the timeout that triggered this call)
  *
@@ -991,7 +992,7 @@ kill_child_pid(const mainloop_child_t *child)
 static gboolean
 child_timeout_callback(void *user_data)
 {
-    mainloop_child_t *child = user_data;
+    pcmk__main_loop_child_t *child = user_data;
     int rc = pcmk_rc_ok;
     const char *result_s = NULL;
 
@@ -1025,7 +1026,7 @@ child_timeout_callback(void *user_data)
  *
  * If the child has an associated timer, remove it.
  *
- * \param[in,out] data  Main loop child (<tt>mainloop_child_t *</tt>)
+ * \param[in,out] data  Main loop child (<tt>pcmk__main_loop_child_t *</tt>)
  *
  * \note This does not free the child's \c user_data field.
  * \note This is a \c GDestroyNotify.
@@ -1033,7 +1034,7 @@ child_timeout_callback(void *user_data)
 static void
 free_main_loop_child(void *data)
 {
-    mainloop_child_t *child = data;
+    pcmk__main_loop_child_t *child = data;
 
     if (child == NULL) {
         return;
@@ -1082,7 +1083,7 @@ child_waitpid(GList *link, bool no_hang)
 {
     const int options = no_hang? WNOHANG : 0;
 
-    mainloop_child_t *child = NULL;
+    pcmk__main_loop_child_t *child = NULL;
     pid_t rc = 0;
     int status = 0;
 
@@ -1107,8 +1108,8 @@ child_waitpid(GList *link, bool no_hang)
             /* This situation should probably never happen in practice. Setting
              * exit_code to 1 is misleading in that it indicates the child
              * exited with code 1, and we don't know that to be true. We could
-             * add a mainloop_child_t flag to indicate this case, but it doesn't
-             * seem worth it.
+             * add a pcmk__main_loop_child_t flag to indicate this case, but it
+             * doesn't seem worth it.
              */
             exit_code = 1;
 
@@ -1237,7 +1238,7 @@ install_sigchld_handler(void *user_data)
 
 /*!
  * \internal
- * \brief Create a new \c mainloop_child_t object and add it to the main loop
+ * \brief Create a \c pcmk__main_loop_child_t object and add it to the main loop
  *
  * If the child process has not exited within \p timeout_ms, send it a
  * \c SIGKILL signal.
@@ -1258,11 +1259,11 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
 {
     static bool need_init = true;
 
-    mainloop_child_t *child = NULL;
+    pcmk__main_loop_child_t *child = NULL;
 
     pcmk__assert(pid > 0);
 
-    child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
+    child = pcmk__assert_alloc(1, sizeof(pcmk__main_loop_child_t));
     child->pid = pid;
     child->desc = pcmk__str_copy(desc);
     child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
@@ -1289,8 +1290,10 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
  * \internal
  * \brief Compare two mainloop child objects by PID
  *
- * \param[in] a  First child to compare (<tt>const mainloop_child_t *</tt>)
- * \param[in] b  Second child to compare (<tt>const mainloop_child_t *</tt>)
+ * \param[in] a  First child to compare
+ *               (<tt>const pcmk__main_loop_child_t *</tt>)
+ * \param[in] b  Second child to compare
+ *               (<tt>const pcmk__main_loop_child_t *</tt>)
  *
  * \retval -1  if \p a->pid is less than \p b->pid
  * \retval  0  if \p a->pid is equal to \p b->pid
@@ -1301,8 +1304,8 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
 static int
 compare_children_by_pid(const void *a, const void *b)
 {
-    const mainloop_child_t *child1 = a;
-    const mainloop_child_t *child2 = b;
+    const pcmk__main_loop_child_t *child1 = a;
+    const pcmk__main_loop_child_t *child2 = b;
 
     if (child1->pid < child2->pid) {
         return -1;
@@ -1338,9 +1341,9 @@ compare_children_by_pid(const void *a, const void *b)
 bool
 pcmk__main_loop_child_kill(pid_t pid)
 {
-    const mainloop_child_t cmp_data = { .pid = pid };
+    const pcmk__main_loop_child_t cmp_data = { .pid = pid };
     GList *match = NULL;
-    mainloop_child_t *child = NULL;
+    pcmk__main_loop_child_t *child = NULL;
     int rc = pcmk_rc_ok;
     bool no_hang = false;
 

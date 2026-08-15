@@ -24,7 +24,12 @@
 extern "C" {
 #endif
 
-typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *child,
+/* Forward-declare because pcmk__main_loop_child_exit_fn_t takes a
+ * (pcmk__main_loop_child_t *) argument
+ */
+typedef struct mainloop_child_s pcmk__main_loop_child_t;
+
+typedef void (*pcmk__mainloop_child_exit_fn_t)(pcmk__main_loop_child_t *child,
                                                int core, int signo,
                                                int exit_code);
 
@@ -33,6 +38,9 @@ typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *child,
  * \brief Info about a child process tracked by a main event loop
  */
 struct mainloop_child_s {
+    /* @COMPAT Drop "struct mainloop_child_s" when we drop it from
+     * mainloop_compat.h
+     */
     pid_t pid;              //!< Child PID
     char *desc;             //!< Description
     unsigned int timer_id;  //!< ID of timer for child timeout

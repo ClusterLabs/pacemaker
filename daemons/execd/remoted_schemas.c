@@ -201,7 +201,7 @@ get_schema_files(void)
  * saving them to disk.
  */
 static void
-get_schema_files_complete(mainloop_child_t *p, int core, int signo,
+get_schema_files_complete(pcmk__main_loop_child_t *p, int core, int signo,
                           int exitcode)
 {
     const char *errmsg = "Could not load additional schema files";
