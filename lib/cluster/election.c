@@ -53,7 +53,7 @@ election_timer_cb(void *user_data)
 
     pcmk__info("Declaring local node as winner after election timed out");
     election_complete(cluster);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -100,7 +100,7 @@ election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *))
     cluster->priv->election->cb = cb;
     cluster->priv->election->timeout = mainloop_timer_add(name,
                                                           ELECTION_TIMEOUT_MS,
-                                                          FALSE,
+                                                          true,
                                                           election_timer_cb,
                                                           cluster);
 }

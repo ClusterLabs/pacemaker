@@ -1864,7 +1864,7 @@ static gboolean
 mon_trigger_refresh(void *user_data)
 {
     mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static int
@@ -2115,7 +2115,8 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     }
 
     if(refresh_timer == NULL) {
-        refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
+        refresh_timer = mainloop_timer_add("refresh", 2000, true,
+                                           mon_trigger_refresh, NULL);
     }
 
     if (reconnect_timer > 0) {

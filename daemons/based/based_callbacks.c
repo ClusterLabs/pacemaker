@@ -102,7 +102,7 @@ void
 based_callbacks_init(void)
 {
     if (digest_timer == NULL) {
-        digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
+        digest_timer = mainloop_timer_add("based_digest_timer", 5000, true,
                                           digest_timer_cb, NULL);
     }
 }

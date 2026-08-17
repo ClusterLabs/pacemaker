@@ -262,7 +262,8 @@ throttle_init(void)
 {
     if(throttle_records == NULL) {
         throttle_records = pcmk__strkey_table(NULL, throttle_record_free);
-        throttle_timer = mainloop_timer_add("throttle", 30 * 1000, TRUE, throttle_timer_cb, NULL);
+        throttle_timer = mainloop_timer_add("throttle", (30 * 1000), true,
+                                            throttle_timer_cb, NULL);
     }
 
     throttle_update_job_max(NULL);
