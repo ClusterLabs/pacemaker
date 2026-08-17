@@ -41,6 +41,7 @@ pcmk__daemon_t attrd = {
     .type = pcmk_ipc_attrd,
     .ec = CRM_EX_OK,
     .priority = QB_LOOP_MED,
+    .op = PCMK_XA_TASK,
     .ipc_fns = &ipc_fns,
 };
 
