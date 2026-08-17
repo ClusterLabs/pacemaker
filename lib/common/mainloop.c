@@ -1363,21 +1363,19 @@ mainloop_timer_cb(void *user_data)
     bool repeat = false;
     mainloop_timer_t *timer = user_data;
 
-    pcmk__assert(timer != NULL);
+    pcmk__assert((timer != NULL) && (timer->cb != NULL));
 
     id = timer->id;
     timer->id = 0; /* Ensure it's unset during callbacks so that
                     * mainloop_timer_running() works as expected
                     */
 
-    if (timer->cb != NULL) {
-        pcmk__trace("Invoking callbacks for timer %s", timer->name);
-        repeat = timer->repeat;
+    pcmk__trace("Invoking callbacks for timer %s", timer->name);
+    repeat = timer->repeat;
 
-        if (!timer->cb(timer->userdata)) {
-            pcmk__trace("Timer %s complete", timer->name);
-            repeat = false;
-        }
+    if (!timer->cb(timer->userdata)) {
+        pcmk__trace("Timer %s complete", timer->name);
+        repeat = false;
     }
 
     if (repeat) {
@@ -1399,7 +1397,7 @@ mainloop_timer_start(mainloop_timer_t *timer)
 {
     mainloop_timer_stop(timer);
 
-    if ((timer == NULL) || (timer->period_ms == 0)) {
+    if ((timer == NULL) || (timer->period_ms == 0) || (timer->cb == NULL)) {
         return;
     }
 
