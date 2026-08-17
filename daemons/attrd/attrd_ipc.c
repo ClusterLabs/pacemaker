@@ -482,50 +482,28 @@ ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     return pcmk__daemon_ipc_accept(&attrd, c, uid, gid);
 }
 
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \return 0 (do not re-run this callback)
- */
 static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t *c)
+ipc_closed(qb_ipcs_connection_t *c)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
-    } else {
-        pcmk__trace("Cleaning up closed client connection %p", c);
-
-        /* Remove the client from the sync point waitlist if it's present. */
-        attrd_remove_client_from_waitlist(client);
-
-        /* And no longer wait for confirmations from any peers. */
-        attrd_do_not_wait_for_client(client);
-
-        pcmk__free_client(client);
-    }
-
-    return 0;
+    return pcmk__daemon_ipc_closed(&attrd, c);
 }
 
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in,out] c  Connection to destroy
- *
- * \note We handle a destroyed connection the same as a closed one,
- *       but we need a separate handler because the return type is different.
- */
-static void
-attrd_ipc_destroy(qb_ipcs_connection_t *c)
+void
+attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client)
 {
-    pcmk__trace("Destroying client connection %p", c);
-    attrd_ipc_closed(c);
+    /* Remove the client from the sync point waitlist if it's present. */
+    attrd_remove_client_from_waitlist(client);
+
+    /* And no longer wait for confirmations from any peers. */
+    attrd_do_not_wait_for_client(client);
+
+    pcmk__free_client(client);
+}
+
+static void
+ipc_destroy(qb_ipcs_connection_t *c)
+{
+    pcmk__daemon_ipc_destroy(&attrd, c);
 }
 
 static int32_t
@@ -606,6 +584,6 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = ipc_accept,
     .connection_created = NULL,
     .msg_process = attrd_ipc_dispatch,
-    .connection_closed = attrd_ipc_closed,
-    .connection_destroyed = attrd_ipc_destroy
+    .connection_closed = ipc_closed,
+    .connection_destroyed = ipc_destroy
 };
