@@ -221,26 +221,40 @@ do_timer_control(long long action, enum crmd_fsa_cause cause,
     }
 }
 
+/*!
+ * \internal
+ * \brief Create an FSA timer
+ *
+ * \param[in] desc         Description
+ * \param[in] interval_ms  Timer interval in milliseconds
+ * \param[in] fsa_input    FSA input to register if the timer pops
+ * \param[in] log_error    If \c true, log an error if the timer pops
+ *
+ * \return Newly allocated FSA timer (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c controld_stop_timer() and \c free().
+ *
+ * \todo Functionize stopping and freeing an \c fsa_timer_t.
+ */
+static fsa_timer_t *
+new_fsa_timer(const char *desc, unsigned int interval_ms,
+              enum crmd_fsa_input fsa_input, bool log_error)
+{
+    fsa_timer_t *timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
+
+    timer->desc = desc;
+    timer->period_ms = interval_ms;
+    timer->fsa_input = fsa_input;
+    timer->log_error = log_error;
+
+    return timer;
+}
+
 void
 controld_init_fsa_timers(void)
 {
-    transition_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    integration_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    finalization_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    election_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    shutdown_escalation_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    wait_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    recheck_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-
-    election_timer->desc = "Election Trigger";
-    election_timer->fsa_input = I_DC_TIMEOUT;
-
-    transition_timer->desc = "New Transition Timer";
-    transition_timer->fsa_input = I_PE_CALC;
-
-    integration_timer->desc = "Integration Timer";
-    integration_timer->fsa_input = I_INTEGRATED;
-    integration_timer->log_error = true;
+    election_timer = new_fsa_timer("Election Trigger", 0, I_DC_TIMEOUT, false);
 
     /* We can't use I_FINALIZED here, because that creates a bug in the join
      * process where a joining node can be stuck in S_PENDING while we think it
@@ -251,19 +265,21 @@ controld_init_fsa_timers(void)
      * not, we can avoid this causing an election/join loop, in the integration
      * phase.
      */
-    finalization_timer->desc = "Finalization Timer";
-    finalization_timer->fsa_input = I_ELECTION;
+    finalization_timer = new_fsa_timer("Finalization Timer", 0, I_ELECTION,
+                                       false);
 
-    shutdown_escalation_timer->desc = "Shutdown Escalation";
-    shutdown_escalation_timer->fsa_input = I_STOP;
-    shutdown_escalation_timer->log_error = true;
+    integration_timer = new_fsa_timer("Integration Timer", 0, I_INTEGRATED,
+                                      true);
 
-    wait_timer->desc = "Wait Timer";
-    wait_timer->period_ms = 2000;
-    wait_timer->fsa_input = I_NULL;
+    recheck_timer = new_fsa_timer("Cluster Recheck Timer", 0, I_PE_CALC, false);
 
-    recheck_timer->desc = "Cluster Recheck Timer";
-    recheck_timer->fsa_input = I_PE_CALC;
+    shutdown_escalation_timer = new_fsa_timer("Shutdown Escalation", 0, I_STOP,
+                                              true);
+
+    transition_timer = new_fsa_timer("New Transition Timer", 0, I_PE_CALC,
+                                     false);
+
+    wait_timer = new_fsa_timer("Wait Timer", 2000, I_NULL, false);
 }
 
 /*!
