@@ -20,12 +20,11 @@
 
 //! FSA mainloop timer type
 typedef struct {
-    unsigned int source_id;             //!< Timer source ID
-    unsigned int period_ms;             //!< Timer period
-    enum crmd_fsa_input fsa_input;      //!< Input to register if timer pops
-    gboolean (*callback)(void *data);   //!< What do if timer pops
-    bool log_error;                     //!< Timer popping indicates error
-    int counter;                        //!< For detecting loops
+    unsigned int source_id;         //!< Timer source ID
+    unsigned int period_ms;         //!< Timer period
+    enum crmd_fsa_input fsa_input;  //!< Input to register if timer pops
+    bool log_error;                 //!< Timer popping indicates error
+    int counter;                    //!< For detecting loops
 } fsa_timer_t;
 
 //! Wait before retrying a failed cib or executor connection
@@ -109,6 +108,65 @@ controld_stop_timer(fsa_timer_t *timer)
     return false;
 }
 
+static gboolean
+crm_timer_popped(void *data)
+{
+    fsa_timer_t *timer = (fsa_timer_t *) data;
+
+    if (timer->log_error) {
+        pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
+                  get_timer_desc(timer),
+                  fsa_state2string(controld_globals.fsa_state),
+                  fsa_input2string(timer->fsa_input), timer->period_ms);
+    } else {
+        pcmk__info("%s just popped " QB_XS " input=%s time=%ums",
+                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
+                   timer->period_ms);
+        timer->counter++;
+    }
+
+    if ((timer == election_timer) && (election_timer->counter > 5)) {
+        pcmk__notice("We appear to be in an election loop, something may be "
+                     "wrong");
+        crm_write_blackbox(0, NULL);
+        election_timer->counter = 0;
+    }
+
+    controld_stop_timer(timer);  // Make timer _not_ go off again
+
+    if (timer->fsa_input == I_INTEGRATED) {
+        pcmk__info("Welcomed: %d, Integrated: %d",
+                   crmd_join_phase_count(controld_join_welcomed),
+                   crmd_join_phase_count(controld_join_integrated));
+        if (crmd_join_phase_count(controld_join_welcomed) == 0) {
+            // If we don't even have ourselves, start again
+            register_fsa_error(I_ELECTION, NULL);
+
+        } else {
+            controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);
+        }
+
+    } else if ((timer == recheck_timer)
+               && (controld_globals.fsa_state != S_IDLE)) {
+        pcmk__debug("Discarding %s event in state: %s",
+                    fsa_input2string(timer->fsa_input),
+                    fsa_state2string(controld_globals.fsa_state));
+
+    } else if ((timer == finalization_timer)
+               && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
+        pcmk__debug("Discarding %s event in state: %s",
+                    fsa_input2string(timer->fsa_input),
+                    fsa_state2string(controld_globals.fsa_state));
+
+    } else if (timer->fsa_input != I_NULL) {
+        controld_fsa_append(C_TIMER_POPPED, timer->fsa_input, NULL);
+    }
+
+    controld_trigger_fsa();
+
+    return G_SOURCE_CONTINUE;
+}
+
 /*!
  * \internal
  * \brief Start an FSA timer
@@ -119,7 +177,8 @@ static void
 controld_start_timer(fsa_timer_t *timer)
 {
     if (timer->source_id == 0 && timer->period_ms > 0) {
-        timer->source_id = pcmk__create_timer(timer->period_ms, timer->callback, timer);
+        timer->source_id = pcmk__create_timer(timer->period_ms,
+                                              crm_timer_popped, timer);
         pcmk__assert(timer->source_id != 0);
         pcmk__debug("Started %s (inject %s if pops after %ums, source=%d)",
                     get_timer_desc(timer), fsa_input2string(timer->fsa_input),
@@ -192,65 +251,6 @@ do_timer_control(long long action, enum crmd_fsa_cause cause,
     }
 }
 
-static gboolean
-crm_timer_popped(void *data)
-{
-    fsa_timer_t *timer = (fsa_timer_t *) data;
-
-    if (timer->log_error) {
-        pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
-                  get_timer_desc(timer),
-                  fsa_state2string(controld_globals.fsa_state),
-                  fsa_input2string(timer->fsa_input), timer->period_ms);
-    } else {
-        pcmk__info("%s just popped " QB_XS " input=%s time=%ums",
-                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                   timer->period_ms);
-        timer->counter++;
-    }
-
-    if ((timer == election_timer) && (election_timer->counter > 5)) {
-        pcmk__notice("We appear to be in an election loop, something may be "
-                     "wrong");
-        crm_write_blackbox(0, NULL);
-        election_timer->counter = 0;
-    }
-
-    controld_stop_timer(timer);  // Make timer _not_ go off again
-
-    if (timer->fsa_input == I_INTEGRATED) {
-        pcmk__info("Welcomed: %d, Integrated: %d",
-                   crmd_join_phase_count(controld_join_welcomed),
-                   crmd_join_phase_count(controld_join_integrated));
-        if (crmd_join_phase_count(controld_join_welcomed) == 0) {
-            // If we don't even have ourselves, start again
-            register_fsa_error(I_ELECTION, NULL);
-
-        } else {
-            controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);
-        }
-
-    } else if ((timer == recheck_timer)
-               && (controld_globals.fsa_state != S_IDLE)) {
-        pcmk__debug("Discarding %s event in state: %s",
-                    fsa_input2string(timer->fsa_input),
-                    fsa_state2string(controld_globals.fsa_state));
-
-    } else if ((timer == finalization_timer)
-               && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
-        pcmk__debug("Discarding %s event in state: %s",
-                    fsa_input2string(timer->fsa_input),
-                    fsa_state2string(controld_globals.fsa_state));
-
-    } else if (timer->fsa_input != I_NULL) {
-        controld_fsa_append(C_TIMER_POPPED, timer->fsa_input, NULL);
-    }
-
-    controld_trigger_fsa();
-
-    return G_SOURCE_CONTINUE;
-}
-
 bool
 controld_init_fsa_timers(void)
 {
@@ -265,25 +265,21 @@ controld_init_fsa_timers(void)
     election_timer->source_id = 0;
     election_timer->period_ms = 0;
     election_timer->fsa_input = I_DC_TIMEOUT;
-    election_timer->callback = crm_timer_popped;
     election_timer->log_error = FALSE;
 
     transition_timer->source_id = 0;
     transition_timer->period_ms = 0;
     transition_timer->fsa_input = I_PE_CALC;
-    transition_timer->callback = crm_timer_popped;
     transition_timer->log_error = FALSE;
 
     integration_timer->source_id = 0;
     integration_timer->period_ms = 0;
     integration_timer->fsa_input = I_INTEGRATED;
-    integration_timer->callback = crm_timer_popped;
     integration_timer->log_error = TRUE;
 
     finalization_timer->source_id = 0;
     finalization_timer->period_ms = 0;
     finalization_timer->fsa_input = I_FINALIZED;
-    finalization_timer->callback = crm_timer_popped;
     finalization_timer->log_error = FALSE;
 
     /* We can't use I_FINALIZED here, because that creates a bug in the join
@@ -300,19 +296,16 @@ controld_init_fsa_timers(void)
     shutdown_escalation_timer->source_id = 0;
     shutdown_escalation_timer->period_ms = 0;
     shutdown_escalation_timer->fsa_input = I_STOP;
-    shutdown_escalation_timer->callback = crm_timer_popped;
     shutdown_escalation_timer->log_error = TRUE;
 
     wait_timer->source_id = 0;
     wait_timer->period_ms = 2000;
     wait_timer->fsa_input = I_NULL;
-    wait_timer->callback = crm_timer_popped;
     wait_timer->log_error = FALSE;
 
     recheck_timer->source_id = 0;
     recheck_timer->period_ms = 0;
     recheck_timer->fsa_input = I_PE_CALC;
-    recheck_timer->callback = crm_timer_popped;
     recheck_timer->log_error = FALSE;
 
     return TRUE;
