@@ -85,6 +85,53 @@ pcmk__daemon_ipc_cleanup(pcmk__daemon_t *d)
 
 /*!
  * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in,out] d The daemon object
+ * \param[in]     c Connection to destroy
+ *
+ * \return 0 (do not re-run this callback)
+ */
+int32_t
+pcmk__daemon_ipc_closed(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
+{
+    pcmk__client_t *client = pcmk__find_client(c);
+
+    if (client == NULL) {
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
+        return 0;
+    }
+
+    pcmk__trace("Cleaning up closed client connection %p", c);
+
+    if (d->ipc_fns->closed != NULL) {
+        d->ipc_fns->closed(d, client);
+    } else {
+        pcmk__free_client(client);
+    }
+
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in,out] d The daemon object
+ * \param[in,out] c Connection to destroy
+ *
+ * \note We handle a destroyed connection the same as a closed one,
+ *       but we need a separate handler because the return type is different.
+ */
+void
+pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
+{
+    pcmk__trace("Destroying client connection %p", c);
+    pcmk__daemon_ipc_closed(d, c);
+}
+
+/*!
+ * \internal
  * \brief Initialize the IPC side of the server
  *
  * This is a generic function that should be good enough for most purposes.
