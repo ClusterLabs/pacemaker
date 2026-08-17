@@ -139,6 +139,9 @@ struct pcmk__daemon_s {
     enum qb_loop_priority priority;
     qb_ipcs_service_t *ipcs;
 
+    //! The message's operation is found in this XML attribute
+    const char *op;
+
     pcmk__daemon_fns_t *fns;
 
     pcmk__daemon_ipc_fns_t *ipc_fns;

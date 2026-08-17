@@ -186,7 +186,7 @@ attrd_populate_attribute(xmlNode *xml, const char *attr)
     attribute_t *a = NULL;
     bool update_both = false;
 
-    const char *op = pcmk__xe_get(xml, PCMK_XA_TASK);
+    const char *op = pcmk__xe_get(xml, attrd.op);
 
     // NULL because PCMK__ATTRD_CMD_SYNC_RESPONSE has no PCMK_XA_TASK
     update_both = pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_BOTH,

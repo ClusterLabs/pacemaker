@@ -66,7 +66,7 @@ attrd_confirmation(int callid)
 
     pcmk__xe_set(node, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(node, PCMK__XA_SRC, pcmk__cluster_local_node_name());
-    pcmk__xe_set(node, PCMK_XA_TASK, PCMK__ATTRD_CMD_CONFIRM);
+    pcmk__xe_set(node, attrd.op, PCMK__ATTRD_CMD_CONFIRM);
     pcmk__xe_set_int(node, PCMK__XA_CALL_ID, callid);
 
     return node;
@@ -100,7 +100,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, attrd.op);
         CRM_CHECK(request.op != NULL, return);
 
         attrd_handle_request(&request);
@@ -201,7 +201,7 @@ attrd_broadcast_value(const attribute_t *a, const attribute_value_t *v)
 {
     xmlNode *op = pcmk__xe_create(NULL, PCMK_XE_OP);
 
-    pcmk__xe_set(op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(op, attrd.op, PCMK__ATTRD_CMD_UPDATE);
     attrd_add_value_xml(op, a, v, false);
     attrd_send_message(NULL, op, false);
     pcmk__xml_free(op);
@@ -471,8 +471,7 @@ broadcast_unseen_local_values(void)
                             readable_value(v));
                 if (sync == NULL) {
                     sync = pcmk__xe_create(NULL, __func__);
-                    pcmk__xe_set(sync, PCMK_XA_TASK,
-                                 PCMK__ATTRD_CMD_SYNC_RESPONSE);
+                    pcmk__xe_set(sync, attrd.op, PCMK__ATTRD_CMD_SYNC_RESPONSE);
                 }
                 attrd_add_value_xml(sync, a, v, a->timeout_ms && a->timer);
             }
@@ -560,7 +559,7 @@ attrd_peer_clear_failure(pcmk__request_t *request)
         return;
     }
 
-    pcmk__xe_set(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(xml, attrd.op, PCMK__ATTRD_CMD_UPDATE);
 
     /* Make sure value is not set, so we delete */
     pcmk__xe_remove_attr(xml, PCMK__XA_ATTR_VALUE);
@@ -715,7 +714,7 @@ attrd_peer_sync(pcmk__node_status_t *peer)
     attribute_value_t *v = NULL;
     xmlNode *sync = pcmk__xe_create(NULL, __func__);
 
-    pcmk__xe_set(sync, PCMK_XA_TASK, PCMK__ATTRD_CMD_SYNC_RESPONSE);
+    pcmk__xe_set(sync, attrd.op, PCMK__ATTRD_CMD_SYNC_RESPONSE);
 
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, NULL, (void **) &a)) {
