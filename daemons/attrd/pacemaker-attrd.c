@@ -33,6 +33,7 @@
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
     .cleanup = pcmk__daemon_ipc_cleanup,
+    .closed = attrd_ipc_closed,
     .init = pcmk__daemon_ipc_init,
 };
 
