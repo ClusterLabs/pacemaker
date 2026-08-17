@@ -322,7 +322,7 @@ attrd_send_protocol(const pcmk__node_status_t *peer)
 
     pcmk__xe_set(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(attrd_op, PCMK__XA_SRC, crm_system_name);
-    pcmk__xe_set(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(attrd_op, attrd.op, PCMK__ATTRD_CMD_UPDATE);
     pcmk__xe_set(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     pcmk__xe_set(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     pcmk__xe_set_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
@@ -352,7 +352,7 @@ attrd_send_protocol(const pcmk__node_status_t *peer)
 gboolean
 attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
-    const char *op = pcmk__xe_get(data, PCMK_XA_TASK);
+    const char *op = pcmk__xe_get(data, attrd.op);
 
     pcmk__xe_set(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);
