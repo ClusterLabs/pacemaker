@@ -510,19 +510,25 @@ static int32_t
 attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
 {
     int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *xml = NULL;
+    pcmk__request_t request = {
+        .ipc_client = pcmk__find_client(c),
+        .ipc_id = 0,
+        .ipc_flags = 0,
+        .peer = NULL,
+        .xml = NULL,
+        .call_options = 0,
+        .flags = 0,
+        .result = PCMK__UNKNOWN_RESULT,
+    };
 
     // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(client != NULL, return 0);
+    CRM_CHECK(request.ipc_client != NULL, return 0);
     if (data == NULL) {
         pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
-    rc = pcmk__ipc_msg_append(&client->buffer, data);
+    rc = pcmk__ipc_msg_append(&request.ipc_client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
@@ -532,9 +538,10 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        xml = pcmk__client_data2xml(client, &id, &flags);
-        g_byte_array_free(client->buffer, TRUE);
-        client->buffer = NULL;
+        request.xml = pcmk__client_data2xml(request.ipc_client, &request.ipc_id,
+                                            &request.ipc_flags);
+        g_byte_array_free(request.ipc_client->buffer, TRUE);
+        request.ipc_client->buffer = NULL;
 
     } else {
         /* Some sort of error occurred reassembling the message.  All we can
@@ -542,32 +549,24 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
          */
         pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
-        if (client->buffer != NULL) {
-            g_byte_array_free(client->buffer, TRUE);
-            client->buffer = NULL;
+        if (request.ipc_client->buffer != NULL) {
+            g_byte_array_free(request.ipc_client->buffer, TRUE);
+            request.ipc_client->buffer = NULL;
         }
 
         return 0;
     }
 
-    if (xml == NULL) {
+    if (request.xml == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(request.ipc_client, request.ipc_id, request.ipc_flags,
+                           NULL, CRM_EX_PROTOCOL);
         return 0;
 
     } else {
-        pcmk__request_t request = {
-            .ipc_client     = client,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = xml,
-            .call_options   = 0,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
-        pcmk__assert(client->user != NULL);
-        pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
+        pcmk__assert(request.ipc_client->user != NULL);
+        pcmk__update_acl_user(request.xml, PCMK__XA_ATTR_USER,
+                              request.ipc_client->user);
 
         request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
         CRM_CHECK(request.op != NULL, goto done);
@@ -576,7 +575,7 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     }
 
 done:
-    pcmk__xml_free(xml);
+    pcmk__xml_free(request.xml);
     return 0;
 }
 
