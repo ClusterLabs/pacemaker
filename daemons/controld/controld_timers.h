@@ -14,7 +14,7 @@
 #  include <glib.h>                 // GHashTable
 #  include <controld_fsa.h>         // crmd_fsa_input
 
-bool controld_init_fsa_timers(void);
+void controld_init_fsa_timers(void);
 void controld_free_fsa_timers(void);
 void controld_configure_fsa_timers(GHashTable *options);
 

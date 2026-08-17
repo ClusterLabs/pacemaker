@@ -251,7 +251,7 @@ do_timer_control(long long action, enum crmd_fsa_cause cause,
     }
 }
 
-bool
+void
 controld_init_fsa_timers(void)
 {
     transition_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
@@ -289,8 +289,6 @@ controld_init_fsa_timers(void)
     wait_timer->fsa_input = I_NULL;
 
     recheck_timer->fsa_input = I_PE_CALC;
-
-    return TRUE;
 }
 
 /*!
