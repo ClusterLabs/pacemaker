@@ -59,6 +59,8 @@
 
 void attrd_free_waitlist(void);
 
+void attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
+
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
 void attrd_cib_init(void);
