@@ -262,25 +262,14 @@ controld_init_fsa_timers(void)
     wait_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
     recheck_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
 
-    election_timer->source_id = 0;
-    election_timer->period_ms = 0;
     election_timer->fsa_input = I_DC_TIMEOUT;
-    election_timer->log_error = FALSE;
 
-    transition_timer->source_id = 0;
-    transition_timer->period_ms = 0;
     transition_timer->fsa_input = I_PE_CALC;
-    transition_timer->log_error = FALSE;
 
-    integration_timer->source_id = 0;
-    integration_timer->period_ms = 0;
     integration_timer->fsa_input = I_INTEGRATED;
-    integration_timer->log_error = TRUE;
+    integration_timer->log_error = true;
 
-    finalization_timer->source_id = 0;
-    finalization_timer->period_ms = 0;
     finalization_timer->fsa_input = I_FINALIZED;
-    finalization_timer->log_error = FALSE;
 
     /* We can't use I_FINALIZED here, because that creates a bug in the join
      * process where a joining node can be stuck in S_PENDING while we think it
@@ -293,20 +282,13 @@ controld_init_fsa_timers(void)
      */
     finalization_timer->fsa_input = I_ELECTION;
 
-    shutdown_escalation_timer->source_id = 0;
-    shutdown_escalation_timer->period_ms = 0;
     shutdown_escalation_timer->fsa_input = I_STOP;
-    shutdown_escalation_timer->log_error = TRUE;
+    shutdown_escalation_timer->log_error = true;
 
-    wait_timer->source_id = 0;
     wait_timer->period_ms = 2000;
     wait_timer->fsa_input = I_NULL;
-    wait_timer->log_error = FALSE;
 
-    recheck_timer->source_id = 0;
-    recheck_timer->period_ms = 0;
     recheck_timer->fsa_input = I_PE_CALC;
-    recheck_timer->log_error = FALSE;
 
     return TRUE;
 }
