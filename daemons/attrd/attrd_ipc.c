@@ -533,17 +533,9 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
         return 0;
+    }
 
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        request.xml = pcmk__client_data2xml(request.ipc_client, &request.ipc_id,
-                                            &request.ipc_flags);
-        g_byte_array_free(request.ipc_client->buffer, TRUE);
-        request.ipc_client->buffer = NULL;
-
-    } else {
+    if (rc != pcmk_rc_ok) {
         /* Some sort of error occurred reassembling the message.  All we can
          * do is clean up, log an error and return.
          */
@@ -557,22 +549,29 @@ attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
         return 0;
     }
 
+    /* We've read the complete message and there's already a header on the
+     * front.  Pass it off for processing.
+     */
+    request.xml = pcmk__client_data2xml(request.ipc_client, &request.ipc_id,
+                                        &request.ipc_flags);
+    g_byte_array_free(request.ipc_client->buffer, TRUE);
+    request.ipc_client->buffer = NULL;
+
     if (request.xml == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
         pcmk__ipc_send_ack(request.ipc_client, request.ipc_id, request.ipc_flags,
                            NULL, CRM_EX_PROTOCOL);
         return 0;
-
-    } else {
-        pcmk__assert(request.ipc_client->user != NULL);
-        pcmk__update_acl_user(request.xml, PCMK__XA_ATTR_USER,
-                              request.ipc_client->user);
-
-        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
-        CRM_CHECK(request.op != NULL, goto done);
-
-        attrd_handle_request(&request);
     }
+
+    pcmk__assert(request.ipc_client->user != NULL);
+    pcmk__update_acl_user(request.xml, PCMK__XA_ATTR_USER,
+                          request.ipc_client->user);
+
+    request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
+    CRM_CHECK(request.op != NULL, goto done);
+
+    attrd_handle_request(&request);
 
 done:
     pcmk__xml_free(request.xml);
