@@ -132,6 +132,80 @@ pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
 
 /*!
  * \internal
+ * \brief Handle an incoming IPC message from a connection
+ *
+ * \param[in,out] d    The daemon object
+ * \param[in,out] c    IPC connection
+ * \param[in]     data Message read from the connection
+ * \param[in]     size Size of the read message
+ */
+void
+pcmk__daemon_ipc_dispatch(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                          void *data, size_t size)
+{
+    int rc = pcmk_rc_ok;
+    pcmk__request_t request = {
+        .ipc_client = pcmk__find_client(c),
+        .ipc_id = 0,
+        .ipc_flags = 0,
+        .peer = NULL,
+        .xml = NULL,
+        .call_options = 0,
+        .flags = 0,
+        .result = PCMK__UNKNOWN_RESULT,
+    };
+
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK(request.ipc_client != NULL, return);
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return;
+    }
+
+    rc = pcmk__ipc_msg_append(&request.ipc_client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (request.ipc_client->buffer != NULL) {
+            g_byte_array_free(request.ipc_client->buffer, TRUE);
+            request.ipc_client->buffer = NULL;
+        }
+
+        return;
+    }
+
+    /* We've read the complete message and there's already a header on the
+     * front.  Pass it off for processing.
+     */
+    request.xml = pcmk__client_data2xml(request.ipc_client, &request.ipc_id,
+                                        &request.ipc_flags);
+    g_byte_array_free(request.ipc_client->buffer, TRUE);
+    request.ipc_client->buffer = NULL;
+
+    if (request.xml == NULL) {
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__ipc_send_ack(request.ipc_client, request.ipc_id, request.ipc_flags,
+                           NULL, CRM_EX_PROTOCOL);
+        return;
+    }
+
+    d->ipc_fns->dispatch(d, &request);
+
+    pcmk__xml_free(request.xml);
+    return;
+}
+
+/*!
+ * \internal
  * \brief Initialize the IPC side of the server
  *
  * This is a generic function that should be good enough for most purposes.

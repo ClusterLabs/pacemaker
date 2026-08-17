@@ -60,6 +60,7 @@
 void attrd_free_waitlist(void);
 
 void attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
+void attrd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request);
 
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
