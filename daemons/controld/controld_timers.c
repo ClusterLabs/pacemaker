@@ -269,8 +269,6 @@ controld_init_fsa_timers(void)
     integration_timer->fsa_input = I_INTEGRATED;
     integration_timer->log_error = true;
 
-    finalization_timer->fsa_input = I_FINALIZED;
-
     /* We can't use I_FINALIZED here, because that creates a bug in the join
      * process where a joining node can be stuck in S_PENDING while we think it
      * is in S_NOT_DC. This created an infinite transition loop in which we
