@@ -342,6 +342,121 @@ add_sort_index_to_node_score(gpointer data, gpointer user_data)
 
 /*!
  * \internal
+ * \brief Apply self-colocation to group promotion by node attribute
+ *
+ * When a promotable clone colocates its own promoted role with itself
+ * (i.e. \c rsc and \c with-rsc reference the same promotable clone, both with
+ * the Promoted role), group promoted instances by the colocation's node
+ * attribute value, so that all promoted instances will be on nodes sharing the
+ * same value for that attribute.
+ *
+ * This allows multi-site clusters to ensure all promoted instances are on a
+ * single site without requiring a separate leading primitive resource.
+ *
+ * \param[in,out] clone       Promotable clone
+ * \param[in]     colocation  Self-colocation constraint
+ */
+static void
+apply_site_colocation(pcmk_resource_t *clone,
+                      const pcmk__colocation_t *colocation)
+{
+    const char *attr = colocation->node_attribute;
+    GHashTableIter iter;
+    pcmk_node_t *node = NULL;
+    GHashTable *site_scores = NULL;
+    const char *best_site = NULL;
+    int best_score = -PCMK_SCORE_INFINITY;
+    gpointer key = NULL;
+    gpointer val = NULL;
+
+    pcmk__rsc_trace(clone,
+                    "Applying self-colocation %s to group %s promotion "
+                    "by node attribute %s",
+                    colocation->id, clone->id, attr);
+
+    // Compute aggregate promotion score per unique attribute value
+    site_scores = pcmk__strikey_table(NULL, NULL);
+
+    g_hash_table_iter_init(&iter, clone->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        const char *value = pcmk__colocation_node_attr(node, attr, clone);
+        gpointer lookup = NULL;
+        int current = 0;
+        int new_score = 0;
+
+        if (value == NULL) {
+            continue;
+        }
+        if (node->weight <= -PCMK_SCORE_INFINITY) {
+            continue; // Don't let banned nodes drag down their site
+        }
+
+        lookup = g_hash_table_lookup(site_scores, value);
+        current = GPOINTER_TO_INT(lookup);
+        new_score = pcmk__add_scores(current, node->weight);
+        g_hash_table_insert(site_scores, (gpointer) value,
+                            GINT_TO_POINTER(new_score));
+    }
+
+    // Find the site with the highest aggregate score
+    g_hash_table_iter_init(&iter, site_scores);
+    while (g_hash_table_iter_next(&iter, &key, &val)) {
+        int score = GPOINTER_TO_INT(val);
+
+        pcmk__rsc_trace(clone, "Site %s=%s aggregate promotion score: %s",
+                        attr, (const char *) key,
+                        pcmk_readable_score(score));
+        if (score > best_score) {
+            best_score = score;
+            best_site = (const char *) key;
+        }
+    }
+
+    g_hash_table_destroy(site_scores);
+
+    if (best_site == NULL) {
+        pcmk__rsc_trace(clone,
+                        "No eligible site found for self-colocation %s",
+                        colocation->id);
+        return;
+    }
+
+    pcmk__rsc_debug(clone,
+                    "Self-colocation %s favors promoting %s "
+                    "on site %s=%s (score %s)",
+                    colocation->id, clone->id, attr, best_site,
+                    pcmk_readable_score(best_score));
+
+    // Apply preference for the winning site
+    g_hash_table_iter_init(&iter, clone->allowed_nodes);
+    while (g_hash_table_iter_next(&iter, NULL, (void **)&node)) {
+        const char *value = pcmk__colocation_node_attr(node, attr, clone);
+        bool matches = pcmk__str_eq(value, best_site, pcmk__str_casei);
+
+        if (!matches && (colocation->score >= PCMK_SCORE_INFINITY)) {
+            node->weight = -PCMK_SCORE_INFINITY;
+            pcmk__rsc_trace(clone,
+                            "Banned %s from promotion of %s "
+                            "(not on preferred site %s=%s)",
+                            pcmk__node_name(node), clone->id,
+                            attr, best_site);
+
+        } else if (matches && (colocation->score > 0)
+                   && (colocation->score < PCMK_SCORE_INFINITY)) {
+            node->weight = pcmk__add_scores(colocation->score,
+                                            node->weight);
+            pcmk__rsc_trace(clone,
+                            "Added %s to %s score on %s for site colocation "
+                            "(now %s)",
+                            pcmk_readable_score(colocation->score),
+                            clone->id, pcmk__node_name(node),
+                            pcmk_readable_score(node->weight));
+        }
+    }
+}
+
+/*!
+ * \internal
  * \brief Apply colocation to primary's node scores if for promoted role
  *
  * \param[in,out] data       Colocation constraint to apply
@@ -359,6 +474,14 @@ apply_coloc_to_primary(gpointer data, gpointer user_data)
 
     if ((colocation->primary_role != pcmk_role_promoted)
          || !pcmk__colocation_has_influence(colocation, NULL)) {
+        return;
+    }
+
+    // Self-colocation: group promotion by node attribute value
+    if (dependent == clone) {
+        if (colocation->score > 0) {
+            apply_site_colocation(clone, colocation);
+        }
         return;
     }
 
