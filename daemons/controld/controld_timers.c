@@ -233,9 +233,7 @@ do_timer_control(long long action, enum crmd_fsa_cause cause,
  * \return Newly allocated FSA timer (guaranteed not to be \c NULL)
  *
  * \note The caller is responsible for freeing the return value using
- *       \c controld_stop_timer() and \c free().
- *
- * \todo Functionize stopping and freeing an \c fsa_timer_t.
+ *       \c free_fsa_timer().
  */
 static fsa_timer_t *
 new_fsa_timer(const char *desc, unsigned int interval_ms,
@@ -249,6 +247,23 @@ new_fsa_timer(const char *desc, unsigned int interval_ms,
     timer->log_error = log_error;
 
     return timer;
+}
+
+/*!
+ * \internal
+ * \return Free an FSA timer
+ *
+ * \param[in,out] timer  FSA timer
+ */
+static void
+free_fsa_timer(fsa_timer_t *timer)
+{
+    if (timer == NULL) {
+        return;
+    }
+
+    controld_stop_timer(timer);
+    free(timer);
 }
 
 void
@@ -326,21 +341,13 @@ controld_configure_fsa_timers(GHashTable *options)
 void
 controld_free_fsa_timers(void)
 {
-    controld_stop_timer(transition_timer);
-    controld_stop_timer(integration_timer);
-    controld_stop_timer(finalization_timer);
-    controld_stop_timer(election_timer);
-    controld_stop_timer(shutdown_escalation_timer);
-    controld_stop_timer(wait_timer);
-    controld_stop_timer(recheck_timer);
-
-    g_clear_pointer(&transition_timer, free);
-    g_clear_pointer(&integration_timer, free);
-    g_clear_pointer(&finalization_timer, free);
-    g_clear_pointer(&election_timer, free);
-    g_clear_pointer(&shutdown_escalation_timer, free);
-    g_clear_pointer(&wait_timer, free);
-    g_clear_pointer(&recheck_timer, free);
+    g_clear_pointer(&election_timer, free_fsa_timer);
+    g_clear_pointer(&finalization_timer, free_fsa_timer);
+    g_clear_pointer(&integration_timer, free_fsa_timer);
+    g_clear_pointer(&recheck_timer, free_fsa_timer);
+    g_clear_pointer(&shutdown_escalation_timer, free_fsa_timer);
+    g_clear_pointer(&transition_timer, free_fsa_timer);
+    g_clear_pointer(&wait_timer, free_fsa_timer);
 }
 
 /*!
