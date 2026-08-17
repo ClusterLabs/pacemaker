@@ -1360,7 +1360,6 @@ static gboolean
 mainloop_timer_cb(void *user_data)
 {
     int id = 0;
-    bool repeat = false;
     mainloop_timer_t *timer = user_data;
 
     pcmk__assert((timer != NULL) && (timer->cb != NULL));
@@ -1371,19 +1370,19 @@ mainloop_timer_cb(void *user_data)
                     */
 
     pcmk__trace("Invoking callbacks for timer %s", timer->name);
-    repeat = timer->repeat;
 
+    // G_SOURCE_REMOVE is false; G_SOURCE_CONTINUE is true
     if (!timer->cb(timer->userdata)) {
         pcmk__trace("Timer %s complete", timer->name);
-        repeat = false;
+        return G_SOURCE_REMOVE;
     }
 
-    if (repeat) {
-        /* Restore if repeating */
-        timer->id = id;
+    if (!timer->repeat) {
+        return G_SOURCE_REMOVE;
     }
 
-    return repeat;
+    timer->id = id;
+    return G_SOURCE_CONTINUE;
 }
 
 bool
