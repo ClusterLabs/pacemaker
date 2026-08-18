@@ -72,10 +72,10 @@ void mainloop_timer_start(mainloop_timer_t *timer);
 void mainloop_timer_stop(mainloop_timer_t *timer);
 
 unsigned int mainloop_timer_set_period(mainloop_timer_t *timer,
-                                       unsigned int period_ms);
+                                       unsigned int interval_ms);
 
 // NOTE: sbd (as of at least 1.5.2) uses this
-mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int period_ms,
+mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int interval_ms,
                                      bool repeat, GSourceFunc cb,
                                      void *userdata);
 

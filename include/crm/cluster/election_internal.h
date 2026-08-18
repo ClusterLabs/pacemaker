@@ -73,8 +73,8 @@ enum election_result {
 void election_reset(pcmk_cluster_t *cluster);
 void election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *));
 
-void election_timeout_set_period(pcmk_cluster_t *cluster,
-                                 unsigned int period_ms);
+void election_timeout_set_interval(pcmk_cluster_t *cluster,
+                                   unsigned int interval_ms);
 void election_timeout_stop(pcmk_cluster_t *cluster);
 
 void election_vote(pcmk_cluster_t *cluster);

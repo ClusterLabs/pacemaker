@@ -645,13 +645,13 @@ get_agent_metadata_cb(void *data)
     }
 
     if (rc == EAGAIN) {
-        if (device->timer->period_ms < (160 * 1000)) {
-            device->timer->period_ms *= 2;
+        if (device->timer->interval_ms < (160 * 1000)) {
+            device->timer->interval_ms *= 2;
         }
 
-        /* @FIXME Does the updated period even take effect? G_SOURCE_CONTINUE
+        /* @FIXME Does the updated interval even take effect? G_SOURCE_CONTINUE
          * tells main_loop_timer_cb() to keep the existing GSource. It seems as
-         * if that GSource would still use the old period.
+         * if that GSource would still use the old interval.
          */
         return G_SOURCE_CONTINUE;
     }

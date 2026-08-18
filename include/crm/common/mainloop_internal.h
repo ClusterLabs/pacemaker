@@ -62,7 +62,7 @@ struct mainloop_child_s {
 
 struct mainloop_timer_s {
     unsigned int id;
-    unsigned int period_ms;
+    unsigned int interval_ms;
     bool repeat;
     char *name;
     GSourceFunc cb;

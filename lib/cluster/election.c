@@ -183,11 +183,11 @@ election_timeout_stop(pcmk_cluster_t *cluster)
  * \internal
  * \brief Change an election's timeout (restarting timer if running)
  *
- * \param[in,out] cluster  Cluster with election
- * \param[in]     period   New timeout
+ * \param[in,out] cluster      Cluster with election
+ * \param[in]     interval_ms  New timer interval in milliseconds
  */
 void
-election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
+election_timeout_set_interval(pcmk_cluster_t *cluster, unsigned int interval_ms)
 {
     mainloop_timer_t *timer = NULL;
 
@@ -198,14 +198,14 @@ election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
 
     timer = cluster->priv->election->timeout;
 
-    if (timer->period_ms == period) {
+    if (timer->interval_ms == interval_ms) {
         return;
     }
 
-    timer->period_ms = period;
+    timer->interval_ms = interval_ms;
 
     if (pcmk__main_loop_timer_running(timer)) {
-        // Restart the timer using the new period if it changed
+        // Restart the timer using the new interval if it changed
         pcmk__main_loop_timer_start(timer);
     }
 }

@@ -1381,7 +1381,7 @@ pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
 
     timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
     timer->name = pcmk__assert_asprintf("%s-%u-%p", name, interval_ms, timer);
-    timer->period_ms = interval_ms;
+    timer->interval_ms = interval_ms;
     timer->cb = callback;
     timer->userdata = user_data;
 
@@ -1478,7 +1478,7 @@ main_loop_timer_cb(void *user_data)
  * Starting a timer consists of:
  * 1. stopping the timer if it's already running (by removing the associated
  *    \c GSource)
- * 2. creating a new \c GSource using \p timer->period_ms as the timeout (see
+ * 2. creating a new \c GSource using \p timer->interval_ms as the timeout (see
  *    \c pcmk__create_timer())
  * 3. assigning the new \c GSource ID to \p timer->id
  *
@@ -1487,13 +1487,16 @@ main_loop_timer_cb(void *user_data)
 void
 pcmk__main_loop_timer_start(mainloop_timer_t *timer)
 {
-    CRM_CHECK((timer != NULL) && (timer->period_ms > 0) && (timer->cb != NULL),
+    CRM_CHECK((timer != NULL)
+              && (timer->interval_ms > 0)
+              && (timer->cb != NULL),
               return);
 
     pcmk__main_loop_timer_stop(timer);
 
     pcmk__trace("Starting timer %s", timer->name);
-    timer->id = pcmk__create_timer(timer->period_ms, main_loop_timer_cb, timer);
+    timer->id = pcmk__create_timer(timer->interval_ms, main_loop_timer_cb,
+                                   timer);
 }
 
 /*!
@@ -1556,12 +1559,13 @@ mainloop_timer_start(mainloop_timer_t *timer)
 {
     mainloop_timer_stop(timer);
 
-    if ((timer == NULL) || (timer->period_ms == 0) || (timer->cb == NULL)) {
+    if ((timer == NULL) || (timer->interval_ms == 0) || (timer->cb == NULL)) {
         return;
     }
 
     pcmk__trace("Starting timer %s", timer->name);
-    timer->id = pcmk__create_timer(timer->period_ms, mainloop_timer_cb, timer);
+    timer->id = pcmk__create_timer(timer->interval_ms, mainloop_timer_cb,
+                                   timer);
 }
 
 void
@@ -1577,7 +1581,7 @@ mainloop_timer_stop(mainloop_timer_t *timer)
 }
 
 unsigned int
-mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int period_ms)
+mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int interval_ms)
 {
     unsigned int last = 0;
 
@@ -1585,10 +1589,10 @@ mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int period_ms)
         return 0;
     }
 
-    last = timer->period_ms;
-    timer->period_ms = period_ms;
+    last = timer->interval_ms;
+    timer->interval_ms = interval_ms;
 
-    if ((timer->id != 0) && (timer->period_ms != last)) {
+    if ((timer->id != 0) && (timer->interval_ms != last)) {
         mainloop_timer_start(timer);
     }
 
@@ -1596,21 +1600,21 @@ mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int period_ms)
 }
 
 mainloop_timer_t *
-mainloop_timer_add(const char *name, unsigned int period_ms, bool repeat,
+mainloop_timer_add(const char *name, unsigned int interval_ms, bool repeat,
                    GSourceFunc cb, void *userdata)
 {
     mainloop_timer_t *timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
 
     if (name != NULL) {
-        timer->name = pcmk__assert_asprintf("%s-%u-%d", name, period_ms,
+        timer->name = pcmk__assert_asprintf("%s-%u-%d", name, interval_ms,
                                             repeat);
 
     } else {
-        timer->name = pcmk__assert_asprintf("%p-%u-%d", timer, period_ms,
+        timer->name = pcmk__assert_asprintf("%p-%u-%d", timer, interval_ms,
                                             repeat);
     }
 
-    timer->period_ms = period_ms;
+    timer->interval_ms = interval_ms;
     timer->repeat = repeat;
     timer->cb = cb;
     timer->userdata = userdata;
