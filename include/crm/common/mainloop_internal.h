@@ -97,6 +97,7 @@ mainloop_timer_t *pcmk__main_loop_timer_new(const char *name,
                                             unsigned int interval_ms,
                                             GSourceFunc callback,
                                             void *user_data);
+bool pcmk__main_loop_timer_running(const mainloop_timer_t *timer);
 
 #ifdef __cplusplus
 }

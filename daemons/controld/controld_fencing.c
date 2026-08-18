@@ -443,7 +443,7 @@ destroy_fencer_connection(stonith_t *st, stonith_event_t *e)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         pcmk__err("Lost fencer connection (will attempt to reconnect)");
-        if (!mainloop_timer_running(controld_fencer_connect_timer)) {
+        if (!pcmk__main_loop_timer_running(controld_fencer_connect_timer)) {
             mainloop_timer_start(controld_fencer_connect_timer);
         }
     } else {
@@ -686,7 +686,7 @@ controld_timer_fencer_connect(void *user_data)
                              QB_XS " rc=%d",
                              pcmk_strerror(rc), rc);
 
-                if (!mainloop_timer_running(controld_fencer_connect_timer)) {
+                if (!pcmk__main_loop_timer_running(controld_fencer_connect_timer)) {
                     mainloop_timer_start(controld_fencer_connect_timer);
                 }
 

@@ -1390,6 +1390,25 @@ pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
     return timer;
 }
 
+/*!
+ * \internal
+ * \brief Check whether a main loop timer is running
+ *
+ * A timer is running if its \c id field is nonzero, meaning that it has an
+ * active \c GSource with that ID associated with it.
+ *
+ * \param[in] timer  Main loop timer
+ *
+ * \return \c true if the timer is running, or \c false otherwise
+ */
+bool
+pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
+{
+    CRM_CHECK(timer != NULL, return false);
+
+    return (timer->id != 0);
+}
+
 static gboolean
 mainloop_timer_cb(void *user_data)
 {
@@ -1398,10 +1417,11 @@ mainloop_timer_cb(void *user_data)
 
     pcmk__assert((timer != NULL) && (timer->cb != NULL));
 
+    /* Ensure id is unset during callbacks so that
+     * pcmk__main_loop_timer_running() works as expected
+     */
     id = timer->id;
-    timer->id = 0; /* Ensure it's unset during callbacks so that
-                    * mainloop_timer_running() works as expected
-                    */
+    timer->id = 0;
 
     pcmk__trace("Invoking callbacks for timer %s", timer->name);
 

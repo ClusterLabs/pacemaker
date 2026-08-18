@@ -321,7 +321,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
          */
         } else if (a->timer) {
             // Attribute has a dampening value, so use that as delay
-            if (!mainloop_timer_running(a->timer)) {
+            if (!pcmk__main_loop_timer_running(a->timer)) {
                 pcmk__trace("Delayed re-attempted write for %s by %s",
                             name, pcmk__readable_interval(a->timeout_ms));
                 mainloop_timer_start(a->timer);
@@ -538,7 +538,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
                        a->id, a->update);
             goto done;
 
-        } else if (mainloop_timer_running(a->timer)) {
+        } else if (pcmk__main_loop_timer_running(a->timer)) {
             if (ignore_delay) {
                 mainloop_timer_stop(a->timer);
                 pcmk__debug("Overriding '%s' write delay", a->id);
