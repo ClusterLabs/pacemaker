@@ -16,6 +16,7 @@
 
 #include <glib.h>                       // g_*, etc.
 #include <qb/qblog.h>                   // LOG_TRACE
+#include <qb/qbloop.h>                  // QB_LOOP_MED
 
 #include <crm_config.h>                 // PCMK_SCHEDULER_INPUT_DIR
 #include <crm/common/logging.h>         // crm_log_init, crm_log_preinit
@@ -31,11 +32,13 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
+    .init = pcmk__daemon_ipc_init,
 };
 
-static pcmk__daemon_t schedulerd = {
+pcmk__daemon_t schedulerd = {
     .type = pcmk_ipc_schedulerd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
     .ipc_fns = &ipc_fns,
 };
 
@@ -189,7 +192,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!schedulerd_ipc_init()) {
+    if (!schedulerd.ipc_fns->init(&schedulerd, &ipc_callbacks)) {
         schedulerd.ec = CRM_EX_FATAL;
         goto done;
     }
