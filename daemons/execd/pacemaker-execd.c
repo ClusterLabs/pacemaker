@@ -57,6 +57,7 @@ pcmk__daemon_t execd = {
     .type = pcmk_ipc_execd,
     .ec = CRM_EX_OK,
     .priority = QB_LOOP_MED,
+    .op = PCMK__XA_LRMD_OP,
     .fns = &fns,
     .ipc_fns = &ipc_fns,
 };
