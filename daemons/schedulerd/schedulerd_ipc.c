@@ -9,29 +9,12 @@
 
 #include <crm_internal.h>
 
-#include <stddef.h>                     // NULL, size_t
-#include <stdint.h>                     // int32_t, uint32_t
-#include <sys/types.h>                  // gid_t, uid_t
-
-#include <qb/qbipcs.h>                  // qb_ipcs_connection_t
+#include <stddef.h>                     // NULL
 
 #include <crm/crm.h>                    // CRM_SYSTEM_PENGINE
 #include <crm/common/results.h>         // CRM_EX_*
 
 #include "pacemaker-schedulerd.h"       // schedulerd_handle_request
-
-static int32_t
-ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
-{
-    return pcmk__daemon_ipc_accept(&schedulerd, c, uid, gid);
-}
-
-static int32_t
-ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    pcmk__daemon_ipc_dispatch(&schedulerd, c, data, size);
-    return 0;
-}
 
 void
 schedulerd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request)
@@ -58,23 +41,3 @@ schedulerd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request)
         schedulerd_handle_request(request);
     }
 }
-
-static int32_t
-ipc_closed(qb_ipcs_connection_t *c)
-{
-    return pcmk__daemon_ipc_closed(&schedulerd, c);
-}
-
-static void
-ipc_destroy(qb_ipcs_connection_t *c)
-{
-    pcmk__daemon_ipc_destroy(&schedulerd, c);
-}
-
-struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = ipc_accept,
-    .connection_created = NULL,
-    .msg_process = ipc_dispatch,
-    .connection_closed = ipc_closed,
-    .connection_destroyed = ipc_destroy
-};

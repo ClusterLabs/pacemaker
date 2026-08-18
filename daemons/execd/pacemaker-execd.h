@@ -15,7 +15,6 @@
 
 #include <glib.h>                   // GList, GHashTable, GMainLoop
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbipcs.h>              // qb_ipcs_service_handlers
 
 #include <crm/common/internal.h>    // pcmk__client_t, pcmk__daemon_t, pcmk__action_result_t
 #include <crm/common/mainloop.h>    // crm_trigger_t
@@ -23,7 +22,6 @@
 
 extern GHashTable *rsc_list;
 extern pcmk__daemon_t execd;
-extern struct qb_ipcs_service_handlers ipc_callbacks;
 
 typedef struct {
     char *rsc_id;

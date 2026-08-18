@@ -186,7 +186,6 @@ extern pcmk_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 extern GHashTable *peer_protocol_vers;
 extern pcmk__daemon_t attrd;
-extern struct qb_ipcs_service_handlers ipc_callbacks;
 
 #define CIB_OP_TIMEOUT_S 120
 

@@ -12,13 +12,10 @@
 #include <errno.h>                  // EINVAL
 #include <regex.h>                  // regcomp, regexec, regfree
 #include <stdbool.h>                // bool, false, true
-#include <stdint.h>                 // int32_t
-#include <stdlib.h>                 // NULL, free, size_t
-#include <sys/types.h>              // gid_t, uid_t
+#include <stdlib.h>                 // NULL, free
 
 #include <glib.h>                   // g_hash_table_*
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbipcs.h>              // qb_ipcs_connection_t
 
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
@@ -496,18 +493,6 @@ attrd_client_update(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
-static int32_t
-ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
-{
-    return pcmk__daemon_ipc_accept(&attrd, c, uid, gid);
-}
-
-static int32_t
-ipc_closed(qb_ipcs_connection_t *c)
-{
-    return pcmk__daemon_ipc_closed(&attrd, c);
-}
-
 void
 attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client)
 {
@@ -518,19 +503,6 @@ attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client)
     attrd_do_not_wait_for_client(client);
 
     pcmk__free_client(client);
-}
-
-static void
-ipc_destroy(qb_ipcs_connection_t *c)
-{
-    pcmk__daemon_ipc_destroy(&attrd, c);
-}
-
-static int32_t
-ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
-{
-    pcmk__daemon_ipc_dispatch(&attrd, c, data, size);
-    return 0;
 }
 
 void
@@ -545,11 +517,3 @@ attrd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request)
 
     attrd_handle_request(request);
 }
-
-struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = ipc_accept,
-    .connection_created = NULL,
-    .msg_process = ipc_dispatch,
-    .connection_closed = ipc_closed,
-    .connection_destroyed = ipc_destroy
-};
