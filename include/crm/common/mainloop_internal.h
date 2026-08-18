@@ -61,10 +61,10 @@ struct mainloop_child_s {
 };
 
 struct mainloop_timer_s {
-    unsigned int id;
+    char *name;
+    unsigned int source_id;
     unsigned int interval_ms;
     bool repeat;
-    char *name;
     GSourceFunc cb;
     void *user_data;
 };

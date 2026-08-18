@@ -1405,7 +1405,7 @@ pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
 {
     CRM_CHECK(timer != NULL, return false);
 
-    return (timer->id != 0);
+    return (timer->source_id != 0);
 }
 
 /*!
@@ -1425,16 +1425,16 @@ pcmk__main_loop_timer_stop(mainloop_timer_t *timer)
     }
 
     pcmk__trace("Stopping timer %s", timer->name);
-    g_source_remove(timer->id);
-    timer->id = 0;
+    g_source_remove(timer->source_id);
+    timer->source_id = 0;
 }
 
 /*!
  * \internal
  * \brief Run a main loop timer's callback
  *
- * If the callback returns \c G_SOURCE_REMOVE, set \p timer->id to 0 to indicate
- * that the timer has no associated \c GSource.
+ * If the callback returns \c G_SOURCE_REMOVE, set \p timer->source_id to 0 to
+ * indicate that the timer has no associated \c GSource.
  *
  * \param[in,out] user_data  Main loop timer (<tt>mainloop_timer_t *</tt>)
  *
@@ -1456,8 +1456,8 @@ main_loop_timer_cb(void *user_data)
      *
      * @TODO Why is this necessary or desirable?
      */
-    id = timer->id;
-    timer->id = 0;
+    id = timer->source_id;
+    timer->source_id = 0;
 
     pcmk__trace("Invoking callbacks for timer %s", timer->name);
 
@@ -1467,7 +1467,7 @@ main_loop_timer_cb(void *user_data)
         return G_SOURCE_REMOVE;
     }
 
-    timer->id = id;
+    timer->source_id = id;
     return G_SOURCE_CONTINUE;
 }
 
@@ -1480,7 +1480,7 @@ main_loop_timer_cb(void *user_data)
  *    \c GSource)
  * 2. creating a new \c GSource using \p timer->interval_ms as the timeout (see
  *    \c pcmk__create_timer())
- * 3. assigning the new \c GSource ID to \p timer->id
+ * 3. assigning the new \c GSource ID to \p timer->source_id
  *
  * \param[in,out] timer  Main loop timer
  */
@@ -1495,8 +1495,8 @@ pcmk__main_loop_timer_start(mainloop_timer_t *timer)
     pcmk__main_loop_timer_stop(timer);
 
     pcmk__trace("Starting timer %s", timer->name);
-    timer->id = pcmk__create_timer(timer->interval_ms, main_loop_timer_cb,
-                                   timer);
+    timer->source_id = pcmk__create_timer(timer->interval_ms,
+                                          main_loop_timer_cb, timer);
 }
 
 /*!
@@ -1529,8 +1529,8 @@ mainloop_timer_cb(void *user_data)
     /* Ensure id is unset during callbacks so that
      * pcmk__main_loop_timer_running() works as expected
      */
-    id = timer->id;
-    timer->id = 0;
+    id = timer->source_id;
+    timer->source_id = 0;
 
     pcmk__trace("Invoking callbacks for timer %s", timer->name);
 
@@ -1544,14 +1544,14 @@ mainloop_timer_cb(void *user_data)
         return G_SOURCE_REMOVE;
     }
 
-    timer->id = id;
+    timer->source_id = id;
     return G_SOURCE_CONTINUE;
 }
 
 bool
 mainloop_timer_running(mainloop_timer_t *timer)
 {
-    return (timer != NULL) && (timer->id != 0);
+    return (timer != NULL) && (timer->source_id != 0);
 }
 
 void
@@ -1564,20 +1564,20 @@ mainloop_timer_start(mainloop_timer_t *timer)
     }
 
     pcmk__trace("Starting timer %s", timer->name);
-    timer->id = pcmk__create_timer(timer->interval_ms, mainloop_timer_cb,
-                                   timer);
+    timer->source_id = pcmk__create_timer(timer->interval_ms, mainloop_timer_cb,
+                                          timer);
 }
 
 void
 mainloop_timer_stop(mainloop_timer_t *timer)
 {
-    if ((timer == NULL) || (timer->id == 0)) {
+    if ((timer == NULL) || (timer->source_id == 0)) {
         return;
     }
 
     pcmk__trace("Stopping timer %s", timer->name);
-    g_source_remove(timer->id);
-    timer->id = 0;
+    g_source_remove(timer->source_id);
+    timer->source_id = 0;
 }
 
 unsigned int
@@ -1592,7 +1592,7 @@ mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int interval_ms)
     last = timer->interval_ms;
     timer->interval_ms = interval_ms;
 
-    if ((timer->id != 0) && (timer->interval_ms != last)) {
+    if ((timer->source_id != 0) && (timer->interval_ms != last)) {
         mainloop_timer_start(timer);
     }
 
