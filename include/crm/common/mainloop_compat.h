@@ -10,9 +10,10 @@
 #ifndef PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
 #define PCMK__CRM_COMMON_MAINLOOP_COMPAT__H
 
+#include <stdbool.h>                // bool
 #include <sys/types.h>              // pid_t
 
-#include <glib.h>                   // gboolean
+#include <glib.h>                   // gboolean, GSourceFunc
 
 #include <crm/common/mainloop.h>    // mainloop_*
 
@@ -67,6 +68,34 @@ void *mainloop_child_userdata(mainloop_child_t *child);
 
 //! \deprecated Do not use
 void mainloop_clear_child_userdata(mainloop_child_t *child);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+typedef struct mainloop_timer_s mainloop_timer_t;
+
+//! \deprecated Do not use
+bool mainloop_timer_running(mainloop_timer_t *timer);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+void mainloop_timer_start(mainloop_timer_t *timer);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+void mainloop_timer_stop(mainloop_timer_t *timer);
+
+//! \deprecated Do not use
+unsigned int mainloop_timer_set_period(mainloop_timer_t *timer,
+                                       unsigned int interval_ms);
+
+// NOTE: sbd (as of at least 1.5.2) uses this
+//! \deprecated Do not use
+mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int interval_ms,
+                                     bool repeat, GSourceFunc cb,
+                                     void *userdata);
+
+//! \deprecated Do not use
+void mainloop_timer_del(mainloop_timer_t *timer);
 
 #ifdef __cplusplus
 }

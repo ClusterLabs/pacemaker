@@ -12,9 +12,9 @@
 
 #include <stdbool.h>    // bool
 #include <signal.h>     // sighandler_t
-#include <sys/types.h>  // pid_t, ssize_t
+#include <sys/types.h>  // ssize_t
 
-#include <glib.h>       // gboolean, GSourceFunc, GMainLoop
+#include <glib.h>       // gboolean, GMainLoop
 #include <qb/qbipcs.h>  // qb_ipcs_service_t, etc.
 
 #include <crm/common/ipc.h>
@@ -34,9 +34,6 @@ extern "C" {
 typedef struct trigger_s crm_trigger_t;
 
 typedef struct mainloop_io_s mainloop_io_t;
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-typedef struct mainloop_timer_s mainloop_timer_t;
 
 void mainloop_cleanup(void);
 
@@ -62,24 +59,6 @@ sighandler_t crm_signal_handler(int sig, sighandler_t dispatch);
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 gboolean mainloop_destroy_signal(int sig);
-
-bool mainloop_timer_running(mainloop_timer_t *timer);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-void mainloop_timer_start(mainloop_timer_t *timer);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-void mainloop_timer_stop(mainloop_timer_t *timer);
-
-unsigned int mainloop_timer_set_period(mainloop_timer_t *timer,
-                                       unsigned int interval_ms);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int interval_ms,
-                                     bool repeat, GSourceFunc cb,
-                                     void *userdata);
-
-void mainloop_timer_del(mainloop_timer_t *timer);
 
 struct ipc_client_callbacks {
     /*!

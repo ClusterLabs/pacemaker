@@ -89,15 +89,6 @@ typedef struct {
     void *user_data;            //!< User data passed to \c cb
 } pcmk__main_loop_timer_t;
 
-struct mainloop_timer_s {
-    char *name;
-    unsigned int source_id;
-    unsigned int interval_ms;
-    bool repeat;
-    GSourceFunc cb;
-    void *user_data;
-};
-
 struct mainloop_io_s {
     char *name;
     void *userdata;
