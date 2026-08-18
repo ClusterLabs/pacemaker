@@ -48,6 +48,7 @@ static pcmk__daemon_fns_t fns = {
 };
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .cleanup = pcmk__daemon_ipc_cleanup,
     .init = pcmk__daemon_ipc_init,
 };
 
@@ -194,7 +195,7 @@ execd_cleanup(void)
     pcmk__info("Terminating with %d client%s", nclients,
                pcmk__plural_s(nclients));
     stonith__api_free(fencer_api);
-    execd_ipc_cleanup();
+    execd.ipc_fns->cleanup(&execd);
 
 #ifdef PCMK__COMPILE_REMOTE
     execd_stop_tls_server();
