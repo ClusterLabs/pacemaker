@@ -102,8 +102,8 @@ void
 based_callbacks_init(void)
 {
     if (digest_timer == NULL) {
-        digest_timer = mainloop_timer_add("based_digest_timer", 5000, true,
-                                          digest_timer_cb, NULL);
+        digest_timer = pcmk__main_loop_timer_new("based_digest_timer", 5000,
+                                                 digest_timer_cb, NULL);
     }
 }
 

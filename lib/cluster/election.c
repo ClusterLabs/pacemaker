@@ -98,11 +98,9 @@ election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *))
 
     cluster->priv->election = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
     cluster->priv->election->cb = cb;
-    cluster->priv->election->timeout = mainloop_timer_add(name,
-                                                          ELECTION_TIMEOUT_MS,
-                                                          true,
-                                                          election_timer_cb,
-                                                          cluster);
+    cluster->priv->election->timeout =
+        pcmk__main_loop_timer_new(name, ELECTION_TIMEOUT_MS, election_timer_cb,
+                                  cluster);
 }
 
 /*!

@@ -121,8 +121,9 @@ cfg_connection_destroy(void *user_data)
                "reattempted once per second)");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
-    reconnect_timer = mainloop_timer_add("pcmkd_corosync_reconnect", 1000, true,
-                                         cluster_reconnect_cb, NULL);
+    reconnect_timer = pcmk__main_loop_timer_new("pcmkd_corosync_reconnect",
+                                                1000, cluster_reconnect_cb,
+                                                NULL);
     mainloop_timer_start(reconnect_timer);
 }
 

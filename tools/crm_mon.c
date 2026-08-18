@@ -2115,8 +2115,8 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     }
 
     if(refresh_timer == NULL) {
-        refresh_timer = mainloop_timer_add("refresh", 2000, true,
-                                           mon_trigger_refresh, NULL);
+        refresh_timer = pcmk__main_loop_timer_new("refresh", 2000,
+                                                  mon_trigger_refresh, NULL);
     }
 
     if (reconnect_timer > 0) {

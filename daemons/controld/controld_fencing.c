@@ -674,9 +674,9 @@ controld_timer_fencer_connect(void *user_data)
 
         if (controld_fencer_connect_timer == NULL) {
             controld_fencer_connect_timer =
-                mainloop_timer_add("controld_fencer_connect", 1000, true,
-                                   controld_timer_fencer_connect,
-                                   GINT_TO_POINTER(TRUE));
+                pcmk__main_loop_timer_new("controld_fencer_connect", 1000,
+                                          controld_timer_fencer_connect,
+                                          GINT_TO_POINTER(TRUE));
         }
 
         if (rc != pcmk_ok) {
@@ -1080,8 +1080,9 @@ controld_trigger_fencing_history_sync(bool long_timeout)
     if (long_timeout) {
         if (fencing_history_sync_timer_long == NULL) {
             fencing_history_sync_timer_long =
-                mainloop_timer_add("history_sync_long", 30000, true,
-                                   fencing_history_sync_set_trigger, NULL);
+                pcmk__main_loop_timer_new("history_sync_long", 30000,
+                                          fencing_history_sync_set_trigger,
+                                          NULL);
         }
         pcmk__info("Fence history will be synchronized cluster-wide within 30 "
                    "seconds");
@@ -1090,8 +1091,9 @@ controld_trigger_fencing_history_sync(bool long_timeout)
     } else {
         if (fencing_history_sync_timer_short == NULL) {
             fencing_history_sync_timer_short =
-                mainloop_timer_add("history_sync_short", 5000, true,
-                                   fencing_history_sync_set_trigger, NULL);
+                pcmk__main_loop_timer_new("history_sync_short", 5000,
+                                          fencing_history_sync_set_trigger,
+                                          NULL);
         }
         pcmk__info("Fence history will be synchronized cluster-wide within 5 "
                    "seconds");

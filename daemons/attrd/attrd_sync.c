@@ -513,8 +513,8 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     action->ipc_id = request->ipc_id;
     action->flags = request->flags;
 
-    action->timer = mainloop_timer_add("attrd_confirmation", 15000, true,
-                                       confirmation_timeout_cb, action);
+    action->timer = pcmk__main_loop_timer_new("attrd_confirmation", 15000,
+                                              confirmation_timeout_cb, action);
     mainloop_timer_start(action->timer);
 
     pcmk__intkey_table_insert(expected_confirmations, callid, action);

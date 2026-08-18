@@ -93,6 +93,11 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
 
+mainloop_timer_t *pcmk__main_loop_timer_new(const char *name,
+                                            unsigned int interval_ms,
+                                            GSourceFunc callback,
+                                            void *user_data);
+
 #ifdef __cplusplus
 }
 #endif

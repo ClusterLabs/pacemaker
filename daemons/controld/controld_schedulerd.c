@@ -292,10 +292,10 @@ controld_expect_sched_reply(char *ref)
 {
     if (ref) {
         if (controld_sched_timer == NULL) {
-            controld_sched_timer = mainloop_timer_add("scheduler_reply_timer",
-                                                      SCHED_TIMEOUT_MS, true,
-                                                      controld_sched_timeout,
-                                                      NULL);
+            controld_sched_timer =
+                pcmk__main_loop_timer_new("scheduler_reply_timer",
+                                          SCHED_TIMEOUT_MS,
+                                          controld_sched_timeout, NULL);
         }
         mainloop_timer_start(controld_sched_timer);
     } else {
@@ -488,8 +488,8 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         pcmk__debug("Re-asking for the CIB: %d other peer updates still "
                     "pending", (num_cib_op_callbacks() - 1));
 
-        controld_cib_retry_timer = mainloop_timer_add("cib_retry", 1000, true,
-                                                      sleep_timer, NULL);
+        controld_cib_retry_timer = pcmk__main_loop_timer_new("cib_retry", 1000,
+                                                             sleep_timer, NULL);
         mainloop_timer_start(controld_cib_retry_timer);
         return;
     }

@@ -1356,6 +1356,40 @@ pcmk__main_loop_child_kill(pid_t pid)
     return child_waitpid(match, no_hang);
 }
 
+/*!
+ * \internal
+ * \brief Create a main loop timer
+ *
+ * \param[in] name         Timer name prefix (for logging only)
+ * \param[in] interval_ms  Timer interval
+ * \param[in] callback     Function to call after \p interval_ms expires
+ * \param[in] user_data    User data for \p callback
+ *
+ * \return Newly allocated main loop timer (guaranteed not to be \c NULL)
+ *
+ * \note The new timer's \c name string starts with the \p name argument and
+ *       includes the timer's interval and address.
+ * \note The caller is responsible for freeing the return value using
+ *       \c mainloop_timer_del().
+ */
+mainloop_timer_t *
+pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
+                          GSourceFunc callback, void *user_data)
+{
+    mainloop_timer_t *timer = NULL;
+    pcmk__assert((name != NULL) && (callback != NULL));
+
+    timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
+    timer->name = pcmk__assert_asprintf("%s-%u-%p", name, interval_ms, timer);
+    timer->period_ms = interval_ms;
+    timer->repeat = true;
+    timer->cb = callback;
+    timer->userdata = user_data;
+
+    pcmk__trace("Created timer %s with data %p", timer->name, user_data);
+    return timer;
+}
+
 static gboolean
 mainloop_timer_cb(void *user_data)
 {
