@@ -72,7 +72,7 @@ crm_trigger_prepare(GSource *source, int *timeout)
 }
 
 static gboolean
-crm_trigger_check(GSource * source)
+crm_trigger_check(GSource *source)
 {
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
@@ -81,13 +81,13 @@ crm_trigger_check(GSource * source)
 
 /*!
  * \internal
- * \brief GSource dispatch function for crm_trigger_t
+ * \brief \c GSource dispatch function for \c crm_trigger_t
  *
- * \param[in] source        crm_trigger_t being dispatched
- * \param[in] callback      Callback passed at source creation
+ * \param[in]     source    \c crm_trigger_t being dispatched
+ * \param[in]     callback  Callback passed at source creation
  * \param[in,out] userdata  User data passed at source creation
  *
- * \return G_SOURCE_REMOVE to remove source, G_SOURCE_CONTINUE to keep it
+ * \return \c G_SOURCE_REMOVE to remove source, \c G_SOURCE_CONTINUE to keep it
  */
 static gboolean
 crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
@@ -96,17 +96,21 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
     if (trig->running) {
-        /* Wait until the existing job is complete before starting the next one */
+        /* Wait until the existing job is complete before starting the next
+         * one
+         */
         return G_SOURCE_CONTINUE;
     }
+
     trig->trigger = false;
 
-    if (callback) {
+    if (callback != NULL) {
         int callback_rc = callback(trig->user_data);
 
         if (callback_rc < 0) {
             pcmk__trace("Trigger handler %p not yet complete", trig);
             trig->running = true;
+
         } else if (callback_rc == 0) {
             rc = G_SOURCE_REMOVE;
         }
@@ -128,30 +132,28 @@ static GSourceFuncs crm_trigger_funcs = {
 };
 
 static crm_trigger_t *
-mainloop_setup_trigger(GSource * source, int priority,
+mainloop_setup_trigger(GSource *source, int priority,
                        int (*dispatch)(void *user_data), void *userdata)
 {
-    crm_trigger_t *trigger = NULL;
-
-    trigger = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
     trigger->id = 0;
     trigger->trigger = false;
     trigger->user_data = userdata;
 
-    if (dispatch) {
+    if (dispatch != NULL) {
         g_source_set_callback(source, dispatch, trigger, NULL);
     }
 
     g_source_set_priority(source, priority);
-    g_source_set_can_recurse(source, FALSE);
+    g_source_set_can_recurse(source, false);
 
     trigger->id = g_source_attach(source, NULL);
     return trigger;
 }
 
 void
-mainloop_trigger_complete(crm_trigger_t * trig)
+mainloop_trigger_complete(crm_trigger_t *trig)
 {
     pcmk__trace("Trigger handler %p complete", trig);
     trig->running = false;
@@ -160,7 +162,8 @@ mainloop_trigger_complete(crm_trigger_t * trig)
 /*!
  * \brief Create a trigger to be used as a mainloop source
  *
- * \param[in] priority  Relative priority of source (lower number is higher priority)
+ * \param[in] priority  Relative priority of source (lower number is higher
+ *                      priority)
  * \param[in] dispatch  Trigger dispatch function (should return 0 to remove the
  *                      trigger from the mainloop, -1 if the trigger should be
  *                      kept but the job is still running and not complete, and
@@ -182,23 +185,25 @@ mainloop_add_trigger(int priority, int (*dispatch) (void *user_data),
 }
 
 void
-mainloop_set_trigger(crm_trigger_t * source)
+mainloop_set_trigger(crm_trigger_t *source)
 {
-    if(source) {
-        source->trigger = true;
+    if (source == NULL) {
+        return;
     }
+
+    source->trigger = true;
 }
 
 gboolean
-mainloop_destroy_trigger(crm_trigger_t * source)
+mainloop_destroy_trigger(crm_trigger_t *source)
 {
     GSource *gs = NULL;
 
-    if(source == NULL) {
+    if (source == NULL) {
         return TRUE;
     }
 
-    gs = (GSource *)source;
+    gs = (GSource *) source;
 
     g_source_destroy(gs); /* Remove from mainloop, ref_count-- */
     g_source_unref(gs); /* The caller no longer carries a reference to source
