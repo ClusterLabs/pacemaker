@@ -115,6 +115,23 @@ pcmk__daemon_ipc_closed(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
 
 /*!
  * \internal
+ * \brief Handle a newly created IPC connection
+ *
+ * \param[in,out] d The daemon object
+ * \param[in]     c The new connection
+ */
+void
+pcmk__daemon_ipc_created(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
+{
+    pcmk__client_t *client = pcmk__find_client(c);
+
+    pcmk__assert(client != NULL);
+    pcmk__trace("New client connection %p", c);
+    d->ipc_fns->created(d, client);
+}
+
+/*!
+ * \internal
  * \brief Destroy a client IPC connection
  *
  * \param[in,out] d The daemon object
