@@ -124,7 +124,7 @@ pacemakerd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_CRM_TASK);
+        request.op = pcmk__xe_get_copy(request.xml, pacemakerd.op);
         CRM_CHECK(request.op != NULL, goto done);
 
         pacemakerd_handle_request(&request);
