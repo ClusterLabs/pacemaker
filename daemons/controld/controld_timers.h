@@ -27,7 +27,7 @@ void controld_start_wait_timer(void);
 
 bool controld_is_started_transition_timer(void);
 
-unsigned int controld_get_period_transition_timer(void);
+unsigned int controld_get_interval_transition_timer(void);
 
 void controld_reset_counter_election_timer(void);
 

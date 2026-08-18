@@ -491,7 +491,7 @@ abort_transition_graph(int abort_priority, enum pcmk__graph_next abort_action,
 
 done:
     if (controld_globals.transition_graph->complete) {
-        if (controld_get_period_transition_timer() > 0) {
+        if (controld_get_interval_transition_timer() > 0) {
             controld_stop_transition_timer();
             controld_start_transition_timer();
         } else {

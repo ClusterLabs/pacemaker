@@ -22,7 +22,7 @@
 typedef struct {
     const char *desc;               //!< Description
     unsigned int source_id;         //!< Timer source ID
-    unsigned int period_ms;         //!< Timer period
+    unsigned int interval_ms;       //!< Timer interval
     enum crmd_fsa_input fsa_input;  //!< Input to register if timer pops
     bool log_error;                 //!< Timer popping indicates error
     int counter;                    //!< For detecting loops
@@ -68,7 +68,7 @@ controld_stop_timer(fsa_timer_t *timer)
     if (timer->source_id != 0) {
         pcmk__trace("Stopping %s (would inject %s if popped after %ums, "
                     "src=%d)", timer->desc, fsa_input2string(timer->fsa_input),
-                    timer->period_ms, timer->source_id);
+                    timer->interval_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
         return true;
@@ -76,7 +76,7 @@ controld_stop_timer(fsa_timer_t *timer)
 
     pcmk__trace("%s already stopped (would inject %s if popped after %ums)",
                 timer->desc, fsa_input2string(timer->fsa_input),
-                timer->period_ms);
+                timer->interval_ms);
     return false;
 }
 
@@ -88,10 +88,10 @@ crm_timer_popped(void *data)
     if (timer->log_error) {
         pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
                   timer->desc, fsa_state2string(controld_globals.fsa_state),
-                  fsa_input2string(timer->fsa_input), timer->period_ms);
+                  fsa_input2string(timer->fsa_input), timer->interval_ms);
     } else {
         pcmk__info("%s just popped " QB_XS " input=%s time=%ums", timer->desc,
-                   fsa_input2string(timer->fsa_input), timer->period_ms);
+                   fsa_input2string(timer->fsa_input), timer->interval_ms);
         timer->counter++;
     }
 
@@ -146,17 +146,17 @@ crm_timer_popped(void *data)
 static void
 controld_start_timer(fsa_timer_t *timer)
 {
-    if (timer->source_id == 0 && timer->period_ms > 0) {
-        timer->source_id = pcmk__create_timer(timer->period_ms,
+    if ((timer->source_id == 0) && (timer->interval_ms > 0)) {
+        timer->source_id = pcmk__create_timer(timer->interval_ms,
                                               crm_timer_popped, timer);
         pcmk__assert(timer->source_id != 0);
         pcmk__debug("Started %s (inject %s if pops after %ums, source=%d)",
                     timer->desc, fsa_input2string(timer->fsa_input),
-                    timer->period_ms, timer->source_id);
+                    timer->interval_ms, timer->source_id);
     } else {
         pcmk__debug("%s already running (inject %s if pops after %ums, "
                     "source=%d)", timer->desc,
-                    fsa_input2string(timer->fsa_input), timer->period_ms,
+                    fsa_input2string(timer->fsa_input), timer->interval_ms,
                     timer->source_id);
     }
 }
@@ -242,7 +242,7 @@ new_fsa_timer(const char *desc, unsigned int interval_ms,
     fsa_timer_t *timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
 
     timer->desc = desc;
-    timer->period_ms = interval_ms;
+    timer->interval_ms = interval_ms;
     timer->fsa_input = fsa_input;
     timer->log_error = log_error;
 
@@ -310,26 +310,25 @@ controld_configure_fsa_timers(GHashTable *options)
 
     // Election timer
     value = g_hash_table_lookup(options, PCMK_OPT_DC_DEADTIME);
-    pcmk_parse_interval_spec(value, &election_timer->period_ms);
+    pcmk_parse_interval_spec(value, &election_timer->interval_ms);
 
     // Integration timer
     value = g_hash_table_lookup(options, PCMK_OPT_JOIN_INTEGRATION_TIMEOUT);
-    pcmk_parse_interval_spec(value, &integration_timer->period_ms);
+    pcmk_parse_interval_spec(value, &integration_timer->interval_ms);
 
     // Finalization timer
     value = g_hash_table_lookup(options, PCMK_OPT_JOIN_FINALIZATION_TIMEOUT);
-    pcmk_parse_interval_spec(value, &finalization_timer->period_ms);
+    pcmk_parse_interval_spec(value, &finalization_timer->interval_ms);
 
     // Shutdown escalation timer
     value = g_hash_table_lookup(options, PCMK_OPT_SHUTDOWN_ESCALATION);
-    pcmk_parse_interval_spec(value, &shutdown_escalation_timer->period_ms);
+    pcmk_parse_interval_spec(value, &shutdown_escalation_timer->interval_ms);
     pcmk__debug("Shutdown escalation occurs if DC has not responded to request "
-                "in %ums",
-                shutdown_escalation_timer->period_ms);
+                "in %ums", shutdown_escalation_timer->interval_ms);
 
     // Transition timer
     value = g_hash_table_lookup(options, PCMK_OPT_TRANSITION_DELAY);
-    pcmk_parse_interval_spec(value, &transition_timer->period_ms);
+    pcmk_parse_interval_spec(value, &transition_timer->interval_ms);
 
     // Recheck interval
     value = g_hash_table_lookup(options, PCMK_OPT_CLUSTER_RECHECK_INTERVAL);
@@ -358,7 +357,7 @@ controld_free_fsa_timers(void)
 bool
 controld_is_started_transition_timer(void)
 {
-    return (transition_timer->period_ms > 0)
+    return (transition_timer->interval_ms > 0)
            && (transition_timer->source_id != 0);
 }
 
@@ -370,7 +369,7 @@ void
 controld_start_recheck_timer(void)
 {
     // Default to recheck interval configured in CIB (if any)
-    unsigned int period_ms = recheck_interval_ms;
+    unsigned int interval_ms = recheck_interval_ms;
 
     // If scheduler supplied a "recheck by" time, check whether that's sooner
     if (controld_globals.transition_graph->recheck_by > 0) {
@@ -379,19 +378,20 @@ controld_start_recheck_timer(void)
 
         if (diff_seconds < 1) {
             // We're already past the desired time
-            period_ms = 500;
+            interval_ms = 500;
         } else {
-            period_ms = (unsigned int) QB_MIN(UINT_MAX, diff_seconds * 1000LL);
+            interval_ms = (unsigned int) QB_MIN(UINT_MAX,
+                                                (diff_seconds * 1000LL));
         }
 
         // Use "recheck by" only if it's sooner than interval from CIB
-        if (period_ms > recheck_interval_ms) {
-            period_ms = recheck_interval_ms;
+        if (interval_ms > recheck_interval_ms) {
+            interval_ms = recheck_interval_ms;
         }
     }
 
-    if (period_ms > 0) {
-        recheck_timer->period_ms = period_ms;
+    if (interval_ms > 0) {
+        recheck_timer->interval_ms = interval_ms;
         controld_start_timer(recheck_timer);
     }
 }
@@ -419,13 +419,15 @@ controld_stop_recheck_timer(void)
 }
 
 /*!
- * \brief Get the transition timer's configured period
- * \return The transition_timer's period
+ * \internal
+ * \brief Get the transition timer's configured interval
+ *
+ * \return The transition_timer's interval
  */
 unsigned int
-controld_get_period_transition_timer(void)
+controld_get_interval_transition_timer(void)
 {
-    return transition_timer->period_ms;
+    return transition_timer->interval_ms;
 }
 
 /*!
@@ -464,17 +466,17 @@ controld_start_transition_timer(void)
  * \internal
  * \brief Start the countdown sequence for a shutdown
  *
- * \param[in] default_period_ms  Period to use if the shutdown escalation
- *                               timer's period is 0
+ * \param[in] default_interval_ms  Interval to use if the shutdown escalation
+ *                                 timer's interval is 0
  */
 void
-controld_shutdown_start_countdown(unsigned int default_period_ms)
+controld_shutdown_start_countdown(unsigned int default_interval_ms)
 {
-    if (shutdown_escalation_timer->period_ms == 0) {
-        shutdown_escalation_timer->period_ms = default_period_ms;
+    if (shutdown_escalation_timer->interval_ms == 0) {
+        shutdown_escalation_timer->interval_ms = default_interval_ms;
     }
 
     pcmk__notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
-               shutdown_escalation_timer->period_ms);
+                 shutdown_escalation_timer->interval_ms);
     controld_start_timer(shutdown_escalation_timer);
 }
