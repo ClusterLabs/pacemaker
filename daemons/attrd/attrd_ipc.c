@@ -339,28 +339,29 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
                        const char *attr)
 {
     attribute_t *a = g_hash_table_lookup(attributes, attr);
+    attribute_value_t *v = NULL;
+    int int_value;
 
     if ((a == NULL) && pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
         return EINVAL;
     }
 
-    if ((*value != NULL) && attrd_value_needs_expansion(*value)) {
-        int int_value;
-        attribute_value_t *v = NULL;
-
-        if (a != NULL) {
-            const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
-            v = g_hash_table_lookup(a->values, host);
-        }
-
-        int_value = attrd_expand_value(*value, ((v != NULL) ? v->current : NULL));
-
-        pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
-        pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
-
-        /* Replacing the value frees the previous memory, so re-query it */
-        *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
+    if ((*value == NULL) || !attrd_value_needs_expansion(*value)) {
+        return pcmk_rc_ok;
     }
+
+    if (a != NULL) {
+        const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
+        v = g_hash_table_lookup(a->values, host);
+    }
+
+    int_value = attrd_expand_value(*value, ((v != NULL) ? v->current : NULL));
+
+    pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
+
+    /* Replacing the value frees the previous memory, so re-query it */
+    *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
 
     return pcmk_rc_ok;
 }
