@@ -29,49 +29,27 @@ ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
     return pcmk__daemon_ipc_accept(&pacemakerd, c, uid, gid);
 }
 
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \return 0 (i.e. do not re-run this callback)
- */
 static int32_t
-pacemakerd_ipc_closed(qb_ipcs_connection_t *c)
+ipc_closed(qb_ipcs_connection_t *c)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
-    } else {
-        pcmk__trace("Cleaning up closed client connection %p", c);
-
-        if (shutdown_complete_state_reported_to == client->pid) {
-            shutdown_complete_state_reported_client_closed = true;
-            mainloop_set_trigger(shutdown_trigger);
-        }
-
-        pcmk__free_client(client);
-    }
-
-    return 0;
+    return pcmk__daemon_ipc_closed(&pacemakerd, c);
 }
 
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \note We handle a destroyed connection the same as a closed one,
- *       but we need a separate handler because the return type is different.
- */
-static void
-pacemakerd_ipc_destroy(qb_ipcs_connection_t *c)
+void
+pacemakerd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client)
 {
-    pcmk__trace("Destroying client connection %p", c);
-    pacemakerd_ipc_closed(c);
+    if (shutdown_complete_state_reported_to == client->pid) {
+        shutdown_complete_state_reported_client_closed = true;
+        mainloop_set_trigger(shutdown_trigger);
+    }
+
+    pcmk__free_client(client);
+}
+
+static void
+ipc_destroy(qb_ipcs_connection_t *c)
+{
+    pcmk__daemon_ipc_destroy(&pacemakerd, c);
 }
 
 /*!
@@ -161,6 +139,6 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = ipc_accept,
     .connection_created = NULL,
     .msg_process = pacemakerd_ipc_dispatch,
-    .connection_closed = pacemakerd_ipc_closed,
-    .connection_destroyed = pacemakerd_ipc_destroy
+    .connection_closed = ipc_closed,
+    .connection_destroyed = ipc_destroy
 };

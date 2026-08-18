@@ -35,3 +35,4 @@ void restart_cluster_subdaemons(void);
 
 void pacemakerd_unregister_handlers(void);
 void pacemakerd_handle_request(pcmk__request_t *request);
+void pacemakerd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
