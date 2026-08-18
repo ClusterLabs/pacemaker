@@ -32,6 +32,7 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
+    .cleanup = pcmk__daemon_ipc_cleanup,
     .init = pcmk__daemon_ipc_init,
 };
 
@@ -99,7 +100,7 @@ schedulerd_cleanup_cmdline(void)
 static void
 schedulerd_cleanup(void)
 {
-    schedulerd_ipc_cleanup();
+    schedulerd.ipc_fns->cleanup(&schedulerd);
     schedulerd_unregister_handlers();
 }
 
