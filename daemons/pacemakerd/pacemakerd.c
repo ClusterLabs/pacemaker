@@ -22,6 +22,7 @@
 #include <unistd.h>                     // chown, geteuid, sleep
 
 #include <qb/qblog.h>                   // QB_XS
+#include <qb/qbloop.h>                  // QB_LOOP_MED
 
 #include <crm_config.h>                 // SUPPORT_COROSYNC, BUILD_VERSION
 #include <crm/common/ipc.h>             // pcmk_ipc_is_connected
@@ -39,9 +40,15 @@
 
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .init = pcmk__daemon_ipc_init,
+};
+
 pcmk__daemon_t pacemakerd = {
     .type = pcmk_ipc_pacemakerd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
+    .ipc_fns = &ipc_fns,
 };
 
 struct {
@@ -461,7 +468,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!pacemakerd_ipc_init()) {
+    if (!pacemakerd.ipc_fns->init(&pacemakerd, &ipc_callbacks)) {
         pacemakerd.ec = CRM_EX_OSERR;
         goto done;
     }
