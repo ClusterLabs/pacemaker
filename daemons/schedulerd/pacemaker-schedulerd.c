@@ -40,6 +40,7 @@ pcmk__daemon_t schedulerd = {
     .type = pcmk_ipc_schedulerd,
     .ec = CRM_EX_OK,
     .priority = QB_LOOP_MED,
+    .op = PCMK__XA_CRM_TASK,
     .ipc_fns = &ipc_fns,
 };
 
