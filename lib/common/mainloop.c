@@ -1370,7 +1370,7 @@ pcmk__main_loop_child_kill(pid_t pid)
  * \note The new timer's \c name string starts with the \p name argument and
  *       includes the timer's interval and address.
  * \note The caller is responsible for freeing the return value using
- *       \c mainloop_timer_del().
+ *       \c pcmk__main_loop_timer_free().
  */
 mainloop_timer_t *
 pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
@@ -1407,6 +1407,25 @@ pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
     CRM_CHECK(timer != NULL, return false);
 
     return (timer->id != 0);
+}
+
+/*!
+ * \internal
+ * \brief Free a main loop timer
+ *
+ * \param[in,out] timer  Main loop timer
+ */
+void
+pcmk__main_loop_timer_free(mainloop_timer_t *timer)
+{
+    if (timer == NULL) {
+        return;
+    }
+
+    pcmk__trace("Destroying timer %s", timer->name);
+    mainloop_timer_stop(timer);
+    free(timer->name);
+    free(timer);
 }
 
 static gboolean

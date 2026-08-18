@@ -154,7 +154,7 @@ election_fini(pcmk_cluster_t *cluster)
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
         election_reset(cluster);
         pcmk__trace("Destroying election");
-        mainloop_timer_del(cluster->priv->election->timeout);
+        pcmk__main_loop_timer_free(cluster->priv->election->timeout);
         g_clear_pointer(&cluster->priv->election, free);
     }
 }

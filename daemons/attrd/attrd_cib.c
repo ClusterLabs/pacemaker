@@ -272,7 +272,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             last_cib_op_done = call_id;
             if (a->timer && !a->timeout_ms) {
                 // Remove temporary dampening for failed writes
-                g_clear_pointer(&a->timer, mainloop_timer_del);
+                g_clear_pointer(&a->timer, pcmk__main_loop_timer_free);
             }
             break;
 

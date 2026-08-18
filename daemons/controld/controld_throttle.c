@@ -292,7 +292,7 @@ controld_configure_throttle(GHashTable *options)
 void
 throttle_fini(void)
 {
-    g_clear_pointer(&throttle_timer, mainloop_timer_del);
+    g_clear_pointer(&throttle_timer, pcmk__main_loop_timer_free);
     g_clear_pointer(&throttle_records, g_hash_table_destroy);
 }
 

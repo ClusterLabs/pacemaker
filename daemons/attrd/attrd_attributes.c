@@ -99,7 +99,7 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
     }
 
     if (a->timeout_ms != dampen) {
-        mainloop_timer_del(a->timer);
+        pcmk__main_loop_timer_free(a->timer);
         a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         if (dampen > 0) {
             a->timer = attrd_add_timer(attr, a->timeout_ms, a);

@@ -912,7 +912,7 @@ free_device(void *data)
 
     if (device->timer != NULL) {
         mainloop_timer_stop(device->timer);
-        mainloop_timer_del(device->timer);
+        pcmk__main_loop_timer_free(device->timer);
     }
 
     mainloop_destroy_trigger(device->work);

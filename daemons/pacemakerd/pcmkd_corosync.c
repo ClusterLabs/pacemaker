@@ -96,7 +96,7 @@ static gboolean
 cluster_reconnect_cb(void *data)
 {
     if (cluster_connect_cfg()) {
-        g_clear_pointer(&reconnect_timer, mainloop_timer_del);
+        g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
         pcmk__notice("Cluster reconnect succeeded");
         pcmkd_read_config();
         restart_cluster_subdaemons();
@@ -135,7 +135,7 @@ cluster_disconnect_cfg(void)
     /* The mainloop should be gone by this point, so this isn't necessary, but
      * cleaning up memory should make valgrind happier.
      */
-    g_clear_pointer(&reconnect_timer, mainloop_timer_del);
+    g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
 }
 
 #define cs_repeat(counter, max, code) do {		\

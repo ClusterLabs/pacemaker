@@ -312,7 +312,7 @@ controld_expect_sched_reply(char *ref)
 void
 controld_free_sched_timer(void)
 {
-    g_clear_pointer(&controld_sched_timer, mainloop_timer_del);
+    g_clear_pointer(&controld_sched_timer, pcmk__main_loop_timer_free);
 }
 
 // A_PE_INVOKE
@@ -451,7 +451,7 @@ sleep_timer(void *data)
 {
     controld_set_fsa_action_flags(A_PE_INVOKE);
     controld_trigger_fsa();
-    g_clear_pointer(&controld_cib_retry_timer, mainloop_timer_del);
+    g_clear_pointer(&controld_cib_retry_timer, pcmk__main_loop_timer_free);
     return G_SOURCE_REMOVE;
 }
 

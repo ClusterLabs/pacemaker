@@ -114,7 +114,7 @@ based_callbacks_init(void)
 void
 based_callbacks_cleanup(void)
 {
-    g_clear_pointer(&digest_timer, mainloop_timer_del);
+    g_clear_pointer(&digest_timer, pcmk__main_loop_timer_free);
     g_clear_pointer(&ping_digest, free);
 }
 

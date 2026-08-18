@@ -341,7 +341,7 @@ free_action(void *data)
 {
     struct confirmation_action *action = (struct confirmation_action *) data;
     g_list_free_full(action->respondents, free);
-    mainloop_timer_del(action->timer);
+    pcmk__main_loop_timer_free(action->timer);
     pcmk__xml_free(action->xml);
     free(action->client_id);
     free(action);
