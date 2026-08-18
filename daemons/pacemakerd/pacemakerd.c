@@ -472,7 +472,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!pacemakerd.ipc_fns->init(&pacemakerd, &ipc_callbacks)) {
+    if (!pacemakerd.ipc_fns->init(&pacemakerd)) {
         pacemakerd.ec = CRM_EX_OSERR;
         goto done;
     }

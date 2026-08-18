@@ -119,8 +119,7 @@ typedef struct {
      * \internal
      * \brief Initialize the IPC side of the server
      *
-     * \param[in,out] d  The daemon object
-     * \param[in,out] cb The IPC callback object
+     * \param[in,out] d The daemon object
      *
      * \note The generic pcmk__daemon_ipc_init function should be assigned
      *       to this function pointer for most every server
@@ -128,7 +127,7 @@ typedef struct {
      * \return \c true if the IPC server was successfully initialized, and
      *         \c false if not
      */
-    bool (*init)(pcmk__daemon_t *, struct qb_ipcs_service_handlers *);
+    bool (*init)(pcmk__daemon_t *);
 
     /*!
      * \internal
@@ -186,8 +185,7 @@ void pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
 void pcmk__daemon_ipc_dispatch(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
                                void *data, size_t size);
 bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
-bool pcmk__daemon_ipc_init(pcmk__daemon_t *d,
-                           struct qb_ipcs_service_handlers *cb);
+bool pcmk__daemon_ipc_init(pcmk__daemon_t *d);
 bool pcmk__generic_ipc_running(pcmk__daemon_t *d);
 
 // Mainloop management functions

@@ -434,7 +434,7 @@ main(int argc, char **argv)
     fenced_init_device_table();
     init_topology_list();
 
-    if (!fenced.ipc_fns->init(&fenced, &ipc_callbacks)) {
+    if (!fenced.ipc_fns->init(&fenced)) {
         fenced.ec = CRM_EX_FATAL;
         goto done;
     }

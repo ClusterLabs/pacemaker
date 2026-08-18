@@ -214,7 +214,7 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    if (!attrd.ipc_fns->init(&attrd, &ipc_callbacks)) {
+    if (!attrd.ipc_fns->init(&attrd)) {
         attrd.ec = CRM_EX_FATAL;
         goto done;
     }

@@ -195,7 +195,7 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!schedulerd.ipc_fns->init(&schedulerd, &ipc_callbacks)) {
+    if (!schedulerd.ipc_fns->init(&schedulerd)) {
         schedulerd.ec = CRM_EX_FATAL;
         goto done;
     }

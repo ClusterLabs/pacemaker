@@ -12,8 +12,6 @@
 #include <stdbool.h>
 #include <time.h>                       // time_t
 
-#include <qb/qbipcs.h>                  // qb_ipcs_service_handlers
-
 #include <crm/common/mainloop.h>        // crm_trigger_t
 
 #define MAX_RESPAWN		100
@@ -26,7 +24,6 @@ extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
 extern time_t subdaemon_check_progress;
 extern pcmk__daemon_t pacemakerd;
-extern struct qb_ipcs_service_handlers ipc_callbacks;
 
 int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);

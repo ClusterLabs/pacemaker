@@ -473,7 +473,7 @@ main(int argc, char **argv)
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
 
-    if (!execd.ipc_fns->init(&execd, &ipc_callbacks)) {
+    if (!execd.ipc_fns->init(&execd)) {
         execd.ec = CRM_EX_FATAL;
         goto done;
     }
