@@ -39,11 +39,13 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__generic_ipc_running,
+    .init = pcmk__daemon_ipc_init,
 };
 
 pcmk__daemon_t fenced = {
     .type = pcmk_ipc_fenced,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_HIGH,
     .ipc_fns = &ipc_fns,
 };
 
@@ -429,7 +431,7 @@ main(int argc, char **argv)
     fenced_init_device_table();
     init_topology_list();
 
-    if (!fenced_ipc_init()) {
+    if (!fenced.ipc_fns->init(&fenced, &ipc_callbacks)) {
         fenced.ec = CRM_EX_FATAL;
         goto done;
     }

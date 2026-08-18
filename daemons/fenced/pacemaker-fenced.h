@@ -9,6 +9,8 @@
 #include <stdint.h>                 // uint32_t, uint64_t
 #include <libxml/tree.h>            // xmlNode
 
+#include <qb/qbipcs.h>              // qb_ipcs_service_handlers
+
 #include <crm/common/mainloop.h>
 #include <crm/cluster.h>
 #include <crm/stonith-ng.h>
@@ -373,7 +375,6 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
-bool fenced_ipc_init(void);
 void fenced_ipc_cleanup(void);
 
 int fenced_cluster_connect(void);
@@ -405,3 +406,4 @@ extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern pcmk_cluster_t *fenced_cluster;
 extern pcmk__daemon_t fenced;
+extern struct qb_ipcs_service_handlers ipc_callbacks;
