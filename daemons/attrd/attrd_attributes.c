@@ -30,6 +30,8 @@ attrd_create_attribute(xmlNode *xml)
     const char *dampen_s = pcmk__xe_get(xml, PCMK__XA_ATTR_DAMPENING);
     attribute_t *a = NULL;
 
+    pcmk__assert(name != NULL);
+
     if (set_type == NULL) {
         set_type = PCMK_XE_INSTANCE_ATTRIBUTES;
     }
