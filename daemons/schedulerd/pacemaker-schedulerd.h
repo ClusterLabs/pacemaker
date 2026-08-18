@@ -18,5 +18,6 @@ extern struct qb_ipcs_service_handlers ipc_callbacks;
 
 void schedulerd_unregister_handlers(void);
 void schedulerd_handle_request(pcmk__request_t *request);
+void schedulerd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request);
 
 #endif
