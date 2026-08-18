@@ -17,6 +17,7 @@
 
 #include <glib.h>                   // G_OPTION_*
 #include <qb/qblog.h>               // QB_XS
+#include <qb/qbloop.h>              // QB_LOOP_MED
 
 #include <crm/common/ipc.h>         // crm_ipc_flags
 #include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
@@ -46,10 +47,16 @@ static pcmk__daemon_fns_t fns = {
     .quit = execd_quit,
 };
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .init = pcmk__daemon_ipc_init,
+};
+
 pcmk__daemon_t execd = {
     .type = pcmk_ipc_execd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
     .fns = &fns,
+    .ipc_fns = &ipc_fns,
 };
 
 static stonith_t *fencer_api = NULL;
@@ -460,7 +467,7 @@ main(int argc, char **argv)
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
 
-    if (!execd_ipc_init()) {
+    if (!execd.ipc_fns->init(&execd, &ipc_callbacks)) {
         execd.ec = CRM_EX_FATAL;
         goto done;
     }
