@@ -186,15 +186,3 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_closed = schedulerd_ipc_closed,
     .connection_destroyed = schedulerd_ipc_destroy
 };
-
-/*!
- * \internal
- * \brief Clean up schedulerd IPC communication
- */
-void
-schedulerd_ipc_cleanup(void)
-{
-    pcmk__drop_all_clients(schedulerd.ipcs);
-    g_clear_pointer(&schedulerd.ipcs, qb_ipcs_destroy);
-    pcmk__client_cleanup();
-}
