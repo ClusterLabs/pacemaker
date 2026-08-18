@@ -9,21 +9,23 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <inttypes.h>   // PRIu32
-#include <sys/types.h>
+#include <errno.h>                  // EINVAL
+#include <regex.h>                  // regcomp, regexec, regfree
+#include <stdbool.h>                // bool, false, true
+#include <stdint.h>                 // int32_t
+#include <stdlib.h>                 // NULL, free, size_t
+#include <sys/types.h>              // gid_t, uid_t
 
-#include <crm/cluster.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/logging.h>
-#include <crm/common/results.h>
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
+#include <glib.h>                   // g_hash_table_*
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qbipcs.h>              // qb_ipcs_connection_t
 
-#include "pacemaker-attrd.h"
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/common/strings.h>     // pcmk_parse_interval_spec
+#include <crm/common/xml_names.h>   // PCMK_XE_OP, PCMK_XE_NODE
+
+#include "pacemaker-attrd.h"        // attrd_*
 
 /*!
  * \internal
