@@ -141,7 +141,7 @@ lrmd_remote_client_msg(void *data)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_LRMD_OP);
+        request.op = pcmk__xe_get_copy(request.xml, execd.op);
         CRM_CHECK(request.op != NULL, goto done);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_REMOTE_MSG_ID,
