@@ -31,8 +31,6 @@ struct trigger_s {
     unsigned int id;
 };
 
-static gboolean mainloop_timer_cb(void *user_data);
-
 static GList *child_list = NULL;
 static qb_array_t *gio_map = NULL;
 
@@ -1384,7 +1382,6 @@ pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
     timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
     timer->name = pcmk__assert_asprintf("%s-%u-%p", name, interval_ms, timer);
     timer->period_ms = interval_ms;
-    timer->repeat = true;
     timer->cb = callback;
     timer->userdata = user_data;
 
@@ -1434,6 +1431,48 @@ pcmk__main_loop_timer_stop(mainloop_timer_t *timer)
 
 /*!
  * \internal
+ * \brief Run a main loop timer's callback
+ *
+ * If the callback returns \c G_SOURCE_REMOVE, set \p timer->id to 0 to indicate
+ * that the timer has no associated \c GSource.
+ *
+ * \param[in,out] user_data  Main loop timer (<tt>mainloop_timer_t *</tt>)
+ *
+ * \return The return value from \p timer->cb (\c G_SOURCE_CONTINUE to keep the
+ *         timeout source, or \c G_SOURCE_REMOVE to remove it)
+ *
+ * \note This is a \c GSourceFunc.
+ */
+static gboolean
+main_loop_timer_cb(void *user_data)
+{
+    int id = 0;
+    mainloop_timer_t *timer = user_data;
+
+    pcmk__assert((timer != NULL) && (timer->cb != NULL));
+
+    /* Ensure id is unset during callbacks so that
+     * pcmk__main_loop_timer_running() works as expected.
+     *
+     * @TODO Why is this necessary or desirable?
+     */
+    id = timer->id;
+    timer->id = 0;
+
+    pcmk__trace("Invoking callbacks for timer %s", timer->name);
+
+    // G_SOURCE_REMOVE is false; G_SOURCE_CONTINUE is true
+    if (!timer->cb(timer->userdata)) {
+        pcmk__trace("Timer %s complete", timer->name);
+        return G_SOURCE_REMOVE;
+    }
+
+    timer->id = id;
+    return G_SOURCE_CONTINUE;
+}
+
+/*!
+ * \internal
  * \brief Start a main loop timer
  *
  * Starting a timer consists of:
@@ -1454,7 +1493,7 @@ pcmk__main_loop_timer_start(mainloop_timer_t *timer)
     pcmk__main_loop_timer_stop(timer);
 
     pcmk__trace("Starting timer %s", timer->name);
-    timer->id = pcmk__create_timer(timer->period_ms, mainloop_timer_cb, timer);
+    timer->id = pcmk__create_timer(timer->period_ms, main_loop_timer_cb, timer);
 }
 
 /*!

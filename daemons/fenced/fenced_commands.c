@@ -650,7 +650,7 @@ get_agent_metadata_cb(void *data)
         }
 
         /* @FIXME Does the updated period even take effect? G_SOURCE_CONTINUE
-         * tells mainloop_timer_cb() to keep the existing GSource. It seems as
+         * tells main_loop_timer_cb() to keep the existing GSource. It seems as
          * if that GSource would still use the old period.
          */
         return G_SOURCE_CONTINUE;
