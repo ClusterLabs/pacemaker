@@ -1,0 +1,41 @@
+
+pcmk__clone_assign: site-clone allocation score on node1: 0
+pcmk__clone_assign: site-clone allocation score on node2: 0
+pcmk__clone_assign: site-clone allocation score on node3: 0
+pcmk__clone_assign: site-clone allocation score on node4: 0
+pcmk__clone_assign: site-rsc:0 allocation score on node1: 11
+pcmk__clone_assign: site-rsc:0 allocation score on node2: 0
+pcmk__clone_assign: site-rsc:0 allocation score on node3: 0
+pcmk__clone_assign: site-rsc:0 allocation score on node4: 0
+pcmk__clone_assign: site-rsc:1 allocation score on node1: 0
+pcmk__clone_assign: site-rsc:1 allocation score on node2: 7
+pcmk__clone_assign: site-rsc:1 allocation score on node3: 0
+pcmk__clone_assign: site-rsc:1 allocation score on node4: 0
+pcmk__clone_assign: site-rsc:2 allocation score on node1: 0
+pcmk__clone_assign: site-rsc:2 allocation score on node2: 0
+pcmk__clone_assign: site-rsc:2 allocation score on node3: 9
+pcmk__clone_assign: site-rsc:2 allocation score on node4: 0
+pcmk__clone_assign: site-rsc:3 allocation score on node1: 0
+pcmk__clone_assign: site-rsc:3 allocation score on node2: 0
+pcmk__clone_assign: site-rsc:3 allocation score on node3: 0
+pcmk__clone_assign: site-rsc:3 allocation score on node4: 8
+pcmk__primitive_assign: site-rsc:0 allocation score on node1: 11
+pcmk__primitive_assign: site-rsc:0 allocation score on node2: 0
+pcmk__primitive_assign: site-rsc:0 allocation score on node3: 0
+pcmk__primitive_assign: site-rsc:0 allocation score on node4: 0
+pcmk__primitive_assign: site-rsc:1 allocation score on node1: -INFINITY
+pcmk__primitive_assign: site-rsc:1 allocation score on node2: 7
+pcmk__primitive_assign: site-rsc:1 allocation score on node3: -INFINITY
+pcmk__primitive_assign: site-rsc:1 allocation score on node4: -INFINITY
+pcmk__primitive_assign: site-rsc:2 allocation score on node1: -INFINITY
+pcmk__primitive_assign: site-rsc:2 allocation score on node2: 0
+pcmk__primitive_assign: site-rsc:2 allocation score on node3: 9
+pcmk__primitive_assign: site-rsc:2 allocation score on node4: 0
+pcmk__primitive_assign: site-rsc:3 allocation score on node1: -INFINITY
+pcmk__primitive_assign: site-rsc:3 allocation score on node2: 0
+pcmk__primitive_assign: site-rsc:3 allocation score on node3: -INFINITY
+pcmk__primitive_assign: site-rsc:3 allocation score on node4: 8
+site-rsc:0 promotion score on node1: 10
+site-rsc:1 promotion score on node2: 6
+site-rsc:2 promotion score on node3: -INFINITY
+site-rsc:3 promotion score on node4: -INFINITY

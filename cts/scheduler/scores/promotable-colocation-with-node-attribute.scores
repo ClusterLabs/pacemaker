@@ -1,0 +1,81 @@
+
+dependent-rsc:0 promotion score on node1: INFINITY
+dependent-rsc:1 promotion score on node2: INFINITY
+dependent-rsc:2 promotion score on node3: -INFINITY
+dependent-rsc:3 promotion score on node4: -INFINITY
+pcmk__clone_assign: dependent-clone allocation score on node1: 0
+pcmk__clone_assign: dependent-clone allocation score on node2: 0
+pcmk__clone_assign: dependent-clone allocation score on node3: 0
+pcmk__clone_assign: dependent-clone allocation score on node4: 0
+pcmk__clone_assign: dependent-rsc:0 allocation score on node1: 6
+pcmk__clone_assign: dependent-rsc:0 allocation score on node2: 0
+pcmk__clone_assign: dependent-rsc:0 allocation score on node3: 0
+pcmk__clone_assign: dependent-rsc:0 allocation score on node4: 0
+pcmk__clone_assign: dependent-rsc:1 allocation score on node1: 0
+pcmk__clone_assign: dependent-rsc:1 allocation score on node2: 6
+pcmk__clone_assign: dependent-rsc:1 allocation score on node3: 0
+pcmk__clone_assign: dependent-rsc:1 allocation score on node4: 0
+pcmk__clone_assign: dependent-rsc:2 allocation score on node1: 0
+pcmk__clone_assign: dependent-rsc:2 allocation score on node2: 0
+pcmk__clone_assign: dependent-rsc:2 allocation score on node3: 11
+pcmk__clone_assign: dependent-rsc:2 allocation score on node4: 0
+pcmk__clone_assign: dependent-rsc:3 allocation score on node1: 0
+pcmk__clone_assign: dependent-rsc:3 allocation score on node2: 0
+pcmk__clone_assign: dependent-rsc:3 allocation score on node3: 0
+pcmk__clone_assign: dependent-rsc:3 allocation score on node4: 6
+pcmk__clone_assign: primary-clone allocation score on node1: 0
+pcmk__clone_assign: primary-clone allocation score on node2: 0
+pcmk__clone_assign: primary-clone allocation score on node3: 0
+pcmk__clone_assign: primary-clone allocation score on node4: 0
+pcmk__clone_assign: primary-rsc:0 allocation score on node1: 11
+pcmk__clone_assign: primary-rsc:0 allocation score on node2: 0
+pcmk__clone_assign: primary-rsc:0 allocation score on node3: 0
+pcmk__clone_assign: primary-rsc:0 allocation score on node4: 0
+pcmk__clone_assign: primary-rsc:1 allocation score on node1: 0
+pcmk__clone_assign: primary-rsc:1 allocation score on node2: 6
+pcmk__clone_assign: primary-rsc:1 allocation score on node3: 0
+pcmk__clone_assign: primary-rsc:1 allocation score on node4: 0
+pcmk__clone_assign: primary-rsc:2 allocation score on node1: 0
+pcmk__clone_assign: primary-rsc:2 allocation score on node2: 0
+pcmk__clone_assign: primary-rsc:2 allocation score on node3: 6
+pcmk__clone_assign: primary-rsc:2 allocation score on node4: 0
+pcmk__clone_assign: primary-rsc:3 allocation score on node1: 0
+pcmk__clone_assign: primary-rsc:3 allocation score on node2: 0
+pcmk__clone_assign: primary-rsc:3 allocation score on node3: 0
+pcmk__clone_assign: primary-rsc:3 allocation score on node4: 6
+pcmk__primitive_assign: dependent-rsc:0 allocation score on node1: 6
+pcmk__primitive_assign: dependent-rsc:0 allocation score on node2: 0
+pcmk__primitive_assign: dependent-rsc:0 allocation score on node3: -INFINITY
+pcmk__primitive_assign: dependent-rsc:0 allocation score on node4: 0
+pcmk__primitive_assign: dependent-rsc:1 allocation score on node1: -INFINITY
+pcmk__primitive_assign: dependent-rsc:1 allocation score on node2: 6
+pcmk__primitive_assign: dependent-rsc:1 allocation score on node3: -INFINITY
+pcmk__primitive_assign: dependent-rsc:1 allocation score on node4: 0
+pcmk__primitive_assign: dependent-rsc:2 allocation score on node1: 0
+pcmk__primitive_assign: dependent-rsc:2 allocation score on node2: 0
+pcmk__primitive_assign: dependent-rsc:2 allocation score on node3: 11
+pcmk__primitive_assign: dependent-rsc:2 allocation score on node4: 0
+pcmk__primitive_assign: dependent-rsc:3 allocation score on node1: -INFINITY
+pcmk__primitive_assign: dependent-rsc:3 allocation score on node2: -INFINITY
+pcmk__primitive_assign: dependent-rsc:3 allocation score on node3: -INFINITY
+pcmk__primitive_assign: dependent-rsc:3 allocation score on node4: 6
+pcmk__primitive_assign: primary-rsc:0 allocation score on node1: 11
+pcmk__primitive_assign: primary-rsc:0 allocation score on node2: 0
+pcmk__primitive_assign: primary-rsc:0 allocation score on node3: 0
+pcmk__primitive_assign: primary-rsc:0 allocation score on node4: 0
+pcmk__primitive_assign: primary-rsc:1 allocation score on node1: -INFINITY
+pcmk__primitive_assign: primary-rsc:1 allocation score on node2: 6
+pcmk__primitive_assign: primary-rsc:1 allocation score on node3: 0
+pcmk__primitive_assign: primary-rsc:1 allocation score on node4: 0
+pcmk__primitive_assign: primary-rsc:2 allocation score on node1: -INFINITY
+pcmk__primitive_assign: primary-rsc:2 allocation score on node2: -INFINITY
+pcmk__primitive_assign: primary-rsc:2 allocation score on node3: 6
+pcmk__primitive_assign: primary-rsc:2 allocation score on node4: 0
+pcmk__primitive_assign: primary-rsc:3 allocation score on node1: -INFINITY
+pcmk__primitive_assign: primary-rsc:3 allocation score on node2: -INFINITY
+pcmk__primitive_assign: primary-rsc:3 allocation score on node3: -INFINITY
+pcmk__primitive_assign: primary-rsc:3 allocation score on node4: 6
+primary-rsc:0 promotion score on node1: 10
+primary-rsc:1 promotion score on node2: 5
+primary-rsc:2 promotion score on node3: 5
+primary-rsc:3 promotion score on node4: 5
