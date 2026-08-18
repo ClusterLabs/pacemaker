@@ -9,7 +9,6 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>                      // ENOMEM
 #include <stdbool.h>                    // true
 #include <stddef.h>                     // NULL, size_t
 #include <stdint.h>                     // int32_t, uint32_t
@@ -24,24 +23,10 @@
 
 #include "pacemakerd.h"                 // pacemakerd_handle_request
 
-/*!
- * \internal
- * \brief Accept a new client IPC connection
- *
- * \param[in,out] c    New connection
- * \param[in]     uid  Client user id
- * \param[in]     gid  Client group id
- *
- * \return 0 on success, -errno otherwise
- */
 static int32_t
-pacemakerd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    pcmk__trace("New client connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -ENOMEM;
-    }
-    return 0;
+    return pcmk__daemon_ipc_accept(&pacemakerd, c, uid, gid);
 }
 
 /*!
@@ -173,7 +158,7 @@ done:
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = pacemakerd_ipc_accept,
+    .connection_accept = ipc_accept,
     .connection_created = NULL,
     .msg_process = pacemakerd_ipc_dispatch,
     .connection_closed = pacemakerd_ipc_closed,
