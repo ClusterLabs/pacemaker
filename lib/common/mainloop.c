@@ -35,8 +35,8 @@
 
 struct trigger_s {
     GSource source;
+    bool ready;
     bool running;
-    bool trigger;
     void *user_data;
     unsigned int id;
 };
@@ -68,7 +68,7 @@ crm_trigger_prepare(GSource *source, int *timeout)
      */
     *timeout = 500;             /* Timeout in ms */
 
-    return trig->trigger;
+    return trig->ready;
 }
 
 static gboolean
@@ -76,7 +76,7 @@ crm_trigger_check(GSource *source)
 {
     crm_trigger_t *trig = (crm_trigger_t *) source;
 
-    return trig->trigger;
+    return trig->ready;
 }
 
 /*!
@@ -102,7 +102,7 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
         return G_SOURCE_CONTINUE;
     }
 
-    trig->trigger = false;
+    trig->ready = false;
 
     if (callback != NULL) {
         int callback_rc = callback(trig->user_data);
@@ -138,7 +138,7 @@ mainloop_setup_trigger(GSource *source, int priority,
     crm_trigger_t *trigger = (crm_trigger_t *) source;
 
     trigger->id = 0;
-    trigger->trigger = false;
+    trigger->ready = false;
     trigger->user_data = userdata;
 
     if (dispatch != NULL) {
@@ -191,7 +191,7 @@ mainloop_set_trigger(crm_trigger_t *source)
         return;
     }
 
-    source->trigger = true;
+    source->ready = true;
 }
 
 gboolean
@@ -251,7 +251,7 @@ crm_signal_dispatch(GSource *source, GSourceFunc callback, void *userdata)
                      ((sig->handler != NULL)? "invoking" : "no"));
     }
 
-    sig->trigger.trigger = false;
+    sig->trigger.ready = false;
     if (sig->handler) {
         sig->handler(sig->signal);
     }

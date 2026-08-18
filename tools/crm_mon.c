@@ -1706,8 +1706,8 @@ main(int argc, char **argv)
     }
 #endif
 
-    /* When refresh_trigger->trigger is set to TRUE, call mon_refresh_display.  In
-     * this file, that is anywhere mainloop_set_trigger is called.
+    /* When refresh_trigger->ready is set to true, call mon_refresh_display().
+     * In this file, that is anywhere mainloop_set_trigger() is called.
      */
     refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
 
