@@ -39,6 +39,7 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__generic_ipc_running,
+    .cleanup = pcmk__daemon_ipc_cleanup,
     .init = pcmk__daemon_ipc_init,
 };
 
@@ -329,7 +330,7 @@ static void
 fenced_cleanup(void)
 {
     fenced_cib_cleanup();
-    fenced_ipc_cleanup();
+    fenced.ipc_fns->cleanup(&fenced);
     fenced_unregister_handlers();
     fenced_cluster_disconnect();
     fenced_scheduler_cleanup();
