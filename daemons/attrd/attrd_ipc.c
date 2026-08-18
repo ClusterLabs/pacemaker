@@ -236,14 +236,15 @@ attrd_client_refresh(pcmk__request_t *request)
 static void
 handle_missing_host(xmlNode *xml)
 {
-    if (pcmk__xe_get(xml, PCMK__XA_ATTR_HOST) == NULL) {
-        pcmk__trace("Inferring local node %s with XML ID %s",
-                    attrd_cluster->priv->node_name,
-                    attrd_cluster->priv->node_xml_id);
-        pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
-        pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
-                     attrd_cluster->priv->node_xml_id);
+    if (pcmk__xe_get(xml, PCMK__XA_ATTR_HOST) != NULL) {
+        return;
     }
+
+    pcmk__trace("Inferring local node %s with XML ID %s",
+                attrd_cluster->priv->node_name,
+                attrd_cluster->priv->node_xml_id);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID, attrd_cluster->priv->node_xml_id);
 }
 
 /* Convert a single IPC message with a regex into one with multiple children, one
