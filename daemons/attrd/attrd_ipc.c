@@ -253,48 +253,51 @@ handle_missing_host(xmlNode *xml)
 static int
 expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *regex)
 {
-    if ((attr == NULL) && (regex != NULL)) {
-        bool matched = false;
-        GHashTableIter aIter;
-        regex_t r_patt;
+    bool matched = false;
+    GHashTableIter aIter;
+    regex_t r_patt;
 
-        pcmk__debug("Setting %s to %s", regex, value);
-        if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
-            return EINVAL;
-        }
+    if (attr != NULL) {
+        return pcmk_rc_ok;
+    }
 
-        g_hash_table_iter_init(&aIter, attributes);
-        while (g_hash_table_iter_next(&aIter, (void **) &attr, NULL)) {
-            int status = regexec(&r_patt, attr, 0, NULL, 0);
-
-            if (status == 0) {
-                xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
-
-                pcmk__trace("Matched %s with %s", attr, regex);
-                matched = true;
-
-                /* Copy all the non-conflicting attributes from the parent over,
-                 * but remove the regex and replace it with the name.
-                 */
-                pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
-                pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
-                pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
-            }
-        }
-
-        regfree(&r_patt);
-
-        /* Return a code if we never matched anything.  This should not be treated
-         * as an error.  It indicates there was a regex, and it was a valid regex,
-         * but simply did not match anything and the caller should not continue
-         * doing any regex-related processing.
-         */
-        if (!matched) {
-            return pcmk_rc_op_unsatisfied;
-        }
-
-    } else if (attr == NULL) {
+    if (regex == NULL) {
         return pcmk_rc_bad_nvpair;
+    }
+
+    pcmk__debug("Setting %s to %s", regex, value);
+    if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
+        return EINVAL;
+    }
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, (void **) &attr, NULL)) {
+        int status = regexec(&r_patt, attr, 0, NULL, 0);
+
+        if (status == 0) {
+            xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
+
+            pcmk__trace("Matched %s with %s", attr, regex);
+            matched = true;
+
+            /* Copy all the non-conflicting attributes from the parent over,
+             * but remove the regex and replace it with the name.
+             */
+            pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
+            pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
+            pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
+        }
+    }
+
+    regfree(&r_patt);
+
+    /* Return a code if we never matched anything.  This should not be treated
+     * as an error.  It indicates there was a regex, and it was a valid regex,
+     * but simply did not match anything and the caller should not continue
+     * doing any regex-related processing.
+     */
+    if (!matched) {
+        return pcmk_rc_op_unsatisfied;
     }
 
     return pcmk_rc_ok;
