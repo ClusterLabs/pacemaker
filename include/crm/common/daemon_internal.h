@@ -20,6 +20,7 @@
 #include <time.h>                           // time_t
 
 #include <glib.h>                           // GMainLoop
+#include <libxml/tree.h>                    // xmlNode
 #include <qb/qbipcs.h>                      // qb_ipcs_service_*
 #include <qb/qbloop.h>                      // qb_loop_priority
 
@@ -119,6 +120,14 @@ typedef struct {
      *         \c false if not
      */
     bool (*init)(pcmk__daemon_t *, struct qb_ipcs_service_handlers *);
+
+    /*!
+     * \internal
+     * \brief Sanity check an IPC message for validity
+     *
+     * \return \c true if the IPC message is invalid, and \c false if not
+     */
+    bool (*invalid_msg)(xmlNode *);
 } pcmk__daemon_ipc_fns_t;
 
 /*!
