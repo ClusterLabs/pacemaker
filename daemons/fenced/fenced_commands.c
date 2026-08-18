@@ -646,8 +646,12 @@ get_agent_metadata_cb(void *data)
 
     if (rc == EAGAIN) {
         if (device->timer->period_ms < (160 * 1000)) {
-            mainloop_timer_set_period(device->timer,
-                                      (2 * device->timer->period_ms));
+            device->timer->period_ms *= 2;
+
+            if (pcmk__main_loop_timer_running(device->timer)) {
+                // Restart the timer using the new period
+                mainloop_timer_start(device->timer);
+            }
         }
 
         return G_SOURCE_CONTINUE;

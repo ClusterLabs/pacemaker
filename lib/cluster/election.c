@@ -189,8 +189,25 @@ election_timeout_stop(pcmk_cluster_t *cluster)
 void
 election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
 {
-    CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
-    mainloop_timer_set_period(cluster->priv->election->timeout, period);
+    mainloop_timer_t *timer = NULL;
+
+    CRM_CHECK((cluster != NULL)
+              && (cluster->priv->election != NULL)
+              && (cluster->priv->election->timeout != NULL),
+              return);
+
+    timer = cluster->priv->election->timeout;
+
+    if (timer->period_ms == period) {
+        return;
+    }
+
+    timer->period_ms = period;
+
+    if (pcmk__main_loop_timer_running(timer)) {
+        // Restart the timer using the new period if it changed
+        mainloop_timer_start(timer);
+    }
 }
 
 static int
