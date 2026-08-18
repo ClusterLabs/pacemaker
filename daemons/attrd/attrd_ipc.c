@@ -273,20 +273,23 @@ expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *re
     g_hash_table_iter_init(&aIter, attributes);
     while (g_hash_table_iter_next(&aIter, (void **) &attr, NULL)) {
         int status = regexec(&r_patt, attr, 0, NULL, 0);
+        xmlNode *child = NULL;
 
-        if (status == 0) {
-            xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
-
-            pcmk__trace("Matched %s with %s", attr, regex);
-            matched = true;
-
-            /* Copy all the non-conflicting attributes from the parent over,
-             * but remove the regex and replace it with the name.
-             */
-            pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
-            pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
-            pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
+        if (status != 0) {
+            continue;
         }
+
+        child = pcmk__xe_create(xml, PCMK_XE_OP);
+
+        pcmk__trace("Matched %s with %s", attr, regex);
+        matched = true;
+
+        /* Copy all the non-conflicting attributes from the parent over,
+         * but remove the regex and replace it with the name.
+         */
+        pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
+        pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
+        pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
     }
 
     regfree(&r_patt);
