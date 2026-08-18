@@ -1372,14 +1372,14 @@ pcmk__main_loop_child_kill(pid_t pid)
  * \note The caller is responsible for freeing the return value using
  *       \c pcmk__main_loop_timer_free().
  */
-mainloop_timer_t *
+pcmk__main_loop_timer_t *
 pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
                           GSourceFunc callback, void *user_data)
 {
-    mainloop_timer_t *timer = NULL;
+    pcmk__main_loop_timer_t *timer = NULL;
     pcmk__assert((name != NULL) && (callback != NULL));
 
-    timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
+    timer = pcmk__assert_alloc(1, sizeof(pcmk__main_loop_timer_t));
     timer->name = pcmk__assert_asprintf("%s-%u-%p", name, interval_ms, timer);
     timer->interval_ms = interval_ms;
     timer->cb = callback;
@@ -1401,7 +1401,7 @@ pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
  * \return \c true if the timer is running, or \c false otherwise
  */
 bool
-pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
+pcmk__main_loop_timer_running(const pcmk__main_loop_timer_t *timer)
 {
     CRM_CHECK(timer != NULL, return false);
 
@@ -1418,7 +1418,7 @@ pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
  * \param[in,out] timer  Main loop timer
  */
 void
-pcmk__main_loop_timer_stop(mainloop_timer_t *timer)
+pcmk__main_loop_timer_stop(pcmk__main_loop_timer_t *timer)
 {
     if (!pcmk__main_loop_timer_running(timer)) {
         return;
@@ -1436,7 +1436,8 @@ pcmk__main_loop_timer_stop(mainloop_timer_t *timer)
  * If the callback returns \c G_SOURCE_REMOVE, set \p timer->source_id to 0 to
  * indicate that the timer has no associated \c GSource.
  *
- * \param[in,out] user_data  Main loop timer (<tt>mainloop_timer_t *</tt>)
+ * \param[in,out] user_data  Main loop timer
+ *                           (<tt>pcmk__main_loop_timer_t *</tt>)
  *
  * \return The return value from \p timer->cb (\c G_SOURCE_CONTINUE to keep the
  *         timeout source, or \c G_SOURCE_REMOVE to remove it)
@@ -1447,7 +1448,7 @@ static gboolean
 main_loop_timer_cb(void *user_data)
 {
     int id = 0;
-    mainloop_timer_t *timer = user_data;
+    pcmk__main_loop_timer_t *timer = user_data;
 
     pcmk__assert((timer != NULL) && (timer->cb != NULL));
 
@@ -1485,7 +1486,7 @@ main_loop_timer_cb(void *user_data)
  * \param[in,out] timer  Main loop timer
  */
 void
-pcmk__main_loop_timer_start(mainloop_timer_t *timer)
+pcmk__main_loop_timer_start(pcmk__main_loop_timer_t *timer)
 {
     CRM_CHECK((timer != NULL)
               && (timer->interval_ms > 0)
@@ -1506,7 +1507,7 @@ pcmk__main_loop_timer_start(mainloop_timer_t *timer)
  * \param[in,out] timer  Main loop timer
  */
 void
-pcmk__main_loop_timer_free(mainloop_timer_t *timer)
+pcmk__main_loop_timer_free(pcmk__main_loop_timer_t *timer)
 {
     if (timer == NULL) {
         return;

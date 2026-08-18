@@ -491,7 +491,7 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
     g_hash_table_replace(t, a_v->nodename, a_v);
 }
 
-mainloop_timer_t *
+pcmk__main_loop_timer_t *
 attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
 {
    return pcmk__main_loop_timer_new(id, timeout_ms, attribute_timer_cb, attr);

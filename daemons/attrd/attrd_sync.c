@@ -66,7 +66,7 @@ struct confirmation_action {
      * \brief A timer that will be used to remove the client should it time out
      *        before receiving all confirmations
      */
-    mainloop_timer_t *timer;
+    pcmk__main_loop_timer_t *timer;
 
     /*!
      * \brief A function to run when all confirmations have been received

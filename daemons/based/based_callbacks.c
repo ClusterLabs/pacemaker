@@ -34,7 +34,7 @@
 
 #include "pacemaker-based.h"
 
-static mainloop_timer_t *digest_timer = NULL;
+static pcmk__main_loop_timer_t *digest_timer = NULL;
 static long long ping_seq = 0;
 static char *ping_digest = NULL;
 static bool ping_modified_since = false;

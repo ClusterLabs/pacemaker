@@ -47,7 +47,7 @@ static float throttle_load_target = 0.0;
 #define THROTTLE_FACTOR_HIGH   2.0
 
 static GHashTable *throttle_records = NULL;
-static mainloop_timer_t *throttle_timer = NULL;
+static pcmk__main_loop_timer_t *throttle_timer = NULL;
 
 static const char *
 load2str(enum throttle_state_e mode)

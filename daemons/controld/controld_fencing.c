@@ -386,7 +386,7 @@ controld_execute_fencing_cleanup(void)
  */
 
 static stonith_t *fencer_api = NULL;
-static mainloop_timer_t *controld_fencer_connect_timer = NULL;
+static pcmk__main_loop_timer_t *controld_fencer_connect_timer = NULL;
 static char *te_client_id = NULL;
 
 static bool
@@ -1018,8 +1018,8 @@ controld_validate_fencing_watchdog_timeout(const char *value)
  */
 
 static crm_trigger_t *fencing_history_sync_trigger = NULL;
-static mainloop_timer_t *fencing_history_sync_timer_short = NULL;
-static mainloop_timer_t *fencing_history_sync_timer_long = NULL;
+static pcmk__main_loop_timer_t *fencing_history_sync_timer_short = NULL;
+static pcmk__main_loop_timer_t *fencing_history_sync_timer_long = NULL;
 
 void
 controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)

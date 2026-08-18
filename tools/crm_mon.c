@@ -67,7 +67,7 @@ static mon_output_format_t output_format = mon_output_unset;
 static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
 static unsigned int reconnect_timer = 0;
-static mainloop_timer_t *refresh_timer = NULL;
+static pcmk__main_loop_timer_t *refresh_timer = NULL;
 
 static enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
 static cib_t *cib = NULL;

@@ -28,7 +28,7 @@ struct pcmk__election {
     unsigned int count;             // How many times local node has voted
     void (*cb)(pcmk_cluster_t *);   // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
-    mainloop_timer_t *timeout; // When to abort if all votes not received
+    pcmk__main_loop_timer_t *timeout; // When to abort if all votes not received
     int election_wins;         // Track wins, for storm detection
     bool wrote_blackbox;       // Write a storm blackbox at most once
     time_t expires;            // When storm detection period ends
@@ -189,7 +189,7 @@ election_timeout_stop(pcmk_cluster_t *cluster)
 void
 election_timeout_set_interval(pcmk_cluster_t *cluster, unsigned int interval_ms)
 {
-    mainloop_timer_t *timer = NULL;
+    pcmk__main_loop_timer_t *timer = NULL;
 
     CRM_CHECK((cluster != NULL)
               && (cluster->priv->election != NULL)

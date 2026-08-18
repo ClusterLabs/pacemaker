@@ -34,7 +34,7 @@
 #include "pcmkd_corosync.h"
 
 static corosync_cfg_handle_t cfg_handle = 0;
-static mainloop_timer_t *reconnect_timer = NULL;
+static pcmk__main_loop_timer_t *reconnect_timer = NULL;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 

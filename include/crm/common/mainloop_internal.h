@@ -60,6 +60,35 @@ struct mainloop_child_s {
     pcmk__main_loop_child_cb_t callback;
 };
 
+/*!
+ * \internal
+ * \brief Main loop timer
+ *
+ * This is an abstraction for a \c GSource that's added using \c g_timeout_add()
+ * or \c g_timeout_add_seconds().
+ *
+ * A given source has an unsigned ID. This ID identifies the source to the main
+ * loop and allows it to be removed by \c g_source_remove().
+ *
+ * To stop a timeout using GLib primitives, we remove the source. At that point,
+ * if we saved the source ID, it's no longer valid. If we want to start the
+ * timeout again using the same interval, callback function, and user data, we
+ * must pass all of those again to \c g_timeout_add() or similar.
+ *
+ * This structure facilitates timeout management and reuse. It encapsulates the
+ * timeout interval, callback function, and user data; a timer name for logging
+ * purposes; and the ID of the associated source if the timer is running. The ID
+ * is set to 0 if the timer is not running, indicating that there's no
+ * associated source.
+ */
+typedef struct {
+    char *name;                 //!< Timer name (for logging only)
+    unsigned int source_id;     //!< Source ID (0 indicates timer not running)
+    unsigned int interval_ms;   //!< Interval in milliseconds
+    GSourceFunc cb;             //!< Callback called every \c interval_ms
+    void *user_data;            //!< User data passed to \c cb
+} pcmk__main_loop_timer_t;
+
 struct mainloop_timer_s {
     char *name;
     unsigned int source_id;
@@ -93,14 +122,14 @@ int pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
                            const struct ipc_client_callbacks *callbacks,
                            mainloop_io_t **source);
 
-mainloop_timer_t *pcmk__main_loop_timer_new(const char *name,
-                                            unsigned int interval_ms,
-                                            GSourceFunc callback,
-                                            void *user_data);
-bool pcmk__main_loop_timer_running(const mainloop_timer_t *timer);
-void pcmk__main_loop_timer_stop(mainloop_timer_t *timer);
-void pcmk__main_loop_timer_start(mainloop_timer_t *timer);
-void pcmk__main_loop_timer_free(mainloop_timer_t *timer);
+pcmk__main_loop_timer_t *pcmk__main_loop_timer_new(const char *name,
+                                                   unsigned int interval_ms,
+                                                   GSourceFunc callback,
+                                                   void *user_data);
+bool pcmk__main_loop_timer_running(const pcmk__main_loop_timer_t *timer);
+void pcmk__main_loop_timer_stop(pcmk__main_loop_timer_t *timer);
+void pcmk__main_loop_timer_start(pcmk__main_loop_timer_t *timer);
+void pcmk__main_loop_timer_free(pcmk__main_loop_timer_t *timer);
 
 #ifdef __cplusplus
 }

@@ -25,7 +25,7 @@
 
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
-static mainloop_timer_t *controld_cib_retry_timer = NULL;
+static pcmk__main_loop_timer_t *controld_cib_retry_timer = NULL;
 
 /*!
  * \internal
@@ -235,7 +235,7 @@ do_pe_control(long long action, enum crmd_fsa_cause cause,
 }
 
 static int fsa_pe_query = 0;
-static mainloop_timer_t *controld_sched_timer = NULL;
+static pcmk__main_loop_timer_t *controld_sched_timer = NULL;
 
 // @TODO Make this a configurable cluster option if there's demand for it
 #define SCHED_TIMEOUT_MS (120000)
