@@ -25,8 +25,6 @@
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
 
-static qb_ipcs_service_t *ipcs = NULL;
-
 /*!
  * \internal
  * \brief Accept a new client IPC connection
@@ -193,7 +191,7 @@ done:
     return 0;
 }
 
-static struct qb_ipcs_service_handlers ipc_callbacks = {
+struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = execd_ipc_accept,
     .connection_created = execd_ipc_created,
     .msg_process = execd_ipc_dispatch,
@@ -208,19 +206,7 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
 void
 execd_ipc_cleanup(void)
 {
-    pcmk__drop_all_clients(ipcs);
-    g_clear_pointer(&ipcs, qb_ipcs_destroy);
-
+    pcmk__drop_all_clients(execd.ipcs);
+    g_clear_pointer(&execd.ipcs, qb_ipcs_destroy);
     pcmk__client_cleanup();
-}
-
-/*!
- * \internal
- * \brief Set up executor IPC communication
- */
-bool
-execd_ipc_init(void)
-{
-    pcmk__serve_execd_ipc(&ipcs, &ipc_callbacks);
-    return ipcs != NULL;
 }
