@@ -179,15 +179,3 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_closed = pacemakerd_ipc_closed,
     .connection_destroyed = pacemakerd_ipc_destroy
 };
-
-/*!
- * \internal
- * \brief Clean up pacemakerd IPC communication
- */
-void
-pacemakerd_ipc_cleanup(void)
-{
-    pcmk__drop_all_clients(pacemakerd.ipcs);
-    g_clear_pointer(&pacemakerd.ipcs, qb_ipcs_destroy);
-    pcmk__client_cleanup();
-}
