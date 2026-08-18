@@ -49,47 +49,26 @@ execd_ipc_created(qb_ipcs_connection_t *c)
     notify_of_new_client(new_client);
 }
 
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \return 0 (i.e. do not re-run this callback)
- */
 static int32_t
-execd_ipc_closed(qb_ipcs_connection_t *c)
+ipc_closed(qb_ipcs_connection_t *c)
 {
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
-    } else {
-        pcmk__trace("Cleaning up closed client connection %p", c);
-        client_disconnect_cleanup(client->id);
-#ifdef PCMK__COMPILE_REMOTE
-        ipc_proxy_remove_provider(client);
-#endif
-        lrmd_client_destroy(client);
-    }
-
-    return 0;
+    return pcmk__daemon_ipc_closed(&execd, c);
 }
 
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \note We handle a destroyed connection the same as a closed one,
- *       but we need a separate handler because the return type is different.
- */
-static void
-execd_ipc_destroy(qb_ipcs_connection_t *c)
+void
+execd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client)
 {
-    pcmk__trace("Destroying client connection %p", c);
-    execd_ipc_closed(c);
+    client_disconnect_cleanup(client->id);
+#ifdef PCMK__COMPILE_REMOTE
+    ipc_proxy_remove_provider(client);
+#endif
+    lrmd_client_destroy(client);
+}
+
+static void
+ipc_destroy(qb_ipcs_connection_t *c)
+{
+    pcmk__daemon_ipc_destroy(&execd, c);
 }
 
 /*!
@@ -180,6 +159,6 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = ipc_accept,
     .connection_created = execd_ipc_created,
     .msg_process = execd_ipc_dispatch,
-    .connection_closed = execd_ipc_closed,
-    .connection_destroyed = execd_ipc_destroy
+    .connection_closed = ipc_closed,
+    .connection_destroyed = ipc_destroy
 };

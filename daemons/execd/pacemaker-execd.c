@@ -49,6 +49,7 @@ static pcmk__daemon_fns_t fns = {
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .cleanup = pcmk__daemon_ipc_cleanup,
+    .closed = execd_ipc_closed,
     .init = pcmk__daemon_ipc_init,
 };
 
