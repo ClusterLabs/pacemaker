@@ -411,7 +411,7 @@ fenced_broadcast_op_result(const remote_fencing_op_t *op, bool op_merged)
     pcmk__trace("Broadcasting result to peers");
     pcmk__xe_set(bcast, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     pcmk__xe_set(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-    pcmk__xe_set(bcast, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+    pcmk__xe_set(bcast, fenced.op, STONITH_OP_NOTIFY);
     pcmk__xe_set_int(bcast, PCMK_XA_COUNT, count);
 
     if (op_merged) {
@@ -448,7 +448,7 @@ handle_local_reply_and_notify(remote_fencing_op_t *op, xmlNode *data)
     /* Do notification with a clean data object */
     pcmk__xe_set_int(data, PCMK_XA_STATE, op->state);
     pcmk__xe_set(data, PCMK__XA_ST_TARGET, op->target);
-    pcmk__xe_set(data, PCMK__XA_ST_OP, op->action);
+    pcmk__xe_set(data, fenced.op, op->action);
 
     reply = fenced_construct_reply(op->request, data, &op->result);
     pcmk__xe_set(reply, PCMK__XA_ST_DELEGATE, op->delegate);
@@ -1216,7 +1216,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
     op->client_id = pcmk__str_copy(client);
 
     /* For a RELAY operation, set fenced on the client. */
-    operation = pcmk__xe_get(request, PCMK__XA_ST_OP);
+    operation = pcmk__xe_get(request, fenced.op);
 
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         op->client_name = pcmk__assert_asprintf("%s.%lu", crm_system_name,
@@ -1357,7 +1357,7 @@ initiate_remote_stonith_op(const pcmk__client_t *client, xmlNode *request,
     pcmk__xe_set_int(query, PCMK__XA_ST_TIMEOUT, op->base_timeout);
 
     /* In case of RELAY operation, RELAY information is added to the query to delete the original operation of RELAY. */
-    operation = pcmk__xe_get(request, PCMK__XA_ST_OP);
+    operation = pcmk__xe_get(request, fenced.op);
     if (pcmk__str_eq(operation, STONITH_OP_RELAY, pcmk__str_none)) {
         relay_op_id = pcmk__xe_get(request, PCMK__XA_ST_REMOTE_OP);
         if (relay_op_id) {

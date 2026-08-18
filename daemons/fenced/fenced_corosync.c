@@ -28,7 +28,7 @@ pcmk_cluster_t *fenced_cluster = NULL;
 static void
 handle_cpg_reply(const char *remote_peer, xmlNode *request)
 {
-    const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request, fenced.op);
 
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
@@ -50,7 +50,7 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
 static void
 fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
 {
-    const char *op = pcmk__xe_get(xml, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(xml, fenced.op);
     int rc = pcmk_rc_ok;
 
     if (pcmk__str_eq(op, STONITH_OP_POKE, pcmk__str_none)) {
@@ -79,7 +79,7 @@ fenced_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
                        pcmk_rc_str(rc));
         }
 
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);
+        request.op = pcmk__xe_get_copy(request.xml, fenced.op);
         CRM_CHECK(request.op != NULL, return);
 
         if (pcmk__is_set(request.call_options, st_opt_sync_call)) {
@@ -111,7 +111,7 @@ fenced_peer_change_cb(enum pcmk__node_update type, pcmk__node_status_t *node,
         xmlNode *query = pcmk__xe_create(NULL, PCMK__XE_STONITH_COMMAND);
 
         pcmk__xe_set(query, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        pcmk__xe_set(query, PCMK__XA_ST_OP, STONITH_OP_POKE);
+        pcmk__xe_set(query, fenced.op, STONITH_OP_POKE);
 
         pcmk__debug("Broadcasting our uname because of node %" PRIu32,
                     node->cluster_layer_id);

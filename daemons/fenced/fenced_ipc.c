@@ -28,7 +28,7 @@
 static void
 handle_ipc_reply(pcmk__client_t *client, xmlNode *request)
 {
-    const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request, fenced.op);
 
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
@@ -121,7 +121,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     op = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
     if (pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
         pcmk__xe_set(msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        pcmk__xe_set(msg, PCMK__XA_ST_OP, op);
+        pcmk__xe_set(msg, fenced.op, op);
         pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
         pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
         pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
@@ -174,7 +174,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
             .result         = PCMK__UNKNOWN_RESULT,
         };
 
-        request.op = pcmk__xe_get_copy(request.xml, PCMK__XA_ST_OP);
+        request.op = pcmk__xe_get_copy(request.xml, fenced.op);
         CRM_CHECK(request.op != NULL, goto done);
 
         if (pcmk__is_set(request.call_options, st_opt_sync_call)) {

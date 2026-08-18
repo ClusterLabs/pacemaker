@@ -47,6 +47,7 @@ pcmk__daemon_t fenced = {
     .type = pcmk_ipc_fenced,
     .ec = CRM_EX_OK,
     .priority = QB_LOOP_HIGH,
+    .op = PCMK__XA_ST_OP,
     .ipc_fns = &ipc_fns,
 };
 
@@ -207,7 +208,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     pcmk__xe_set(update_msg, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     pcmk__xe_set(update_msg, PCMK__XA_SUBT, type);
-    pcmk__xe_set(update_msg, PCMK__XA_ST_OP, type);
+    pcmk__xe_set(update_msg, fenced.op, type);
     stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
