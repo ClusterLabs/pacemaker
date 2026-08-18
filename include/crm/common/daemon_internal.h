@@ -99,6 +99,15 @@ typedef struct {
 
     /*!
      * \internal
+     * \brief Handle a newly created IPC connection
+     *
+     * \param[in,out] d      The daemon object
+     * \param[in]     client The new client connection
+     */
+    void (*created)(pcmk__daemon_t *, pcmk__client_t *);
+
+    /*!
+     * \internal
      * \brief Handle an incoming IPC request
      *
      * \param[in,out] d       The daemon object
@@ -172,6 +181,7 @@ int32_t pcmk__daemon_ipc_accept(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
                                 uid_t uid, gid_t gid);
 void pcmk__daemon_ipc_cleanup(pcmk__daemon_t *d);
 int32_t pcmk__daemon_ipc_closed(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
+void pcmk__daemon_ipc_created(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
 void pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
 void pcmk__daemon_ipc_dispatch(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
                                void *data, size_t size);
