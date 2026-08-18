@@ -1383,7 +1383,7 @@ pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
     timer->name = pcmk__assert_asprintf("%s-%u-%p", name, interval_ms, timer);
     timer->interval_ms = interval_ms;
     timer->cb = callback;
-    timer->userdata = user_data;
+    timer->user_data = user_data;
 
     pcmk__trace("Created timer %s with data %p", timer->name, user_data);
     return timer;
@@ -1462,7 +1462,7 @@ main_loop_timer_cb(void *user_data)
     pcmk__trace("Invoking callbacks for timer %s", timer->name);
 
     // G_SOURCE_REMOVE is false; G_SOURCE_CONTINUE is true
-    if (!timer->cb(timer->userdata)) {
+    if (!timer->cb(timer->user_data)) {
         pcmk__trace("Timer %s complete", timer->name);
         return G_SOURCE_REMOVE;
     }
@@ -1535,7 +1535,7 @@ mainloop_timer_cb(void *user_data)
     pcmk__trace("Invoking callbacks for timer %s", timer->name);
 
     // G_SOURCE_REMOVE is false; G_SOURCE_CONTINUE is true
-    if (!timer->cb(timer->userdata)) {
+    if (!timer->cb(timer->user_data)) {
         pcmk__trace("Timer %s complete", timer->name);
         return G_SOURCE_REMOVE;
     }
@@ -1617,7 +1617,7 @@ mainloop_timer_add(const char *name, unsigned int interval_ms, bool repeat,
     timer->interval_ms = interval_ms;
     timer->repeat = repeat;
     timer->cb = cb;
-    timer->userdata = userdata;
+    timer->user_data = userdata;
 
     pcmk__trace("Created timer %s with %p", timer->name, userdata);
     return timer;

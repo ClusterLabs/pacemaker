@@ -66,7 +66,7 @@ struct mainloop_timer_s {
     bool repeat;
     char *name;
     GSourceFunc cb;
-    void *userdata;
+    void *user_data;
 };
 
 struct mainloop_io_s {
