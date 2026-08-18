@@ -50,6 +50,7 @@ static pcmk__daemon_fns_t fns = {
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .cleanup = pcmk__daemon_ipc_cleanup,
     .closed = execd_ipc_closed,
+    .created = execd_ipc_created,
     .dispatch = execd_ipc_dispatch,
     .init = pcmk__daemon_ipc_init,
     .invalid_msg = execd_invalid_msg,
