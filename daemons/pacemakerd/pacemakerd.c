@@ -41,6 +41,7 @@
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .cleanup = pcmk__daemon_ipc_cleanup,
     .init = pcmk__daemon_ipc_init,
 };
 
@@ -361,7 +362,7 @@ pacemakerd_cleanup_cmdline(void)
 static void
 pacemakerd_cleanup(void)
 {
-    pacemakerd_ipc_cleanup();
+    pacemakerd.ipc_fns->cleanup(&pacemakerd);
     pacemakerd_unregister_handlers();
 
 #if SUPPORT_COROSYNC
