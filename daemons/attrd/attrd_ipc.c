@@ -39,7 +39,9 @@ static xmlNode *
 build_query_reply(const char *attr, const char *host)
 {
     xmlNode *reply = pcmk__xe_create(NULL, __func__);
+    xmlNode *host_value = NULL;
     attribute_t *a = NULL;
+    attribute_value_t *v = NULL;
 
     pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
@@ -47,36 +49,35 @@ build_query_reply(const char *attr, const char *host)
 
     /* If desired attribute exists, add its value(s) to the reply */
     a = g_hash_table_lookup(attributes, attr);
-    if (a != NULL) {
-        attribute_value_t *v = NULL;
-        xmlNode *host_value = NULL;
+    if (a == NULL) {
+        return reply;
+    }
 
-        pcmk__xe_set(reply, PCMK__XA_ATTR_NAME, attr);
+    pcmk__xe_set(reply, PCMK__XA_ATTR_NAME, attr);
 
-        /* Allow caller to use "localhost" to refer to local node */
-        if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
-            host = attrd_cluster->priv->node_name;
-            pcmk__trace("Mapped localhost to %s", host);
-        }
+    /* Allow caller to use "localhost" to refer to local node */
+    if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
+        host = attrd_cluster->priv->node_name;
+        pcmk__trace("Mapped localhost to %s", host);
+    }
 
-        /* If a specific node was requested, add its value */
-        if (host != NULL) {
-            v = g_hash_table_lookup(a->values, host);
+    /* If a specific node was requested, add its value */
+    if (host != NULL) {
+        v = g_hash_table_lookup(a->values, host);
+        host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
+        pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, host);
+        pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE,
+                     ((v != NULL)? v->current : NULL));
+
+    /* Otherwise, add all nodes' values */
+    } else {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, a->values);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &v)) {
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-            pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, host);
-            pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE,
-                         ((v != NULL)? v->current : NULL));
-
-        /* Otherwise, add all nodes' values */
-        } else {
-            GHashTableIter iter;
-
-            g_hash_table_iter_init(&iter, a->values);
-            while (g_hash_table_iter_next(&iter, NULL, (void **) &v)) {
-                host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-                pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, v->nodename);
-                pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE, v->current);
-            }
+            pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, v->nodename);
+            pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE, v->current);
         }
     }
 
