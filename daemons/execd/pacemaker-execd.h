@@ -17,7 +17,7 @@
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qbipcs.h>              // qb_ipcs_service_handlers
 
-#include <crm/common/internal.h>    // pcmk__client_t, pcmk__action_result_t
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__daemon_t, pcmk__action_result_t
 #include <crm/common/mainloop.h>    // crm_trigger_t
 #include <crm/stonith-ng.h>         // stonith_t
 
@@ -104,6 +104,8 @@ void lrmd_drain_alerts(GMainLoop *mloop);
 
 bool execd_invalid_msg(xmlNode *msg);
 void execd_handle_request(pcmk__request_t *request);
+
+void execd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
 void execd_send_generic_notify(int rc, xmlNode *request);
