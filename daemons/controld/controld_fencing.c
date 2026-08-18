@@ -1031,8 +1031,8 @@ controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
                         pcmk__main_loop_timer_free);
 
     } else {
-        mainloop_timer_stop(fencing_history_sync_timer_short);
-        mainloop_timer_stop(fencing_history_sync_timer_long);
+        pcmk__main_loop_timer_stop(fencing_history_sync_timer_short);
+        pcmk__main_loop_timer_stop(fencing_history_sync_timer_long);
     }
 
     if (st) {

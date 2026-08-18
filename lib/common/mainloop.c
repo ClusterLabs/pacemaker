@@ -1413,6 +1413,27 @@ pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
 
 /*!
  * \internal
+ * \brief Stop a main loop timer
+ *
+ * Stopping a timer consists of removing its \c GSource and setting its \c id
+ * field to 0 (to indicate that it has no associated \c GSource).
+ *
+ * \param[in,out] timer  Main loop timer
+ */
+void
+pcmk__main_loop_timer_stop(mainloop_timer_t *timer)
+{
+    if (!pcmk__main_loop_timer_running(timer)) {
+        return;
+    }
+
+    pcmk__trace("Stopping timer %s", timer->name);
+    g_source_remove(timer->id);
+    timer->id = 0;
+}
+
+/*!
+ * \internal
  * \brief Start a main loop timer
  *
  * Starting a timer consists of:
@@ -1430,7 +1451,7 @@ pcmk__main_loop_timer_start(mainloop_timer_t *timer)
     CRM_CHECK((timer != NULL) && (timer->period_ms > 0) && (timer->cb != NULL),
               return);
 
-    mainloop_timer_stop(timer);
+    pcmk__main_loop_timer_stop(timer);
 
     pcmk__trace("Starting timer %s", timer->name);
     timer->id = pcmk__create_timer(timer->period_ms, mainloop_timer_cb, timer);
@@ -1450,7 +1471,7 @@ pcmk__main_loop_timer_free(mainloop_timer_t *timer)
     }
 
     pcmk__trace("Destroying timer %s", timer->name);
-    mainloop_timer_stop(timer);
+    pcmk__main_loop_timer_stop(timer);
     free(timer->name);
     free(timer);
 }

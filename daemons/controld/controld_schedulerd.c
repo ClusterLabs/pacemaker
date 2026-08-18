@@ -276,7 +276,8 @@ controld_stop_sched_timer(void)
         pcmk__trace("Stopping timer for scheduler reply %s",
                     controld_globals.fsa_pe_ref);
     }
-    mainloop_timer_stop(controld_sched_timer);
+
+    pcmk__main_loop_timer_stop(controld_sched_timer);
 }
 
 /*!

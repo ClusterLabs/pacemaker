@@ -540,7 +540,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
 
         } else if (pcmk__main_loop_timer_running(a->timer)) {
             if (ignore_delay) {
-                mainloop_timer_stop(a->timer);
+                pcmk__main_loop_timer_stop(a->timer);
                 pcmk__debug("Overriding '%s' write delay", a->id);
             } else {
                 pcmk__info("Delaying write of '%s'", a->id);

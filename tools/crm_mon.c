@@ -831,7 +831,7 @@ mon_cib_connection_destroy(void *user_data)
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
-        mainloop_timer_stop(refresh_timer);
+        pcmk__main_loop_timer_stop(refresh_timer);
     }
     if (reconnect_timer) {
         /* we'll trigger a new reconnect-timeout at the end */
@@ -2121,7 +2121,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
 
     if (reconnect_timer > 0) {
         /* we will receive a refresh request after successful reconnect */
-        mainloop_timer_stop(refresh_timer);
+        pcmk__main_loop_timer_stop(refresh_timer);
         return;
     }
 
@@ -2135,7 +2135,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
         ((now - last_refresh) > pcmk__timeout_ms2s(options.reconnect_ms)) ||
         updates >= 10) {
         mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
-        mainloop_timer_stop(refresh_timer);
+        pcmk__main_loop_timer_stop(refresh_timer);
         updates = 0;
 
     } else {
