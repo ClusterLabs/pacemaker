@@ -2139,7 +2139,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
         updates = 0;
 
     } else {
-        mainloop_timer_start(refresh_timer);
+        pcmk__main_loop_timer_start(refresh_timer);
     }
 }
 

@@ -324,7 +324,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             if (!pcmk__main_loop_timer_running(a->timer)) {
                 pcmk__trace("Delayed re-attempted write for %s by %s",
                             name, pcmk__readable_interval(a->timeout_ms));
-                mainloop_timer_start(a->timer);
+                pcmk__main_loop_timer_start(a->timer);
             }
         } else {
             /* Set a temporary dampening of 2 seconds (timer will continue
@@ -332,7 +332,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
              * write succeeds).
              */
             a->timer = attrd_add_timer(a->id, 2000, a);
-            mainloop_timer_start(a->timer);
+            pcmk__main_loop_timer_start(a->timer);
         }
     }
 }

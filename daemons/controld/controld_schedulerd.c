@@ -297,7 +297,9 @@ controld_expect_sched_reply(char *ref)
                                           SCHED_TIMEOUT_MS,
                                           controld_sched_timeout, NULL);
         }
-        mainloop_timer_start(controld_sched_timer);
+
+        pcmk__main_loop_timer_start(controld_sched_timer);
+
     } else {
         controld_stop_sched_timer();
     }
@@ -490,7 +492,7 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
 
         controld_cib_retry_timer = pcmk__main_loop_timer_new("cib_retry", 1000,
                                                              sleep_timer, NULL);
-        mainloop_timer_start(controld_cib_retry_timer);
+        pcmk__main_loop_timer_start(controld_cib_retry_timer);
         return;
     }
 

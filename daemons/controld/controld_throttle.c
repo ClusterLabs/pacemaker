@@ -267,7 +267,7 @@ throttle_init(void)
     }
 
     throttle_update_job_max(NULL);
-    mainloop_timer_start(throttle_timer);
+    pcmk__main_loop_timer_start(throttle_timer);
 }
 
 /*!

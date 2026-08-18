@@ -566,7 +566,7 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         ping_modified_since = true;
     }
 
-    mainloop_timer_start(digest_timer);
+    pcmk__main_loop_timer_start(digest_timer);
 
 done:
     if (!pcmk__any_flags_set(call_options,

@@ -31,6 +31,8 @@ struct trigger_s {
     unsigned int id;
 };
 
+static gboolean mainloop_timer_cb(void *user_data);
+
 static GList *child_list = NULL;
 static qb_array_t *gio_map = NULL;
 
@@ -1407,6 +1409,31 @@ pcmk__main_loop_timer_running(const mainloop_timer_t *timer)
     CRM_CHECK(timer != NULL, return false);
 
     return (timer->id != 0);
+}
+
+/*!
+ * \internal
+ * \brief Start a main loop timer
+ *
+ * Starting a timer consists of:
+ * 1. stopping the timer if it's already running (by removing the associated
+ *    \c GSource)
+ * 2. creating a new \c GSource using \p timer->period_ms as the timeout (see
+ *    \c pcmk__create_timer())
+ * 3. assigning the new \c GSource ID to \p timer->id
+ *
+ * \param[in,out] timer  Main loop timer
+ */
+void
+pcmk__main_loop_timer_start(mainloop_timer_t *timer)
+{
+    CRM_CHECK((timer != NULL) && (timer->period_ms > 0) && (timer->cb != NULL),
+              return);
+
+    mainloop_timer_stop(timer);
+
+    pcmk__trace("Starting timer %s", timer->name);
+    timer->id = pcmk__create_timer(timer->period_ms, mainloop_timer_cb, timer);
 }
 
 /*!

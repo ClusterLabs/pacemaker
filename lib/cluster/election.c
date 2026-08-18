@@ -162,7 +162,7 @@ election_fini(pcmk_cluster_t *cluster)
 static void
 election_timeout_start(pcmk_cluster_t *cluster)
 {
-    mainloop_timer_start(cluster->priv->election->timeout);
+    pcmk__main_loop_timer_start(cluster->priv->election->timeout);
 }
 
 /*!
@@ -206,7 +206,7 @@ election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
 
     if (pcmk__main_loop_timer_running(timer)) {
         // Restart the timer using the new period if it changed
-        mainloop_timer_start(timer);
+        pcmk__main_loop_timer_start(timer);
     }
 }
 

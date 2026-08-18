@@ -124,7 +124,7 @@ cfg_connection_destroy(void *user_data)
     reconnect_timer = pcmk__main_loop_timer_new("pcmkd_corosync_reconnect",
                                                 1000, cluster_reconnect_cb,
                                                 NULL);
-    mainloop_timer_start(reconnect_timer);
+    pcmk__main_loop_timer_start(reconnect_timer);
 }
 
 void

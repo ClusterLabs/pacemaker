@@ -444,7 +444,7 @@ destroy_fencer_connection(stonith_t *st, stonith_event_t *e)
     if (pcmk__is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         pcmk__err("Lost fencer connection (will attempt to reconnect)");
         if (!pcmk__main_loop_timer_running(controld_fencer_connect_timer)) {
-            mainloop_timer_start(controld_fencer_connect_timer);
+            pcmk__main_loop_timer_start(controld_fencer_connect_timer);
         }
     } else {
         pcmk__info("Disconnected from fencer");
@@ -687,7 +687,7 @@ controld_timer_fencer_connect(void *user_data)
                              pcmk_strerror(rc), rc);
 
                 if (!pcmk__main_loop_timer_running(controld_fencer_connect_timer)) {
-                    mainloop_timer_start(controld_fencer_connect_timer);
+                    pcmk__main_loop_timer_start(controld_fencer_connect_timer);
                 }
 
                 return G_SOURCE_CONTINUE;
@@ -1089,7 +1089,7 @@ controld_trigger_fencing_history_sync(bool long_timeout)
         }
         pcmk__info("Fence history will be synchronized cluster-wide within 30 "
                    "seconds");
-        mainloop_timer_start(fencing_history_sync_timer_long);
+        pcmk__main_loop_timer_start(fencing_history_sync_timer_long);
 
     } else {
         if (fencing_history_sync_timer_short == NULL) {
@@ -1100,7 +1100,7 @@ controld_trigger_fencing_history_sync(bool long_timeout)
         }
         pcmk__info("Fence history will be synchronized cluster-wide within 5 "
                    "seconds");
-        mainloop_timer_start(fencing_history_sync_timer_short);
+        pcmk__main_loop_timer_start(fencing_history_sync_timer_short);
     }
 
 }
