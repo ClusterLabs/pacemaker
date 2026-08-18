@@ -13,14 +13,11 @@
 #include <stdint.h>                         // int32_t, uint32_t
 #include <sys/types.h>                      // gid_t, uid_t
 
-#include <glib.h>                           // g_byte_array_free, TRUE
-#include <libxml/tree.h>                    // xmlNode
 #include <qb/qbipcs.h>                      // qb_ipcs_connection_t
 
 #include <crm/common/internal.h>            // pcmk__client_t, pcmk__find_client
 #include <crm/common/ipc.h>                 // crm_ipc_client_response
 #include <crm/common/logging.h>             // CRM_CHECK
-#include <crm/common/results.h>             // pcmk_rc_*, pcmk_rc_str
 
 #include "pacemaker-execd.h"                // client_disconnect_cleanup
 
@@ -71,94 +68,28 @@ ipc_destroy(qb_ipcs_connection_t *c)
     pcmk__daemon_ipc_destroy(&execd, c);
 }
 
-/*!
- * \internal
- * \brief Handle a message from an IPC connection
- *
- * \param[in,out] c     Established IPC connection
- * \param[in]     data  The message data read from the connection - this can be
- *                      a complete IPC message or just a part of one if it's
- *                      very large
- * \param[size]   size  Unused
- *
- * \return 0 in all cases
- */
 static int32_t
-execd_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *msg = NULL;
-
-    // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(client != NULL, return 0);
-
-    if (data == NULL) {
-        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-
-    rc = pcmk__ipc_msg_append(&client->buffer, data);
-
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
-
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        msg = pcmk__client_data2xml(client, &id, &flags);
-        g_byte_array_free(client->buffer, TRUE);
-        client->buffer = NULL;
-
-    } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (client->buffer != NULL) {
-            g_byte_array_free(client->buffer, TRUE);
-            client->buffer = NULL;
-        }
-
-        return 0;
-    }
-
-    CRM_CHECK(pcmk__is_set(flags, crm_ipc_client_response), goto done);
-
-    if ((msg == NULL) || execd_invalid_msg(msg)) {
-        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
-    } else {
-        pcmk__request_t request = {
-            .ipc_client     = client,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = msg,
-            .call_options   = 0,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
-        request.op = pcmk__xe_get_copy(request.xml, execd.op);
-        CRM_CHECK(request.op != NULL, goto done);
-
-        execd_handle_request(&request);
-    }
-
-done:
-    pcmk__xml_free(msg);
+    pcmk__daemon_ipc_dispatch(&execd, c, data, size);
     return 0;
+}
+
+void
+execd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request)
+{
+    request->op = pcmk__xe_get_copy(request->xml, d->op);
+    CRM_CHECK(request->op != NULL, return);
+
+    CRM_CHECK(pcmk__is_set(request->ipc_flags, crm_ipc_client_response),
+              g_clear_pointer(&request->op, free); return);
+    execd_handle_request(request);
 }
 
 struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_accept = ipc_accept,
     .connection_created = execd_ipc_created,
-    .msg_process = execd_ipc_dispatch,
+    .msg_process = ipc_dispatch,
     .connection_closed = ipc_closed,
     .connection_destroyed = ipc_destroy
 };
