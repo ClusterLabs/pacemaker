@@ -256,15 +256,3 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_closed = fenced_ipc_closed,
     .connection_destroyed = fenced_ipc_destroy
 };
-
-/*!
- * \internal
- * \brief Clean up fenced IPC communication
- */
-void
-fenced_ipc_cleanup(void)
-{
-    pcmk__drop_all_clients(fenced.ipcs);
-    g_clear_pointer(&fenced.ipcs, qb_ipcs_destroy);
-    pcmk__client_cleanup();
-}
