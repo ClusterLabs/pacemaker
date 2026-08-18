@@ -106,6 +106,7 @@ bool execd_invalid_msg(xmlNode *msg);
 void execd_handle_request(pcmk__request_t *request);
 
 void execd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
+void execd_ipc_created(pcmk__daemon_t *d, pcmk__client_t *client);
 void execd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);
