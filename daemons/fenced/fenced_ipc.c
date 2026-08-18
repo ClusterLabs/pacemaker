@@ -69,22 +69,27 @@ ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static int32_t
 fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
 {
-    uint32_t id = 0;
-    uint32_t flags = 0;
     uint32_t call_options = st_opt_none;
-    xmlNode *msg = NULL;
-    pcmk__client_t *client = pcmk__find_client(c);
     const char *op = NULL;
     int rc = pcmk_rc_ok;
 
+    pcmk__request_t request = {
+        .ipc_client = pcmk__find_client(c),
+        .ipc_id = 0,
+        .ipc_flags = 0,
+        .peer = NULL,
+        .xml = NULL,
+        .result = PCMK__UNKNOWN_RESULT,
+    };
+
     // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(client != NULL, return 0);
+    CRM_CHECK(request.ipc_client != NULL, return 0);
     if (data == NULL) {
         pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
         return 0;
     }
 
-    rc = pcmk__ipc_msg_append(&client->buffer, data);
+    rc = pcmk__ipc_msg_append(&request.ipc_client->buffer, data);
 
     if (rc == pcmk_rc_ipc_more) {
         /* We haven't read the complete message yet, so just return. */
@@ -94,9 +99,10 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
         /* We've read the complete message and there's already a header on
          * the front.  Pass it off for processing.
          */
-        msg = pcmk__client_data2xml(client, &id, &flags);
-        g_byte_array_free(client->buffer, TRUE);
-        client->buffer = NULL;
+        request.xml = pcmk__client_data2xml(request.ipc_client, &request.ipc_id,
+                                            &request.ipc_flags);
+        g_byte_array_free(request.ipc_client->buffer, TRUE);
+        request.ipc_client->buffer = NULL;
 
     } else {
         /* Some sort of error occurred reassembling the message.  All we can
@@ -104,76 +110,73 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
          */
         pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
 
-        if (client->buffer != NULL) {
-            g_byte_array_free(client->buffer, TRUE);
-            client->buffer = NULL;
+        if (request.ipc_client->buffer != NULL) {
+            g_byte_array_free(request.ipc_client->buffer, TRUE);
+            request.ipc_client->buffer = NULL;
         }
 
         return 0;
     }
 
-    if (msg == NULL) {
+    if (request.xml == NULL) {
         pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
+        pcmk__ipc_send_ack(request.ipc_client, request.ipc_id, request.ipc_flags,
+                           NULL, CRM_EX_PROTOCOL);
         return 0;
     }
 
-    op = pcmk__xe_get(msg, PCMK__XA_CRM_TASK);
+    op = pcmk__xe_get(request.xml, PCMK__XA_CRM_TASK);
     if (pcmk__str_eq(op, CRM_OP_RM_NODE_CACHE, pcmk__str_casei)) {
-        pcmk__xe_set(msg, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-        pcmk__xe_set(msg, fenced.op, op);
-        pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
-        pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
-        pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
+        pcmk__xe_set(request.xml, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
+        pcmk__xe_set(request.xml, fenced.op, op);
+        pcmk__xe_set(request.xml, PCMK__XA_ST_CLIENTID, request.ipc_client->id);
+        pcmk__xe_set(request.xml, PCMK__XA_ST_CLIENTNAME,
+                     pcmk__client_name(request.ipc_client));
+        pcmk__xe_set(request.xml, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, msg);
+        pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, request.xml);
         goto done;
     }
 
-    if (client->name == NULL) {
-        const char *value = pcmk__xe_get(msg, PCMK__XA_ST_CLIENTNAME);
+    if (request.ipc_client->name == NULL) {
+        const char *value = pcmk__xe_get(request.xml, PCMK__XA_ST_CLIENTNAME);
 
-        client->name = pcmk__assert_asprintf("%s.%u", pcmk__s(value, "unknown"),
-                                             client->pid);
+        request.ipc_client->name =
+            pcmk__assert_asprintf("%s.%u", pcmk__s(value, "unknown"),
+                                  request.ipc_client->pid);
     }
 
-    rc = pcmk__xe_get_flags(msg, PCMK__XA_ST_CALLOPT, &call_options,
+    rc = pcmk__xe_get_flags(request.xml, PCMK__XA_ST_CALLOPT, &call_options,
                             st_opt_none);
     if (rc != pcmk_rc_ok) {
         pcmk__warn("Couldn't parse options from request: %s", pcmk_rc_str(rc));
     }
 
+    request.call_options = call_options;
+
     pcmk__trace("Flags %#08" PRIx32 "/%#08x for command %" PRIu32
                 " from client %s",
-                flags, call_options, id, pcmk__client_name(client));
+                request.ipc_flags, request.call_options, request.ipc_id,
+                pcmk__client_name(request.ipc_client));
 
-    if (pcmk__is_set(call_options, st_opt_sync_call)) {
-        pcmk__assert(pcmk__is_set(flags, crm_ipc_client_response));
+    if (pcmk__is_set(request.call_options, st_opt_sync_call)) {
+        pcmk__assert(pcmk__is_set(request.ipc_flags, crm_ipc_client_response));
         /* This means the client has two synchronous events in-flight */
-        CRM_LOG_ASSERT(client->request_id == 0);
+        CRM_LOG_ASSERT(request.ipc_client->request_id == 0);
         /* Reply only to the last one */
-        client->request_id = id;
+        request.ipc_client->request_id = request.ipc_id;
     }
 
-    pcmk__xe_set(msg, PCMK__XA_ST_CLIENTID, client->id);
-    pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNAME, pcmk__client_name(client));
-    pcmk__xe_set(msg, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
+    pcmk__xe_set(request.xml, PCMK__XA_ST_CLIENTID, request.ipc_client->id);
+    pcmk__xe_set(request.xml, PCMK__XA_ST_CLIENTNAME,
+                 pcmk__client_name(request.ipc_client));
+    pcmk__xe_set(request.xml, PCMK__XA_ST_CLIENTNODE, fenced_get_local_node());
 
-    if (pcmk__xpath_find_one(msg->doc, "//" PCMK__XE_ST_REPLY,
+    if (pcmk__xpath_find_one(request.xml->doc, "//" PCMK__XE_ST_REPLY,
                              PCMK__LOG_NEVER) != NULL) {
-        handle_ipc_reply(client, msg);
+        handle_ipc_reply(request.ipc_client, request.xml);
 
     } else {
-        pcmk__request_t request = {
-            .ipc_client     = client,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = msg,
-            .call_options   = call_options,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
         request.op = pcmk__xe_get_copy(request.xml, fenced.op);
         CRM_CHECK(request.op != NULL, goto done);
 
@@ -185,7 +188,7 @@ fenced_ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
     }
 
 done:
-    pcmk__xml_free(msg);
+    pcmk__xml_free(request.xml);
     return 0;
 }
 
