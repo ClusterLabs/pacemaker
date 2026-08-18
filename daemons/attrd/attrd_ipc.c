@@ -35,10 +35,11 @@
  * \return New XML reply
  * \note Caller is responsible for freeing the resulting XML
  */
-static xmlNode *build_query_reply(const char *attr, const char *host)
+static xmlNode *
+build_query_reply(const char *attr, const char *host)
 {
     xmlNode *reply = pcmk__xe_create(NULL, __func__);
-    attribute_t *a;
+    attribute_t *a = NULL;
 
     pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
@@ -46,9 +47,9 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
     /* If desired attribute exists, add its value(s) to the reply */
     a = g_hash_table_lookup(attributes, attr);
-    if (a) {
-        attribute_value_t *v;
-        xmlNode *host_value;
+    if (a != NULL) {
+        attribute_value_t *v = NULL;
+        xmlNode *host_value = NULL;
 
         pcmk__xe_set(reply, PCMK__XA_ATTR_NAME, attr);
 
@@ -59,7 +60,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
         }
 
         /* If a specific node was requested, add its value */
-        if (host) {
+        if (host != NULL) {
             v = g_hash_table_lookup(a->values, host);
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
             pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, host);
@@ -78,6 +79,7 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
             }
         }
     }
+
     return reply;
 }
 
@@ -85,7 +87,9 @@ void
 attrd_client_clear_failure(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
-    const char *rsc, *op, *interval_spec;
+    const char *rsc = NULL;
+    const char *op = NULL;
+    const char *interval_spec = NULL;
 
     if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
@@ -105,8 +109,8 @@ attrd_client_clear_failure(pcmk__request_t *request)
 
     /* Add regular expression matching desired attributes */
 
-    if (rsc) {
-        char *pattern;
+    if (rsc != NULL) {
+        char *pattern = NULL;
 
         if (op == NULL) {
             pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
@@ -162,15 +166,17 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host_alloc = pcmk__cluster_node_name(nodeid);
                 host = host_alloc;
             }
+
             pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, host);
         }
     }
 
-    if (host) {
+    if (host != NULL) {
         pcmk__info("Client %s is requesting all values for %s be removed",
                    pcmk__client_name(request->ipc_client), host);
         attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
         free(host_alloc);
+
     } else {
         pcmk__info("Ignoring request by client %s to remove all peer values "
                    "without specifying peer",
@@ -206,6 +212,7 @@ attrd_client_query(pcmk__request_t *request)
                             "Could not respond to query from %s: could not create XML reply",
                             pcmk__client_name(request->ipc_client));
         return NULL;
+
     } else {
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     }
@@ -244,7 +251,7 @@ handle_missing_host(xmlNode *xml)
 static int
 expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *regex)
 {
-    if (attr == NULL && regex) {
+    if ((attr == NULL) && (regex != NULL)) {
         bool matched = false;
         GHashTableIter aIter;
         regex_t r_patt;
@@ -325,20 +332,20 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
 {
     attribute_t *a = g_hash_table_lookup(attributes, attr);
 
-    if (a == NULL && pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
+    if ((a == NULL) && pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
         return EINVAL;
     }
 
-    if (*value && attrd_value_needs_expansion(*value)) {
+    if ((*value != NULL) && attrd_value_needs_expansion(*value)) {
         int int_value;
         attribute_value_t *v = NULL;
 
-        if (a) {
+        if (a != NULL) {
             const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
             v = g_hash_table_lookup(a->values, host);
         }
 
-        int_value = attrd_expand_value(*value, (v? v->current : NULL));
+        int_value = attrd_expand_value(*value, ((v != NULL) ? v->current : NULL));
 
         pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
         pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
@@ -389,7 +396,9 @@ void
 attrd_client_update(pcmk__request_t *request)
 {
     xmlNode *xml = NULL;
-    const char *attr, *value, *regex;
+    const char *attr = NULL;
+    const char *value = NULL;
+    const char *regex = NULL;
 
     CRM_CHECK((request != NULL) && (request->xml != NULL), return);
 
