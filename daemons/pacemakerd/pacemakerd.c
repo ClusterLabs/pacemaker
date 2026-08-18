@@ -43,6 +43,7 @@
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .cleanup = pcmk__daemon_ipc_cleanup,
     .closed = pacemakerd_ipc_closed,
+    .dispatch = pacemakerd_ipc_dispatch,
     .init = pcmk__daemon_ipc_init,
 };
 
