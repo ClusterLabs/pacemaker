@@ -198,15 +198,3 @@ struct qb_ipcs_service_handlers ipc_callbacks = {
     .connection_closed = execd_ipc_closed,
     .connection_destroyed = execd_ipc_destroy
 };
-
-/*!
- * \internal
- * \brief Clean up executor IPC communication
- */
-void
-execd_ipc_cleanup(void)
-{
-    pcmk__drop_all_clients(execd.ipcs);
-    g_clear_pointer(&execd.ipcs, qb_ipcs_destroy);
-    pcmk__client_cleanup();
-}
