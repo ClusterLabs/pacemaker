@@ -9,10 +9,13 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <time.h>                       // time_t
+#include <stdbool.h>                // bool
+#include <time.h>                   // time_t
 
-#include <crm/common/mainloop.h>        // crm_trigger_t
+#include <glib.h>                   // gboolean
+
+#include <crm/common/internal.h>    // pcmk__client_t, pcmk__daemon_t, pcmk__request_t
+#include <crm/common/mainloop.h>    // crm_trigger_t
 
 #define MAX_RESPAWN		100
 
