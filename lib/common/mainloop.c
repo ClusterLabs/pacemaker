@@ -33,9 +33,26 @@
 #include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // pcmk_rc_*, pcmk_strerror
 
+/*!
+ * \internal
+ * \brief Main loop trigger
+ *
+ * This derived event source type attaches boolean values to a \c GSource,
+ * indicating whether the source is ready to be dispatched and whether an event
+ * handler job is currently running.
+ *
+ * \note This is a new source type derived from \c GSource. Note that the first
+ *       field is a \c GSource, not a pointer to \c GSource. This is a
+ *       documented idiom; see the GLib "Main Event Loop" documentation.
+ */
 struct trigger_s {
+    //! Event source (base type)
     GSource source;
+
+    //! If \c true, this source is ready to be dispatched
     bool ready;
+
+    //! If \c true, an event handler job is currently running for this source
     bool running;
 };
 
