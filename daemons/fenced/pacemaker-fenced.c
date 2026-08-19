@@ -9,31 +9,24 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/utsname.h>
+#include <errno.h>                  // EIO
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // atexit
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <inttypes.h>  // PRIu32, PRIx32
+#include <glib.h>
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/common/ipc.h>
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT, crm_log_*, crm_exit
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/fencing/internal.h>   // STONITH_OP_*
+#include <crm/stonith-ng.h>         // st_opt_*
 
-#include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
-#include <crm/common/xml.h>
-
-#include <crm/common/mainloop.h>
-
-#include <crm/cib/internal.h>
-
-#include <pacemaker-fenced.h>
+#include "pacemaker-fenced.h"
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
