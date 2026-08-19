@@ -473,11 +473,6 @@ main(int argc, char **argv)
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
 
-    if (!execd.ipc_fns->init(&execd)) {
-        execd.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         pcmk__err("Failed to create TLS listener: shutting down and staying "
@@ -493,7 +488,7 @@ main(int argc, char **argv)
 
     rc = pcmk__daemon_init(&execd);
     if (rc != pcmk_rc_ok) {
-        execd.ec = CRM_EX_ERROR;
+        execd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

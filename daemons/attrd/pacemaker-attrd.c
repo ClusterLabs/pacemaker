@@ -214,14 +214,9 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    if (!attrd.ipc_fns->init(&attrd)) {
-        attrd.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
     rc = pcmk__daemon_init(&attrd);
     if (rc != pcmk_rc_ok) {
-        attrd.ec = CRM_EX_ERROR;
+        attrd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

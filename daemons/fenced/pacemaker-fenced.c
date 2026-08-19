@@ -434,14 +434,9 @@ main(int argc, char **argv)
     fenced_init_device_table();
     init_topology_list();
 
-    if (!fenced.ipc_fns->init(&fenced)) {
-        fenced.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
     rc = pcmk__daemon_init(&fenced);
     if (rc != pcmk_rc_ok) {
-        fenced.ec = CRM_EX_ERROR;
+        fenced.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

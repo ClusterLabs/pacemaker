@@ -472,11 +472,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!pacemakerd.ipc_fns->init(&pacemakerd)) {
-        pacemakerd.ec = CRM_EX_OSERR;
-        goto done;
-    }
-
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
@@ -516,7 +511,7 @@ main(int argc, char **argv)
 
     rc = pcmk__daemon_init(&pacemakerd);
     if (rc != pcmk_rc_ok) {
-        pacemakerd.ec = CRM_EX_ERROR;
+        pacemakerd.ec = (rc == EIO) ? CRM_EX_OSERR : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

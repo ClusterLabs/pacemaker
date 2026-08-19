@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                      // EIO
 #include <signal.h>                     // SIGTERM
 #include <stdbool.h>                    // true
 #include <stddef.h>                     // NULL
@@ -195,11 +196,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!schedulerd.ipc_fns->init(&schedulerd)) {
-        schedulerd.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
     if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         schedulerd.ec = CRM_EX_FATAL;
         goto done;
@@ -210,7 +206,7 @@ main(int argc, char **argv)
 
     rc = pcmk__daemon_init(&schedulerd);
     if (rc != pcmk_rc_ok) {
-        schedulerd.ec = CRM_EX_ERROR;
+        schedulerd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));
