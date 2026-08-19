@@ -45,7 +45,7 @@ static qb_array_t *gio_map = NULL;
 static gboolean
 crm_trigger_prepare(GSource *source, int *timeout)
 {
-    crm_trigger_t *trig = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
     /* cluster-glue's FD and IPC related sources make use of
      * g_source_add_poll() but do not set a timeout in their prepare
@@ -66,15 +66,15 @@ crm_trigger_prepare(GSource *source, int *timeout)
      */
     *timeout = 500;             /* Timeout in ms */
 
-    return trig->ready;
+    return trigger->ready;
 }
 
 static gboolean
 crm_trigger_check(GSource *source)
 {
-    crm_trigger_t *trig = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
-    return trig->ready;
+    return trigger->ready;
 }
 
 /*!
@@ -91,23 +91,23 @@ static gboolean
 crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
 {
     gboolean rc = G_SOURCE_CONTINUE;
-    crm_trigger_t *trig = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
-    if (trig->running) {
+    if (trigger->running) {
         /* Wait until the existing job is complete before starting the next
          * one
          */
         return G_SOURCE_CONTINUE;
     }
 
-    trig->ready = false;
+    trigger->ready = false;
 
     if (callback != NULL) {
         int callback_rc = callback(userdata);
 
         if (callback_rc < 0) {
-            pcmk__trace("Trigger handler %p not yet complete", trig);
-            trig->running = true;
+            pcmk__trace("Handler for trigger %p is not yet complete", trigger);
+            trigger->running = true;
 
         } else if (callback_rc == 0) {
             rc = G_SOURCE_REMOVE;
@@ -149,10 +149,10 @@ mainloop_setup_trigger(GSource *source, int priority,
 }
 
 void
-mainloop_trigger_complete(crm_trigger_t *trig)
+mainloop_trigger_complete(crm_trigger_t *trigger)
 {
-    pcmk__trace("Trigger handler %p complete", trig);
-    trig->running = false;
+    pcmk__trace("Handler for trigger %p complete", trigger);
+    trigger->running = false;
 }
 
 /*!
