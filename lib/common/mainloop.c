@@ -266,6 +266,19 @@ pcmk__main_loop_trigger_set(crm_trigger_t *trigger)
     trigger->ready = true;
 }
 
+/*!
+ * \internal
+ * \brief Mark a main loop trigger as complete when its job has finished running
+ *
+ * \param[in,out] trigger  Main loop trigger
+ */
+void
+pcmk__main_loop_trigger_complete(crm_trigger_t *trigger)
+{
+    pcmk__trace("Handler for trigger %p complete", trigger);
+    trigger->running = false;
+}
+
 // Define a custom glib source for signal handling
 
 // Data structure for custom glib source

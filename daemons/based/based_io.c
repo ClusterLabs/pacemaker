@@ -73,7 +73,7 @@ write_cib_cb(pcmk__main_loop_child_t *child, int core, int signo, int exit_code)
                   ((core != 0)? " and dumped core" : ""));
     }
 
-    mainloop_trigger_complete(write_trigger);
+    pcmk__main_loop_trigger_complete(write_trigger);
 }
 
 /*!
