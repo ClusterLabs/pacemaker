@@ -5,14 +5,20 @@
  * or later (GPLv2+) WITHOUT ANY WARRANTY.
  */
 
-#include <stdbool.h>
-#include <stdint.h>                 // uint32_t, uint64_t
-#include <libxml/tree.h>            // xmlNode
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // UINT32_C, uint32_t
+#include <time.h>                   // time_t
 
-#include <crm/common/mainloop.h>
-#include <crm/cluster.h>
-#include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
+#include <glib.h>                   // GList, GHFunc, GHashTable, gboolean, gchar
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // LOG_TRACE
+
+#include <crm/cluster.h>            // pcmk_cluster_t
+#include <crm/cluster/internal.h>   // pcmk__node_status_t
+#include <crm/common/internal.h>
+#include <crm/common/mainloop.h>    // crm_trigger_t, mainloop_timer_t
+#include <crm/fencing/internal.h>   // ST__LEVEL_COUNT
+#include <crm/stonith-ng.h>         // op_state
 
 /*!
  * \internal
@@ -325,7 +331,7 @@ xmlNode *fenced_construct_reply(const xmlNode *request, xmlNode *data,
                                 const pcmk__action_result_t *result);
 
 void
- do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
+do_stonith_async_timeout_update(const char *client, const char *call_id, int timeout);
 
 void fenced_send_notification(const char *type,
                               const pcmk__action_result_t *result,
