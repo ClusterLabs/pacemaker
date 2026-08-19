@@ -10,17 +10,20 @@
 #ifndef PACEMAKER_ATTRD__H
 #  define PACEMAKER_ATTRD__H
 
-#include <regex.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <regex.h>                  // regex_t
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // UINT32_C, uint32_t
 
-#include <glib.h>
+#include <glib.h>                   // GHashTable, gboolean
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/cluster.h>
-#include <crm/cluster/election_internal.h>
+#include <crm/cib/cib_types.h>      // cib_t
+#include <crm/cluster.h>            // pcmk_cluster_t
+#include <crm/cluster/internal.h>   // pcmk__node_status_t
 #include <crm/common/internal.h>
-#include <crm/cib/cib_types.h>
+#include <crm/common/mainloop.h>    // crm_trigger_t, mainloop_timer_t
+#include <crm/lrmd.h>               // lrmd_t
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
