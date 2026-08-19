@@ -112,7 +112,7 @@ controld_trigger_fsa_as(const char *fn, int line)
 {
     if (fsa_trigger != NULL) {
         pcmk__trace("%s:%d - Triggered FSA invocation", fn, line);
-        mainloop_set_trigger(fsa_trigger);
+        pcmk__main_loop_trigger_set(fsa_trigger);
     }
 }
 

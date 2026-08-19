@@ -119,7 +119,7 @@ void
 controld_trigger_graph_as(const char *fn, int line)
 {
     pcmk__trace("%s:%d - Triggered graph processing", fn, line);
-    mainloop_set_trigger(transition_trigger);
+    pcmk__main_loop_trigger_set(transition_trigger);
 }
 
 static struct abort_timer_s {

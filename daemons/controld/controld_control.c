@@ -606,7 +606,7 @@ controld_trigger_config_as(const char *fn, int line)
 {
     if (config_read_trigger != NULL) {
         pcmk__trace("%s:%d - Triggered config processing", fn, line);
-        mainloop_set_trigger(config_read_trigger);
+        pcmk__main_loop_trigger_set(config_read_trigger);
     }
 }
 

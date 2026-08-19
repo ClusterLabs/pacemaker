@@ -602,7 +602,7 @@ main(int argc, char **argv)
         lrmd_conn = lrmd_api_new();
     }
     trig = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH, start_test, NULL);
-    mainloop_set_trigger(trig);
+    pcmk__main_loop_trigger_set(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
     pcmk__info("Starting");

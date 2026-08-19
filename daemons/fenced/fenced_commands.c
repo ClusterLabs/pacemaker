@@ -793,7 +793,7 @@ done:
      * simultaneously. Trigger the device again to make sure any
      * remaining concurrent commands get executed. */
     if (device->pending_ops != NULL) {
-        mainloop_set_trigger(device->work);
+        pcmk__main_loop_trigger_set(device->work);
     }
     return TRUE;
 }
@@ -812,7 +812,7 @@ start_delay_helper(void *data)
 
     cmd->delay_id = 0;
     if (device != NULL) {
-        mainloop_set_trigger(device->work);
+        pcmk__main_loop_trigger_set(device->work);
     }
 
     return G_SOURCE_REMOVE;
@@ -853,7 +853,7 @@ schedule_stonith_command(async_command_t *cmd, fenced_device_t *device)
     }
 
     device->pending_ops = g_list_append(device->pending_ops, cmd);
-    mainloop_set_trigger(device->work);
+    pcmk__main_loop_trigger_set(device->work);
 
     // Value -1 means disable any static/random fencing delays
     if (requested_delay < 0) {
@@ -1283,7 +1283,7 @@ status_search_cb(int pid, const pcmk__action_result_t *result, void *user_data)
         return;
     }
 
-    mainloop_set_trigger(dev->work);
+    pcmk__main_loop_trigger_set(dev->work);
 
     if (result->execution_status != PCMK_EXEC_DONE) {
         const char *reason = result->exit_reason;
@@ -1340,7 +1340,7 @@ dynamic_list_search_cb(int pid, const pcmk__action_result_t *result,
         return;
     }
 
-    mainloop_set_trigger(dev->work);
+    pcmk__main_loop_trigger_set(dev->work);
 
     if (pcmk__result_ok(result)) {
         pcmk__info("Refreshing target list for %s", dev->id);
@@ -1552,7 +1552,7 @@ fenced_device_register(const xmlNode *dev, bool from_cib)
             fenced_device_set_flags(device, fenced_df_api_registered);
             old->pending_ops = NULL;
             if (device->pending_ops != NULL) {
-                mainloop_set_trigger(device->work);
+                pcmk__main_loop_trigger_set(device->work);
             }
         }
         g_hash_table_replace(device_table, device->id, device);
@@ -2885,7 +2885,7 @@ st_child_done(int pid, const pcmk__action_result_t *result, void *user_data)
             fenced_device_set_flags(device, fenced_df_verified);
         }
 
-        mainloop_set_trigger(device->work);
+        pcmk__main_loop_trigger_set(device->work);
     }
 
     if (pcmk__result_ok(result)) {

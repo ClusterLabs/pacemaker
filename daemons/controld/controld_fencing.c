@@ -1050,7 +1050,7 @@ fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 static gboolean
 fencing_history_sync_set_trigger(void *user_data)
 {
-    mainloop_set_trigger(fencing_history_sync_trigger);
+    pcmk__main_loop_trigger_set(fencing_history_sync_trigger);
     return G_SOURCE_REMOVE;
 }
 

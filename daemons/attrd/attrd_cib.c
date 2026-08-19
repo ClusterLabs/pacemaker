@@ -58,7 +58,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         if (attrd.shutting_down) {
             pcmk__debug("Ignoring alerts change in CIB during shutdown");
         } else {
-            mainloop_set_trigger(attrd_config_read);
+            pcmk__main_loop_trigger_set(attrd_config_read);
         }
     }
 
@@ -234,7 +234,7 @@ attrd_cib_init(void)
                                                     attrd_read_options, NULL);
 
     // Always read the CIB at start-up
-    mainloop_set_trigger(attrd_config_read);
+    pcmk__main_loop_trigger_set(attrd_config_read);
 }
 
 static gboolean

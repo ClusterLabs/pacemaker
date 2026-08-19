@@ -219,7 +219,7 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
 
     trig = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH, async_fence_helper,
                                        NULL);
-    mainloop_set_trigger(trig);
+    pcmk__main_loop_trigger_set(trig);
 
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);

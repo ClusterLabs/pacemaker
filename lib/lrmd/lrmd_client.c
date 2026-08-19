@@ -29,7 +29,7 @@
 #include <crm/common/internal.h>
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT
-#include <crm/common/mainloop.h>    // mainloop_set_trigger
+#include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/nvpair.h>      // hash2smartfield, xml2list
 #include <crm/common/options.h>     // PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
 #include <crm/common/results.h>     // pcmk_rc_*, pcmk_rc2legacy
@@ -826,7 +826,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             native->pending_notify = g_list_append(native->pending_notify, *reply);
             if (native->process_notify) {
                 pcmk__info("notify trigger set");
-                mainloop_set_trigger(native->process_notify);
+                pcmk__main_loop_trigger_set(native->process_notify);
             }
             *reply = NULL;
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
@@ -847,7 +847,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
     }
 
     if (native->remote->buffer && native->process_notify) {
-        mainloop_set_trigger(native->process_notify);
+        pcmk__main_loop_trigger_set(native->process_notify);
     }
 
     return rc;
@@ -1485,7 +1485,7 @@ try_handshake_cb(void *user_data)
         free(hs);
         return 0;
     } else if (rc == EAGAIN) {
-        mainloop_set_trigger(native->handshake_trigger);
+        pcmk__main_loop_trigger_set(native->handshake_trigger);
         return 1;
     } else {
         rc = EKEYREJECTED;
@@ -1571,7 +1571,7 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
 
         native->handshake_trigger =
             pcmk__main_loop_trigger_new(G_PRIORITY_LOW, try_handshake_cb, hs);
-        mainloop_set_trigger(native->handshake_trigger);
+        pcmk__main_loop_trigger_set(native->handshake_trigger);
 
     } else if (rc == pcmk_rc_ok) {
         tls_handshake_succeeded(lrmd);

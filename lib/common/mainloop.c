@@ -252,6 +252,20 @@ pcmk__main_loop_trigger_new(int priority, int (*dispatch_fn)(void *user_data),
     return mainloop_setup_trigger(source, priority, dispatch_fn, user_data);
 }
 
+/*!
+ * \internal
+ * \brief Mark a main loop trigger as ready to be dispatched
+ *
+ * \param[in,out] trigger  Main loop trigger
+ */
+void
+pcmk__main_loop_trigger_set(crm_trigger_t *trigger)
+{
+    CRM_CHECK(trigger != NULL, return);
+
+    trigger->ready = true;
+}
+
 // Define a custom glib source for signal handling
 
 // Data structure for custom glib source
@@ -306,7 +320,7 @@ static void
 mainloop_signal_handler(int sig)
 {
     if (sig > 0 && sig < NSIG && crm_signals[sig] != NULL) {
-        mainloop_set_trigger((crm_trigger_t *) crm_signals[sig]);
+        pcmk__main_loop_trigger_set((crm_trigger_t *) crm_signals[sig]);
     }
 }
 

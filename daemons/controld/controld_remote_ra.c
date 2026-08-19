@@ -135,7 +135,7 @@ recurring_helper(void *data)
         ra_data->recurring_cmds = g_list_remove(ra_data->recurring_cmds, cmd);
 
         ra_data->cmds = g_list_append(ra_data->cmds, cmd);
-        mainloop_set_trigger(ra_data->work);
+        pcmk__main_loop_trigger_set(ra_data->work);
     }
 
     return G_SOURCE_REMOVE;
@@ -152,7 +152,7 @@ start_delay_helper(void *data)
     if (connection_rsc && connection_rsc->remote_ra_data) {
         remote_ra_data_t *ra_data = connection_rsc->remote_ra_data;
 
-        mainloop_set_trigger(ra_data->work);
+        pcmk__main_loop_trigger_set(ra_data->work);
     }
 
     return G_SOURCE_REMOVE;
@@ -490,7 +490,7 @@ retry_start_cmd_cb(void *data)
         report_remote_ra_result(cmd);
 
         if (ra_data->cmds) {
-            mainloop_set_trigger(ra_data->work);
+            pcmk__main_loop_trigger_set(ra_data->work);
         }
         ra_data->cur_cmd = NULL;
         free_cmd(cmd);
@@ -540,7 +540,7 @@ monitor_timeout_cb(void *data)
             ra_data->cur_cmd = NULL;
         }
         if (ra_data->cmds) {
-            mainloop_set_trigger(ra_data->work);
+            pcmk__main_loop_trigger_set(ra_data->work);
         }
     }
 
@@ -756,7 +756,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
     if (cmd_handled) {
         ra_data->cur_cmd = NULL;
         if (ra_data->cmds) {
-            mainloop_set_trigger(ra_data->work);
+            pcmk__main_loop_trigger_set(ra_data->work);
         }
         free_cmd(cmd);
     }
@@ -1246,7 +1246,7 @@ controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
     }
 
     ra_data->cmds = g_list_append(ra_data->cmds, cmd);
-    mainloop_set_trigger(ra_data->work);
+    pcmk__main_loop_trigger_set(ra_data->work);
 
     *call_id = cmd->call_id;
     return pcmk_rc_ok;

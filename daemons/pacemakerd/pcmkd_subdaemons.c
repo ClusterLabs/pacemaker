@@ -28,7 +28,7 @@
 #include <crm_config.h>                 // SUPPORT_COROSYNC, CRM_DAEMON_*
 #include <crm/cluster.h>                // pcmk_get_cluster_layer, pcmk_cluster_layer
 #include <crm/common/ipc.h>             // pcmk_ipc_server
-#include <crm/common/mainloop.h>        // mainloop_set_trigger, crm_trigger_t
+#include <crm/common/mainloop.h>        // crm_trigger_t
 #include <crm/common/options.h>         // PCMK_VALUE_TRUE
 #include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc_str, crm_exit*
 
@@ -320,7 +320,7 @@ pcmk_process_exit(pcmkd_child_t * child)
 
     if (shutdown_trigger) {
         /* resume step-wise shutdown (returned TRUE yields no parallelizing) */
-        mainloop_set_trigger(shutdown_trigger);
+        pcmk__main_loop_trigger_set(shutdown_trigger);
 
     } else if (!pcmk__is_set(child->flags, child_respawn)) {
         /* nothing to do */
@@ -865,7 +865,7 @@ pcmk_shutdown(int nsig)
                                                        pcmk_shutdown_worker,
                                                        NULL);
     }
-    mainloop_set_trigger(shutdown_trigger);
+    pcmk__main_loop_trigger_set(shutdown_trigger);
 }
 
 static void
