@@ -12,6 +12,8 @@
 
 #include <crm_internal.h>
 
+#include <crm/common/internal.h>        // pcmk__daemon_t, pcmk__output_t, pcmk__request_t
+
 extern pcmk__output_t *logger_out;
 extern pcmk__daemon_t schedulerd;
 
