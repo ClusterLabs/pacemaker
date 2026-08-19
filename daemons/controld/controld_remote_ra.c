@@ -952,7 +952,9 @@ remote_ra_data_init(lrm_state_t * lrm_state)
     }
 
     ra_data = pcmk__assert_alloc(1, sizeof(remote_ra_data_t));
-    ra_data->work = mainloop_add_trigger(G_PRIORITY_HIGH, handle_remote_ra_exec, lrm_state);
+    ra_data->work = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                handle_remote_ra_exec,
+                                                lrm_state);
     lrm_state->remote_ra_data = ra_data;
 }
 

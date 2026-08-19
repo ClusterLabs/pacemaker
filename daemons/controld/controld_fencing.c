@@ -1077,7 +1077,8 @@ controld_trigger_fencing_history_sync(bool long_timeout)
      */
     if (fencing_history_sync_trigger == NULL) {
         fencing_history_sync_trigger =
-            mainloop_add_trigger(G_PRIORITY_LOW, sync_fencing_history, NULL);
+            pcmk__main_loop_trigger_new(G_PRIORITY_LOW, sync_fencing_history,
+                                        NULL);
     }
 
     if (long_timeout) {

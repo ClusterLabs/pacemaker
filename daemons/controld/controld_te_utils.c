@@ -101,8 +101,8 @@ te_graph_trigger(void *user_data)
 void
 controld_init_transition_trigger(void)
 {
-    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger,
-                                              NULL);
+    transition_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_LOW,
+                                                     te_graph_trigger, NULL);
 }
 
 /*!

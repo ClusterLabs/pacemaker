@@ -861,7 +861,9 @@ void
 pcmk_shutdown(int nsig)
 {
     if (shutdown_trigger == NULL) {
-        shutdown_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, pcmk_shutdown_worker, NULL);
+        shutdown_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                       pcmk_shutdown_worker,
+                                                       NULL);
     }
     mainloop_set_trigger(shutdown_trigger);
 }

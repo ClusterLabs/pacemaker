@@ -296,8 +296,8 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->class = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
     rsc->provider = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
     rsc->type = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
-    rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
-                                     rsc);
+    rsc->work = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                            execute_resource_action, rsc);
 
     // Initialize fence device probes (to return "not running")
     pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,

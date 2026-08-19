@@ -230,7 +230,8 @@ attrd_cib_init(void)
     attrd_cib_erase_transient_attrs(attrd_cluster->priv->node_name);
 
     // Set a trigger for reading the CIB (for the alerts section)
-    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+    attrd_config_read = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                    attrd_read_options, NULL);
 
     // Always read the CIB at start-up
     mainloop_set_trigger(attrd_config_read);

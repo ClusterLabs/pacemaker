@@ -230,6 +230,28 @@ mainloop_destroy_trigger(crm_trigger_t *source)
     return TRUE;
 }
 
+/*!
+ * \internal
+ * \brief Create a main loop trigger (a type of event source)
+ *
+ * \param[in] priority     Priority
+ * \param[in] dispatch_fn  Dispatch function (returns 0 to remove the trigger
+ *                         from the main loop, -1 if the trigger should be kept
+ *                         but the job is still running, and 1 if the trigger
+ *                         should be kept and the job is complete)
+ * \param[in] user_data    User data for \p dispatch_fn
+ *
+ * \return Newly allocated main loop trigger (guaranteed not to be \c NULL)
+ */
+crm_trigger_t *
+pcmk__main_loop_trigger_new(int priority, int (*dispatch_fn)(void *user_data),
+                            void *user_data)
+{
+    GSource *source = g_source_new(&crm_trigger_funcs, sizeof(crm_trigger_t));
+
+    return mainloop_setup_trigger(source, priority, dispatch_fn, user_data);
+}
+
 // Define a custom glib source for signal handling
 
 // Data structure for custom glib source

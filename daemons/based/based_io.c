@@ -196,7 +196,8 @@ based_io_init(void)
      */
     mainloop_add_signal(SIGPIPE, based_enable_writes);
 
-    write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
+    write_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_LOW, write_cib_async,
+                                                NULL);
 }
 
 /*!

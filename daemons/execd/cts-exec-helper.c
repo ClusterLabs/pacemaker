@@ -601,7 +601,7 @@ main(int argc, char **argv)
     } else {
         lrmd_conn = lrmd_api_new();
     }
-    trig = mainloop_add_trigger(G_PRIORITY_HIGH, start_test, NULL);
+    trig = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH, start_test, NULL);
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 

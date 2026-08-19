@@ -1226,7 +1226,8 @@ build_device_from_xml(const xmlNode *dev)
         g_free(on_target_actions);
     }
 
-    device->work = mainloop_add_trigger(G_PRIORITY_HIGH, stonith_device_dispatch, device);
+    device->work = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                               stonith_device_dispatch, device);
 
     return device;
 }

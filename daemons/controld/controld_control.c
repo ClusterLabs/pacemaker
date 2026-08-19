@@ -285,8 +285,8 @@ do_startup(long long action, enum crmd_fsa_cause cause,
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, NULL); // Ignore SIGPIPE
 
-    config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                               crm_read_options, NULL);
+    config_read_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                      crm_read_options, NULL);
     controld_init_fsa_trigger();
     controld_init_transition_trigger();
 

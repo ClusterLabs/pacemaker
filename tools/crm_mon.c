@@ -1709,7 +1709,8 @@ main(int argc, char **argv)
     /* When refresh_trigger->ready is set to true, call mon_refresh_display().
      * In this file, that is anywhere mainloop_set_trigger() is called.
      */
-    refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
+    refresh_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_LOW,
+                                                  mon_refresh_display, NULL);
 
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);

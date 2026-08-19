@@ -1288,8 +1288,9 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
         .destroy = lrmd_tls_connection_destroy,
     };
 
-    native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                                  process_pending_notifies, lrmd);
+    native->process_notify =
+        pcmk__main_loop_trigger_new(G_PRIORITY_HIGH, process_pending_notifies,
+                                    lrmd);
     native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd,
                                      &tls_fd_callbacks);
 
@@ -1568,7 +1569,8 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         hs->start_time = time(NULL);
         hs->timeout_sec = TLS_HANDSHAKE_TIMEOUT;
 
-        native->handshake_trigger = mainloop_add_trigger(G_PRIORITY_LOW, try_handshake_cb, hs);
+        native->handshake_trigger =
+            pcmk__main_loop_trigger_new(G_PRIORITY_LOW, try_handshake_cb, hs);
         mainloop_set_trigger(native->handshake_trigger);
 
     } else if (rc == pcmk_rc_ok) {
