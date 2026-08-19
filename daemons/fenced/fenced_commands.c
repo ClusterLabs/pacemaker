@@ -918,7 +918,7 @@ free_device(void *data)
         pcmk__main_loop_timer_free(device->timer);
     }
 
-    mainloop_destroy_trigger(device->work);
+    pcmk__main_loop_trigger_free(device->work);
 
     pcmk__xml_free(device->agent_metadata);
     free(device->namespace);

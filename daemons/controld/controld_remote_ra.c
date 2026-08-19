@@ -967,7 +967,7 @@ remote_ra_cleanup(lrm_state_t * lrm_state)
 
     g_list_free_full(lrm_state->remote_ra_data->cmds, free_cmd);
     g_list_free_full(lrm_state->remote_ra_data->recurring_cmds, free_cmd);
-    mainloop_destroy_trigger(lrm_state->remote_ra_data->work);
+    pcmk__main_loop_trigger_free(lrm_state->remote_ra_data->work);
     g_clear_pointer(&lrm_state->remote_ra_data, free);
 }
 

@@ -207,7 +207,7 @@ based_io_init(void)
 void
 based_io_cleanup(void)
 {
-    g_clear_pointer(&write_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&write_trigger, pcmk__main_loop_trigger_free);
 }
 
 /*!

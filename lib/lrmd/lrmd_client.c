@@ -1140,12 +1140,12 @@ lrmd_tls_connection_destroy(void *userdata)
         close(native->sock);
     }
 
-    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
+    g_clear_pointer(&native->process_notify, pcmk__main_loop_trigger_free);
 
     g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
     native->pending_notify = NULL;
 
-    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&native->handshake_trigger, pcmk__main_loop_trigger_free);
 
     g_clear_pointer(&native->remote->buffer, free);
     g_clear_pointer(&native->remote->start_state, free);

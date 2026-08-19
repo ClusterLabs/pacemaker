@@ -127,6 +127,7 @@ crm_trigger_t *pcmk__main_loop_trigger_new(int priority,
                                            void *user_data);
 void pcmk__main_loop_trigger_set(crm_trigger_t *trigger);
 void pcmk__main_loop_trigger_complete(crm_trigger_t *trigger);
+void pcmk__main_loop_trigger_free(crm_trigger_t *trigger);
 
 #ifdef __cplusplus
 }

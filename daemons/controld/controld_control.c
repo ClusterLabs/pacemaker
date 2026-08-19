@@ -210,7 +210,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_execd_state_table_free();
     controld_remote_proxy_table_free();
 
-    g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&config_read_trigger, pcmk__main_loop_trigger_free);
 
     controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();

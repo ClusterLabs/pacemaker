@@ -1515,7 +1515,7 @@ execd_free_rsc(void *data)
     free(rsc->class);
     free(rsc->provider);
     free(rsc->type);
-    mainloop_destroy_trigger(rsc->work);
+    pcmk__main_loop_trigger_free(rsc->work);
 
     free(rsc);
 }

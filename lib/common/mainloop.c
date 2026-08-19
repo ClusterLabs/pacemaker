@@ -279,6 +279,37 @@ pcmk__main_loop_trigger_complete(crm_trigger_t *trigger)
     trigger->running = false;
 }
 
+/*!
+ * \internal
+ * \brief Free a main loop trigger
+ *
+ * \param[in,out] trigger  Main loop trigger
+ */
+void
+pcmk__main_loop_trigger_free(crm_trigger_t *trigger)
+{
+    GSource *source = (GSource *) trigger;
+
+    if (source == NULL) {
+        return;
+    }
+
+    // Remove from main loop, which decrements the ref count
+    g_source_destroy(source);
+
+    /* The caller no longer carries a reference to source.
+     *
+     * At this point the source should be freed, unless we're currently
+     * processing said source. In that case, the main loop holds an additional
+     * reference, and it will be freed once our processing completes.
+     *
+     * @TODO Confirm correctness. The g_source_destroy() documentation says it
+     * doesn't unref the source, but g_source_destroy_internal() does call
+     * g_source_unref_internal().
+     */
+    g_source_unref(source);
+}
+
 // Define a custom glib source for signal handling
 
 // Data structure for custom glib source
@@ -391,7 +422,7 @@ mainloop_destroy_signal_entry(int sig)
     if (tmp != NULL) {
         crm_signals[sig] = NULL;
         pcmk__trace("Unregistering mainloop handler for signal %d", sig);
-        mainloop_destroy_trigger((crm_trigger_t *) tmp);
+        pcmk__main_loop_trigger_free((crm_trigger_t *) tmp);
     }
 }
 

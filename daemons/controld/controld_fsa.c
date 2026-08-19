@@ -97,7 +97,7 @@ void
 controld_destroy_fsa_trigger(void)
 {
     // This basically will not work, since mainloop has a reference to it
-    g_clear_pointer(&fsa_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&fsa_trigger, pcmk__main_loop_trigger_free);
 }
 
 /*!
