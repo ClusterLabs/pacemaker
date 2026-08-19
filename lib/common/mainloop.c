@@ -37,7 +37,6 @@ struct trigger_s {
     GSource source;
     bool ready;
     bool running;
-    void *user_data;
 };
 
 static GList *child_list = NULL;
@@ -104,7 +103,7 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
     trig->ready = false;
 
     if (callback != NULL) {
-        int callback_rc = callback(trig->user_data);
+        int callback_rc = callback(userdata);
 
         if (callback_rc < 0) {
             pcmk__trace("Trigger handler %p not yet complete", trig);
@@ -137,10 +136,9 @@ mainloop_setup_trigger(GSource *source, int priority,
     crm_trigger_t *trigger = (crm_trigger_t *) source;
 
     trigger->ready = false;
-    trigger->user_data = userdata;
 
     if (dispatch != NULL) {
-        g_source_set_callback(source, dispatch, trigger, NULL);
+        g_source_set_callback(source, dispatch, userdata, NULL);
     }
 
     g_source_set_priority(source, priority);
