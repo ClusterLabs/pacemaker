@@ -38,7 +38,6 @@ struct trigger_s {
     bool ready;
     bool running;
     void *user_data;
-    unsigned int id;
 };
 
 static GList *child_list = NULL;
@@ -137,7 +136,6 @@ mainloop_setup_trigger(GSource *source, int priority,
 {
     crm_trigger_t *trigger = (crm_trigger_t *) source;
 
-    trigger->id = 0;
     trigger->ready = false;
     trigger->user_data = userdata;
 
@@ -147,8 +145,8 @@ mainloop_setup_trigger(GSource *source, int priority,
 
     g_source_set_priority(source, priority);
     g_source_set_can_recurse(source, false);
+    g_source_attach(source, NULL);
 
-    trigger->id = g_source_attach(source, NULL);
     return trigger;
 }
 
