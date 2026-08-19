@@ -124,10 +124,9 @@ typedef struct {
      * \note The generic pcmk__daemon_ipc_init function should be assigned
      *       to this function pointer for most every server
      *
-     * \return \c true if the IPC server was successfully initialized, and
-     *         \c false if not
+     * \return Standard Pacemaker return code
      */
-    bool (*init)(pcmk__daemon_t *);
+    int (*init)(pcmk__daemon_t *);
 
     /*!
      * \internal
@@ -185,7 +184,7 @@ void pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
 void pcmk__daemon_ipc_dispatch(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
                                void *data, size_t size);
 bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
-bool pcmk__daemon_ipc_init(pcmk__daemon_t *d);
+int pcmk__daemon_ipc_init(pcmk__daemon_t *d);
 bool pcmk__generic_ipc_running(pcmk__daemon_t *d);
 
 // Mainloop management functions
