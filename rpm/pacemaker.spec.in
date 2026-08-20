@@ -271,7 +271,7 @@ BuildRequires: pkgconfig(libqb) >= 2.0.8
 
 # Required basic build tools
 BuildRequires: autoconf >= 2.71
-BuildRequires: automake
+BuildRequires: automake >= 1.16
 BuildRequires: coreutils
 BuildRequires: findutils
 BuildRequires: gcc
@@ -427,7 +427,7 @@ Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{pkgname_bzip2_devel}%{?_isa}
 Requires:      corosync-devel >= 3.1.9
-Requires:      glib2-devel%{?_isa}
+Requires:      glib2-devel%{?_isa} >= 2.80.0
 Requires:      libqb-devel%{?_isa} >= 2.0.8
 %if %{defined pkgname_libtool_devel_arch}
 Requires:      %{?pkgname_libtool_devel_arch}
