@@ -9,22 +9,21 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <errno.h>                  // EIO
+#include <signal.h>                 // SIGTERM
+#include <stdbool.h>                // true
+#include <stdlib.h>                 // NULL, atexit
+#include <syslog.h>                 // LOG_INFO
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <glib.h>
+#include <qb/qbloop.h>              // qb_loop_priority
 
-#include <crm/crm.h>
-#include <crm/common/iso8601.h>
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-#include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>         // pcmk_ipc_server
+#include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
+#include <crm/common/mainloop.h>    // mainloop_add_signal, crm_trigger_t
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*, pcmk_rc_str
+#include <crm/common/xml.h>         // PCMK_XA_TASK
+#include <crm/lrmd.h>               // lrmd_t
 
 #include "pacemaker-attrd.h"
 
