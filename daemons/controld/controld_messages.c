@@ -663,6 +663,13 @@ handle_lrm_delete(xmlNode *stored_msg)
                                             NULL);
     xmlNode *msg_data = pcmk__xe_first_child(wrapper, NULL, NULL, NULL);
 
+    const char *from_sys = NULL;
+    const char *user_name = NULL;
+    const char *rsc_id = NULL;
+    const char *node = NULL;
+    xmlNode *rsc_xml = NULL;
+    int rc = pcmk_rc_ok;
+
     CRM_CHECK(msg_data != NULL, return I_NULL);
 
     /* CRM_OP_LRM_DELETE has two distinct modes. The default behavior is to
@@ -680,64 +687,60 @@ handle_lrm_delete(xmlNode *stored_msg)
         // Relay to affected node
         pcmk__xe_set(stored_msg, PCMK__XA_CRM_SYS_TO, CRM_SYSTEM_LRMD);
         return I_ROUTER;
-
-    } else {
-        // Delete CIB history locally (compare with do_lrm_delete())
-        const char *from_sys = NULL;
-        const char *user_name = NULL;
-        const char *rsc_id = NULL;
-        const char *node = NULL;
-        xmlNode *rsc_xml = NULL;
-        int rc = pcmk_rc_ok;
-
-        rsc_xml = pcmk__xe_first_child(msg_data, PCMK_XE_PRIMITIVE, NULL, NULL);
-        CRM_CHECK(rsc_xml != NULL, return I_NULL);
-
-        rsc_id = pcmk__xe_id(rsc_xml);
-        from_sys = pcmk__xe_get(stored_msg, PCMK__XA_CRM_SYS_FROM);
-        node = pcmk__xe_get(msg_data, PCMK__META_ON_NODE);
-        user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
-        pcmk__debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
-                    "(clearing CIB resource history only)",
-                    rsc_id, node, ((user_name != NULL)? " for user " : ""),
-                    pcmk__s(user_name, ""));
-        rc = controld_delete_resource_history(rsc_id, node, user_name,
-                                              cib_dryrun|cib_sync_call);
-        if (rc == pcmk_rc_ok) {
-            rc = controld_delete_resource_history(rsc_id, node, user_name,
-                                                  crmd_cib_smart_opt());
-        }
-
-        /* Notify client. Also notify tengine if mode=PCMK__VALUE_CIB and
-         * op=CRM_OP_LRM_DELETE.
-         */
-        if (from_sys) {
-            lrmd_event_data_t *op = NULL;
-            const char *from_host = pcmk__xe_get(stored_msg, PCMK__XA_SRC);
-            const char *transition;
-
-            if (strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
-                transition = pcmk__xe_get(msg_data, PCMK__XA_TRANSITION_KEY);
-            } else {
-                transition = pcmk__xe_get(stored_msg, PCMK__XA_TRANSITION_KEY);
-            }
-
-            pcmk__info("Notifying %s on %s that %s was%s deleted", from_sys,
-                       pcmk__s(from_host, "local node"), rsc_id,
-                       ((rc == pcmk_rc_ok)? "" : " not"));
-            op = lrmd_new_event(rsc_id, PCMK_ACTION_DELETE, 0);
-            op->type = lrmd_event_exec_complete;
-            op->user_data = pcmk__str_copy(pcmk__s(transition, FAKE_TE_ID));
-            op->params = pcmk__strkey_table(free, free);
-            pcmk__insert_dup(op->params, PCMK_XA_CRM_FEATURE_SET,
-                             CRM_FEATURE_SET);
-            controld_rc2event(op, rc);
-            controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
-            lrmd_free_event(op);
-            controld_trigger_delete_refresh(from_sys, rsc_id);
-        }
-        return I_NULL;
     }
+
+    // Delete CIB history locally (compare with do_lrm_delete())
+    rsc_xml = pcmk__xe_first_child(msg_data, PCMK_XE_PRIMITIVE, NULL, NULL);
+    CRM_CHECK(rsc_xml != NULL, return I_NULL);
+
+    rsc_id = pcmk__xe_id(rsc_xml);
+    from_sys = pcmk__xe_get(stored_msg, PCMK__XA_CRM_SYS_FROM);
+    node = pcmk__xe_get(msg_data, PCMK__META_ON_NODE);
+    user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
+
+    pcmk__debug("Handling " CRM_OP_LRM_DELETE " for %s on %s locally%s%s "
+                "(clearing CIB resource history only)",
+                rsc_id, node, ((user_name != NULL)? " for user " : ""),
+                pcmk__s(user_name, ""));
+
+    rc = controld_delete_resource_history(rsc_id, node, user_name,
+                                          cib_dryrun|cib_sync_call);
+    if (rc == pcmk_rc_ok) {
+        rc = controld_delete_resource_history(rsc_id, node, user_name,
+                                              crmd_cib_smart_opt());
+    }
+
+    /* Notify client. Also notify tengine if mode=PCMK__VALUE_CIB and
+     * op=CRM_OP_LRM_DELETE.
+     */
+    if (from_sys != NULL) {
+        lrmd_event_data_t *op = NULL;
+        const char *from_host = pcmk__xe_get(stored_msg, PCMK__XA_SRC);
+        const char *transition = NULL;
+
+        if (strcmp(from_sys, CRM_SYSTEM_TENGINE)) {
+            transition = pcmk__xe_get(msg_data, PCMK__XA_TRANSITION_KEY);
+        } else {
+            transition = pcmk__xe_get(stored_msg, PCMK__XA_TRANSITION_KEY);
+        }
+
+        pcmk__info("Notifying %s on %s that %s was%s deleted", from_sys,
+                   pcmk__s(from_host, "local node"), rsc_id,
+                   ((rc == pcmk_rc_ok)? "" : " not"));
+
+        op = lrmd_new_event(rsc_id, PCMK_ACTION_DELETE, 0);
+        op->type = lrmd_event_exec_complete;
+        op->user_data = pcmk__str_copy(pcmk__s(transition, FAKE_TE_ID));
+        op->params = pcmk__strkey_table(free, free);
+        pcmk__insert_dup(op->params, PCMK_XA_CRM_FEATURE_SET, CRM_FEATURE_SET);
+
+        controld_rc2event(op, rc);
+        controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
+        lrmd_free_event(op);
+        controld_trigger_delete_refresh(from_sys, rsc_id);
+    }
+
+    return I_NULL;
 }
 
 /*!
