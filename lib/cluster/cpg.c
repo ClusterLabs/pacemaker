@@ -24,6 +24,7 @@
 #include <corosync/corotypes.h>
 #include <corosync/hdb.h>
 #include <corosync/cpg.h>
+#include <qb/qbdefs.h>                  // QB_MIN
 #include <qb/qbipc_common.h>
 #include <qb/qbipcc.h>
 #include <qb/qbutil.h>
@@ -372,6 +373,19 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
     return true;
 }
 
+static size_t
+truncate_peer_name(size_t cur_len, const char *name)
+{
+    if (cur_len >= MAX_NAME) {
+        pcmk__warn("Peer name '%s' is longer than max allowed %d chars and "
+                   "will be truncated",
+                   name, MAX_NAME - 1);
+        return MAX_NAME - 1;
+    }
+
+    return cur_len;
+}
+
 /*!
  * \internal
  * \brief Extract text data from a Corosync CPG message
@@ -440,12 +454,14 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                             " but its name is unknown",
                             sender_id);
             } else {
-                pcmk__debug("Updating name of CPG message sender with ID %" PRIu32
-                            " to %s",
-                            sender_id, peer->name);
-                msg->sender.size = strlen(peer->name);
+                msg->sender.size = truncate_peer_name(strlen(peer->name),
+                                                      peer->name);
                 memset(msg->sender.uname, 0, MAX_NAME);
                 memcpy(msg->sender.uname, peer->name, msg->sender.size);
+
+                pcmk__debug("Updating name of CPG message sender with ID %" PRIu32
+                            " to %s",
+                            sender_id, msg->sender.uname);
             }
         }
     }
@@ -947,10 +963,10 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     if (node != NULL) {
         if (node->name != NULL) {
-            target = pcmk__str_copy(node->name);
-            msg->host.size = strlen(node->name);
+            msg->host.size = truncate_peer_name(strlen(node->name), node->name);
             memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->name, msg->host.size);
+            target = pcmk__str_copy(msg->host.uname);
 
         } else {
             target = pcmk__assert_asprintf("%" PRIu32, node->cluster_layer_id);
@@ -964,7 +980,8 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->sender.id = 0;
     msg->sender.type = pcmk__parse_server(crm_system_name);
     msg->sender.pid = local_pid;
-    msg->sender.size = local_name_len;
+    msg->sender.size = truncate_peer_name(local_name_len, local_name);
+
     memset(msg->sender.uname, 0, MAX_NAME);
     memcpy(msg->sender.uname, local_name, msg->sender.size);
 
