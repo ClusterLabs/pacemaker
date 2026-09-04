@@ -694,6 +694,8 @@ handle_lrm_delete(xmlNode *stored_msg)
     CRM_CHECK(rsc_xml != NULL, return I_NULL);
 
     rsc_id = pcmk__xe_id(rsc_xml);
+    CRM_CHECK(rsc_id != NULL, return I_NULL);
+
     from_sys = pcmk__xe_get(stored_msg, PCMK__XA_CRM_SYS_FROM);
     node = pcmk__xe_get(msg_data, PCMK__META_ON_NODE);
     user_name = pcmk__update_acl_user(stored_msg, PCMK__XA_CRM_USER, NULL);
