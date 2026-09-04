@@ -926,8 +926,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     if (local_name == NULL) {
         local_name = pcmk__cluster_local_node_name();
-    }
-    if ((local_name_len == 0) && (local_name != NULL)) {
         local_name_len = strlen(local_name);
     }
 
@@ -968,10 +966,7 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->sender.pid = local_pid;
     msg->sender.size = local_name_len;
     memset(msg->sender.uname, 0, MAX_NAME);
-
-    if ((local_name != NULL) && (msg->sender.size != 0)) {
-        memcpy(msg->sender.uname, local_name, msg->sender.size);
-    }
+    memcpy(msg->sender.uname, local_name, msg->sender.size);
 
     msg->size = 1 + strlen(data);
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;
