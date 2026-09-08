@@ -69,29 +69,27 @@ ipc_proxy_get_provider(void)
  *
  * \param[in,out] c            New connection
  * \param[in]     uid          Client user id
- * \param[in]     gid          Client group id
  * \param[in]     ipc_channel  Name of IPC server to proxy
  *
  * \return 0 on success, -errno on error
  */
 static int32_t
-ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid, const char *ipc_channel)
+ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, const char *ipc_channel)
 {
     pcmk__client_t *client = NULL;
     pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
     xmlNode *msg = NULL;
 
     if (ipc_proxy == NULL) {
-        pcmk__warn("Cannot proxy IPC connection from uid %d gid %d to %s "
-                   "because not connected to cluster",
-                   uid, gid, ipc_channel);
+        pcmk__warn("Cannot proxy IPC connection from uid %lld to %s because "
+                   "not connected to cluster", (long long) uid, ipc_channel);
         return -EREMOTEIO;
     }
 
     /* This new client is a local IPC client on a Pacemaker Remote controlled
      * node, needing to access cluster node IPC services.
      */
-    client = pcmk__new_client(c, uid, gid);
+    client = pcmk__new_client(c, uid);
     if (client == NULL) {
         return -ENOMEM;
     }
@@ -99,8 +97,8 @@ ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid, const char *ipc_
     /* This ipc client is bound to a single ipc provider. If the
      * provider goes away, this client is disconnected */
     client->userdata = pcmk__str_copy(ipc_proxy->id);
-    client->name = pcmk__assert_asprintf("proxy-%s-%d-%.8s", ipc_channel,
-                                         client->pid, client->id);
+    client->name = pcmk__assert_asprintf("proxy-%s-%lld-%.8s", ipc_channel,
+                                         (long long) client->pid, client->id);
 
     /* Allow remote executor to distinguish between proxied local clients and
      * actual executor API clients
@@ -115,28 +113,27 @@ ipc_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid, const char *ipc_
     pcmk__xe_set(msg, PCMK__XA_LRMD_IPC_SESSION, client->id);
     lrmd_server_send_notify(ipc_proxy, msg);
     pcmk__xml_free(msg);
-    pcmk__debug("Accepted IPC proxy connection (session ID %s) from uid %d "
-                "gid %d on channel %s",
-                client->id, uid, gid, ipc_channel);
+    pcmk__debug("Accepted IPC proxy connection (session ID %s) from uid %lld "
+                "on channel %s", client->id, (long long) uid, ipc_channel);
     return 0;
 }
 
 static int32_t
 crmd_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, CRM_SYSTEM_CRMD);
+    return ipc_proxy_accept(c, uid, CRM_SYSTEM_CRMD);
 }
 
 static int32_t
 attrd_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, PCMK__VALUE_ATTRD);
+    return ipc_proxy_accept(c, uid, PCMK__VALUE_ATTRD);
 }
 
 static int32_t
 fencer_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, "stonith-ng");
+    return ipc_proxy_accept(c, uid, "stonith-ng");
 }
 
 static int32_t
@@ -148,13 +145,13 @@ pacemakerd_proxy_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 static int32_t
 cib_proxy_accept_rw(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RW);
+    return ipc_proxy_accept(c, uid, PCMK__SERVER_BASED_RW);
 }
 
 static int32_t
 cib_proxy_accept_ro(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
-    return ipc_proxy_accept(c, uid, gid, PCMK__SERVER_BASED_RO);
+    return ipc_proxy_accept(c, uid, PCMK__SERVER_BASED_RO);
 }
 
 int

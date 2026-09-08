@@ -586,7 +586,7 @@ cib_remote_listen(void *user_data)
         return 0;
     }
 
-    new_client = pcmk__new_unauth_client(NULL);
+    new_client = pcmk__new_unauth_client();
     new_client->remote = pcmk__assert_alloc(1, sizeof(pcmk__remote_t));
 
     if (is_tls) {

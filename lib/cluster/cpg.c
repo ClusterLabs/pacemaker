@@ -139,18 +139,20 @@ pcmk__cpg_local_nodeid(cpg_handle_t handle)
         }
 
         // CPG provider run as root (at least in given user namespace)?
-        rv = crm_ipc_is_authentic_process(fd, (uid_t) 0, (gid_t) 0, &found_pid,
-                                          &found_uid, &found_gid);
+        rv = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                          &found_gid);
+
         if (rv == 0) {
             pcmk__err("CPG provider is not authentic: process %lld "
                       "(uid: %lld, gid: %lld)",
                       (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                       (long long) found_uid, (long long) found_gid);
             goto bail;
+        }
 
-        } else if (rv < 0) {
+        if (rv < 0) {
             pcmk__err("Could not verify authenticity of CPG provider: %s (%d)",
-                      strerror(-rv), -rv);
+                      pcmk_strerror(rv), rv);
             goto bail;
         }
     }
@@ -834,17 +836,21 @@ pcmk__cpg_connect(pcmk_cluster_t *cluster)
     }
 
     /* CPG provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                            &found_uid, &found_gid))) {
+    rv = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                      &found_gid);
+
+    if (rv == 0) {
         pcmk__err("CPG provider is not authentic: process %lld "
                   "(uid: %lld, gid: %lld)",
                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                   (long long) found_uid, (long long) found_gid);
         rc = CS_ERR_ACCESS;
         goto bail;
-    } else if (rv < 0) {
+    }
+
+    if (rv < 0) {
         pcmk__err("Could not verify authenticity of CPG provider: %s (%d)",
-                  strerror(-rv), -rv);
+                  pcmk_strerror(rv), rv);
         rc = CS_ERR_ACCESS;
         goto bail;
     }

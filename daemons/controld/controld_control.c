@@ -305,7 +305,7 @@ static int32_t
 accept_controller_client(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     pcmk__trace("Accepting new IPC client connection");
-    if (pcmk__new_client(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid) == NULL) {
         return -ENOMEM;
     }
     return 0;

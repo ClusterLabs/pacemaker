@@ -112,10 +112,6 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     char *name = NULL;
     cmap_handle_t local_handle = 0;
     int fd = -1;
-    uid_t found_uid = 0;
-    gid_t found_gid = 0;
-    pid_t found_pid = 0;
-    int rv;
 
     if (nodeid == 0) {
         nodeid = pcmk__cpg_local_nodeid(0);
@@ -144,6 +140,11 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
     }
 
     if (cmap_handle == 0) {
+        pid_t found_pid = 0;
+        uid_t found_uid = 0;
+        gid_t found_gid = 0;
+        int rv = 0;
+
         cmap_handle = local_handle;
 
         rc = cmap_fd_get(cmap_handle, &fd);
@@ -154,16 +155,20 @@ pcmk__corosync_name(uint64_t /*cmap_handle_t */ cmap_handle, uint32_t nodeid)
         }
 
         /* CMAP provider run as root (in given user namespace, anyway)? */
-        if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                                &found_uid, &found_gid))) {
+        rv = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                          &found_gid);
+
+        if (rv == 0) {
             pcmk__err("CMAP provider is not authentic: process %lld "
                       "(uid: %lld, gid: %lld)",
                       (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                       (long long) found_uid, (long long) found_gid);
             goto bail;
-        } else if (rv < 0) {
+        }
+
+        if (rv < 0) {
             pcmk__err("Could not verify authenticity of CMAP provider: %s (%d)",
-                      strerror(-rv), -rv);
+                      pcmk_strerror(rv), rv);
             goto bail;
         }
     }
@@ -409,17 +414,21 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
     }
 
     /* Quorum provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                            &found_uid, &found_gid))) {
+    rv = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                      &found_gid);
+
+    if (rv == 0) {
         pcmk__err("Quorum provider is not authentic: process %lld "
                   "(uid: %lld, gid: %lld)",
                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                   (long long) found_uid, (long long) found_gid);
         rc = CS_ERR_ACCESS;
         goto bail;
-    } else if (rv < 0) {
+    }
+
+    if (rv < 0) {
         pcmk__err("Could not verify authenticity of Quorum provider: %s (%d)",
-                  strerror(-rv), -rv);
+                  pcmk_strerror(rv), rv);
         rc = CS_ERR_ACCESS;
         goto bail;
     }
@@ -604,16 +613,20 @@ pcmk__corosync_add_nodes(xmlNode *xml_parent)
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                            &found_uid, &found_gid))) {
+    rv = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                      &found_gid);
+
+    if (rv == 0) {
         pcmk__err("CMAP provider is not authentic: process %lld "
                   "(uid: %lld, gid: %lld)",
                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                   (long long) found_uid, (long long) found_gid);
         goto bail;
-    } else if (rv < 0) {
+    }
+
+    if (rv < 0) {
         pcmk__err("Could not verify authenticity of CMAP provider: %s (%d)",
-                  strerror(-rv), -rv);
+                  pcmk_strerror(rv), rv);
         goto bail;
     }
 
@@ -708,16 +721,20 @@ pcmk__corosync_cluster_name(void)
     }
 
     /* CMAP provider run as root (in given user namespace, anyway)? */
-    if (!(rv = crm_ipc_is_authentic_process(fd, (uid_t) 0,(gid_t) 0, &found_pid,
-                                            &found_uid, &found_gid))) {
+    rv = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                      &found_gid);
+
+    if (rv == 0) {
         pcmk__err("CMAP provider is not authentic: process %lld "
                   "(uid: %lld, gid: %lld)",
                   (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                   (long long) found_uid, (long long) found_gid);
         goto bail;
-    } else if (rv < 0) {
+    }
+
+    if (rv < 0) {
         pcmk__err("Could not verify authenticity of CMAP provider: %s (%d)",
-                  strerror(-rv), -rv);
+                  pcmk_strerror(rv), rv);
         goto bail;
     }
 
@@ -789,8 +806,9 @@ pcmk__corosync_has_nodelist(void)
     }
 
     // Check whether CMAP connection is authentic (i.e. provided by root)
-    rc = crm_ipc_is_authentic_process(fd, (uid_t) 0, (gid_t) 0,
-                                      &found_pid, &found_uid, &found_gid);
+    rc = crm_ipc_is_authentic_process(fd, 0, 0, &found_pid, &found_uid,
+                                      &found_gid);
+
     if (rc == 0) {
         pcmk__warn("Assuming Corosync does not have node list: CMAP provider "
                    "is inauthentic "
@@ -798,7 +816,9 @@ pcmk__corosync_has_nodelist(void)
                    (long long) PCMK__SPECIAL_PID_AS_0(found_pid),
                    (long long) found_uid, (long long) found_gid);
         goto bail;
-    } else if (rc < 0) {
+    }
+
+    if (rc < 0) {
         pcmk__warn("Assuming Corosync does not have node list: Could not "
                    "verify CMAP authenticity (%s) " QB_XS " rc=%d",
                    pcmk_strerror(rc), rc);

@@ -183,66 +183,57 @@ pcmk__drop_all_clients(qb_ipcs_service_t *service)
  * \brief Allocate a new pcmk__client_t object based on an IPC connection
  *
  * \param[in] c           IPC connection (NULL to allocate generic client)
- * \param[in] key         Connection table key (NULL to use sane default)
  * \param[in] uid_client  UID corresponding to c (ignored if c is NULL)
  *
  * \return Pointer to new pcmk__client_t (guaranteed not to be \c NULL)
  */
 static pcmk__client_t *
-client_from_connection(qb_ipcs_connection_t *c, void *key, uid_t uid_client)
+client_from_connection(qb_ipcs_connection_t *c, uid_t uid_client)
 {
     pcmk__client_t *client = pcmk__assert_alloc(1, sizeof(pcmk__client_t));
 
+    client->id = pcmk__generate_uuid();
+
     if (c != NULL) {
         client->user = pcmk__uid2username(uid_client);
+
         if (client->user == NULL) {
             client->user = pcmk__str_copy("#unprivileged");
             pcmk__err("Unable to enforce ACLs for user ID %d, assuming "
-                      "unprivileged",
-                      uid_client);
+                      "unprivileged", uid_client);
         }
 
         client->ipcs = c;
         pcmk__set_client_flags(client, pcmk__client_ipc);
         client->pid = pcmk__client_pid(c);
-
-        if (key == NULL) {
-            key = c;
-        }
-    }
-
-    client->id = pcmk__generate_uuid();
-
-    if (key == NULL) {
-        key = client->id;
     }
 
     if (client_connections == NULL) {
-        pcmk__trace("Creating IPC client table");
         client_connections = g_hash_table_new(g_direct_hash, g_direct_equal);
     }
 
-    g_hash_table_insert(client_connections, key, client);
+    g_hash_table_insert(client_connections,
+                        ((c != NULL)? (void *) c : (void *) client->id),
+                        client);
     return client;
 }
 
 /*!
- * \brief Allocate a new pcmk__client_t object and generate its ID
+ * \internal
+ * \brief Create and initialize a \c pcmk__client_t object
  *
- * \param[in] key  What to use as connections hash table key (NULL to use ID)
- *
- * \return Pointer to new pcmk__client_t (asserts on failure)
+ * \return Newly allocated client object (guaranteed not to be \c NULL)
  */
 pcmk__client_t *
-pcmk__new_unauth_client(void *key)
+pcmk__new_unauth_client(void)
 {
-    return client_from_connection(NULL, key, 0);
+    return client_from_connection(NULL, 0);
 }
 
 pcmk__client_t *
-pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
+pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client)
 {
-    gid_t uid_cluster = 0;
+    uid_t uid_cluster = 0;
     gid_t gid_cluster = 0;
 
     pcmk__client_t *client = NULL;
@@ -260,22 +251,22 @@ pcmk__new_client(qb_ipcs_connection_t *c, uid_t uid_client, gid_t gid_client)
     }
 
     if (uid_client != 0) {
-        pcmk__trace("Giving group %u access to new IPC connection",
-                    gid_cluster);
+        pcmk__trace("Giving group %lld access to new IPC connection",
+                    (long long) gid_cluster);
         /* Passing -1 to chown(2) means don't change */
         qb_ipcs_connection_auth_set(c, -1, gid_cluster, S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
     }
 
     /* TODO: Do our own auth checking, return NULL if unauthorized */
-    client = client_from_connection(c, NULL, uid_client);
+    client = client_from_connection(c, uid_client);
 
     if ((uid_client == 0) || (uid_client == uid_cluster)) {
         /* Remember when a connection came from root or hacluster */
         pcmk__set_client_flags(client, pcmk__client_privileged);
     }
 
-    pcmk__debug("New IPC client %s for PID %u with uid %d and gid %d",
-                client->id, client->pid, uid_client, gid_client);
+    pcmk__debug("New IPC client %s for PID %lld with uid %lld", client->id,
+                (long long) client->pid, (long long) uid_client);
     return client;
 }
 
