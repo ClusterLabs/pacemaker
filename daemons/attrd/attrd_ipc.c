@@ -17,7 +17,6 @@
 #include <sys/types.h>
 
 #include <crm/cluster.h>
-#include <crm/cluster/internal.h>
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/util.h>

@@ -521,11 +521,21 @@ load_file_cib(const char *filename, xmlNode **output)
     return pcmk_ok;
 }
 
+/*!
+ * \internal
+ * \brief Sign on a native client to the CIB API
+ *
+ * \param[in,out] cib   CIB connection (client)
+ * \param[in]     name  Ignored
+ * \param[in]     type  Ignored
+ */
 static int
 file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     file_opaque_t *private = cib->variant_opaque;
+
+    name = pcmk__s(crm_system_name, "client");
 
     if (private->filename == NULL) {
         rc = -EINVAL;
@@ -535,15 +545,13 @@ file_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 
     if (rc == pcmk_ok) {
         pcmk__debug("Opened connection to local file '%s' for %s",
-                    private->filename, pcmk__s(name, "client"));
+                    private->filename, name);
         cib->state = cib_connected_command;
-        cib->type = cib_command;
         register_client(cib);
 
     } else {
         pcmk__info("Connection to local file '%s' for %s (client %s) failed: "
-                   "%s",
-                   private->filename, pcmk__s(name, "client"), private->id,
+                   "%s", private->filename, name, private->id,
                    pcmk_strerror(rc));
     }
     return rc;
@@ -648,7 +656,6 @@ file_signoff(cib_t *cib)
 
     pcmk__debug("Disconnecting from the CIB manager");
     cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
     unregister_client(cib);
     cib->cmds->end_transaction(cib, false, cib_none);
 

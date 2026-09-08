@@ -26,7 +26,6 @@
 
 #include <crm/common/actions.h>     // PCMK_DEFAULT_ACTION_TIMEOUT_MS
 #include <crm/common/agents.h>      // PCMK_RESOURCE_CLASS_STONITH
-#include <crm/common/internal.h>
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT
 #include <crm/common/mainloop.h>    // mainloop_set_trigger

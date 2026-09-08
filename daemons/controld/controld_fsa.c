@@ -20,7 +20,6 @@
 #include <crm/lrmd.h>
 #include <crm/cib.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/election_internal.h>
 #include <crm/cluster.h>
 
 #include <pacemaker-controld.h>

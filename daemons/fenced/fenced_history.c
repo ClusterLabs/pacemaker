@@ -18,7 +18,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
@@ -482,7 +481,8 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
 
     if (dev) {
         target = pcmk__xe_get(dev, PCMK__XA_ST_TARGET);
-        if (target && (options & st_opt_cs_nodeid)) {
+
+        if ((target != NULL) && pcmk__is_set(options, st_opt_cs_nodeid)) {
             int nodeid;
             pcmk__node_status_t *node = NULL;
 
@@ -496,14 +496,14 @@ stonith_fence_history(xmlNode *msg, xmlNode **output,
         }
     }
 
-    if (options & st_opt_cleanup) {
+    if (pcmk__is_set(options, st_opt_cleanup)) {
         const char *call_id = pcmk__xe_get(msg, PCMK__XA_ST_CALLID);
 
         pcmk__trace("Cleaning up operations on %s in %p", target,
                     stonith_remote_op_list);
         stonith_fence_history_cleanup(target, (call_id != NULL));
 
-    } else if (options & st_opt_broadcast) {
+    } else if (pcmk__is_set(options, st_opt_broadcast)) {
         /* there is no clear sign atm for when a history sync
            is done so send a notification for anything
            that smells like history-sync

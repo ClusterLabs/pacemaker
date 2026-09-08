@@ -20,7 +20,6 @@
 #include <glib.h>
 
 #include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
 #include <crm/common/xml.h>
 #include "crmcluster_private.h"
 
@@ -1128,7 +1127,7 @@ crm_update_peer_proc(const char *source, pcmk__node_status_t *node,
             changed = TRUE;
         }
 
-    } else if (node->processes & flag) {
+    } else if (pcmk__is_set(node->processes, flag)) {
         node->processes = pcmk__clear_flags_as(__func__, __LINE__,
                                                LOG_TRACE, "Peer process",
                                                node->name, node->processes,

@@ -19,8 +19,6 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm/cib/internal.h>       // PCMK__CIB_REQUEST_UPGRADE
-#include <crm/cluster/internal.h>   // pcmk__cluster_send_message
-#include <crm/common/internal.h>    // pcmk__info, pcmk__xml_free, etc.
 #include <crm/common/ipc.h>         // pcmk_ipc_server
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_err, pcmk_ok, pcmk_rc*

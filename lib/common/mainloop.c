@@ -687,7 +687,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
-    if (condition & G_IO_IN) {
+    if (pcmk__is_set(condition, G_IO_IN)) {
         if (client->ipc) {
             long read_rc = 0L;
             int max = 10;
@@ -738,12 +738,14 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                   client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 
-    } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
+    } else if (pcmk__any_flags_set(condition,
+                                   (G_IO_HUP | G_IO_NVAL | G_IO_ERR))) {
+
         pcmk__trace("The connection %s[%p] has been closed (I/O condition=%d)",
                     client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 
-    } else if ((condition & G_IO_IN) == 0) {
+    } else if (!pcmk__is_set(condition, G_IO_IN)) {
         /*
            #define      GLIB_SYSDEF_POLLIN     =1
            #define      GLIB_SYSDEF_POLLPRI    =2

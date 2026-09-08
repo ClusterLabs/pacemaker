@@ -1092,16 +1092,17 @@ wait_for_sync_result(svc_action_t *op, struct sigchld_data_s *data)
         wait_reason = NULL;
 
         if (poll_rc > 0) {
-            if (fds[0].revents & POLLIN) {
+            if (pcmk__is_set(fds[0].revents, POLLIN)) {
                 svc_read_output(op->opaque->stdout_fd, op, FALSE);
             }
 
-            if (fds[1].revents & POLLIN) {
+            if (pcmk__is_set(fds[1].revents, POLLIN)) {
                 svc_read_output(op->opaque->stderr_fd, op, TRUE);
             }
 
-            if ((fds[2].revents & POLLIN)
+            if (pcmk__is_set(fds[2].revents, POLLIN)
                 && sigchld_received(fds[2].fd, op->pid, data)) {
+
                 wait_rc = waitpid(op->pid, &status, WNOHANG);
 
                 if ((wait_rc > 0) || ((wait_rc < 0) && (errno == ECHILD))) {

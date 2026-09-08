@@ -18,7 +18,7 @@
 
 #include <crm/crm.h>
 #include <crm/cluster.h>
-#include <crm/cluster/election_internal.h>
+#include <crm/cluster/internal.h>
 #include <crm/common/internal.h>
 #include <crm/cib/cib_types.h>
 

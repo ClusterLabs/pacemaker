@@ -21,7 +21,6 @@
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/cib.h>                    // cib_*
-#include <crm/common/internal.h>        // pcmk__xe_*, pcmk__xml_*, etc.
 #include <crm/common/ipc.h>             // crm_ipc_*
 #include <crm/common/iso8601.h>         // crm_time_*
 #include <crm/common/logging.h>         // CRM_CHECK, crm_log_xml_explicit
@@ -129,7 +128,7 @@ remote_proxy_dispatch(const char *buffer, ssize_t length, void *userdata)
     }
 
     flags = crm_ipc_buffer_flags(proxy->ipc);
-    if (flags & crm_ipc_proxied_relay_response) {
+    if (pcmk__is_set(flags, crm_ipc_proxied_relay_response)) {
         pcmk__trace("Passing response back to %.8s on %s: %.200s - request id: "
                     "%d", proxy->session_id, proxy->node_name, buffer,
                     proxy->last_request_id);
@@ -187,6 +186,16 @@ remote_proxy_new(lrmd_t *lrmd, const char *node_name, const char *session_id,
         pcmk__err("No channel specified to proxy");
         remote_proxy_notify_destroy(lrmd, session_id);
         return NULL;
+    }
+
+    /* @COMPAT Proxied clients from Pacemaker Remote nodes older than version
+     * 3.0.2 can connect using PCMK__SERVER_BASED_RO. Since we use
+     * PCMK__SERVER_BASED_RW for everything now, and since no local or same-
+     * versioned proxied clients can connect to PCMK__SERVER_BASED_RO, just map
+     * it to PCMK__SERVER_BASED_RW here.
+     */
+    if (pcmk__str_eq(channel, PCMK__SERVER_BASED_RO, pcmk__str_none)) {
+        channel = PCMK__SERVER_BASED_RW;
     }
 
     proxy = pcmk__assert_alloc(1, sizeof(remote_proxy_t));

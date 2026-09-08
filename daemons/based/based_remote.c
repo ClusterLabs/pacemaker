@@ -27,7 +27,6 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm_config.h>             // CRM_DAEMON_GROUP
-#include <crm/common/internal.h>    // pcmk__client_t, etc.
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // pcmk_rc_*
@@ -393,7 +392,7 @@ cib_handle_remote_msg(pcmk__client_t *client, xmlNode *command)
         based_update_notify_flags(command, client);
     }
 
-    based_process_request(command, true, client);
+    based_process_request(command, client);
 }
 
 static int
@@ -564,6 +563,11 @@ cib_remote_listen(void *user_data)
         .dispatch = cib_remote_msg,
         .destroy = based_remote_client_destroy,
     };
+
+    if (based_shutting_down()) {
+        pcmk__info("Ignoring new remote connection during shutdown");
+        return 0;
+    }
 
     /* accept the connection */
     laddr = sizeof(addr);

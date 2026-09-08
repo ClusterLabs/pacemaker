@@ -10,6 +10,8 @@
 #ifndef PCMK__CRM_CLUSTER_INTERNAL__H
 #define PCMK__CRM_CLUSTER_INTERNAL__H
 
+#define PCMK__INCLUDED_CRM_CLUSTER_INTERNAL_H
+
 #include <stdbool.h>
 #include <stdint.h>         // uint32_t, uint64_t
 
@@ -18,10 +20,13 @@
 
 #include <crm/common/ipc.h> // enum crm_ipc_server
 #include <crm/cluster.h>
+#include <crm/cluster/election_internal.h>
 
 #if SUPPORT_COROSYNC
 #include <corosync/cpg.h>   // cpg_name, cpg_handle_t
 #endif
+
+#undef PCMK__INCLUDED_CRM_CLUSTER_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {

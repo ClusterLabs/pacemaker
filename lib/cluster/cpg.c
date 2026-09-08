@@ -28,7 +28,6 @@
 #include <qb/qbipcc.h>
 #include <qb/qbutil.h>
 
-#include <crm/cluster/internal.h>
 #include <crm/common/ipc.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>

@@ -27,7 +27,6 @@
 #include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
 #include <crm/common/agents.h>              // pcmk_get_ra_caps, pcmk_ra_cap_*
 #include <crm/common/cib.h>                 // pcmk_cib_xpath_for
-#include <crm/common/internal.h>
 #include <crm/common/ipc.h>                 // pcmk_ipc_api_t
 #include <crm/common/ipc_controld.h>        // pcmk_controld_api_*
 #include <crm/common/iso8601.h>             // crm_time_new

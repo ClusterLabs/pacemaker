@@ -82,18 +82,19 @@ dispatch_messages(void)
 static const char*
 dbus_watch_flags_to_string(int flags)
 {
-    const char *watch_type;
-
-    if ((flags & DBUS_WATCH_READABLE) && (flags & DBUS_WATCH_WRITABLE)) {
-        watch_type = "read/write";
-    } else if (flags & DBUS_WATCH_READABLE) {
-        watch_type = "read";
-    } else if (flags & DBUS_WATCH_WRITABLE) {
-        watch_type = "write";
-    } else {
-        watch_type = "neither read nor write";
+    if (pcmk__all_flags_set(flags, DBUS_WATCH_READABLE|DBUS_WATCH_WRITABLE)) {
+        return "read/write";
     }
-    return watch_type;
+
+    if (pcmk__is_set(flags, DBUS_WATCH_READABLE)) {
+        return "read";
+    }
+
+    if (pcmk__is_set(flags, DBUS_WATCH_WRITABLE)) {
+        return "write";
+    }
+
+    return "neither read nor write";
 }
 
 /*!
@@ -120,7 +121,10 @@ dispatch_fd_data(void *userdata)
                 dbus_watch_get_unix_fd(watch), flags,
                 dbus_watch_flags_to_string(flags));
 
-    if (enabled && (flags & (DBUS_WATCH_READABLE|DBUS_WATCH_WRITABLE))) {
+    if (enabled
+        && pcmk__any_flags_set(flags,
+                               DBUS_WATCH_READABLE|DBUS_WATCH_WRITABLE)) {
+
         oom = !dbus_watch_handle(watch, flags);
 
     } else if (enabled) {

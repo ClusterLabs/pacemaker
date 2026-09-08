@@ -26,7 +26,6 @@
 #include <gnutls/x509.h>            // gnutls_x509_*
 #include <qb/qblog.h>               // QB_XS
 
-#include <crm/common/internal.h>
 #include <crm/common/iso8601.h>     // crm_time_*
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
@@ -643,7 +642,7 @@ pcmk__cred_file_useable(const char *location, bool *file_exists)
         return false;
     }
 
-    if ((sb.st_mode & (S_IRWXG | S_IRWXO)) != 0) {
+    if (pcmk__any_flags_set(sb.st_mode, S_IRWXG|S_IRWXO)) {
         pcmk__err("Refusing to use PSK credentials file %s because it has "
                   "group and/or other permissions set", location);
         return false;

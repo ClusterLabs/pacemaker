@@ -222,6 +222,7 @@ pcmk__request_fencing(stonith_t *st, const char *target, const char *action,
 
     mainloop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(mainloop);
+    g_main_loop_unref(mainloop);
 
     free(async_fence_data.name);
 

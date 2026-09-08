@@ -177,7 +177,7 @@ class Corosync2Patterns(BasePatterns):
             r"error.*: Operation 'reboot' .* using FencingFail returned ",
             r"getinfo response error: 1$",
             r"sbd.* error: inquisitor_child: DEBUG MODE IS ACTIVE",
-            r"sbd.* pcmk:\s*error:.*Connection to cib_ro.* (failed|closed)",
+            r"sbd.* pcmk:\s*error:.*Connection to cib_rw.* (failed|closed)",
         ]
 
         self._bad_news = [

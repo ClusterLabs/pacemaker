@@ -18,7 +18,6 @@
 #include <crm/common/logging.h>
 #include <crm/common/results.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/internal.h>   // pcmk__get_node()
 
 #include "pacemaker-attrd.h"
 

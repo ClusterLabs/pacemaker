@@ -23,7 +23,6 @@
 #include <libxml/tree.h>                // xmlNode
 #include <qb/qblog.h>                   // QB_XS
 
-#include <crm/common/internal.h>
 #include <crm/common/logging.h>         // CRM_CHECK
 #include <crm/common/mainloop.h>        // mainloop_*
 #include <crm/common/results.h>         // pcmk_rc_str, pcmk_rc_*

@@ -23,8 +23,6 @@
 
 #include <crm/cib.h>                // cib_call_options values
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/cluster/internal.h>   // pcmk__cluster_send_message
-#include <crm/common/internal.h>    // pcmk__s, pcmk__str_eq
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_*
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT, CRM_CHECK
 #include <crm/common/mainloop.h>    // mainloop_*
@@ -68,6 +66,10 @@ static gboolean
 digest_timer_cb(void *data)
 {
     xmlNode *ping = NULL;
+
+    if (based_shutting_down()) {
+        return G_SOURCE_REMOVE;
+    }
 
     if (!based_get_local_node_dc()) {
         // Only the DC sends a ping
@@ -615,14 +617,9 @@ log_op_result(const xmlNode *request, const cib__operation_t *operation, int rc,
     originator = pcmk__s(originator, "local");
     client_name = pcmk__s(client_name, "client");
 
-    /* @FIXME based_cib should always be non-NULL, but that's currently not the
-     * case during shutdown
-     */
-    if (based_cib != NULL) {
-        pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
-        pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
-        pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
-    }
+    pcmk__xe_get_int(based_cib, PCMK_XA_ADMIN_EPOCH, &admin_epoch);
+    pcmk__xe_get_int(based_cib, PCMK_XA_EPOCH, &epoch);
+    pcmk__xe_get_int(based_cib, PCMK_XA_NUM_UPDATES, &num_updates);
 
     do_crm_log(level,
                "Completed %s operation for section %s: %s (rc=%d, "
@@ -659,17 +656,14 @@ send_peer_reply(xmlNode *msg, const char *originator)
  * \internal
  * \brief Handle an IPC or CPG message containing a request
  *
- * \param[in,out] request     Request XML
- * \param[in]     privileged  If \c true, operations with
- *                            \c cib__op_attr_privileged can be run
- * \param[in]     client      IPC client that sent request (\c NULL if request
- *                            came from CPG)
+ * \param[in,out] request  Request XML
+ * \param[in]     client   IPC client that sent request (\c NULL if request came
+ *                         from CPG)
  *
  * \return Standard Pacemaker return code
  */
 int
-based_process_request(xmlNode *request, bool privileged,
-                      const pcmk__client_t *client)
+based_process_request(xmlNode *request, const pcmk__client_t *client)
 {
     // @TODO: Break into multiple smaller functions
     uint32_t call_options = cib_none;
@@ -695,6 +689,11 @@ based_process_request(xmlNode *request, bool privileged,
 
     xmlNode *output = NULL;
     time_t start_time = 0;
+
+    if (based_shutting_down()) {
+        pcmk__info("Ignoring pending CIB request during shutdown");
+        return ENOTCONN;
+    }
 
     rc = pcmk__xe_get_flags(request, PCMK__XA_CIB_CALLOPT, &call_options,
                             cib_none);
@@ -793,12 +792,7 @@ based_process_request(xmlNode *request, bool privileged,
 
     start_time = time(NULL);
 
-    if (!privileged
-        && pcmk__is_set(operation->flags, cib__op_attr_privileged)) {
-
-        rc = EACCES;
-
-    } else if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
+    if (!pcmk__is_set(operation->flags, cib__op_attr_modifies)) {
         rc = cib__perform_op_ro(op_function, request, &based_cib, &output);
 
     } else {

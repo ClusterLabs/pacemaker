@@ -16,8 +16,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/internal.h>
-#include <crm/cluster/election_internal.h>
 
 #include <pacemaker-controld.h>
 
@@ -241,9 +239,6 @@ crmd_exit(crm_exit_t exit_code)
     if (mloop != NULL) {
         GMainContext *ctx = g_main_loop_get_context(controld_globals.mainloop);
 
-        // Don't re-enter this block
-        controld_globals.mainloop = NULL;
-
         // Try to drain the main loop before closing it
         for (int i = 0; (i < 10) && g_main_context_pending(ctx); i++) {
             g_main_context_dispatch(ctx);
@@ -251,7 +246,6 @@ crmd_exit(crm_exit_t exit_code)
 
         // Exit the main loop and free it when we return from this dispatch
         g_main_loop_quit(mloop);
-        g_main_loop_unref(mloop);
     }
 
     throttle_fini();

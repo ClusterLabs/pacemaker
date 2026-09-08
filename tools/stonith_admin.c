@@ -26,7 +26,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>   // stonith__register_messages()

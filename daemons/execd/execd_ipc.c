@@ -18,7 +18,6 @@
 #include <libxml/tree.h>                    // xmlNode
 #include <qb/qbipcs.h>                      // qb_ipcs_connection_t
 
-#include <crm/common/internal.h>            // pcmk__client_t, pcmk__find_client
 #include <crm/common/ipc.h>                 // crm_ipc_client_response
 #include <crm/common/logging.h>             // CRM_CHECK
 #include <crm/common/results.h>             // pcmk_rc_*, pcmk_rc_str

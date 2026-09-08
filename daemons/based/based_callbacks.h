@@ -10,8 +10,6 @@
 #ifndef BASED_CALLBACKS__H
 #define BASED_CALLBACKS__H
 
-#include <stdbool.h>
-
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/internal.h>        // pcmk__client_t
@@ -19,7 +17,6 @@
 void based_callbacks_init(void);
 void based_callbacks_cleanup(void);
 
-int based_process_request(xmlNode *request, bool privileged,
-                          const pcmk__client_t *client);
+int based_process_request(xmlNode *request, const pcmk__client_t *client);
 
 #endif // BASED_CALLBACKS__H

@@ -24,7 +24,6 @@
 
 #include <crm/cib.h>                // cib_t, cib_remote_new
 #include <crm/cib/internal.h>       // cib__create_op, cib__extend_transaction
-#include <crm/common/internal.h>
 #include <crm/common/mainloop.h>    // mainloop_fd_callbacks
 #include <crm/common/results.h>     // pcmk_rc_str, pcmk_rc_*
 #include <crm/common/xml.h>         // PCMK_XA_*,
@@ -106,18 +105,19 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     }
 
     pcmk__trace("Sending %s message to the CIB manager", op);
-    if (!(call_options & cib_sync_call)) {
+    if (!pcmk__is_set(call_options, cib_sync_call)) {
         pcmk__remote_send_xml(&private->callback, op_msg);
     } else {
         pcmk__remote_send_xml(&private->command, op_msg);
     }
     pcmk__xml_free(op_msg);
 
-    if ((call_options & cib_discard_reply)) {
+    if (pcmk__is_set(call_options, cib_discard_reply)) {
         pcmk__trace("Discarding reply");
         return pcmk_ok;
+    }
 
-    } else if (!(call_options & cib_sync_call)) {
+    if (!pcmk__is_set(call_options, cib_sync_call)) {
         return cib->call_id;
     }
 
@@ -173,9 +173,9 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
         return -ENOMSG;
     }
 
-    /* The only reason we can receive an ACK here is if dispatch_common ->
+    /* The only reason we can receive an ACK here is if based_ipc_dispatch ->
      * pcmk__client_data2xml processed something that's not valid XML.
-     * dispatch_common does not return ACK, unlike other daemons.
+     * based_ipc_dispatch does not return ACK, unlike other daemons.
      */
     if (pcmk__xe_is(op_reply, PCMK__XE_ACK) && ack_is_failure(op_reply)) {
         pcmk__xml_free(op_reply);
@@ -200,7 +200,7 @@ cib_remote_perform_op(cib_t *cib, const char *op, const char *host,
     if (output_data == NULL) {
         /* do nothing more */
 
-    } else if (!(call_options & cib_discard_reply)) {
+    } else if (!pcmk__is_set(call_options, cib_discard_reply)) {
         xmlNode *tmp = cib__get_calldata(op_reply);
 
         if (tmp == NULL) {
@@ -525,9 +525,9 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
         goto done;
     }
 
-    /* The only reason we can receive an ACK here is if dispatch_common ->
+    /* The only reason we can receive an ACK here is if based_ipc_dispatch ->
      * pcmk__client_data2xml processed something that's not valid XML.
-     * dispatch_common does not return ACK, unlike other daemons.
+     * based_ipc_dispatch does not return ACK, unlike other daemons.
      */
     if (pcmk__xe_is(answer, PCMK__XE_ACK) && ack_is_failure(answer)) {
         rc = -EPROTO;
@@ -540,7 +540,7 @@ cib_tls_signon(cib_t *cib, pcmk__remote_t *connection, gboolean event_channel)
     msg_type = pcmk__xe_get(answer, PCMK__XA_CIB_OP);
     tmp_ticket = pcmk__xe_get(answer, PCMK__XA_CIB_CLIENTID);
 
-    if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_casei)) {
+    if (!pcmk__str_eq(msg_type, CRM_OP_REGISTER, pcmk__str_none)) {
         pcmk__err("Invalid registration message: %s", msg_type);
         rc = -EPROTO;
 
@@ -567,15 +567,21 @@ done:
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Sign on a native client to the CIB API
+ *
+ * \param[in,out] cib   CIB connection (client)
+ * \param[in]     name  Ignored
+ * \param[in]     type  Ignored
+ */
 static int
 cib_remote_signon(cib_t *cib, const char *name, enum cib_conn_type type)
 {
     int rc = pcmk_ok;
     cib_remote_opaque_t *private = cib->variant_opaque;
 
-    if (name == NULL) {
-        name = pcmk__s(crm_system_name, "client");
-    }
+    name = pcmk__s(crm_system_name, "client");
 
     if (private->passwd == NULL) {
         if (private->out == NULL) {
@@ -606,7 +612,6 @@ done:
         pcmk__info("Opened connection to %s:%d for %s", private->server,
                    private->port, name);
         cib->state = cib_connected_command;
-        cib->type = cib_command;
 
     } else {
         pcmk__info("Connection to %s:%d for %s failed: %s\n", private->server,
@@ -626,7 +631,6 @@ cib_remote_signoff(cib_t *cib)
 
     cib->cmds->end_transaction(cib, false, cib_none);
     cib->state = cib_disconnected;
-    cib->type = cib_no_connection;
 
     return rc;
 }

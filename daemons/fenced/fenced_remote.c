@@ -28,7 +28,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
 
 #include <crm/stonith-ng.h>
 #include <crm/fencing/internal.h>
@@ -1246,7 +1245,7 @@ create_remote_stonith_op(const char *client, xmlNode *request, gboolean peer)
                 op->replies_expected,
                 pcmk__plural_alt(op->replies_expected, "reply", "replies"));
 
-    if (op->call_options & st_opt_cs_nodeid) {
+    if (pcmk__is_set(op->call_options, st_opt_cs_nodeid)) {
         int nodeid;
         pcmk__node_status_t *node = NULL;
 
@@ -1397,7 +1396,7 @@ static peer_device_info_t *
 find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer_options options)
 {
     GList *iter = NULL;
-    gboolean verified_devices_only = (options & FIND_PEER_VERIFIED_ONLY) ? TRUE : FALSE;
+    bool verified_devices_only = pcmk__is_set(options, FIND_PEER_VERIFIED_ONLY);
 
     if ((device == NULL) && pcmk__is_set(op->call_options, st_opt_topology)) {
         return NULL;
@@ -1410,10 +1409,16 @@ find_best_peer(const char *device, remote_fencing_op_t * op, enum find_best_peer
                     "%x",
                     peer->host, op->target, peer->ndevices,
                     pcmk__plural_s(peer->ndevices), peer->tried, options);
-        if ((options & FIND_PEER_SKIP_TARGET) && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
+
+        if (pcmk__is_set(options, FIND_PEER_SKIP_TARGET)
+            && pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
+
             continue;
         }
-        if ((options & FIND_PEER_TARGET_ONLY) && !pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
+
+        if (pcmk__is_set(options, FIND_PEER_TARGET_ONLY)
+            && !pcmk__str_eq(peer->host, op->target, pcmk__str_casei)) {
+
             continue;
         }
 
@@ -1723,13 +1728,15 @@ report_timeout_period(remote_fencing_op_t * op, int op_timeout)
     const char *client_id = NULL;
     const char *call_id = NULL;
 
-    if (op->call_options & st_opt_sync_call) {
+    if (pcmk__is_set(op->call_options, st_opt_sync_call)) {
         /* There is no reason to report the timeout for a synchronous call. It
          * is impossible to use the reported timeout to do anything when the client
          * is blocking for the response.  This update is only important for
          * async calls that require a callback to report the results in. */
         return;
-    } else if (!op->request) {
+    }
+
+    if (op->request == NULL) {
         return;
     }
 

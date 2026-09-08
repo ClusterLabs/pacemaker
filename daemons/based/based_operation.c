@@ -12,7 +12,6 @@
 #include <stddef.h>                 // NULL
 
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/common/internal.h>    // pcmk__assert, PCMK__NELEM
 
 #include "pacemaker-based.h"
 

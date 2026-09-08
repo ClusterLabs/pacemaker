@@ -28,7 +28,6 @@
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
 #include <crm/common/mainloop.h>
 
 #include <crm/stonith-ng.h>

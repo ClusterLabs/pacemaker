@@ -28,8 +28,6 @@
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm/cluster.h>            // pcmk_cluster_*, etc.
-#include <crm/cluster/internal.h>   // pcmk__cluster_private_t members
-#include <crm/common/internal.h>    // pcmk__corosync2rc, pcmk__err, etc.
 #include <crm/common/ipc.h>         // crm_ipc_is_authentic_process
 #include <crm/common/logging.h>     // CRM_LOG_ASSERT
 #include <crm/common/mainloop.h>    // mainloop_*
@@ -461,6 +459,9 @@ pcmk__corosync_quorum_connect(gboolean (*dispatch)(unsigned long long,
  * \param[in,out] cluster  Initialized cluster object to connect
  *
  * \return Standard Pacemaker return code
+ *
+ * \note This initializes the node caches on success by calling
+ *       \c pcmk__get_node().
  */
 int
 pcmk__corosync_connect(pcmk_cluster_t *cluster)

@@ -614,7 +614,6 @@ cib_new_variant(void)
     new_cib->call_id = 1;
     new_cib->variant = cib_undefined;
 
-    new_cib->type = cib_no_connection;
     new_cib->state = cib_disconnected;
     new_cib->variant_opaque = NULL;
     new_cib->notify_list = NULL;

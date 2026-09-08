@@ -27,7 +27,6 @@
 
 #include <crm/common/ipc.h>
 #include <crm/common/xml.h>
-#include <crm/cluster/internal.h>
 #include "crmcluster_private.h"
 
 /*!

@@ -10,14 +10,12 @@
 #include <crm_internal.h>
 
 #include <errno.h>                  // EOPNOTSUPP
-#include <stdbool.h>
 #include <stddef.h>                 // NULL
 #include <stdlib.h>                 // free
 
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/common/internal.h>    // pcmk__client_t, pcmk__s, pcmk__xe_*, etc.
 #include <crm/common/logging.h>     // CRM_CHECK
 #include <crm/common/results.h>     // pcmk_rc_*
 
@@ -80,11 +78,9 @@ process_transaction_requests(xmlNode *transaction, const pcmk__client_t *client,
                 || (host != NULL)) {
 
                 rc = EOPNOTSUPP;
+
             } else {
-                /* Commit-transaction is a privileged operation. If we reached
-                 * this point, the request came from a privileged connection.
-                 */
-                rc = based_process_request(request, true, client);
+                rc = based_process_request(request, client);
             }
         }
 
