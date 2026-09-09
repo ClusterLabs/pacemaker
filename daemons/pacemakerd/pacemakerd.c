@@ -366,7 +366,6 @@ static void
 pacemakerd_cleanup(void)
 {
     pacemakerd.ipc_fns->cleanup(&pacemakerd);
-    pacemakerd_unregister_handlers();
 
 #if SUPPORT_COROSYNC
     cluster_disconnect_cfg();
@@ -509,7 +508,7 @@ main(int argc, char **argv)
         init_children_processes(NULL);
     }
 
-    rc = pcmk__daemon_init(&pacemakerd, NULL);
+    rc = pcmk__daemon_init(&pacemakerd, pacemakerd_handlers);
     if (rc != pcmk_rc_ok) {
         pacemakerd.ec = (rc == EIO) ? CRM_EX_OSERR : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
