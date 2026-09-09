@@ -326,7 +326,6 @@ fenced_cleanup(void)
 {
     fenced_cib_cleanup();
     fenced.ipc_fns->cleanup(&fenced);
-    fenced_unregister_handlers();
     fenced_cluster_disconnect();
     fenced_scheduler_cleanup();
 
@@ -427,7 +426,7 @@ main(int argc, char **argv)
     fenced_init_device_table();
     init_topology_list();
 
-    rc = pcmk__daemon_init(&fenced, NULL);
+    rc = pcmk__daemon_init(&fenced, fenced_handlers);
     if (rc != pcmk_rc_ok) {
         fenced.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,

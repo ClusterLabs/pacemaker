@@ -42,8 +42,6 @@ static GHashTable *device_table = NULL;
 GHashTable *topology = NULL;
 static GList *cmd_list = NULL;
 
-static GHashTable *fenced_handlers = NULL;
-
 struct device_search_s {
     /* target of fence action */
     char *host;
@@ -3623,34 +3621,22 @@ handle_cache_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-fenced_register_handlers(void)
-{
-    pcmk__server_command_t handlers[] = {
-        { CRM_OP_REGISTER, handle_register_request },
-        { STONITH_OP_EXEC, handle_agent_request },
-        { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
-        { STONITH_OP_QUERY, handle_query_request },
-        { STONITH_OP_NOTIFY, handle_notify_request },
-        { STONITH_OP_RELAY, handle_relay_request },
-        { STONITH_OP_FENCE, handle_fence_request },
-        { STONITH_OP_FENCE_HISTORY, handle_history_request },
-        { STONITH_OP_DEVICE_ADD, handle_device_add_request },
-        { STONITH_OP_DEVICE_DEL, handle_device_delete_request },
-        { STONITH_OP_LEVEL_ADD, handle_level_add_request },
-        { STONITH_OP_LEVEL_DEL, handle_level_delete_request },
-        { CRM_OP_RM_NODE_CACHE, handle_cache_request },
-        { NULL, handle_unknown_request },
-    };
-
-    fenced_handlers = pcmk__register_handlers(handlers);
-}
-
-void
-fenced_unregister_handlers(void)
-{
-    g_clear_pointer(&fenced_handlers, g_hash_table_destroy);
-}
+pcmk__server_command_t fenced_handlers[] = {
+    { CRM_OP_REGISTER, handle_register_request },
+    { STONITH_OP_EXEC, handle_agent_request },
+    { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
+    { STONITH_OP_QUERY, handle_query_request },
+    { STONITH_OP_NOTIFY, handle_notify_request },
+    { STONITH_OP_RELAY, handle_relay_request },
+    { STONITH_OP_FENCE, handle_fence_request },
+    { STONITH_OP_FENCE_HISTORY, handle_history_request },
+    { STONITH_OP_DEVICE_ADD, handle_device_add_request },
+    { STONITH_OP_DEVICE_DEL, handle_device_delete_request },
+    { STONITH_OP_LEVEL_ADD, handle_level_add_request },
+    { STONITH_OP_LEVEL_DEL, handle_level_delete_request },
+    { CRM_OP_RM_NODE_CACHE, handle_cache_request },
+    { NULL, handle_unknown_request },
+};
 
 void
 fenced_handle_request(pcmk__request_t *request)
@@ -3660,11 +3646,7 @@ fenced_handle_request(pcmk__request_t *request)
     const char *exec_status_s = NULL;
     const char *reason = NULL;
 
-    if (fenced_handlers == NULL) {
-        fenced_register_handlers();
-    }
-
-    reply = pcmk__process_request(request, fenced_handlers);
+    reply = pcmk__process_request(request, fenced.handlers);
 
     if (reply != NULL) {
         pcmk__log_xml_trace(reply, "Reply");
