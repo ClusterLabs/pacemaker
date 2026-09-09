@@ -16,8 +16,8 @@
 
 extern pcmk__output_t *logger_out;
 extern pcmk__daemon_t schedulerd;
+extern pcmk__server_command_t schedulerd_handlers[];
 
-void schedulerd_unregister_handlers(void);
 void schedulerd_handle_request(pcmk__request_t *request);
 void schedulerd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request);
 

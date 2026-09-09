@@ -81,9 +81,7 @@ pcmk__daemon_init(pcmk__daemon_t *d, const pcmk__server_command_t handlers[])
 {
     int rc = pcmk_rc_ok;
 
-    if (handlers != NULL) {
-        d->handlers = pcmk__register_handlers(handlers);
-    }
+    d->handlers = pcmk__register_handlers(handlers);
 
     rc = d->ipc_fns->init(d);
     if (rc != pcmk_rc_ok) {
