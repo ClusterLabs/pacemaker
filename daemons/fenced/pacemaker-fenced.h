@@ -312,7 +312,6 @@ void free_topology_list(void);
 void free_stonith_remote_op_list(void);
 void init_stonith_remote_op_hash_table(GHashTable **table);
 void free_metadata_cache(void);
-void fenced_unregister_handlers(void);
 
 int fenced_device_register(const xmlNode *dev, bool from_cib);
 
@@ -409,3 +408,4 @@ extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
 extern pcmk_cluster_t *fenced_cluster;
 extern pcmk__daemon_t fenced;
+extern pcmk__server_command_t fenced_handlers[];
