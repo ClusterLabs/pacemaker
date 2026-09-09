@@ -101,13 +101,6 @@ schedulerd_cleanup_cmdline(void)
 }
 
 static void
-schedulerd_cleanup(void)
-{
-    schedulerd.ipc_fns->cleanup(&schedulerd);
-    schedulerd_unregister_handlers();
-}
-
-static void
 schedulerd_shutdown(int nsig)
 {
     pcmk__daemon_quit(&schedulerd, CRM_EX_OK);
@@ -204,7 +197,7 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
-    rc = pcmk__daemon_init(&schedulerd, NULL);
+    rc = pcmk__daemon_init(&schedulerd, schedulerd_handlers);
     if (rc != pcmk_rc_ok) {
         schedulerd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
@@ -218,7 +211,7 @@ main(int argc, char **argv)
     pcmk__daemon_run(&schedulerd);
 
 done:
-    schedulerd_cleanup();
+    schedulerd.ipc_fns->cleanup(&schedulerd);
 
     pcmk__output_and_clear_error(&error, out);
 
