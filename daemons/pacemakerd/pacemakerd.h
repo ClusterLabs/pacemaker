@@ -27,13 +27,13 @@ extern crm_trigger_t *shutdown_trigger;
 extern crm_trigger_t *startup_trigger;
 extern time_t subdaemon_check_progress;
 extern pcmk__daemon_t pacemakerd;
+extern pcmk__server_command_t pacemakerd_handlers[];
 
 int find_and_track_existing_processes(void);
 gboolean init_children_processes(void *user_data);
 void pcmk_shutdown(int nsig);
 void restart_cluster_subdaemons(void);
 
-void pacemakerd_unregister_handlers(void);
 void pacemakerd_handle_request(pcmk__request_t *request);
 void pacemakerd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
 void pacemakerd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request);
