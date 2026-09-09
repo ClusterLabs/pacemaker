@@ -26,7 +26,7 @@
 
 #include <crm/common/ipc.h>                 // pcmk_ipc_server
 #include <crm/common/ipc_internal.h>        // pcmk__client_t
-#include <crm/common/messages_internal.h>   // pcmk__request_t
+#include <crm/common/messages_internal.h>   // pcmk__request_t, pcmk__server_command_t
 #include <crm/common/results.h>             // crm_exit_t
 
 #ifdef __cplusplus
@@ -161,6 +161,9 @@ struct pcmk__daemon_s {
     //! Main loop
     GMainLoop *mainloop;
 
+    //! IPC/cluster message handlers
+    GHashTable *handlers;
+
     //! IPC server
     enum qb_loop_priority priority;
     qb_ipcs_service_t *ipcs;
@@ -189,7 +192,7 @@ bool pcmk__generic_ipc_running(pcmk__daemon_t *d);
 
 // Mainloop management functions
 
-int pcmk__daemon_init(pcmk__daemon_t *d);
+int pcmk__daemon_init(pcmk__daemon_t *d, const pcmk__server_command_t handler[]);
 void pcmk__daemon_quit(pcmk__daemon_t *d, crm_exit_t ec);
 void pcmk__daemon_run(pcmk__daemon_t *d);
 
