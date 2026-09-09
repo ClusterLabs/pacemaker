@@ -25,8 +25,6 @@
 
 #include "pacemaker-execd.h"                // execd_*
 
-
-static GHashTable *execd_handlers = NULL;
 static int lrmd_call_id = 0;
 
 static xmlNode *
@@ -411,32 +409,20 @@ handle_unknown_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-execd_register_handlers(void)
-{
-    pcmk__server_command_t handlers[] = {
-        { CRM_OP_IPC_FWD, handle_ipc_fwd_request },
-        { CRM_OP_REGISTER, handle_register_request },
-        { LRMD_OP_ALERT_EXEC, handle_alert_exec_request },
-        { LRMD_OP_CHECK, handle_check_request },
-        { LRMD_OP_GET_RECURRING, handle_get_recurring_request },
-        { LRMD_OP_POKE, handle_poke_request },
-        { LRMD_OP_RSC_CANCEL, handle_rsc_cancel_request },
-        { LRMD_OP_RSC_EXEC, handle_rsc_exec_request },
-        { LRMD_OP_RSC_INFO, handle_rsc_info_request },
-        { LRMD_OP_RSC_REG, handle_rsc_reg_request },
-        { LRMD_OP_RSC_UNREG, handle_rsc_unreg_request },
-        { NULL, handle_unknown_request },
-    };
-
-    execd_handlers = pcmk__register_handlers(handlers);
-}
-
-void
-execd_unregister_handlers(void)
-{
-    g_clear_pointer(&execd_handlers, g_hash_table_destroy);
-}
+pcmk__server_command_t execd_handlers[] = {
+    { CRM_OP_IPC_FWD, handle_ipc_fwd_request },
+    { CRM_OP_REGISTER, handle_register_request },
+    { LRMD_OP_ALERT_EXEC, handle_alert_exec_request },
+    { LRMD_OP_CHECK, handle_check_request },
+    { LRMD_OP_GET_RECURRING, handle_get_recurring_request },
+    { LRMD_OP_POKE, handle_poke_request },
+    { LRMD_OP_RSC_CANCEL, handle_rsc_cancel_request },
+    { LRMD_OP_RSC_EXEC, handle_rsc_exec_request },
+    { LRMD_OP_RSC_INFO, handle_rsc_info_request },
+    { LRMD_OP_RSC_REG, handle_rsc_reg_request },
+    { LRMD_OP_RSC_UNREG, handle_rsc_unreg_request },
+    { NULL, handle_unknown_request },
+};
 
 bool
 execd_invalid_msg(xmlNode *msg)
@@ -469,10 +455,6 @@ execd_handle_request(pcmk__request_t *request)
     const char *exec_status_s = NULL;
     xmlNode *reply = NULL;
 
-    if (execd_handlers == NULL) {
-        execd_register_handlers();
-    }
-
     if (request->ipc_client->name == NULL) {
         request->ipc_client->name = pcmk__xe_get_copy(request->xml,
                                                       PCMK__XA_LRMD_CLIENTNAME);
@@ -488,7 +470,7 @@ execd_handle_request(pcmk__request_t *request)
                  request->ipc_client->name);
     pcmk__xe_set_int(request->xml, PCMK__XA_LRMD_CALLID, lrmd_call_id);
 
-    reply = pcmk__process_request(request, execd_handlers);
+    reply = pcmk__process_request(request, execd.handlers);
 
     if (reply != NULL) {
         int rc = pcmk_rc_ok;
