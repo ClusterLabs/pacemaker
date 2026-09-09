@@ -22,6 +22,7 @@
 
 extern GHashTable *rsc_list;
 extern pcmk__daemon_t execd;
+extern pcmk__server_command_t execd_handlers[];
 
 typedef struct {
     char *rsc_id;
@@ -95,8 +96,6 @@ int ipc_proxy_shutdown_req(pcmk__client_t *ipc_proxy);
 void remoted_spawn_pidone(int argc, char **argv);
 void remoted_request_cib_schema_files(void);
 #endif
-
-void execd_unregister_handlers(void);
 
 void lrmd_drain_alerts(GMainLoop *mloop);
 
