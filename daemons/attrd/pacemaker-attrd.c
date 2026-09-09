@@ -88,7 +88,6 @@ attrd_cleanup(void)
     attrd.ipc_fns->cleanup(&attrd);
 
     attrd_lrmd_disconnect();
-    attrd_unregister_handlers();
     attrd_cib_disconnect();
     attrd_cluster_disconnect();
 
@@ -206,7 +205,7 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    rc = pcmk__daemon_init(&attrd);
+    rc = pcmk__daemon_init(&attrd, attrd_handlers);
     if (rc != pcmk_rc_ok) {
         attrd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
