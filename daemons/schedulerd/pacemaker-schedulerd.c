@@ -204,7 +204,7 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
-    rc = pcmk__daemon_init(&schedulerd);
+    rc = pcmk__daemon_init(&schedulerd, NULL);
     if (rc != pcmk_rc_ok) {
         schedulerd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,

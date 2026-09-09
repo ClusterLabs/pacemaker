@@ -486,7 +486,7 @@ main(int argc, char **argv)
     }
 #endif
 
-    rc = pcmk__daemon_init(&execd);
+    rc = pcmk__daemon_init(&execd, NULL);
     if (rc != pcmk_rc_ok) {
         execd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,

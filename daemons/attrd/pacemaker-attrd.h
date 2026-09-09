@@ -90,6 +90,7 @@ int attrd_expand_value(const char *value, const char *old_value);
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         unsigned int interval_ms);
 
+extern pcmk__server_command_t attrd_handlers[];
 extern cib_t *the_cib;
 
 /* Alerts */
@@ -236,7 +237,6 @@ void attrd_update_minimum_protocol_ver(const char *host, const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 
-void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
 
 enum attrd_sync_point {

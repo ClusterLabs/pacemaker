@@ -71,17 +71,23 @@ static struct qb_ipcs_service_handlers ipc_callbacks = {
  * \internal
  * \brief Initialize a previously allocated daemon object
  *
- * \param[in,out] d The daemon object
+ * \param[in,out] d        The daemon object
+ * \param[in]     handlers A list of IPC/cluster message handlers to register
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__daemon_init(pcmk__daemon_t *d)
+pcmk__daemon_init(pcmk__daemon_t *d, const pcmk__server_command_t handlers[])
 {
     int rc = pcmk_rc_ok;
 
+    if (handlers != NULL) {
+        d->handlers = pcmk__register_handlers(handlers);
+    }
+
     rc = d->ipc_fns->init(d);
     if (rc != pcmk_rc_ok) {
+        g_clear_pointer(&d->handlers, g_hash_table_destroy);
         return rc;
     }
 
@@ -402,8 +408,11 @@ pcmk__daemon_run(pcmk__daemon_t *d)
 {
     pcmk__notice("Pacemaker %s successfully started and accepting connections",
                  pcmk__server_log_name(d->type));
+
     g_main_loop_run(d->mainloop);
+
     g_clear_pointer(&d->mainloop, g_main_loop_unref);
+    g_clear_pointer(&d->handlers, g_hash_table_destroy);
 }
 
 /*!
