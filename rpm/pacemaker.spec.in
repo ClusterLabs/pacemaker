@@ -188,6 +188,28 @@
 
 # Python-related definitions
 
+%if 0%{?rhel} && 0%{?rhel} == 8
+# There is pyproject-rpm-macros in EPEL8 but it requires Python 3.8
+# thus switching python to AppStream-python. As we
+# want to build against system-python so if there are traces in
+# the build environment try to revert them.
+
+# 1. Force the interpreter back to system Python 3 (Python 3.6)
+%global __python3 /usr/bin/python3
+%global python3 /usr/bin/python3
+
+# 2. Reset installation paths to system Python 3 sitelib/sitearch
+# 2. Dynamically query system Python for sitelib and sitearch paths
+%global python3_sitelib %(%{__python3} -c "import sysconfig; print(sysconfig.get_path('purelib'))")
+%global python3_sitearch %(%{__python3} -c "import sysconfig; print(sysconfig.get_path('platlib'))")
+
+# 3. Disable PEP 517 macros
+%undefine pyproject_wheel
+%undefine pyproject_install
+%undefine pyproject_save_files
+%undefine pyproject_files
+%endif
+
 ## Turn off auto-compilation of Python files outside Python specific paths,
 ## so there's no risk that unexpected "__python" macro gets picked to do the
 ## RPM-native byte-compiling there (only "{_datadir}/pacemaker/tests" affected)
@@ -263,7 +285,19 @@ Requires:      %{python_name}-%{name} = %{version}-%{release}
 
 Requires:      %{python_path}
 BuildRequires: %{python_name}-devel
+%if 0%{?rhel} && 0%{?rhel} <= 8
 BuildRequires: %{python_name}-setuptools
+%else
+# as setup.py isn't yet built from setup.py.in when
+# pyproject_buildrequires is run use it with -N option
+# and require the tools manually for now and keep
+# setuptools in the conditional to express it is one
+# of these tools
+BuildRequires: %{python_name}-wheel
+BuildRequires: %{python_name}-pip
+BuildRequires: %{python_name}-setuptools
+BuildRequires: pyproject-rpm-macros
+%endif
 
 # Pacemaker requires a minimum libqb functionality
 Requires:      libqb >= 1.0.1
@@ -487,6 +521,12 @@ manager.
 %prep
 %setup -q -n %{name}-%{archive_version}
 
+%if 0%{?rhel} && 0%{?rhel} <= 8
+%else
+%generate_buildrequires
+%pyproject_buildrequires -N
+%endif
+
 %build
 
 export systemdsystemunitdir=%{_unitdir}
@@ -530,7 +570,8 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 make %{_smp_mflags} V=1
 
 pushd python
-%py3_build
+# use 2-step expansion for embedded lua-script option handling to work
+%{?pyproject_wheel:%pyproject_wheel}%{!?pyproject_wheel:%py3_build}
 popd
 
 %check
@@ -551,7 +592,9 @@ make install \
   %{?_python_bytecompile_extra:%{?py_byte_compile:am__py_compile=true}}
 
 pushd python
-%py3_install
+%{?pyproject_install}%{!?pyproject_install:%py3_install}
+# take care of the license-files manually for now
+%{?pyproject_save_files:%pyproject_save_files -L "*"}
 popd
 
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
@@ -776,9 +819,11 @@ exit 0
 %doc COPYING
 %doc ChangeLog.md
 
-%files -n %{python_name}-%{name}
-%{python3_sitelib}/pacemaker/
-%{python3_sitelib}/pacemaker-*.egg-info
+%files -n %{python_name}-%{name} %{?pyproject_files:-f %{pyproject_files}}
+%if 0%{?rhel} && 0%{?rhel} <= 8
+%{python3_sitelib}/%{name}/
+%{python3_sitelib}/%{name}-*.egg-info
+%endif
 %exclude %{python3_sitelib}/pacemaker/_cts/
 %license licenses/LGPLv2.1
 %doc COPYING
