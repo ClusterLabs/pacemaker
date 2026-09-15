@@ -427,7 +427,7 @@ start_test(void *user_data)
         g_list_foreach(op_list, print_op_info, NULL);
         g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
 
-    } else if (options.api_call != NULL) {
+    } else {
         print_result("API-CALL FAILURE unknown action '%s'", options.action);
         test_exit(CRM_EX_ERROR);
     }
@@ -438,7 +438,7 @@ start_test(void *user_data)
         test_exit(CRM_EX_ERROR);
     }
 
-    if ((options.api_call != NULL) && (rc == pcmk_ok)) {
+    if (rc == pcmk_ok) {
         print_result("API-CALL SUCCESSFUL for '%s'", options.api_call);
         if (options.listen == NULL) {
             test_exit(CRM_EX_OK);
