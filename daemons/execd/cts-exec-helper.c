@@ -201,22 +201,23 @@ test_shutdown(int nsig)
 static void
 read_events(lrmd_event_data_t * event)
 {
-    char buf[1024] = { '\0', };
-
-    pcmk__assert(snprintf(buf, sizeof(buf),
-                          "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s "
-                          "op_status:%s",
-                          lrmd_event_type2str(event->type), event->rsc_id,
-                          pcmk__s(event->op_type, "none"),
-                          crm_exit_str((crm_exit_t) event->rc),
-                          pcmk_exec_status_str(event->op_status)) >= 0);
+    char *buf =
+        pcmk__assert_asprintf("NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s "
+                              "op_status:%s",
+                              lrmd_event_type2str(event->type), event->rsc_id,
+                              pcmk__s(event->op_type, "none"),
+                              crm_exit_str((crm_exit_t) event->rc),
+                              pcmk_exec_status_str(event->op_status));
     pcmk__info("%s", buf);
 
     if ((options.listen != NULL)
         && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
         print_result("LISTEN EVENT SUCCESSFUL");
+        free(buf);
         test_exit(CRM_EX_OK);
     }
+
+    free(buf);
 
     if ((exec_call_id != 0) && (event->call_id == exec_call_id)) {
         if ((event->op_status == 0) && (event->rc == 0)) {
