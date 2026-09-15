@@ -38,6 +38,38 @@
 
 #define SUMMARY "cts-exec-helper - inject commands into the Pacemaker executor and watch for events"
 
+/*!
+ * \internal
+ * \brief Commands for \c cts-exec-helper
+ */
+enum cts_exec_cmd {
+    cts_exec_cmd_none,
+    cts_exec_cmd_exec,
+
+    // Update this when adding new commands
+    cts_exec_cmd_max = cts_exec_cmd_exec,
+};
+
+/*!
+ * \internal
+ * \brief Flags to define attributes of a given \c cts-exec-helper command
+ */
+enum cts_exec_command_flags {
+    //! This flag has no effect
+    cts_exec_cf_none        = UINT32_C(0),
+};
+
+/*!
+ * \internal
+ * \brief Information about a \c cts-exec-helper command type
+ */
+typedef struct {
+    int (*handler)(void);       //!< Function to call to handle command
+
+    //! Group of <tt>enum cts_exec_command_flags</tt>
+    uint32_t flags;
+} cts_exec_cmd_info_t;
+
 static int exec_call_id = 0;
 static gboolean start_test(void *user_data);
 static void try_connect(void);
@@ -48,6 +80,7 @@ static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 
 static struct {
+    enum cts_exec_cmd cmd;
     int verbose;
     int quiet;
     unsigned int interval_ms;
@@ -58,7 +91,7 @@ static struct {
     gboolean is_running;
     gboolean no_connect;
     int exec_call_opts;
-    const char *api_call;
+    char *api_call;
     const char *rsc_id;
     const char *provider;
     const char *class;
@@ -67,7 +100,9 @@ static struct {
     const char *listen;
     gboolean use_tls;
     lrmd_key_value_t *params;
-} options;
+} options = {
+    .cmd = cts_exec_cmd_none,
+};
 
 static gboolean
 interval_cb(const char *option_name, const char *optarg, void *data,
@@ -109,8 +144,21 @@ param_key_val_cb(const char *option_name, const char *optarg, void *data,
     return TRUE;
 }
 
+static gboolean
+command_cb(const char *option_name, const char *optarg, void *data,
+           GError **error)
+{
+    if (pcmk__str_eq(optarg, "exec", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_exec;
+    } else {
+        options.api_call = strdup(optarg);
+    }
+
+    return TRUE;
+}
+
 static GOptionEntry basic_entries[] = {
-    { "api-call", 'c', 0, G_OPTION_ARG_STRING, &options.api_call,
+    { "api-call", 'c', 0, G_OPTION_ARG_CALLBACK, command_cb,
       "Directly relates to executor API functions",
       NULL },
 
@@ -297,10 +345,34 @@ print_op_info(gpointer data, gpointer user_data)
                  op_info->timeout_ms_s);
 }
 
+static int
+exec_test(void)
+{
+    int rc = lrmd_conn->cmds->exec(lrmd_conn, options.rsc_id, options.action,
+                                   NULL, options.interval_ms, options.timeout,
+                                   options.start_delay, options.exec_call_opts,
+                                   options.params);
+
+    if (rc > 0) {
+        exec_call_id = rc;
+        print_result("API-CALL 'exec' action pending, waiting on response");
+    }
+
+    return rc;
+}
+
+static const cts_exec_cmd_info_t cts_exec_command_info[] = {
+    [cts_exec_cmd_exec] = {
+        exec_test,
+        cts_exec_cf_none,
+    },
+};
+
 static gboolean
 start_test(void *user_data)
 {
     int rc = 0;
+    const cts_exec_cmd_info_t *cmd_info = NULL;
 
     if (!options.no_connect && !lrmd_conn->cmds->is_connected(lrmd_conn)) {
         try_connect();
@@ -314,27 +386,17 @@ start_test(void *user_data)
         pcmk__create_timer(options.timeout, timeout_err, NULL);
     }
 
+    if (options.cmd != cts_exec_cmd_none) {
+        cmd_info = &cts_exec_command_info[options.cmd];
+        rc = cmd_info->handler();
+        goto done;
+    }
+
     if (options.api_call == NULL) {
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "exec", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->exec(lrmd_conn,
-                                   options.rsc_id,
-                                   options.action,
-                                   NULL,
-                                   options.interval_ms,
-                                   options.timeout,
-                                   options.start_delay,
-                                   options.exec_call_opts,
-                                   options.params);
-
-        if (rc > 0) {
-            exec_call_id = rc;
-            print_result("API-CALL 'exec' action pending, waiting on response");
-        }
-
-    } else if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->register_rsc(lrmd_conn,
                                            options.rsc_id,
                                            options.class, options.provider, options.type, 0);
@@ -431,6 +493,7 @@ start_test(void *user_data)
         test_exit(CRM_EX_ERROR);
     }
 
+done:
     if (rc < 0) {
         print_result("API-CALL FAILURE for '%s' api_rc:%d",
                      options.api_call, rc);
@@ -546,6 +609,8 @@ cleanup_cmdline(void)
     g_clear_pointer(&val, free);
     g_clear_pointer(&processed_args, g_strfreev);
     g_clear_pointer(&context, pcmk__free_arg_context);
+
+    g_clear_pointer(&options.api_call, free);
 }
 
 int
@@ -613,12 +678,14 @@ main(int argc, char **argv)
                         "unable to get parameters from CIB");
             goto done;
         }
-        options.api_call = "exec";
+
+        options.cmd = cts_exec_cmd_exec;
         options.action = PCMK_ACTION_MONITOR;
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
-    if ((options.api_call == NULL) && (options.listen == NULL)) {
+    if ((options.cmd == cts_exec_cmd_none) && (options.api_call == NULL)
+        && (options.listen == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must specify at least one of --api-call, --listen, "
