@@ -179,7 +179,6 @@ static GOptionEntry api_call_entries[] = {
     { NULL }
 };
 
-static GMainLoop *mainloop = NULL;
 static lrmd_t *lrmd_conn = NULL;
 
 static crm_exit_t
@@ -558,6 +557,7 @@ main(int argc, char **argv)
     crm_exit_t exit_code = CRM_EX_OK;
     crm_trigger_t *trig = NULL;
     pcmk__common_args_t *args = NULL;
+    GMainLoop *mainloop = NULL;
 
     atexit(cleanup_cmdline);
 
