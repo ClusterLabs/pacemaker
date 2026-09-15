@@ -314,11 +314,20 @@ exec_test(void)
     return rc;
 }
 
+static int
+register_rsc_test(void)
+{
+    return lrmd_conn->cmds->register_rsc(lrmd_conn,
+                                         options.rsc_id,
+                                         options.class, options.provider, options.type, 0);
+}
+
 static struct {
     const char *command;
     int (*handler)(void);
 } handlers[] = {
     { "exec", exec_test },
+    { "register_rsc", register_rsc_test },
     { NULL },
 };
 
@@ -352,11 +361,7 @@ start_test(void *user_data)
         goto done;
     }
 
-    if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->register_rsc(lrmd_conn,
-                                           options.rsc_id,
-                                           options.class, options.provider, options.type, 0);
-    } else if (pcmk__str_eq(options.api_call, "get_rsc_info", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "get_rsc_info", pcmk__str_casei)) {
         lrmd_rsc_info_t *rsc_info;
 
         rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
