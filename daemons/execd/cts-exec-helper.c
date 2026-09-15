@@ -99,7 +99,7 @@ param_key_val_cb(const char *option_name, const char *optarg, void *data,
         pcmk__str_update(&val, optarg);
     }
 
-    if (key != NULL && val != NULL) {
+    if ((key != NULL) && (val != NULL)) {
         options.params = lrmd_key_value_add(options.params, key, val);
         g_clear_pointer(&key, free);
         g_clear_pointer(&val, free);
@@ -212,13 +212,14 @@ read_events(lrmd_event_data_t * event)
                           pcmk_exec_status_str(event->op_status)) >= 0);
     pcmk__info("%s", buf);
 
-    if (options.listen && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
+    if ((options.listen != NULL)
+        && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
         print_result("LISTEN EVENT SUCCESSFUL");
         test_exit(CRM_EX_OK);
     }
 
-    if (exec_call_id && (event->call_id == exec_call_id)) {
-        if (event->op_status == 0 && event->rc == 0) {
+    if ((exec_call_id != 0) && (event->call_id == exec_call_id)) {
+        if ((event->op_status == 0) && (event->rc == 0)) {
             print_result("API-CALL SUCCESSFUL for 'exec'");
         } else {
             print_result("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s",
@@ -226,7 +227,7 @@ read_events(lrmd_event_data_t * event)
             test_exit(CRM_EX_ERROR);
         }
 
-        if (!options.listen) {
+        if (options.listen == NULL) {
             test_exit(CRM_EX_OK);
         }
     }
@@ -250,15 +251,15 @@ connection_events(lrmd_event_data_t * event)
         return;
     }
 
-    if (!rc) {
+    if (rc == 0) {
         pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
-    } else {
-        sleep(1);
-        try_connect();
-        pcmk__notice("Executor client connection failed");
     }
+
+    sleep(1);
+    try_connect();
+    pcmk__notice("Executor client connection failed");
 }
 
 static void
@@ -272,9 +273,10 @@ try_connect(void)
     for (; num_tries < tries; num_tries++) {
         rc = lrmd_conn->cmds->connect_async(lrmd_conn, crm_system_name, 3000);
 
-        if (!rc) {
+        if (rc == 0) {
             return;             /* we'll hear back in async callback */
         }
+
         sleep(1);
     }
 
@@ -287,20 +289,19 @@ start_test(void *user_data)
 {
     int rc = 0;
 
-    if (!options.no_connect) {
-        if (!lrmd_conn->cmds->is_connected(lrmd_conn)) {
-            try_connect();
-            /* async connect -- this function will get called back into */
-            return 0;
-        }
+    if (!options.no_connect && !lrmd_conn->cmds->is_connected(lrmd_conn)) {
+        try_connect();
+        /* async connect -- this function will get called back into */
+        return 0;
     }
+
     lrmd_conn->cmds->set_callback(lrmd_conn, read_events);
 
-    if (options.timeout) {
+    if (options.timeout != 0) {
         pcmk__create_timer(options.timeout, timeout_err, NULL);
     }
 
-    if (!options.api_call) {
+    if (options.api_call == NULL) {
         return 0;
     }
 
@@ -329,7 +330,7 @@ start_test(void *user_data)
 
         rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
 
-        if (rsc_info) {
+        if (rsc_info != NULL) {
             print_result("RSC_INFO: id:%s class:%s provider:%s type:%s",
                          rsc_info->id, rsc_info->standard,
                          (rsc_info->provider? rsc_info->provider : "<none>"),
@@ -423,7 +424,7 @@ start_test(void *user_data)
         }
         g_list_free(op_list);
 
-    } else if (options.api_call) {
+    } else if (options.api_call != NULL) {
         print_result("API-CALL FAILURE unknown action '%s'", options.action);
         test_exit(CRM_EX_ERROR);
     }
@@ -434,9 +435,9 @@ start_test(void *user_data)
         test_exit(CRM_EX_ERROR);
     }
 
-    if (options.api_call && rc == pcmk_ok) {
+    if ((options.api_call != NULL) && (rc == pcmk_ok)) {
         print_result("API-CALL SUCCESSFUL for '%s'", options.api_call);
-        if (!options.listen) {
+        if (options.listen == NULL) {
             test_exit(CRM_EX_OK);
         }
     }
@@ -601,7 +602,7 @@ main(int argc, char **argv)
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
-    if (!options.api_call && !options.listen) {
+    if ((options.api_call == NULL) && !options.listen) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must specify at least one of --api-call, --listen, "
