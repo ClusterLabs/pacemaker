@@ -299,6 +299,13 @@ print_op_info(gpointer data, gpointer user_data)
 }
 
 static int
+cancel_test(void)
+{
+    return lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
+                                   options.interval_ms);
+}
+
+static int
 exec_test(void)
 {
     int rc = lrmd_conn->cmds->exec(lrmd_conn, options.rsc_id, options.action,
@@ -349,6 +356,7 @@ static struct {
     const char *command;
     int (*handler)(void);
 } handlers[] = {
+    { "cancel", cancel_test },
     { "exec", exec_test },
     { "get_rsc_info", get_rsc_info_test },
     { "register_rsc", register_rsc_test },
@@ -386,10 +394,7 @@ start_test(void *user_data)
         goto done;
     }
 
-    if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
-                                     options.interval_ms);
-    } else if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
         char *output = NULL;
 
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
