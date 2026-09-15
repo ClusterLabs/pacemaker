@@ -219,18 +219,20 @@ read_events(lrmd_event_data_t * event)
 
     free(buf);
 
-    if ((exec_call_id != 0) && (event->call_id == exec_call_id)) {
-        if ((event->op_status == 0) && (event->rc == 0)) {
-            print_result("API-CALL SUCCESSFUL for 'exec'");
-        } else {
-            print_result("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s",
-                         event->rc, pcmk_exec_status_str(event->op_status));
-            test_exit(CRM_EX_ERROR);
-        }
+    if ((exec_call_id == 0) || (event->call_id != exec_call_id)) {
+        return;
+    }
 
-        if (options.listen == NULL) {
-            test_exit(CRM_EX_OK);
-        }
+    if ((event->op_status == 0) && (event->rc == 0)) {
+        print_result("API-CALL SUCCESSFUL for 'exec'");
+    } else {
+        print_result("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s",
+                     event->rc, pcmk_exec_status_str(event->op_status));
+        test_exit(CRM_EX_ERROR);
+    }
+
+    if (options.listen == NULL) {
+        test_exit(CRM_EX_OK);
     }
 }
 
