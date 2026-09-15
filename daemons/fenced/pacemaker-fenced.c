@@ -37,16 +37,25 @@
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .already_running = pcmk__generic_ipc_running,
+};
+
+pcmk__daemon_t fenced = {
+    .type = pcmk_ipc_fenced,
+    .ec = CRM_EX_OK,
+    .ipc_fns = &ipc_fns,
+};
+
 // @TODO This should be unsigned int
 long long fencing_watchdog_timeout_ms = 0;
 
 GList *stonith_watchdog_targets = NULL;
 
-static GMainLoop *mainloop = NULL;
-
-gboolean stonith_shutdown_flag = FALSE;
-
 static pcmk__output_t *out = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
+static gchar **log_files = NULL;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -54,15 +63,6 @@ pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
-
-static struct {
-    gboolean stand_alone;
-    gchar **log_files;
-} options;
-
-crm_exit_t exit_code = CRM_EX_OK;
-
-static void stonith_cleanup(void);
 
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
@@ -260,27 +260,6 @@ node_does_watchdog_fencing(const char *node)
             pcmk__str_in_list(node, stonith_watchdog_targets, pcmk__str_casei));
 }
 
-void
-stonith_shutdown(int nsig)
-{
-    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
-    stonith_shutdown_flag = TRUE;
-    if (mainloop != NULL && g_main_loop_is_running(mainloop)) {
-        g_main_loop_quit(mainloop);
-    }
-}
-
-static void
-stonith_cleanup(void)
-{
-    fenced_cib_cleanup();
-    fenced_ipc_cleanup();
-    free_stonith_remote_op_list();
-    free_topology_list();
-    fenced_free_device_table();
-    free_metadata_cache();
-}
-
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_fence_attrs() or
  * crm_resource --list-options=fencing instead of querying daemon metadata.
  *
@@ -302,11 +281,11 @@ fencer_metadata(void)
 
 static GOptionEntry entries[] = {
     { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
-      &options.stand_alone, N_("Intended for use in regression testing only"),
+      &fenced.stand_alone, N_("Intended for use in regression testing only"),
       NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
-      &options.log_files, N_("Send logs to the additional named logfile"), NULL },
+      &log_files, N_("Send logs to the additional named logfile"), NULL },
 
     { NULL }
 };
@@ -321,31 +300,42 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
-static bool
-ipc_already_running(void)
+static void
+fenced_cleanup_cmdline(void)
 {
-    crm_ipc_t *old_instance = NULL;
-    int rc = pcmk_rc_ok;
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&log_files, g_strfreev);
+}
 
-    old_instance = crm_ipc_new("stonith-ng", 0);
-    if (old_instance == NULL) {
-        /* This is an error - memory allocation failed, etc. - but crm_ipc_new
-         * will have already logged an error message.
-         */
-        return false;
-    }
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+fenced_shutdown(int nsig)
+{
+    pcmk__info("Terminating with %d clients", pcmk__ipc_client_count());
+    pcmk__daemon_quit(&fenced, CRM_EX_OK);
+}
 
-    rc = pcmk__connect_generic_ipc(old_instance);
-    if (rc != pcmk_rc_ok) {
-        pcmk__debug("No existing stonith-ng instance found: %s",
-                    pcmk_rc_str(rc));
-        crm_ipc_destroy(old_instance);
-        return false;
-    }
+static void
+fenced_cleanup(void)
+{
+    fenced_cib_cleanup();
+    fenced_ipc_cleanup();
+    fenced_unregister_handlers();
+    fenced_cluster_disconnect();
+    fenced_scheduler_cleanup();
 
-    crm_ipc_close(old_instance);
-    crm_ipc_destroy(old_instance);
-    return true;
+    free_stonith_remote_op_list();
+    free_topology_list();
+    fenced_free_device_table();
+    free_metadata_cache();
 }
 
 int
@@ -356,22 +346,26 @@ main(int argc, char **argv)
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "l");
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+
+    atexit(fenced_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, "l");
+    context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        fenced.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        fenced.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
@@ -387,84 +381,89 @@ main(int argc, char **argv)
 
         rc = fencer_metadata();
         if (rc != pcmk_rc_ok) {
-            exit_code = CRM_EX_FATAL;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+            fenced.ec = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                         "Unable to display metadata: %s", pcmk_rc_str(rc));
         }
         goto done;
     }
 
     // Open additional log files
-    pcmk__add_logfiles(options.log_files, out);
+    pcmk__add_logfiles(log_files, out);
 
     crm_log_init(NULL, LOG_INFO + args->verbosity, TRUE,
                  (args->verbosity > 0), argc, argv, FALSE);
 
-    pcmk__notice("Starting Pacemaker fencer");
-
-    if (ipc_already_running()) {
-        exit_code = CRM_EX_OK;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+    if (fenced.ipc_fns->already_running(&fenced)) {
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Aborting start-up because a fencer instance is already active");
         pcmk__crit("%s", error->message);
         goto done;
     }
 
-    mainloop_add_signal(SIGTERM, stonith_shutdown);
+    pcmk__notice("Starting Pacemaker fencer");
 
     pcmk__cluster_init_node_caches();
 
     rc = fenced_scheduler_init();
     if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        fenced.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Error initializing scheduler data: %s", pcmk_rc_str(rc));
         goto done;
     }
 
     if (fenced_cluster_connect() != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        fenced.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Could not connect to the cluster");
         goto done;
     }
 
-    pcmk__info("Cluster connection active");
-
     fenced_set_local_node(fenced_cluster->priv->node_name);
 
-    if (!options.stand_alone) {
+    if (!fenced.stand_alone) {
         setup_cib();
     }
 
     fenced_init_device_table();
     init_topology_list();
-    fenced_ipc_init();
 
-    // Create the mainloop and run it...
-    mainloop = g_main_loop_new(NULL, FALSE);
-    pcmk__notice("Pacemaker fencer successfully started and accepting "
-                 "connections");
-    g_main_loop_run(mainloop);
+    if (!fenced_ipc_init()) {
+        fenced.ec = CRM_EX_FATAL;
+        goto done;
+    }
+
+    rc = pcmk__daemon_init(&fenced);
+    if (rc != pcmk_rc_ok) {
+        fenced.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    mainloop_add_signal(SIGTERM, fenced_shutdown);
+
+    pcmk__daemon_run(&fenced);
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    /* If we got here through any of the "goto done" calls instead of by the
+     * main loop quitting on SIGTERM, shutting_down will still be false.  Set
+     * it here so fenced_cleanup -> fenced_cib_cleanup -> cib_connection_destroy
+     * doesn't call pcmk__daemon_quit with no main loop.
+     */
+    fenced.shutting_down = true;
 
-    g_strfreev(options.log_files);
-
-    stonith_cleanup();
-    fenced_cluster_disconnect();
-    fenced_unregister_handlers();
-    fenced_scheduler_cleanup();
+    fenced_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, fenced.ec, true, NULL);
         pcmk__output_free(out);
     }
 
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(fenced.ec);
 }

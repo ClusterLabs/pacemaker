@@ -57,14 +57,8 @@
     pcmk__ipc_send_ack((client), (id), (flags), ATTRD_PROTOCOL_VERSION, \
                        CRM_EX_INDETERMINATE)
 
-void attrd_init_mainloop(void);
-void attrd_run_mainloop(void);
-
 void attrd_free_waitlist(void);
-void attrd_shutdown(int nsig);
-bool attrd_shutting_down(void);
-bool attrd_stand_alone(void);
-void attrd_ipc_init(void);
+bool attrd_ipc_init(void);
 void attrd_ipc_cleanup(void);
 
 int attrd_cib_connect(int max_retry);
@@ -93,7 +87,6 @@ int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         unsigned int interval_ms);
 
 extern cib_t *the_cib;
-extern crm_exit_t attrd_exit_status;
 
 /* Alerts */
 
@@ -188,6 +181,7 @@ typedef struct {
 extern pcmk_cluster_t *attrd_cluster;
 extern GHashTable *attributes;
 extern GHashTable *peer_protocol_vers;
+extern pcmk__daemon_t attrd;
 
 #define CIB_OP_TIMEOUT_S 120
 

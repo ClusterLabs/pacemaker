@@ -24,82 +24,10 @@
 
 cib_t *the_cib = NULL;
 
-static bool shutting_down = false;
-static GMainLoop *mloop = NULL;
-
 /* A hash table storing information on the protocol version of each peer attrd.
  * The key is the peer's uname, and the value is the protocol version number.
  */
 GHashTable *peer_protocol_vers = NULL;
-
-/*!
- * \internal
- * \brief Check whether local attribute manager is shutting down
- *
- * \return \c true if local attribute manager has begun shutdown sequence,
- *         otherwise \c false
- */
-bool
-attrd_shutting_down(void)
-{
-    return shutting_down;
-}
-
-/*!
- * \internal
- * \brief  Exit (using mainloop or not, as appropriate)
- *
- * \param[in] nsig  Ignored
- */
-void
-attrd_shutdown(int nsig)
-{
-    // Tell various functions not to do anthing
-    shutting_down = true;
-
-    // Don't respond to signals while shutting down
-    mainloop_destroy_signal(SIGTERM);
-    mainloop_destroy_signal(SIGCHLD);
-    mainloop_destroy_signal(SIGPIPE);
-    mainloop_destroy_signal(SIGUSR1);
-    mainloop_destroy_signal(SIGUSR2);
-    mainloop_destroy_signal(SIGTRAP);
-
-    attrd_free_waitlist();
-    attrd_free_confirmations();
-
-    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
-
-    if ((mloop == NULL) || !g_main_loop_is_running(mloop)) {
-        /* If there's no main loop active, just exit. This should be possible
-         * only if we get SIGTERM in brief windows at start-up and shutdown.
-         */
-        crm_exit(CRM_EX_OK);
-    } else {
-        g_main_loop_quit(mloop);
-        g_main_loop_unref(mloop);
-    }
-}
-
-/*!
- * \internal
- * \brief Create a main loop for attrd
- */
-void
-attrd_init_mainloop(void)
-{
-    mloop = g_main_loop_new(NULL, FALSE);
-}
-
-/*!
- * \internal
- * \brief Run attrd main loop
- */
-void
-attrd_run_mainloop(void)
-{
-    g_main_loop_run(mloop);
-}
 
 /* strlen("value") */
 #define plus_plus_len (5)

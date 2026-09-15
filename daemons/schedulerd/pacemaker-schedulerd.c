@@ -29,15 +29,22 @@
 #define SUMMARY PCMK__SERVER_SCHEDULERD " - daemon for calculating a " \
                 "Pacemaker cluster's response to events"
 
-struct {
-    gchar **remainder;
-} options;
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .already_running = pcmk__daemon_ipc_running,
+};
+
+static pcmk__daemon_t schedulerd = {
+    .type = pcmk_ipc_schedulerd,
+    .ec = CRM_EX_OK,
+    .ipc_fns = &ipc_fns,
+};
 
 pcmk__output_t *logger_out = NULL;
 
 static pcmk__output_t *out = NULL;
-static GMainLoop *mainloop = NULL;
-static crm_exit_t exit_code = CRM_EX_OK;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
+static gchar **remainder = NULL;
 
 pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -45,8 +52,6 @@ pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_XML,
     { NULL, NULL, NULL }
 };
-
-void pengine_shutdown(int nsig);
 
 /* @COMPAT Deprecated since 2.1.8. Use pcmk_list_cluster_options() or
  * crm_attribute --list-options=cluster instead of querying daemon metadata.
@@ -68,7 +73,7 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     GOptionContext *context = NULL;
 
     GOptionEntry extra_prog_entries[] = {
-        { G_OPTION_REMAINING, 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY, &options.remainder,
+        { G_OPTION_REMAINING, 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_STRING_ARRAY, &remainder,
           NULL,
           NULL },
 
@@ -80,6 +85,27 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+schedulerd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&remainder, g_strfreev);
+}
+
+static void
+schedulerd_cleanup(void)
+{
+    schedulerd_ipc_cleanup();
+    schedulerd_unregister_handlers();
+}
+
+static void
+schedulerd_shutdown(int nsig)
+{
+    pcmk__daemon_quit(&schedulerd, CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {
@@ -87,23 +113,27 @@ main(int argc, char **argv)
     int rc = pcmk_rc_ok;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
+
+    atexit(schedulerd_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, &output_group);
 
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGTERM, pengine_shutdown);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        schedulerd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+        schedulerd.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
@@ -111,20 +141,20 @@ main(int argc, char **argv)
     pe__register_messages(out);
     pcmk__register_lib_messages(out);
 
-    if (options.remainder) {
-        if (g_strv_length(options.remainder) == 1 &&
-            pcmk__str_eq("metadata", options.remainder[0], pcmk__str_casei)) {
+    if (remainder != NULL) {
+        if (g_strv_length(remainder) == 1 &&
+            pcmk__str_eq("metadata", remainder[0], pcmk__str_casei)) {
 
             rc = scheduler_metadata(out);
             if (rc != pcmk_rc_ok) {
-                exit_code = CRM_EX_FATAL;
-                g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+                schedulerd.ec = CRM_EX_FATAL;
+                g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                             "Unable to display metadata: %s", pcmk_rc_str(rc));
             }
 
         } else {
-            exit_code = CRM_EX_USAGE;
-            g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+            schedulerd.ec = CRM_EX_USAGE;
+            g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                         "Unsupported extra command line parameters");
         }
         goto done;
@@ -137,59 +167,69 @@ main(int argc, char **argv)
 
     pcmk__cli_init_logging(PCMK__SERVER_SCHEDULERD, args->verbosity);
     crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
+
+    if (schedulerd.ipc_fns->already_running(&schedulerd)) {
+        schedulerd.ec = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
+                    "Aborting start-up because a scheduler instance is "
+                    "already active");
+        pcmk__crit("%s", error->message);
+        goto done;
+    }
+
     pcmk__notice("Starting Pacemaker scheduler");
 
     if (pcmk__daemon_can_write(PCMK_SCHEDULER_INPUT_DIR, NULL) == FALSE) {
         pcmk__err("Terminating due to bad permissions on "
                   PCMK_SCHEDULER_INPUT_DIR);
-        exit_code = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        schedulerd.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                     "ERROR: Bad permissions on %s (see logs for details)",
                     PCMK_SCHEDULER_INPUT_DIR);
         goto done;
     }
 
-    schedulerd_ipc_init();
+    if (!schedulerd_ipc_init()) {
+        schedulerd.ec = CRM_EX_FATAL;
+        goto done;
+    }
 
     if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
-        exit_code = CRM_EX_FATAL;
+        schedulerd.ec = CRM_EX_FATAL;
         goto done;
     }
     pe__register_messages(logger_out);
     pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
-    /* Create the mainloop and run it... */
-    mainloop = g_main_loop_new(NULL, FALSE);
-    pcmk__notice("Pacemaker scheduler successfully started and accepting "
-                 "connections");
-    g_main_loop_run(mainloop);
+    rc = pcmk__daemon_init(&schedulerd);
+    if (rc != pcmk_rc_ok) {
+        schedulerd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
+
+    mainloop_add_signal(SIGTERM, schedulerd_shutdown);
+
+    pcmk__daemon_run(&schedulerd);
 
 done:
-    g_strfreev(options.remainder);
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    schedulerd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
-    pengine_shutdown(0);
-}
-
-void
-pengine_shutdown(int nsig)
-{
-    schedulerd_ipc_cleanup();
-    schedulerd_unregister_handlers();
 
     if (logger_out != NULL) {
-        logger_out->finish(logger_out, exit_code, true, NULL);
+        logger_out->finish(logger_out, schedulerd.ec, true, NULL);
         g_clear_pointer(&logger_out, pcmk__output_free);
     }
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, schedulerd.ec, true, NULL);
         g_clear_pointer(&out, pcmk__output_free);
     }
 
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(schedulerd.ec);
 }

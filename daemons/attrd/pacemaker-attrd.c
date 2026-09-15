@@ -30,11 +30,23 @@
 
 #define SUMMARY "daemon for managing Pacemaker node attributes"
 
-static gboolean stand_alone = false;
-gchar **log_files = NULL;
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .already_running = pcmk__daemon_ipc_running,
+};
+
+pcmk__daemon_t attrd = {
+    .type = pcmk_ipc_attrd,
+    .ec = CRM_EX_OK,
+    .ipc_fns = &ipc_fns,
+};
+
+static gchar **log_files = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static GOptionEntry entries[] = {
-    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE, &stand_alone,
+    { "stand-alone", 's', G_OPTION_FLAG_NONE, G_OPTION_ARG_NONE,
+      &attrd.stand_alone,
       "(Advanced use only) Run in stand-alone mode", NULL },
 
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
@@ -54,44 +66,6 @@ static pcmk__supported_format_t formats[] = {
 
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
-crm_exit_t attrd_exit_status = CRM_EX_OK;
-
-/*!
- * \internal
- * \brief Check whether local attribute manager is running in stand-alone mode
- *
- * \return \c true if local attribute manager is in stand-alone mode, or
- *         \c false otherwise
- */
-bool
-attrd_stand_alone(void)
-{
-    return stand_alone;
-}
-
-static bool
-ipc_already_running(void)
-{
-    pcmk_ipc_api_t *old_instance = NULL;
-    int rc = pcmk_rc_ok;
-
-    rc = pcmk_new_ipc_api(&old_instance, pcmk_ipc_attrd);
-    if (rc != pcmk_rc_ok) {
-        return false;
-    }
-
-    rc = pcmk__connect_ipc(old_instance, pcmk_ipc_dispatch_sync, 2);
-    if (rc != pcmk_rc_ok) {
-        pcmk__debug("No existing %s instance found: %s",
-                    pcmk_ipc_name(old_instance, true), pcmk_rc_str(rc));
-        pcmk_free_ipc_api(old_instance);
-        return false;
-    }
-
-    pcmk_disconnect_ipc(old_instance);
-    pcmk_free_ipc_api(old_instance);
-    return true;
-}
 
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
@@ -102,33 +76,73 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+attrd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&log_files, g_strfreev);
+}
+
+static void
+attrd_cleanup(void)
+{
+    attrd_ipc_cleanup();
+    attrd_lrmd_disconnect();
+    attrd_unregister_handlers();
+    attrd_cib_disconnect();
+    attrd_cluster_disconnect();
+
+    attrd_free_removed_peers();
+    attrd_free_waitlist();
+    attrd_free_confirmations();
+    attrd_cleanup_xml_ids();
+
+    g_clear_pointer(&attributes, g_hash_table_destroy);
+    g_clear_pointer(&peer_protocol_vers, g_hash_table_destroy);
+}
+
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+attrd_shutdown(int nsig)
+{
+    pcmk__daemon_quit(&attrd, CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
 
     GError *error = NULL;
-    bool initialized = false;
-
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t *args = NULL;
 
-    attrd_init_mainloop();
+    atexit(attrd_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, &output_group);
+
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGTERM, attrd_shutdown);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        attrd_exit_status = CRM_EX_USAGE;
+        attrd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        attrd_exit_status = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+        attrd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
@@ -143,19 +157,18 @@ main(int argc, char **argv)
     pcmk__add_logfiles(log_files, out);
 
     crm_log_init(PCMK__VALUE_ATTRD, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
-    pcmk__notice("Starting Pacemaker node attribute manager%s",
-                 (attrd_stand_alone() ? " in standalone mode" : ""));
 
-    if (ipc_already_running()) {
-        attrd_exit_status = CRM_EX_OK;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+    if (attrd.ipc_fns->already_running(&attrd)) {
+        attrd.ec = CRM_EX_OK;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Aborting start-up because an attribute manager "
                     "instance is already active");
         pcmk__crit("%s", error->message);
         goto done;
     }
 
-    initialized = true;
+    pcmk__notice("Starting Pacemaker node attribute manager%s",
+                 (attrd.stand_alone ? " in standalone mode" : ""));
 
     attributes = pcmk__strkey_table(NULL, attrd_free_attribute);
 
@@ -163,10 +176,10 @@ main(int argc, char **argv)
      * This allows us to assume the CIB is connected whenever we process a
      * cluster or IPC message (which also avoids start-up race conditions).
      */
-    if (!attrd_stand_alone()) {
+    if (!attrd.stand_alone) {
         if (attrd_cib_connect(30) != pcmk_ok) {
-            attrd_exit_status = CRM_EX_FATAL;
-            g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+            attrd.ec = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                         "Could not connect to the CIB");
             goto done;
         }
@@ -174,18 +187,16 @@ main(int argc, char **argv)
     }
 
     if (attrd_cluster_connect() != pcmk_rc_ok) {
-        attrd_exit_status = CRM_EX_FATAL;
-        g_set_error(&error, PCMK__EXITC_ERROR, attrd_exit_status,
+        attrd.ec = CRM_EX_FATAL;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Could not connect to the cluster");
         goto done;
     }
 
-    pcmk__info("Cluster connection active");
-
     // Initialization that requires the cluster to be connected
     attrd_election_init();
 
-    if (!attrd_stand_alone()) {
+    if (!attrd.stand_alone) {
         attrd_cib_init();
     }
 
@@ -196,42 +207,40 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    attrd_ipc_init();
-    pcmk__notice("Pacemaker node attribute manager successfully started and "
-                 "accepting connections");
-    attrd_run_mainloop();
-
-  done:
-    if (initialized) {
-        pcmk__info("Shutting down attribute manager");
-
-        attrd_ipc_cleanup();
-        attrd_lrmd_disconnect();
-
-        if (!attrd_stand_alone()) {
-            attrd_cib_disconnect();
-        }
-
-        attrd_free_removed_peers();
-        attrd_free_waitlist();
-        attrd_cluster_disconnect();
-        attrd_unregister_handlers();
-        g_hash_table_destroy(attributes);
+    if (!attrd_ipc_init()) {
+        attrd.ec = CRM_EX_FATAL;
+        goto done;
     }
 
-    attrd_cleanup_xml_ids();
+    rc = pcmk__daemon_init(&attrd);
+    if (rc != pcmk_rc_ok) {
+        attrd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
 
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    mainloop_add_signal(SIGTERM, attrd_shutdown);
 
-    g_strfreev(log_files);
+    pcmk__daemon_run(&attrd);
+
+  done:
+    /* If we got here through any of the "goto done" calls instead of by the
+     * main loop quitting on SIGTERM, shutting_down will still be false.  Set
+     * it here so attrd_cleanup -> attrd_cib_disconnect -> attrd_cib_destroy_cb
+     * doesn't call pcmk__daemon_quit with no main loop.
+     */
+    attrd.shutting_down = true;
+
+    attrd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, attrd_exit_status, true, NULL);
+        out->finish(out, attrd.ec, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
-    crm_exit(attrd_exit_status);
+    crm_exit(attrd.ec);
 }

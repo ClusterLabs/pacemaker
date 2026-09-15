@@ -82,7 +82,7 @@ attrd_peer_message(pcmk__node_status_t *peer, xmlNode *xml)
         return;
     }
 
-    if (attrd_shutting_down()) {
+    if (attrd.shutting_down) {
         /* If we're shutting down, we want to continue responding to election
          * ops as long as we're a cluster member (because our vote may be
          * needed). Ignore all other messages.
@@ -179,14 +179,13 @@ attrd_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
 static void
 attrd_cpg_destroy(void *unused)
 {
-    if (attrd_shutting_down()) {
+    if (attrd.shutting_down) {
         pcmk__info("Disconnected from Corosync process group");
-
-    } else {
-        pcmk__crit("Lost connection to Corosync process group, shutting down");
-        attrd_exit_status = CRM_EX_DISCONNECT;
-        attrd_shutdown(0);
+        return;
     }
+
+    pcmk__crit("Lost connection to Corosync process group, shutting down");
+    pcmk__daemon_quit(&attrd, CRM_EX_DISCONNECT);
 }
 #endif // SUPPORT_COROSYNC
 
@@ -511,7 +510,10 @@ attrd_cluster_connect(void)
     pcmk__cluster_set_status_callback(&attrd_peer_change_cb);
 
     rc = pcmk_cluster_connect(attrd_cluster);
-    if (rc != pcmk_rc_ok) {
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__info("Cluster connection active");
+    } else {
         pcmk__err("Cluster connection failed");
     }
 

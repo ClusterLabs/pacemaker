@@ -170,7 +170,7 @@ static void
 fenced_cpg_destroy(void *unused)
 {
     pcmk__crit("Lost connection to cluster layer, shutting down");
-    stonith_shutdown(0);
+    pcmk__daemon_quit(&fenced, CRM_EX_DISCONNECT);
 }
 #endif // SUPPORT_COROSYNC
 
@@ -198,7 +198,10 @@ fenced_cluster_connect(void)
     pcmk__cluster_set_status_callback(&fenced_peer_change_cb);
 
     rc = pcmk_cluster_connect(fenced_cluster);
-    if (rc != pcmk_rc_ok) {
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__info("Cluster connection active");
+    } else {
         pcmk__err("Cluster connection failed");
     }
 

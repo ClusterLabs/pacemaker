@@ -295,8 +295,6 @@ typedef struct {
 
 } stonith_topology_t;
 
-void stonith_shutdown(int nsig);
-
 void fenced_init_device_table(void);
 void fenced_free_device_table(void);
 bool fenced_has_watchdog_device(void);
@@ -375,7 +373,7 @@ const char *fenced_get_local_node(void);
 void fenced_scheduler_cleanup(void);
 void fenced_scheduler_run(xmlNode *cib);
 
-void fenced_ipc_init(void);
+bool fenced_ipc_init(void);
 void fenced_ipc_cleanup(void);
 
 int fenced_cluster_connect(void);
@@ -405,6 +403,5 @@ extern GHashTable *topology;
 extern long long fencing_watchdog_timeout_ms;
 extern GList *stonith_watchdog_targets;
 extern GHashTable *stonith_remote_op_list;
-extern crm_exit_t exit_code;
-extern gboolean stonith_shutdown_flag;
 extern pcmk_cluster_t *fenced_cluster;
+extern pcmk__daemon_t fenced;

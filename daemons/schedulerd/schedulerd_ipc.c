@@ -206,8 +206,9 @@ schedulerd_ipc_cleanup(void)
  * \internal
  * \brief Set up schedulerd IPC communication
  */
-void
+bool
 schedulerd_ipc_init(void)
 {
     pcmk__serve_schedulerd_ipc(&ipcs, &ipc_callbacks);
+    return ipcs != NULL;
 }

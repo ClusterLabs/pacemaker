@@ -50,8 +50,16 @@ handle_ipc_fwd_request(pcmk__request_t *request)
 
     rc = ipc_proxy_forward_client(request->ipc_client, request->xml);
 
-    if (rc == pcmk_rc_ok) {
+    if ((rc == pcmk_rc_ok) || (rc == ESHUTDOWN)) {
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
+        if (rc == ESHUTDOWN) {
+            /* We're shutting down so return NULL for the reply, but
+             * execd_handle_request will still want to process a result which
+             * is why we set one above.
+             */
+            return NULL;
+        }
 
     } else {
         pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,

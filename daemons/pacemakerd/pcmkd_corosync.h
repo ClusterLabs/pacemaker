@@ -1,5 +1,5 @@
 /*
- * Copyright 2010-2025 the Pacemaker project contributors
+ * Copyright 2010-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,6 @@
 
 gboolean cluster_connect_cfg(void);
 void cluster_disconnect_cfg(void);
-gboolean pacemakerd_read_config(void);
+bool pcmkd_read_config(void);
 bool pcmkd_corosync_connected(void);
 void pcmkd_shutdown_corosync(void);

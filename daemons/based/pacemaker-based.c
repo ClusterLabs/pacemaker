@@ -405,8 +405,6 @@ main(int argc, char **argv)
                         "Could not connect to the cluster");
             goto done;
         }
-
-        pcmk__info("Cluster connection active");
     }
 
     // Run the main loop

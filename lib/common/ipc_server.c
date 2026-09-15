@@ -1065,8 +1065,6 @@ pcmk__ipc_send_ack_as(const char *function, int line, pcmk__client_t *c,
  * \param[out] ipcs_rw   New IPC server for read/write CIB manager API
  * \param[in]  ro_cb     IPC callbacks for read-only API
  * \param[in]  rw_cb     IPC callbacks for read/write and shared-memory APIs
- *
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
@@ -1087,7 +1085,6 @@ pcmk__serve_based_ipc(qb_ipcs_service_t **ipcs_ro, qb_ipcs_service_t **ipcs_rw,
                    pcmk__server_log_name(pcmk_ipc_based));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1125,8 +1122,6 @@ pcmk__serve_controld_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
@@ -1142,7 +1137,6 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
                    pcmk__server_log_name(pcmk_ipc_attrd));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1152,8 +1146,6 @@ pcmk__serve_attrd_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
@@ -1165,7 +1157,6 @@ pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
                    pcmk__server_log_name(pcmk_ipc_execd));
-        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1175,8 +1166,6 @@ pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
@@ -1192,7 +1181,6 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
                    pcmk__server_log_name(pcmk_ipc_fenced));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-        crm_exit(CRM_EX_FATAL);
     }
 }
 
@@ -1202,8 +1190,6 @@ pcmk__serve_fenced_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \note This function exits with CRM_EX_OSERR on error.
  */
 void
 pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
@@ -1219,13 +1205,6 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
                    pcmk__server_log_name(pcmk_ipc_pacemakerd));
         pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
                    "enabled");
-
-        /* sub-daemons are observed by pacemakerd. Thus we exit CRM_EX_FATAL
-         * if we want to prevent pacemakerd from restarting them.
-         * With pacemakerd we leave the exit-code shown to e.g. systemd
-         * to what it was prior to moving the code here from pacemakerd.c
-         */
-        crm_exit(CRM_EX_OSERR);
     }
 }
 
@@ -1235,9 +1214,6 @@ pcmk__serve_pacemakerd_ipc(qb_ipcs_service_t **ipcs,
  *
  * \param[out] ipcs  Where to store newly created IPC server
  * \param[in]  cb    IPC callbacks
- *
- * \return Newly created IPC server
- * \note This function exits fatally on error.
  */
 void
 pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
@@ -1251,6 +1227,5 @@ pcmk__serve_schedulerd_ipc(qb_ipcs_service_t **ipcs,
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
                    pcmk__server_log_name(pcmk_ipc_schedulerd));
-        crm_exit(CRM_EX_FATAL);
     }
 }
