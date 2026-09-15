@@ -9,20 +9,33 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                      // EINVAL, ENOMEM
+#include <signal.h>                     // SIGTERM
+#include <stdbool.h>                    // false
+#include <stdio.h>                      // NULL, printf, snprintf
+#include <stdlib.h>                     // free
+#include <syslog.h>                     // LOG_INFO
+#include <unistd.h>                     // sleep
+
 #include <glib.h>
-#include <stdbool.h>
-#include <unistd.h>
+#include <libxml/tree.h>                // xmlNode
 
-#include <crm/crm.h>
-#include <crm/services.h>
-#include <crm/common/mainloop.h>
-
-#include <crm/pengine/status.h>
-#include <crm/pengine/internal.h>
-#include <crm/cib.h>
-#include <crm/cib/internal.h>
-#include <crm/lrmd.h>
-#include <crm/lrmd_internal.h>
+#include <crm/cib/internal.h>           // cib__signon_query
+#include <crm/common/actions.h>         // PCMK_ACTION_MONITOR
+#include <crm/common/iso8601.h>         // crm_time_new
+#include <crm/common/logging.h>         // crm_bump_log_level, crm_log_init
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/nvpair.h>          // crm_meta_name
+#include <crm/common/resources.h>       // pe_find, pcmk__resource
+#include <crm/common/results.h>         // CRM_EX_*, pcmk_rc_*, crm_exit_t, crm_exit
+#include <crm/common/scheduler.h>       // pcmk_free_scheduler
+#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_scheduler_t
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/crm.h>                    // crm_system_name
+#include <crm/lrmd_events.h>            // lrmd_event_data_t
+#include <crm/lrmd_internal.h>          // lrmd__key_value_add_from_hash
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/status.h>         // cluster_status, pe_find_resource_with_flags
 
 #define SUMMARY "cts-exec-helper - inject commands into the Pacemaker executor and watch for events"
 
