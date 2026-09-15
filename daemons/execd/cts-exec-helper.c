@@ -13,7 +13,7 @@
 #include <signal.h>                     // SIGTERM
 #include <stdbool.h>                    // false
 #include <stdio.h>                      // NULL, printf, snprintf
-#include <stdlib.h>                     // free
+#include <stdlib.h>                     // atexit, free
 #include <syslog.h>                     // LOG_INFO
 #include <unistd.h>                     // sleep
 
@@ -45,6 +45,8 @@ static void try_connect(void);
 
 static char *key = NULL;
 static char *val = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static struct {
     int verbose;
@@ -539,21 +541,34 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+cleanup_cmdline(void)
+{
+    g_clear_pointer(&context, pcmk__free_arg_context);
+    g_clear_pointer(&key, free);
+    g_clear_pointer(&lrmd_conn, lrmd_api_delete);
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&val, free);
+}
+
 int
 main(int argc, char **argv)
 {
     GError *error = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     crm_trigger_t *trig = NULL;
+    pcmk__common_args_t *args = NULL;
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    atexit(cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
     /* Typically we'd pass all the single character options that take an argument
      * as the second parameter here (and there's a bunch of those in this tool).
      * However, we control how this program is called so we can just not call it
      * in a way where the preprocessing ever matters.
      */
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, NULL);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, NULL);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
@@ -626,12 +641,6 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
-
-    free(key);
-    free(val);
-
     pcmk__output_and_clear_error(&error, NULL);
     return test_exit(exit_code);
 }
