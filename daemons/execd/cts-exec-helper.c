@@ -298,6 +298,30 @@ print_op_info(gpointer data, gpointer user_data)
                  op_info->timeout_ms_s);
 }
 
+static int
+exec_test(void)
+{
+    int rc = lrmd_conn->cmds->exec(lrmd_conn, options.rsc_id, options.action,
+                                   NULL, options.interval_ms, options.timeout,
+                                   options.start_delay, options.exec_call_opts,
+                                   options.params);
+
+    if (rc > 0) {
+        exec_call_id = rc;
+        print_result("API-CALL 'exec' action pending, waiting on response");
+    }
+
+    return rc;
+}
+
+static struct {
+    const char *command;
+    int (*handler)(void);
+} handlers[] = {
+    { "exec", exec_test },
+    { NULL },
+};
+
 static gboolean
 start_test(void *user_data)
 {
@@ -319,23 +343,16 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "exec", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->exec(lrmd_conn,
-                                   options.rsc_id,
-                                   options.action,
-                                   NULL,
-                                   options.interval_ms,
-                                   options.timeout,
-                                   options.start_delay,
-                                   options.exec_call_opts,
-                                   options.params);
-
-        if (rc > 0) {
-            exec_call_id = rc;
-            print_result("API-CALL 'exec' action pending, waiting on response");
+    for (int i = 0; handlers[i].command != NULL; i++) {
+        if (!pcmk__str_eq(options.api_call, handlers[i].command, pcmk__str_casei)) {
+            continue;
         }
 
-    } else if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
+        rc = handlers[i].handler();
+        goto done;
+    }
+
+    if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->register_rsc(lrmd_conn,
                                            options.rsc_id,
                                            options.class, options.provider, options.type, 0);
@@ -432,6 +449,7 @@ start_test(void *user_data)
         test_exit(CRM_EX_ERROR);
     }
 
+done:
     if (rc < 0) {
         print_result("API-CALL FAILURE for '%s' api_rc:%d",
                      options.api_call, rc);
