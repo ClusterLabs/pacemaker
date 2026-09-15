@@ -339,6 +339,22 @@ get_rsc_info_test(void)
 }
 
 static int
+metadata_test(void)
+{
+    char *output = NULL;
+    int rc = lrmd_conn->cmds->get_metadata(lrmd_conn, options.class,
+                                           options.provider, options.type,
+                                           &output, 0);
+
+    if (rc == pcmk_ok) {
+        print_result("%s", output);
+        free(output);
+    }
+
+    return rc;
+}
+
+static int
 register_rsc_test(void)
 {
     return lrmd_conn->cmds->register_rsc(lrmd_conn,
@@ -359,6 +375,7 @@ static struct {
     { "cancel", cancel_test },
     { "exec", exec_test },
     { "get_rsc_info", get_rsc_info_test },
+    { "metadata", metadata_test },
     { "register_rsc", register_rsc_test },
     { "unregister_rsc", unregister_rsc_test },
     { NULL },
@@ -394,17 +411,7 @@ start_test(void *user_data)
         goto done;
     }
 
-    if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
-        char *output = NULL;
-
-        rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
-                                           options.class,
-                                           options.provider, options.type, &output, 0);
-        if (rc == pcmk_ok) {
-            print_result("%s", output);
-            free(output);
-        }
-    } else if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
         lrmd_list_t *list = NULL;
 
         rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, options.class, options.provider);
