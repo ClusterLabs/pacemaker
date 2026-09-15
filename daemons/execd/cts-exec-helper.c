@@ -259,13 +259,6 @@ static GOptionEntry api_call_entries[] = {
 
 static lrmd_t *lrmd_conn = NULL;
 
-static crm_exit_t
-test_exit(crm_exit_t exit_code)
-{
-    lrmd_api_delete(lrmd_conn);
-    return crm_exit(exit_code);
-}
-
 #define print_result(fmt, args...)  \
     if (!options.quiet) {           \
         printf(fmt "\n", ##args);   \
@@ -291,9 +284,9 @@ read_events(lrmd_event_data_t * event)
 
     if ((options.listen != NULL)
         && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
-        print_result("LISTEN EVENT SUCCESSFUL");
         free(buf);
-        test_exit(CRM_EX_OK);
+        print_result("LISTEN EVENT SUCCESSFUL");
+        crm_exit(CRM_EX_OK);
     }
 
     free(buf);
@@ -307,11 +300,11 @@ read_events(lrmd_event_data_t * event)
     } else {
         print_result("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s",
                      event->rc, pcmk_exec_status_str(event->op_status));
-        test_exit(CRM_EX_ERROR);
+        crm_exit(CRM_EX_ERROR);
     }
 
     if (options.listen == NULL) {
-        test_exit(CRM_EX_OK);
+        crm_exit(CRM_EX_OK);
     }
 }
 
@@ -319,7 +312,7 @@ static gboolean
 timeout_err(void *data)
 {
     print_result("LISTEN EVENT FAILURE - timeout occurred, never found");
-    test_exit(CRM_EX_TIMEOUT);
+    crm_exit(CRM_EX_TIMEOUT);
     return G_SOURCE_REMOVE;
 }
 
@@ -363,7 +356,7 @@ try_connect(void)
     }
 
     print_result("API CONNECTION FAILURE");
-    test_exit(CRM_EX_ERROR);
+    crm_exit(CRM_EX_ERROR);
 }
 
 static void
@@ -594,19 +587,19 @@ start_test(void *user_data)
     if (rc < 0) {
         print_result("API-CALL FAILURE for '%s' api_rc:%d",
                      options.api_call, rc);
-        test_exit(CRM_EX_ERROR);
+        crm_exit(CRM_EX_ERROR);
     }
 
     if (rc == pcmk_ok) {
         print_result("API-CALL SUCCESSFUL for '%s'", options.api_call);
         if (options.listen == NULL) {
-            test_exit(CRM_EX_OK);
+            crm_exit(CRM_EX_OK);
         }
     }
 
     if (options.no_wait) {
         /* just make the call and exit regardless of anything else. */
-        test_exit(CRM_EX_OK);
+        crm_exit(CRM_EX_OK);
     }
 
     return 0;
@@ -799,5 +792,5 @@ main(int argc, char **argv)
 
 done:
     pcmk__output_and_clear_error(&error, NULL);
-    return test_exit(exit_code);
+    return crm_exit(exit_code);
 }
