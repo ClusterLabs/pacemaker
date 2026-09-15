@@ -322,6 +322,18 @@ exec_test(void)
 }
 
 static int
+get_recurring_ops_test(void)
+{
+    GList *op_list = NULL;
+    int rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
+                                                &op_list);
+
+    g_list_foreach(op_list, print_op_info, NULL);
+    g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
+    return rc;
+}
+
+static int
 get_rsc_info_test(void)
 {
     lrmd_rsc_info_t *rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
@@ -438,6 +450,7 @@ static struct {
 } handlers[] = {
     { "cancel", cancel_test },
     { "exec", exec_test },
+    { "get_recurring_ops", get_recurring_ops_test },
     { "get_rsc_info", get_rsc_info_test },
     { "list_agents", list_agents_test },
     { "list_ocf_providers", list_ocf_providers_test },
@@ -478,18 +491,8 @@ start_test(void *user_data)
         goto done;
     }
 
-    if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
-        GList *op_list = NULL;
-
-        rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
-                                                &op_list);
-        g_list_foreach(op_list, print_op_info, NULL);
-        g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
-
-    } else {
-        print_result("API-CALL FAILURE unknown action '%s'", options.action);
-        test_exit(CRM_EX_ERROR);
-    }
+    print_result("API-CALL FAILURE unknown action '%s'", options.action);
+    test_exit(CRM_EX_ERROR);
 
 done:
     if (rc < 0) {
