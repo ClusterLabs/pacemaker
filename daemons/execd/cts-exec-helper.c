@@ -284,6 +284,16 @@ try_connect(void)
     test_exit(CRM_EX_ERROR);
 }
 
+static void
+print_op_info(gpointer data, gpointer user_data)
+{
+    lrmd_op_info_t *op_info = data;
+
+    print_result("RECURRING_OP: %s_%s_%s timeout=%sms",
+                 op_info->rsc_id, op_info->action, op_info->interval_ms_s,
+                 op_info->timeout_ms_s);
+}
+
 static gboolean
 start_test(void *user_data)
 {
@@ -410,19 +420,11 @@ start_test(void *user_data)
 
     } else if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
         GList *op_list = NULL;
-        GList *op_item = NULL;
+
         rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
                                                 &op_list);
-
-        for (op_item = op_list; op_item != NULL; op_item = op_item->next) {
-            lrmd_op_info_t *op_info = op_item->data;
-
-            print_result("RECURRING_OP: %s_%s_%s timeout=%sms",
-                         op_info->rsc_id, op_info->action,
-                         op_info->interval_ms_s, op_info->timeout_ms_s);
-            lrmd_free_op_info(op_info);
-        }
-        g_list_free(op_list);
+        g_list_foreach(op_list, print_op_info, NULL);
+        g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
 
     } else if (options.api_call != NULL) {
         print_result("API-CALL FAILURE unknown action '%s'", options.action);
