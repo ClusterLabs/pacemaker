@@ -30,6 +30,8 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
 {
     const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
 
+    pcmk__debug("Processing %s reply from peer %s", op, remote_peer);
+
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
 
@@ -43,8 +45,6 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
         pcmk__log_xml_warn(request, "UnknownOp");
         return;
     }
-
-    pcmk__debug("Processed %s reply from peer %s", op, remote_peer);
 }
 
 static void
