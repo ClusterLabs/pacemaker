@@ -339,6 +339,12 @@ register_rsc_test(void)
                                          options.class, options.provider, options.type, 0);
 }
 
+static int
+unregister_rsc_test(void)
+{
+    return lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
+}
+
 static struct {
     const char *command;
     int (*handler)(void);
@@ -346,6 +352,7 @@ static struct {
     { "exec", exec_test },
     { "get_rsc_info", get_rsc_info_test },
     { "register_rsc", register_rsc_test },
+    { "unregister_rsc", unregister_rsc_test },
     { NULL },
 };
 
@@ -379,9 +386,7 @@ start_test(void *user_data)
         goto done;
     }
 
-    if (pcmk__str_eq(options.api_call, "unregister_rsc", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
-    } else if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
                                      options.interval_ms);
     } else if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
