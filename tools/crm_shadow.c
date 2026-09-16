@@ -319,13 +319,6 @@ shadow_xml(pcmk__output_t *out, va_list args)
     return pcmk_rc_ok;
 }
 
-static const pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 static const pcmk__message_entry_t fmt_functions[] = {
     { "instruction", "default", instruction_default },
     { "instruction", "xml", instruction_xml },
@@ -1190,7 +1183,7 @@ main(int argc, char **argv)
 
     crm_log_preinit(NULL, argc, argv);
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
