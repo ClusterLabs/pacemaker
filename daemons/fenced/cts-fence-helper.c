@@ -129,7 +129,7 @@ st_callback(stonith_t * st, stonith_event_t * e)
     pcmk__notice("%s", desc);
     free(desc);
 
-    if (expected_notifications) {
+    if (expected_notifications != 0) {
         expected_notifications--;
     }
 }
@@ -408,7 +408,7 @@ test_async_fence_pass(int check_event)
 {
     int rc = 0;
 
-    if (check_event) {
+    if (check_event != 0) {
         mainloop_test_done(__func__, (result.exit_status == CRM_EX_OK));
         return;
     }
@@ -430,7 +430,7 @@ test_async_fence_custom_timeout(int check_event)
     int rc = 0;
     static time_t begin = 0;
 
-    if (check_event) {
+    if (check_event != 0) {
         uint32_t diff = (time(NULL) - begin);
 
         if (result.execution_status != PCMK_EXEC_TIMEOUT) {
@@ -463,7 +463,7 @@ test_async_fence_timeout(int check_event)
 {
     int rc = 0;
 
-    if (check_event) {
+    if (check_event != 0) {
         mainloop_test_done(__func__,
                            (result.execution_status == PCMK_EXEC_NO_FENCE_DEVICE));
         return;
@@ -484,7 +484,7 @@ test_async_monitor(int check_event)
 {
     int rc = 0;
 
-    if (check_event) {
+    if (check_event != 0) {
         mainloop_test_done(__func__, (result.exit_status == CRM_EX_OK));
         return;
     }
@@ -577,19 +577,12 @@ trigger_iterate_mainloop_tests(void *user_data)
 static void
 test_shutdown(int nsig)
 {
-    int rc = 0;
-
-    if (st) {
-        rc = st->cmds->disconnect(st);
-        pcmk__info("Disconnect: %d", rc);
-
-        pcmk__debug("Destroy");
-        stonith__api_free(st);
+    if (st == NULL) {
+        return;
     }
 
-    if (rc) {
-        crm_exit(CRM_EX_ERROR);
-    }
+    st->cmds->disconnect(st);
+    stonith__api_free(st);
 }
 
 static void
