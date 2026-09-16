@@ -95,7 +95,6 @@ dispatch_helper(int timeout)
 {
     int rc;
 
-    pcmk__debug("Looking for notification");
     pollfd.events = POLLIN;
     while (true) {
         rc = poll(&pollfd, 1, timeout); /* wait 10 minutes, -1 forever */
@@ -570,9 +569,6 @@ test_shutdown(int nsig)
 
     if (st != NULL) {
         rc = st->cmds->disconnect(st);
-        pcmk__info("Disconnect: %d", rc);
-
-        pcmk__debug("Destroy");
         stonith__api_free(st);
     }
 
