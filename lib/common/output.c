@@ -9,12 +9,17 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <glib.h>
+#include <errno.h>                  // EINVAL, ENOMEM
+#include <stdarg.h>                 // va_end, va_list, va_start
+#include <stdbool.h>                // false
+#include <stdio.h>                  // fprintf, stdout
+#include <stdlib.h>                 // free, setenv
+#include <string.h>                 // strdup
 
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
-#include <libxml/tree.h>
+#include <glib.h>
+#include <libxml/tree.h>            // xmlNodePtr
+
+#include <crm/common/results.h>     // pcmk_rc_*
 
 #include "crmcommon_private.h"
 
