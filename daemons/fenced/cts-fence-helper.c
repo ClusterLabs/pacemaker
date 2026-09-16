@@ -12,7 +12,7 @@
 #include <signal.h>                 // SIGTERM
 #include <stdbool.h>                // bool, false, true
 #include <stdint.h>                 // uint32_t
-#include <stdlib.h>                 // NULL, free
+#include <stdlib.h>                 // NULL, atexit, free
 #include <syslog.h>                 // LOG_INFO
 #include <time.h>                   // time, time_t
 
@@ -32,6 +32,8 @@
 static crm_trigger_t *trig = NULL;
 static int mainloop_iter = 0;
 static pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 typedef void (*mainloop_test_iteration_cb) (int check_event);
 
@@ -602,15 +604,25 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+cleanup_cmdline(void)
+{
+    g_clear_pointer(&context, pcmk__free_arg_context);
+    g_clear_pointer(&processed_args, g_strfreev);
+}
+
 int
 main(int argc, char **argv)
 {
     GError *error = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
+    pcmk__common_args_t *args = NULL;
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, NULL);
+    atexit(cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, NULL);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
@@ -644,9 +656,6 @@ main(int argc, char **argv)
     test_shutdown(0);
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
-
     pcmk__output_and_clear_error(&error, NULL);
     crm_exit(exit_code);
 }
