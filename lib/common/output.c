@@ -18,6 +18,13 @@
 
 #include "crmcommon_private.h"
 
+static pcmk__supported_format_t default_formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
+
 static GHashTable *formatters = NULL;
 
 #if defined(PCMK__UNIT_TESTING)
@@ -171,8 +178,9 @@ pcmk__register_formats(GOptionGroup *group,
                        const pcmk__supported_format_t *formats)
 {
     if (formats == NULL) {
-        return;
+        formats = default_formats;
     }
+
     for (const pcmk__supported_format_t *entry = formats; entry->name != NULL;
          entry++) {
         pcmk__register_format(group, entry->name, entry->create, entry->options);

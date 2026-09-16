@@ -1,5 +1,5 @@
 /*
- * Copyright 2022-2025 the Pacemaker project contributors
+ * Copyright 2022-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -14,8 +14,12 @@
 static void
 no_formats(void **state)
 {
+    GHashTable *formatters = NULL;
+
     pcmk__register_formats(NULL, NULL);
-    assert_null(pcmk__output_formatters());
+    formatters = pcmk__output_formatters();
+    assert_int_equal(g_hash_table_size(formatters), 3);
+    pcmk__unregister_formats();
 }
 
 static void
@@ -30,6 +34,7 @@ invalid_entries(void **state)
     };
 
     pcmk__assert_asserts(pcmk__register_formats(NULL, formats));
+    pcmk__unregister_formats();
 }
 
 static void
