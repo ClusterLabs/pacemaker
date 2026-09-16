@@ -125,13 +125,6 @@ command_cb(const char *option_name, const char *optarg, void *data,
     return TRUE;
 }
 
-static pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 #define DESC \
     "Notes:\n\n"                                                              \
     "DURATION in any command line option can be specified as an integer\n"    \
@@ -183,7 +176,7 @@ main(int argc, char **argv)
     gchar **processed_args = pcmk__cmdline_preproc(argv, "itKNS");
     GOptionContext *context = build_arg_context(args, &output_group);
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;

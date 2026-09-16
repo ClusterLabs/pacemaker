@@ -57,13 +57,6 @@ static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 static gchar **log_files = NULL;
 
-pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
                int call_options)
@@ -356,7 +349,7 @@ main(int argc, char **argv)
 
     crm_log_preinit(NULL, argc, argv);
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         fenced.ec = CRM_EX_USAGE;
         goto done;

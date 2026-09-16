@@ -62,13 +62,6 @@ static pcmk__output_t *out = NULL;
 
 #define INDENT "                               "
 
-static pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 static gboolean
 attr_value_cb(const char *option_name, const char *optarg, void *data,
               GError **err)
@@ -373,7 +366,7 @@ main(int argc, char **argv)
     context = build_arg_context(args, &output_group);
     processed_args = pcmk__cmdline_preproc(argv, "dintvxCDGS");
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
