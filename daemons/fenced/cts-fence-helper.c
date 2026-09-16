@@ -109,7 +109,7 @@ dispatch_helper(void)
 }
 
 static void
-st_callback(stonith_t * st, stonith_event_t * e)
+st_callback(stonith_t *st, stonith_event_t *e)
 {
     char *desc = NULL;
 
@@ -127,7 +127,7 @@ st_callback(stonith_t * st, stonith_event_t * e)
 }
 
 static void
-st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
+st_global_callback(stonith_t *stonith, stonith_callback_data_t *data)
 {
     pcmk__notice("Call %d exited %d: %s (%s)", data->call_id,
                  stonith__exit_status(data), stonith__execution_status(data),
@@ -290,6 +290,7 @@ sanity_tests(void)
         stonith__api_free(st);
         crm_exit(CRM_EX_DISCONNECT);
     }
+
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_DISCONNECT,
                                     st_callback);
     st->cmds->register_notification(st, PCMK__VALUE_ST_NOTIFY_FENCE,
@@ -373,7 +374,7 @@ standard_dev_test(void)
 static void iterate_mainloop_tests(bool event_ready);
 
 static void
-mainloop_callback(stonith_t * stonith, stonith_callback_data_t * data)
+mainloop_callback(stonith_t *stonith, stonith_callback_data_t *data)
 {
     pcmk__set_result(&result, stonith__exit_status(data),
                      stonith__execution_status(data),
@@ -406,8 +407,8 @@ test_async_fence_pass(bool check_event)
         pcmk__err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
+
     register_callback_helper(rc);
-    /* wait for event */
 }
 
 #define CUSTOM_TIMEOUT_ADDITION 10
@@ -431,8 +432,10 @@ test_async_fence_custom_timeout(bool check_event)
         } else {
             mainloop_test_done(__func__, true);
         }
+
         return;
     }
+
     begin = time(NULL);
 
     rc = st->cmds->fence(st, 0, "custom_timeout_node1", PCMK_ACTION_OFF,
@@ -441,8 +444,8 @@ test_async_fence_custom_timeout(bool check_event)
         pcmk__err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
+
     register_callback_helper(rc);
-    /* wait for event */
 }
 
 static void
@@ -462,8 +465,8 @@ test_async_fence_timeout(bool check_event)
         pcmk__err("fence failed with rc %d", rc);
         mainloop_test_done(__func__, false);
     }
+
     register_callback_helper(rc);
-    /* wait for event */
 }
 
 static void
@@ -483,7 +486,6 @@ test_async_monitor(bool check_event)
     }
 
     register_callback_helper(rc);
-    /* wait for event */
 }
 
 static void
@@ -529,6 +531,7 @@ try_mainloop_connect(bool check_event)
         mainloop_test_done(__func__, true);
         return;
     }
+
     pcmk__err("API CONNECTION FAILURE");
     mainloop_test_done(__func__, false);
 }
@@ -546,7 +549,6 @@ iterate_mainloop_tests(bool event_ready)
     };
 
     if (mainloop_iter == (sizeof(callbacks) / sizeof(mainloop_test_iteration_cb))) {
-        /* all tests ran, everything passed */
         pcmk__info("ALL MAINLOOP TESTS PASSED!");
         crm_exit(CRM_EX_OK);
     }
@@ -591,7 +593,8 @@ mainloop_tests(void)
 }
 
 static GOptionContext *
-build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
+build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
+{
     GOptionContext *context = NULL;
 
     context = pcmk__build_arg_context(args, NULL, group, NULL);
