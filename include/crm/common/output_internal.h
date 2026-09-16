@@ -608,6 +608,8 @@ pcmk__register_format(GOptionGroup *group, const char *name,
  *                      for use outside of command line programs.
  * \param[in]     table An array of ::pcmk__supported_format_t which should
  *                      all be registered.  This array must be NULL-terminated.
+ *                      If this array is NULL, a set of default formats will be
+ *                      registered.
  *
  */
 void
