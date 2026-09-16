@@ -37,25 +37,19 @@ typedef void (*mainloop_test_iteration_cb) (int check_event);
 
 #define MAINLOOP_DEFAULT_TIMEOUT 2
 
-enum test_modes {
+static enum test_modes {
     test_standard = 0,  // test using a specific developer environment
     test_api_sanity,    // sanity-test stonith client API using fence_dummy
     test_api_mainloop,  // sanity-test mainloop code with async responses
-};
-
-struct {
-    enum test_modes mode;
-} options = {
-    .mode = test_standard
-};
+} mode = test_standard;
 
 static gboolean
 mode_cb(const char *option_name, const char *optarg, void *data, GError **error)
 {
     if (pcmk__str_any_of(option_name, "--mainloop_api_test", "-m", NULL)) {
-        options.mode = test_api_mainloop;
+        mode = test_api_mainloop;
     } else if (pcmk__str_any_of(option_name, "--api_test", "-t", NULL)) {
-        options.mode = test_api_sanity;
+        mode = test_api_sanity;
     }
 
     return TRUE;
@@ -636,7 +630,7 @@ main(int argc, char **argv)
 
     st = stonith__api_new();
 
-    switch (options.mode) {
+    switch (mode) {
         case test_standard:
             standard_dev_test();
             break;
