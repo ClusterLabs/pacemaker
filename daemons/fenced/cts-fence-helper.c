@@ -77,7 +77,6 @@ static stonith_t *st = NULL;
 static struct pollfd pollfd;
 static const int st_opts = st_opt_sync_call;
 static int expected_notifications = 0;
-static int verbose = 0;
 
 static void
 mainloop_test_done(const char *origin, bool pass)
@@ -167,11 +166,7 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
             crm_exit(CRM_EX_ERROR);                                         \
         }                                                                   \
                                                                             \
-        if (verbose) {                                                      \
-            pcmk__info("SUCCESS - %s: %d", str, rc);                        \
-        } else {                                                            \
-            pcmk__debug("SUCCESS - %s: %d", str, rc);                       \
-        }                                                                   \
+        pcmk__debug("SUCCESS - %s: %d", str, rc);                           \
     } while (0)
 
 static void
@@ -633,8 +628,7 @@ main(int argc, char **argv)
      * different handling for daemons vs. command line programs, and
      * pcmk__cli_init_logging is set up to only handle the latter.
      */
-    crm_log_init(NULL, LOG_INFO, TRUE, (verbose? TRUE : FALSE), argc, argv,
-                 FALSE);
+    crm_log_init(NULL, LOG_INFO, TRUE, FALSE, argc, argv, FALSE);
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
