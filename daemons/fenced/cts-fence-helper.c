@@ -554,11 +554,11 @@ iterate_mainloop_tests(bool event_ready)
     callbacks[mainloop_iter](event_ready);
 }
 
-static gboolean
+static int
 trigger_iterate_mainloop_tests(void *user_data)
 {
     iterate_mainloop_tests(false);
-    return TRUE;
+    return 1;
 }
 
 static void
