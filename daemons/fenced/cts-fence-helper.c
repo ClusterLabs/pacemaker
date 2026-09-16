@@ -91,18 +91,18 @@ mainloop_test_done(const char *origin, bool pass)
 }
 
 static void
-dispatch_helper(int timeout)
+dispatch_helper(void)
 {
-    int rc;
-
     pollfd.events = POLLIN;
+
     while (true) {
-        rc = poll(&pollfd, 1, timeout); /* wait 10 minutes, -1 forever */
-        if (rc > 0) {
-            if (stonith__api_dispatch(st) != pcmk_rc_ok) {
-                break;
-            }
-        } else {
+        int rc = poll(&pollfd, 1, 500);
+
+        if (rc <= 0) {
+            break;
+        }
+
+        if (stonith__api_dispatch(st) != pcmk_rc_ok) {
             break;
         }
     }
@@ -142,7 +142,7 @@ st_global_callback(stonith_t * stonith, stonith_callback_data_t * data)
                                                                             \
         if (num_notifications != 0) {                                       \
             expected_notifications = num_notifications;                     \
-            dispatch_helper(500);                                           \
+            dispatch_helper();                                              \
         }                                                                   \
                                                                             \
         if (rc != expected_rc) {                                            \
