@@ -29,7 +29,6 @@
 
 #define SUMMARY "cts-fence-helper - inject commands into the Pacemaker fencer and watch for events"
 
-static GMainLoop *mainloop = NULL;
 static crm_trigger_t *trig = NULL;
 static int mainloop_iter = 0;
 static pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
@@ -595,6 +594,8 @@ test_shutdown(int nsig)
 static void
 mainloop_tests(void)
 {
+    GMainLoop *mainloop = NULL;
+
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, trigger_iterate_mainloop_tests, NULL);
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
