@@ -75,19 +75,18 @@ static int expected_notifications = 0;
 static void
 mainloop_test_done(const char *origin, bool pass)
 {
-    if (pass) {
-        pcmk__info("SUCCESS - %s", origin);
-        mainloop_iter++;
-        mainloop_set_trigger(trig);
-        result.execution_status = PCMK_EXEC_DONE;
-        result.exit_status = CRM_EX_OK;
-    } else {
+    if (!pass) {
         pcmk__err("FAILURE - %s (%d: %s)", origin, result.exit_status,
                   pcmk_exec_status_str(result.execution_status));
         crm_exit(CRM_EX_ERROR);
     }
-}
 
+    pcmk__info("SUCCESS - %s", origin);
+    mainloop_iter++;
+    mainloop_set_trigger(trig);
+    result.execution_status = PCMK_EXEC_DONE;
+    result.exit_status = CRM_EX_OK;
+}
 
 static void
 dispatch_helper(int timeout)
