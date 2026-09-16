@@ -133,8 +133,8 @@ bool pcmk__valid_placement_strategy(const char *value);
 // from watchdog.c
 long pcmk__get_sbd_watchdog_timeout(void);
 bool pcmk__get_sbd_sync_resource_startup(void);
-long pcmk__auto_fencing_watchdog_timeout(void);
-bool pcmk__valid_fencing_watchdog_timeout(const char *value);
+long long pcmk__parse_fencing_watchdog_timeout(const char *value);
+bool pcmk__valid_fencing_watchdog_timeout(long long st_timeout);
 
 // @COMPAT Deprecated cluster options
 #define PCMK__OPT_CANCEL_REMOVED_ACTIONS    "cancel-removed-actions"

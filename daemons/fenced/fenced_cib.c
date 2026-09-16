@@ -159,8 +159,6 @@ get_fencing_watchdog_timeout(xmlNode *cib)
 {
     xmlNode *stonith_watchdog_xml = NULL;
     const char *value = NULL;
-    int rc = pcmk_rc_ok;
-    long long timeout_ms = 0;
 
     // @TODO An XPath search can't handle multiple instances or rules
     stonith_watchdog_xml = pcmk__xpath_find_one(cib->doc,
@@ -182,16 +180,8 @@ get_fencing_watchdog_timeout(xmlNode *cib)
     }
 
     value = pcmk__xe_get(stonith_watchdog_xml, PCMK_XA_VALUE);
-    if (value == NULL) {
-        return 0;
-    }
 
-    rc = pcmk__parse_ms(value, &timeout_ms);
-    if ((rc == pcmk_rc_ok) && (timeout_ms >= 0)) {
-        return timeout_ms;
-    }
-
-    return pcmk__auto_fencing_watchdog_timeout();
+    return pcmk__parse_fencing_watchdog_timeout(value);
 }
 
 /*!

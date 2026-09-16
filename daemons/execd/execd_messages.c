@@ -141,7 +141,7 @@ handle_check_request(pcmk__request_t *request)
                                 pcmk__client_privileged);
     xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
-    const char *timeout = NULL;
+    long long timeout_ms = 0;
 
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
@@ -162,11 +162,11 @@ handle_check_request(pcmk__request_t *request)
         return NULL;
     }
 
-    timeout = pcmk__xe_get(data, PCMK__XA_LRMD_WATCHDOG);
+    pcmk__xe_get_ll(data, PCMK__XA_LRMD_WATCHDOG, &timeout_ms);
     /* FIXME: This just exits on certain conditions, which seems like a pretty
      * extreme reaction for a daemon to take.
      */
-    pcmk__valid_fencing_watchdog_timeout(timeout);
+    pcmk__valid_fencing_watchdog_timeout(timeout_ms);
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;
