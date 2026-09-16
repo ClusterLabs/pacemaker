@@ -7,29 +7,25 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/utsname.h>
+#include <errno.h>                  // EINVAL, ENODATA, ENODEV
+#include <poll.h>                   // POLLIN, poll, pollfd
+#include <signal.h>                 // SIGTERM
+#include <stdbool.h>                // bool, false, true
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // NULL, free
+#include <syslog.h>                 // LOG_INFO
+#include <time.h>                   // time, time_t
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <glib.h>
 
-#include <crm/crm.h>
-#include <crm/common/ipc.h>
-#include <crm/cluster/internal.h>
-
-#include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
-#include <crm/common/agents.h>
-#include <crm/common/xml.h>
-
-#include <crm/common/mainloop.h>
+#include <crm/common/actions.h>     // PCMK_ACTION_OFF, PCMK_ACTION_ON
+#include <crm/common/agents.h>      // PCMK_FENCING_HOST_MAP
+#include <crm/common/logging.h>     // crm_bump_log_level, crm_log_init
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*, crm_exit, pcmk_strerror
+#include <crm/crm.h>                // crm_system_name
+#include <crm/fencing/internal.h>   // stonith__key_value_add, stonith__key_value_freeall
+#include <crm/stonith-ng.h>         // stonith_s, stonith_key_value_t
 
 #define SUMMARY "cts-fence-helper - inject commands into the Pacemaker fencer and watch for events"
 
