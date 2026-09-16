@@ -35,7 +35,7 @@ static pcmk__action_result_t result = PCMK__UNKNOWN_RESULT;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 
-typedef void (*mainloop_test_iteration_cb) (int check_event);
+typedef void (*mainloop_test_iteration_cb)(bool check_event);
 
 #define MAINLOOP_DEFAULT_TIMEOUT 2
 
@@ -370,8 +370,7 @@ standard_dev_test(void)
     stonith__key_value_freeall(params, true, true);
 }
 
-static void
- iterate_mainloop_tests(gboolean event_ready);
+static void iterate_mainloop_tests(bool event_ready);
 
 static void
 mainloop_callback(stonith_t * stonith, stonith_callback_data_t * data)
@@ -379,7 +378,7 @@ mainloop_callback(stonith_t * stonith, stonith_callback_data_t * data)
     pcmk__set_result(&result, stonith__exit_status(data),
                      stonith__execution_status(data),
                      stonith__exit_reason(data));
-    iterate_mainloop_tests(TRUE);
+    iterate_mainloop_tests(true);
 }
 
 static int
@@ -392,11 +391,11 @@ register_callback_helper(int callid)
 }
 
 static void
-test_async_fence_pass(int check_event)
+test_async_fence_pass(bool check_event)
 {
     int rc = 0;
 
-    if (check_event != 0) {
+    if (check_event) {
         mainloop_test_done(__func__, (result.exit_status == CRM_EX_OK));
         return;
     }
@@ -413,12 +412,12 @@ test_async_fence_pass(int check_event)
 
 #define CUSTOM_TIMEOUT_ADDITION 10
 static void
-test_async_fence_custom_timeout(int check_event)
+test_async_fence_custom_timeout(bool check_event)
 {
     int rc = 0;
     static time_t begin = 0;
 
-    if (check_event != 0) {
+    if (check_event) {
         uint32_t diff = (time(NULL) - begin);
 
         if (result.execution_status != PCMK_EXEC_TIMEOUT) {
@@ -447,11 +446,11 @@ test_async_fence_custom_timeout(int check_event)
 }
 
 static void
-test_async_fence_timeout(int check_event)
+test_async_fence_timeout(bool check_event)
 {
     int rc = 0;
 
-    if (check_event != 0) {
+    if (check_event) {
         mainloop_test_done(__func__,
                            (result.execution_status == PCMK_EXEC_NO_FENCE_DEVICE));
         return;
@@ -468,11 +467,11 @@ test_async_fence_timeout(int check_event)
 }
 
 static void
-test_async_monitor(int check_event)
+test_async_monitor(bool check_event)
 {
     int rc = 0;
 
-    if (check_event != 0) {
+    if (check_event) {
         mainloop_test_done(__func__, (result.exit_status == CRM_EX_OK));
         return;
     }
@@ -488,7 +487,7 @@ test_async_monitor(int check_event)
 }
 
 static void
-test_register_async_devices(int check_event)
+test_register_async_devices(bool check_event)
 {
     char *off_timeout_s = pcmk__itoa(MAINLOOP_DEFAULT_TIMEOUT
                                      + CUSTOM_TIMEOUT_ADDITION);
@@ -522,7 +521,7 @@ test_register_async_devices(int check_event)
 }
 
 static void
-try_mainloop_connect(int check_event)
+try_mainloop_connect(bool check_event)
 {
     int rc = stonith__api_connect_retry(st, crm_system_name, 10);
 
@@ -535,7 +534,7 @@ try_mainloop_connect(int check_event)
 }
 
 static void
-iterate_mainloop_tests(gboolean event_ready)
+iterate_mainloop_tests(bool event_ready)
 {
     static mainloop_test_iteration_cb callbacks[] = {
         try_mainloop_connect,
@@ -552,13 +551,13 @@ iterate_mainloop_tests(gboolean event_ready)
         crm_exit(CRM_EX_OK);
     }
 
-    callbacks[mainloop_iter] (event_ready);
+    callbacks[mainloop_iter](event_ready);
 }
 
 static gboolean
 trigger_iterate_mainloop_tests(void *user_data)
 {
-    iterate_mainloop_tests(FALSE);
+    iterate_mainloop_tests(false);
     return TRUE;
 }
 
