@@ -17,6 +17,7 @@
 
 #include <glib.h>                   // G_OPTION_*
 #include <qb/qblog.h>               // QB_XS
+#include <qb/qbloop.h>              // QB_LOOP_MED
 
 #include <crm/common/ipc.h>         // crm_ipc_flags
 #include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
@@ -46,10 +47,22 @@ static pcmk__daemon_fns_t fns = {
     .quit = execd_quit,
 };
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .cleanup = pcmk__daemon_ipc_cleanup,
+    .closed = execd_ipc_closed,
+    .created = execd_ipc_created,
+    .dispatch = execd_ipc_dispatch,
+    .init = pcmk__daemon_ipc_init,
+    .invalid_msg = execd_invalid_msg,
+};
+
 pcmk__daemon_t execd = {
     .type = pcmk_ipc_execd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
+    .op = PCMK__XA_LRMD_OP,
     .fns = &fns,
+    .ipc_fns = &ipc_fns,
 };
 
 static stonith_t *fencer_api = NULL;
@@ -187,14 +200,13 @@ execd_cleanup(void)
     pcmk__info("Terminating with %d client%s", nclients,
                pcmk__plural_s(nclients));
     stonith__api_free(fencer_api);
-    execd_ipc_cleanup();
+    execd.ipc_fns->cleanup(&execd);
 
 #ifdef PCMK__COMPILE_REMOTE
     execd_stop_tls_server();
     ipc_proxy_cleanup();
 #endif
 
-    execd_unregister_handlers();
     g_clear_pointer(&rsc_list, g_hash_table_destroy);
 }
 
@@ -460,11 +472,6 @@ main(int argc, char **argv)
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
 
-    if (!execd_ipc_init()) {
-        execd.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         pcmk__err("Failed to create TLS listener: shutting down and staying "
@@ -478,9 +485,9 @@ main(int argc, char **argv)
     }
 #endif
 
-    rc = pcmk__daemon_init(&execd);
+    rc = pcmk__daemon_init(&execd, execd_handlers);
     if (rc != pcmk_rc_ok) {
-        execd.ec = CRM_EX_ERROR;
+        execd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

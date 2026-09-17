@@ -42,8 +42,6 @@ static GHashTable *device_table = NULL;
 GHashTable *topology = NULL;
 static GList *cmd_list = NULL;
 
-static GHashTable *fenced_handlers = NULL;
-
 struct device_search_s {
     /* target of fence action */
     char *host;
@@ -533,7 +531,7 @@ create_async_command(xmlNode *msg)
 
     // All messages must include these
     cmd->action = pcmk__xe_get_copy(op, PCMK__XA_ST_DEVICE_ACTION);
-    cmd->op = pcmk__xe_get_copy(msg, PCMK__XA_ST_OP);
+    cmd->op = pcmk__xe_get_copy(msg, fenced.op);
     cmd->client = pcmk__xe_get_copy(msg, PCMK__XA_ST_CLIENTID);
     if ((cmd->action == NULL) || (cmd->op == NULL) || (cmd->client == NULL)) {
         free_async_command(cmd);
@@ -2727,7 +2725,7 @@ send_async_reply(const async_command_t *cmd, const pcmk__action_result_t *result
         pcmk__trace("Broadcast '%s' result for %s (target was also originator)",
                     cmd->action, cmd->target);
         pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-        pcmk__xe_set(reply, PCMK__XA_ST_OP, STONITH_OP_NOTIFY);
+        pcmk__xe_set(reply, fenced.op, STONITH_OP_NOTIFY);
         pcmk__cluster_send_message(NULL, pcmk_ipc_fenced, reply);
     } else {
         // Reply only to the originator
@@ -3084,7 +3082,7 @@ construct_async_reply(const async_command_t *cmd,
 
     pcmk__xe_set(reply, PCMK__XA_ST_ORIGIN, __func__);
     pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
-    pcmk__xe_set(reply, PCMK__XA_ST_OP, cmd->op);
+    pcmk__xe_set(reply, fenced.op, cmd->op);
     pcmk__xe_set(reply, PCMK__XA_ST_DEVICE_ID, cmd->device);
     pcmk__xe_set(reply, PCMK__XA_ST_REMOTE_OP, cmd->remote_op_id);
     pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, cmd->client);
@@ -3267,7 +3265,7 @@ handle_register_request(pcmk__request_t *request)
     }
 
     reply = pcmk__xe_create(NULL, "reply");
-    pcmk__xe_set(reply, PCMK__XA_ST_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(reply, fenced.op, CRM_OP_REGISTER);
     pcmk__xe_set(reply, PCMK__XA_ST_CLIENTID, request->ipc_client->id);
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     pcmk__set_request_flags(request, pcmk__request_reuse_options);
@@ -3482,7 +3480,7 @@ handle_fence_request(pcmk__request_t *request)
          */
         op = create_remote_stonith_op(client_id, request->xml, FALSE);
 
-        pcmk__xe_set(request->xml, PCMK__XA_ST_OP, STONITH_OP_RELAY);
+        pcmk__xe_set(request->xml, fenced.op, STONITH_OP_RELAY);
         pcmk__xe_set(request->xml, PCMK__XA_ST_CLIENTID,
                      request->ipc_client->id);
         pcmk__xe_set(request->xml, PCMK__XA_ST_REMOTE_OP, op->id);
@@ -3532,7 +3530,7 @@ handle_history_request(pcmk__request_t *request)
 static xmlNode *
 handle_device_add_request(pcmk__request_t *request)
 {
-    const char *op = pcmk__xe_get(request->xml, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request->xml, fenced.op);
     xmlNode *dev = pcmk__xpath_find_one(request->xml->doc,
                                         "//" PCMK__XE_ST_DEVICE_ID, LOG_ERR);
 
@@ -3561,7 +3559,7 @@ handle_device_delete_request(pcmk__request_t *request)
     xmlNode *dev = pcmk__xpath_find_one(request->xml->doc,
                                         "//" PCMK__XE_ST_DEVICE_ID, LOG_ERR);
     const char *device_id = pcmk__xe_get(dev, PCMK_XA_ID);
-    const char *op = pcmk__xe_get(request->xml, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request->xml, fenced.op);
 
     if (is_privileged(request->ipc_client, op)) {
         stonith_device_remove(device_id, false);
@@ -3579,7 +3577,7 @@ handle_device_delete_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_add_request(pcmk__request_t *request)
 {
-    const char *op = pcmk__xe_get(request->xml, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request->xml, fenced.op);
 
     if (is_privileged(request->ipc_client, op)) {
         fenced_register_level(request->xml, &request->result);
@@ -3596,7 +3594,7 @@ handle_level_add_request(pcmk__request_t *request)
 static xmlNode *
 handle_level_delete_request(pcmk__request_t *request)
 {
-    const char *op = pcmk__xe_get(request->xml, PCMK__XA_ST_OP);
+    const char *op = pcmk__xe_get(request->xml, fenced.op);
 
     if (is_privileged(request->ipc_client, op)) {
         fenced_unregister_level(request->xml, &request->result);
@@ -3623,34 +3621,22 @@ handle_cache_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-fenced_register_handlers(void)
-{
-    pcmk__server_command_t handlers[] = {
-        { CRM_OP_REGISTER, handle_register_request },
-        { STONITH_OP_EXEC, handle_agent_request },
-        { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
-        { STONITH_OP_QUERY, handle_query_request },
-        { STONITH_OP_NOTIFY, handle_notify_request },
-        { STONITH_OP_RELAY, handle_relay_request },
-        { STONITH_OP_FENCE, handle_fence_request },
-        { STONITH_OP_FENCE_HISTORY, handle_history_request },
-        { STONITH_OP_DEVICE_ADD, handle_device_add_request },
-        { STONITH_OP_DEVICE_DEL, handle_device_delete_request },
-        { STONITH_OP_LEVEL_ADD, handle_level_add_request },
-        { STONITH_OP_LEVEL_DEL, handle_level_delete_request },
-        { CRM_OP_RM_NODE_CACHE, handle_cache_request },
-        { NULL, handle_unknown_request },
-    };
-
-    fenced_handlers = pcmk__register_handlers(handlers);
-}
-
-void
-fenced_unregister_handlers(void)
-{
-    g_clear_pointer(&fenced_handlers, g_hash_table_destroy);
-}
+pcmk__server_command_t fenced_handlers[] = {
+    { CRM_OP_REGISTER, handle_register_request },
+    { STONITH_OP_EXEC, handle_agent_request },
+    { STONITH_OP_TIMEOUT_UPDATE, handle_update_timeout_request },
+    { STONITH_OP_QUERY, handle_query_request },
+    { STONITH_OP_NOTIFY, handle_notify_request },
+    { STONITH_OP_RELAY, handle_relay_request },
+    { STONITH_OP_FENCE, handle_fence_request },
+    { STONITH_OP_FENCE_HISTORY, handle_history_request },
+    { STONITH_OP_DEVICE_ADD, handle_device_add_request },
+    { STONITH_OP_DEVICE_DEL, handle_device_delete_request },
+    { STONITH_OP_LEVEL_ADD, handle_level_add_request },
+    { STONITH_OP_LEVEL_DEL, handle_level_delete_request },
+    { CRM_OP_RM_NODE_CACHE, handle_cache_request },
+    { NULL, handle_unknown_request },
+};
 
 void
 fenced_handle_request(pcmk__request_t *request)
@@ -3660,11 +3646,7 @@ fenced_handle_request(pcmk__request_t *request)
     const char *exec_status_s = NULL;
     const char *reason = NULL;
 
-    if (fenced_handlers == NULL) {
-        fenced_register_handlers();
-    }
-
-    reply = pcmk__process_request(request, fenced_handlers);
+    reply = pcmk__process_request(request, fenced.handlers);
 
     if (reply != NULL) {
         pcmk__log_xml_trace(reply, "Reply");

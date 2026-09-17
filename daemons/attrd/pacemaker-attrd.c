@@ -9,22 +9,21 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <errno.h>                  // EIO
+#include <signal.h>                 // SIGTERM
+#include <stdbool.h>                // true
+#include <stdlib.h>                 // NULL, atexit
+#include <syslog.h>                 // LOG_INFO
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
+#include <glib.h>
+#include <qb/qbloop.h>              // qb_loop_priority
 
-#include <crm/crm.h>
-#include <crm/common/iso8601.h>
-#include <crm/common/ipc.h>
-#include <crm/common/xml.h>
-#include <crm/cluster/internal.h>
+#include <crm/common/ipc.h>         // pcmk_ipc_server
+#include <crm/common/logging.h>     // crm_log_init, crm_log_preinit
+#include <crm/common/mainloop.h>    // mainloop_add_signal, crm_trigger_t
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*, pcmk_rc_str
+#include <crm/common/xml.h>         // PCMK_XA_TASK
+#include <crm/lrmd.h>               // lrmd_t
 
 #include "pacemaker-attrd.h"
 
@@ -32,11 +31,17 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
+    .cleanup = pcmk__daemon_ipc_cleanup,
+    .closed = attrd_ipc_closed,
+    .dispatch = attrd_ipc_dispatch,
+    .init = pcmk__daemon_ipc_init,
 };
 
 pcmk__daemon_t attrd = {
     .type = pcmk_ipc_attrd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
+    .op = PCMK_XA_TASK,
     .ipc_fns = &ipc_fns,
 };
 
@@ -87,9 +92,9 @@ attrd_cleanup_cmdline(void)
 static void
 attrd_cleanup(void)
 {
-    attrd_ipc_cleanup();
+    attrd.ipc_fns->cleanup(&attrd);
+
     attrd_lrmd_disconnect();
-    attrd_unregister_handlers();
     attrd_cib_disconnect();
     attrd_cluster_disconnect();
 
@@ -207,14 +212,9 @@ main(int argc, char **argv)
      */
     attrd_send_protocol(NULL);
 
-    if (!attrd_ipc_init()) {
-        attrd.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
-    rc = pcmk__daemon_init(&attrd);
+    rc = pcmk__daemon_init(&attrd, attrd_handlers);
     if (rc != pcmk_rc_ok) {
-        attrd.ec = CRM_EX_ERROR;
+        attrd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, attrd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

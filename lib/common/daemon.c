@@ -11,29 +11,307 @@
 
 #include <signal.h>                 // SIG*
 #include <stdbool.h>                // bool, false, true
-#include <stddef.h>                 // NULL
+#include <stddef.h>                 // NULL, size_t
+#include <sys/types.h>              // gid_t, uid_t
 #include <time.h>                   // time
 
 #include <glib.h>                   // g_clear_pointer, g_main_loop_*
+#include <qb/qbipcs.h>              // qb_ipcs_*
 
 #include <crm/common/ipc.h>         // crm_ipc_*, pcmk_ipc_api_t, pcmk_*_ipc_api
 #include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/mainloop.h>    // mainloop_add_ipc_server
 #include <crm/common/results.h>     // CRM_EX_*, crm_exit, pcmk_rc_*
+
+static int32_t
+ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
+{
+    pcmk__daemon_t *d = qb_ipcs_connection_service_context_get(c);
+    return pcmk__daemon_ipc_accept(d, c, uid, gid);
+}
+
+static int32_t
+ipc_closed(qb_ipcs_connection_t *c)
+{
+    pcmk__daemon_t *d = qb_ipcs_connection_service_context_get(c);
+    return pcmk__daemon_ipc_closed(d, c);
+}
+
+static void
+ipc_created(qb_ipcs_connection_t *c)
+{
+    pcmk__daemon_t *d = qb_ipcs_connection_service_context_get(c);
+    pcmk__daemon_ipc_created(d, c);
+}
+
+static void
+ipc_destroy(qb_ipcs_connection_t *c)
+{
+    pcmk__daemon_t *d = qb_ipcs_connection_service_context_get(c);
+    pcmk__daemon_ipc_destroy(d, c);
+}
+
+static int32_t
+ipc_dispatch(qb_ipcs_connection_t *c, void *data, size_t size)
+{
+    pcmk__daemon_t *d = qb_ipcs_connection_service_context_get(c);
+    pcmk__daemon_ipc_dispatch(d, c, data, size);
+    return 0;
+}
+
+static struct qb_ipcs_service_handlers ipc_callbacks = {
+    .connection_accept = ipc_accept,
+    .connection_created = ipc_created,
+    .msg_process = ipc_dispatch,
+    .connection_closed = ipc_closed,
+    .connection_destroyed = ipc_destroy
+};
 
 /*!
  * \internal
  * \brief Initialize a previously allocated daemon object
+ *
+ * \param[in,out] d        The daemon object
+ * \param[in]     handlers A list of IPC/cluster message handlers to register
+ *
+ * \return Standard Pacemaker return code
+ */
+int
+pcmk__daemon_init(pcmk__daemon_t *d, const pcmk__server_command_t handlers[])
+{
+    int rc = pcmk_rc_ok;
+
+    d->handlers = pcmk__register_handlers(handlers);
+
+    rc = d->ipc_fns->init(d);
+    if (rc != pcmk_rc_ok) {
+        g_clear_pointer(&d->handlers, g_hash_table_destroy);
+        return rc;
+    }
+
+    d->start_time = time(NULL);
+
+    d->mainloop = g_main_loop_new(NULL, false);
+    return rc;
+}
+
+/*!
+ * \internal
+ * \brief Accept a new client IPC connection
+ *
+ * \param[in,out] d   The daemon object
+ * \param[in,out] c   New connection
+ * \param[in]     uid Client user id
+ * \param[in]     gid Client group id
+ *
+ * \return pcmk_ok on success, -errno otherwise
+ */
+int32_t
+pcmk__daemon_ipc_accept(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                        uid_t uid, gid_t gid)
+{
+    if (d->shutting_down) {
+        pcmk__info("Ignoring new connection from pid %d during shutdown",
+                   pcmk__client_pid(c));
+        return -ECONNREFUSED;
+    }
+
+    pcmk__trace("New client connection %p", c);
+
+    if (pcmk__new_client(c, uid, gid) == NULL) {
+        return -ENOMEM;
+    }
+
+    return pcmk_ok;
+}
+
+/*!
+ * \internal
+ * \brief Clean up IPC communication
+ *
+ * \param[in,out] d The daemon object
+ */
+void
+pcmk__daemon_ipc_cleanup(pcmk__daemon_t *d)
+{
+    pcmk__drop_all_clients(d->ipcs);
+    g_clear_pointer(&d->ipcs, qb_ipcs_destroy);
+    pcmk__client_cleanup();
+}
+
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in,out] d The daemon object
+ * \param[in]     c Connection to destroy
+ *
+ * \return 0 (do not re-run this callback)
+ */
+int32_t
+pcmk__daemon_ipc_closed(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
+{
+    pcmk__client_t *client = pcmk__find_client(c);
+
+    if (client == NULL) {
+        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
+        return 0;
+    }
+
+    pcmk__trace("Cleaning up closed client connection %p", c);
+
+    if (d->ipc_fns->closed != NULL) {
+        d->ipc_fns->closed(d, client);
+    } else {
+        pcmk__free_client(client);
+    }
+
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Handle a newly created IPC connection
+ *
+ * \param[in,out] d The daemon object
+ * \param[in]     c The new connection
+ */
+void
+pcmk__daemon_ipc_created(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
+{
+    pcmk__client_t *client = pcmk__find_client(c);
+
+    pcmk__assert(client != NULL);
+    pcmk__trace("New client connection %p", c);
+
+    if (d->ipc_fns->created != NULL) {
+        d->ipc_fns->created(d, client);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Destroy a client IPC connection
+ *
+ * \param[in,out] d The daemon object
+ * \param[in,out] c Connection to destroy
+ *
+ * \note We handle a destroyed connection the same as a closed one,
+ *       but we need a separate handler because the return type is different.
+ */
+void
+pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c)
+{
+    pcmk__trace("Destroying client connection %p", c);
+    pcmk__daemon_ipc_closed(d, c);
+}
+
+/*!
+ * \internal
+ * \brief Handle an incoming IPC message from a connection
+ *
+ * \param[in,out] d    The daemon object
+ * \param[in,out] c    IPC connection
+ * \param[in]     data Message read from the connection
+ * \param[in]     size Size of the read message
+ */
+void
+pcmk__daemon_ipc_dispatch(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                          void *data, size_t size)
+{
+    int rc = pcmk_rc_ok;
+    pcmk__request_t request = {
+        .ipc_client = pcmk__find_client(c),
+        .ipc_id = 0,
+        .ipc_flags = 0,
+        .peer = NULL,
+        .xml = NULL,
+        .call_options = 0,
+        .flags = 0,
+        .result = PCMK__UNKNOWN_RESULT,
+    };
+
+    // Sanity-check, and parse XML from IPC data
+    CRM_CHECK(request.ipc_client != NULL, return);
+    if (data == NULL) {
+        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
+        return;
+    }
+
+    rc = pcmk__ipc_msg_append(&request.ipc_client->buffer, data);
+
+    if (rc == pcmk_rc_ipc_more) {
+        /* We haven't read the complete message yet, so just return. */
+        return;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        /* Some sort of error occurred reassembling the message.  All we can
+         * do is clean up, log an error and return.
+         */
+        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
+
+        if (request.ipc_client->buffer != NULL) {
+            g_byte_array_free(request.ipc_client->buffer, TRUE);
+            request.ipc_client->buffer = NULL;
+        }
+
+        return;
+    }
+
+    /* We've read the complete message and there's already a header on the
+     * front.  Pass it off for processing.
+     */
+    request.xml = pcmk__client_data2xml(request.ipc_client, &request.ipc_id,
+                                        &request.ipc_flags);
+    g_byte_array_free(request.ipc_client->buffer, TRUE);
+    request.ipc_client->buffer = NULL;
+
+    if ((request.xml == NULL)
+        || ((d->ipc_fns->invalid_msg != NULL) && d->ipc_fns->invalid_msg(request.xml))) {
+        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
+        pcmk__ipc_send_ack(request.ipc_client, request.ipc_id, request.ipc_flags,
+                           NULL, CRM_EX_PROTOCOL);
+        goto done;
+    }
+
+    d->ipc_fns->dispatch(d, &request);
+
+done:
+    pcmk__xml_free(request.xml);
+    return;
+}
+
+/*!
+ * \internal
+ * \brief Initialize the IPC side of the server
+ *
+ * This is a generic function that should be good enough for most purposes.
+ * Certain servers may require specialized functionality.
  *
  * \param[in,out] d The daemon object
  *
  * \return Standard Pacemaker return code
  */
 int
-pcmk__daemon_init(pcmk__daemon_t *d)
+pcmk__daemon_ipc_init(pcmk__daemon_t *d)
 {
-    d->start_time = time(NULL);
+    pcmk__assert((d->ipcs == NULL));
 
-    d->mainloop = g_main_loop_new(NULL, false);
+    d->ipcs = mainloop_add_ipc_server_with_prio(pcmk__server_ipc_name(d->type),
+                                                QB_IPC_SHM, &ipc_callbacks,
+                                                d->priority);
+
+    if (d->ipcs == NULL) {
+        pcmk__crit("Failed to create %s IPC server; shutting down",
+                   pcmk__server_log_name(d->type));
+        pcmk__crit("Verify pacemaker and pacemaker_remote are not both "
+                   "enabled");
+        return EIO;
+    }
+
+    qb_ipcs_service_context_set(d->ipcs, d);
+
     return pcmk_rc_ok;
 }
 
@@ -128,8 +406,11 @@ pcmk__daemon_run(pcmk__daemon_t *d)
 {
     pcmk__notice("Pacemaker %s successfully started and accepting connections",
                  pcmk__server_log_name(d->type));
+
     g_main_loop_run(d->mainloop);
+
     g_clear_pointer(&d->mainloop, g_main_loop_unref);
+    g_clear_pointer(&d->handlers, g_hash_table_destroy);
 }
 
 /*!

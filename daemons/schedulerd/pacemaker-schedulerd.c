@@ -9,6 +9,7 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                      // EIO
 #include <signal.h>                     // SIGTERM
 #include <stdbool.h>                    // true
 #include <stddef.h>                     // NULL
@@ -16,6 +17,7 @@
 
 #include <glib.h>                       // g_*, etc.
 #include <qb/qblog.h>                   // LOG_TRACE
+#include <qb/qbloop.h>                  // QB_LOOP_MED
 
 #include <crm_config.h>                 // PCMK_SCHEDULER_INPUT_DIR
 #include <crm/common/logging.h>         // crm_log_init, crm_log_preinit
@@ -31,11 +33,16 @@
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__daemon_ipc_running,
+    .cleanup = pcmk__daemon_ipc_cleanup,
+    .dispatch = schedulerd_ipc_dispatch,
+    .init = pcmk__daemon_ipc_init,
 };
 
-static pcmk__daemon_t schedulerd = {
+pcmk__daemon_t schedulerd = {
     .type = pcmk_ipc_schedulerd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
+    .op = PCMK__XA_CRM_TASK,
     .ipc_fns = &ipc_fns,
 };
 
@@ -91,13 +98,6 @@ schedulerd_cleanup_cmdline(void)
     g_clear_pointer(&processed_args, g_strfreev);
     g_clear_pointer(&context, g_option_context_free);
     g_clear_pointer(&remainder, g_strfreev);
-}
-
-static void
-schedulerd_cleanup(void)
-{
-    schedulerd_ipc_cleanup();
-    schedulerd_unregister_handlers();
 }
 
 static void
@@ -189,11 +189,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!schedulerd_ipc_init()) {
-        schedulerd.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
     if (pcmk__log_output_new(&logger_out) != pcmk_rc_ok) {
         schedulerd.ec = CRM_EX_FATAL;
         goto done;
@@ -202,9 +197,9 @@ main(int argc, char **argv)
     pcmk__register_lib_messages(logger_out);
     pcmk__output_set_log_level(logger_out, LOG_TRACE);
 
-    rc = pcmk__daemon_init(&schedulerd);
+    rc = pcmk__daemon_init(&schedulerd, schedulerd_handlers);
     if (rc != pcmk_rc_ok) {
-        schedulerd.ec = CRM_EX_ERROR;
+        schedulerd.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, schedulerd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));
@@ -216,7 +211,7 @@ main(int argc, char **argv)
     pcmk__daemon_run(&schedulerd);
 
 done:
-    schedulerd_cleanup();
+    schedulerd.ipc_fns->cleanup(&schedulerd);
 
     pcmk__output_and_clear_error(&error, out);
 
