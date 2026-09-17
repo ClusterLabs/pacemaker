@@ -1,0 +1,1 @@
+<cib><status><node_state id="1"><lrm id="1"><lrm_resources><lrm_resource id="r1" type="Dummy" class="ocf"><lrm_rsc_op id="op1" operation="monitor" rc-code="0" call-id="1"/></lrm_resource></lrm_resources></lrm></node_state></status></cib>

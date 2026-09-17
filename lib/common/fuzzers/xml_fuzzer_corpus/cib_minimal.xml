@@ -1,0 +1,1 @@
+<cib validate-with="pacemaker-3.10" epoch="1" num_updates="0" admin_epoch="0"><configuration><crm_config/><nodes/><resources/><constraints/></configuration><status/></cib>
