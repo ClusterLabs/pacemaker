@@ -1,5 +1,5 @@
 #
-# Copyright 2008-2025 the Pacemaker project contributors
+# Copyright 2008-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -43,51 +43,27 @@
 ## Upstream commit (full commit ID, abbreviated commit ID, or tag) to build
 %global commit HEAD
 
-## Since git v2.11, the extent of abbreviation is autoscaled by default
-## (used to be constant of 7), so we need to convey it for non-tags, too.
-%if 0%{?fedora} || (0%{?rhel} >= 9)
-%global commit_abbrev 9
-%else
-%global commit_abbrev 7
-%endif
-
 
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
 
-## Use systemd to create users/groups as required
-%if (0%{?fedora} >= 38)
-%bcond_without use_sysusers
-%else
-%bcond_with use_sysusers
-%endif
+## Use systemd to create users/groups
+%bcond use_sysusers %[ 0%{?fedora} >= 38 ]
 
 ## Add option for Linux-HA (stonith/external) fencing agent support
-%if 0%{?suse_version}
-%bcond_without linuxha
-%else
-%bcond_with linuxha
-%endif
+%bcond linuxha 0%{?suse_version}
 
 ## Add option for whether to support storing sensitive information outside CIB
-%if (0%{?fedora} && 0%{?fedora} <= 33) || (0%{?rhel} && 0%{?rhel} <= 8)
-%bcond_with cibsecrets
-%else
-%bcond_without cibsecrets
-%endif
+%bcond cibsecrets %[ ! ((0%{?fedora} && 0%{?fedora} <= 33) || (0%{?rhel} && 0%{?rhel} <= 8)) ]
 
 ## Add option to enable Native Language Support (experimental)
-%bcond_with nls
+%bcond nls 0
 
 ## Add option to create binaries suitable for use with profiling tools
-%bcond_with profiling
+%bcond profiling 0
 
 ## Allow deprecated option to skip (or enable, on RHEL) documentation
-%if 0%{?rhel}
-%bcond_with doc
-%else
-%bcond_without doc
-%endif
+%bcond doc %[ ! 0%{?rhel} ]
 
 ## Add option to default to start-up synchronization with SBD.
 ##
@@ -96,18 +72,14 @@
 ## to synchronization improves safety, without requiring higher-level tools
 ## to be aware of the setting or requiring users to modify configurations
 ## after upgrading to versions that support synchronization.
-%if 0%{?rhel} && 0%{?rhel} > 8
-%bcond_without sbd_sync
-%else
-%bcond_with sbd_sync
-%endif
+%bcond sbd_sync %[ 0%{?rhel} > 8 ]
 
 ## Add option to prefix package version with "0."
 ## (so later "official" packages will be considered updates)
-%bcond_with pre_release
+%bcond pre_release 0
 
 ## Add option to turn off hardening of libraries and daemon executables
-%bcond_without hardening
+%bcond hardening 1
 
 # Define globals for convenient use later
 
@@ -136,7 +108,7 @@
 %define pcmk_release %{specversion}
 %endif
 %else
-%define archive_version %(c=%{commit}; echo ${c:0:%{commit_abbrev}})
+%define archive_version %(c=%{commit}; echo ${c:0:9})
 %define archive_github_url %{archive_version}#/%{name}-%{archive_version}.tar.gz
 %if %{with pre_release}
 %define pcmk_release 0.%{specversion}.%{archive_version}.git
@@ -266,12 +238,12 @@ BuildRequires: %{python_name}-devel
 BuildRequires: %{python_name}-setuptools
 
 # Pacemaker requires a minimum libqb functionality
-Requires:      libqb >= 1.0.1
-BuildRequires: pkgconfig(libqb) >= 1.0.1
+Requires:      libqb >= 2.0.8
+BuildRequires: pkgconfig(libqb) >= 2.0.8
 
 # Required basic build tools
-BuildRequires: autoconf
-BuildRequires: automake
+BuildRequires: autoconf >= 2.71
+BuildRequires: automake >= 1.16
 BuildRequires: coreutils
 BuildRequires: findutils
 BuildRequires: gcc
@@ -281,32 +253,32 @@ BuildRequires: libtool
 BuildRequires: %{?pkgname_libtool_devel}
 %endif
 BuildRequires: make
-BuildRequires: pkgconfig >= 0.28
+BuildRequires: pkgconfig >= 2.1.0
 BuildRequires: sed
 
 # Required for core functionality
-BuildRequires: pkgconfig(glib-2.0) >= 2.42
-BuildRequires: pkgconfig(gnutls) >= 3.4.6
-BuildRequires: pkgconfig(libxml-2.0) >= 2.9.2
+BuildRequires: pkgconfig(glib-2.0) >= 2.80
+BuildRequires: pkgconfig(gnutls) >= 3.8.9
+BuildRequires: pkgconfig(libxml-2.0) >= 2.12.5
 BuildRequires: pkgconfig(systemd)
 BuildRequires: libxslt-devel
 BuildRequires: pkgconfig(uuid)
 BuildRequires: %{pkgname_bzip2_devel}
 
 # Enables optional functionality
-BuildRequires: pkgconfig(dbus-1) >= 1.5.12
+BuildRequires: pkgconfig(dbus-1) >= 1.14.10
 BuildRequires: %{pkgname_docbook_xsl}
 BuildRequires: help2man
 BuildRequires: ncurses-devel
 BuildRequires: pam-devel
-BuildRequires: %{pkgname_gettext} >= 0.18
+BuildRequires: %{pkgname_gettext} >= 0.22
 
 # Required for "make check"
 BuildRequires: libcmocka-devel >= 1.1.0
 BuildRequires: %{python_name}-psutil
 
-Requires:      corosync >= 2.0.0
-BuildRequires: corosync-devel >= 2.0.0
+Requires:      corosync >= 3.1.9
+BuildRequires: corosync-devel >= 3.1.9
 
 %if %{with linuxha}
 BuildRequires: %{pkgname_glue_libs}-devel
@@ -426,14 +398,14 @@ Summary:       Pacemaker development package
 Requires:      %{pkgname_pcmk_libs}%{?_isa} = %{version}-%{release}
 Requires:      %{name}-cluster-libs%{?_isa} = %{version}-%{release}
 Requires:      %{pkgname_bzip2_devel}%{?_isa}
-Requires:      corosync-devel >= 2.0.0
-Requires:      glib2-devel%{?_isa}
-Requires:      libqb-devel%{?_isa} >= 1.0.1
+Requires:      corosync-devel >= 3.1.9
+Requires:      glib2-devel%{?_isa} >= 2.80.0
+Requires:      libqb-devel%{?_isa} >= 2.0.8
 %if %{defined pkgname_libtool_devel_arch}
 Requires:      %{?pkgname_libtool_devel_arch}
 %endif
 Requires:      libuuid-devel%{?_isa}
-Requires:      libxml2-devel%{?_isa} >= 2.9.2
+Requires:      libxml2-devel%{?_isa} >= 2.12.5
 Requires:      libxslt-devel%{?_isa}
 
 %description -n %{pkgname_pcmk_libs}-devel
