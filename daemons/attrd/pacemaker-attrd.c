@@ -57,13 +57,6 @@ static GOptionEntry entries[] = {
 
 static pcmk__output_t *out = NULL;
 
-static pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 lrmd_t *the_lrmd = NULL;
 crm_trigger_t *attrd_config_read = NULL;
 
@@ -133,7 +126,7 @@ main(int argc, char **argv)
 
     crm_log_preinit(NULL, argc, argv);
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         attrd.ec = CRM_EX_USAGE;
         goto done;

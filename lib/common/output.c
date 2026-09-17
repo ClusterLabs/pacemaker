@@ -9,14 +9,26 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <glib.h>
+#include <errno.h>                  // EINVAL, ENOMEM
+#include <stdarg.h>                 // va_end, va_list, va_start
+#include <stdbool.h>                // false
+#include <stdio.h>                  // fprintf, stdout
+#include <stdlib.h>                 // free, setenv
+#include <string.h>                 // strdup
 
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
-#include <libxml/tree.h>
+#include <glib.h>
+#include <libxml/tree.h>            // xmlNodePtr
+
+#include <crm/common/results.h>     // pcmk_rc_*
 
 #include "crmcommon_private.h"
+
+static pcmk__supported_format_t default_formats[] = {
+    PCMK__SUPPORTED_FORMAT_NONE,
+    PCMK__SUPPORTED_FORMAT_TEXT,
+    PCMK__SUPPORTED_FORMAT_XML,
+    { NULL, NULL, NULL }
+};
 
 static GHashTable *formatters = NULL;
 
@@ -171,8 +183,9 @@ pcmk__register_formats(GOptionGroup *group,
                        const pcmk__supported_format_t *formats)
 {
     if (formats == NULL) {
-        return;
+        formats = default_formats;
     }
+
     for (const pcmk__supported_format_t *entry = formats; entry->name != NULL;
          entry++) {
         pcmk__register_format(group, entry->name, entry->create, entry->options);
