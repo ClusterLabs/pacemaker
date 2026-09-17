@@ -181,14 +181,17 @@ bail:
  *
  * \param[in] data  CPG handle
  *
- * \return FALSE (to indicate to glib that timer should not be removed)
+ * \return \c G_SOURCE_REMOVE (to indicate to glib that timer should not be
+ *         removed)
+ *
+ * \note Return value description seems inverted
  */
 static gboolean
 crm_cs_flush_cb(void *data)
 {
     cs_message_timer = 0;
     crm_cs_flush(data);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 // Send no more than this many CPG messages in one flush

@@ -1363,7 +1363,7 @@ systemd_timeout_callback(void *p)
     } else {
         services__finalize_async_op(op);
     }
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!

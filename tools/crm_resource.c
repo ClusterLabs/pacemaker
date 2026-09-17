@@ -212,7 +212,7 @@ resource_ipc_timeout(void *data)
                 _("Aborting because no messages received in %d seconds"), MESSAGE_TIMEOUT_S);
 
     quit_main_loop(CRM_EX_TIMEOUT);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

@@ -195,13 +195,13 @@ lrmd_auth_timeout_cb(void *data)
     client->remote->auth_timeout = 0;
 
     if (pcmk__is_set(client->flags, pcmk__client_tls_handshake_complete)) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     g_clear_pointer(&client->remote->source, mainloop_del_fd);
     pcmk__err("Remote client authentication timed out");
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 // Dispatch callback for remote server socket

@@ -47,7 +47,7 @@ static float throttle_load_target = 0.0;
 #define THROTTLE_FACTOR_HIGH   2.0
 
 static GHashTable *throttle_records = NULL;
-static mainloop_timer_t *throttle_timer = NULL;
+static pcmk__main_loop_timer_t *throttle_timer = NULL;
 
 static const char *
 load2str(enum throttle_state_e mode)
@@ -202,7 +202,7 @@ static gboolean
 throttle_timer_cb(void *data)
 {
     throttle_send_command(throttle_mode());
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 static void
@@ -262,11 +262,12 @@ throttle_init(void)
 {
     if(throttle_records == NULL) {
         throttle_records = pcmk__strkey_table(NULL, throttle_record_free);
-        throttle_timer = mainloop_timer_add("throttle", 30 * 1000, TRUE, throttle_timer_cb, NULL);
+        throttle_timer = pcmk__main_loop_timer_new("throttle", (30 * 1000),
+                                                   throttle_timer_cb, NULL);
     }
 
     throttle_update_job_max(NULL);
-    mainloop_timer_start(throttle_timer);
+    pcmk__main_loop_timer_start(throttle_timer);
 }
 
 /*!
@@ -291,7 +292,7 @@ controld_configure_throttle(GHashTable *options)
 void
 throttle_fini(void)
 {
-    g_clear_pointer(&throttle_timer, mainloop_timer_del);
+    g_clear_pointer(&throttle_timer, pcmk__main_loop_timer_free);
     g_clear_pointer(&throttle_records, g_hash_table_destroy);
 }
 

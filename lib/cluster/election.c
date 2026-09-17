@@ -28,7 +28,7 @@ struct pcmk__election {
     unsigned int count;             // How many times local node has voted
     void (*cb)(pcmk_cluster_t *);   // Function to call if election is won
     GHashTable *voted;  // Key = node name, value = how node voted
-    mainloop_timer_t *timeout; // When to abort if all votes not received
+    pcmk__main_loop_timer_t *timeout; // When to abort if all votes not received
     int election_wins;         // Track wins, for storm detection
     bool wrote_blackbox;       // Write a storm blackbox at most once
     time_t expires;            // When storm detection period ends
@@ -53,7 +53,7 @@ election_timer_cb(void *user_data)
 
     pcmk__info("Declaring local node as winner after election timed out");
     election_complete(cluster);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -98,11 +98,9 @@ election_init(pcmk_cluster_t *cluster, void (*cb)(pcmk_cluster_t *))
 
     cluster->priv->election = pcmk__assert_alloc(1, sizeof(pcmk__election_t));
     cluster->priv->election->cb = cb;
-    cluster->priv->election->timeout = mainloop_timer_add(name,
-                                                          ELECTION_TIMEOUT_MS,
-                                                          FALSE,
-                                                          election_timer_cb,
-                                                          cluster);
+    cluster->priv->election->timeout =
+        pcmk__main_loop_timer_new(name, ELECTION_TIMEOUT_MS, election_timer_cb,
+                                  cluster);
 }
 
 /*!
@@ -136,7 +134,7 @@ election_reset(pcmk_cluster_t *cluster)
 {
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
         pcmk__trace("Resetting election");
-        mainloop_timer_stop(cluster->priv->election->timeout);
+        pcmk__main_loop_timer_stop(cluster->priv->election->timeout);
         g_clear_pointer(&cluster->priv->election->voted, g_hash_table_destroy);
     }
 }
@@ -156,7 +154,7 @@ election_fini(pcmk_cluster_t *cluster)
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
         election_reset(cluster);
         pcmk__trace("Destroying election");
-        mainloop_timer_del(cluster->priv->election->timeout);
+        pcmk__main_loop_timer_free(cluster->priv->election->timeout);
         g_clear_pointer(&cluster->priv->election, free);
     }
 }
@@ -164,7 +162,7 @@ election_fini(pcmk_cluster_t *cluster)
 static void
 election_timeout_start(pcmk_cluster_t *cluster)
 {
-    mainloop_timer_start(cluster->priv->election->timeout);
+    pcmk__main_loop_timer_start(cluster->priv->election->timeout);
 }
 
 /*!
@@ -177,7 +175,7 @@ void
 election_timeout_stop(pcmk_cluster_t *cluster)
 {
     if ((cluster != NULL) && (cluster->priv->election != NULL)) {
-        mainloop_timer_stop(cluster->priv->election->timeout);
+        pcmk__main_loop_timer_stop(cluster->priv->election->timeout);
     }
 }
 
@@ -185,14 +183,31 @@ election_timeout_stop(pcmk_cluster_t *cluster)
  * \internal
  * \brief Change an election's timeout (restarting timer if running)
  *
- * \param[in,out] cluster  Cluster with election
- * \param[in]     period   New timeout
+ * \param[in,out] cluster      Cluster with election
+ * \param[in]     interval_ms  New timer interval in milliseconds
  */
 void
-election_timeout_set_period(pcmk_cluster_t *cluster, unsigned int period)
+election_timeout_set_interval(pcmk_cluster_t *cluster, unsigned int interval_ms)
 {
-    CRM_CHECK((cluster != NULL) && (cluster->priv->election != NULL), return);
-    mainloop_timer_set_period(cluster->priv->election->timeout, period);
+    pcmk__main_loop_timer_t *timer = NULL;
+
+    CRM_CHECK((cluster != NULL)
+              && (cluster->priv->election != NULL)
+              && (cluster->priv->election->timeout != NULL),
+              return);
+
+    timer = cluster->priv->election->timeout;
+
+    if (timer->interval_ms == interval_ms) {
+        return;
+    }
+
+    timer->interval_ms = interval_ms;
+
+    if (pcmk__main_loop_timer_running(timer)) {
+        // Restart the timer using the new interval if it changed
+        pcmk__main_loop_timer_start(timer);
+    }
 }
 
 static int

@@ -205,7 +205,7 @@ timer_popped(void *data)
     pcmk__debug("%dms DBus timer expired",
                 dbus_timeout_get_interval((DBusTimeout *) data));
     dbus_timeout_handle(data);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static dbus_bool_t

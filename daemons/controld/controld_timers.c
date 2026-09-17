@@ -20,12 +20,12 @@
 
 //! FSA mainloop timer type
 typedef struct {
-    unsigned int source_id;             //!< Timer source ID
-    unsigned int period_ms;             //!< Timer period
-    enum crmd_fsa_input fsa_input;      //!< Input to register if timer pops
-    gboolean (*callback)(void *data);   //!< What do if timer pops
-    bool log_error;                     //!< Timer popping indicates error
-    int counter;                        //!< For detecting loops
+    const char *desc;               //!< Description
+    unsigned int source_id;         //!< Timer source ID
+    unsigned int interval_ms;       //!< Timer interval
+    enum crmd_fsa_input fsa_input;  //!< Input to register if timer pops
+    bool log_error;                 //!< Timer popping indicates error
+    int counter;                    //!< For detecting loops
 } fsa_timer_t;
 
 //! Wait before retrying a failed cib or executor connection
@@ -52,34 +52,6 @@ fsa_timer_t *shutdown_escalation_timer = NULL;
 //! Cluster recheck interval (from configuration)
 static unsigned int recheck_interval_ms = 0;
 
-static const char *
-get_timer_desc(fsa_timer_t * timer)
-{
-    if (timer == election_timer) {
-        return "Election Trigger";
-
-    } else if (timer == shutdown_escalation_timer) {
-        return "Shutdown Escalation";
-
-    } else if (timer == integration_timer) {
-        return "Integration Timer";
-
-    } else if (timer == finalization_timer) {
-        return "Finalization Timer";
-
-    } else if (timer == transition_timer) {
-        return "New Transition Timer";
-
-    } else if (timer == wait_timer) {
-        return "Wait Timer";
-
-    } else if (timer == recheck_timer) {
-        return "Cluster Recheck Timer";
-
-    }
-    return "Unknown Timer";
-}
-
 /*!
  * \internal
  * \brief Stop an FSA timer
@@ -95,18 +67,74 @@ controld_stop_timer(fsa_timer_t *timer)
 
     if (timer->source_id != 0) {
         pcmk__trace("Stopping %s (would inject %s if popped after %ums, "
-                    "src=%d)",
-                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                    timer->period_ms, timer->source_id);
+                    "src=%d)", timer->desc, fsa_input2string(timer->fsa_input),
+                    timer->interval_ms, timer->source_id);
         g_source_remove(timer->source_id);
         timer->source_id = 0;
         return true;
     }
 
     pcmk__trace("%s already stopped (would inject %s if popped after %ums)",
-                get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                timer->period_ms);
+                timer->desc, fsa_input2string(timer->fsa_input),
+                timer->interval_ms);
     return false;
+}
+
+static gboolean
+crm_timer_popped(void *data)
+{
+    fsa_timer_t *timer = (fsa_timer_t *) data;
+
+    if (timer->log_error) {
+        pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
+                  timer->desc, fsa_state2string(controld_globals.fsa_state),
+                  fsa_input2string(timer->fsa_input), timer->interval_ms);
+    } else {
+        pcmk__info("%s just popped " QB_XS " input=%s time=%ums", timer->desc,
+                   fsa_input2string(timer->fsa_input), timer->interval_ms);
+        timer->counter++;
+    }
+
+    if ((timer == election_timer) && (election_timer->counter > 5)) {
+        pcmk__notice("We appear to be in an election loop, something may be "
+                     "wrong");
+        crm_write_blackbox(0, NULL);
+        election_timer->counter = 0;
+    }
+
+    controld_stop_timer(timer);  // Make timer _not_ go off again
+
+    if (timer->fsa_input == I_INTEGRATED) {
+        pcmk__info("Welcomed: %d, Integrated: %d",
+                   crmd_join_phase_count(controld_join_welcomed),
+                   crmd_join_phase_count(controld_join_integrated));
+        if (crmd_join_phase_count(controld_join_welcomed) == 0) {
+            // If we don't even have ourselves, start again
+            register_fsa_error(I_ELECTION, NULL);
+
+        } else {
+            controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);
+        }
+
+    } else if ((timer == recheck_timer)
+               && (controld_globals.fsa_state != S_IDLE)) {
+        pcmk__debug("Discarding %s event in state: %s",
+                    fsa_input2string(timer->fsa_input),
+                    fsa_state2string(controld_globals.fsa_state));
+
+    } else if ((timer == finalization_timer)
+               && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
+        pcmk__debug("Discarding %s event in state: %s",
+                    fsa_input2string(timer->fsa_input),
+                    fsa_state2string(controld_globals.fsa_state));
+
+    } else if (timer->fsa_input != I_NULL) {
+        controld_fsa_append(C_TIMER_POPPED, timer->fsa_input, NULL);
+    }
+
+    controld_trigger_fsa();
+
+    return G_SOURCE_CONTINUE;
 }
 
 /*!
@@ -118,17 +146,18 @@ controld_stop_timer(fsa_timer_t *timer)
 static void
 controld_start_timer(fsa_timer_t *timer)
 {
-    if (timer->source_id == 0 && timer->period_ms > 0) {
-        timer->source_id = pcmk__create_timer(timer->period_ms, timer->callback, timer);
+    if ((timer->source_id == 0) && (timer->interval_ms > 0)) {
+        timer->source_id = pcmk__create_timer(timer->interval_ms,
+                                              crm_timer_popped, timer);
         pcmk__assert(timer->source_id != 0);
         pcmk__debug("Started %s (inject %s if pops after %ums, source=%d)",
-                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                    timer->period_ms, timer->source_id);
+                    timer->desc, fsa_input2string(timer->fsa_input),
+                    timer->interval_ms, timer->source_id);
     } else {
         pcmk__debug("%s already running (inject %s if pops after %ums, "
-                    "source=%d)",
-                    get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                    timer->period_ms, timer->source_id);
+                    "source=%d)", timer->desc,
+                    fsa_input2string(timer->fsa_input), timer->interval_ms,
+                    timer->source_id);
     }
 }
 
@@ -192,99 +221,55 @@ do_timer_control(long long action, enum crmd_fsa_cause cause,
     }
 }
 
-static gboolean
-crm_timer_popped(void *data)
+/*!
+ * \internal
+ * \brief Create an FSA timer
+ *
+ * \param[in] desc         Description
+ * \param[in] interval_ms  Timer interval in milliseconds
+ * \param[in] fsa_input    FSA input to register if the timer pops
+ * \param[in] log_error    If \c true, log an error if the timer pops
+ *
+ * \return Newly allocated FSA timer (guaranteed not to be \c NULL)
+ *
+ * \note The caller is responsible for freeing the return value using
+ *       \c free_fsa_timer().
+ */
+static fsa_timer_t *
+new_fsa_timer(const char *desc, unsigned int interval_ms,
+              enum crmd_fsa_input fsa_input, bool log_error)
 {
-    fsa_timer_t *timer = (fsa_timer_t *) data;
+    fsa_timer_t *timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
 
-    if (timer->log_error) {
-        pcmk__err("%s just popped in state %s! " QB_XS " input=%s time=%ums",
-                  get_timer_desc(timer),
-                  fsa_state2string(controld_globals.fsa_state),
-                  fsa_input2string(timer->fsa_input), timer->period_ms);
-    } else {
-        pcmk__info("%s just popped " QB_XS " input=%s time=%ums",
-                   get_timer_desc(timer), fsa_input2string(timer->fsa_input),
-                   timer->period_ms);
-        timer->counter++;
-    }
+    timer->desc = desc;
+    timer->interval_ms = interval_ms;
+    timer->fsa_input = fsa_input;
+    timer->log_error = log_error;
 
-    if ((timer == election_timer) && (election_timer->counter > 5)) {
-        pcmk__notice("We appear to be in an election loop, something may be "
-                     "wrong");
-        crm_write_blackbox(0, NULL);
-        election_timer->counter = 0;
-    }
-
-    controld_stop_timer(timer);  // Make timer _not_ go off again
-
-    if (timer->fsa_input == I_INTEGRATED) {
-        pcmk__info("Welcomed: %d, Integrated: %d",
-                   crmd_join_phase_count(controld_join_welcomed),
-                   crmd_join_phase_count(controld_join_integrated));
-        if (crmd_join_phase_count(controld_join_welcomed) == 0) {
-            // If we don't even have ourselves, start again
-            register_fsa_error(I_ELECTION, NULL);
-
-        } else {
-            controld_fsa_prepend(C_TIMER_POPPED, timer->fsa_input, NULL);
-        }
-
-    } else if ((timer == recheck_timer)
-               && (controld_globals.fsa_state != S_IDLE)) {
-        pcmk__debug("Discarding %s event in state: %s",
-                    fsa_input2string(timer->fsa_input),
-                    fsa_state2string(controld_globals.fsa_state));
-
-    } else if ((timer == finalization_timer)
-               && (controld_globals.fsa_state != S_FINALIZE_JOIN)) {
-        pcmk__debug("Discarding %s event in state: %s",
-                    fsa_input2string(timer->fsa_input),
-                    fsa_state2string(controld_globals.fsa_state));
-
-    } else if (timer->fsa_input != I_NULL) {
-        controld_fsa_append(C_TIMER_POPPED, timer->fsa_input, NULL);
-    }
-
-    controld_trigger_fsa();
-
-    return TRUE;
+    return timer;
 }
 
-bool
+/*!
+ * \internal
+ * \return Free an FSA timer
+ *
+ * \param[in,out] timer  FSA timer
+ */
+static void
+free_fsa_timer(fsa_timer_t *timer)
+{
+    if (timer == NULL) {
+        return;
+    }
+
+    controld_stop_timer(timer);
+    free(timer);
+}
+
+void
 controld_init_fsa_timers(void)
 {
-    transition_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    integration_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    finalization_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    election_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    shutdown_escalation_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    wait_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-    recheck_timer = pcmk__assert_alloc(1, sizeof(fsa_timer_t));
-
-    election_timer->source_id = 0;
-    election_timer->period_ms = 0;
-    election_timer->fsa_input = I_DC_TIMEOUT;
-    election_timer->callback = crm_timer_popped;
-    election_timer->log_error = FALSE;
-
-    transition_timer->source_id = 0;
-    transition_timer->period_ms = 0;
-    transition_timer->fsa_input = I_PE_CALC;
-    transition_timer->callback = crm_timer_popped;
-    transition_timer->log_error = FALSE;
-
-    integration_timer->source_id = 0;
-    integration_timer->period_ms = 0;
-    integration_timer->fsa_input = I_INTEGRATED;
-    integration_timer->callback = crm_timer_popped;
-    integration_timer->log_error = TRUE;
-
-    finalization_timer->source_id = 0;
-    finalization_timer->period_ms = 0;
-    finalization_timer->fsa_input = I_FINALIZED;
-    finalization_timer->callback = crm_timer_popped;
-    finalization_timer->log_error = FALSE;
+    election_timer = new_fsa_timer("Election Trigger", 0, I_DC_TIMEOUT, false);
 
     /* We can't use I_FINALIZED here, because that creates a bug in the join
      * process where a joining node can be stuck in S_PENDING while we think it
@@ -295,27 +280,21 @@ controld_init_fsa_timers(void)
      * not, we can avoid this causing an election/join loop, in the integration
      * phase.
      */
-    finalization_timer->fsa_input = I_ELECTION;
+    finalization_timer = new_fsa_timer("Finalization Timer", 0, I_ELECTION,
+                                       false);
 
-    shutdown_escalation_timer->source_id = 0;
-    shutdown_escalation_timer->period_ms = 0;
-    shutdown_escalation_timer->fsa_input = I_STOP;
-    shutdown_escalation_timer->callback = crm_timer_popped;
-    shutdown_escalation_timer->log_error = TRUE;
+    integration_timer = new_fsa_timer("Integration Timer", 0, I_INTEGRATED,
+                                      true);
 
-    wait_timer->source_id = 0;
-    wait_timer->period_ms = 2000;
-    wait_timer->fsa_input = I_NULL;
-    wait_timer->callback = crm_timer_popped;
-    wait_timer->log_error = FALSE;
+    recheck_timer = new_fsa_timer("Cluster Recheck Timer", 0, I_PE_CALC, false);
 
-    recheck_timer->source_id = 0;
-    recheck_timer->period_ms = 0;
-    recheck_timer->fsa_input = I_PE_CALC;
-    recheck_timer->callback = crm_timer_popped;
-    recheck_timer->log_error = FALSE;
+    shutdown_escalation_timer = new_fsa_timer("Shutdown Escalation", 0, I_STOP,
+                                              true);
 
-    return TRUE;
+    transition_timer = new_fsa_timer("New Transition Timer", 0, I_PE_CALC,
+                                     false);
+
+    wait_timer = new_fsa_timer("Wait Timer", 2000, I_NULL, false);
 }
 
 /*!
@@ -331,26 +310,25 @@ controld_configure_fsa_timers(GHashTable *options)
 
     // Election timer
     value = g_hash_table_lookup(options, PCMK_OPT_DC_DEADTIME);
-    pcmk_parse_interval_spec(value, &election_timer->period_ms);
+    pcmk_parse_interval_spec(value, &election_timer->interval_ms);
 
     // Integration timer
     value = g_hash_table_lookup(options, PCMK_OPT_JOIN_INTEGRATION_TIMEOUT);
-    pcmk_parse_interval_spec(value, &integration_timer->period_ms);
+    pcmk_parse_interval_spec(value, &integration_timer->interval_ms);
 
     // Finalization timer
     value = g_hash_table_lookup(options, PCMK_OPT_JOIN_FINALIZATION_TIMEOUT);
-    pcmk_parse_interval_spec(value, &finalization_timer->period_ms);
+    pcmk_parse_interval_spec(value, &finalization_timer->interval_ms);
 
     // Shutdown escalation timer
     value = g_hash_table_lookup(options, PCMK_OPT_SHUTDOWN_ESCALATION);
-    pcmk_parse_interval_spec(value, &shutdown_escalation_timer->period_ms);
+    pcmk_parse_interval_spec(value, &shutdown_escalation_timer->interval_ms);
     pcmk__debug("Shutdown escalation occurs if DC has not responded to request "
-                "in %ums",
-                shutdown_escalation_timer->period_ms);
+                "in %ums", shutdown_escalation_timer->interval_ms);
 
     // Transition timer
     value = g_hash_table_lookup(options, PCMK_OPT_TRANSITION_DELAY);
-    pcmk_parse_interval_spec(value, &transition_timer->period_ms);
+    pcmk_parse_interval_spec(value, &transition_timer->interval_ms);
 
     // Recheck interval
     value = g_hash_table_lookup(options, PCMK_OPT_CLUSTER_RECHECK_INTERVAL);
@@ -362,21 +340,13 @@ controld_configure_fsa_timers(GHashTable *options)
 void
 controld_free_fsa_timers(void)
 {
-    controld_stop_timer(transition_timer);
-    controld_stop_timer(integration_timer);
-    controld_stop_timer(finalization_timer);
-    controld_stop_timer(election_timer);
-    controld_stop_timer(shutdown_escalation_timer);
-    controld_stop_timer(wait_timer);
-    controld_stop_timer(recheck_timer);
-
-    g_clear_pointer(&transition_timer, free);
-    g_clear_pointer(&integration_timer, free);
-    g_clear_pointer(&finalization_timer, free);
-    g_clear_pointer(&election_timer, free);
-    g_clear_pointer(&shutdown_escalation_timer, free);
-    g_clear_pointer(&wait_timer, free);
-    g_clear_pointer(&recheck_timer, free);
+    g_clear_pointer(&election_timer, free_fsa_timer);
+    g_clear_pointer(&finalization_timer, free_fsa_timer);
+    g_clear_pointer(&integration_timer, free_fsa_timer);
+    g_clear_pointer(&recheck_timer, free_fsa_timer);
+    g_clear_pointer(&shutdown_escalation_timer, free_fsa_timer);
+    g_clear_pointer(&transition_timer, free_fsa_timer);
+    g_clear_pointer(&wait_timer, free_fsa_timer);
 }
 
 /*!
@@ -387,7 +357,7 @@ controld_free_fsa_timers(void)
 bool
 controld_is_started_transition_timer(void)
 {
-    return (transition_timer->period_ms > 0)
+    return (transition_timer->interval_ms > 0)
            && (transition_timer->source_id != 0);
 }
 
@@ -399,7 +369,7 @@ void
 controld_start_recheck_timer(void)
 {
     // Default to recheck interval configured in CIB (if any)
-    unsigned int period_ms = recheck_interval_ms;
+    unsigned int interval_ms = recheck_interval_ms;
 
     // If scheduler supplied a "recheck by" time, check whether that's sooner
     if (controld_globals.transition_graph->recheck_by > 0) {
@@ -408,19 +378,20 @@ controld_start_recheck_timer(void)
 
         if (diff_seconds < 1) {
             // We're already past the desired time
-            period_ms = 500;
+            interval_ms = 500;
         } else {
-            period_ms = (unsigned int) QB_MIN(UINT_MAX, diff_seconds * 1000LL);
+            interval_ms = (unsigned int) QB_MIN(UINT_MAX,
+                                                (diff_seconds * 1000LL));
         }
 
         // Use "recheck by" only if it's sooner than interval from CIB
-        if (period_ms > recheck_interval_ms) {
-            period_ms = recheck_interval_ms;
+        if (interval_ms > recheck_interval_ms) {
+            interval_ms = recheck_interval_ms;
         }
     }
 
-    if (period_ms > 0) {
-        recheck_timer->period_ms = period_ms;
+    if (interval_ms > 0) {
+        recheck_timer->interval_ms = interval_ms;
         controld_start_timer(recheck_timer);
     }
 }
@@ -448,13 +419,15 @@ controld_stop_recheck_timer(void)
 }
 
 /*!
- * \brief Get the transition timer's configured period
- * \return The transition_timer's period
+ * \internal
+ * \brief Get the transition timer's configured interval
+ *
+ * \return The transition_timer's interval
  */
 unsigned int
-controld_get_period_transition_timer(void)
+controld_get_interval_transition_timer(void)
 {
-    return transition_timer->period_ms;
+    return transition_timer->interval_ms;
 }
 
 /*!
@@ -493,17 +466,17 @@ controld_start_transition_timer(void)
  * \internal
  * \brief Start the countdown sequence for a shutdown
  *
- * \param[in] default_period_ms  Period to use if the shutdown escalation
- *                               timer's period is 0
+ * \param[in] default_interval_ms  Interval to use if the shutdown escalation
+ *                                 timer's interval is 0
  */
 void
-controld_shutdown_start_countdown(unsigned int default_period_ms)
+controld_shutdown_start_countdown(unsigned int default_interval_ms)
 {
-    if (shutdown_escalation_timer->period_ms == 0) {
-        shutdown_escalation_timer->period_ms = default_period_ms;
+    if (shutdown_escalation_timer->interval_ms == 0) {
+        shutdown_escalation_timer->interval_ms = default_interval_ms;
     }
 
     pcmk__notice("Initiating controller shutdown sequence " QB_XS " limit=%ums",
-               shutdown_escalation_timer->period_ms);
+                 shutdown_escalation_timer->interval_ms);
     controld_start_timer(shutdown_escalation_timer);
 }

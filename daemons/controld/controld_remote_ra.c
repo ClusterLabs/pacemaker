@@ -137,7 +137,8 @@ recurring_helper(void *data)
         ra_data->cmds = g_list_append(ra_data->cmds, cmd);
         mainloop_set_trigger(ra_data->work);
     }
-    return FALSE;
+
+    return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -153,7 +154,8 @@ start_delay_helper(void *data)
 
         mainloop_set_trigger(ra_data->work);
     }
-    return FALSE;
+
+    return G_SOURCE_REMOVE;
 }
 
 static bool
@@ -468,11 +470,11 @@ retry_start_cmd_cb(void *data)
     int remaining = 0;
 
     if (!ra_data || !ra_data->cur_cmd) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
     cmd = ra_data->cur_cmd;
     if (!pcmk__is_up_action(cmd->action)) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     remaining = remaining_timeout_sec(cmd);
@@ -496,7 +498,7 @@ retry_start_cmd_cb(void *data)
         /* wait for connection event */
     }
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 
@@ -514,7 +516,7 @@ connection_takeover_timeout_cb(void *data)
     handle_remote_ra_stop(lrm_state, cmd);
     free_cmd(cmd);
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static gboolean
@@ -550,7 +552,7 @@ monitor_timeout_cb(void *data)
         controld_execd_state_disconnect(lrm_state);
         g_clear_pointer(&lrm_state->conn, lrmd_api_delete);
     }
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void

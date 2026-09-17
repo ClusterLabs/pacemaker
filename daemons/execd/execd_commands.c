@@ -387,7 +387,7 @@ stonith_recurring_op_helper(void *data)
     cmd->stonith_recurring_id = 0;
 
     if (!cmd->rsc_id) {
-        return FALSE;
+        return G_SOURCE_REMOVE;
     }
 
     rsc = g_hash_table_lookup(rsc_list, cmd->rsc_id);
@@ -402,7 +402,7 @@ stonith_recurring_op_helper(void *data)
 #endif
     mainloop_set_trigger(rsc->work);
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static inline void
@@ -430,7 +430,7 @@ start_delay_helper(void *data)
         mainloop_set_trigger(rsc->work);
     }
 
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
