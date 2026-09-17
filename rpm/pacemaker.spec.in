@@ -43,14 +43,6 @@
 ## Upstream commit (full commit ID, abbreviated commit ID, or tag) to build
 %global commit HEAD
 
-## Since git v2.11, the extent of abbreviation is autoscaled by default
-## (used to be constant of 7), so we need to convey it for non-tags, too.
-%if 0%{?fedora} || (0%{?rhel} >= 9)
-%global commit_abbrev 9
-%else
-%global commit_abbrev 7
-%endif
-
 
 # Define conditionals so that "rpmbuild --with <feature>" and
 # "rpmbuild --without <feature>" can enable and disable specific features
@@ -136,7 +128,7 @@
 %define pcmk_release %{specversion}
 %endif
 %else
-%define archive_version %(c=%{commit}; echo ${c:0:%{commit_abbrev}})
+%define archive_version %(c=%{commit}; echo ${c:0:9})
 %define archive_github_url %{archive_version}#/%{name}-%{archive_version}.tar.gz
 %if %{with pre_release}
 %define pcmk_release 0.%{specversion}.%{archive_version}.git
