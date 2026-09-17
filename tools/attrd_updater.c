@@ -150,46 +150,32 @@ static GOptionEntry required_entries[] = {
 
 static GOptionEntry command_entries[] = {
     { "update", 'U', 0, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's value. Required: -n/--name or -P/--pattern.\n"
-      INDENT "Optional: -d/--delay (if specified, the delay will be used if\n"
-      INDENT "the attribute needs to be created, but ignored if the\n"
-      INDENT "attribute already exists), -s/--set, -p/--private, -W/--wait,\n"
-      INDENT "-z/--utilization.",
+      "Update attribute's value\n"
+      INDENT "Required: -n/--name or -P/--pattern.",
       "VALUE" },
 
     { "update-both", 'B', 0, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's value and time to wait (dampening) in the\n"
-      INDENT "attribute manager. If this changes the value or dampening,\n"
-      INDENT "the attribute will also be written to the cluster configuration,\n"
-      INDENT "so be aware that repeatedly changing the dampening reduces its\n"
-      INDENT "effectiveness.\n"
-      INDENT "Requires -d/--delay",
+      "Update attribute's value and time to wait (dampening)\n"
+      INDENT "in the attribute manager\n"
+      INDENT "Required: -d/--delay",
       "VALUE" },
 
     { "update-delay", 'Y', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Update attribute's dampening in the attribute manager. If this\n"
-      INDENT "changes the dampening, the attribute will also be written\n"
-      INDENT "to the cluster configuration, so be aware that repeatedly\n"
-      INDENT "changing the dampening reduces its effectiveness.\n"
-      INDENT "Requires -d/--delay",
+      "Update attribute's dampening in the attribute manager\n"
+      INDENT "Required: -d/--delay",
       NULL },
 
     { "query", 'Q', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Query the attribute's value from the attribute manager. By default\n"
-      INDENT "this will query the value of the attribute on the local node.\n"
-      INDENT "Use -N/--node for the value on a given node, or -A/--all for the\n"
-      INDENT "value on all nodes.",
+      "Query the attribute's value from the attribute manager",
       NULL },
 
     { "delete", 'D', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "Unset attribute from the attribute manager. At the moment, there is no\n"
-      INDENT "way to remove an attribute. This option will instead set its\n"
-      INDENT "value to the empty string.",
+      "Unset attribute from the attribute manager",
       NULL },
 
     { "refresh", 'R', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, command_cb,
-      "(Advanced) Force the attribute manager to resend all current\n"
-      INDENT "values to the CIB",
+      "(Advanced) Force the attribute manager to resend all\n"
+      INDENT "current values to the CIB",
       NULL },
 
     { NULL }
@@ -197,46 +183,44 @@ static GOptionEntry command_entries[] = {
 
 static GOptionEntry addl_entries[] = {
     { "delay", 'd', 0, G_OPTION_ARG_STRING, &options.attr_dampen,
-      "The time to wait (dampening) in seconds for further changes\n"
+      "The time to wait (dampening) for further changes\n"
       INDENT "before sending to the CIB",
       "SECONDS" },
 
     { "set", 's', 0, G_OPTION_ARG_STRING, &options.attr_set,
-      "(Advanced) The attribute set in which to place the value",
+      "(Advanced) The attribute set in which to place the\n"
+      INDENT "value",
       "SET" },
 
     { "node", 'N', 0, G_OPTION_ARG_STRING, &options.attr_node,
-      "Use the named node for setting and querying the attribute (instead\n"
-      INDENT "of the local one)",
+      "Use the named node for setting and querying the\n"
+      INDENT "attribute (instead of the local one)",
       "NODE" },
 
     { "all", 'A', 0, G_OPTION_ARG_NONE, &options.query_all,
-      "Show values of the attribute for all nodes (query only)",
+      "Show values of the attribute for all nodes (query\n"
+      INDENT "only)",
       NULL },
 
     { "lifetime", 'l', 0, G_OPTION_ARG_CALLBACK, section_cb,
-      "(Not yet implemented) Lifetime of the node attribute (silently\n"
-      INDENT "ignored by cluster)",
+      "(Not yet implemented) Lifetime of the node attribute\n"
+      INDENT "(silently ignored by cluster)",
       "SECTION" },
 
     { "private", 'p', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, private_cb,
-      "If this creates a new attribute, never write the attribute to CIB",
+      "If this creates a new attribute, never write the\n"
+      INDENT "attribute to CIB",
       NULL },
 
     { "wait", 'W', 0, G_OPTION_ARG_CALLBACK, wait_cb,
-      "Wait for some event to occur before returning.  Values are 'no' (wait\n"
-      INDENT "only for the attribute daemon to acknowledge the request),\n"
-      INDENT "'local' (wait until the change has propagated to where a local\n"
-      INDENT "query will return the request value, or the value set by a\n"
-      INDENT "later request), or 'cluster' (wait until the change has propagated\n"
-      INDENT "to where a query anywhere on the cluster will return the requested\n"
-      INDENT "value, or the value set by a later request).  Default is 'no'.",
+      "Wait for some event to occur before returning\n"
+      INDENT "Values: 'no' (default), 'local', 'cluster'",
       "UNTIL" },
 
     { "utilization", 'z', G_OPTION_FLAG_NO_ARG, G_OPTION_ARG_CALLBACK, attr_set_type_cb,
-      "When creating a new attribute, create it as a node utilization attribute\n"
-      INDENT "instead of an instance attribute.  If the attribute already exists,\n"
-      INDENT "its existing type (utilization vs. instance) will be used regardless.\n"
+      "When creating a new attribute, create it as a node\n"
+      INDENT "utilization attribute instead of an instance\n"
+      INDENT "attribute\n"
       INDENT "(with -B, -U, -Y)",
       NULL },
 
