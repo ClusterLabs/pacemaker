@@ -391,7 +391,7 @@ main(int argc, char **argv)
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
-    if ((rc != pcmk_rc_ok) || (out == NULL)) {
+    if (rc != pcmk_rc_ok) {
         pacemakerd.ec = CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
                     "Error creating output format %s: %s",

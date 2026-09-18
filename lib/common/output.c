@@ -311,7 +311,7 @@ pcmk__log_output_new(pcmk__output_t **out)
 
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(out, "log", NULL, (char **) argv);
-    if ((rc != pcmk_rc_ok) || (*out == NULL)) {
+    if (rc != pcmk_rc_ok) {
         pcmk__err("Can't log certain messages due to internal error: %s",
                   pcmk_rc_str(rc));
         return rc;
@@ -340,7 +340,7 @@ pcmk__text_output_new(pcmk__output_t **out, const char *filename)
 
     pcmk__register_formats(NULL, formats);
     rc = pcmk__output_new(out, "text", filename, (char **) argv);
-    if ((rc != pcmk_rc_ok) || (*out == NULL)) {
+    if (rc != pcmk_rc_ok) {
         pcmk__err("Can't create text output object to internal error: %s",
                   pcmk_rc_str(rc));
         return rc;
