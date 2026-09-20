@@ -1,0 +1,1 @@
+<cib validate-with="pacemaker-3.10"><configuration><crm_config/><nodes/><resources/><constraints/><acls><acl_role id="ro"><acl_permission id="p" kind="read" xpath="/cib"/></acl_role><acl_target id="t"><role id="ro"/></acl_target></acls></configuration><status/></cib>

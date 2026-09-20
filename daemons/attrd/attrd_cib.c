@@ -33,15 +33,14 @@ attrd_cib_destroy_cb(void *user_data)
 
     cib->cmds->signoff(cib);
 
-    if (attrd_shutting_down()) {
+    if (attrd.shutting_down) {
         pcmk__info("Disconnected from the CIB manager");
-
-    } else {
-        // @TODO This should trigger a reconnect, not a shutdown
-        pcmk__crit("Lost connection to the CIB manager, shutting down");
-        attrd_exit_status = CRM_EX_DISCONNECT;
-        attrd_shutdown(0);
+        return;
     }
+
+    // @TODO This should trigger a reconnect, not a shutdown
+    pcmk__crit("Lost connection to the CIB manager, shutting down");
+    pcmk__daemon_quit(&attrd, CRM_EX_DISCONNECT);
 }
 
 static void
@@ -56,7 +55,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     }
 
     if (pcmk__cib_element_in_patchset(patchset, PCMK_XE_ALERTS)) {
-        if (attrd_shutting_down()) {
+        if (attrd.shutting_down) {
             pcmk__debug("Ignoring alerts change in CIB during shutdown");
         } else {
             mainloop_set_trigger(attrd_config_read);
@@ -81,7 +80,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
     if (status_changed
         || pcmk__cib_element_in_patchset(patchset, PCMK_XE_NODES)) {
 
-        if (attrd_shutting_down()) {
+        if (attrd.shutting_down) {
             pcmk__debug("Ignoring node change in CIB during shutdown");
             return;
         }
@@ -154,7 +153,10 @@ cleanup:
 void
 attrd_cib_disconnect(void)
 {
-    CRM_CHECK(the_cib != NULL, return);
+    if (the_cib == NULL) {
+        return;
+    }
+
     the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
@@ -518,7 +520,7 @@ write_attribute(attribute_t *a, bool ignore_delay)
     }
 
     // Private attributes (or any in standalone mode) are not written to the CIB
-    if (attrd_stand_alone() || pcmk__is_set(a->flags, attrd_attr_is_private)) {
+    if (attrd.stand_alone || pcmk__is_set(a->flags, attrd_attr_is_private)) {
         should_write = false;
     }
 

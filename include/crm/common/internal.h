@@ -23,6 +23,7 @@
 #include <crm/common/cib_secrets_internal.h>
 #include <crm/common/clone_internal.h>
 #include <crm/common/cmdline_internal.h>
+#include <crm/common/daemon_internal.h>
 #include <crm/common/digest_internal.h>
 #include <crm/common/failcounts_internal.h>
 #include <crm/common/flags_internal.h>

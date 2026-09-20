@@ -40,11 +40,8 @@ invalid_type(void **state)
 {
     const enum pcmk__xml_escape_type type = (enum pcmk__xml_escape_type) -1;
 
-    // Easier to ignore invalid type for NULL or empty string
-    assert_null(pcmk__xml_escape(NULL, type));
-    assert_escape("", "", type);
-
-    // Otherwise, assert if we somehow passed an invalid type
+    pcmk__assert_asserts(pcmk__xml_escape(NULL, type));
+    pcmk__assert_asserts(pcmk__xml_escape("", type));
     pcmk__assert_asserts(pcmk__xml_escape("he<>llo", type));
 }
 

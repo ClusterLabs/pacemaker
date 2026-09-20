@@ -218,8 +218,9 @@ execd_ipc_cleanup(void)
  * \internal
  * \brief Set up executor IPC communication
  */
-void
+bool
 execd_ipc_init(void)
 {
     pcmk__serve_execd_ipc(&ipcs, &ipc_callbacks);
+    return ipcs != NULL;
 }

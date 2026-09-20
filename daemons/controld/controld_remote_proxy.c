@@ -227,7 +227,7 @@ controld_remote_proxy_send(const char *session, xmlNode *msg)
         return ENXIO;
     }
 
-    if (controld_get_executor_state(proxy->node_name, false) == NULL) {
+    if (controld_execd_state_get(proxy->node_name, false) == NULL) {
         return pcmk_rc_ok;
     }
 
@@ -272,7 +272,7 @@ remote_config_check(xmlNode *msg, int call_id, int rc, xmlNode *output,
     lrmd__validate_remote_settings(lrmd, config_hash);
 
     g_hash_table_destroy(config_hash);
-    crm_time_free(now);
+    free(now);
 }
 
 /*!
@@ -311,11 +311,9 @@ remote_proxy_end_session(remote_proxy_t *proxy)
     if (proxy == NULL) {
         return;
     }
-    pcmk__trace("Ending session ID %s", proxy->session_id);
 
-    if (proxy->source) {
-        mainloop_del_ipc_client(proxy->source);
-    }
+    pcmk__trace("Ending session ID %s", proxy->session_id);
+    mainloop_del_ipc_client(proxy->source);
 }
 
 static void
@@ -654,10 +652,7 @@ controld_remote_proxy_disconnect_node(const char *node_name)
         /* mainloop_del_ipc_client() eventually calls remote_proxy_disconnected()
          * , which removes the entry from proxy_table.
          * Do not do this in a g_hash_table_iter_next() loop. */
-        if (proxy->source) {
-            mainloop_del_ipc_client(proxy->source);
-        }
-
+        mainloop_del_ipc_client(proxy->source);
         proxy = find_proxy_by_node(node_name);
     }
 

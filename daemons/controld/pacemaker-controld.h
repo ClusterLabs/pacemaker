@@ -15,11 +15,11 @@
 #include <controld_alerts.h>
 #include <controld_callbacks.h>
 #include <controld_cib.h>
+#include <controld_execd.h>
 #include <controld_fencing.h>
 #include <controld_fsa.h>
 #include <controld_globals.h>
 #include <controld_timers.h>
-#include <controld_lrm.h>
 #include <controld_membership.h>
 #include <controld_messages.h>
 #include <controld_metadata.h>

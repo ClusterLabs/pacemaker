@@ -22,8 +22,6 @@
 
 #include <pacemaker-controld.h>
 
-#define REMOTE_LRMD_RA "remote"
-
 /* The max start timeout before cmd retry */
 #define MAX_START_TIMEOUT_MS 10000
 
@@ -130,7 +128,7 @@ recurring_helper(void *data)
     lrm_state_t *connection_rsc = NULL;
 
     cmd->interval_id = 0;
-    connection_rsc = controld_get_executor_state(cmd->rsc_id, false);
+    connection_rsc = controld_execd_state_get(cmd->rsc_id, false);
     if (connection_rsc && connection_rsc->remote_ra_data) {
         remote_ra_data_t *ra_data = connection_rsc->remote_ra_data;
 
@@ -149,7 +147,7 @@ start_delay_helper(void *data)
     lrm_state_t *connection_rsc = NULL;
 
     cmd->delay_id = 0;
-    connection_rsc = controld_get_executor_state(cmd->rsc_id, false);
+    connection_rsc = controld_execd_state_get(cmd->rsc_id, false);
     if (connection_rsc && connection_rsc->remote_ra_data) {
         remote_ra_data_t *ra_data = connection_rsc->remote_ra_data;
 
@@ -181,7 +179,7 @@ should_purge_attributes(pcmk__node_status_t *node)
      * enough, set purge=true.  "Long enough" means it started running earlier
      * than the timestamp when we noticed it went away in the first place.
      */
-    connection_rsc = controld_get_executor_state(node->name, false);
+    connection_rsc = controld_execd_state_get(node->name, false);
 
     if (connection_rsc != NULL) {
         time_t uptime = lrmd__uptime(connection_rsc->conn);
@@ -254,7 +252,7 @@ remote_node_up(const char *node_name)
     /* Apply any start state that we were given from the environment on the
      * remote node.
      */
-    connection_rsc = controld_get_executor_state(node->name, false);
+    connection_rsc = controld_execd_state_get(node->name, false);
 
     if (connection_rsc != NULL) {
         const char *start_state = lrmd__node_start_state(connection_rsc->conn);
@@ -367,8 +365,7 @@ check_remote_node_state(const remote_ra_cmd_t *cmd)
         pcmk__update_peer_state(__func__, node, PCMK_VALUE_MEMBER, 0);
 
     } else if (pcmk__str_eq(cmd->action, PCMK_ACTION_STOP, pcmk__str_casei)) {
-        lrm_state_t *lrm_state = controld_get_executor_state(cmd->rsc_id,
-                                                             false);
+        lrm_state_t *lrm_state = controld_execd_state_get(cmd->rsc_id, false);
         remote_ra_data_t *ra_data = lrm_state? lrm_state->remote_ra_data : NULL;
 
         if (ra_data) {
@@ -512,7 +509,7 @@ connection_takeover_timeout_cb(void *data)
     pcmk__info("takeover event timed out for node %s", cmd->rsc_id);
     cmd->takeover_timeout_id = 0;
 
-    lrm_state = controld_get_executor_state(cmd->rsc_id, false);
+    lrm_state = controld_execd_state_get(cmd->rsc_id, false);
 
     handle_remote_ra_stop(lrm_state, cmd);
     free_cmd(cmd);
@@ -526,7 +523,7 @@ monitor_timeout_cb(void *data)
     lrm_state_t *lrm_state = NULL;
     remote_ra_cmd_t *cmd = data;
 
-    lrm_state = controld_get_executor_state(cmd->rsc_id, false);
+    lrm_state = controld_execd_state_get(cmd->rsc_id, false);
 
     pcmk__info("Timed out waiting for remote poke response from %s%s",
                cmd->rsc_id, ((lrm_state != NULL)? "" : " (no LRM state)"));
@@ -550,7 +547,8 @@ monitor_timeout_cb(void *data)
 
     if(lrm_state) {
         // @TODO Should we move this before reporting the result above?
-        lrm_state_disconnect(lrm_state);
+        controld_execd_state_disconnect(lrm_state);
+        g_clear_pointer(&lrm_state->conn, lrmd_api_delete);
     }
     return FALSE;
 }
@@ -562,7 +560,7 @@ synthesize_lrmd_success(lrm_state_t *lrm_state, const char *rsc_id, const char *
 
     if (lrm_state == NULL) {
         /* if lrm_state not given assume local */
-        lrm_state = controld_get_executor_state(NULL, false);
+        lrm_state = controld_execd_state_get(NULL, false);
     }
     pcmk__assert(lrm_state != NULL);
 
@@ -592,7 +590,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
                 crm_exit_str((crm_exit_t) op->rc), op->rc,
                 pcmk_exec_status_str(op->op_status), op->op_status);
 
-    lrm_state = controld_get_executor_state(op->remote_nodename, false);
+    lrm_state = controld_execd_state_get(op->remote_nodename, false);
     if (!lrm_state || !lrm_state->remote_ra_data) {
         pcmk__debug("No state information found for remote connection event");
         return;
@@ -614,7 +612,7 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             /* In this case, lrmd_tls_connection_destroy() will be called under the control of mainloop. */
             /* Do not free lrm_state->conn yet. */
             /* It'll be freed in the following stop action. */
-            lrm_state_disconnect_only(lrm_state);
+            controld_execd_state_disconnect(lrm_state);
         }
         return;
     }
@@ -692,7 +690,9 @@ remote_lrm_op_callback(lrmd_event_data_t * op)
             }
 
         } else {
-            lrm_state_reset_tables(lrm_state, TRUE);
+            controld_execd_state_reset_tables(lrm_state);
+            metadata_cache_reset(lrm_state->metadata_cache);
+
             pcmk__set_result(&cmd->result, PCMK_OCF_OK, PCMK_EXEC_DONE, NULL);
             lrm_remote_set_flags(lrm_state, remote_active);
         }
@@ -771,11 +771,13 @@ handle_remote_ra_stop(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd)
     } else {
         /* we no longer hold the history if this connection has been migrated,
          * however, we keep metadata cache for future use */
-        lrm_state_reset_tables(lrm_state, FALSE);
+        controld_execd_state_reset_tables(lrm_state);
     }
 
     lrm_remote_clear_flags(lrm_state, remote_active);
-    lrm_state_disconnect(lrm_state);
+
+    controld_execd_state_disconnect(lrm_state);
+    g_clear_pointer(&lrm_state->conn, lrmd_api_delete);
 
     g_list_free_full(lrm_state->remote_ra_data->cmds, free_cmd);
     lrm_state->remote_ra_data->cmds = NULL;
@@ -817,8 +819,8 @@ handle_remote_ra_start(lrm_state_t * lrm_state, remote_ra_cmd_t * cmd, int timeo
         }
     }
 
-    rc = controld_connect_remote_executor(lrm_state, server, port,
-                                          timeout_used);
+    rc = controld_execd_state_connect_remote(lrm_state, server, port,
+                                             timeout_used);
     if (rc != pcmk_rc_ok) {
         pcmk__format_result(&cmd->result, PCMK_OCF_UNKNOWN_ERROR,
                             PCMK_EXEC_ERROR,
@@ -868,9 +870,10 @@ handle_remote_ra_exec(void *user_data)
             report_remote_ra_result(cmd);
 
         } else if (!strcmp(cmd->action, PCMK_ACTION_MONITOR)) {
+            if ((lrm_state->conn != NULL)
+                && lrm_state->conn->cmds->is_connected(lrm_state->conn)) {
 
-            if (lrm_state_is_connected(lrm_state) == TRUE) {
-                rc = lrm_state_poke_connection(lrm_state);
+                rc = lrm_state->conn->cmds->poke_connection(lrm_state->conn);
                 if (rc < 0) {
                     pcmk__set_result(&cmd->result, PCMK_OCF_UNKNOWN_ERROR,
                                      PCMK_EXEC_ERROR, pcmk_strerror(rc));
@@ -964,28 +967,25 @@ remote_ra_cleanup(lrm_state_t * lrm_state)
     g_clear_pointer(&lrm_state->remote_ra_data, free);
 }
 
-gboolean
-is_remote_lrmd_ra(const char *agent, const char *provider, const char *id)
+bool
+is_remote_lrmd_ra(const char *id)
 {
-    if (agent && provider && !strcmp(agent, REMOTE_LRMD_RA) && !strcmp(provider, "pacemaker")) {
-        return TRUE;
-    }
-    return (id != NULL) && (controld_get_executor_state(id, false) != NULL)
+    return (id != NULL) && (controld_execd_state_get(id, false) != NULL)
            && !controld_is_local_node(id);
 }
 
 lrmd_rsc_info_t *
-remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id)
+remote_ra_get_rsc_info(const char *rsc_id)
 {
     lrmd_rsc_info_t *info = NULL;
 
     CRM_CHECK(rsc_id != NULL, return NULL);
 
-    if (controld_get_executor_state(rsc_id, false) != NULL) {
+    if (controld_execd_state_get(rsc_id, false) != NULL) {
         info = pcmk__assert_alloc(1, sizeof(lrmd_rsc_info_t));
 
         info->id = pcmk__str_copy(rsc_id);
-        info->type = pcmk__str_copy(REMOTE_LRMD_RA);
+        info->type = pcmk__str_copy("remote");
         info->standard = pcmk__str_copy(PCMK_RESOURCE_CLASS_OCF);
         info->provider = pcmk__str_copy("pacemaker");
     }
@@ -1063,15 +1063,15 @@ remove_cmd(GList * list, const char *action, unsigned int interval_ms)
 }
 
 int
-remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                 const char *action, unsigned int interval_ms)
+remote_ra_cancel(const char *rsc_id, const char *action,
+                 unsigned int interval_ms)
 {
     lrm_state_t *connection_rsc = NULL;
     remote_ra_data_t *ra_data = NULL;
 
     CRM_CHECK(rsc_id != NULL, return -EINVAL);
 
-    connection_rsc = controld_get_executor_state(rsc_id, false);
+    connection_rsc = controld_execd_state_get(rsc_id, false);
     if (!connection_rsc || !connection_rsc->remote_ra_data) {
         return -EINVAL;
     }
@@ -1207,7 +1207,7 @@ controld_execute_remote_agent(const lrm_state_t *lrm_state, const char *rsc_id,
         return EOPNOTSUPP;
     }
 
-    connection_rsc = controld_get_executor_state(rsc_id, false);
+    connection_rsc = controld_execd_state_get(rsc_id, false);
     if (connection_rsc == NULL) {
         lrmd_key_value_freeall(params);
         return ENOTCONN;
@@ -1258,17 +1258,23 @@ void
 remote_ra_fail(const char *node_name)
 {
     lrm_state_t *lrm_state = NULL;
+    remote_ra_data_t *ra_data = NULL;
 
     CRM_CHECK(node_name != NULL, return);
 
-    lrm_state = controld_get_executor_state(node_name, false);
-    if (lrm_state && lrm_state_is_connected(lrm_state)) {
-        remote_ra_data_t *ra_data = lrm_state->remote_ra_data;
+    lrm_state = controld_execd_state_get(node_name, false);
 
-        pcmk__info("Failing monitors on Pacemaker Remote node %s", node_name);
-        ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
-        ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
+    if ((lrm_state == NULL) || (lrm_state->conn == NULL)
+        || !lrm_state->conn->cmds->is_connected(lrm_state->conn)) {
+
+        return;
     }
+
+    ra_data = lrm_state->remote_ra_data;
+
+    pcmk__info("Failing monitors on Pacemaker Remote node %s", node_name);
+    ra_data->recurring_cmds = fail_all_monitor_cmds(ra_data->recurring_cmds);
+    ra_data->cmds = fail_all_monitor_cmds(ra_data->cmds);
 }
 
 /* A guest node fencing implied by host fencing looks like:
@@ -1377,7 +1383,7 @@ remote_ra_process_maintenance_nodes(xmlNode *xml)
             continue;
         }
 
-        lrm_state = controld_get_executor_state(id, false);
+        lrm_state = controld_execd_state_get(id, false);
 
         if ((lrm_state != NULL) && (lrm_state->remote_ra_data != NULL)
             && pcmk__is_set(lrm_state->remote_ra_data->status, remote_active)) {

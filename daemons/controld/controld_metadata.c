@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2025 the Pacemaker project contributors
+ * Copyright 2017-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -257,7 +257,7 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
     struct ra_metadata_s *metadata = NULL;
     char *metadata_str = NULL;
     char *key = NULL;
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     CRM_CHECK((lrm_state != NULL) && (rsc != NULL), return NULL);
 
@@ -297,13 +297,14 @@ controld_get_rsc_metadata(lrm_state_t *lrm_state, const lrmd_rsc_info_t *rsc,
     pcmk__debug("Retrieving metadata for %s (%s%s%s:%s) synchronously", rsc->id,
                 rsc->standard, ((rsc->provider != NULL)? ":" : ""),
                 pcmk__s(rsc->provider, ""), rsc->type);
-    rc = lrm_state_get_metadata(lrm_state, rsc->standard, rsc->provider,
-                                rsc->type, &metadata_str, 0);
-    if (rc != pcmk_ok) {
+    rc = controld_execd_state_get_metadata(lrm_state, rsc->standard,
+                                           rsc->provider, rsc->type,
+                                           &metadata_str);
+    if (rc != pcmk_rc_ok) {
         pcmk__warn("Failed to get metadata for %s (%s%s%s:%s): %s", rsc->id,
                    rsc->standard, ((rsc->provider == NULL)? "" : ":"),
                    ((rsc->provider == NULL)? "" : rsc->provider), rsc->type,
-                   pcmk_strerror(rc));
+                   pcmk_rc_str(rc));
         return NULL;
     }
 

@@ -220,7 +220,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
                              parent_id, id,                                 \
                              pcmk__time_component_attr(component),          \
                              pcmk_rc_str(rc));                              \
-            g_clear_pointer(end, crm_time_free);                            \
+            g_clear_pointer(end, free);                                     \
             return rc;                                                      \
         }                                                                   \
     } while (0)
@@ -235,7 +235,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
  *                       initially)
  *
  * \return Standard Pacemaker return code
- * \note The caller is responsible for freeing \p *end using crm_time_free().
+ * \note The caller is responsible for freeing \p *end using \c free().
  */
 int
 pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
@@ -258,7 +258,7 @@ pcmk__unpack_duration(const xmlNode *duration, const crm_time_t *start,
         return pcmk_rc_unpack_error;
     }
 
-    *end = pcmk_copy_time(start);
+    *end = pcmk__time_copy(start);
 
     ADD_COMPONENT(pcmk__time_years);
     ADD_COMPONENT(pcmk__time_months);
@@ -302,7 +302,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
                               &end) != pcmk_rc_ok) {
         pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION " %s as not "
                          "passing because " PCMK_XA_END " is invalid", id);
-        crm_time_free(start);
+        free(start);
         return pcmk_rc_unpack_error;
     }
 
@@ -326,7 +326,7 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
                 pcmk__config_err("Treating " PCMK_XE_DATE_EXPRESSION
                                  " %s as not passing because duration "
                                  "is invalid", id);
-                crm_time_free(start);
+                free(start);
                 return rc;
             }
         }
@@ -334,27 +334,27 @@ evaluate_in_range(const xmlNode *date_expression, const char *id,
 
     if ((start != NULL) && (pcmk__time_compare(now, start) < 0)) {
         pcmk__set_time_if_earlier(next_change, start);
-        crm_time_free(start);
-        crm_time_free(end);
+        free(start);
+        free(end);
         return pcmk_rc_before_range;
     }
 
     if (end != NULL) {
         if (pcmk__time_compare(now, end) > 0) {
-            crm_time_free(start);
-            crm_time_free(end);
+            free(start);
+            free(end);
             return pcmk_rc_after_range;
         }
 
         // Evaluation doesn't change until second after end
         if (next_change != NULL) {
-            crm_time_add_seconds(end, 1);
+            pcmk__time_add_seconds(end, 1);
             pcmk__set_time_if_earlier(next_change, end);
         }
     }
 
-    crm_time_free(start);
-    crm_time_free(end);
+    free(start);
+    free(end);
     return pcmk_rc_within_range;
 }
 
@@ -393,14 +393,14 @@ evaluate_gt(const xmlNode *date_expression, const char *id,
     }
 
     if (pcmk__time_compare(now, start) > 0) {
-        crm_time_free(start);
+        free(start);
         return pcmk_rc_within_range;
     }
 
     // Evaluation doesn't change until second after start time
-    crm_time_add_seconds(start, 1);
+    pcmk__time_add_seconds(start, 1);
     pcmk__set_time_if_earlier(next_change, start);
-    crm_time_free(start);
+    free(start);
     return pcmk_rc_before_range;
 }
 
@@ -439,11 +439,11 @@ evaluate_lt(const xmlNode *date_expression, const char *id,
 
     if (pcmk__time_compare(now, end) < 0) {
         pcmk__set_time_if_earlier(next_change, end);
-        crm_time_free(end);
+        free(end);
         return pcmk_rc_within_range;
     }
 
-    crm_time_free(end);
+    free(end);
     return pcmk_rc_after_range;
 }
 

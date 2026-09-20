@@ -902,7 +902,7 @@ setup_fencer_connection(void)
         st = stonith__api_new();
     }
 
-    if (!options.fence_connect || st == NULL || st->state != stonith_disconnected) {
+    if (!options.fence_connect || (st->state != stonith_disconnected)) {
         return rc;
     }
 

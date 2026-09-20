@@ -16,6 +16,8 @@
 
 #include <crm/common/iso8601.h>
 
+#include "crmcommon_private.h"              // pcmk__time_add_days
+
 static void
 assert_add_days(const char *orig_date_time, int days,
                 const char *expected_date_time)
@@ -26,17 +28,17 @@ assert_add_days(const char *orig_date_time, int days,
     assert_non_null(orig);
     assert_non_null(expected);
 
-    crm_time_add_days(orig, days);
+    pcmk__time_add_days(orig, days);
     assert_int_equal(pcmk__time_compare(orig, expected), 0);
 
-    crm_time_free(orig);
-    crm_time_free(expected);
+    free(orig);
+    free(expected);
 }
 
 static void
 invalid_argument(void **state)
 {
-    pcmk__assert_asserts(crm_time_add_days(NULL, 1));
+    pcmk__assert_asserts(pcmk__time_add_days(NULL, 1));
 }
 
 static void

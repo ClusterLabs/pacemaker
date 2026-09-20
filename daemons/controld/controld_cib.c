@@ -649,7 +649,7 @@ controld_add_resource_history_xml_as(const char *func, xmlNode *parent,
         return;
     }
 
-    lrm_state = controld_get_executor_state(node_name, false);
+    lrm_state = controld_execd_state_get(node_name, false);
     if (lrm_state == NULL) {
         pcmk__warn("Cannot calculate digests for operation " PCMK__OP_FMT
                    " because we have no connection to executor for %s",

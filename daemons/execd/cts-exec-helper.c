@@ -22,6 +22,7 @@
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
 #include <crm/lrmd.h>
+#include <crm/lrmd_internal.h>
 
 #define SUMMARY "cts-exec-helper - inject commands into the Pacemaker executor and watch for events"
 
@@ -492,11 +493,8 @@ generate_params(void)
     // Add resource instance parameters to options.params
     params = pe_rsc_params(rsc, NULL, scheduler);
     if (params != NULL) {
-        g_hash_table_iter_init(&iter, params);
-        while (g_hash_table_iter_next(&iter, (void **) &key,
-                                      (void **) &value)) {
-            options.params = lrmd_key_value_add(options.params, key, value);
-        }
+        g_hash_table_foreach(params, lrmd__key_value_add_from_hash,
+                             &options.params);
     }
 
     // Add resource meta-attributes to options.params

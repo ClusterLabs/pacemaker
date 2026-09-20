@@ -54,6 +54,7 @@
 #define SECONDS_IN_HOUR     (SECONDS_IN_MINUTE * MINUTES_IN_HOUR)
 #define HOURS_IN_DAY        24
 #define SECONDS_IN_DAY      (SECONDS_IN_HOUR * HOURS_IN_DAY)
+#define DAYS_IN_WEEK        7
 
 #define BEGIN_VALID_RANGE_S "0001-01-01T00:00:00"
 #define END_VALID_RANGE_S   "9999-12-31T23:59:59"
@@ -181,7 +182,7 @@ year_days(int year)
  *  YY = (Y-1) % 100
  *  C = (Y-1) - YY
  *  G = YY + YY/4
- *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % 7)
+ *  Jan1Weekday = 1 + (((((C / 100) % 4) x 5) + G) % DAYS_IN_WEEK)
  */
 static int
 jan1_day_of_week(int year)
@@ -189,7 +190,7 @@ jan1_day_of_week(int year)
     int YY = (year - 1) % 100;
     int C = (year - 1) - YY;
     int G = YY + YY / 4;
-    int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % 7);
+    int jan1 = 1 + (((((C / 100) % 4) * 5) + G) % DAYS_IN_WEEK);
 
     pcmk__trace("YY=%d, C=%d, G=%d", YY, C, G);
     pcmk__trace("January 1 %.4d: %d", year, jan1);
@@ -359,6 +360,47 @@ seconds_to_hms(int seconds_i, uint32_t *hours, uint32_t *minutes,
 
 /*!
  * \internal
+ * \brief Add days to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of days to add (can be negative to subtract)
+ */
+void
+pcmk__time_add_days(crm_time_t *dt, int value)
+{
+    pcmk__assert(dt != NULL);
+
+    if (value > 0) {
+        while ((dt->days + (long long) value) > year_days(dt->years)) {
+            if (dt->years == INT_MAX) {
+                // Clip to latest we can handle
+                dt->days = year_days(dt->years);
+                return;
+            }
+
+            value -= year_days(dt->years);
+            dt->years++;
+        }
+
+    } else if (value < 0) {
+        const int min_days = dt->duration? 0 : 1;
+
+        while ((dt->days + (long long) value) < min_days) {
+            if (dt->years <= 1) {
+                dt->days = 1; // Clip to earliest we can handle (no BCE)
+                return;
+            }
+
+            dt->years--;
+            value += year_days(dt->years);
+        }
+    }
+
+    dt->days += value;
+}
+
+/*!
+ * \internal
  * \brief Parse the time portion of an ISO 8601 date/time string
  *
  * \param[in]     time_str  Time portion of specification (after any 'T')
@@ -406,7 +448,7 @@ parse_time(const char *time_str, crm_time_t *a_time)
     if (a_time->seconds == SECONDS_IN_DAY) {
         // 24:00:00 == 00:00:00 of next day
         a_time->seconds = 0;
-        crm_time_add_days(a_time, 1);
+        pcmk__time_add_days(a_time, 1);
     }
     return true;
 }
@@ -571,15 +613,15 @@ parse_date(const char *date_str)
                         year, jan1, week, day, date_str);
 
             dt->years = year;
-            crm_time_add_days(dt, (week - 1) * 7);
+            pcmk__time_add_days(dt, (week - 1) * DAYS_IN_WEEK);
 
             if (jan1 <= 4) {
-                crm_time_add_days(dt, 1 - jan1);
+                pcmk__time_add_days(dt, 1 - jan1);
             } else {
-                crm_time_add_days(dt, 8 - jan1);
+                pcmk__time_add_days(dt, 8 - jan1);
             }
 
-            crm_time_add_days(dt, day);
+            pcmk__time_add_days(dt, day);
         }
         goto parse_time_segment;
     }
@@ -610,9 +652,38 @@ parse_time_segment:
     return dt;
 
 invalid:
-    crm_time_free(dt);
+    free(dt);
     errno = EINVAL;
     return NULL;
+}
+
+/*!
+ * \internal
+ * \brief Add a given number of seconds to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of seconds to add (can be negative to subtract)
+ */
+void
+pcmk__time_add_seconds(crm_time_t *dt, int value)
+{
+    int days = value / SECONDS_IN_DAY;
+
+    pcmk__assert(dt != NULL);
+
+    dt->seconds += value % SECONDS_IN_DAY;
+
+    // Check whether the addition crossed a day boundary
+    if (dt->seconds > SECONDS_IN_DAY) {
+        ++days;
+        dt->seconds -= SECONDS_IN_DAY;
+
+    } else if (dt->seconds < 0) {
+        --days;
+        dt->seconds += SECONDS_IN_DAY;
+    }
+
+    pcmk__time_add_days(dt, days);
 }
 
 // Return value is guaranteed not to be NULL
@@ -639,7 +710,7 @@ copy_time_to_utc(const crm_time_t *dt)
     utc->duration = dt->duration;
 
     if (dt->offset != 0) {
-        crm_time_add_seconds(utc, -dt->offset);
+        pcmk__time_add_seconds(utc, -dt->offset);
 
     } else {
         // Durations (the only things that can include months) never have a TZ
@@ -662,6 +733,31 @@ crm_time_new(const char *date_time)
 }
 
 /*!
+ * \internal
+ * \brief Copy a time object
+ *
+ * \param[in] source  Time object
+ *
+ * \return Newly allocated copy of \p source, or \c NULL if \p source is \c NULL
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ */
+crm_time_t *
+pcmk__time_copy(const crm_time_t *source)
+{
+    crm_time_t *target = NULL;
+
+    if (source == NULL) {
+        return NULL;
+    }
+
+    target = pcmk__assert_alloc(1, sizeof(crm_time_t));
+    *target = *source;
+    return target;
+}
+
+/*!
+ * \internal
  * \brief Check whether a time object has been initialized yet
  *
  * \param[in] dt  Time object to check
@@ -679,15 +775,6 @@ pcmk__time_is_initialized(const crm_time_t *dt)
                || (dt->seconds != 0)
                || (dt->offset != 0)
                || dt->duration);
-}
-
-void
-crm_time_free(crm_time_t * dt)
-{
-    if (dt == NULL) {
-        return;
-    }
-    free(dt);
 }
 
 void
@@ -733,7 +820,14 @@ pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hours,
     seconds_to_hms(dt->seconds, hours, minutes, seconds);
 }
 
-// Time in seconds since 0000-01-01 00:00:00Z
+/*
+ * \internal
+ * \brief Convert a time object to seconds since 0000-01-01 00:00:00Z
+ *
+ * \param[in] dt  Time object
+ *
+ * \return Number of seconds between 0001-01-01 00:00:00Z and \p dt
+ */
 long long
 pcmk__time_get_seconds(const crm_time_t *dt)
 {
@@ -773,15 +867,35 @@ pcmk__time_get_seconds(const crm_time_t *dt)
 
     seconds = dt->seconds + (SECONDS_IN_DAY * days);
 
-    crm_time_free(utc);
+    free(utc);
     return seconds;
 }
 
-#define EPOCH_SECONDS 62135596800ULL // Calculated using pcmk__time_get_seconds
+/*
+ * \internal
+ * \brief Convert a time object to seconds since the Unix epoch
+ *
+ * \param[in] dt  Time object
+ *
+ * \return Number of seconds between 1970-01-01 00:00:00Z and \p dt
+ */
 long long
-crm_time_get_seconds_since_epoch(const crm_time_t *dt)
+pcmk__time_to_unix(const crm_time_t *dt)
 {
-    return (dt == NULL)? 0 : (pcmk__time_get_seconds(dt) - EPOCH_SECONDS);
+    static long long epoch_seconds = 0;
+
+    if (dt == NULL) {
+        return 0;
+    }
+
+    if (epoch_seconds == 0) {
+        crm_time_t *epoch_dt = crm_time_new("1970-01-01 00:00:00Z");
+
+        epoch_seconds = pcmk__time_get_seconds(epoch_dt);
+        free(epoch_dt);
+    }
+
+    return pcmk__time_get_seconds(dt) - epoch_seconds;
 }
 
 /*!
@@ -854,7 +968,7 @@ pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d)
 
 /* 6. Find the Weekday for Y M D */
     h = dt->days + jan1 - 1;
-    *d = 1 + ((h - 1) % 7);
+    *d = 1 + ((h - 1) % DAYS_IN_WEEK);
 
 /* 7. Find if Y M D falls in YearNumber Y-1, WeekNumber 52 or 53 */
     if (dt->days <= (8 - jan1) && jan1 > 4) {
@@ -881,9 +995,9 @@ pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w, uint32_t *d)
 
 /* 9. Find if Y M D falls in YearNumber Y, WeekNumber 1 through 53 */
     if (year_num == dt->years) {
-        int j = dt->days + (7 - *d) + (jan1 - 1);
+        int j = dt->days + (DAYS_IN_WEEK - *d) + (jan1 - 1);
 
-        *w = j / 7;
+        *w = j / DAYS_IN_WEEK;
         if (jan1 > 4) {
             *w -= 1;
         }
@@ -1047,7 +1161,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
         if (pcmk__is_set(flags, pcmk__time_fmt_seconds)) {
             seconds = pcmk__time_get_seconds(dt);
         } else {
-            seconds = crm_time_get_seconds_since_epoch(dt);
+            seconds = pcmk__time_to_unix(dt);
         }
 
         if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
@@ -1120,7 +1234,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
     }
 
 done:
-    crm_time_free(utc);
+    free(utc);
     result = pcmk__str_copy(buf->str);
     g_string_free(buf, TRUE);
     return result;
@@ -1304,8 +1418,7 @@ parse_duration_element(const char **element, const char *duration_s,
  *                      ignored)
  *
  * \return New time object on success, or \c NULL (and set \c errno) otherwise
- * \note It is the caller's responsibility to free the result using
- *       \c crm_time_free().
+ * \note It is the caller's responsibility to free the result using \c free().
  */
 crm_time_t *
 pcmk__time_parse_duration(const char *period_s)
@@ -1366,7 +1479,7 @@ invalid:
     /* @COMPAT Setting errno is required only for backward compatibility with
      * crm_time_parse_duration()
      */
-    crm_time_free(diff);
+    free(diff);
     errno = EINVAL;
     return NULL;
 }
@@ -1398,13 +1511,27 @@ pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source)
     pcmk__time_log(LOG_TRACE, "target", target, flags);
 }
 
-crm_time_t *
-pcmk_copy_time(const crm_time_t *source)
+/*!
+ * \internal
+ * \brief Add years to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of years to add (can be negative to subtract)
+ */
+void
+pcmk__time_add_years(crm_time_t *dt, int value)
 {
-    crm_time_t *target = pcmk__assert_alloc(1, sizeof(crm_time_t));
+    pcmk__assert(dt != NULL);
 
-    *target = *source;
-    return target;
+    if ((value > 0) && ((dt->years + (long long) value) > INT_MAX)) {
+        dt->years = INT_MAX;
+
+    } else if ((value < 0) && ((dt->years + (long long) value) < 1)) {
+        dt->years = 1; // Clip to earliest we can handle (no BCE)
+
+    } else {
+        dt->years += value;
+    }
 }
 
 /*!
@@ -1415,8 +1542,7 @@ pcmk_copy_time(const crm_time_t *source)
  *
  * \return Newly allocated \c crm_time_t object representing \p source_sec
  *
- * \note The caller is responsible for freeing the return value using
- *       \c crm_time_free().
+ * \note The caller is responsible for freeing the return value using \c free().
  */
 crm_time_t *
 pcmk__copy_timet(time_t source_sec)
@@ -1430,7 +1556,7 @@ pcmk__copy_timet(time_t source_sec)
     if (source->tm_year > 0) {
         // Years since 1900
         target->years = 1900;
-        crm_time_add_years(target, source->tm_year);
+        pcmk__time_add_years(target, source->tm_year);
     }
 
     if (source->tm_yday >= 0) {
@@ -1463,26 +1589,83 @@ pcmk__copy_timet(time_t source_sec)
     return target;
 }
 
+/*!
+ * \internal
+ * \brief Add a given number of months to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of months to add (can be negative to subtract)
+ */
+static void
+add_months(crm_time_t *dt, int value)
+{
+    uint32_t year = 0;
+    uint32_t month = 0;
+    uint32_t day = 0;
+    int days_in_month = 0;
+
+    pcmk__time_get_ymd(dt, &year, &month, &day);
+
+    if (value > 0) {
+        for (int i = value; i > 0; i--) {
+            month++;
+            if (month == 13) {
+                month = 1;
+                year++;
+            }
+        }
+    } else {
+        for (int i = value; i < 0; i++) {
+            month--;
+            if (month == 0) {
+                month = 12;
+                year--;
+            }
+        }
+    }
+
+    days_in_month = days_in_month_year(month, year);
+
+    if (days_in_month < day) {
+        // Preserve day-of-month unless the month doesn't have enough days
+        day = days_in_month;
+    }
+
+    dt->years = year;
+    dt->days = get_ordinal_days(year, month, day);
+}
+
+/*!
+ * \internal
+ * \brief Add one time object to another and return the sum
+ *
+ * \param[in] dt     Time object to add to
+ * \param[in] value  Value to add to \p dt
+ *
+ * \return Newly allocated sum of \p dt and \p value
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ * \note \p dt is treated as a date/time, while \p value is treated as a
+ *       duration. Adding two dates is an ill-defined operation, though it
+ *       allowed.
+ */
 crm_time_t *
-crm_time_add(const crm_time_t *dt, const crm_time_t *value)
+pcmk__time_add(const crm_time_t *dt, const crm_time_t *value)
 {
     crm_time_t *utc = NULL;
     crm_time_t *answer = NULL;
 
-    if ((dt == NULL) || (value == NULL)) {
-        errno = EINVAL;
-        return NULL;
-    }
+    pcmk__assert((dt != NULL) && (value != NULL));
 
-    answer = pcmk_copy_time(dt);
+    answer = pcmk__time_copy(dt);
     utc = copy_time_to_utc(value);
 
-    crm_time_add_years(answer, utc->years);
-    crm_time_add_months(answer, utc->months);
-    crm_time_add_days(answer, utc->days);
-    crm_time_add_seconds(answer, utc->seconds);
+    pcmk__time_add_years(answer, utc->years);
+    add_months(answer, utc->months);
+    pcmk__time_add_days(answer, utc->days);
+    pcmk__time_add_seconds(answer, utc->seconds);
 
-    crm_time_free(utc);
+    free(utc);
     return answer;
 }
 
@@ -1525,6 +1708,63 @@ pcmk__time_component_attr(enum pcmk__time_component component)
     }
 }
 
+/*!
+ * \internal
+ * \brief Add a given number of weeks to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of weeks to add (can be negative to subtract)
+ */
+static void
+add_weeks(crm_time_t *dt, int value)
+{
+    for (; value > 0; value--) {
+        pcmk__time_add_days(dt, DAYS_IN_WEEK);
+    }
+
+    for (; value < 0; value++) {
+        pcmk__time_add_days(dt, -DAYS_IN_WEEK);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a given number of hours to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of hours to add (can be negative to subtract)
+ */
+static void
+add_hours(crm_time_t *dt, int value)
+{
+    for (; value > 0; value--) {
+        pcmk__time_add_seconds(dt, SECONDS_IN_HOUR);
+    }
+
+    for (; value < 0; value++) {
+        pcmk__time_add_seconds(dt, -SECONDS_IN_HOUR);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Add a given number of minutes to a time object
+ *
+ * \param[in,out] dt     Time object
+ * \param[in]     value  Number of minutes to add (can be negative to subtract)
+ */
+static void
+add_minutes(crm_time_t *dt, int value)
+{
+    for (; value > 0; value--) {
+        pcmk__time_add_seconds(dt, SECONDS_IN_MINUTE);
+    }
+
+    for (; value < 0; value++) {
+        pcmk__time_add_seconds(dt, -SECONDS_IN_MINUTE);
+    }
+}
+
 typedef void (*component_fn_t)(crm_time_t *, int);
 
 /*!
@@ -1540,30 +1780,29 @@ component_fn(enum pcmk__time_component component)
 {
     switch (component) {
         case pcmk__time_years:
-            return crm_time_add_years;
+            return pcmk__time_add_years;
 
         case pcmk__time_months:
-            return crm_time_add_months;
+            return add_months;
 
         case pcmk__time_weeks:
-            return crm_time_add_weeks;
+            return add_weeks;
 
         case pcmk__time_days:
-            return crm_time_add_days;
+            return pcmk__time_add_days;
 
         case pcmk__time_hours:
-            return crm_time_add_hours;
+            return add_hours;
 
         case pcmk__time_minutes:
-            return crm_time_add_minutes;
+            return add_minutes;
 
         case pcmk__time_seconds:
-            return crm_time_add_seconds;
+            return pcmk__time_add_seconds;
 
         default:
             return NULL;
     }
-
 }
 
 /*!
@@ -1612,12 +1851,9 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     crm_time_t *result = NULL;
     crm_time_t *utc = NULL;
 
-    if ((dt1 == NULL) || (dt2 == NULL)) {
-        errno = EINVAL;
-        return NULL;
-    }
+    pcmk__assert((dt1 != NULL) && (dt2 != NULL));
 
-    result = (as_duration? copy_time_to_utc(dt1) : pcmk_copy_time(dt1));
+    result = (as_duration? copy_time_to_utc(dt1) : pcmk__time_copy(dt1));
     result->duration = as_duration;
 
     utc = copy_time_to_utc(dt2);
@@ -1625,35 +1861,49 @@ subtract_time(const crm_time_t *dt1, const crm_time_t *dt2, bool as_duration)
     // Avoid overflow when negating INT_MIN in calculations below
 
     if (utc->years == INT_MIN) {
-        crm_time_add_years(result, -1);
+        pcmk__time_add_years(result, -1);
         utc->years++;
     }
-    crm_time_add_years(result, -utc->years);
+    pcmk__time_add_years(result, -utc->years);
 
     if (utc->months == INT_MIN) {
-        crm_time_add_months(result, -1);
+        add_months(result, -1);
         utc->months++;
     }
-    crm_time_add_months(result, -utc->months);
+    add_months(result, -utc->months);
 
     if (utc->days == INT_MIN) {
-        crm_time_add_days(result, -1);
+        pcmk__time_add_days(result, -1);
         utc->days++;
     }
-    crm_time_add_days(result, -utc->days);
+    pcmk__time_add_days(result, -utc->days);
 
     if (utc->seconds == INT_MIN) {
-        crm_time_add_seconds(result, -1);
+        pcmk__time_add_seconds(result, -1);
         utc->seconds++;
     }
-    crm_time_add_seconds(result, -utc->seconds);
+    pcmk__time_add_seconds(result, -utc->seconds);
 
-    crm_time_free(utc);
+    free(utc);
     return result;
 }
 
+/*!
+ * \internal
+ * \brief Subtract one time object from another and return the difference
+ *
+ * \param[in] dt     Time object to subtract from
+ * \param[in] value  Value to subtract from \p dt
+ *
+ * \return Newly allocated difference of \p dt and \p value
+ *
+ * \note The caller is responsible for freeing the return value using \c free().
+ * \note \p dt is treated as a date/time, while \p value is treated as a
+ *       duration. Subtracting two dates is an ill-defined operation, though it
+ *       allowed.
+ */
 crm_time_t *
-crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
+pcmk__time_subtract(const crm_time_t *dt, const crm_time_t *value)
 {
     return subtract_time(dt, value, false);
 }
@@ -1741,151 +1991,9 @@ pcmk__time_compare(const crm_time_t *time1, const crm_time_t *time2)
                 utc1->years, utc1->days, utc1->seconds);
 
 done:
-    crm_time_free(utc1);
-    crm_time_free(utc2);
+    free(utc1);
+    free(utc2);
     return rc;
-}
-
-/*!
- * \brief Add a given number of seconds to a date/time or duration
- *
- * \param[in,out] dt     Date/time or duration to add seconds to
- * \param[in]     value  Number of seconds to add
- */
-void
-crm_time_add_seconds(crm_time_t *dt, int value)
-{
-    int days = value / SECONDS_IN_DAY;
-
-    pcmk__assert(dt != NULL);
-
-    pcmk__trace("Adding %d seconds (including %d whole day%s) to %d", value,
-                days, pcmk__plural_s(days), dt->seconds);
-
-    dt->seconds += value % SECONDS_IN_DAY;
-
-    // Check whether the addition crossed a day boundary
-    if (dt->seconds > SECONDS_IN_DAY) {
-        ++days;
-        dt->seconds -= SECONDS_IN_DAY;
-
-    } else if (dt->seconds < 0) {
-        --days;
-        dt->seconds += SECONDS_IN_DAY;
-    }
-
-    crm_time_add_days(dt, days);
-}
-
-/*!
- * \brief Add days to a date/time
- *
- * \param[in,out] dt     Time to modify
- * \param[in]     value  Number of days to add (may be negative to subtract)
- */
-void
-crm_time_add_days(crm_time_t *dt, int value)
-{
-    pcmk__assert(dt != NULL);
-
-    pcmk__trace("Adding %d days to %.4d-%.3d", value, dt->years, dt->days);
-
-    if (value > 0) {
-        while ((dt->days + (long long) value) > year_days(dt->years)) {
-            if (dt->years == INT_MAX) {
-                // Clip to latest we can handle
-                dt->days = year_days(dt->years);
-                return;
-            }
-            value -= year_days(dt->years);
-            dt->years++;
-        }
-    } else if (value < 0) {
-        const int min_days = dt->duration? 0 : 1;
-
-        while ((dt->days + (long long) value) < min_days) {
-            if (dt->years <= 1) {
-                dt->days = 1; // Clip to earliest we can handle (no BCE)
-                return;
-            }
-            dt->years--;
-            value += year_days(dt->years);
-        }
-    }
-    dt->days += value;
-}
-
-void
-crm_time_add_months(crm_time_t *dt, int value)
-{
-    uint32_t year = 0;
-    uint32_t month = 0;
-    uint32_t day = 0;
-    int days_in_month = 0;
-
-    pcmk__time_get_ymd(dt, &year, &month, &day);
-
-    if (value > 0) {
-        for (int i = value; i > 0; i--) {
-            month++;
-            if (month == 13) {
-                month = 1;
-                year++;
-            }
-        }
-    } else {
-        for (int i = value; i < 0; i++) {
-            month--;
-            if (month == 0) {
-                month = 12;
-                year--;
-            }
-        }
-    }
-
-    days_in_month = days_in_month_year(month, year);
-
-    if (days_in_month < day) {
-        // Preserve day-of-month unless the month doesn't have enough days
-        day = days_in_month;
-    }
-
-    dt->years = year;
-    dt->days = get_ordinal_days(year, month, day);
-}
-
-void
-crm_time_add_minutes(crm_time_t *dt, int value)
-{
-    crm_time_add_seconds(dt, value * SECONDS_IN_MINUTE);
-}
-
-void
-crm_time_add_hours(crm_time_t *dt, int value)
-{
-    crm_time_add_seconds(dt, value * SECONDS_IN_HOUR);
-}
-
-void
-crm_time_add_weeks(crm_time_t *dt, int value)
-{
-    crm_time_add_days(dt, value * 7);
-}
-
-void
-crm_time_add_years(crm_time_t *dt, int value)
-{
-    pcmk__assert(dt != NULL);
-
-    if ((value > 0) && ((dt->years + (long long) value) > INT_MAX)) {
-        dt->years = INT_MAX;
-
-    } else if ((value < 0) && ((dt->years + (long long) value) < 1)) {
-        dt->years = 1; // Clip to earliest we can handle (no BCE)
-
-    } else {
-        dt->years += value;
-    }
 }
 
 static void
@@ -2169,7 +2277,7 @@ pcmk__epoch2str(const time_t *source, uint32_t flags)
     dt = pcmk__copy_timet(epoch_time);
     result = pcmk__time_text(dt, flags);
 
-    crm_time_free(dt);
+    free(dt);
     return result;
 }
 
@@ -2205,7 +2313,7 @@ pcmk__timespec2str(const struct timespec *ts, uint32_t flags)
     dt = pcmk__copy_timet(ts->tv_sec);
     result = time_as_string_common(dt, ts->tv_nsec / QB_TIME_NS_IN_USEC, flags);
 
-    crm_time_free(dt);
+    free(dt);
     return result;
 }
 
@@ -2344,7 +2452,7 @@ crm_time_set_timet(crm_time_t *target, const time_t *source_sec)
 
     source = pcmk__copy_timet(*source_sec);
     *target = *source;
-    crm_time_free(source);
+    free(source);
 }
 
 int
@@ -2371,9 +2479,9 @@ void
 crm_time_free_period(crm_time_period_t *period)
 {
     if (period) {
-        crm_time_free(period->start);
-        crm_time_free(period->end);
-        crm_time_free(period->diff);
+        free(period->start);
+        free(period->end);
+        free(period->diff);
         free(period);
     }
 }
@@ -2438,10 +2546,10 @@ crm_time_parse_period(const char *period_str)
     }
 
     if (period->start == NULL) {
-        period->start = crm_time_subtract(period->end, period->diff);
+        period->start = pcmk__time_subtract(period->end, period->diff);
 
     } else if (period->end == NULL) {
-        period->end = crm_time_add(period->start, period->diff);
+        period->end = pcmk__time_add(period->start, period->diff);
     }
 
     if (!pcmk__time_valid_year(period->start->years)
@@ -2473,6 +2581,11 @@ invalid:
 crm_time_t *
 crm_time_calculate_duration(const crm_time_t *dt, const crm_time_t *value)
 {
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
     return subtract_time(dt, value, true);
 }
 
@@ -2536,6 +2649,88 @@ long long
 crm_time_get_seconds(const crm_time_t *dt)
 {
     return pcmk__time_get_seconds(dt);
+}
+
+long long
+crm_time_get_seconds_since_epoch(const crm_time_t *dt)
+{
+    return pcmk__time_to_unix(dt);
+}
+
+void
+crm_time_free(crm_time_t *dt)
+{
+    free(dt);
+}
+
+crm_time_t *
+pcmk_copy_time(const crm_time_t *source)
+{
+    return pcmk__time_copy(source);
+}
+
+crm_time_t *
+crm_time_add(const crm_time_t *dt, const crm_time_t *value)
+{
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return pcmk__time_add(dt, value);
+}
+
+crm_time_t *
+crm_time_subtract(const crm_time_t *dt, const crm_time_t *value)
+{
+    if ((dt == NULL) || (value == NULL)) {
+        errno = EINVAL;
+        return NULL;
+    }
+
+    return pcmk__time_subtract(dt, value);
+}
+
+void
+crm_time_add_seconds(crm_time_t *dt, int value)
+{
+    pcmk__time_add_seconds(dt, value);
+}
+
+void
+crm_time_add_minutes(crm_time_t *dt, int value)
+{
+    add_minutes(dt, value);
+}
+
+void
+crm_time_add_hours(crm_time_t *dt, int value)
+{
+    add_hours(dt, value);
+}
+
+void
+crm_time_add_days(crm_time_t *dt, int value)
+{
+    pcmk__time_add_days(dt, value);
+}
+
+void
+crm_time_add_weeks(crm_time_t *dt, int value)
+{
+    add_weeks(dt, value);
+}
+
+void
+crm_time_add_months(crm_time_t *dt, int value)
+{
+    add_months(dt, value);
+}
+
+void
+crm_time_add_years(crm_time_t *dt, int value)
+{
+    pcmk__time_add_years(dt, value);
 }
 
 // LCOV_EXCL_STOP

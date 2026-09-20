@@ -148,6 +148,26 @@ lrmd_key_value_add(lrmd_key_value_t * head, const char *key, const char *value)
     return head;
 }
 
+/*!
+ * \internal
+ * \brief Add a key and value to an \c lrmd_key_value_t list from a hash table
+ *
+ * \param[in]     key        Key (<tt>const char *</tt>)
+ * \param[in]     value      Value (<tt>const char *</tt>)
+ * \param[in,out] user_data  List (<tt>lrmd_key_value_t **</tt>)
+ *
+ * \note This is a \c GHFunc.
+ */
+void
+lrmd__key_value_add_from_hash(void *key, void *value, void *user_data)
+{
+    lrmd_key_value_t **list = user_data;
+
+    pcmk__assert(list != NULL);
+
+    *list = lrmd_key_value_add(*list, key, value);
+}
+
 void
 lrmd_key_value_freeall(lrmd_key_value_t * head)
 {
@@ -1044,13 +1064,15 @@ lrmd__validate_remote_settings(lrmd_t *lrmd, GHashTable *hash)
     const char *value;
     lrmd_private_t *native = lrmd->lrmd_private;
     xmlNode *data = pcmk__xe_create(NULL, PCMK__XA_LRMD_OP);
+    long long timeout_ms = 0;
 
     pcmk__xe_set(data, PCMK__XA_LRMD_ORIGIN, __func__);
 
     value = pcmk__cluster_option(hash, PCMK_OPT_FENCING_WATCHDOG_TIMEOUT);
-    if ((value) &&
+    timeout_ms = pcmk__parse_fencing_watchdog_timeout(value);
+    if ((timeout_ms != 0) &&
         (stonith__watchdog_fencing_enabled_for_node(native->remote_nodename))) {
-       pcmk__xe_set(data, PCMK__XA_LRMD_WATCHDOG, value);
+        pcmk__xe_set_ll(data, PCMK__XA_LRMD_WATCHDOG, timeout_ms);
     }
 
     rc = lrmd_send_command(lrmd, LRMD_OP_CHECK, data, NULL, 0, 0,
@@ -1975,10 +1997,6 @@ list_stonith_agents(lrmd_list_t **resources)
     stonith_key_value_t *stonith_resources = NULL;
     stonith_key_value_t *dIter = NULL;
 
-    if (stonith_api == NULL) {
-        pcmk__err("Could not list fence agents: API memory allocation failed");
-        return -ENOMEM;
-    }
     stonith_api->cmds->list_agents(stonith_api, st_opt_sync_call, NULL,
                                    &stonith_resources, 0);
     stonith_api->cmds->free(stonith_api);
@@ -2130,12 +2148,6 @@ stonith_get_metadata(const char *type, char **output)
 {
     int rc = pcmk_ok;
     stonith_t *stonith_api = stonith__api_new();
-
-    if (stonith_api == NULL) {
-        pcmk__err("Could not get fence agent meta-data: API memory allocation "
-                  "failed");
-        return -ENOMEM;
-    }
 
     rc = stonith_api->cmds->metadata(stonith_api, st_opt_sync_call, type, NULL,
                                      output, 0);

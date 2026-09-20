@@ -13,11 +13,13 @@
 #include <stdint.h>                 // UINT32_C
 #include <crm/lrmd.h>               // lrmd_t
 
+#include <glib.h>                   // gboolean, GHashTable, GList
+
 #include <controld_fsa.h>           // fsa_data_t
 #include <controld_messages.h>
 #include <controld_remote_ra.h>     // remote_ra_data_t
 
-extern gboolean verify_stopped(enum crmd_fsa_state cur_state, int log_level);
+void verify_stopped(enum crmd_fsa_state cur_state, int log_level);
 void lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                             const char *operation, unsigned int interval_ms);
 void controld_invoke_execd(fsa_data_t *msg_data);
@@ -57,7 +59,7 @@ typedef struct {
     char *rsc_id;
     char *op_type;
     char *op_key;
-    char *user_data;
+    char *transition_key;
     GHashTable *params;
 } active_op_t;
 
@@ -74,12 +76,27 @@ typedef struct {
     } while (0)
 
 typedef struct {
-    const char *node_name;
+    char *node_name;
     lrmd_t *conn;                       // Reserved for controld_execd_state.c
     remote_ra_data_t *remote_ra_data;   // Reserved for controld_remote_ra.c
 
+    /* All of these hash tables should be allocated when the lrm_state_t object
+     * is allocated, and they should be freed only when the lrm_state_t object
+     * is freed. Thus they should be non-NULL for the lifetime of the
+     * lrm_state_t object.
+     */
+
     GHashTable *resource_history;
-    GHashTable *active_ops;     // Pending and recurring actions
+
+    /*!
+     * Pending and recurring actions.
+     *
+     * Key: Executor call key in <tt><resource_id>:<execd_call_id></tt> format
+     *      (<tt>char *</tt>).
+     * Value: Operation (<tt>active_op_t *</tt>).
+     */
+    GHashTable *active_ops;
+
     GHashTable *deletion_ops;
     GHashTable *rsc_info_cache;
     GHashTable *metadata_cache; // key = class[:provider]:agent, value = ra_metadata_s
@@ -92,33 +109,16 @@ struct pending_deletion_op_s {
     ha_msg_input_t *input;
 };
 
-/*!
- * \brief Check whether this the local IPC connection to the executor
- */
-gboolean
-lrm_state_is_local(lrm_state_t *lrm_state);
-
-/*!
- * \brief Clear all state information from a single state entry.
- * \note It sometimes useful to save metadata cache when it won't go stale.
- * \note This does not close the executor connection
- */
-void lrm_state_reset_tables(lrm_state_t * lrm_state, gboolean reset_metadata);
+void controld_execd_state_reset_tables(lrm_state_t *lrm_state);
 GList *lrm_state_get_list(void);
 
-/*!
- * \internal
- * \brief Initialize the controller's executor state table
- */
 void controld_execd_state_table_init(void);
-
-/*!
- * \internal
- * \brief Free the controller's executor state table and its entries
- */
 void controld_execd_state_table_free(void);
 
-lrm_state_t *controld_get_executor_state(const char *node_name, bool create);
+lrm_state_t *controld_execd_state_get(const char *node_name, bool create);
+
+bool lrm_state_verify_stopped(lrm_state_t *lrm_state,
+                              enum crmd_fsa_state cur_state, int log_level);
 
 /*!
  * The functions below are wrappers for the executor API the controller uses.
@@ -127,40 +127,39 @@ lrm_state_t *controld_get_executor_state(const char *node_name, bool create);
  * resources go to the executor, and remote connection resources are handled
  * locally in the controller.
  */
-void lrm_state_disconnect_only(lrm_state_t * lrm_state);
-void lrm_state_disconnect(lrm_state_t * lrm_state);
-int controld_connect_local_executor(lrm_state_t *lrm_state);
-int controld_connect_remote_executor(lrm_state_t *lrm_state, const char *server,
-                                     int port, int timeout);
-int lrm_state_is_connected(lrm_state_t * lrm_state);
-int lrm_state_poke_connection(lrm_state_t * lrm_state);
+void controld_execd_state_disconnect(lrm_state_t *lrm_state);
+int controld_execd_state_connect_local(lrm_state_t *lrm_state);
+int controld_execd_state_connect_remote(lrm_state_t *lrm_state,
+                                        const char *server, int port,
+                                        int timeout_ms);
 
-int lrm_state_get_metadata(lrm_state_t * lrm_state,
-                           const char *class,
-                           const char *provider,
-                           const char *agent, char **output, enum lrmd_call_options options);
-int lrm_state_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                     const char *action, unsigned int interval_ms);
-int controld_execute_resource_agent(lrm_state_t *lrm_state, const char *rsc_id,
-                                    const char *action, const char *userdata,
-                                    unsigned int interval_ms, int timeout_ms,
-                                    int start_delay_ms,
-                                    GHashTable *parameters, int *call_id);
-lrmd_rsc_info_t *lrm_state_get_rsc_info(lrm_state_t * lrm_state,
-                                        const char *rsc_id, enum lrmd_call_options options);
-int lrm_state_register_rsc(lrm_state_t * lrm_state,
-                           const char *rsc_id,
-                           const char *class,
-                           const char *provider, const char *agent, enum lrmd_call_options options);
-int lrm_state_unregister_rsc(lrm_state_t * lrm_state,
-                             const char *rsc_id, enum lrmd_call_options options);
+bool controld_execd_cancel_op(lrm_state_t *lrm_state, const char *rsc_id,
+                              const char *key, int op, bool remove);
+int controld_execd_state_get_metadata(const lrm_state_t *lrm_state,
+                                      const char *class, const char *provider,
+                                      const char *agent, char **output);
+int controld_execd_state_cancel(lrm_state_t *lrm_state, const char *rsc_id,
+                                const char *action, unsigned int interval_ms);
+int controld_execd_state_exec(lrm_state_t *lrm_state, const char *rsc_id,
+                              const char *action, const char *user_data,
+                              unsigned int interval_ms, int timeout_ms,
+                              int start_delay_ms, GHashTable *parameters,
+                              int *call_id);
+lrmd_rsc_info_t *controld_execd_state_get_rsc_info(lrm_state_t *lrm_state,
+                                                   const char *rsc_id);
+
+int controld_execd_state_register_rsc(lrm_state_t *lrm_state,
+                                      const char *rsc_id, const char *class,
+                                      const char *provider, const char *agent);
+int controld_execd_state_unregister_rsc(lrm_state_t *lrm_state,
+                                        const char *rsc_id);
 
 // Functions used to manage remote executor connection resources
 void remote_lrm_op_callback(lrmd_event_data_t * op);
-gboolean is_remote_lrmd_ra(const char *agent, const char *provider, const char *id);
-lrmd_rsc_info_t *remote_ra_get_rsc_info(lrm_state_t * lrm_state, const char *rsc_id);
-int remote_ra_cancel(lrm_state_t *lrm_state, const char *rsc_id,
-                     const char *action, unsigned int interval_ms);
+bool is_remote_lrmd_ra(const char *id);
+lrmd_rsc_info_t *remote_ra_get_rsc_info(const char *rsc_id);
+int remote_ra_cancel(const char *rsc_id, const char *action,
+                     unsigned int interval_ms);
 int controld_execute_remote_agent(const lrm_state_t *lrm_state,
                                   const char *rsc_id, const char *action,
                                   const char *userdata,

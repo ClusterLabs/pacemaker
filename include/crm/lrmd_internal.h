@@ -40,6 +40,8 @@ lrmd__supports_schema_request(const char *protocol_version)
     return pcmk__compare_versions(protocol_version, "1.2") >= 0;
 }
 
+void lrmd__key_value_add_from_hash(void *key, void *value, void *user_data);
+
 int lrmd_send_attribute_alert(lrmd_t *lrmd, const GList *alert_list,
                               const char *node, uint32_t nodeid,
                               const char *attr_name, const char *attr_value);

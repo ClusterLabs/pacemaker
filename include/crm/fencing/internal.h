@@ -1,5 +1,5 @@
 /*
- * Copyright 2011-2025 the Pacemaker project contributors
+ * Copyright 2011-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -166,8 +166,8 @@ stonith__op_state_pending(enum op_state state)
     return state != st_failed && state != st_done;
 }
 
-gboolean stonith__watchdog_fencing_enabled_for_node(const char *node);
-gboolean stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node);
+bool stonith__watchdog_fencing_enabled_for_node(const char *node);
+bool stonith__watchdog_fencing_enabled_for_node_api(stonith_t *st, const char *node);
 
 /*!
  * \internal

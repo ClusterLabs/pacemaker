@@ -365,16 +365,6 @@
 #
 # Default: PCMK_remote_schema_directory="@PCMK__REMOTE_SCHEMA_DIR@"
 
-# G_SLICE (Advanced Use Only)
-#
-# Affect the behavior of glib's memory allocator. Setting to "always-malloc"
-# when running under valgrind will help valgrind track malloc/free better;
-# setting to "debug-blocks" when not running under valgrind will perform
-# (somewhat expensive) memory checks.
-#
-# Default: G_SLICE=""
-# Example: G_SLICE="always-malloc"
-
 # MALLOC_PERTURB_ (Advanced Use Only)
 #
 # Setting this to a decimal byte value will make malloc() initialize newly

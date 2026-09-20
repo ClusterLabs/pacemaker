@@ -40,9 +40,22 @@
 #  define SUMMARY "resource agent executor daemon for Pacemaker cluster nodes"
 #endif
 
-static GMainLoop *mainloop = NULL;
+static bool execd_quit(pcmk__daemon_t *d);
+
+static pcmk__daemon_fns_t fns = {
+    .quit = execd_quit,
+};
+
+pcmk__daemon_t execd = {
+    .type = pcmk_ipc_execd,
+    .ec = CRM_EX_OK,
+    .fns = &fns,
+};
+
 static stonith_t *fencer_api = NULL;
-time_t start_time;
+
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static struct {
     gchar **log_files;
@@ -50,13 +63,6 @@ static struct {
     gchar *port;
 #endif  // PCMK__COMPILE_REMOTE
 } options;
-
-#ifdef PCMK__COMPILE_REMOTE
-/* whether shutdown request has been sent */
-static gboolean shutting_down = FALSE;
-#endif
-
-static void exit_executor(void);
 
 static void
 fencer_connection_destroy_cb(stonith_t *st, stonith_event_t *e)
@@ -76,11 +82,6 @@ execd_get_fencer_connection(void)
         int rc = pcmk_ok;
 
         fencer_api = stonith__api_new();
-        if (fencer_api == NULL) {
-            pcmk__err("Could not connect to fencer: API memory allocation "
-                      "failed");
-            return NULL;
-        }
 
         rc = stonith__api_connect_retry(fencer_api, crm_system_name, 10);
         if (rc != pcmk_rc_ok) {
@@ -112,11 +113,19 @@ lrmd_client_destroy(pcmk__client_t *client)
     pcmk__free_client(client);
 
 #ifdef PCMK__COMPILE_REMOTE
-    /* If we were waiting to shut down, we can now safely do so
-     * if there are no more proxied IPC providers
+    /* If we were waiting to shut down, we can now safely do so if there are
+     * no more proxied IPC providers
+     *
+     * This kills the main loop and cleans everything up.  Control flow will
+     * eventually make it back up to lrmd_remote_client_destroy or
+     * execd_ipc_closed, which were both called directly from the main loop.
+     * After that, we'll return to the done label in main() and finish
+     * shutting down.
      */
-    if (shutting_down && (ipc_proxy_get_provider() == NULL)) {
-        exit_executor();
+    if (execd.shutting_down && (ipc_proxy_get_provider() == NULL)) {
+        // Unset shutting_down so pcmk__daemon_quit does something
+        execd.shutting_down = false;
+        pcmk__daemon_quit(&execd, CRM_EX_OK);
     }
 #endif
 }
@@ -170,12 +179,8 @@ lrmd_server_send_notify(pcmk__client_t *client, xmlNode *msg)
     return ENOTCONN;
 }
 
-/*!
- * \internal
- * \brief Clean up and exit immediately
- */
 static void
-exit_executor(void)
+execd_cleanup(void)
 {
     const unsigned int nclients = pcmk__ipc_client_count();
 
@@ -189,64 +194,8 @@ exit_executor(void)
     ipc_proxy_cleanup();
 #endif
 
-    if (mainloop) {
-        lrmd_drain_alerts(mainloop);
-    }
-
     execd_unregister_handlers();
-    g_hash_table_destroy(rsc_list);
-
-    // @TODO End mainloop instead so all cleanup is done
-    crm_exit(CRM_EX_OK);
-}
-
-/*!
- * \internal
- * \brief Request cluster shutdown if appropriate, otherwise exit immediately
- *
- * \param[in] nsig  Signal that caused invocation (ignored)
- */
-static void
-lrmd_shutdown(int nsig)
-{
-#ifdef PCMK__COMPILE_REMOTE
-    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
-
-    /* If there are active proxied IPC providers, then we may be running
-     * resources, so notify the cluster that we wish to shut down.
-     */
-    if (ipc_proxy) {
-        if (shutting_down) {
-            pcmk__notice("Waiting for cluster to stop resources before "
-                         "exiting");
-            return;
-        }
-
-        pcmk__info("Sending shutdown request to cluster");
-        if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
-            pcmk__crit("Shutdown request failed, exiting immediately");
-
-        } else {
-            /* We requested a shutdown. Now, we need to wait for an
-             * acknowledgement from the proxy host, then wait for all proxy
-             * hosts to disconnect (which ensures that all resources have been
-             * stopped).
-             */
-            shutting_down = TRUE;
-
-            /* Stop accepting new proxy connections */
-            execd_stop_tls_server();
-
-            /* Currently, we let the OS kill us if the clients don't disconnect
-             * in a reasonable time. We could instead set a long timer here
-             * (shorter than what the OS is likely to use) and exit immediately
-             * if it pops.
-             */
-            return;
-        }
-    }
-#endif
-    exit_executor();
+    g_clear_pointer(&rsc_list, g_hash_table_destroy);
 }
 
 /*!
@@ -257,7 +206,7 @@ void
 handle_shutdown_ack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
-    if (shutting_down) {
+    if (execd.shutting_down) {
         pcmk__info("IPC proxy provider acknowledged shutdown request");
         return;
     }
@@ -266,23 +215,45 @@ handle_shutdown_ack(void)
                 "provider");
 }
 
+#ifdef PCMK__COMPILE_REMOTE
+static bool
+execd_quit_on_nack(pcmk__daemon_t *d)
+{
+    lrmd_drain_alerts(execd.mainloop);
+    return true;
+}
+#endif
+
 /*!
  * \internal
  * \brief Handle rejection of shutdown request
+ *
+ * \return Standard Pacemaker return code
  */
-void
+int
 handle_shutdown_nack(void)
 {
 #ifdef PCMK__COMPILE_REMOTE
-    if (shutting_down) {
+    if (execd.shutting_down) {
         pcmk__info("Exiting immediately after IPC proxy provider indicated no "
                    "resources will be stopped");
-        exit_executor();
-        return;
+
+        /* Avoid calling the original quit function because that can potentially
+         * just lead us right back to this point.  However, we still want to do
+         * everything in pcmk__daemon_quit (most importantly, kill the main loop)
+         * as well as drain alerts.
+         */
+        execd.shutting_down = false;
+        execd.fns->quit = execd_quit_on_nack;
+        pcmk__daemon_quit(&execd, CRM_EX_OK);
+
+        return ESHUTDOWN;
     }
 #endif
+
     pcmk__debug("Ignoring unexpected shutdown rejection from IPC proxy "
                 "provider");
+    return pcmk_rc_ok;
 }
 
 static GOptionEntry entries[] = {
@@ -315,11 +286,81 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
     return context;
 }
 
+static void
+execd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+    g_clear_pointer(&options.log_files, g_strfreev);
+#ifdef PCMK__COMPILE_REMOTE
+    g_clear_pointer(&options.port, g_free);
+#endif
+}
+
+static bool
+execd_quit(pcmk__daemon_t *d)
+{
+#ifdef PCMK__COMPILE_REMOTE
+    pcmk__client_t *ipc_proxy = ipc_proxy_get_provider();
+
+    if (ipc_proxy == NULL) {
+        goto done;
+    }
+
+    /* If there are active proxied IPC providers, then we may be running
+     * resources, so notify the cluster that we wish to shut down.
+     */
+    if (execd.shutting_down) {
+        pcmk__notice("Waiting for cluster to stop resources before exiting");
+        return false;
+    }
+
+    pcmk__info("Sending shutdown request to cluster");
+    if (ipc_proxy_shutdown_req(ipc_proxy) < 0) {
+        pcmk__crit("Shutdown request failed, exiting immediately");
+        goto done;
+    }
+
+    /* We requested a shutdown. Now, we need to wait for an acknowledgement
+     * from the proxy host, then wait for all proxy hosts to disconnect (which
+     * ensures that all resources have been stopped).
+     */
+    execd.shutting_down = true;
+
+    /* Stop accepting new proxy connections */
+    execd_stop_tls_server();
+
+    /* Currently, we let the OS kill us if the clients don't disconnect in a
+     * reasonable time. We could instead set a long timer here (shorter than
+     * what the OS is likely to use) and exit immediately if it pops.
+     */
+    return false;
+
+done:
+#endif
+
+    lrmd_drain_alerts(execd.mainloop);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief  Quit the main loop and set the exit code to \c CRM_EX_OK
+ *
+ * \param[in] nsig  Ignored
+ *
+ * \note This is a main loop signal handler function.
+ */
+static void
+execd_shutdown(int nsig)
+{
+    pcmk__daemon_quit(&execd, CRM_EX_OK);
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_exit_t exit_code = CRM_EX_OK;
 
     const char *option = NULL;
 
@@ -329,8 +370,8 @@ main(int argc, char **argv)
 
     GOptionGroup *output_group = NULL;
     pcmk__common_args_t *args = NULL;
-    gchar **processed_args = NULL;
-    GOptionContext *context = NULL;
+
+    atexit(execd_cleanup_cmdline);
 
 #ifdef PCMK__COMPILE_REMOTE
     // If necessary, create PID 1 now before any file descriptors are opened
@@ -349,14 +390,14 @@ main(int argc, char **argv)
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        execd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if (rc != pcmk_rc_ok) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
+        execd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,
                     "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
@@ -398,8 +439,6 @@ main(int argc, char **argv)
     }
 #endif  // PCMK__COMPILE_REMOTE
 
-    start_time = time(NULL);
-
     pcmk__notice("Starting Pacemaker " EXECD_TYPE " executor");
 
     /* The presence of this variable allegedly controls whether child
@@ -421,43 +460,46 @@ main(int argc, char **argv)
 
     rsc_list = pcmk__strkey_table(NULL, execd_free_rsc);
 
-    execd_ipc_init();
+    if (!execd_ipc_init()) {
+        execd.ec = CRM_EX_FATAL;
+        goto done;
+    }
 
 #ifdef PCMK__COMPILE_REMOTE
     if (lrmd_init_remote_tls_server() < 0) {
         pcmk__err("Failed to create TLS listener: shutting down and staying "
                   "down");
-        exit_code = CRM_EX_FATAL;
+        execd.ec = CRM_EX_FATAL;
         goto done;
     }
-    ipc_proxy_init();
+
+    if (!ipc_proxy_init()) {
+        goto done;
+    }
 #endif
 
-    mainloop_add_signal(SIGTERM, lrmd_shutdown);
-    mainloop = g_main_loop_new(NULL, FALSE);
-    pcmk__notice("Pacemaker " EXECD_TYPE " executor successfully started and "
-                 "accepting connections");
-    pcmk__notice("OCF resource agent search path is %s", PCMK__OCF_RA_PATH);
-    g_main_loop_run(mainloop);
+    rc = pcmk__daemon_init(&execd);
+    if (rc != pcmk_rc_ok) {
+        execd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, execd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
 
-    /* should never get here */
-    exit_executor();
+    mainloop_add_signal(SIGTERM, execd_shutdown);
+
+    pcmk__daemon_run(&execd);
 
 done:
-    g_strfreev(options.log_files);
-#ifdef PCMK__COMPILE_REMOTE
-    g_free(options.port);
-#endif  // PCMK__COMPILE_REMOTE
-
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    execd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, execd.ec, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(execd.ec);
 }

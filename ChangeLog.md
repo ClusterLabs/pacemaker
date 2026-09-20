@@ -1,4 +1,4 @@
-# Pacemaker-3.0.3-rc1 (10 Jul 2026)
+# Pacemaker-3.0.3 (28 Jul 2026)
 * 20 commits with 16 files changed, 395 insertions(+), 134 deletions(-)
 
 ## Fixes since Pacemaker-3.0.2

@@ -139,6 +139,42 @@ int crm_time_get_ordinal(const crm_time_t *dt, uint32_t *y, uint32_t *d);
 //! \deprecated Do not use
 long long crm_time_get_seconds(const crm_time_t *dt);
 
+//! \deprecated Do not use
+long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
+
+//! \deprecated Use \c free() instead
+void crm_time_free(crm_time_t *dt);
+
+//! \deprecated Do not use
+crm_time_t *pcmk_copy_time(const crm_time_t *source);
+
+//! \deprecated Do not use
+crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
+
+//! \deprecated Do not use
+crm_time_t *crm_time_subtract(const crm_time_t *dt, const crm_time_t *value);
+
+//! \deprecated Do not use
+void crm_time_add_seconds(crm_time_t *dt, int value);
+
+//! \deprecated Do not use
+void crm_time_add_minutes(crm_time_t *dt, int value);
+
+//! \deprecated Do not use
+void crm_time_add_hours(crm_time_t *dt, int value);
+
+//! \deprecated Do not use
+void crm_time_add_days(crm_time_t *dt, int value);
+
+//! \deprecated Do not use
+void crm_time_add_weeks(crm_time_t *dt, int value);
+
+//! \deprecated Do not use
+void crm_time_add_months(crm_time_t *dt, int value);
+
+//! \deprecated Do not use
+void crm_time_add_years(crm_time_t *dt, int value);
+
 #ifdef __cplusplus
 }
 #endif

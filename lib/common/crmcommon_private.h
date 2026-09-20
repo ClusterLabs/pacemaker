@@ -209,12 +209,22 @@ enum pcmk__time_component {
 };
 
 G_GNUC_INTERNAL
+void pcmk__time_add_days(crm_time_t *dt, int value);
+
+G_GNUC_INTERNAL
+void pcmk__time_add_seconds(crm_time_t *dt, int value);
+
+G_GNUC_INTERNAL
 void pcmk__time_get_timeofday(const crm_time_t *dt, uint32_t *hour,
                               uint32_t *minute, uint32_t *second);
 
 G_GNUC_INTERNAL
 void pcmk__time_get_ymd(const crm_time_t *dt, uint32_t *year, uint32_t *month,
                         uint32_t *day);
+
+G_GNUC_INTERNAL
+void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
+                        uint32_t *d);
 
 G_GNUC_INTERNAL
 const char *pcmk__time_component_attr(enum pcmk__time_component component);
@@ -225,6 +235,9 @@ int pcmk__add_time_from_xml(crm_time_t *t, enum pcmk__time_component component,
 
 G_GNUC_INTERNAL
 void pcmk__set_time_if_earlier(crm_time_t *target, const crm_time_t *source);
+
+G_GNUC_INTERNAL
+void pcmk__time_add_years(crm_time_t *dt, int value);
 
 
 /*

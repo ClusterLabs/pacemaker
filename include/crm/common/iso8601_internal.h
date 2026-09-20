@@ -129,10 +129,12 @@ enum pcmk__time_fmt_flags {
 };
 
 bool pcmk__time_valid_year(int year);
+
+crm_time_t *pcmk__time_copy(const crm_time_t *source);
+
 bool pcmk__time_is_initialized(const crm_time_t *dt);
 long long pcmk__time_get_seconds(const crm_time_t *dt);
-void pcmk__time_get_ywd(const crm_time_t *dt, uint32_t *y, uint32_t *w,
-                        uint32_t *d);
+long long pcmk__time_to_unix(const crm_time_t *dt);
 char *pcmk__time_text(const crm_time_t *dt, int flags);
 char *pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec);
 char *pcmk__epoch2str(const time_t *source, uint32_t flags);
@@ -141,6 +143,8 @@ const char *pcmk__readable_interval(unsigned int interval_ms);
 
 crm_time_t *pcmk__time_parse_duration(const char *period_s);
 crm_time_t *pcmk__copy_timet(time_t source_sec);
+crm_time_t *pcmk__time_add(const crm_time_t *dt, const crm_time_t *value);
+crm_time_t *pcmk__time_subtract(const crm_time_t *dt, const crm_time_t *value);
 
 int pcmk__time_compare(const crm_time_t *a, const crm_time_t *b);
 

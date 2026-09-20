@@ -33,9 +33,7 @@ struct delete_event_s {
     lrm_state_t *lrm_state;
 };
 
-static gboolean is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id);
 static gboolean build_active_RAs(lrm_state_t * lrm_state, xmlNode * rsc_list);
-static gboolean stop_recurring_actions(void *key, void *value, void *user_data);
 
 static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
                                        const xmlNode *rsc_op,
@@ -43,9 +41,6 @@ static lrmd_event_data_t *construct_op(const lrm_state_t *lrm_state,
                                        const char *operation);
 static void do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc,
                           xmlNode *msg, struct ra_metadata_s *md);
-
-static gboolean lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state,
-                                         int log_level);
 
 static void
 lrm_connection_destroy(void)
@@ -293,7 +288,7 @@ lrm_op_callback(lrmd_event_data_t * op)
         case lrmd_event_exec_complete:
             {
                 lrm_state_t *lrm_state =
-                    controld_get_executor_state(op_node_name(op), false);
+                    controld_execd_state_get(op_node_name(op), false);
 
                 pcmk__assert(lrm_state != NULL);
                 process_lrm_event(lrm_state, op, NULL, NULL);
@@ -314,7 +309,7 @@ try_local_executor_connect(long long action, fsa_data_t *msg_data,
     pcmk__debug("Connecting to the local executor");
 
     // If we can connect, great
-    rc = controld_connect_local_executor(lrm_state);
+    rc = controld_execd_state_connect_local(lrm_state);
     if (rc == pcmk_rc_ok) {
         controld_set_fsa_input_flags(R_LRM_CONNECTED);
         pcmk__info("Connection to the local executor established");
@@ -357,7 +352,7 @@ do_lrm_control(long long action, enum crmd_fsa_cause cause,
         return; // Shouldn't be possible
     }
 
-    lrm_state = controld_get_executor_state(NULL, true);
+    lrm_state = controld_execd_state_get(NULL, true);
     if (lrm_state == NULL) {
         register_fsa_error(I_ERROR, msg_data);
         return;
@@ -367,13 +362,22 @@ do_lrm_control(long long action, enum crmd_fsa_cause cause,
         if (!lrm_state_verify_stopped(lrm_state, cur_state, LOG_INFO)
             && (action == A_LRM_DISCONNECT)) {
 
+            /* There are pending, non-recurring operations, cur_state is not
+             * S_TERMINATE, R_SENT_RSC_STOP is set, and we're not going to
+             * reconnect.
+             *
+             * @TODO Why do we stall here?
+             */
             controld_fsa_stall(msg_data, action);
             return;
         }
 
         controld_clear_fsa_input_flags(R_LRM_CONNECTED);
-        lrm_state_disconnect(lrm_state);
-        lrm_state_reset_tables(lrm_state, FALSE);
+
+        controld_execd_state_disconnect(lrm_state);
+        g_clear_pointer(&lrm_state->conn, lrmd_api_delete);
+
+        controld_execd_state_reset_tables(lrm_state);
     }
 
     if (pcmk__is_set(action, A_LRM_CONNECT)) {
@@ -384,152 +388,6 @@ do_lrm_control(long long action, enum crmd_fsa_cause cause,
         pcmk__err("Unexpected action %s in %s", fsa_action2string(action),
                   __func__);
     }
-}
-
-static gboolean
-lrm_state_verify_stopped(lrm_state_t * lrm_state, enum crmd_fsa_state cur_state, int log_level)
-{
-    int counter = 0;
-    gboolean rc = TRUE;
-    const char *when = "lrm disconnect";
-
-    GHashTableIter gIter;
-    const char *key = NULL;
-    rsc_history_t *entry = NULL;
-    active_op_t *pending = NULL;
-
-    pcmk__debug("Checking for active resources before exit");
-
-    if (cur_state == S_TERMINATE) {
-        log_level = LOG_ERR;
-        when = "shutdown";
-
-    } else if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        when = "shutdown... waiting";
-    }
-
-    if ((lrm_state->active_ops != NULL) && lrm_state_is_connected(lrm_state)) {
-        unsigned int removed =
-            g_hash_table_foreach_remove(lrm_state->active_ops,
-                                        stop_recurring_actions, lrm_state);
-        unsigned int nremaining = g_hash_table_size(lrm_state->active_ops);
-
-        if (removed || nremaining) {
-            pcmk__notice("Stopped %u recurring operation%s at %s (%u "
-                         "remaining)",
-                         removed, pcmk__plural_s(removed), when, nremaining);
-        }
-    }
-
-    if (lrm_state->active_ops != NULL) {
-        g_hash_table_iter_init(&gIter, lrm_state->active_ops);
-        while (g_hash_table_iter_next(&gIter, NULL, (void **)&pending)) {
-            /* Ignore recurring actions in the shutdown calculations */
-            if (pending->interval_ms == 0) {
-                counter++;
-            }
-        }
-    }
-
-    if (counter > 0) {
-        do_crm_log(log_level, "%d pending executor operation%s at %s",
-                   counter, pcmk__plural_s(counter), when);
-
-        if ((cur_state == S_TERMINATE)
-            || !pcmk__is_set(controld_globals.fsa_input_register,
-                             R_SENT_RSC_STOP)) {
-            g_hash_table_iter_init(&gIter, lrm_state->active_ops);
-            while (g_hash_table_iter_next(&gIter, (void **) &key,
-                                          (void **) &pending)) {
-                do_crm_log(log_level, "Pending action: %s (%s)", key, pending->op_key);
-            }
-
-        } else {
-            rc = FALSE;
-        }
-        return rc;
-    }
-
-    if (lrm_state->resource_history == NULL) {
-        return rc;
-    }
-
-    if (pcmk__is_set(controld_globals.fsa_input_register, R_SHUTDOWN)) {
-        /* At this point we're not waiting, we're just shutting down */
-        when = "shutdown";
-    }
-
-    counter = 0;
-    g_hash_table_iter_init(&gIter, lrm_state->resource_history);
-    while (g_hash_table_iter_next(&gIter, NULL, (void **) &entry)) {
-        if (is_rsc_active(lrm_state, entry->id) == FALSE) {
-            continue;
-        }
-
-        counter++;
-        if (log_level == LOG_ERR) {
-            pcmk__info("Found %s active at %s", entry->id, when);
-        } else {
-            pcmk__trace("Found %s active at %s", entry->id, when);
-        }
-        if (lrm_state->active_ops != NULL) {
-            GHashTableIter hIter;
-
-            g_hash_table_iter_init(&hIter, lrm_state->active_ops);
-            while (g_hash_table_iter_next(&hIter, (void **) &key,
-                                          (void **) &pending)) {
-                if (pcmk__str_eq(entry->id, pending->rsc_id, pcmk__str_none)) {
-                    const bool recurring = (pending->interval_ms != 0);
-
-                    pcmk__notice("%s %s (%s) incomplete at %s",
-                                 (recurring? "Recurring action" : "Action"),
-                                 key, pending->op_key, when);
-                }
-            }
-        }
-    }
-
-    if (counter) {
-        pcmk__err("%d resource%s active at %s",
-                  counter, ((counter == 1)? " was" : "s were"), when);
-    }
-
-    return rc;
-}
-
-static gboolean
-is_rsc_active(lrm_state_t * lrm_state, const char *rsc_id)
-{
-    rsc_history_t *entry = NULL;
-
-    entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
-    if (entry == NULL || entry->last == NULL) {
-        return FALSE;
-    }
-
-    pcmk__trace("Processing %s: %s.%d=%d", rsc_id, entry->last->op_type,
-                entry->last->interval_ms, entry->last->rc);
-    if ((entry->last->rc == PCMK_OCF_OK)
-        && pcmk__str_eq(entry->last->op_type, PCMK_ACTION_STOP,
-                        pcmk__str_casei)) {
-        return FALSE;
-
-    } else if (entry->last->rc == PCMK_OCF_OK
-               && pcmk__str_eq(entry->last->op_type, PCMK_ACTION_MIGRATE_TO,
-                               pcmk__str_casei)) {
-        // A stricter check is too complex ... leave that to the scheduler
-        return FALSE;
-
-    } else if (entry->last->rc == PCMK_OCF_NOT_RUNNING) {
-        return FALSE;
-
-    } else if ((entry->last->interval_ms == 0)
-               && (entry->last->rc == PCMK_OCF_NOT_CONFIGURED)) {
-        /* Badly configured resources can't be reliably stopped */
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 static gboolean
@@ -581,7 +439,7 @@ controld_query_executor_state(void)
     xmlNode *xml_data = NULL;
     xmlNode *rsc_list = NULL;
     pcmk__node_status_t *peer = NULL;
-    lrm_state_t *lrm_state = controld_get_executor_state(NULL, false);
+    lrm_state_t *lrm_state = controld_execd_state_get(NULL, false);
 
     if (!lrm_state) {
         pcmk__err("Could not get executor state for local node");
@@ -675,9 +533,9 @@ notify_deleted(lrm_state_t * lrm_state, ha_msg_input_t * input, const char *rsc_
 
     pcmk__info("Notifying %s on %s that %s was%s deleted", from_sys,
                pcmk__s(from_host, "localhost"), rsc_id,
-               ((rc == pcmk_ok)? "" : " not"));
+               ((rc == pcmk_rc_ok)? "" : " not"));
     op = construct_op(lrm_state, input->xml, rsc_id, PCMK_ACTION_DELETE);
-    controld_rc2event(op, pcmk_legacy2rc(rc));
+    controld_rc2event(op, rc);
     controld_ack_event_directly(from_host, from_sys, NULL, op, rsc_id);
     lrmd_free_event(op);
     controld_trigger_delete_refresh(from_sys, rsc_id);
@@ -719,7 +577,7 @@ delete_rsc_entry(lrm_state_t *lrm_state, ha_msg_input_t *input,
 
     CRM_CHECK(rsc_id != NULL, return);
 
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         char *rsc_id_copy = pcmk__str_copy(rsc_id);
 
         if (rsc_iter) {
@@ -778,31 +636,31 @@ void
 lrm_clear_last_failure(const char *rsc_id, const char *node_name,
                        const char *operation, unsigned int interval_ms)
 {
-    lrm_state_t *lrm_state = controld_get_executor_state(node_name, false);
+    lrm_state_t *lrm_state = controld_execd_state_get(node_name, false);
+    rsc_history_t *entry = NULL;
 
     if (lrm_state == NULL) {
         return;
     }
-    if (lrm_state->resource_history != NULL) {
-        rsc_history_t *entry = g_hash_table_lookup(lrm_state->resource_history,
-                                                   rsc_id);
 
-        if (last_failed_matches_op(entry, operation, interval_ms)) {
-            g_clear_pointer(&entry->failed, lrmd_free_event);
-        }
+    entry = g_hash_table_lookup(lrm_state->resource_history, rsc_id);
+
+    if (last_failed_matches_op(entry, operation, interval_ms)) {
+        g_clear_pointer(&entry->failed, lrmd_free_event);
     }
 }
 
-/* Returns: gboolean - cancellation is in progress */
-static gboolean
-cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, gboolean remove)
+// Returns: bool - cancellation is in progress
+bool
+controld_execd_cancel_op(lrm_state_t *lrm_state, const char *rsc_id,
+                         const char *key, int op, bool remove)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
     char *local_key = NULL;
     active_op_t *pending = NULL;
 
-    CRM_CHECK(op != 0, return FALSE);
-    CRM_CHECK(rsc_id != NULL, return FALSE);
+    CRM_CHECK(op != 0, return false);
+    CRM_CHECK(rsc_id != NULL, return false);
     if (key == NULL) {
         local_key = make_stop_id(rsc_id, op);
         key = local_key;
@@ -818,37 +676,37 @@ cancel_op(lrm_state_t * lrm_state, const char *rsc_id, const char *key, int op, 
         if (pcmk__is_set(pending->flags, active_op_cancelled)) {
             pcmk__debug("Operation %s already cancelled", key);
             free(local_key);
-            return FALSE;
+            return false;
         }
         controld_set_active_op_flags(pending, active_op_cancelled);
 
     } else {
         pcmk__info("No pending op found for %s", key);
         free(local_key);
-        return FALSE;
+        return false;
     }
 
     pcmk__debug("Cancelling op %d for %s (%s)", op, rsc_id, key);
-    rc = lrm_state_cancel(lrm_state, pending->rsc_id, pending->op_type,
-                          pending->interval_ms);
-    if (rc == pcmk_ok) {
+    rc = controld_execd_state_cancel(lrm_state, pending->rsc_id,
+                                     pending->op_type, pending->interval_ms);
+    if (rc == pcmk_rc_ok) {
         pcmk__debug("Op %d for %s (%s): cancelled", op, rsc_id, key);
         free(local_key);
-        return TRUE;
+        return true;
     }
 
     pcmk__debug("Op %d for %s (%s): Nothing to cancel", op, rsc_id, key);
     /* The caller needs to make sure the entry is
      * removed from the active operations list
      *
-     * Usually by returning TRUE inside the worker function
+     * Usually by returning true inside the worker function
      * supplied to g_hash_table_foreach_remove()
      *
      * Not removing the entry from active operations will block
      * the node from shutting down
      */
     free(local_key);
-    return FALSE;
+    return false;
 }
 
 struct cancel_data {
@@ -868,7 +726,8 @@ cancel_action_by_key(void *key, void *value, void *user_data)
 
     if (pcmk__str_eq(op->op_key, data->key, pcmk__str_none)) {
         data->done = TRUE;
-        remove = !cancel_op(data->lrm_state, data->rsc->id, key, op->call_id, data->remove);
+        remove = !controld_execd_cancel_op(data->lrm_state, data->rsc->id, key,
+                                           op->call_id, data->remove);
     }
     return remove;
 }
@@ -918,23 +777,24 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
 {
     const char *id = pcmk__xe_id(rsc_xml);
 
-    CRM_CHECK(lrm_state && rsc_xml && rsc_info, return -EINVAL);
-    CRM_CHECK(id, return -EINVAL);
+    CRM_CHECK((lrm_state != NULL) && (rsc_xml != NULL) && (rsc_info != NULL)
+              && (id != NULL),
+              return EINVAL);
 
-    if (lrm_state_is_connected(lrm_state) == FALSE) {
-        return -ENOTCONN;
+    if (!lrm_state->conn->cmds->is_connected(lrm_state->conn)) {
+        return ENOTCONN;
     }
 
     pcmk__trace("Retrieving resource information for %s from the executor",
                 id);
-    *rsc_info = lrm_state_get_rsc_info(lrm_state, id, 0);
+    *rsc_info = controld_execd_state_get_rsc_info(lrm_state, id);
 
     // If resource isn't known by ID, try clone name, if provided
     if (!*rsc_info) {
         const char *long_id = pcmk__xe_get(rsc_xml, PCMK__XA_LONG_ID);
 
         if (long_id) {
-            *rsc_info = lrm_state_get_rsc_info(lrm_state, long_id, 0);
+            *rsc_info = controld_execd_state_get_rsc_info(lrm_state, long_id);
         }
     }
 
@@ -942,29 +802,32 @@ get_lrm_resource(lrm_state_t *lrm_state, const xmlNode *rsc_xml,
         const char *class = pcmk__xe_get(rsc_xml, PCMK_XA_CLASS);
         const char *provider = pcmk__xe_get(rsc_xml, PCMK_XA_PROVIDER);
         const char *type = pcmk__xe_get(rsc_xml, PCMK_XA_TYPE);
-        int rc;
+        int rc = pcmk_rc_ok;
 
         pcmk__trace("Registering resource %s with the executor", id);
-        rc = lrm_state_register_rsc(lrm_state, id, class, provider, type,
-                                    lrmd_opt_drop_recurring);
-        if (rc != pcmk_ok) {
+
+        rc = controld_execd_state_register_rsc(lrm_state, id, class, provider,
+                                               type);
+        if (rc != pcmk_rc_ok) {
             pcmk__err("Could not register resource %s with the executor on %s: "
                       "%s " QB_XS " rc=%d",
-                      id, lrm_state->node_name, pcmk_strerror(rc), rc);
+                      id, lrm_state->node_name, pcmk_rc_str(rc), rc);
 
             /* Register this as an internal error if this involves the local
              * executor. Otherwise, we're likely dealing with an unresponsive
              * remote node, which is not an FSA failure.
              */
-            if (lrm_state_is_local(lrm_state) == TRUE) {
+            if (controld_is_local_node(lrm_state->node_name)) {
                 register_fsa_error(I_FAIL, NULL);
             }
+
             return rc;
         }
 
-        *rsc_info = lrm_state_get_rsc_info(lrm_state, id, 0);
+        *rsc_info = controld_execd_state_get_rsc_info(lrm_state, id);
     }
-    return *rsc_info? pcmk_ok : -ENODEV;
+
+    return (*rsc_info != NULL)? pcmk_rc_ok : ENODEV;
 }
 
 static void
@@ -972,18 +835,19 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
                 GHashTableIter *iter, const char *sys, const char *user,
                 ha_msg_input_t *request, bool unregister, bool from_cib)
 {
-    int rc = pcmk_ok;
+    int rc = pcmk_rc_ok;
 
     pcmk__info("Removing resource %s from executor for %s%s%s", id, sys,
                ((user != NULL)? " as " : ""), pcmk__s(user, ""));
 
     if (rsc && unregister) {
-        rc = lrm_state_unregister_rsc(lrm_state, id, 0);
+        rc = controld_execd_state_unregister_rsc(lrm_state, id);
     }
 
-    if (rc == pcmk_ok) {
+    if (rc == pcmk_rc_ok) {
         pcmk__trace("Resource %s deleted from executor", id);
-    } else if (rc == -EINPROGRESS) {
+
+    } else if (rc == EINPROGRESS) {
         pcmk__info("Deletion of resource '%s' from executor is pending", id);
         if (request) {
             struct pending_deletion_op_s *op = NULL;
@@ -994,12 +858,14 @@ delete_resource(lrm_state_t *lrm_state, const char *id, lrmd_rsc_info_t *rsc,
             op->input = copy_ha_msg_input(request);
             g_hash_table_insert(lrm_state->deletion_ops, ref, op);
         }
+
         return;
+
     } else {
         pcmk__warn("Could not delete '%s' from executor for %s%s%s: %s "
                    QB_XS " rc=%d",
                    id, sys, ((user != NULL)? " as " : ""), pcmk__s(user, ""),
-                   pcmk_strerror(rc), rc);
+                   pcmk_rc_str(rc), rc);
     }
 
     delete_rsc_entry(lrm_state, request, id, iter, rc, user, from_cib);
@@ -1054,12 +920,12 @@ force_reprobe(lrm_state_t *lrm_state, const char *from_sys,
          * membership */
         bool unregister = true;
 
-        if (is_remote_lrmd_ra(NULL, NULL, entry->id)) {
+        if (is_remote_lrmd_ra(entry->id)) {
             unregister = false;
 
             if (reprobe_all_nodes) {
                 lrm_state_t *remote_lrm_state =
-                    controld_get_executor_state(entry->id, false);
+                    controld_execd_state_get(entry->id, false);
 
                 if (remote_lrm_state != NULL) {
                     /* If reprobing all nodes, be sure to reprobe the remote
@@ -1198,7 +1064,7 @@ fail_lrm_resource(xmlNode *xml, lrm_state_t *lrm_state, const char *user_name,
     }
 
 
-    if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_ok) {
+    if (get_lrm_resource(lrm_state, xml_rsc, TRUE, &rsc) == pcmk_rc_ok) {
         pcmk__info("Failing resource %s...", rsc->id);
         fake_op_status(lrm_state, op, PCMK_EXEC_DONE, PCMK_OCF_UNKNOWN_ERROR,
                        "Simulated failure");
@@ -1281,14 +1147,15 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
 
     } else {
         // Normal case when the scheduler cancels a removed op
-        in_progress = cancel_op(lrm_state, rsc->id, NULL, call, TRUE);
+        in_progress = controld_execd_cancel_op(lrm_state, rsc->id, NULL, call,
+                                               true);
     }
 
     // Acknowledge cancellation operation if for a remote connection resource
-    if (!in_progress || is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
+    if (!in_progress || is_remote_lrmd_ra(rsc->id)) {
         char *op_id = make_stop_id(rsc->id, call);
 
-        if (is_remote_lrmd_ra(NULL, NULL, rsc->id) == FALSE) {
+        if (!is_remote_lrmd_ra(rsc->id)) {
             pcmk__info("Nothing known about operation %d for %s", call, op_key);
         }
         controld_delete_action_history_by_key(rsc->id, lrm_state->node_name,
@@ -1297,9 +1164,7 @@ static bool do_lrm_cancel(ha_msg_input_t *input, lrm_state_t *lrm_state,
                          from_host, from_sys);
 
         /* needed at least for cancellation of a remote operation */
-        if (lrm_state->active_ops != NULL) {
-            g_hash_table_remove(lrm_state->active_ops, op_id);
-        }
+        g_hash_table_remove(lrm_state->active_ops, op_id);
         free(op_id);
     }
 
@@ -1331,7 +1196,7 @@ do_lrm_delete(ha_msg_input_t *input, lrm_state_t *lrm_state,
         return;
     }
 
-    if (crm_rsc_delete && is_remote_lrmd_ra(NULL, NULL, rsc->id)) {
+    if (crm_rsc_delete && is_remote_lrmd_ra(rsc->id)) {
         unregister = false;
     }
 
@@ -1379,7 +1244,7 @@ metadata_complete(int pid, const pcmk__action_result_t *result, void *user_data)
 
     struct ra_metadata_s *md = NULL;
     lrm_state_t *lrm_state =
-        controld_get_executor_state(lrm_op_target(data->input_xml), false);
+        controld_execd_state_get(lrm_op_target(data->input_xml), false);
 
     if ((lrm_state != NULL) && pcmk__result_ok(result)) {
         md = controld_cache_metadata(lrm_state->metadata_cache, data->rsc,
@@ -1413,7 +1278,7 @@ controld_invoke_execd(fsa_data_t *msg_data)
     // Message routed to the local node is targeting a specific, non-local node
     is_remote_node = !controld_is_local_node(target_node);
 
-    lrm_state = controld_get_executor_state(target_node, false);
+    lrm_state = controld_execd_state_get(target_node, false);
     if ((lrm_state == NULL) && is_remote_node) {
         pcmk__err("Failing action because local node has never had connection "
                   "to remote node %s",
@@ -1476,26 +1341,28 @@ controld_invoke_execd(fsa_data_t *msg_data)
         CRM_CHECK((xml_rsc != NULL) && (pcmk__xe_id(xml_rsc) != NULL), return);
 
         rc = get_lrm_resource(lrm_state, xml_rsc, create_rsc, &rsc);
-        if (rc == -ENOTCONN) {
+        if (rc == ENOTCONN) {
             synthesize_lrmd_failure(lrm_state, input->xml,
                                     PCMK_EXEC_NOT_CONNECTED,
                                     PCMK_OCF_UNKNOWN_ERROR,
                                     "Not connected to remote executor");
             return;
+        }
 
-        } else if ((rc < 0) && !create_rsc) {
+        if ((rc != pcmk_rc_ok) && !create_rsc) {
             /* Delete of malformed or nonexistent resource
              * (deleting something that does not exist is a success)
              */
             pcmk__debug("Not registering resource '%s' for a %s event "
                         QB_XS " get-rc=%d (%s) transition-key=%s",
-                        pcmk__xe_id(xml_rsc), operation, rc, pcmk_strerror(rc),
+                        pcmk__xe_id(xml_rsc), operation, rc, pcmk_rc_str(rc),
                         pcmk__xe_id(input->xml));
             delete_rsc_entry(lrm_state, input, pcmk__xe_id(xml_rsc), NULL,
-                             pcmk_ok, user_name, true);
+                             pcmk_rc_ok, user_name, true);
             return;
+        }
 
-        } else if (rc == -EINVAL) {
+        if (rc == EINVAL) {
             // Resource operation on malformed resource
             pcmk__err("Invalid resource definition for %s",
                       pcmk__xe_id(xml_rsc));
@@ -1504,12 +1371,13 @@ controld_invoke_execd(fsa_data_t *msg_data)
                                     PCMK_OCF_NOT_CONFIGURED, // fatal error
                                     "Invalid resource definition");
             return;
+        }
 
-        } else if (rc < 0) {
+        if (rc != pcmk_rc_ok) {
             // Error communicating with the executor
             pcmk__err("Could not register resource '%s' with executor: %s "
                       QB_XS " rc=%d",
-                      pcmk__xe_id(xml_rsc), pcmk_strerror(rc), rc);
+                      pcmk__xe_id(xml_rsc), pcmk_rc_str(rc), rc);
             pcmk__log_xml_warn(input->msg, "failed registration");
             synthesize_lrmd_failure(lrm_state, input->xml, PCMK_EXEC_ERROR,
                                     PCMK_OCF_INVALID_PARAM, // hard error
@@ -1777,25 +1645,20 @@ controld_ack_event_directly(const char *to_host, const char *to_sys,
     pcmk__xml_free(reply);
 }
 
-gboolean
+void
 verify_stopped(enum crmd_fsa_state cur_state, int log_level)
 {
-    gboolean res = TRUE;
     GList *lrm_state_list = lrm_state_get_list();
     GList *state_entry;
 
     for (state_entry = lrm_state_list; state_entry != NULL; state_entry = state_entry->next) {
         lrm_state_t *lrm_state = state_entry->data;
 
-        if (!lrm_state_verify_stopped(lrm_state, cur_state, log_level)) {
-            /* keep iterating through all even when false is returned */
-            res = FALSE;
-        }
+        lrm_state_verify_stopped(lrm_state, cur_state, log_level);
     }
 
     controld_set_fsa_input_flags(R_SENT_RSC_STOP);
-    g_clear_pointer(&lrm_state_list, g_list_free);
-    return res;
+    g_list_free(lrm_state_list);
 }
 
 struct stop_recurring_action_s {
@@ -1815,23 +1678,8 @@ stop_recurring_action_by_rsc(void *key, void *value, void *user_data)
 
         pcmk__debug("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
                     (const char *) key);
-        remove = !cancel_op(event->lrm_state, event->rsc->id, key, op->call_id, FALSE);
-    }
-
-    return remove;
-}
-
-static gboolean
-stop_recurring_actions(void *key, void *value, void *user_data)
-{
-    gboolean remove = FALSE;
-    lrm_state_t *lrm_state = user_data;
-    active_op_t *op = value;
-
-    if (op->interval_ms != 0) {
-        pcmk__info("Cancelling op %d for %s (%s)", op->call_id, op->rsc_id,
-                   (const char *) key);
-        remove = !cancel_op(lrm_state, op->rsc_id, key, op->call_id, FALSE);
+        remove = !controld_execd_cancel_op(event->lrm_state, event->rsc->id,
+                                           key, op->call_id, false);
     }
 
     return remove;
@@ -1851,7 +1699,7 @@ static bool
 should_cancel_recurring(const char *rsc_id, const char *action,
                         unsigned int interval_ms)
 {
-    if (is_remote_lrmd_ra(NULL, NULL, rsc_id) && (interval_ms == 0)
+    if (is_remote_lrmd_ra(rsc_id) && (interval_ms == 0)
         && (strcmp(action, PCMK_ACTION_MIGRATE_TO) == 0)) {
         /* Don't stop monitoring a migrating Pacemaker Remote connection
          * resource until the entire migration has completed. We must detect if
@@ -1998,10 +1846,9 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         cancel_op_key(lrm_state, rsc, op_id, FALSE);
     }
 
-    rc = controld_execute_resource_agent(lrm_state, rsc->id, op->op_type,
-                                         op->user_data, op->interval_ms,
-                                         op->timeout, op->start_delay,
-                                         op->params, &call_id);
+    rc = controld_execd_state_exec(lrm_state, rsc->id, op->op_type,
+                                   op->user_data, op->interval_ms, op->timeout,
+                                   op->start_delay, op->params, &call_id);
     if (rc == pcmk_rc_ok) {
         /* record all operations so we can wait
          * for them to complete during shutdown
@@ -2019,7 +1866,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         pending->op_key = pcmk__str_copy(op_id);
         pending->rsc_id = pcmk__str_copy(rsc->id);
         pending->start_time = time(NULL);
-        pending->user_data = pcmk__str_copy(op->user_data);
+        pending->transition_key = pcmk__str_copy(op->user_data);
         pcmk__xe_get_time(msg, PCMK_OPT_SHUTDOWN_LOCK, &pending->lock_time);
         g_hash_table_replace(lrm_state->active_ops, call_id_s, pending);
 
@@ -2038,7 +1885,7 @@ do_lrm_rsc_op(lrm_state_t *lrm_state, lrmd_rsc_info_t *rsc, xmlNode *msg,
         pending->params = op->params;
         op->params = NULL;
 
-    } else if (lrm_state_is_local(lrm_state)) {
+    } else if (controld_is_local_node(lrm_state->node_name)) {
         pcmk__err("Could not initiate %s action for resource %s locally: %s "
                   QB_XS " rc=%d",
                   operation, rsc->id, pcmk_rc_str(rc), rc);
@@ -2200,7 +2047,7 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
 
     // Get resource info if available (from executor state or action XML)
     if (lrm_state) {
-        rsc = lrm_state_get_rsc_info(lrm_state, op->rsc_id, 0);
+        rsc = controld_execd_state_get_rsc_info(lrm_state, op->rsc_id);
     }
     if ((rsc == NULL) && action_xml) {
         xmlNode *xml = pcmk__xe_first_child(action_xml, PCMK_XE_PRIMITIVE, NULL,
@@ -2383,8 +2230,8 @@ process_lrm_event(lrm_state_t *lrm_state, lrmd_event_data_t *op,
         pcmk__info("Deletion of resource '%s' complete after %s", op->rsc_id,
                    op_key);
         if (lrm_state) {
-            delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_ok, NULL,
-                             true);
+            delete_rsc_entry(lrm_state, NULL, op->rsc_id, NULL, pcmk_rc_ok,
+                             NULL, true);
         }
     }
 

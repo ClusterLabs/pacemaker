@@ -10,11 +10,6 @@
 #ifndef PCMK__CRM_COMMON_ISO8601__H
 #define PCMK__CRM_COMMON_ISO8601__H
 
-#include <ctype.h>
-#include <stdbool.h>  // bool
-#include <stdint.h>   // uint32_t
-#include <time.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -52,24 +47,6 @@ typedef struct crm_time_s crm_time_t;
  *   A timezone of 'Z' denotes UTC time
  */
 crm_time_t *crm_time_new(const char *string);
-void crm_time_free(crm_time_t * dt);
-
-/* Time in seconds since 1970-01-01 00:00:00Z */
-long long crm_time_get_seconds_since_epoch(const crm_time_t *dt);
-
-/* Returns a new time object */
-crm_time_t *pcmk_copy_time(const crm_time_t *source);
-crm_time_t *crm_time_add(const crm_time_t *dt, const crm_time_t *value);
-crm_time_t *crm_time_subtract(const crm_time_t *dt, const crm_time_t *value);
-
-/* All crm_time_add_... functions support negative values */
-void crm_time_add_seconds(crm_time_t * dt, int value);
-void crm_time_add_minutes(crm_time_t * dt, int value);
-void crm_time_add_hours(crm_time_t * dt, int value);
-void crm_time_add_days(crm_time_t * dt, int value);
-void crm_time_add_weeks(crm_time_t * dt, int value);
-void crm_time_add_months(crm_time_t * dt, int value);
-void crm_time_add_years(crm_time_t * dt, int value);
 
 #ifdef __cplusplus
 }

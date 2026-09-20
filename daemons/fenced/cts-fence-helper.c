@@ -644,12 +644,6 @@ main(int argc, char **argv)
     }
 
     st = stonith__api_new();
-    if (st == NULL) {
-        exit_code = CRM_EX_DISCONNECT;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
-                    "Could not connect to fencer: API memory allocation failed");
-        goto done;
-    }
 
     switch (options.mode) {
         case test_standard:

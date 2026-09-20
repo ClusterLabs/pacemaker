@@ -40,7 +40,7 @@ crmd_alert_node_event(pcmk__node_status_t *node)
         return;
     }
 
-    lrm_state = controld_get_executor_state(NULL, false);
+    lrm_state = controld_execd_state_get(NULL, false);
     if (lrm_state == NULL) {
         return;
     }
@@ -59,7 +59,7 @@ crmd_alert_fencing_op(stonith_event_t * e)
         return;
     }
 
-    lrm_state = controld_get_executor_state(NULL, false);
+    lrm_state = controld_execd_state_get(NULL, false);
     if (lrm_state == NULL) {
         return;
     }
@@ -79,7 +79,7 @@ crmd_alert_resource_op(const char *node, const lrmd_event_data_t *op)
         return;
     }
 
-    lrm_state = controld_get_executor_state(NULL, false);
+    lrm_state = controld_execd_state_get(NULL, false);
     if (lrm_state == NULL) {
         return;
     }

@@ -69,7 +69,6 @@ struct device_search_s {
     uint32_t support_action_only;
 };
 
-static gboolean stonith_device_dispatch(void *user_data);
 static void st_child_done(int pid, const pcmk__action_result_t *result,
                           void *user_data);
 
@@ -1032,12 +1031,6 @@ get_agent_metadata(const char *agent, xmlNode ** metadata)
     }
 
     st = stonith__api_new();
-
-    if (st == NULL) {
-        pcmk__warn("Could not get agent meta-data: API memory allocation "
-                   "failed");
-        return EAGAIN;
-    }
 
     rc = st->cmds->metadata(st, st_opt_sync_call, agent, NULL, &buffer, 10);
     stonith__api_free(st);
@@ -2790,6 +2783,12 @@ reply_to_duplicates(async_command_t *cmd, const pcmk__action_result_t *result,
         next = iter->next; // We might delete this entry, so grab next now
 
         if (cmd == cmd_other) {
+            continue;
+        }
+
+        // Do not merge with an in-flight fencing action
+        if (cmd_other->activating_on != NULL
+            || cmd_other->active_on != NULL) {
             continue;
         }
 

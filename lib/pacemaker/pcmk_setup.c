@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2025 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -104,9 +104,6 @@ pcmk__setup_output_fencing(pcmk__output_t **out, stonith_t **st, xmlNode **xml)
     }
 
     *st = stonith__api_new();
-    if (*st == NULL) {
-        return ENOMEM;
-    }
 
     rc = (*st)->cmds->connect(*st, crm_system_name, NULL);
     if (rc < 0) {

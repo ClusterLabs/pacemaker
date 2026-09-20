@@ -342,10 +342,10 @@ parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
     }
 
     if (*start == NULL) {
-        *start = crm_time_subtract(*end, diff);
+        *start = pcmk__time_subtract(*end, diff);
 
     } else if (*end == NULL) {
-        *end = crm_time_add(*start, diff);
+        *end = pcmk__time_add(*start, diff);
     }
 
     if (!pcmk__time_valid_year((*start)->years) || !valid_time(*start)) {
@@ -362,13 +362,13 @@ parse_period(const char *period_str, crm_time_t **start, crm_time_t **end)
         goto invalid;
     }
 
-    crm_time_free(diff);
+    free(diff);
     return pcmk_rc_ok;
 
 invalid:
-    crm_time_free(diff);
-    crm_time_free(*start);
-    crm_time_free(*end);
+    free(diff);
+    free(*start);
+    free(*end);
     return EINVAL;
 }
 
@@ -495,12 +495,12 @@ main(int argc, char **argv)
         }
 
         out->message(out, "period", start, end, options.print_options);
-        crm_time_free(start);
-        crm_time_free(end);
+        free(start);
+        free(end);
     }
 
     if (date_time && duration) {
-        crm_time_t *later = crm_time_add(date_time, duration);
+        crm_time_t *later = pcmk__time_add(date_time, duration);
 
         if (later == NULL) {
             exit_code = CRM_EX_SOFTWARE;
@@ -523,7 +523,7 @@ main(int argc, char **argv)
             }
             free(dt_s);
         }
-        crm_time_free(later);
+        free(later);
 
     } else if (date_time && options.expected_s) {
         char *dt_s = pcmk__time_text(date_time,
@@ -539,8 +539,8 @@ main(int argc, char **argv)
     }
 
 done:
-    crm_time_free(date_time);
-    crm_time_free(duration);
+    free(date_time);
+    free(duration);
 
     g_strfreev(processed_args);
     pcmk__free_arg_context(context);

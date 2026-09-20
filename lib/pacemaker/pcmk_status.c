@@ -39,10 +39,6 @@ fencing_connect(void)
     stonith_t *st = stonith__api_new();
     int rc = pcmk_rc_ok;
 
-    if (st == NULL) {
-        return NULL;
-    }
-
     rc = st->cmds->connect(st, crm_system_name, NULL);
     if (rc == pcmk_rc_ok) {
         return st;

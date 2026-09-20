@@ -570,11 +570,11 @@ main(int argc, char **argv)
     out->quiet = args->quiet;
 
     st = stonith__api_new();
-    if (st == NULL) {
-        rc = -ENOMEM;
-    } else if (!no_connect) {
+
+    if (!no_connect) {
         rc = st->cmds->connect(st, name, NULL);
     }
+
     if (rc < 0) {
         out->err(out, "Could not connect to fencer: %s", pcmk_strerror(rc));
         exit_code = CRM_EX_DISCONNECT;

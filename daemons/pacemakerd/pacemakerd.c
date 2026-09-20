@@ -39,6 +39,11 @@
 
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
+pcmk__daemon_t pacemakerd = {
+    .type = pcmk_ipc_pacemakerd,
+    .ec = CRM_EX_OK,
+};
+
 struct {
     gboolean features;
     gboolean foreground;
@@ -47,6 +52,8 @@ struct {
 } options;
 
 static pcmk__output_t *out = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static pcmk__supported_format_t formats[] = {
     PCMK__SUPPORTED_FORMAT_NONE,
@@ -153,7 +160,7 @@ pacemakerd_chown(const char *path, uid_t uid, gid_t gid)
     }
 }
 
-static void
+static int
 create_pcmk_dirs(void)
 {
     uid_t pcmk_uid = 0;
@@ -172,7 +179,7 @@ create_pcmk_dirs(void)
     if (pcmk__daemon_user(&pcmk_uid, &pcmk_gid) != pcmk_rc_ok) {
         pcmk__err("Cluster user " CRM_DAEMON_USER " does not exist, aborting "
                   "Pacemaker startup");
-        crm_exit(CRM_EX_NOUSER);
+        return EINVAL;
     }
 
     // Used by some resource agents
@@ -193,6 +200,8 @@ create_pcmk_dirs(void)
             pacemakerd_chown(dirs[i], pcmk_uid, pcmk_gid);
         }
     }
+
+    return pcmk_rc_ok;
 }
 
 static void
@@ -243,12 +252,8 @@ pacemakerd_event_cb(pcmk_ipc_api_t *pacemakerd_api,
 {
     pcmk_pacemakerd_api_reply_t *reply = event_data;
 
-    switch (event_type) {
-        case pcmk_ipc_event_reply:
-            break;
-
-        default:
-            return;
+    if (event_type != pcmk_ipc_event_reply) {
+        return;
     }
 
     if (status != CRM_EX_OK) {
@@ -339,37 +344,57 @@ done:
     return rc;
 }
 
+static void
+pacemakerd_cleanup_cmdline(void)
+{
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&context, g_option_context_free);
+}
+
+static void
+pacemakerd_cleanup(void)
+{
+    pacemakerd_ipc_cleanup();
+    pacemakerd_unregister_handlers();
+
+#if SUPPORT_COROSYNC
+    cluster_disconnect_cfg();
+#endif
+}
+
 int
 main(int argc, char **argv)
 {
     int rc = pcmk_rc_ok;
-    crm_exit_t exit_code = CRM_EX_OK;
 
     GError *error = NULL;
 
     GOptionGroup *output_group = NULL;
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
-    gchar **processed_args = pcmk__cmdline_preproc(argv, "p");
-    GOptionContext *context = build_arg_context(args, &output_group);
+    pcmk__common_args_t * args = NULL;
+
+    atexit(pacemakerd_cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
+    processed_args = pcmk__cmdline_preproc(argv, "p");
+    context = build_arg_context(args, &output_group);
 
     subdaemon_check_progress = time(NULL);
 
     setenv("LC_ALL", "C", 1); // Ensure logs are in a common language
 
     crm_log_preinit(NULL, argc, argv);
-    mainloop_add_signal(SIGHUP, pcmk_ignore);
-    mainloop_add_signal(SIGQUIT, pcmk_sigquit);
 
     pcmk__register_formats(output_group, formats);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
-        exit_code = CRM_EX_USAGE;
+        pacemakerd.ec = CRM_EX_USAGE;
         goto done;
     }
 
     rc = pcmk__output_new(&out, args->output_ty, args->output_dest, argv);
     if ((rc != pcmk_rc_ok) || (out == NULL)) {
-        exit_code = CRM_EX_ERROR;
-        g_set_error(&error, PCMK__EXITC_ERROR, exit_code, "Error creating output format %s: %s",
+        pacemakerd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
+                    "Error creating output format %s: %s",
                     args->output_ty, pcmk_rc_str(rc));
         goto done;
     }
@@ -378,7 +403,7 @@ main(int argc, char **argv)
 
     if (options.features) {
         out->message(out, "features");
-        exit_code = CRM_EX_OK;
+        pacemakerd.ec = CRM_EX_OK;
         goto done;
     }
 
@@ -397,22 +422,23 @@ main(int argc, char **argv)
     if ((rc == pcmk_rc_ok) && options.shutdown) {
         goto done;
     } else if (rc == pcmk_rc_already) {
-        exit_code = CRM_EX_FATAL;
+        pacemakerd.ec = CRM_EX_FATAL;
         goto done;
     } else if (rc != pcmk_rc_ok) {
-        exit_code = pcmk_rc2exitc(rc);
+        pacemakerd.ec = pcmk_rc2exitc(rc);
         goto done;
     }
 
     /* Don't allow any accidental output after this point. */
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, pacemakerd.ec, true, NULL);
         g_clear_pointer(&out, pcmk__output_free);
     }
 
 #if SUPPORT_COROSYNC
-    if (pacemakerd_read_config() == FALSE) {
-        crm_exit(CRM_EX_UNAVAILABLE);
+    if (!pcmkd_read_config()) {
+        pacemakerd.ec = CRM_EX_UNAVAILABLE;
+        goto done;
     }
 #endif
 
@@ -428,16 +454,22 @@ main(int argc, char **argv)
 
     pcmk__notice("Starting Pacemaker " PACEMAKER_VERSION " "
                  QB_XS " build=" BUILD_VERSION " features:" CRM_FEATURES);
-    mainloop = g_main_loop_new(NULL, FALSE);
 
     remove_core_file_limit();
-    create_pcmk_dirs();
-    pacemakerd_ipc_init();
+    if (create_pcmk_dirs() != pcmk_rc_ok) {
+        pacemakerd.ec = CRM_EX_NOUSER;
+        goto done;
+    }
+
+    if (!pacemakerd_ipc_init()) {
+        pacemakerd.ec = CRM_EX_OSERR;
+        goto done;
+    }
 
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
-        exit_code = CRM_EX_PROTOCOL;
+        pacemakerd.ec = CRM_EX_PROTOCOL;
         goto done;
     }
 #endif
@@ -450,15 +482,12 @@ main(int argc, char **argv)
         case pcmk_rc_ok:
             break;
         case pcmk_rc_ipc_unauthorized:
-            exit_code = CRM_EX_CANTCREAT;
+            pacemakerd.ec = CRM_EX_CANTCREAT;
             goto done;
         default:
-            exit_code = CRM_EX_FATAL;
+            pacemakerd.ec = CRM_EX_FATAL;
             goto done;
     };
-
-    mainloop_add_signal(SIGTERM, pcmk_shutdown);
-    mainloop_add_signal(SIGINT, pcmk_shutdown);
 
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
         pcmk__notice("Waiting for startup-trigger from SBD");
@@ -474,27 +503,31 @@ main(int argc, char **argv)
         init_children_processes(NULL);
     }
 
-    pcmk__notice("Pacemaker daemon successfully started and accepting "
-                 "connections");
-    g_main_loop_run(mainloop);
-    pacemakerd_ipc_cleanup();
-    pacemakerd_unregister_handlers();
+    rc = pcmk__daemon_init(&pacemakerd);
+    if (rc != pcmk_rc_ok) {
+        pacemakerd.ec = CRM_EX_ERROR;
+        g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
+                    "Error initializing daemon object: %s",
+                    pcmk_rc_str(rc));
+        goto done;
+    }
 
-    g_main_loop_unref(mainloop);
-#if SUPPORT_COROSYNC
-    cluster_disconnect_cfg();
-#endif
+    mainloop_add_signal(SIGHUP, pcmk_ignore);
+    mainloop_add_signal(SIGINT, pcmk_shutdown);
+    mainloop_add_signal(SIGQUIT, pcmk_sigquit);
+    mainloop_add_signal(SIGTERM, pcmk_shutdown);
+
+    pcmk__daemon_run(&pacemakerd);
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    pacemakerd_cleanup();
 
     pcmk__output_and_clear_error(&error, out);
 
     if (out != NULL) {
-        out->finish(out, exit_code, true, NULL);
+        out->finish(out, pacemakerd.ec, true, NULL);
         pcmk__output_free(out);
     }
     pcmk__unregister_formats();
-    crm_exit(exit_code);
+    crm_exit(pacemakerd.ec);
 }

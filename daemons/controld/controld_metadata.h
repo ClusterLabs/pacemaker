@@ -1,5 +1,5 @@
 /*
- * Copyright 2017-2025 the Pacemaker project contributors
+ * Copyright 2017-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,7 +12,8 @@
 
 #include <stdint.h>             // uint32_t
 #include <glib.h>               // GList, GHashTable
-#include "controld_lrm.h"       // lrm_state_t, lrm_rsc_info_t
+
+#include "controld_execd.h"     // lrm_state_t, lrm_rsc_info_t
 
 /*
  * @COMPAT pre-OCF-1.1 resource agents

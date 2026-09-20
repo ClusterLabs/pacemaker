@@ -12,7 +12,6 @@
 
 #include <stdbool.h>                // bool
 #include <stdint.h>                 // uint32_t
-#include <time.h>                   // time_t
 
 #include <glib.h>                   // GList, GHashTable, GMainLoop
 #include <libxml/tree.h>            // xmlNode
@@ -22,7 +21,7 @@
 #include <crm/stonith-ng.h>         // stonith_t
 
 extern GHashTable *rsc_list;
-extern time_t start_time;
+extern pcmk__daemon_t execd;
 
 typedef struct {
     char *rsc_id;
@@ -70,7 +69,7 @@ void execd_free_rsc(void *data);
 
 void handle_shutdown_ack(void);
 
-void handle_shutdown_nack(void);
+int handle_shutdown_nack(void);
 
 void lrmd_client_destroy(pcmk__client_t *client);
 
@@ -86,7 +85,7 @@ stonith_t *execd_get_fencer_connection(void);
 void execd_fencer_connection_failed(void);
 
 #ifdef PCMK__COMPILE_REMOTE
-void ipc_proxy_init(void);
+bool ipc_proxy_init(void);
 void ipc_proxy_cleanup(void);
 void ipc_proxy_add_provider(pcmk__client_t *client);
 void ipc_proxy_remove_provider(pcmk__client_t *client);
@@ -104,7 +103,7 @@ void lrmd_drain_alerts(GMainLoop *mloop);
 bool execd_invalid_msg(xmlNode *msg);
 void execd_handle_request(pcmk__request_t *request);
 
-void execd_ipc_init(void);
+bool execd_ipc_init(void);
 void execd_ipc_cleanup(void);
 
 xmlNode *execd_create_reply_as(const char *origin, int rc, int call_id);

@@ -55,7 +55,7 @@ null_invalid(void **state)
     assert_int_equal(pcmk_evaluate_rule(NULL, &rule_input, next_change),
                      EINVAL);
 
-    crm_time_free(next_change);
+    free(next_change);
 }
 
 #define RULE_OP_MISSING_ID                              \
@@ -74,7 +74,7 @@ id_missing(void **state)
     assert_int_equal(pcmk_evaluate_rule(xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 
-    crm_time_free(next_change);
+    free(next_change);
     pcmk__xml_free(xml);
 }
 
@@ -91,7 +91,7 @@ good_idref(void **state)
     assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
                      pcmk_rc_ok);
 
-    crm_time_free(next_change);
+    free(next_change);
     pcmk__xml_free(parent_xml);
 }
 
@@ -106,7 +106,7 @@ bad_idref(void **state)
     assert_int_equal(pcmk_evaluate_rule(rule_xml, &rule_input, next_change),
                      pcmk_rc_unpack_error);
 
-    crm_time_free(next_change);
+    free(next_change);
     pcmk__xml_free(parent_xml);
 }
 

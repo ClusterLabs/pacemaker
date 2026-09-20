@@ -50,8 +50,16 @@ handle_ipc_fwd_request(pcmk__request_t *request)
 
     rc = ipc_proxy_forward_client(request->ipc_client, request->xml);
 
-    if (rc == pcmk_rc_ok) {
+    if ((rc == pcmk_rc_ok) || (rc == ESHUTDOWN)) {
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
+
+        if (rc == ESHUTDOWN) {
+            /* We're shutting down so return NULL for the reply, but
+             * execd_handle_request will still want to process a result which
+             * is why we set one above.
+             */
+            return NULL;
+        }
 
     } else {
         pcmk__set_result(&request->result, pcmk_rc2exitc(rc), PCMK_EXEC_ERROR,
@@ -133,7 +141,7 @@ handle_check_request(pcmk__request_t *request)
                                 pcmk__client_privileged);
     xmlNode *wrapper = NULL;
     xmlNode *data = NULL;
-    const char *timeout = NULL;
+    long long timeout_ms = 0;
 
     if (!allowed) {
         pcmk__set_result(&request->result, CRM_EX_INSUFFICIENT_PRIV,
@@ -154,11 +162,11 @@ handle_check_request(pcmk__request_t *request)
         return NULL;
     }
 
-    timeout = pcmk__xe_get(data, PCMK__XA_LRMD_WATCHDOG);
+    pcmk__xe_get_ll(data, PCMK__XA_LRMD_WATCHDOG, &timeout_ms);
     /* FIXME: This just exits on certain conditions, which seems like a pretty
      * extreme reaction for a daemon to take.
      */
-    pcmk__valid_fencing_watchdog_timeout(timeout);
+    pcmk__valid_fencing_watchdog_timeout(timeout_ms);
 
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     return NULL;

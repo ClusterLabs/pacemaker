@@ -184,7 +184,7 @@ exec_alert_list(lrmd_t *lrmd, const GList *alert_list,
         }
     }
 
-    crm_time_free(now_dt);
+    free(now_dt);
 
     if (any_failure) {
         return (any_success? -1 : -2);

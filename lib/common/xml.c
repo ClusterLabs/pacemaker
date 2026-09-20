@@ -1051,12 +1051,20 @@ pcmk__strip_xml_text(xmlNode *xml)
 
 /*!
  * \internal
+ * \brief Function for appending an XML-escaped character to a buffer
+ */
+typedef void (*append_xml_escaped_fn_t)(char, GString *);
+
+/*!
+ * \internal
  * \brief Append an XML-escaped character to a buffer (text escaping)
  *
  * This appends an escaped character in \c pcmk__xml_escape_text mode.
  *
  * \param[in]     current_char  Character to escape
  * \param[in,out] buffer        Buffer
+ *
+ * \c This is an append_xml_escaped_fn_t.
  */
 static void
 append_xml_escaped_char_text(char current_char, GString *buffer)
@@ -1097,6 +1105,8 @@ append_xml_escaped_char_text(char current_char, GString *buffer)
  *
  * \param[in]     current_char  Character to escape
  * \param[in,out] buffer        Buffer
+ *
+ * \c This is an append_xml_escaped_fn_t.
  */
 static void
 append_xml_escaped_char_attr(char current_char, GString *buffer)
@@ -1136,6 +1146,8 @@ append_xml_escaped_char_attr(char current_char, GString *buffer)
  *
  * \param[in]     current_char  Character to escape
  * \param[in,out] buffer        Buffer
+ *
+ * \c This is an append_xml_escaped_fn_t.
  */
 static void
 append_xml_escaped_char_pretty(char current_char, GString *buffer)
@@ -1165,37 +1177,6 @@ append_xml_escaped_char_pretty(char current_char, GString *buffer)
 
 /*!
  * \internal
- * \brief Append an XML-escaped character to a buffer
- *
- * \param[in]     current_char  Character to escape
- * \param[in]     type          Type of escaping
- * \param[in,out] buffer        Buffer
- */
-static void
-append_xml_escaped_char(char current_char, enum pcmk__xml_escape_type type,
-                        GString *buffer)
-{
-    switch (type) {
-        case pcmk__xml_escape_text:
-            append_xml_escaped_char_text(current_char, buffer);
-            return;
-
-        case pcmk__xml_escape_attr:
-            append_xml_escaped_char_attr(current_char, buffer);
-            return;
-
-        case pcmk__xml_escape_attr_pretty:
-            append_xml_escaped_char_pretty(current_char, buffer);
-            return;
-
-        default:    // Invalid enum value
-            pcmk__assert(false);
-            return;
-    }
-}
-
-/*!
- * \internal
  * \brief Replace special characters with their XML escape sequences
  *
  * \param[in] text  Text to escape
@@ -1216,11 +1197,24 @@ append_xml_escaped_char(char current_char, enum pcmk__xml_escape_type type,
 gchar *
 pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
 {
+    static const append_xml_escaped_fn_t append_xml_escaped_fns[] = {
+        [pcmk__xml_escape_text] = append_xml_escaped_char_text,
+        [pcmk__xml_escape_attr] = append_xml_escaped_char_attr,
+        [pcmk__xml_escape_attr_pretty] = append_xml_escaped_char_pretty,
+    };
+
+    append_xml_escaped_fn_t append_char_fn = NULL;
     GString *copy = NULL;
+
+    pcmk__assert((type >= 0) && (type < PCMK__NELEM(append_xml_escaped_fns)));
+
+    append_char_fn = append_xml_escaped_fns[type];
+    pcmk__assert(append_char_fn != NULL);
 
     if (text == NULL) {
         return NULL;
     }
+
     copy = g_string_sized_new(strlen(text));
 
     while (*text != '\0') {
@@ -1233,10 +1227,10 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
             continue;
         }
 
-        append_xml_escaped_char(*text, type, copy);
-
+        append_char_fn(*text, copy);
         text = g_utf8_next_char(text);
     }
+
     return g_string_free(copy, FALSE);
 }
 

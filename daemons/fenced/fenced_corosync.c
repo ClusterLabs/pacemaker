@@ -30,6 +30,8 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
 {
     const char *op = pcmk__xe_get(request, PCMK__XA_ST_OP);
 
+    pcmk__debug("Processing %s reply from peer %s", op, remote_peer);
+
     if (pcmk__str_eq(op, STONITH_OP_QUERY, pcmk__str_none)) {
         process_remote_stonith_query(request);
 
@@ -43,8 +45,6 @@ handle_cpg_reply(const char *remote_peer, xmlNode *request)
         pcmk__log_xml_warn(request, "UnknownOp");
         return;
     }
-
-    pcmk__debug("Processed %s reply from peer %s", op, remote_peer);
 }
 
 static void
@@ -170,7 +170,7 @@ static void
 fenced_cpg_destroy(void *unused)
 {
     pcmk__crit("Lost connection to cluster layer, shutting down");
-    stonith_shutdown(0);
+    pcmk__daemon_quit(&fenced, CRM_EX_DISCONNECT);
 }
 #endif // SUPPORT_COROSYNC
 
@@ -198,7 +198,10 @@ fenced_cluster_connect(void)
     pcmk__cluster_set_status_callback(&fenced_peer_change_cb);
 
     rc = pcmk_cluster_connect(fenced_cluster);
-    if (rc != pcmk_rc_ok) {
+
+    if (rc == pcmk_rc_ok) {
+        pcmk__info("Cluster connection active");
+    } else {
         pcmk__err("Cluster connection failed");
     }
 
