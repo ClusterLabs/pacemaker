@@ -168,7 +168,6 @@ typedef struct {
     pcmk__remote_t *remote;     /* TCP/TLS */
 
     unsigned int queue_backlog; /* IPC queue length after last flush */
-    unsigned int queue_max;     /* Evict client whose queue grows this big */
 } pcmk__client_t;
 
 #define pcmk__set_client_flags(client, flags_to_set) do {               \

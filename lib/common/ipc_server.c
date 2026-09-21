@@ -22,7 +22,6 @@
 #include <glib.h>                   // g_hash_table_*
 #include <gnutls/gnutls.h>          // gnutls_deinit
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbdefs.h>              // QB_MAX
 #include <qb/qbipc_common.h>        // qb_ipc_response_header
 #include <qb/qbipcs.h>              // qb_ipcs_*
 #include <qb/qblog.h>               // QB_XS
@@ -550,7 +549,7 @@ no_more_retries:
      * but drop completely unresponsive clients so the connection doesn't
      * consume resources indefinitely.
      */
-    if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
+    if (queue_len > PCMK_IPC_DEFAULT_QUEUE_MAX) {
         /* Don't evict:
          * - Clients with a new backlog.
          * - Clients with a shrinking backlog (the client is processing
