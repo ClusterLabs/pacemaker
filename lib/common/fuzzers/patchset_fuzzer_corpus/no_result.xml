@@ -1,0 +1,1 @@
+<diff format="2"><version><source admin_epoch="0" epoch="1" num_updates="0"/><target admin_epoch="0" epoch="1" num_updates="1"/></version><change operation="modify" path="/cib/configuration/nodes/node[@id='1']"/></diff>
