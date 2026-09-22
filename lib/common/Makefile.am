@@ -125,6 +125,7 @@ libcrmcommon_test_la_SOURCES	+= unittest.c
 libcrmcommon_test_la_LDFLAGS = $(libcrmcommon_la_LDFLAGS)
 libcrmcommon_test_la_LDFLAGS += -rpath $(libdir)
 libcrmcommon_test_la_LDFLAGS += $(LDFLAGS_WRAP)
+libcrmcommon_test_la_LDFLAGS += -Wno-error=aggregate-return
 
 # If GCC emits a builtin function in place of something we've mocked up, that will
 # get used instead of the mocked version which leads to unexpected test results.  So
@@ -135,6 +136,7 @@ libcrmcommon_test_la_CFLAGS = $(libcrmcommon_la_CFLAGS)
 libcrmcommon_test_la_CFLAGS += -DPCMK__UNIT_TESTING
 libcrmcommon_test_la_CFLAGS += -fno-builtin
 libcrmcommon_test_la_CFLAGS += -fno-inline
+libcrmcommon_test_la_CFLAGS += -Wno-error=aggregate-return
 
 # If -fno-builtin is used, -lm also needs to be added.  See the comment at
 # BUILD_PROFILING above.
