@@ -126,7 +126,7 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry,
     const char *value = NULL;
     int rc = pcmk_rc_ok;
 
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 

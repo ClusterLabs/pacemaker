@@ -19,7 +19,7 @@
  * Shared data
  */
 
-static pcmk_rule_input_t rule_input = {
+static pcmk__rule_input_t rule_input = {
     .rsc_standard = PCMK_RESOURCE_CLASS_OCF,
     .rsc_provider = "heartbeat",
     .rsc_agent = "IPaddr2",

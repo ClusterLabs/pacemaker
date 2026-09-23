@@ -65,7 +65,7 @@ null_xml(void **state)
     GHashTable *values = pcmk__strkey_table(free, free);
     crm_time_t *now = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *next_change = crm_time_new("2024-01-01 20:00:00");
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -84,7 +84,7 @@ null_table(void **state)
     xmlNode *xml = pcmk__xml_parse(XML_BLOCKS);
     crm_time_t *now = crm_time_new("2024-01-01 15:00:00");
     crm_time_t *next_change = crm_time_new("2024-01-01 20:00:00");
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -105,7 +105,7 @@ rule_passes(void **state)
     crm_time_t *now = crm_time_new("2024-11-06 15:00:00");
     crm_time_t *next_change = crm_time_new("2024-11-06 20:00:00");
     GHashTable *values = pcmk__strkey_table(free, free);
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -131,7 +131,7 @@ rule_fails(void **state)
     crm_time_t *next_change = crm_time_new("2024-11-05 20:00:00");
     crm_time_t *expected_next_change = crm_time_new("2024-11-05 00:00:01");
     GHashTable *values = pcmk__strkey_table(free, free);
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
@@ -159,7 +159,7 @@ element_name(void **state)
     xmlNode *xml = pcmk__xml_parse(XML_BLOCKS);
     crm_time_t *now = crm_time_new("2024-11-06 15:00:00");
     GHashTable *values = pcmk__strkey_table(free, free);
-    pcmk_rule_input_t rule_input = {
+    pcmk__rule_input_t rule_input = {
         .now = now,
     };
 
