@@ -295,9 +295,7 @@ do_startup(long long action, enum crmd_fsa_cause cause,
     controld_execd_state_table_init();
     controld_remote_proxy_table_init();
 
-    if (!controld_init_fsa_timers()) {
-        register_fsa_error(I_ERROR, msg_data);
-    }
+    controld_init_fsa_timers();
 }
 
 // \return libqb error code (0 on success, -errno on error)

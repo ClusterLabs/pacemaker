@@ -1022,10 +1022,10 @@ stonith_async_timeout_handler(void *data)
               timer->timeout);
     invoke_registered_callbacks(timer->stonith, NULL, timer->call_id);
 
-    /* Always return TRUE, never remove the handler
-     * We do that in stonith_del_callback()
+    /* Always return G_SOURCE_CONTINUE, never remove the handler.
+     * We do that in stonith_del_callback().
      */
-    return TRUE;
+    return G_SOURCE_CONTINUE;
 }
 
 static void

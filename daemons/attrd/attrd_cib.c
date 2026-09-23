@@ -242,7 +242,7 @@ attribute_timer_cb(void *data)
     attribute_t *a = data;
     pcmk__trace("Dampen interval expired for %s", a->id);
     attrd_write_or_elect_attribute(a);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static void
@@ -272,7 +272,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
             last_cib_op_done = call_id;
             if (a->timer && !a->timeout_ms) {
                 // Remove temporary dampening for failed writes
-                g_clear_pointer(&a->timer, mainloop_timer_del);
+                g_clear_pointer(&a->timer, pcmk__main_loop_timer_free);
             }
             break;
 
@@ -321,10 +321,10 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
          */
         } else if (a->timer) {
             // Attribute has a dampening value, so use that as delay
-            if (!mainloop_timer_running(a->timer)) {
+            if (!pcmk__main_loop_timer_running(a->timer)) {
                 pcmk__trace("Delayed re-attempted write for %s by %s",
                             name, pcmk__readable_interval(a->timeout_ms));
-                mainloop_timer_start(a->timer);
+                pcmk__main_loop_timer_start(a->timer);
             }
         } else {
             /* Set a temporary dampening of 2 seconds (timer will continue
@@ -332,7 +332,7 @@ attrd_cib_callback(xmlNode *msg, int call_id, int rc, xmlNode *output, void *use
              * write succeeds).
              */
             a->timer = attrd_add_timer(a->id, 2000, a);
-            mainloop_timer_start(a->timer);
+            pcmk__main_loop_timer_start(a->timer);
         }
     }
 }
@@ -491,10 +491,10 @@ set_alert_attribute_value(GHashTable *t, attribute_value_t *v)
     g_hash_table_replace(t, a_v->nodename, a_v);
 }
 
-mainloop_timer_t *
+pcmk__main_loop_timer_t *
 attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr)
 {
-   return mainloop_timer_add(id, timeout_ms, FALSE, attribute_timer_cb, attr);
+   return pcmk__main_loop_timer_new(id, timeout_ms, attribute_timer_cb, attr);
 }
 
 /*!
@@ -538,9 +538,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
                        a->id, a->update);
             goto done;
 
-        } else if (mainloop_timer_running(a->timer)) {
+        } else if (pcmk__main_loop_timer_running(a->timer)) {
             if (ignore_delay) {
-                mainloop_timer_stop(a->timer);
+                pcmk__main_loop_timer_stop(a->timer);
                 pcmk__debug("Overriding '%s' write delay", a->id);
             } else {
                 pcmk__info("Delaying write of '%s'", a->id);

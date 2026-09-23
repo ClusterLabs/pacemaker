@@ -25,36 +25,14 @@
 
 struct trigger_s {
     GSource source;
-    gboolean running;
-    gboolean trigger;
+    bool running;
+    bool trigger;
     void *user_data;
     unsigned int id;
 };
 
-struct mainloop_timer_s {
-        unsigned int id;
-        unsigned int period_ms;
-        bool repeat;
-        char *name;
-        GSourceFunc cb;
-        void *userdata;
-};
-
 static GList *child_list = NULL;
 static qb_array_t *gio_map = NULL;
-
-static void
-child_free(mainloop_child_t *child)
-{
-    if (child->timerid != 0) {
-        pcmk__trace("Removing timer %d", child->timerid);
-        g_source_remove(child->timerid);
-        child->timerid = 0;
-    }
-
-    free(child->desc);
-    free(child);
-}
 
 static gboolean
 crm_trigger_prepare(GSource *source, int *timeout)
@@ -111,14 +89,14 @@ crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
         /* Wait until the existing job is complete before starting the next one */
         return G_SOURCE_CONTINUE;
     }
-    trig->trigger = FALSE;
+    trig->trigger = false;
 
     if (callback) {
         int callback_rc = callback(trig->user_data);
 
         if (callback_rc < 0) {
             pcmk__trace("Trigger handler %p not yet complete", trig);
-            trig->running = TRUE;
+            trig->running = true;
         } else if (callback_rc == 0) {
             rc = G_SOURCE_REMOVE;
         }
@@ -148,7 +126,7 @@ mainloop_setup_trigger(GSource * source, int priority,
     trigger = (crm_trigger_t *) source;
 
     trigger->id = 0;
-    trigger->trigger = FALSE;
+    trigger->trigger = false;
     trigger->user_data = userdata;
 
     if (dispatch) {
@@ -166,7 +144,7 @@ void
 mainloop_trigger_complete(crm_trigger_t * trig)
 {
     pcmk__trace("Trigger handler %p complete", trig);
-    trig->running = FALSE;
+    trig->running = false;
 }
 
 /*!
@@ -197,7 +175,7 @@ void
 mainloop_set_trigger(crm_trigger_t * source)
 {
     if(source) {
-        source->trigger = TRUE;
+        source->trigger = true;
     }
 }
 
@@ -258,7 +236,7 @@ crm_signal_dispatch(GSource *source, GSourceFunc callback, void *userdata)
                      ((sig->handler != NULL)? "invoking" : "no"));
     }
 
-    sig->trigger.trigger = FALSE;
+    sig->trigger.trigger = false;
     if (sig->handler) {
         sig->handler(sig->signal);
     }
@@ -413,25 +391,6 @@ mainloop_destroy_signal(int sig)
     }
     mainloop_destroy_signal_entry(sig);
     return TRUE;
-}
-
-/*!
- * \internal
- * \brief Free data structures used for the mainloop
- *
- * \todo This is incomplete. Free other data structures created in this file.
- */
-void
-mainloop_cleanup(void)
-{
-    g_list_free_full(child_list, (GDestroyNotify) child_free);
-    child_list = NULL;
-
-    g_clear_pointer(&gio_map, qb_array_free);
-
-    for (int sig = 0; sig < NSIG; ++sig) {
-        mainloop_destroy_signal_entry(sig);
-    }
 }
 
 /*
@@ -869,22 +828,6 @@ pcmk__add_mainloop_ipc(crm_ipc_t *ipc, int priority, void *userdata,
     return pcmk_rc_ok;
 }
 
-/*!
- * \brief Get period for mainloop timer
- *
- * \param[in]  timer      Timer
- *
- * \return Period in ms
- */
-unsigned int
-pcmk__mainloop_timer_get_period(const mainloop_timer_t *timer)
-{
-    if (timer) {
-        return timer->period_ms;
-    }
-    return 0;
-}
-
 mainloop_io_t *
 mainloop_add_ipc_client(const char *name, int priority, size_t max_size,
                         void *userdata, struct ipc_client_callbacks *callbacks)
@@ -975,52 +918,27 @@ mainloop_del_fd(mainloop_io_t *client)
     g_source_remove(client->source);
 }
 
-pid_t
-mainloop_child_pid(mainloop_child_t * child)
-{
-    return child->pid;
-}
-
-const char *
-mainloop_child_name(mainloop_child_t * child)
-{
-    return child->desc;
-}
-
-int
-mainloop_child_timeout(mainloop_child_t * child)
-{
-    return child->timeout;
-}
-
-void *
-mainloop_child_userdata(mainloop_child_t * child)
-{
-    return child->privatedata;
-}
-
-void
-mainloop_clear_child_userdata(mainloop_child_t * child)
-{
-    child->privatedata = NULL;
-}
-
+/*!
+ * \internal
+ * \brief Send \c SIGKILL to a main loop child process or its process group
+ *
+ * If \p child->kill_group is set, kill the child's entire process group.
+ * Otherwise, kill only the child process itself.
+ *
+ * \param[in] child  Main loop child
+ *
+ * \return Standard Pacemaker return code (\c pcmk_rc_ok if \c kill() returns 0,
+ *         or \c errno after calling \c kill() otherwise)
+ */
 static int
-child_kill_helper(const mainloop_child_t *child)
+kill_child_pid(const pcmk__main_loop_child_t *child)
 {
+    const pid_t pid = (child->kill_group? -child->pid : child->pid);
     int rc = 0;
 
-    if (pcmk__is_set(child->flags, mainloop_leave_pid_group)) {
-        pcmk__debug("Killing PID %lld only. Leaving its process group intact.",
-                    (long long) child->pid);
-        rc = kill(child->pid, SIGKILL);
+    pcmk__debug("Killing PID %lld", (long long) pid);
 
-    } else {
-        pcmk__debug("Killing PID %lld's entire process group",
-                    (long long) child->pid);
-        rc = kill(-child->pid, SIGKILL);
-    }
-
+    rc = kill(pid, SIGKILL);
     if (rc == 0) {
         return pcmk_rc_ok;
     }
@@ -1030,334 +948,575 @@ child_kill_helper(const mainloop_child_t *child)
         return rc;
     }
 
-    pcmk__err("kill(%lld, KILL) failed: %s", (long long) child->pid,
-              strerror(rc));
+    pcmk__err("kill(%lld, KILL) failed for child '%s': %s", (long long) pid,
+              pcmk__s(child->desc, ""), strerror(rc));
     return rc;
 }
 
+/*!
+ * \internal
+ * \brief Kill a child process after its timeout has expired
+ *
+ * \param[in,out] user_data  Main loop child
+ *                           (<tt>pcmk__main_loop_child_t *</tt>)
+ *
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout that triggered this call)
+ *
+ * \note This is a \c GSourceFunc.
+ */
 static gboolean
-child_timeout_callback(void *p)
+child_timeout_callback(void *user_data)
 {
-    mainloop_child_t *child = p;
+    pcmk__main_loop_child_t *child = user_data;
     int rc = pcmk_rc_ok;
+    const char *result_s = NULL;
 
-    child->timerid = 0;
-    if (child->timeout) {
-        pcmk__warn("%s process (PID %lld) will not die!", child->desc,
-                   (long long) child->pid);
-        return FALSE;
+    child->timer_id = 0;
+    child->timed_out = true;
+
+    rc = kill_child_pid(child);
+
+    switch (rc) {
+        case pcmk_rc_ok:
+            result_s = "was successfully killed";
+            break;
+
+        case ESRCH:
+            result_s = "has already terminated";
+            break;
+
+        default:
+            result_s = "could not be killed";
+            break;
     }
 
-    rc = child_kill_helper(child);
-    if (rc == ESRCH) {
-        /* Nothing left to do. pid doesn't exist */
-        return FALSE;
-    }
-
-    child->timeout = TRUE;
-    pcmk__debug("%s process (PID %lld) timed out", child->desc,
-                (long long) child->pid);
-
-    child->timerid = pcmk__create_timer(5000, child_timeout_callback, child);
-    return FALSE;
+    pcmk__debug("%s process (PID %lld) timed out and %s", child->desc,
+                (long long) child->pid, result_s);
+    return G_SOURCE_REMOVE;
 }
 
-static bool
-child_waitpid(mainloop_child_t *child, int flags)
+/*!
+ * \internal
+ * \brief Free a main loop child
+ *
+ * If the child has an associated timer, remove it.
+ *
+ * \param[in,out] data  Main loop child (<tt>pcmk__main_loop_child_t *</tt>)
+ *
+ * \note This does not free the child's \c user_data field.
+ * \note This is a \c GDestroyNotify.
+ */
+static void
+free_main_loop_child(void *data)
 {
-    int rc = 0;
+    pcmk__main_loop_child_t *child = data;
+
+    if (child == NULL) {
+        return;
+    }
+
+    if (child->timer_id != 0) {
+        pcmk__trace("Removing timer %u", child->timer_id);
+        g_source_remove(child->timer_id);
+    }
+
+    free(child->desc);
+    free(child);
+}
+
+/*!
+ * \internal
+ * \brief Wait on a child process and free it if terminated
+ *
+ * If the child has terminated, call its exit callback if any, remove it from
+ * \c child_list, and free it.
+ *
+ * Likely bug: If the child object's \c pid field is nonpositive, then we wait
+ * on the corresponding process group as documented in the \c wait(2) man page.
+ * On success, call the exit callback using that PID (not the PID of the actual
+ * child process that changed state). Also remove the child object from
+ * \c child_list and free the child object, even though there may still be other
+ * child processes in the same process group that have not yet been waited on.
+ * This seems incorrect. However, nothing internal creates a child object with
+ * nonpositive PID, and the \c mainloop_child_add() documentation notes that
+ * nonpositive PIDs are not expected to work correctly.
+ *
+ * \param[in,out] link     List element whose data is the child to wait for
+ * \param[in]     no_hang  If \c true, use the \c waitpid() \c WNOHANG option
+ *
+ * \return \c true if the child process (or a child process in the specified
+ *         process group) has terminated, or \c false if the child process is
+ *         still active or its state changed in an unexpected way
+ *
+ * \note Taking the list link rather than the child as an argument allows us to
+ *       delete a terminated child from \c child_list in constant time. If we
+ *       took the child, \c g_list_remove() would have to find the child in the
+ *       list again before removing it.
+ */
+static bool
+child_waitpid(GList *link, bool no_hang)
+{
+    const int options = no_hang? WNOHANG : 0;
+
+    pcmk__main_loop_child_t *child = NULL;
+    pid_t rc = 0;
+    int status = 0;
+
     int core = 0;
     int signo = 0;
-    int status = 0;
-    int exitcode = 0;
+    int exit_code = 0;
 
-    rc = waitpid(child->pid, &status, flags);
+    pcmk__assert(link != NULL);
+    child = link->data;
 
-    if (rc == 0) { // WNOHANG in flags, and child status is not available
+    rc = waitpid(child->pid, &status, options);
+
+    if (rc == 0) {
+        // WNOHANG was specified and child->pid exists and has not changed state
         pcmk__trace("Child process %lld (%s) still active",
                     (long long) child->pid, child->desc);
         return false;
     }
 
-    if (rc != child->pid) {
-        /* According to POSIX, possible conditions:
-         * - child->pid was non-positive (process group or any child),
-         *   and rc is specific child
-         * - errno ECHILD (pid does not exist or is not child)
-         * - errno EINVAL (invalid flags)
-         * - errno EINTR (caller interrupted by signal)
-         *
-         * @TODO Handle these cases more specifically.
-         */
-        signo = SIGCHLD;
-        exitcode = 1;
-        pcmk__notice("Wait for child process %lld (%s) interrupted: %s",
-                     (long long) child->pid, child->desc, strerror(errno));
+    if (rc == -1) {
+        if (errno == ECHILD) {
+            /* This situation should probably never happen in practice. Setting
+             * exit_code to 1 is misleading in that it indicates the child
+             * exited with code 1, and we don't know that to be true. We could
+             * add a pcmk__main_loop_child_t flag to indicate this case, but it
+             * doesn't seem worth it.
+             */
+            exit_code = 1;
 
-    } else if (WIFEXITED(status)) {
-        exitcode = WEXITSTATUS(status);
-        pcmk__trace("Child process %lld (%s) exited with status %d",
-                    (long long) child->pid, child->desc, exitcode);
+            pcmk__err("Wait for child process %lld (%s) failed because process "
+                      "does not exist or is not our child",
+                      (long long) child->pid, child->desc);
+            goto terminated;
+        }
 
-    } else if (WIFSIGNALED(status)) {
-        signo = WTERMSIG(status);
-        pcmk__trace("Child process %lld (%s) exited with signal %d (%s)",
-                    (long long) child->pid, child->desc, signo,
-                    strsignal(signo));
+        if (errno == EINTR) {
+            pcmk__notice("Wait for child process %lld (%s) was interrupted by "
+                         "a signal", (long long) child->pid, child->desc);
+            return false;
+        }
 
-#ifdef WCOREDUMP // AIX, SunOS, maybe others
-    } else if (WCOREDUMP(status)) {
-        core = 1;
-        pcmk__err("Child process %lld (%s) dumped core", (long long) child->pid,
-                  child->desc);
-#endif
-
-    } else { // flags must contain WUNTRACED and/or WCONTINUED to reach this
-        pcmk__trace("Child process %lld (%s) stopped or continued",
-                    (long long) child->pid, child->desc);
+        pcmk__err("Bug: Wait for child process %lld (%s) failed: %s (waitpid() "
+                  "options: %#x)", (long long) child->pid, child->desc,
+                  strerror(errno), options);
         return false;
     }
 
-    if (child->exit_fn != NULL) {
-        child->exit_fn(child, core, signo, exitcode);
+    /* At this point, rc is the PID of a child whose state changed. If
+     * child->pid is positive, then rc == child->pid. Otherwise, rc is the PID
+     * of one of the child processes in the process group with ID -child->pid.
+     */
+
+    if (rc != child->pid) {
+        /* @COMPAT Nothing internal creates a nonpositive child->pid, and the
+         * public Doxygen for mainloop_child_add() now notes that nonpositive
+         * PIDs are not expected to work correctly.
+         */
+        pcmk__trace("Child process %lld from group %lld (%s) terminated",
+                    (long long) rc, (long long) -child->pid, child->desc);
+        goto terminated;
     }
+
+    if (WIFEXITED(status)) {
+        exit_code = WEXITSTATUS(status);
+        pcmk__trace("Child process %lld (%s) exited with status %d",
+                    (long long) child->pid, child->desc, exit_code);
+        goto terminated;
+    }
+
+    if (WIFSIGNALED(status)) {
+        signo = WTERMSIG(status);
+        pcmk__trace("Child process %lld (%s) was terminated by signal %d (%s)",
+                    (long long) child->pid, child->desc, signo,
+                    strsignal(signo));
+
+#ifdef WCOREDUMP
+        if (WCOREDUMP(status)) {
+            core = 1;
+            pcmk__err("Child process %lld (%s) dumped core",
+                      (long long) child->pid, child->desc);
+        }
+#endif  // defined(WCOREDUMP)
+
+        goto terminated;
+    }
+
+    /* We're not using the WUNTRACED or WCONTINUED options. If the process
+     * changed state, it should have either exited or been terminated by a
+     * signal.
+     */
+    CRM_CHECK(false, return false);
+
+terminated:
+    if (child->callback != NULL) {
+        child->callback(child, core, signo, exit_code);
+    }
+
+    pcmk__trace("Removing terminated process %lld from child list",
+                (long long) child->pid);
+    child_list = g_list_delete_link(child_list, link);
+    free_main_loop_child(child);
 
     return true;
 }
 
+/*!
+ * \internal
+ * \brief Free all main loop children whose processes have terminated
+ *
+ * If a child object's process has terminated, remove the child from
+ * \c child_list and free it.
+ *
+ * \param[in] signal  Ignored
+ */
 static void
-child_death_dispatch(int signal)
+free_terminated_children(int signal)
 {
-    for (GList *iter = child_list; iter; ) {
-        GList *saved = iter;
-        mainloop_child_t *child = iter->data;
+    GList *iter = child_list;
 
-        iter = iter->next;
-        if (child_waitpid(child, WNOHANG)) {
-            pcmk__trace("Removing completed process %lld from child list",
-                        (long long) child->pid);
-            child_list = g_list_remove_link(child_list, saved);
-            g_list_free(saved);
-            child_free(child);
-        }
+    while (iter != NULL) {
+        GList *next = iter->next;
+
+        child_waitpid(iter, true);
+        iter = next;
     }
 }
 
+/*!
+ * \internal
+ * \brief Install the main loop \c SIGCHLD handler
+ *
+ * Install \c free_terminated_children() as the \c SIGCHLD handler, and call it
+ * for any children that terminated before the handler was installed.
+ *
+ * \param[in] user_data  Ignored
+ *
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout that triggered this call)
+ *
+ * \note This is a \c GSourceFunc.
+ */
 static gboolean
-child_signal_init(void *p)
+install_sigchld_handler(void *user_data)
 {
-    pcmk__trace("Installed SIGCHLD handler");
-    /* Do NOT use g_child_watch_add() and friends, they rely on pthreads */
-    mainloop_add_signal(SIGCHLD, child_death_dispatch);
+    pcmk__trace("Installing SIGCHLD handler");
 
-    /* In case they terminated before the signal handler was installed */
-    child_death_dispatch(SIGCHLD);
-    return FALSE;
+    // Do NOT use g_child_watch_add() and friends, since they rely on pthreads
+    mainloop_add_signal(SIGCHLD, free_terminated_children);
+
+    free_terminated_children(SIGCHLD);
+    return G_SOURCE_REMOVE;
 }
 
-gboolean
-mainloop_child_kill(pid_t pid)
+/*!
+ * \internal
+ * \brief Create a \c pcmk__main_loop_child_t object and add it to the main loop
+ *
+ * If the child process has not exited within \p timeout_ms, send it a
+ * \c SIGKILL signal.
+ *
+ * \param[in] pid         Child PID
+ * \param[in] desc        Description
+ * \param[in] timeout_ms  Timeout in milliseconds
+ * \param[in] user_data   User data
+ * \param[in] kill group  If \c true, kill the child's entire process group on
+ *                        timeout; otherwise, kill only the child process
+ * \param[in] callback    Function to call when the child process terminates
+ */
+void
+pcmk__main_loop_child_create(pid_t pid, const char *desc,
+                             unsigned int timeout_ms, void *user_data,
+                             bool kill_group,
+                             pcmk__main_loop_child_cb_t callback)
 {
-    GList *iter;
-    mainloop_child_t *child = NULL;
-    mainloop_child_t *match = NULL;
-    /* It is impossible to block SIGKILL, this allows us to
-     * call waitpid without WNOHANG flag.*/
-    int waitflags = 0;
+    static bool need_init = true;
+
+    pcmk__main_loop_child_t *child = NULL;
+
+    pcmk__assert(pid > 0);
+
+    child = pcmk__assert_alloc(1, sizeof(pcmk__main_loop_child_t));
+    child->pid = pid;
+    child->desc = pcmk__str_copy(desc);
+    child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                         child);
+    child->user_data = user_data;
+    child->kill_group = kill_group;
+    child->callback = callback;
+
+    child_list = g_list_append(child_list, child);
+
+    if (need_init) {
+        /* Invoke SIGCHLD processing from the main loop. This ensures that we
+         * don't add a child to the main loop and have the exit callback invoked
+         * for the child PID within the same call stack.
+         *
+         * @TODO Understand and document why this matters.
+         */
+        need_init = false;
+        pcmk__create_timer(1, install_sigchld_handler, NULL);
+    }
+}
+
+/*!
+ * \internal
+ * \brief Compare two mainloop child objects by PID
+ *
+ * \param[in] a  First child to compare
+ *               (<tt>const pcmk__main_loop_child_t *</tt>)
+ * \param[in] b  Second child to compare
+ *               (<tt>const pcmk__main_loop_child_t *</tt>)
+ *
+ * \retval -1  if \p a->pid is less than \p b->pid
+ * \retval  0  if \p a->pid is equal to \p b->pid
+ * \retval  1  if \p a->pid is greater than \p b->pid
+ *
+ * \note This is a \c GCompareFunc.
+ */
+static int
+compare_children_by_pid(const void *a, const void *b)
+{
+    const pcmk__main_loop_child_t *child1 = a;
+    const pcmk__main_loop_child_t *child2 = b;
+
+    if (child1->pid < child2->pid) {
+        return -1;
+    }
+
+    if (child1->pid > child2->pid) {
+        return 1;
+    }
+
+    return 0;
+}
+
+/*!
+ * \internal
+ * \brief Kill a child process tracked by the main loop
+ *
+ * If a process with PID \p pid is being tracked, send it a \c SIGKILL.
+ *
+ * If this function kills the child process successfully, remove the child from
+ * the tracking data structure and free the child.
+ *
+ * If the process is being tracked but no longer exists, don't remove or free
+ * the child yet. We will do this later when we receive a \c SIGCHLD for the
+ * child process.
+ *
+ * \param[in] pid  Child PID
+ *
+ * \return \c true if the child with ID \p pid was being tracked and either this
+ *         function killed the process successfully or the process has already
+ *         terminated but we have not received a \c SIGCHLD for it; or \c false
+ *         otherwise
+ */
+bool
+pcmk__main_loop_child_kill(pid_t pid)
+{
+    const pcmk__main_loop_child_t cmp_data = { .pid = pid };
+    GList *match = NULL;
+    pcmk__main_loop_child_t *child = NULL;
     int rc = pcmk_rc_ok;
+    bool no_hang = false;
 
-    for (iter = child_list; iter != NULL && match == NULL; iter = iter->next) {
-        child = iter->data;
-        if (pid == child->pid) {
-            match = child;
-        }
-    }
+    pcmk__assert(pid > 0);
 
+    match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
     if (match == NULL) {
-        return FALSE;
+        return false;
     }
 
-    rc = child_kill_helper(match);
+    child = match->data;
+
+    rc = kill_child_pid(child);
     if (rc == ESRCH) {
-        /* It's gone, but hasn't shown up in waitpid() yet. Wait until we get
+        /* It's gone but hasn't shown up in waitpid() yet. Wait until we get
          * SIGCHLD and let handler clean it up as normal (so we get the correct
          * return code/status). The blocking alternative would be to call
-         * child_waitpid(match, 0).
+         * child_waitpid(iter, false).
          */
         pcmk__trace("Waiting for signal that child process %lld completed",
-                    (long long) match->pid);
-        return TRUE;
+                    (long long) child->pid);
+        return true;
     }
 
     if (rc != pcmk_rc_ok) {
         /* If kill() failed for some other reason, set the WNOHANG flag, since
          * we can't be certain what happened.
+         *
+         * If kill() succeeded, we don't need the WNOHANG flag because SIGKILL
+         * can't be blocked.
          */
-        waitflags = WNOHANG;
+        no_hang = true;
     }
 
-    if (!child_waitpid(match, waitflags)) {
-        /* not much we can do if this occurs */
-        return FALSE;
-    }
-
-    child_list = g_list_remove(child_list, match);
-    child_free(match);
-    return TRUE;
+    return child_waitpid(match, no_hang);
 }
 
-/* Create/Log a new tracked process
- * To track a process group, use -pid
+/*!
+ * \internal
+ * \brief Create a main loop timer
  *
- * @TODO Using a non-positive pid (i.e. any child, or process group) would
- *       likely not be useful since we will free the child after the first
- *       completed process.
+ * \param[in] name         Timer name prefix (for logging only)
+ * \param[in] interval_ms  Timer interval
+ * \param[in] callback     Function to call after \p interval_ms expires
+ * \param[in] user_data    User data for \p callback
+ *
+ * \return Newly allocated main loop timer (guaranteed not to be \c NULL)
+ *
+ * \note The new timer's \c name string starts with the \p name argument and
+ *       includes the timer's interval and address.
+ * \note The caller is responsible for freeing the return value using
+ *       \c pcmk__main_loop_timer_free().
+ */
+pcmk__main_loop_timer_t *
+pcmk__main_loop_timer_new(const char *name, unsigned int interval_ms,
+                          GSourceFunc callback, void *user_data)
+{
+    pcmk__main_loop_timer_t *timer = NULL;
+    pcmk__assert((name != NULL) && (callback != NULL));
+
+    timer = pcmk__assert_alloc(1, sizeof(pcmk__main_loop_timer_t));
+    timer->name = pcmk__assert_asprintf("%s-%u-%p", name, interval_ms, timer);
+    timer->interval_ms = interval_ms;
+    timer->cb = callback;
+    timer->user_data = user_data;
+
+    pcmk__trace("Created timer %s with data %p", timer->name, user_data);
+    return timer;
+}
+
+/*!
+ * \internal
+ * \brief Check whether a main loop timer is running
+ *
+ * A timer is running if its \c id field is nonzero, meaning that it has an
+ * active \c GSource with that ID associated with it.
+ *
+ * \param[in] timer  Main loop timer
+ *
+ * \return \c true if the timer is running, or \c false otherwise
+ */
+bool
+pcmk__main_loop_timer_running(const pcmk__main_loop_timer_t *timer)
+{
+    CRM_CHECK(timer != NULL, return false);
+
+    return (timer->source_id != 0);
+}
+
+/*!
+ * \internal
+ * \brief Stop a main loop timer
+ *
+ * Stopping a timer consists of removing its \c GSource and setting its \c id
+ * field to 0 (to indicate that it has no associated \c GSource).
+ *
+ * \param[in,out] timer  Main loop timer
  */
 void
-mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
-                              void *privatedata,
-                              enum mainloop_child_flags flags,
-                              pcmk__mainloop_child_exit_fn_t exit_fn)
+pcmk__main_loop_timer_stop(pcmk__main_loop_timer_t *timer)
 {
-    static bool need_init = TRUE;
-    mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
-
-    child->pid = pid;
-    child->timerid = 0;
-    child->timeout = FALSE;
-    child->privatedata = privatedata;
-    child->exit_fn = exit_fn;
-    child->flags = flags;
-    child->desc = pcmk__str_copy(desc);
-
-    if (timeout) {
-        child->timerid = pcmk__create_timer(timeout, child_timeout_callback, child);
+    if (!pcmk__main_loop_timer_running(timer)) {
+        return;
     }
 
-    child_list = g_list_append(child_list, child);
-
-    if(need_init) {
-        need_init = FALSE;
-        /* SIGCHLD processing has to be invoked from mainloop.
-         * We do not want it to be possible to both add a child pid
-         * to mainloop, and have the pid's exit callback invoked within
-         * the same callstack. */
-        pcmk__create_timer(1, child_signal_init, NULL);
-    }
+    pcmk__trace("Stopping timer %s", timer->name);
+    g_source_remove(timer->source_id);
+    timer->source_id = 0;
 }
 
-void
-mainloop_child_add(pid_t pid, int timeout, const char *desc, void *privatedata,
-                   pcmk__mainloop_child_exit_fn_t exit_fn)
-{
-    mainloop_child_add_with_flags(pid, timeout, desc, privatedata, 0, exit_fn);
-}
-
+/*!
+ * \internal
+ * \brief Run a main loop timer's callback
+ *
+ * If the callback returns \c G_SOURCE_REMOVE, set \p timer->source_id to 0 to
+ * indicate that the timer has no associated \c GSource.
+ *
+ * \param[in,out] user_data  Main loop timer
+ *                           (<tt>pcmk__main_loop_timer_t *</tt>)
+ *
+ * \return The return value from \p timer->cb (\c G_SOURCE_CONTINUE to keep the
+ *         timeout source, or \c G_SOURCE_REMOVE to remove it)
+ *
+ * \note This is a \c GSourceFunc.
+ */
 static gboolean
-mainloop_timer_cb(void *user_data)
+main_loop_timer_cb(void *user_data)
 {
     int id = 0;
-    bool repeat = FALSE;
-    struct mainloop_timer_s *t = user_data;
+    pcmk__main_loop_timer_t *timer = user_data;
 
-    pcmk__assert(t != NULL);
+    pcmk__assert((timer != NULL) && (timer->cb != NULL));
 
-    id = t->id;
-    t->id = 0; /* Ensure it's unset during callbacks so that
-                * mainloop_timer_running() works as expected
-                */
+    /* Ensure id is unset during callbacks so that
+     * pcmk__main_loop_timer_running() works as expected.
+     *
+     * @TODO Why is this necessary or desirable?
+     */
+    id = timer->source_id;
+    timer->source_id = 0;
 
-    if(t->cb) {
-        pcmk__trace("Invoking callbacks for timer %s", t->name);
-        repeat = t->repeat;
-        if(t->cb(t->userdata) == FALSE) {
-            pcmk__trace("Timer %s complete", t->name);
-            repeat = FALSE;
-        }
+    pcmk__trace("Invoking callbacks for timer %s", timer->name);
+
+    // G_SOURCE_REMOVE is false; G_SOURCE_CONTINUE is true
+    if (!timer->cb(timer->user_data)) {
+        pcmk__trace("Timer %s complete", timer->name);
+        return G_SOURCE_REMOVE;
     }
 
-    if(repeat) {
-        /* Restore if repeating */
-        t->id = id;
-    }
-
-    return repeat;
+    timer->source_id = id;
+    return G_SOURCE_CONTINUE;
 }
 
-bool
-mainloop_timer_running(mainloop_timer_t *t)
-{
-    if(t && t->id != 0) {
-        return TRUE;
-    }
-    return FALSE;
-}
-
+/*!
+ * \internal
+ * \brief Start a main loop timer
+ *
+ * Starting a timer consists of:
+ * 1. stopping the timer if it's already running (by removing the associated
+ *    \c GSource)
+ * 2. creating a new \c GSource using \p timer->interval_ms as the timeout (see
+ *    \c pcmk__create_timer())
+ * 3. assigning the new \c GSource ID to \p timer->source_id
+ *
+ * \param[in,out] timer  Main loop timer
+ */
 void
-mainloop_timer_start(mainloop_timer_t *t)
+pcmk__main_loop_timer_start(pcmk__main_loop_timer_t *timer)
 {
-    mainloop_timer_stop(t);
-    if(t && t->period_ms > 0) {
-        pcmk__trace("Starting timer %s", t->name);
-        t->id = pcmk__create_timer(t->period_ms, mainloop_timer_cb, t);
-    }
+    CRM_CHECK((timer != NULL)
+              && (timer->interval_ms > 0)
+              && (timer->cb != NULL),
+              return);
+
+    pcmk__main_loop_timer_stop(timer);
+
+    pcmk__trace("Starting timer %s", timer->name);
+    timer->source_id = pcmk__create_timer(timer->interval_ms,
+                                          main_loop_timer_cb, timer);
 }
 
+/*!
+ * \internal
+ * \brief Free a main loop timer
+ *
+ * \param[in,out] timer  Main loop timer
+ */
 void
-mainloop_timer_stop(mainloop_timer_t *t)
+pcmk__main_loop_timer_free(pcmk__main_loop_timer_t *timer)
 {
-    if(t && t->id != 0) {
-        pcmk__trace("Stopping timer %s", t->name);
-        g_source_remove(t->id);
-        t->id = 0;
-    }
-}
-
-unsigned int
-mainloop_timer_set_period(mainloop_timer_t *t, unsigned int period_ms)
-{
-    unsigned int last = 0;
-
-    if(t) {
-        last = t->period_ms;
-        t->period_ms = period_ms;
+    if (timer == NULL) {
+        return;
     }
 
-    if(t && t->id != 0 && last != t->period_ms) {
-        mainloop_timer_start(t);
-    }
-    return last;
-}
-
-mainloop_timer_t *
-mainloop_timer_add(const char *name, unsigned int period_ms, bool repeat,
-                   GSourceFunc cb, void *userdata)
-{
-    mainloop_timer_t *t = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
-
-    if (name != NULL) {
-        t->name = pcmk__assert_asprintf("%s-%u-%d", name, period_ms, repeat);
-    } else {
-        t->name = pcmk__assert_asprintf("%p-%u-%d", t, period_ms, repeat);
-    }
-    t->id = 0;
-    t->period_ms = period_ms;
-    t->repeat = repeat;
-    t->cb = cb;
-    t->userdata = userdata;
-    pcmk__trace("Created timer %s with %p %p", t->name, userdata, t->userdata);
-    return t;
-}
-
-void
-mainloop_timer_del(mainloop_timer_t *t)
-{
-    if(t) {
-        pcmk__trace("Destroying timer %s", t->name);
-        mainloop_timer_stop(t);
-        free(t->name);
-        free(t);
-    }
+    pcmk__trace("Destroying timer %s", timer->name);
+    pcmk__main_loop_timer_stop(timer);
+    free(timer->name);
+    free(timer);
 }
 
 /*
@@ -1370,7 +1529,7 @@ drain_timeout_cb(void *user_data)
     bool *timeout_popped = (bool*) user_data;
 
     *timeout_popped = TRUE;
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -1432,3 +1591,251 @@ pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
         g_source_remove(timer);
     }
 }
+
+/*!
+ * \internal
+ * \brief Free data structures used for the mainloop
+ *
+ * \todo This is incomplete. Free other data structures created in this file.
+ */
+void
+mainloop_cleanup(void)
+{
+    g_list_free_full(child_list, free_main_loop_child);
+    child_list = NULL;
+
+    g_clear_pointer(&gio_map, qb_array_free);
+
+    for (int sig = 0; sig < NSIG; ++sig) {
+        mainloop_destroy_signal_entry(sig);
+    }
+}
+
+// Deprecated functions kept only for backward API compatibility
+// LCOV_EXCL_START
+
+#include <crm/common/mainloop_compat.h>
+
+void
+mainloop_child_add_with_flags(pid_t pid, int timeout_ms, const char *desc,
+                              void *user_data,
+                              enum mainloop_child_flags flags,
+                              void (*callback)(mainloop_child_t *child, int core,
+                                               int signo, int exit_code))
+{
+    static bool need_init = true;
+
+    mainloop_child_t *child = pcmk__assert_alloc(1, sizeof(mainloop_child_t));
+
+    child->pid = pid;
+    child->desc = pcmk__str_copy(desc);
+    child->user_data = user_data;
+    child->kill_group = !pcmk__is_set(flags, mainloop_leave_pid_group);
+    child->callback = callback;
+
+    if (timeout_ms > 0) {
+        child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                             child);
+    }
+
+    child_list = g_list_append(child_list, child);
+
+    if (need_init) {
+        need_init = false;
+        pcmk__create_timer(1, install_sigchld_handler, NULL);
+    }
+}
+
+void
+mainloop_child_add(pid_t pid, int timeout_ms, const char *desc, void *user_data,
+                   void (*callback)(mainloop_child_t *child, int core,
+                                    int signo, int exit_code))
+{
+    mainloop_child_add_with_flags(pid, timeout_ms, desc, user_data, 0, callback);
+}
+
+gboolean
+mainloop_child_kill(pid_t pid)
+{
+    const mainloop_child_t cmp_data = { .pid = pid };
+    GList *match = NULL;
+    mainloop_child_t *child = NULL;
+    int rc = pcmk_rc_ok;
+    bool no_hang = false;
+
+    match = g_list_find_custom(child_list, &cmp_data, compare_children_by_pid);
+    if (match == NULL) {
+        return FALSE;
+    }
+
+    child = match->data;
+
+    rc = kill_child_pid(child);
+    if (rc == ESRCH) {
+        pcmk__trace("Waiting for signal that child process %lld completed",
+                    (long long) child->pid);
+        return TRUE;
+    }
+
+    if (rc != pcmk_rc_ok) {
+        no_hang = true;
+    }
+
+    return child_waitpid(match, no_hang)? TRUE : FALSE;
+}
+
+pid_t
+mainloop_child_pid(mainloop_child_t *child)
+{
+    return child->pid;
+}
+
+const char *
+mainloop_child_name(mainloop_child_t *child)
+{
+    return child->desc;
+}
+
+int
+mainloop_child_timeout(mainloop_child_t *child)
+{
+    return child->timed_out? TRUE : FALSE;
+}
+
+void *
+mainloop_child_userdata(mainloop_child_t *child)
+{
+    return child->user_data;
+}
+
+void
+mainloop_clear_child_userdata(mainloop_child_t *child)
+{
+    child->user_data = NULL;
+}
+
+struct mainloop_timer_s {
+    char *name;
+    unsigned int source_id;
+    unsigned int interval_ms;
+    gboolean repeat;
+    GSourceFunc cb;
+    void *user_data;
+};
+
+static gboolean
+mainloop_timer_cb(void *user_data)
+{
+    int id = 0;
+    mainloop_timer_t *timer = user_data;
+
+    pcmk__assert((timer != NULL) && (timer->cb != NULL));
+
+    id = timer->source_id;
+    timer->source_id = 0;
+
+    pcmk__trace("Invoking callbacks for timer %s", timer->name);
+
+    if (!timer->cb(timer->user_data)) {
+        pcmk__trace("Timer %s complete", timer->name);
+        return G_SOURCE_REMOVE;
+    }
+
+    if (!timer->repeat) {
+        return G_SOURCE_REMOVE;
+    }
+
+    timer->source_id = id;
+    return G_SOURCE_CONTINUE;
+}
+
+bool
+mainloop_timer_running(mainloop_timer_t *timer)
+{
+    return (timer != NULL) && (timer->source_id != 0);
+}
+
+void
+mainloop_timer_start(mainloop_timer_t *timer)
+{
+    mainloop_timer_stop(timer);
+
+    if ((timer == NULL) || (timer->interval_ms == 0) || (timer->cb == NULL)) {
+        return;
+    }
+
+    pcmk__trace("Starting timer %s", timer->name);
+    timer->source_id = pcmk__create_timer(timer->interval_ms, mainloop_timer_cb,
+                                          timer);
+}
+
+void
+mainloop_timer_stop(mainloop_timer_t *timer)
+{
+    if ((timer == NULL) || (timer->source_id == 0)) {
+        return;
+    }
+
+    pcmk__trace("Stopping timer %s", timer->name);
+    g_source_remove(timer->source_id);
+    timer->source_id = 0;
+}
+
+unsigned int
+mainloop_timer_set_period(mainloop_timer_t *timer, unsigned int interval_ms)
+{
+    unsigned int last = 0;
+
+    if (timer == NULL) {
+        return 0;
+    }
+
+    last = timer->interval_ms;
+    timer->interval_ms = interval_ms;
+
+    if ((timer->source_id != 0) && (timer->interval_ms != last)) {
+        mainloop_timer_start(timer);
+    }
+
+    return last;
+}
+
+mainloop_timer_t *
+mainloop_timer_add(const char *name, unsigned int interval_ms, bool repeat,
+                   GSourceFunc cb, void *userdata)
+{
+    mainloop_timer_t *timer = pcmk__assert_alloc(1, sizeof(mainloop_timer_t));
+
+    if (name != NULL) {
+        timer->name = pcmk__assert_asprintf("%s-%u-%d", name, interval_ms,
+                                            repeat);
+
+    } else {
+        timer->name = pcmk__assert_asprintf("%p-%u-%d", timer, interval_ms,
+                                            repeat);
+    }
+
+    timer->interval_ms = interval_ms;
+    timer->repeat = repeat;
+    timer->cb = cb;
+    timer->user_data = userdata;
+
+    pcmk__trace("Created timer %s with %p", timer->name, userdata);
+    return timer;
+}
+
+void
+mainloop_timer_del(mainloop_timer_t *timer)
+{
+    if (timer == NULL) {
+        return;
+    }
+
+    pcmk__trace("Destroying timer %s", timer->name);
+    mainloop_timer_stop(timer);
+    free(timer->name);
+    free(timer);
+}
+
+// LCOV_EXCL_STOP
+// End deprecated API

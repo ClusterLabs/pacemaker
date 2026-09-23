@@ -143,7 +143,7 @@ typedef struct {
     GHashTable *params;
     GHashTable *aliases;
     GList *pending_ops;
-    mainloop_timer_t *timer;
+    pcmk__main_loop_timer_t *timer;
     crm_trigger_t *work;
     xmlNode *agent_metadata;
     const char *default_host_arg;

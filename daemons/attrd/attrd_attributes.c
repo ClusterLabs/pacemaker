@@ -30,6 +30,8 @@ attrd_create_attribute(xmlNode *xml)
     const char *dampen_s = pcmk__xe_get(xml, PCMK__XA_ATTR_DAMPENING);
     attribute_t *a = NULL;
 
+    pcmk__assert(name != NULL);
+
     if (set_type == NULL) {
         set_type = PCMK_XE_INSTANCE_ATTRIBUTES;
     }
@@ -97,7 +99,7 @@ attrd_update_dampening(attribute_t *a, xmlNode *xml, const char *attr)
     }
 
     if (a->timeout_ms != dampen) {
-        mainloop_timer_del(a->timer);
+        pcmk__main_loop_timer_free(a->timer);
         a->timeout_ms = (int) QB_MIN(dampen, INT_MAX);
         if (dampen > 0) {
             a->timer = attrd_add_timer(attr, a->timeout_ms, a);

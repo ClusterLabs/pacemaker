@@ -45,13 +45,13 @@ static crm_trigger_t *write_trigger = NULL;
  * \internal
  * \brief Process the exit status of a child forked from \c write_cib_async()
  *
- * \param[in] child      Mainloop child data
+ * \param[in] child      Main loop child
  * \param[in] core       If set to 1, the child process dumped core
  * \param[in] signo      Signal that the child process exited with
  * \param[in] exit_code  Child process's exit code
  */
 static void
-write_cib_cb(mainloop_child_t *child, int core, int signo, int exit_code)
+write_cib_cb(pcmk__main_loop_child_t *child, int core, int signo, int exit_code)
 {
     const char *error = "Could not write CIB to disk";
 
@@ -113,7 +113,8 @@ write_cib_async(void *user_data)
 
     if (pid > 0) {
         // Parent
-        mainloop_child_add(pid, 0, "disk-writer", NULL, write_cib_cb);
+        pcmk__main_loop_child_create(pid, "disk-writer", 0, NULL, true,
+                                     write_cib_cb);
 
         if (blackbox_state == QB_LOG_STATE_ENABLED) {
             qb_log_ctl(QB_LOG_BLACKBOX, QB_LOG_CONF_ENABLED, QB_TRUE);

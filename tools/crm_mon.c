@@ -67,7 +67,7 @@ static mon_output_format_t output_format = mon_output_unset;
 static GIOChannel *io_channel = NULL;
 static GMainLoop *mainloop = NULL;
 static unsigned int reconnect_timer = 0;
-static mainloop_timer_t *refresh_timer = NULL;
+static pcmk__main_loop_timer_t *refresh_timer = NULL;
 
 static enum pcmk_pacemakerd_state pcmkd_state = pcmk_pacemakerd_state_invalid;
 static cib_t *cib = NULL;
@@ -831,7 +831,7 @@ mon_cib_connection_destroy(void *user_data)
 
     if (refresh_timer != NULL) {
         /* we'll trigger a refresh after reconnect */
-        mainloop_timer_stop(refresh_timer);
+        pcmk__main_loop_timer_stop(refresh_timer);
     }
     if (reconnect_timer) {
         /* we'll trigger a new reconnect-timeout at the end */
@@ -1864,7 +1864,7 @@ static gboolean
 mon_trigger_refresh(void *user_data)
 {
     mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 static int
@@ -2115,12 +2115,13 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     }
 
     if(refresh_timer == NULL) {
-        refresh_timer = mainloop_timer_add("refresh", 2000, FALSE, mon_trigger_refresh, NULL);
+        refresh_timer = pcmk__main_loop_timer_new("refresh", 2000,
+                                                  mon_trigger_refresh, NULL);
     }
 
     if (reconnect_timer > 0) {
         /* we will receive a refresh request after successful reconnect */
-        mainloop_timer_stop(refresh_timer);
+        pcmk__main_loop_timer_stop(refresh_timer);
         return;
     }
 
@@ -2134,11 +2135,11 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
         ((now - last_refresh) > pcmk__timeout_ms2s(options.reconnect_ms)) ||
         updates >= 10) {
         mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
-        mainloop_timer_stop(refresh_timer);
+        pcmk__main_loop_timer_stop(refresh_timer);
         updates = 0;
 
     } else {
-        mainloop_timer_start(refresh_timer);
+        pcmk__main_loop_timer_start(refresh_timer);
     }
 }
 

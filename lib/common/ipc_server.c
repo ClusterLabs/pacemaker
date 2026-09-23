@@ -430,7 +430,7 @@ crm_ipcs_flush_events_cb(void *data)
 
     c->event_timer = 0;
     crm_ipcs_flush_events(c);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
