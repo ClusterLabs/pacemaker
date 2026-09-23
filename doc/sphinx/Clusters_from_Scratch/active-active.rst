@@ -4,6 +4,13 @@
 Convert Storage to Active/Active
 --------------------------------
 
+.. NOTE::
+
+   GFS2 is not available in a package repo for |CFS_DISTRO| |CFS_DISTRO_VER|.
+   It can still be built from source, but doing so is scope of this document.
+   The following instructions are still useful for older distributions or
+   for installation from source.  They have been updated where possible.
+
 The primary requirement for an active/active cluster is that the data
 required for your services is available, simultaneously, on both
 machines. Pacemaker makes no requirement on how this is achieved; you
@@ -68,38 +75,80 @@ Activate our new configuration, and see how the cluster responds:
         * Started: [ pcmk-1 pcmk-2 ]
     [root@pcmk-1 ~]# pcs resource config
      Resource: ClusterIP (class=ocf provider=heartbeat type=IPaddr2)
-      Attributes: cidr_netmask=24 ip=192.168.122.120
-      Operations: monitor interval=30s (ClusterIP-monitor-interval-30s)
-                  start interval=0s timeout=20s (ClusterIP-start-interval-0s)
-                  stop interval=0s timeout=20s (ClusterIP-stop-interval-0s)
+      Attributes: ClusterIP-instance_attributes
+        cidr_netmask=24
+        ip=192.168.122.120
+        nic=enp1s0
+      Operations:
+        monitor: ClusterIP-monitor-interval-30s
+          interval=30s
+        start: ClusterIP-start-interval-0s
+          interval=0s timeout=20s
+        stop: ClusterIP-stop-interval-0s
+          interval=0s timeout=20s
      Resource: WebSite (class=ocf provider=heartbeat type=apache)
-      Attributes: configfile=/etc/httpd/conf/httpd.conf statusurl=http://localhost/server-status
-      Operations: monitor interval=1min (WebSite-monitor-interval-1min)
-                  start interval=0s timeout=40s (WebSite-start-interval-0s)
-                  stop interval=0s timeout=60s (WebSite-stop-interval-0s)
-     Clone: WebData-clone
-      Meta Attrs: clone-max=2 clone-node-max=1 notify=true promotable=true promoted-max=1 promoted-node-max=1
-      Resource: WebData (class=ocf provider=linbit type=drbd)
-       Attributes: drbd_resource=wwwdata
-       Operations: demote interval=0s timeout=90 (WebData-demote-interval-0s)
-                   monitor interval=29s role=Promoted (WebData-monitor-interval-29s)
-                   monitor interval=31s role=Unpromoted (WebData-monitor-interval-31s)
-                   notify interval=0s timeout=90 (WebData-notify-interval-0s)
-                   promote interval=0s timeout=90 (WebData-promote-interval-0s)
-                   reload interval=0s timeout=30 (WebData-reload-interval-0s)
-                   start interval=0s timeout=240 (WebData-start-interval-0s)
-                   stop interval=0s timeout=100 (WebData-stop-interval-0s)
+      Attributes: WebSite-instance_attributes
+        configfile=/etc/httpd/conf/httpd.conf
+        statusurl=http://localhost/server-status
+      Operations:
+        monitor: WebSite-monitor-interval-1min
+          interval=1min
+        start: WebSite-start-interval-0s
+          interval=0s timeout=40s
+        stop: WebSite-stop-interval-0s
+          interval=0s timeout=60s
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
-      Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
-                  start interval=0s timeout=60s (WebFS-start-interval-0s)
-                  stop interval=0s timeout=60s (WebFS-stop-interval-0s)
+      Attributes: WebFS-instance_attributes
+        device=/dev/drbd1
+        directory=/var/www/html
+        fstype=xfs
+      Operations:
+        monitor: WebFS-monitor-interval-20s
+          interval=20s timeout=40s
+        start: WebFS-start-interval-0s
+          interval=0s timeout=60s
+        stop: WebFS-stop-interval-0s
+          interval=0s timeout=60s
+     Clone: WebData-clone
+      Meta Attributes: WebData-clone-meta_attributes
+        clone-max=2
+        clone-node-max=1
+        notify=true
+        promotable=true
+        promoted-max=1
+        promoted-node-max=1
+      Resource: WebData (class=ocf provider=linbit type=drbd)
+       Attributes: WebData-instance_attributes
+         drbd_resource=wwwdata
+       Operations:
+         demote: WebData-demote-interval-0s
+           interval=0s timeout=90
+         monitor: WebData-monitor-interval-29s
+           interval=29s role=Promoted
+         monitor: WebData-monitor-interval-31s
+           interval=31s role=Unpromoted
+         notify: WebData-notify-interval-0s
+           interval=0s timeout=90
+         promote: WebData-promote-interval-0s
+           interval=0s timeout=90
+         reload: WebData-reload-interval-0s
+           interval=0s timeout=30
+         start: WebData-start-interval-0s
+           interval=0s timeout=240
+         stop: WebData-stop-interval-0s
+           interval=0s timeout=100
      Clone: dlm-clone
-      Meta Attrs: interleave=true ordered=true
+      Meta Attributes: dlm-clone-meta_attributes
+        interleave=true
+        ordered=true
       Resource: dlm (class=ocf provider=pacemaker type=controld)
-       Operations: monitor interval=60s (dlm-monitor-interval-60s)
-                   start interval=0s timeout=90s (dlm-start-interval-0s)
-                   stop interval=0s timeout=100s (dlm-stop-interval-0s)
+       Operations:
+         monitor: dlm-monitor-interval-60s
+           interval=60s
+         start: dlm-start-interval-0s
+           interval=0s timeout=90
+         stop: dlm-stop-interval-0s
+           interval=0s timeout=100
 
 Create and Populate GFS2 Filesystem
 ###################################
@@ -202,11 +251,19 @@ With the ``WebFS`` resource stopped, let's update the configuration.
 
     [root@pcmk-1 ~]# pcs resource config WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=xfs
-      Meta Attrs: target-role=Stopped
-      Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
-                  start interval=0s timeout=60s (WebFS-start-interval-0s)
-                  stop interval=0s timeout=60s (WebFS-stop-interval-0s)
+      Attributes: WebFS-instance_attributes
+        device=/dev/drbd1
+        directory=/var/www/html
+        fstype=xfs
+      Meta Attributes: WebFS-meta_attributes
+        target-role=Stopped
+      Operations:
+        monitor: WebFS-monitor-interval-20s
+          interval=20s timeout=40s
+        start: WebFS-start-interval-0s
+          interval=0s timeout=60s
+        stop: WebFS-stop-interval-0s
+          interval=0s timeout=60s
 
 The fstype option needs to be updated to ``gfs2`` instead of ``xfs``.
 
@@ -215,11 +272,19 @@ The fstype option needs to be updated to ``gfs2`` instead of ``xfs``.
     [root@pcmk-1 ~]# pcs resource update WebFS fstype=gfs2
     [root@pcmk-1 ~]# pcs resource config WebFS
      Resource: WebFS (class=ocf provider=heartbeat type=Filesystem)
-      Attributes: device=/dev/drbd1 directory=/var/www/html fstype=gfs2
-      Meta Attrs: target-role=Stopped
-      Operations: monitor interval=20s timeout=40s (WebFS-monitor-interval-20s)
-                  start interval=0s timeout=60s (WebFS-start-interval-0s)
-                  stop interval=0s timeout=60s (WebFS-stop-interval-0s)
+      Attributes: WebFS-instance_attributes
+        device=/dev/drbd1
+        directory=/var/www/html
+        fstype=gfs2
+      Meta Attributes: WebFS-meta_attributes
+        target-role=Stopped
+      Operations:
+        monitor: WebFS-monitor-interval-20s
+          interval=20s timeout=40s
+        start: WebFS-start-interval-0s
+          interval=0s timeout=60s
+        stop: WebFS-stop-interval-0s
+          interval=0s timeout=60s
 
 GFS2 requires that DLM be running, so we also need to set up new colocation
 and ordering constraints for it:
@@ -231,20 +296,21 @@ and ordering constraints for it:
     Adding dlm-clone WebFS (kind: Mandatory) (Options: first-action=start then-action=start)
     [root@pcmk-1 ~]# pcs constraint
     Location Constraints:
-      Resource: WebSite
-        Enabled on:
-          Node: pcmk-2 (score:50)
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
-      promote WebData-clone then start WebFS (kind:Mandatory)
-      start WebFS then start WebSite (kind:Mandatory)
-      start dlm-clone then start WebFS (kind:Mandatory)
+      resource 'WebSite' prefers node 'pcmk-2' with score 50
     Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-      WebFS with WebData-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Promoted)
-      WebSite with WebFS (score:INFINITY)
-      WebFS with dlm-clone (score:INFINITY)
-    Ticket Constraints:
+      resource 'WebSite' with resource 'ClusterIP'
+        score=INFINITY
+      resource 'WebFS' with Promoted resource 'WebData-clone'
+        score=INFINITY
+      resource 'WebSite' with resource 'WebFS'
+        score=INFINITY
+      resource 'WebFS' with resource 'dlm-clone'
+        score=INFINITY
+    Order Constraints:
+      start resource 'ClusterIP' then start resource 'WebSite'
+      promote resource 'WebData-clone' then start resource 'WebFS'
+      start resource 'WebFS' then start resource 'WebSite'
+      start resource 'dlm-clone' then start resource 'WebFS'
 
 We also need to update the ``no-quorum-policy`` property to ``freeze``. By
 default, the value of ``no-quorum-policy`` is set to ``stop`` indicating that
@@ -283,20 +349,21 @@ Notice how ``pcs`` automatically updates the relevant constraints again.
     [root@pcmk-1 ~]# pcs -f active_cfg resource clone WebFS
     [root@pcmk-1 ~]# pcs -f active_cfg constraint
     Location Constraints:
-      Resource: WebSite
-        Enabled on:
-          Node: pcmk-2 (score:50)
-    Ordering Constraints:
-      start ClusterIP then start WebSite (kind:Mandatory)
-      promote WebData-clone then start WebFS-clone (kind:Mandatory)
-      start WebFS-clone then start WebSite (kind:Mandatory)
-      start dlm-clone then start WebFS-clone (kind:Mandatory)
+      resource 'WebSite' prefers node 'pcmk-2' with score 50
     Colocation Constraints:
-      WebSite with ClusterIP (score:INFINITY)
-      WebFS-clone with WebData-clone (score:INFINITY) (rsc-role:Started) (with-rsc-role:Promoted)
-      WebSite with WebFS-clone (score:INFINITY)
-      WebFS-clone with dlm-clone (score:INFINITY)
-    Ticket Constraints:
+      resource 'WebSite' with resource 'ClusterIP'
+        score=INFINITY
+      resource 'WebFS-clone' with Promoted resource 'WebData-clone'
+        score=INFINITY
+      resource 'WebSite' with resource 'WebFS-clone'
+        score=INFINITY
+      resource 'WebFS-clone' with resource 'dlm-clone'
+        score=INFINITY
+    Order Constraints:
+      start resource 'ClusterIP' then start resource 'WebSite'
+      promote resource 'WebData-clone' then start resource 'WebFS-clone'
+      start resource 'WebFS-clone' then start resource 'WebSite'
+      start resource 'dlm-clone' then start resource 'WebFS-clone'
 
 Tell the cluster that it is now allowed to promote both instances to be DRBD
 Primary.
