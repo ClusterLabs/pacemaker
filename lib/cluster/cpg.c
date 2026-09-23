@@ -9,29 +9,35 @@
 
 #include <crm_internal.h>
 
-#include <arpa/inet.h>
-#include <inttypes.h>                   // PRIu32
-#include <netdb.h>
-#include <netinet/in.h>
-#include <stdbool.h>
-#include <stdint.h>                     // uint32_t
-#include <sys/socket.h>
-#include <sys/types.h>                  // size_t
-#include <sys/utsname.h>
+#include <errno.h>                  // EINVAL, ENOTCONN
+#include <inttypes.h>               // PRIu32, uint32_t, int32_t
+#include <stdbool.h>                // bool, false, true
+#include <stdlib.h>                 // NULL, bsearch, free, size_t
+#include <string.h>                 // memcpy, memset, strerror, strlen
+#include <sys/types.h>              // gid_t, pid_t, time_t, uid_t
+#include <sys/uio.h>                // iovec
+#include <syslog.h>                 // LOG_INFO
+#include <time.h>                   // time
+#include <unistd.h>                 // getpid, sleep
 
-#include <bzlib.h>
-#include <corosync/corodefs.h>
-#include <corosync/corotypes.h>
-#include <corosync/hdb.h>
-#include <corosync/cpg.h>
-#include <qb/qbipc_common.h>
-#include <qb/qbipcc.h>
-#include <qb/qbutil.h>
+#include <bzlib.h>                  // BZ2_bzBuffToBuffDecompress
+#include <corosync/corotypes.h>     // CS_OK, CS_ERR_QUEUE_FULL
+#include <corosync/cpg.h>           // cpg_address, cpg_name, cpg_fd_get
+#include <glib.h>                   // FALSE, TRUE, g_list_append, gboolean
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qbdefs.h>              // QB_MIN
+#include <qb/qbipc_common.h>        // qb_ipc_response_header
+#include <qb/qblog.h>               // QB_XS, LOG_TRACE
 
+#include <crm/cluster.h>            // pcmk_cluster_t
 #include <crm/cluster/internal.h>
-#include <crm/common/ipc.h>
-#include <crm/common/mainloop.h>
-#include <crm/common/xml.h>
+#include <crm/common/internal.h>    // pcmk__err, pcmk__corosync2rc
+#include <crm/common/ipc.h>         // crm_ipc_is_authentic_process, pcmk_ipc_server
+#include <crm/common/logging.h>     // do_crm_log
+#include <crm/common/mainloop.h>    // G_PRIORITY_MEDIUM, mainloop_*
+#include <crm/common/options.h>     // PCMK_VALUE_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_rc_str
+#include <crm/crm.h>                // MAX_NAME, crm_system_name
 
 #include "crmcluster_private.h"
 
@@ -372,6 +378,19 @@ check_message_sanity(const pcmk__cpg_msg_t *msg)
     return true;
 }
 
+static size_t
+truncate_peer_name(size_t cur_len, const char *name)
+{
+    if (cur_len >= MAX_NAME) {
+        pcmk__warn("Peer name '%s' is longer than max allowed %d chars and "
+                   "will be truncated",
+                   name, MAX_NAME - 1);
+        return MAX_NAME - 1;
+    }
+
+    return cur_len;
+}
+
 /*!
  * \internal
  * \brief Extract text data from a Corosync CPG message
@@ -440,12 +459,14 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
                             " but its name is unknown",
                             sender_id);
             } else {
-                pcmk__debug("Updating name of CPG message sender with ID %" PRIu32
-                            " to %s",
-                            sender_id, peer->name);
-                msg->sender.size = strlen(peer->name);
+                msg->sender.size = truncate_peer_name(strlen(peer->name),
+                                                      peer->name);
                 memset(msg->sender.uname, 0, MAX_NAME);
                 memcpy(msg->sender.uname, peer->name, msg->sender.size);
+
+                pcmk__debug("Updating name of CPG message sender with ID %" PRIu32
+                            " to %s",
+                            sender_id, msg->sender.uname);
             }
         }
     }
@@ -926,8 +947,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     if (local_name == NULL) {
         local_name = pcmk__cluster_local_node_name();
-    }
-    if ((local_name_len == 0) && (local_name != NULL)) {
         local_name_len = strlen(local_name);
     }
 
@@ -949,10 +968,9 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
 
     if (node != NULL) {
         if (node->name != NULL) {
-            target = pcmk__str_copy(node->name);
-            msg->host.size = strlen(node->name);
-            memset(msg->host.uname, 0, MAX_NAME);
+            msg->host.size = truncate_peer_name(strlen(node->name), node->name);
             memcpy(msg->host.uname, node->name, msg->host.size);
+            target = pcmk__str_copy(msg->host.uname);
 
         } else {
             target = pcmk__assert_asprintf("%" PRIu32, node->cluster_layer_id);
@@ -966,12 +984,9 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->sender.id = 0;
     msg->sender.type = pcmk__parse_server(crm_system_name);
     msg->sender.pid = local_pid;
-    msg->sender.size = local_name_len;
-    memset(msg->sender.uname, 0, MAX_NAME);
+    msg->sender.size = truncate_peer_name(local_name_len, local_name);
 
-    if ((local_name != NULL) && (msg->sender.size != 0)) {
-        memcpy(msg->sender.uname, local_name, msg->sender.size);
-    }
+    memcpy(msg->sender.uname, local_name, msg->sender.size);
 
     msg->size = 1 + strlen(data);
     msg->header.size = sizeof(pcmk__cpg_msg_t) + msg->size;

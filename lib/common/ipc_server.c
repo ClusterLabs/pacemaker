@@ -22,7 +22,6 @@
 #include <glib.h>                   // g_hash_table_*
 #include <gnutls/gnutls.h>          // gnutls_deinit
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbdefs.h>              // QB_MAX
 #include <qb/qbipc_common.h>        // qb_ipc_response_header
 #include <qb/qbipcs.h>              // qb_ipcs_*
 #include <qb/qblog.h>               // QB_XS
@@ -374,51 +373,6 @@ pcmk__free_client(pcmk__client_t *c)
     free(c);
 }
 
-/*!
- * \internal
- * \brief Raise IPC eviction threshold for a client, if allowed
- *
- * \param[in,out] client     Client to modify
- * \param[in]     qmax       New threshold
- */
-void
-pcmk__set_client_queue_max(pcmk__client_t *client, const char *qmax)
-{
-    int rc = pcmk_rc_ok;
-    long long qmax_ll = 0LL;
-    unsigned int orig_value = 0U;
-
-    CRM_CHECK(client != NULL, return);
-
-    orig_value = client->queue_max;
-
-    if (pcmk__is_set(client->flags, pcmk__client_privileged)) {
-        rc = pcmk__scan_ll(qmax, &qmax_ll, 0LL);
-
-        if (rc == pcmk_rc_ok) {
-            if ((qmax_ll <= 0LL) || (qmax_ll > UINT_MAX)) {
-                rc = ERANGE;
-            } else {
-                client->queue_max = (unsigned int) qmax_ll;
-            }
-        }
-
-    } else {
-        rc = EACCES;
-    }
-
-    if (rc != pcmk_rc_ok) {
-        pcmk__info("Could not set IPC threshold for client %s[%u] to %s: %s",
-                   pcmk__client_name(client), client->pid,
-                   pcmk__s(qmax, "default"), pcmk_rc_str(rc));
-
-    } else if (client->queue_max != orig_value) {
-        pcmk__debug("IPC threshold for client %s[%u] is now %u (was %u)",
-                    pcmk__client_name(client), client->pid, client->queue_max,
-                    orig_value);
-    }
-}
-
 int
 pcmk__client_pid(qb_ipcs_connection_t *c)
 {
@@ -446,10 +400,6 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
     pcmk__ipc_header_t *header = (void *) c->buffer->data;
     char *text = (char *) header + sizeof(pcmk__ipc_header_t);
 
-    if (!pcmk__valid_ipc_header(header)) {
-        return NULL;
-    }
-
     if (id != NULL) {
         *id = header->qb.id;
     }
@@ -465,8 +415,6 @@ pcmk__client_data2xml(pcmk__client_t *c, uint32_t *id, uint32_t *flags)
          */
         pcmk__set_client_flags(c, pcmk__client_proxied);
     }
-
-    pcmk__assert(text[header->size - 1] == 0);
 
     xml = pcmk__xml_parse(text);
     pcmk__log_xml_trace(xml, "[IPC received]");
@@ -595,7 +543,7 @@ no_more_retries:
      * but drop completely unresponsive clients so the connection doesn't
      * consume resources indefinitely.
      */
-    if (queue_len > QB_MAX(c->queue_max, PCMK_IPC_DEFAULT_QUEUE_MAX)) {
+    if (queue_len > PCMK_IPC_DEFAULT_QUEUE_MAX) {
         /* Don't evict:
          * - Clients with a new backlog.
          * - Clients with a shrinking backlog (the client is processing
@@ -606,7 +554,8 @@ no_more_retries:
          */
         if ((c->queue_backlog <= 1)
             || (queue_len < c->queue_backlog)
-            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown))) {
+            || ((sent > 0) && (pcmk__parse_server(c->name) != pcmk_ipc_unknown)
+                && pcmk__is_set(c->flags, pcmk__client_privileged))) {
             pcmk__warn("Client with process ID %u has a backlog of %u messages "
                        QB_XS " %p", c->pid, queue_len, c->ipcs);
 
