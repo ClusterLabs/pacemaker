@@ -969,7 +969,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     if (node != NULL) {
         if (node->name != NULL) {
             msg->host.size = truncate_peer_name(strlen(node->name), node->name);
-            memset(msg->host.uname, 0, MAX_NAME);
             memcpy(msg->host.uname, node->name, msg->host.size);
             target = pcmk__str_copy(msg->host.uname);
 
@@ -987,7 +986,6 @@ send_cpg_text(const char *data, const pcmk__node_status_t *node,
     msg->sender.pid = local_pid;
     msg->sender.size = truncate_peer_name(local_name_len, local_name);
 
-    memset(msg->sender.uname, 0, MAX_NAME);
     memcpy(msg->sender.uname, local_name, msg->sender.size);
 
     msg->size = 1 + strlen(data);
