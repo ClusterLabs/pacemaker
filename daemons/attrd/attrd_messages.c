@@ -21,8 +21,6 @@
 
 int minimum_protocol_version = -1;
 
-static GHashTable *attrd_handlers = NULL;
-
 static bool
 is_sync_point_attr(const xmlAttr *attr, void *data)
 {
@@ -238,30 +236,18 @@ handle_update_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-attrd_register_handlers(void)
-{
-    pcmk__server_command_t handlers[] = {
-        { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
-        { PCMK__ATTRD_CMD_CONFIRM, handle_confirm_request },
-        { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
-        { PCMK__ATTRD_CMD_QUERY, handle_query_request },
-        { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
-        { PCMK__ATTRD_CMD_SYNC_RESPONSE, handle_sync_response_request },
-        { PCMK__ATTRD_CMD_UPDATE, handle_update_request },
-        { PCMK__ATTRD_CMD_UPDATE_DELAY, handle_update_request },
-        { PCMK__ATTRD_CMD_UPDATE_BOTH, handle_update_request },
-        { NULL, handle_unknown_request },
-    };
-
-    attrd_handlers = pcmk__register_handlers(handlers);
-}
-
-void
-attrd_unregister_handlers(void)
-{
-    g_clear_pointer(&attrd_handlers, g_hash_table_destroy);
-}
+pcmk__server_command_t attrd_handlers[] = {
+    { PCMK__ATTRD_CMD_CLEAR_FAILURE, handle_clear_failure_request },
+    { PCMK__ATTRD_CMD_CONFIRM, handle_confirm_request },
+    { PCMK__ATTRD_CMD_PEER_REMOVE, handle_remove_request },
+    { PCMK__ATTRD_CMD_QUERY, handle_query_request },
+    { PCMK__ATTRD_CMD_REFRESH, handle_refresh_request },
+    { PCMK__ATTRD_CMD_SYNC_RESPONSE, handle_sync_response_request },
+    { PCMK__ATTRD_CMD_UPDATE, handle_update_request },
+    { PCMK__ATTRD_CMD_UPDATE_DELAY, handle_update_request },
+    { PCMK__ATTRD_CMD_UPDATE_BOTH, handle_update_request },
+    { NULL, handle_unknown_request },
+};
 
 void
 attrd_handle_request(pcmk__request_t *request)
@@ -271,11 +257,7 @@ attrd_handle_request(pcmk__request_t *request)
     const char *exec_status_s = NULL;
     const char *reason = NULL;
 
-    if (attrd_handlers == NULL) {
-        attrd_register_handlers();
-    }
-
-    reply = pcmk__process_request(request, attrd_handlers);
+    reply = pcmk__process_request(request, attrd.handlers);
 
     if (reply != NULL) {
         pcmk__log_xml_trace(reply, "Reply");
@@ -322,7 +304,7 @@ attrd_send_protocol(const pcmk__node_status_t *peer)
 
     pcmk__xe_set(attrd_op, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(attrd_op, PCMK__XA_SRC, crm_system_name);
-    pcmk__xe_set(attrd_op, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(attrd_op, attrd.op, PCMK__ATTRD_CMD_UPDATE);
     pcmk__xe_set(attrd_op, PCMK__XA_ATTR_NAME, CRM_ATTR_PROTOCOL);
     pcmk__xe_set(attrd_op, PCMK__XA_ATTR_VALUE, ATTRD_PROTOCOL_VERSION);
     pcmk__xe_set_int(attrd_op, PCMK__XA_ATTR_IS_PRIVATE, 1);
@@ -352,7 +334,7 @@ attrd_send_protocol(const pcmk__node_status_t *peer)
 gboolean
 attrd_send_message(const pcmk__node_status_t *node, xmlNode *data, bool confirm)
 {
-    const char *op = pcmk__xe_get(data, PCMK_XA_TASK);
+    const char *op = pcmk__xe_get(data, attrd.op);
 
     pcmk__xe_set(data, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(data, PCMK__XA_ATTR_VERSION, ATTRD_PROTOCOL_VERSION);

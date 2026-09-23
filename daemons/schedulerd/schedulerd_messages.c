@@ -30,8 +30,6 @@
 
 #include "pacemaker-schedulerd.h"       // logger_out, schedulerd_*
 
-static GHashTable *schedulerd_handlers = NULL;
-
 static pcmk_scheduler_t *
 init_scheduler(void)
 {
@@ -207,23 +205,11 @@ handle_hello_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-schedulerd_register_handlers(void)
-{
-    pcmk__server_command_t handlers[] = {
-        { CRM_OP_HELLO, handle_hello_request },
-        { CRM_OP_PECALC, handle_pecalc_request },
-        { NULL, handle_unknown_request },
-    };
-
-    schedulerd_handlers = pcmk__register_handlers(handlers);
-}
-
-void
-schedulerd_unregister_handlers(void)
-{
-    g_clear_pointer(&schedulerd_handlers, g_hash_table_destroy);
-}
+pcmk__server_command_t schedulerd_handlers[] = {
+    { CRM_OP_HELLO, handle_hello_request },
+    { CRM_OP_PECALC, handle_pecalc_request },
+    { NULL, handle_unknown_request },
+};
 
 void
 schedulerd_handle_request(pcmk__request_t *request)
@@ -233,11 +219,7 @@ schedulerd_handle_request(pcmk__request_t *request)
     const char *exec_status_s = NULL;
     const char *reason = NULL;
 
-    if (schedulerd_handlers == NULL) {
-        schedulerd_register_handlers();
-    }
-
-    reply = pcmk__process_request(request, schedulerd_handlers);
+    reply = pcmk__process_request(request, schedulerd.handlers);
 
     if (reply != NULL) {
         pcmk__log_xml_trace(reply, "Reply");

@@ -10,17 +10,20 @@
 #ifndef PACEMAKER_ATTRD__H
 #  define PACEMAKER_ATTRD__H
 
-#include <regex.h>
-#include <stdbool.h>
-#include <stdint.h>
+#include <regex.h>                  // regex_t
+#include <stdbool.h>                // bool
+#include <stdint.h>                 // UINT32_C, uint32_t
 
-#include <glib.h>
+#include <glib.h>                   // GHashTable, gboolean
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // LOG_TRACE
 
-#include <crm/crm.h>
-#include <crm/cluster.h>
-#include <crm/cluster/election_internal.h>
+#include <crm/cib/cib_types.h>      // cib_t
+#include <crm/cluster.h>            // pcmk_cluster_t
+#include <crm/cluster/internal.h>   // pcmk__node_status_t
 #include <crm/common/internal.h>
-#include <crm/cib/cib_types.h>
+#include <crm/common/mainloop.h>    // crm_trigger_t, mainloop_timer_t
+#include <crm/lrmd.h>               // lrmd_t
 
 /*
  * Legacy attrd (all pre-1.1.11 Pacemaker versions, plus all versions when used
@@ -58,8 +61,9 @@
                        CRM_EX_INDETERMINATE)
 
 void attrd_free_waitlist(void);
-bool attrd_ipc_init(void);
-void attrd_ipc_cleanup(void);
+
+void attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client);
+void attrd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request);
 
 int attrd_cib_connect(int max_retry);
 void attrd_cib_disconnect(void);
@@ -86,6 +90,7 @@ int attrd_expand_value(const char *value, const char *old_value);
 int attrd_failure_regex(regex_t *regex, const char *rsc, const char *op,
                         unsigned int interval_ms);
 
+extern pcmk__server_command_t attrd_handlers[];
 extern cib_t *the_cib;
 
 /* Alerts */
@@ -232,7 +237,6 @@ void attrd_update_minimum_protocol_ver(const char *host, const char *value);
 
 mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
 
-void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);
 
 enum attrd_sync_point {
