@@ -17,6 +17,7 @@ SUBDIRS += cmdline
 SUBDIRS += digest
 SUBDIRS += flags
 SUBDIRS += health
+SUBDIRS += ipc
 SUBDIRS += io
 SUBDIRS += iso8601
 SUBDIRS += lists

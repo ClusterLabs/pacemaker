@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -12,6 +12,7 @@
 
 #include <pwd.h>                    // struct passwd
 #include <stdbool.h>                // bool
+#include <stdint.h>                 // uint32_t
 #include <stdio.h>                  // FILE
 #include <stdlib.h>
 #include <string.h>
@@ -19,6 +20,8 @@
 #include <sys/utsname.h>
 #include <unistd.h>
 #include <grp.h>                    // struct group
+
+#include <qb/qbipcs.h>              // qb_ipcs_service_t
 
 #include <crm/common/results.h>     // _Noreturn
 
@@ -87,6 +90,14 @@ ssize_t __wrap_readlink(const char *restrict path, char *restrict buf,
 extern bool pcmk__mock_strdup;
 char *__real_strdup(const char *s);
 char *__wrap_strdup(const char *s);
+
+extern bool pcmk__mock_add_mainloop_ipc_server;
+qb_ipcs_service_t *__real_pcmk__add_mainloop_ipc_server(
+    const char *name, struct qb_ipcs_service_handlers *callbacks,
+    uint32_t flags);
+qb_ipcs_service_t *__wrap_pcmk__add_mainloop_ipc_server(
+    const char *name, struct qb_ipcs_service_handlers *callbacks,
+    uint32_t flags);
 
 #ifdef __cplusplus
 }
