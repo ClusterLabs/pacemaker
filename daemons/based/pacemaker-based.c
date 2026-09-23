@@ -204,13 +204,6 @@ static GOptionEntry entries[] = {
     { NULL }
 };
 
-static pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group)
 {
@@ -300,7 +293,7 @@ main(int argc, char **argv)
 
     crm_log_preinit(NULL, argc, argv);
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;

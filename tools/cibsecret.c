@@ -1096,13 +1096,6 @@ tools_installed(pcmk__output_t *out, rsh_fn_t *rsh_fn, rcp_fn_t *rcp_fn,
     return false;
 }
 
-static pcmk__supported_format_t formats[] = {
-    PCMK__SUPPORTED_FORMAT_NONE,
-    PCMK__SUPPORTED_FORMAT_TEXT,
-    PCMK__SUPPORTED_FORMAT_XML,
-    { NULL, NULL, NULL }
-};
-
 static GOptionContext *
 build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     const char *desc = NULL;
@@ -1201,7 +1194,7 @@ main(int argc, char **argv)
     // Load locale information for the local host from the environment
     setlocale(LC_ALL, "");
 
-    pcmk__register_formats(output_group, formats);
+    pcmk__register_formats(output_group, NULL);
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
         goto done;
