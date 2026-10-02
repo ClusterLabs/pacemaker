@@ -798,8 +798,7 @@ class CIBAudit(ClusterAudit):
 
             if node_xml is None:
                 logging.log(f"Could not perform audit: No configuration from {node}")
-                passed = False
-                continue
+                return False
 
             if node0 is None:
                 node0 = node
