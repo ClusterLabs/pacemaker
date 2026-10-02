@@ -799,25 +799,27 @@ class CIBAudit(ClusterAudit):
             if node_xml is None:
                 logging.log(f"Could not perform audit: No configuration from {node}")
                 passed = False
+                continue
 
-            elif node0 is None:
+            if node0 is None:
                 node0 = node
                 node0_xml = node_xml
+                continue
 
-            else:
-                (rc, result) = self._cm.rsh.call(
-                    node0, f"crm_diff -VV -c --new {node_xml} --original {node0_xml}", verbose=1)
+            (rc, result) = self._cm.rsh.call(node0,
+                                             f"crm_diff -VV -c --new {node_xml} --original {node0_xml}",
+                                             verbose=1)
 
-                if rc != 0:
-                    logging.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
+            if rc != 0:
+                logging.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
+                passed = False
+
+            for line in result:
+                if not re.search("<diff/>", line):
                     passed = False
-
-                for line in result:
-                    if not re.search("<diff/>", line):
-                        passed = False
-                        self.debug(f"CibDiff[{node0}-{node}]: {line}")
-                    else:
-                        self.debug(f"CibDiff[{node0}-{node}] Ignoring: {line}")
+                    self.debug(f"CibDiff[{node0}-{node}]: {line}")
+                else:
+                    self.debug(f"CibDiff[{node0}-{node}] Ignoring: {line}")
 
         return passed
 
