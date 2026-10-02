@@ -804,10 +804,6 @@ class CIBAudit(ClusterAudit):
                 node0 = node
                 node0_xml = node_xml
 
-            elif node0_xml is None:
-                logging.log(f"Could not perform audit: No configuration from {node0}")
-                passed = False
-
             else:
                 (rc, result) = self._cm.rsh.call(
                     node0, f"crm_diff -VV -c --new {node_xml} --original {node0_xml}", verbose=1)
