@@ -838,9 +838,8 @@ class CIBAudit(ClusterAudit):
             logging.log("Could not retrieve configuration")
             return None
 
-        self._cm.rsh.call("localhost", f"rm -f {filename}")
-        for line in lines:
-            self._cm.rsh.call("localhost", f"echo \'{line[:-1]}\' >> {filename}", verbose=0)
+        with open(filename, "w", encoding="utf-8") as f:
+            f.writelines(lines)
 
         if self._cm.rsh.copy(filename, f"root@{target}:{filename}") != 0:
             logging.log("Could not store configuration")
