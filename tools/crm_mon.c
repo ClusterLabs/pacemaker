@@ -2213,7 +2213,7 @@ clean_up(crm_exit_t exit_code)
         g_free(help);
     }
 
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     /* (4) Output the error if one exists. Finish the output unless this is a
      * successful daemonized child. Clean up the output object and exit.

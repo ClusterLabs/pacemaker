@@ -536,7 +536,7 @@ done:
     free(duration);
 
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     free(options.date_time_s);
     g_free(options.duration_s);

@@ -690,7 +690,7 @@ cleanup_cmdline(void)
     g_clear_pointer(&key, free);
     g_clear_pointer(&val, free);
     g_clear_pointer(&processed_args, g_strfreev);
-    g_clear_pointer(&context, pcmk__free_arg_context);
+    g_clear_pointer(&context, g_option_context_free);
 
     g_clear_pointer(&options.api_call, free);
 }

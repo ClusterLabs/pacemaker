@@ -367,7 +367,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
     g_free(options.attr_dampen);
     g_free(options.attr_name);
     g_free(options.attr_node);
