@@ -795,11 +795,15 @@ class CIBAudit(ClusterAudit):
 
         partition_hosts = hostlist.split()
         for node in partition_hosts:
-            node_xml = self._store_remote_cib(node)
+            node_xml = f"/tmp/ctsaudit.{node}.xml"
 
-            if node_xml is None:
-                logging.log(f"Could not perform audit: No configuration from {node}")
+            (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
+            if rc != 0:
+                logging.log(f"Could not perform audit: Failed to get configuration from {node}")
                 return False
+
+            with open(node_xml, "w", encoding="utf-8") as f:
+                f.writelines(lines)
 
             if node0 is None:
                 node0 = node
@@ -822,20 +826,6 @@ class CIBAudit(ClusterAudit):
                     self.debug(f"CibDiff[{node0}-{node}] Ignoring: {line}")
 
         return passed
-
-    def _store_remote_cib(self, node):
-        """Store a copy of the given node's CIB on the local node."""
-        filename = f"/tmp/ctsaudit.{node}.xml"
-
-        (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
-        if rc != 0:
-            logging.log("Could not retrieve configuration")
-            return None
-
-        with open(filename, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-
-        return filename
 
     def is_applicable(self):
         """Return True if this audit is applicable in the current test configuration."""
