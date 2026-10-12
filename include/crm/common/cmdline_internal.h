@@ -71,16 +71,6 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
 
 /*!
  * \internal
- * \brief Clean up after pcmk__build_arg_context().  This should be called
- *        instead of ::g_option_context_free at program termination.
- *
- * \param[in,out] context Argument context to free
- */
-void
-pcmk__free_arg_context(GOptionContext *context);
-
-/*!
- * \internal
  * \brief Add options to the main application options
  *
  * \param[in,out] context  Argument context to add options to
