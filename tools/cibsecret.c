@@ -1287,7 +1287,7 @@ main(int argc, char **argv)
  done:
     g_strfreev(processed_args);
     g_strfreev(remainder);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     pcmk__output_and_clear_error(&error, out);
 

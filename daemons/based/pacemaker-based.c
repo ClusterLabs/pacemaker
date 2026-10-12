@@ -408,7 +408,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     based_cluster_disconnect();
     based_cleanup();
