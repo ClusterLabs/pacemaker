@@ -794,7 +794,7 @@ class CIBAudit(ClusterAudit):
 
         partition_hosts = hostlist.split()
         for node in partition_hosts:
-            node_xml = self._store_remote_cib(node, node0)
+            node_xml = self._store_remote_cib(node)
 
             if node_xml is None:
                 logging.log(f"Could not perform audit: No configuration from {node}")
@@ -805,7 +805,7 @@ class CIBAudit(ClusterAudit):
                 node0_xml = node_xml
                 continue
 
-            (rc, result) = self._cm.rsh.call(node0,
+            (rc, result) = self._cm.rsh.call("localhost",
                                              f"crm_diff -VV -c --new {node_xml} --original {node0_xml}",
                                              verbose=1)
 
@@ -822,16 +822,9 @@ class CIBAudit(ClusterAudit):
 
         return passed
 
-    def _store_remote_cib(self, node, target):
-        """
-        Store a copy of the given node's CIB on the given target node.
-
-        If no target is given, store the CIB on the given node.
-        """
+    def _store_remote_cib(self, node):
+        """Store a copy of the given node's CIB on the local node."""
         filename = f"/tmp/ctsaudit.{node}.xml"
-
-        if not target:
-            target = node
 
         (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
         if rc != 0:
@@ -840,10 +833,6 @@ class CIBAudit(ClusterAudit):
 
         with open(filename, "w", encoding="utf-8") as f:
             f.writelines(lines)
-
-        if self._cm.rsh.copy(filename, f"root@{target}:{filename}") != 0:
-            logging.log("Could not store configuration")
-            return None
 
         return filename
 
