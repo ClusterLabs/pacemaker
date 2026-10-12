@@ -5,6 +5,7 @@ __copyright__ = "Copyright 2000-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import re
+import subprocess
 import time
 import uuid
 
@@ -805,15 +806,15 @@ class CIBAudit(ClusterAudit):
                 node0_xml = node_xml
                 continue
 
-            (rc, result) = self._cm.rsh.call("localhost",
-                                             f"crm_diff -VV -c --new {node_xml} --original {node0_xml}",
-                                             verbose=1)
+            proc = subprocess.run(["crm_diff", "-VV", "-c", "--new", node_xml,
+                                   "--original", node0_xml],
+                                  check=False, capture_output=True, universal_newlines=True)
 
-            if rc != 0:
-                logging.log(f"Diff between {node0_xml} and {node_xml} failed: {rc}")
+            if proc.returncode != 0:
+                logging.log(f"Diff between {node0_xml} and {node_xml} failed: {proc.returncode}")
                 passed = False
 
-            for line in result:
+            for line in proc.stdout.splitlines():
                 if not re.search("<diff/>", line):
                     passed = False
                     self.debug(f"CibDiff[{node0}-{node}]: {line}")
