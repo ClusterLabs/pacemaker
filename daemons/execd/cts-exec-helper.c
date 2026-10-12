@@ -101,12 +101,12 @@ static struct {
     gboolean is_running;
     int exec_call_opts;
     char *api_call;
-    const char *rsc_id;
-    const char *provider;
-    const char *class;
-    const char *type;
-    const char *action;
-    const char *listen;
+    gchar *rsc_id;
+    gchar *provider;
+    gchar *class;
+    gchar *type;
+    gchar *action;
+    gchar *listen;
     gboolean use_tls;
     lrmd_key_value_t *params;
 } options = {
@@ -693,6 +693,12 @@ cleanup_cmdline(void)
     g_clear_pointer(&context, g_option_context_free);
 
     g_clear_pointer(&options.api_call, free);
+    g_free(options.rsc_id);
+    g_free(options.provider);
+    g_free(options.class);
+    g_free(options.type);
+    g_free(options.action);
+    g_free(options.listen);
 }
 
 int
@@ -757,7 +763,7 @@ main(int argc, char **argv)
 
         options.cmd = cts_exec_cmd_exec;
         options.api_call = strdup("exec");
-        options.action = PCMK_ACTION_MONITOR;
+        options.action = g_strdup(PCMK_ACTION_MONITOR);
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
