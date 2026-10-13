@@ -187,10 +187,7 @@ bail:
  *
  * \param[in] data  CPG handle
  *
- * \return \c G_SOURCE_REMOVE (to indicate to glib that timer should not be
- *         removed)
- *
- * \note Return value description seems inverted
+ * \return \c G_SOURCE_REMOVE (to destroy the timeout that triggered this call)
  */
 static gboolean
 crm_cs_flush_cb(void *data)
