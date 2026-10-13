@@ -783,20 +783,20 @@ class CIBAudit(ClusterAudit):
         for partition in ccm_partitions:
             self.debug(f"\tAuditing CIB consistency for: {partition}")
 
+            nodes = partition.split()
+
             with TemporaryDirectory(prefix="ctsaudit-") as tmpdir:
-                if not self._audit_cib_contents(partition, tmpdir):
+                if not self._audit_cib_contents(nodes, tmpdir):
                     passed = False
 
         return passed
 
-    def _audit_cib_contents(self, hostlist, tmpdir):
-        """Perform the CIB audit on the given hosts."""
+    def _audit_cib_contents(self, nodes, tmpdir):
+        """Perform the CIB audit on the given nodes."""
         passed = True
-        node0 = None
         node0_xml = None
 
-        partition_hosts = hostlist.split()
-        for node in partition_hosts:
+        for node in nodes:
             node_xml = f"{tmpdir}/{node}.xml"
 
             (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
@@ -807,8 +807,7 @@ class CIBAudit(ClusterAudit):
             with open(node_xml, "w", encoding="utf-8") as f:
                 f.writelines(lines)
 
-            if node0 is None:
-                node0 = node
+            if node0_xml is None:
                 node0_xml = node_xml
                 continue
 
@@ -823,9 +822,9 @@ class CIBAudit(ClusterAudit):
             for line in proc.stdout.splitlines():
                 if not re.search("<diff/>", line):
                     passed = False
-                    self.debug(f"CibDiff[{node0}-{node}]: {line}")
+                    self.debug(f"CibDiff[{nodes[0]}-{node}]: {line}")
                 else:
-                    self.debug(f"CibDiff[{node0}-{node}] Ignoring: {line}")
+                    self.debug(f"CibDiff[{nodes[0]}-{node}] Ignoring: {line}")
 
         return passed
 
