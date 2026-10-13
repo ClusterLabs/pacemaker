@@ -794,29 +794,28 @@ class CIBAudit(ClusterAudit):
     def _audit_cib_contents(self, nodes, tmpdir):
         """Perform the CIB audit on the given nodes."""
         passed = True
-        node0_xml = None
 
-        for node in nodes:
-            node_xml = f"{tmpdir}/{node}.xml"
+        cib_files = [f"{tmpdir}/{node}.xml" for node in nodes]
 
+        for (node, cib_file) in zip(nodes, cib_files):
             (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
             if rc != 0:
                 logging.log(f"Could not perform audit: Failed to get configuration from {node}")
                 return False
 
-            with open(node_xml, "w", encoding="utf-8") as f:
+            with open(cib_file, "w", encoding="utf-8") as f:
                 f.writelines(lines)
 
-            if node0_xml is None:
-                node0_xml = node_xml
+            if node == nodes[0]:
+                # Don't diff the first node's CIB against itself
                 continue
 
-            proc = subprocess.run(["crm_diff", "-VV", "-c", "--new", node_xml,
-                                   "--original", node0_xml],
+            proc = subprocess.run(["crm_diff", "-VV", "-c", "--new", cib_file,
+                                   "--original", cib_files[0]],
                                   check=False, capture_output=True, universal_newlines=True)
 
             if proc.returncode != 0:
-                logging.log(f"Diff between {node0_xml} and {node_xml} failed: {proc.returncode}")
+                logging.log(f"Diff between {cib_files[0]} and {cib_file} failed: {proc.returncode}")
                 passed = False
 
             for line in proc.stdout.splitlines():
