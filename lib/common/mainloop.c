@@ -9,19 +9,29 @@
 
 #include <crm_internal.h>
 
-#include <stdbool.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
-#include <errno.h>
+#include <errno.h>                  // errno, ESRCH, etc.
+#include <signal.h>                 // sigaction, NSIG, SIG_ERR
+#include <stdbool.h>                // bool, false, true
+#include <stdint.h>                 // int32_t
+#include <stdio.h>                  // fprintf, stderr
+#include <stdlib.h>                 // free
+#include <string.h>                 // memset, strerror, strsignal
+#include <sys/types.h>              // pid_t
+#include <sys/wait.h>               // waitpid, WNOHANG, etc.
+#include <time.h>                   // time
 
-#include <sys/wait.h>
+#include <glib.h>                   // g_*, G_*, etc.
+#include <qb/qbarray.h>             // qb_array_*
+#include <qb/qbdefs.h>              // QB_FALSE, QB_TRUE
+#include <qb/qbipc_common.h>        // qb_ipc_type
+#include <qb/qbipcs.h>              // qb_ipcs_*
+#include <qb/qblog.h>               // QB_XS
+#include <qb/qbloop.h>              // qb_loop_priority
 
-#include <crm/crm.h>
-#include <crm/common/xml.h>
-#include <crm/common/mainloop.h>
-
-#include <qb/qbarray.h>
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // crm_log_level, CRM_CHECK
+#include <crm/common/mainloop.h>    // mainloop_*
+#include <crm/common/results.h>     // pcmk_rc_*, pcmk_strerror
 
 struct trigger_s {
     GSource source;
