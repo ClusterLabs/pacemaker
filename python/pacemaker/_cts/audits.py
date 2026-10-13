@@ -6,6 +6,7 @@ __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT AN
 
 import re
 import subprocess
+from tempfile import TemporaryDirectory
 import time
 import uuid
 
@@ -782,12 +783,13 @@ class CIBAudit(ClusterAudit):
         for partition in ccm_partitions:
             self.debug(f"\tAuditing CIB consistency for: {partition}")
 
-            if self._audit_cib_contents(partition) == 0:
-                passed = False
+            with TemporaryDirectory(prefix="ctsaudit-") as tmpdir:
+                if not self._audit_cib_contents(partition, tmpdir):
+                    passed = False
 
         return passed
 
-    def _audit_cib_contents(self, hostlist):
+    def _audit_cib_contents(self, hostlist, tmpdir):
         """Perform the CIB audit on the given hosts."""
         passed = True
         node0 = None
@@ -795,7 +797,7 @@ class CIBAudit(ClusterAudit):
 
         partition_hosts = hostlist.split()
         for node in partition_hosts:
-            node_xml = f"/tmp/ctsaudit.{node}.xml"
+            node_xml = f"{tmpdir}/{node}.xml"
 
             (rc, lines) = self._cm.rsh.call(node, self._cm.templates["CibQuery"], verbose=1)
             if rc != 0:
@@ -876,7 +878,7 @@ class PartitionAudit(ClusterAudit):
                 logging.log(f"\t {partition}")
 
         for partition in ccm_partitions:
-            if self._audit_partition(partition) == 0:
+            if not self._audit_partition(partition):
                 passed = False
 
         return passed
