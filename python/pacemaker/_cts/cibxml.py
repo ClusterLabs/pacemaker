@@ -511,8 +511,7 @@ class Resource(XmlBase):
         Create a colocation constraint between this resource and some other.
 
         Arguments:
-        resource -- The name of the resource that should be located relative
-                    this one
+        resource -- The name of the primary resource in the colocation
         score    -- Apply this score to the colocation constraint
         role     -- Apply this colocation constraint only to promotable clones
                     in this role ("started", "promoted", "unpromoted")
