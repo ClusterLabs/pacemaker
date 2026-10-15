@@ -293,10 +293,17 @@ BuildRequires: %{python_name}-setuptools
 # and require the tools manually for now and keep
 # setuptools in the conditional to express it is one
 # of these tools
-BuildRequires: %{python_name}-wheel
+# pyproject-rpm-macros RFE: https://bugzilla.redhat.com/2543102
 BuildRequires: %{python_name}-pip
 BuildRequires: %{python_name}-setuptools
-BuildRequires: pyproject-rpm-macros
+BuildRequires: (%{python_name}-wheel if %{python_name}-setuptools < 71)
+# Check if pyproject_wheel exists, but lacks the native version 1.19.0+ '-d' option parsing
+%if 0%{?pyproject_wheel:1}
+%if 0%(grep -q "pyproject_wheel(C:)" /usr/lib/rpm/macros.d/macros.pyproject 2>/dev/null && echo 1 || echo 0)
+%global _pyproject_wheeldir %{_builddir}/%{buildsubdir}/.pyproject-wheeldir
+%global pyproject_wheel(d:) (cd python && %{pyproject_wheel})
+%endif
+%endif
 %endif
 
 # Pacemaker requires a minimum libqb functionality
@@ -569,10 +576,8 @@ sed -i 's|^runpath_var=LD_RUN_PATH|runpath_var=DIE_RPATH_DIE|g' libtool
 
 make %{_smp_mflags} V=1
 
-pushd python
 # use 2-step expansion for embedded lua-script option handling to work
-%{?pyproject_wheel:%pyproject_wheel}%{!?pyproject_wheel:%py3_build}
-popd
+%{?pyproject_wheel:%pyproject_wheel -d python}%{!?pyproject_wheel:(cd python && %py3_build)}
 
 %check
 make %{_smp_mflags} check
@@ -591,11 +596,9 @@ make install \
   DESTDIR=%{buildroot} V=1 docdir=%{pcmk_docdir} \
   %{?_python_bytecompile_extra:%{?py_byte_compile:am__py_compile=true}}
 
-pushd python
-%{?pyproject_install}%{!?pyproject_install:%py3_install}
+%{?pyproject_install}%{!?pyproject_install:(cd python && %py3_install)}
 # take care of the license-files manually for now
-%{?pyproject_save_files:%pyproject_save_files -L "*"}
-popd
+%{?pyproject_save_files:%pyproject_save_files -L pacemaker}
 
 mkdir -p ${RPM_BUILD_ROOT}%{_localstatedir}/lib/rpm-state/%{name}
 
@@ -821,8 +824,8 @@ exit 0
 
 %files -n %{python_name}-%{name} %{?pyproject_files:-f %{pyproject_files}}
 %if 0%{?rhel} && 0%{?rhel} <= 8
-%{python3_sitelib}/%{name}/
-%{python3_sitelib}/%{name}-*.egg-info
+%{python3_sitelib}/pacemaker/
+%{python3_sitelib}/pacemaker-*.egg-info*
 %endif
 %exclude %{python3_sitelib}/pacemaker/_cts/
 %license licenses/LGPLv2.1
