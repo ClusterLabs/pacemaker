@@ -15,7 +15,7 @@
 #include <regex.h>
 #include <sys/types.h>
 
-#include <glib.h>                   // g_*, G*, MAX, MIN
+#include <glib.h>                   // g_*, CLAMP, G*
 
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
@@ -76,11 +76,8 @@ attrd_expand_value(const char *value, const char *old_value)
         increment = 0; // Invalid increment
     }
 
-    if (increment < 0) {
-        return MAX(score + increment, -PCMK_SCORE_INFINITY);
-    }
-
-    return MIN(score + increment, PCMK_SCORE_INFINITY);
+    score += increment;
+    return CLAMP(score, -PCMK_SCORE_INFINITY, PCMK_SCORE_INFINITY);
 }
 
 /*!

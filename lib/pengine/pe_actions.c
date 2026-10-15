@@ -17,7 +17,7 @@
 #include <syslog.h>                     // LOG_WARNING
 #include <time.h>                       // time_t
 
-#include <glib.h>                       // g_*, G*, MAX, MIN, etc.
+#include <glib.h>                       // g_*, CLAMP, G*, MIN, etc.
 #include <libxml/tree.h>                // xmlNode, xmlAttrPtr
 
 #include <crm/common/actions.h>         // PCMK_ACTION_*, etc.
@@ -619,8 +619,7 @@ unpack_start_delay(const char *value, GHashTable *meta)
     }
 
     if (pcmk__parse_ms(value, &start_delay_ms) == pcmk_rc_ok) {
-        start_delay_ms = MAX(start_delay_ms, 0);
-        start_delay_ms = MIN(start_delay_ms, INT_MAX);
+        start_delay_ms = CLAMP(start_delay_ms, 0, INT_MAX);
     }
 
     if (meta != NULL) {
