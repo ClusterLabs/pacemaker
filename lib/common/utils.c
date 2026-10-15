@@ -398,6 +398,9 @@ pcmk__create_timer(unsigned int interval_ms, GSourceFunc fn, void *data)
  *
  * \return If \p timeout_ms is 0, return 0.  Otherwise, return the number of
  *         seconds, rounded to the nearest integer, with a minimum of 1.
+ *
+ * \note The return value is guaranteed to be less than \c INT_MAX, assuming
+ *       \c UINT_MAX is one plus double \c INT_MAX.
  */
 unsigned int
 pcmk__timeout_ms2s(unsigned int timeout_ms)

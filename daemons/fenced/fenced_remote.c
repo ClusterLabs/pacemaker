@@ -24,7 +24,7 @@
 #include <ctype.h>
 #include <regex.h>
 
-#include <glib.h>                       // g_*, G*, MAX, MIN
+#include <glib.h>                       // g_*, G*, MIN
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
@@ -1514,6 +1514,7 @@ valid_fencing_timeout(int specified_timeout_sec, bool action_specific,
 {
     int timeout_sec = specified_timeout_sec;
     unsigned int watchdog_timeout_ms = 0;
+    unsigned int watchdog_timeout_sec = 0;
     char *desc = NULL;
 
     if (!is_watchdog_fencing(op, device)) {
@@ -1523,13 +1524,13 @@ valid_fencing_timeout(int specified_timeout_sec, bool action_specific,
     // pcmk__parse_fencing_watchdog_timeout() ensured >= 0 already
     watchdog_timeout_ms = MIN(fencing_watchdog_timeout_ms, UINT_MAX);
 
-    timeout_sec = (int) MIN(MAX(specified_timeout_sec,
-                                pcmk__timeout_ms2s(watchdog_timeout_ms)),
-                        INT_MAX);
-
-    if (timeout_sec <= specified_timeout_sec) {
+    // watchdog_timeout_sec is the minimum valid fencing timeout
+    watchdog_timeout_sec = pcmk__timeout_ms2s(watchdog_timeout_ms);
+    if (timeout_sec >= watchdog_timeout_sec) {
         goto done;
     }
+
+    timeout_sec = watchdog_timeout_sec;
 
     if (action_specific) {
         desc = pcmk__assert_asprintf("pcmk_%s_timeout %ds for %s", op->action,
