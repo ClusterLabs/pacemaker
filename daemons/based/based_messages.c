@@ -14,7 +14,7 @@
 #include <stddef.h>                 // NULL
 #include <stdlib.h>                 // free
 
-#include <glib.h>                   // g_list_free_full, GList
+#include <glib.h>                   // g_list_free_full, GList, G_N_ELEMENTS
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
 
@@ -325,7 +325,7 @@ cib_msg_copy(const xmlNode *msg)
 
     xmlNode *copy = pcmk__xe_create(NULL, PCMK__XE_COPY);
 
-    for (int lpc = 0; lpc < PCMK__NELEM(field_list); lpc++) {
+    for (int lpc = 0; lpc < G_N_ELEMENTS(field_list); lpc++) {
         const char *field = field_list[lpc];
         const char *value = pcmk__xe_get(msg, field);
 

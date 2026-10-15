@@ -1,5 +1,5 @@
 /*
- * Copyright 2013-2025 the Pacemaker project contributors
+ * Copyright 2013-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -21,8 +21,7 @@
 #include <dirent.h>
 #include <signal.h>
 
-#include <glib.h>           // g_str_has_prefix()
-#include <qb/qbdefs.h>      // QB_MIN(), QB_MAX()
+#include <glib.h>           // gchar, g_*, MIN
 
 static pid_t sbd_pid = 0;
 
@@ -228,7 +227,7 @@ pcmk__get_sbd_watchdog_timeout(void)
             && (pcmk__parse_ms(timeout, &timeout_ms) == pcmk_rc_ok)
             && (timeout_ms >= 0)) {
 
-            sbd_timeout = (long) QB_MIN(timeout_ms, LONG_MAX);
+            sbd_timeout = (long) MIN(timeout_ms, LONG_MAX);
 
         } else {
             sbd_timeout = 0;
@@ -268,7 +267,7 @@ auto_fencing_watchdog_timeout(void)
     long sbd_timeout = pcmk__get_sbd_watchdog_timeout();
     long long st_timeout = 2 * (long long) sbd_timeout;
 
-    return (long) QB_MIN(st_timeout, LONG_MAX);
+    return (long) MIN(st_timeout, LONG_MAX);
 }
 
 long long
@@ -281,7 +280,7 @@ pcmk__parse_fencing_watchdog_timeout(const char *value)
     long long st_timeout = 0;
 
     if ((value != NULL) && (pcmk__parse_ms(value, &st_timeout) == pcmk_rc_ok)) {
-        st_timeout = QB_MIN(st_timeout, LONG_MAX);
+        st_timeout = MIN(st_timeout, LONG_MAX);
     }
 
     if (st_timeout < 0) {

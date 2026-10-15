@@ -587,7 +587,7 @@ based_read_cib(void)
      *   and then unmodified.
      * * We need to set these defaults before schema validation happens.
      */
-    for (int i = 0; i < PCMK__NELEM(version_attrs); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(version_attrs); i++) {
         set_default_if_unset(cib_xml, version_attrs[i]);
     }
 

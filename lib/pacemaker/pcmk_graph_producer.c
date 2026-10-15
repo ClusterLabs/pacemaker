@@ -15,7 +15,7 @@
 #include <crm/cib.h>
 #include <crm/common/xml.h>
 
-#include <glib.h>
+#include <glib.h>                   // g_*, G*
 
 #include <pacemaker-internal.h>
 
@@ -319,7 +319,7 @@ add_resource_details(const pcmk_action_t *action, xmlNode *action_xml)
         pcmk__xe_set(rsc_xml, PCMK_XA_ID, action->rsc->id);
     }
 
-    for (int lpc = 0; lpc < PCMK__NELEM(attr_list); lpc++) {
+    for (int lpc = 0; lpc < G_N_ELEMENTS(attr_list); lpc++) {
         pcmk__xe_set(rsc_xml, attr_list[lpc],
                      g_hash_table_lookup(action->rsc->priv->meta,
                                          attr_list[lpc]));

@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <glib.h>                           // g_strchomp()
+#include <glib.h>                   // g_*, gchar, ABS, CLAMP, G*
 
 #include <crm/common/iso8601.h>
 #include "crmcommon_private.h"
@@ -72,7 +72,7 @@
  * \return true if the seconds/microseconds tuple is valid, or false otherwise
  */
 #define valid_sec_usec(sec, usec)               \
-        ((QB_ABS(usec) < QB_TIME_US_IN_SEC)     \
+        ((ABS(usec) < QB_TIME_US_IN_SEC)        \
          && (((sec) == 0) || ((usec) == 0) || (((sec) < 0) == ((usec) < 0))))
 
 /*!
@@ -351,10 +351,10 @@ seconds_to_hms(int seconds_i, uint32_t *hours, uint32_t *minutes,
     minutes_i = seconds_i / SECONDS_IN_MINUTE;
     seconds_i %= SECONDS_IN_MINUTE;
 
-    *hours = (uint32_t) QB_ABS(hours_i);
-    *minutes = (uint32_t) QB_ABS(minutes_i);
+    *hours = (uint32_t) ABS(hours_i);
+    *minutes = (uint32_t) ABS(minutes_i);
     if (seconds != NULL) {
-        *seconds = (uint32_t) QB_ABS(seconds_i);
+        *seconds = (uint32_t) ABS(seconds_i);
     }
 }
 
@@ -1026,7 +1026,7 @@ sec_usec_as_string(long long sec, int usec, GString *buf)
     if ((sec == 0) && (usec < 0)) {
         g_string_append_c(buf, '-');
     }
-    g_string_append_printf(buf, "%lld.%06d", sec, QB_ABS(usec));
+    g_string_append_printf(buf, "%lld.%06d", sec, ABS(usec));
 }
 
 /*!
@@ -1073,7 +1073,7 @@ duration_as_string(const crm_time_t *dt, int usec, bool show_usec, GString *buf)
     }
 
     // More than one minute, so provide a more readable breakdown into units
-    if (QB_ABS(dt->seconds) >= SECONDS_IN_MINUTE) {
+    if (ABS(dt->seconds) >= SECONDS_IN_MINUTE) {
         uint32_t hours = 0;
         uint32_t minutes = 0;
         uint32_t seconds = 0;
@@ -1220,7 +1220,7 @@ time_as_string_common(const crm_time_t *dt, int usec, uint32_t flags)
                                h, m, s);
 
         if (pcmk__is_set(flags, pcmk__time_fmt_usecs)) {
-            g_string_append_printf(buf, ".%06" PRIu32, QB_ABS(usec));
+            g_string_append_printf(buf, ".%06" PRIu32, ABS(usec));
         }
 
         if (pcmk__is_set(flags, pcmk__time_fmt_timezone) && (dt->offset != 0)) {
@@ -2027,7 +2027,7 @@ offset_text(int offset)
     uint32_t minutes = 0;
 
     // If offset is out of range, default to NULL
-    CRM_CHECK(QB_ABS(offset) <= SECONDS_IN_DAY, return NULL);
+    CRM_CHECK(ABS(offset) <= SECONDS_IN_DAY, return NULL);
 
     seconds_to_hms(offset, &hours, &minutes, NULL);
 
@@ -2161,8 +2161,7 @@ pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec)
 
                     // Parse width field
                     frac_digits = atoi(&format[fmt_pos + 1]);
-                    frac_digits = QB_MAX(frac_digits, 0);
-                    frac_digits = QB_MIN(frac_digits, 6);
+                    frac_digits = CLAMP(frac_digits, 0, 6);
                     break;
 
                 default: // Some other specifier

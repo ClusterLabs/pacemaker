@@ -14,7 +14,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <glib.h>               // GString, etc.
+#include <glib.h>               // gchar, g_*, GString, G_N_ELEMENTS, TRUE
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -288,7 +288,7 @@ pcmk__xa_filterable(const char *name)
         PCMK_XA_UPDATE_USER,
     };
 
-    for (int i = 0; i < PCMK__NELEM(filter); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(filter); i++) {
         if (strcmp(name, filter[i]) == 0) {
             return true;
         }

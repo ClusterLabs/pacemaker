@@ -29,7 +29,7 @@
 #include <unistd.h>                 // close, read, write
 
 #include <bzlib.h>                  // BZ2_bzBuffToBuffDecompress
-#include <glib.h>                   // GUINT32_SWAP_LE_BE, g_string_*
+#include <glib.h>                   // gboolean, g_*, FALSE, G*, TRUE
 #include <gnutls/gnutls.h>          // gnutls_strerror, GNUTLS_E_AGAIN
 #include <libxml/tree.h>            // xmlNode
 #include <qb/qblog.h>               // QB_XS
@@ -1073,7 +1073,7 @@ pcmk__connect_remote(const char *host, int port, int timeout, int *timer_id,
             ((struct sockaddr_in *)(void*)addr)->sin_port = htons(port);
         }
 
-        memset(buffer, 0, PCMK__NELEM(buffer));
+        memset(buffer, 0, G_N_ELEMENTS(buffer));
         pcmk__sockaddr2str(addr, buffer);
         pcmk__info("Attempting remote connection to %s:%d", buffer, port);
 

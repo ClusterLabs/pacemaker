@@ -21,7 +21,7 @@
 #include <sys/param.h>
 #include <sys/types.h>
 
-#include <glib.h>
+#include <glib.h>                       // g_*, G_N_ELEMENTS
 #include <libxml/tree.h>
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
@@ -147,7 +147,7 @@ cib__get_operation(const char *op, const cib__operation_t **operation)
     if (operation_table == NULL) {
         operation_table = pcmk__strkey_table(NULL, NULL);
 
-        for (int lpc = 0; lpc < PCMK__NELEM(cib_ops); lpc++) {
+        for (int lpc = 0; lpc < G_N_ELEMENTS(cib_ops); lpc++) {
             const cib__operation_t *oper = &cib_ops[lpc];
 
             g_hash_table_insert(operation_table, (void *) oper->name,

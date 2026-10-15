@@ -16,6 +16,8 @@
 #include <ctype.h>
 #include <dirent.h>
 
+#include <glib.h>                   // gboolean, g_*, G*, MAX
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 #include <crm/cluster.h>
@@ -311,13 +313,13 @@ throttle_get_total_job_limit(int l)
 
             case throttle_extreme:
                 if(limit == 0 || limit > peers/4) {
-                    limit = QB_MAX(1, peers/4);
+                    limit = MAX(1, peers/4);
                 }
                 break;
 
             case throttle_high:
                 if(limit == 0 || limit > peers/2) {
-                    limit = QB_MAX(1, peers/2);
+                    limit = MAX(1, peers/2);
                 }
                 break;
             default:
@@ -359,13 +361,13 @@ throttle_get_job_limit(const char *node)
             jobs = 1; /* At least one job must always be allowed */
             break;
         case throttle_med:
-            jobs = QB_MAX(1, r->max / 4);
+            jobs = MAX(1, r->max / 4);
             break;
         case throttle_low:
-            jobs = QB_MAX(1, r->max / 2);
+            jobs = MAX(1, r->max / 2);
             break;
         case throttle_none:
-            jobs = QB_MAX(1, r->max);
+            jobs = MAX(1, r->max);
             break;
         default:
             pcmk__err("Unknown throttle mode %.4x on %s", r->mode, node);
