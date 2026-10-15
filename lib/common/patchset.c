@@ -17,8 +17,9 @@
 #include <string.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <bzlib.h>
 
+#include <bzlib.h>
+#include <glib.h>                       // g_*, FALSE, G*, TRUE
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
@@ -47,7 +48,7 @@ set_version_fields(xmlNode *version, const xmlNode *from, const char *name)
 {
     xmlNode *child = pcmk__xe_create(version, name);
 
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
         const char *value = pcmk__xe_get(from, vfields[i]);
 
         if (value == NULL) {
@@ -536,7 +537,7 @@ pcmk__xml_patchset_versions(const xmlNode *patchset, int source[3],
      * xml_patch_version_check() sets its own defaults in case of absent
      * versions.
      */
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
         if (source_xml != NULL) {
             if (pcmk__xe_get_int(source_xml, vfields[i],
                                  &source[i]) != pcmk_rc_ok) {
@@ -582,7 +583,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     int target[] = { 0, 0, 0 };
     int rc = pcmk_rc_ok;
 
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
         /* @COMPAT We should probably fail with EINVAL for negative or invalid.
          *
          * Preserve behavior for xml_apply_patchset(). Use new behavior in a
@@ -611,7 +612,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     target[0] = current[0];
     target[1] = current[1];
     target[2] = current[2] + 1;
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
         source[i] = current[i];
     }
 
@@ -621,7 +622,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     }
 
     // Ensure current version matches patchset source version
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
         if (current[i] < source[i]) {
             pcmk__debug("Current %s is too low "
                         "(%d.%d.%d < %d.%d.%d --> %d.%d.%d)",
@@ -642,7 +643,7 @@ check_patchset_versions(const xmlNode *cib_root, const xmlNode *patchset)
     }
 
     // Ensure target version is newer than source version
-    for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
         if (target[i] > source[i]) {
             pcmk__debug("Can apply patch %d.%d.%d to %d.%d.%d",
                         target[0], target[1], target[2],
@@ -1158,14 +1159,14 @@ xml_patch_versions(const xmlNode *patchset, int add[3], int del[3])
     }
 
     if (source != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
             pcmk__xe_get_int(source, vfields[i], &del[i]);
             pcmk__trace("Got %d for del[%s]", del[i], vfields[i]);
         }
     }
 
     if (target != NULL) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
             pcmk__xe_get_int(target, vfields[i], &add[i]);
             pcmk__trace("Got %d for add[%s]", add[i], vfields[i]);
         }

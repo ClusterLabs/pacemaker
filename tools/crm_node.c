@@ -16,6 +16,8 @@
 #include <errno.h>
 #include <sys/types.h>
 
+#include <glib.h>                       // gboolean, gchar, g_*, FALSE, G*, TRUE
+
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/common/xml.h>
@@ -741,7 +743,7 @@ remove_node(const char *target_uname)
         node_name = target_uname;
     }
 
-    for (int i = 0; i < PCMK__NELEM(servers); ++i) {
+    for (int i = 0; i < G_N_ELEMENTS(servers); ++i) {
         rc = purge_node_from(servers[i], node_name, nodeid);
         if (rc != pcmk_rc_ok) {
             exit_code = pcmk_rc2exitc(rc);

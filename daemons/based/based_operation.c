@@ -11,8 +11,9 @@
 
 #include <stddef.h>                 // NULL
 
+#include <glib.h>                   // G_N_ELEMENTS
+
 #include <crm/cib/internal.h>       // cib__*
-#include <crm/common/internal.h>    // pcmk__assert, PCMK__NELEM
 
 #include "pacemaker-based.h"
 
@@ -53,7 +54,7 @@ based_get_op_function(const cib__operation_t *operation)
 
     pcmk__assert(type >= 0);
 
-    if (type >= PCMK__NELEM(op_functions)) {
+    if (type >= G_N_ELEMENTS(op_functions)) {
         return NULL;
     }
     return op_functions[type];

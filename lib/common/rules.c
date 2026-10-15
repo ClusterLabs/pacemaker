@@ -9,14 +9,15 @@
 
 #include <crm_internal.h>
 
-#include <stdio.h>                          // NULL, size_t
-#include <stdbool.h>                        // bool
-#include <ctype.h>                          // isdigit()
-#include <regex.h>                          // regmatch_t
-#include <stdint.h>                         // uint32_t
-#include <inttypes.h>                       // PRIu32
-#include <glib.h>                           // gboolean, FALSE
-#include <libxml/tree.h>                    // xmlNode
+#include <stdio.h>                      // NULL, size_t
+#include <stdbool.h>                    // bool
+#include <ctype.h>                      // isdigit()
+#include <regex.h>                      // regmatch_t
+#include <stdint.h>                     // uint32_t
+#include <inttypes.h>                   // PRIu32
+
+#include <glib.h>                       // g_*, FALSE, GHashTable, G_N_ELEMENTS
+#include <libxml/tree.h>                // xmlNode
 
 #include <crm/common/scheduler.h>
 
@@ -198,7 +199,7 @@ pcmk__evaluate_date_spec(const xmlNode *date_spec, const crm_time_t *now)
     pcmk__time_get_ywd(now, &ranges[7].value, &ranges[8].value,
                        &ranges[9].value);
 
-    for (int i = 0; i < PCMK__NELEM(ranges); ++i) {
+    for (int i = 0; i < G_N_ELEMENTS(ranges); ++i) {
         int rc = check_range(date_spec, parent_id, ranges[i].attr,
                              ranges[i].value);
 

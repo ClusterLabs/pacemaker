@@ -18,6 +18,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <glib.h>               // gchar, g_*, GError, G_*
+
 #include <crm/crm.h>
 #include "pacemaker-execd.h"
 
@@ -301,7 +303,7 @@ remoted_spawn_pidone(int argc, char **argv)
         int sig = 0;
 
         sigwait(&set, &sig);
-        for (int i = 0; i < PCMK__NELEM(sigmap); i++) {
+        for (int i = 0; i < G_N_ELEMENTS(sigmap); i++) {
             if (sigmap[i].sig == sig) {
                 sigmap[i].handler();
                 break;
