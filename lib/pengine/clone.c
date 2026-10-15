@@ -16,9 +16,8 @@
 #include <stdlib.h>                     // free
 #include <string.h>                     // strcmp, strchr
 
-#include <glib.h>                       // g_*, MIN, etc.
+#include <glib.h>                       // g_*, G*, FALSE, MAX, MIN, TRUE, etc.
 #include <libxml/tree.h>                // xmlNode
-#include <qb/qbdefs.h>                  // QB_MAX
 #include <qb/qblog.h>                   // LOG_TRACE
 
 #include <crm/common/actions.h>         // PCMK_ACTION_*
@@ -373,7 +372,7 @@ clone_unpack(pcmk_resource_t *rsc)
      * @TODO Exclude bundle nodes when counting
      */
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
-                                            QB_MAX(1, num_nodes));
+                                            MAX(1, num_nodes));
 
     if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
                                           PCMK_META_ORDERED))) {

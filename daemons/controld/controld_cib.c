@@ -12,6 +12,8 @@
 #include <stdbool.h>
 #include <unistd.h>  /* sleep */
 
+#include <glib.h>                   // g_*, G*, MAX, TRUE
+
 #include <crm/common/xml.h>
 #include <crm/crm.h>
 #include <crm/lrmd_internal.h>
@@ -215,7 +217,7 @@ cib_op_timeout(void)
                                              + pcmk__cluster_num_remote_nodes()
                                              + 1U);
 
-    calculated_timeout = QB_MAX(calculated_timeout, MIN_CIB_OP_TIMEOUT);
+    calculated_timeout = MAX(calculated_timeout, MIN_CIB_OP_TIMEOUT);
     pcmk__trace("Calculated timeout: %s",
                 pcmk__readable_interval(calculated_timeout * 1000));
 

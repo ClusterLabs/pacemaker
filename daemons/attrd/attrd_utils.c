@@ -15,7 +15,7 @@
 #include <regex.h>
 #include <sys/types.h>
 
-#include <glib.h>                   // g_*, GHashTable, GINT_TO_POINTER, MIN
+#include <glib.h>                   // g_*, G*, MAX, MIN
 
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
@@ -77,7 +77,7 @@ attrd_expand_value(const char *value, const char *old_value)
     }
 
     if (increment < 0) {
-        return QB_MAX(score + increment, -PCMK_SCORE_INFINITY);
+        return MAX(score + increment, -PCMK_SCORE_INFINITY);
     }
 
     return MIN(score + increment, PCMK_SCORE_INFINITY);

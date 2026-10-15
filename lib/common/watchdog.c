@@ -22,7 +22,6 @@
 #include <signal.h>
 
 #include <glib.h>           // gchar, g_*, MIN
-#include <qb/qbdefs.h>      // QB_MAX()
 
 static pid_t sbd_pid = 0;
 
