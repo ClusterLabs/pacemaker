@@ -24,6 +24,7 @@
 #include <ctype.h>
 #include <regex.h>
 
+#include <glib.h>                       // g_*, G*, MIN
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
@@ -1459,7 +1460,9 @@ stonith_choose_peer(remote_fencing_op_t * op)
             return peer;
         }
 
-        if(op->query_timer != 0 && op->replies < QB_MIN(op->replies_expected, active)) {
+        if ((op->query_timer != 0)
+            && (op->replies < MIN(op->replies_expected, active))) {
+
             pcmk__trace("Waiting before looking for unverified devices to "
                         "fence %s",
                         op->target);
@@ -1515,9 +1518,9 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
         return timeout;
     }
 
-    timeout = (int) QB_MIN(QB_MAX(specified_timeout,
-                                  pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
-                           INT_MAX);
+    timeout = (int) MIN(QB_MAX(specified_timeout,
+                               pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
+                        INT_MAX);
 
     if (timeout > specified_timeout) {
         if (action_specific) {
@@ -1711,7 +1714,7 @@ get_op_total_timeout(const remote_fencing_op_t *op,
     if (op->client_delay > 0) {
         total_timeout += op->client_delay;
     }
-    return (int) QB_MIN(total_timeout, INT_MAX);
+    return (int) MIN(total_timeout, INT_MAX);
 }
 
 static void
@@ -1835,7 +1838,7 @@ static gboolean
 check_watchdog_fencing_and_wait(remote_fencing_op_t * op)
 {
     if (node_does_watchdog_fencing(op->target)) {
-        unsigned int timeout_ms = QB_MIN(fencing_watchdog_timeout_ms, UINT_MAX);
+        unsigned int timeout_ms = MIN(fencing_watchdog_timeout_ms, UINT_MAX);
 
         pcmk__notice("Waiting %s for %s to self-fence (%s) for client %s "
                      QB_XS " id=%.8s",

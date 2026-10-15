@@ -16,9 +16,9 @@
 #include <stdlib.h>                     // free
 #include <string.h>                     // strcmp, strchr
 
-#include <glib.h>                       // g_*, etc.
+#include <glib.h>                       // g_*, MIN, etc.
 #include <libxml/tree.h>                // xmlNode
-#include <qb/qbdefs.h>                  // QB_MAX, QB_MIN
+#include <qb/qbdefs.h>                  // QB_MAX
 #include <qb/qblog.h>                   // LOG_TRACE
 
 #include <crm/common/actions.h>         // PCMK_ACTION_*
@@ -230,8 +230,8 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
                           "anonymous clones", rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
-        clone_data->clone_max = QB_MIN(clone_data->clone_max,
-                                       g_list_length(scheduler->nodes));
+        clone_data->clone_max = MIN(clone_data->clone_max,
+                                    g_list_length(scheduler->nodes));
     }
 }
 

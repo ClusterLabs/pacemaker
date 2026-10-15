@@ -28,6 +28,7 @@
 #include <locale.h>                         // setlocale
 #include <time.h>
 
+#include <glib.h>                           // g_*, G*, MIN, etc.
 #include <libxml/xpath.h>                   // xmlXPathObject, etc.
 
 #include <crm/crm.h>
@@ -530,7 +531,7 @@ timeout_cb(const char *option_name, const char *optarg, void *data,
         || (timeout_ms < 0)) {
         return FALSE;
     }
-    options.timeout_ms = (unsigned int) QB_MIN(timeout_ms, UINT_MAX);
+    options.timeout_ms = (unsigned int) MIN(timeout_ms, UINT_MAX);
     return TRUE;
 }
 
