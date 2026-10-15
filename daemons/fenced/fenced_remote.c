@@ -1509,10 +1509,10 @@ stonith_choose_peer(remote_fencing_op_t * op)
 }
 
 static int
-valid_fencing_timeout(int specified_timeout, bool action_specific,
+valid_fencing_timeout(int specified_timeout_sec, bool action_specific,
                       const remote_fencing_op_t *op, const char *device)
 {
-    int timeout = specified_timeout;
+    int timeout_sec = specified_timeout_sec;
     unsigned int watchdog_timeout_ms = 0;
     char *desc = NULL;
 
@@ -1523,28 +1523,29 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
     // pcmk__parse_fencing_watchdog_timeout() ensured >= 0 already
     watchdog_timeout_ms = MIN(fencing_watchdog_timeout_ms, UINT_MAX);
 
-    timeout = (int) MIN(MAX(specified_timeout,
-                            pcmk__timeout_ms2s(watchdog_timeout_ms)),
+    timeout_sec = (int) MIN(MAX(specified_timeout_sec,
+                                pcmk__timeout_ms2s(watchdog_timeout_ms)),
                         INT_MAX);
 
-    if (timeout <= specified_timeout) {
+    if (timeout_sec <= specified_timeout_sec) {
         goto done;
     }
 
     if (action_specific) {
         desc = pcmk__assert_asprintf("pcmk_%s_timeout %ds for %s", op->action,
-                                     specified_timeout, device);
+                                     specified_timeout_sec, device);
 
     } else {
-        desc = pcmk__assert_asprintf("Fencing timeout %ds", specified_timeout);
+        desc = pcmk__assert_asprintf("Fencing timeout %ds",
+                                     specified_timeout_sec);
     }
 
     pcmk__warn("%s is too short (must be >= " PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
-               " %ds), using %ds instead", desc, timeout, timeout);
+               " %ds), using %ds instead", desc, timeout_sec, timeout_sec);
 
 done:
     free(desc);
-    return timeout;
+    return timeout_sec;
 }
 
 static int
