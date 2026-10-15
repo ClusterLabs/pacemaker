@@ -21,7 +21,7 @@
 #include <sys/types.h>
 
 #include <bzlib.h>
-#include <glib.h>           // gboolean, gchar, g_*, G*, MIN
+#include <glib.h>           // gboolean, gchar, g_*, ABS, G*, MIN
 
 /*!
  * \internal
@@ -227,7 +227,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
              */
             const char *over_under;
 
-            if (QB_ABS(*result) > DBL_MIN) {
+            if (ABS(*result) > DBL_MIN) {
                 rc = EOVERFLOW;
                 over_under = "over";
             } else {
@@ -257,7 +257,7 @@ pcmk__scan_double(const char *text, double *result, const char *default_text,
                         "%.1f instead): No digits found",
                         text, PCMK__PARSE_DBL_DEFAULT);
 
-        } else if (QB_ABS(*result) <= DBL_MIN) {
+        } else if (ABS(*result) <= DBL_MIN) {
             /*
              * errno == 0 and text was parsed, but value might have
              * underflowed.
