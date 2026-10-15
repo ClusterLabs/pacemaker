@@ -12,6 +12,9 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include <glib.h>                   // g_*, FALSE, G*
+
 #include <crm/common/xml.h>
 #include <pacemaker-internal.h>
 
@@ -119,7 +122,7 @@ pcmk__rsc_agent_changed(pcmk_resource_t *rsc, pcmk_node_t *node,
         PCMK_XA_PROVIDER,
     };
 
-    for (int i = 0; i < PCMK__NELEM(attr_list); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(attr_list); i++) {
         const char *value = pcmk__xe_get(rsc->priv->xml, attr_list[i]);
         const char *old_value = pcmk__xe_get(rsc_entry, attr_list[i]);
 

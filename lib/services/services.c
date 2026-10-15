@@ -18,6 +18,8 @@
 #include <dirent.h>
 #include <fcntl.h>
 
+#include <glib.h>                   // gboolean, gchar, g_*, FALSE, G*, TRUE
+
 #include <crm/crm.h>
 #include <crm/common/mainloop.h>
 #include <crm/services.h>
@@ -372,7 +374,7 @@ services_action_create_generic(const char *exec, const char *args[])
 
     for (int cur_arg = 1; args[cur_arg - 1] != NULL; cur_arg++) {
 
-        if (cur_arg == PCMK__NELEM(op->opaque->args)) {
+        if (cur_arg == G_N_ELEMENTS(op->opaque->args)) {
             pcmk__info("Cannot prepare action for '%s': Too many arguments",
                        exec);
             services__set_result(op, PCMK_OCF_UNKNOWN_ERROR,
@@ -594,7 +596,7 @@ services_action_free(svc_action_t * op)
     free(op->id);
     free(op->opaque->exec);
 
-    for (i = 0; i < PCMK__NELEM(op->opaque->args); i++) {
+    for (i = 0; i < G_N_ELEMENTS(op->opaque->args); i++) {
         free(op->opaque->args[i]);
     }
 

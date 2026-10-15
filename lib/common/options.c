@@ -16,6 +16,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <glib.h>               // gchar, g_*, FALSE, G*, TRUE
+
 #include <crm/crm.h>
 #include <crm/common/xml.h>
 
@@ -1074,7 +1076,7 @@ pcmk__env_option(const char *option)
 
     CRM_CHECK(!pcmk__str_empty(option), return NULL);
 
-    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(prefixes); i++) {
         char *env_name = pcmk__assert_asprintf("%s_%s", prefixes[i], option);
         const char *value = getenv(env_name);
 
@@ -1115,7 +1117,7 @@ pcmk__set_env_option(const char *option, const char *value, bool compat)
 
     CRM_CHECK(!pcmk__str_empty(option), return);
 
-    for (int i = 0; i < PCMK__NELEM(prefixes); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(prefixes); i++) {
         char *env_name = pcmk__assert_asprintf("%s_%s", prefixes[i], option);
         int rc = 0;
 

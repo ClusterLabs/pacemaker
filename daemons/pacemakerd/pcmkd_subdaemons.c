@@ -22,7 +22,7 @@
 #include <time.h>                       // time, time_t
 #include <unistd.h>                     // execlp, fork, setgid, setsid
 
-#include <glib.h>                       // gboolean, G_SOURCE_CONTINUE
+#include <glib.h>                       // gboolean, G_*
 #include <qb/qblog.h>                   // QB_XS
 
 #include <crm_config.h>                 // SUPPORT_COROSYNC, CRM_DAEMON_*
@@ -110,7 +110,7 @@ static void stop_child(pcmkd_child_t *child, int signal);
 static void
 for_each_child(void (*fn)(pcmkd_child_t *child))
 {
-    for (int i = 0; i < PCMK__NELEM(pcmk_children); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(pcmk_children); i++) {
         fn(&pcmk_children[i]);
     }
 }
@@ -225,7 +225,7 @@ check_next_subdaemon(void *user_data)
             return G_SOURCE_REMOVE;
     }
 
-    if (++next_child >= PCMK__NELEM(pcmk_children)) {
+    if (++next_child >= G_N_ELEMENTS(pcmk_children)) {
         next_child = 0;
     }
 
@@ -349,10 +349,10 @@ pcmk_process_exit(pcmkd_child_t * child)
 static gboolean
 pcmk_shutdown_worker(void *user_data)
 {
-    static int phase = PCMK__NELEM(pcmk_children) - 1;
+    static int phase = G_N_ELEMENTS(pcmk_children) - 1;
     static time_t next_log = 0;
 
-    if (phase == PCMK__NELEM(pcmk_children) - 1) {
+    if (phase == G_N_ELEMENTS(pcmk_children) - 1) {
         pcmk__notice("Shutting down Pacemaker");
         pacemakerd_state = PCMK__VALUE_SHUTTING_DOWN;
     }
@@ -799,7 +799,7 @@ find_and_track_existing_processes(void)
     for (rounds = 1; rounds <= WAIT_TRIES; rounds++) {
         wait_in_progress = false;
 
-        for (i = 0; i < PCMK__NELEM(pcmk_children); i++) {
+        for (i = 0; i < G_N_ELEMENTS(pcmk_children); i++) {
             int rc = find_and_track_child(&pcmk_children[i], rounds,
                                           &wait_in_progress);
 

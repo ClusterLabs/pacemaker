@@ -1,6 +1,6 @@
 /*
  * Original copyright 2004 International Business Machines
- * Later changes copyright 2008-2025 the Pacemaker project contributors
+ * Later changes copyright 2008-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -11,6 +11,8 @@
 #include <crm_internal.h>
 
 #include <stdio.h>
+
+#include <glib.h>           // G_N_ELEMENTS
 #include <libxml/tree.h>    // xmlNode
 
 #include <crm/common/xml.h>
@@ -110,7 +112,7 @@ static struct {
 const char *
 pcmk_cib_xpath_for(const char *element_name)
 {
-    for (int lpc = 0; lpc < PCMK__NELEM(cib_sections); lpc++) {
+    for (int lpc = 0; lpc < G_N_ELEMENTS(cib_sections); lpc++) {
         // A NULL element_name will match the first entry
         if (pcmk__str_eq(element_name, cib_sections[lpc].name,
                          pcmk__str_null_matches)) {
@@ -148,7 +150,7 @@ pcmk__cib_abs_xpath_for(const char *element)
 const char *
 pcmk_cib_parent_name_for(const char *element_name)
 {
-    for (int lpc = 0; lpc < PCMK__NELEM(cib_sections); lpc++) {
+    for (int lpc = 0; lpc < G_N_ELEMENTS(cib_sections); lpc++) {
         // A NULL element_name will match the first entry
         if (pcmk__str_eq(element_name, cib_sections[lpc].name,
                          pcmk__str_null_matches)) {

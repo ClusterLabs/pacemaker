@@ -175,7 +175,7 @@ handle_glib_message(const char *log_domain, GLogLevelFlags log_level,
 static void
 set_glib_log_handlers(void)
 {
-    for (int i = 0; i < PCMK__NELEM(log_handler_ids); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(log_handler_ids); i++) {
         struct log_handler_id *entry = &log_handler_ids[i];
 
         entry->handler_id = g_log_set_handler(entry->log_domain,
@@ -193,7 +193,7 @@ set_glib_log_handlers(void)
 static void
 remove_glib_log_handlers(void)
 {
-    for (int i = 0; i < PCMK__NELEM(log_handler_ids); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(log_handler_ids); i++) {
         struct log_handler_id *entry = &log_handler_ids[i];
 
         if (entry->handler_id == 0) {

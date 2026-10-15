@@ -14,7 +14,7 @@
 #include <stdio.h>                  // NULL
 #include <stdlib.h>                 // free(), etc.
 
-#include <glib.h>                   // gboolean, etc.
+#include <glib.h>                   // gboolean, gchar, g_*, G*, etc.
 #include <libxml/tree.h>            // xmlNode
 
 #include <crm/crm.h>
@@ -466,7 +466,7 @@ do_dc_join_filter_offer(long long action, enum crmd_fsa_cause cause,
          * element from the join client. The "if" guard is for clarity.
          */
         if (pcmk__xe_is(generation, PCMK__XE_GENERATION_TUPLE)) {
-            for (int i = 0; (cmp == 0) && (i < PCMK__NELEM(attributes)); i++) {
+            for (int i = 0; (cmp == 0) && (i < G_N_ELEMENTS(attributes)); i++) {
                 cmp = compare_int_fields(max_generation_xml, generation,
                                          attributes[i]);
             }

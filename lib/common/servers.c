@@ -11,6 +11,8 @@
 
 #include <stdio.h>      // NULL
 
+#include <glib.h>           // G_N_ELEMENTS
+
 #include <crm/crm.h>
 
 /* Each Pacemaker subdaemon offers an IPC interface, and most exchange cluster
@@ -106,7 +108,7 @@ static struct {
 const char *
 pcmk__server_name(enum pcmk_ipc_server server)
 {
-    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+    CRM_CHECK((server > 0) && (server < G_N_ELEMENTS(server_info)),
               return NULL);
     return server_info[server].system_names[0];
 }
@@ -124,7 +126,7 @@ pcmk__server_name(enum pcmk_ipc_server server)
 const char *
 pcmk__server_log_name(enum pcmk_ipc_server server)
 {
-    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+    CRM_CHECK((server > 0) && (server < G_N_ELEMENTS(server_info)),
               return NULL);
     return server_info[server].log_name;
 }
@@ -142,7 +144,7 @@ pcmk__server_log_name(enum pcmk_ipc_server server)
 const char *
 pcmk__server_ipc_name(enum pcmk_ipc_server server)
 {
-    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+    CRM_CHECK((server > 0) && (server < G_N_ELEMENTS(server_info)),
               return NULL);
     return server_info[server].ipc_names[0];
 }
@@ -160,7 +162,7 @@ pcmk__server_ipc_name(enum pcmk_ipc_server server)
 const char *
 pcmk__server_message_type(enum pcmk_ipc_server server)
 {
-    CRM_CHECK((server > 0) && (server < PCMK__NELEM(server_info)),
+    CRM_CHECK((server > 0) && (server < G_N_ELEMENTS(server_info)),
               return NULL);
     return server_info[server].message_types[0];
 }

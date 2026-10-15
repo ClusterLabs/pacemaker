@@ -19,7 +19,7 @@
 #include <sys/wait.h>           // WEXITSTATUS
 #include <unistd.h>             // geteuid
 
-#include <glib.h>
+#include <glib.h>               // gboolean, gchar, g_*, FALSE, G*, TRUE
 #include <libxml/tree.h>        // xmlNode, xmlNodeGetContent
 #include <libxml/xmlmemory.h>   // xmlFree
 #include <libxml/xmlstring.h>   // xmlChar
@@ -1228,7 +1228,7 @@ main(int argc, char **argv)
     }
 
     /* Traverse the subcommand table looking for a match. */
-    for (int i = 0; i < PCMK__NELEM(subcommand_table); i++) {
+    for (int i = 0; i < G_N_ELEMENTS(subcommand_table); i++) {
         cmd = subcommand_table[i];
 
         if (!pcmk__str_eq(remainder[0], cmd.name, pcmk__str_none)) {

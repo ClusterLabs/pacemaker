@@ -3056,7 +3056,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             PCMK__XA_ST_CALLOPT,
         };
 
-        for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
+        for (int lpc = 0; lpc < G_N_ELEMENTS(names); lpc++) {
             name = names[lpc];
             value = pcmk__xe_get(request, name);
             pcmk__xe_set(reply, name, value);
