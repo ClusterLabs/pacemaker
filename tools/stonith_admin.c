@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <glib.h>                   // gboolean, gchar, etc.
+#include <glib.h>                   // g_*, G*, MIN, etc.
 
 #include <crm/crm.h>
 #include <crm/common/ipc.h>
@@ -289,7 +289,7 @@ add_tolerance(const char *option_name, const char *optarg, void *data,
         // @COMPAT Treat as an error and return FALSE?
         pcmk__warn("Ignoring invalid tolerance '%s'", optarg);
     } else {
-        options.tolerance_ms = (unsigned int) QB_MIN(tolerance_ms, UINT_MAX);
+        options.tolerance_ms = (unsigned int) MIN(tolerance_ms, UINT_MAX);
     }
     return TRUE;
 }

@@ -13,7 +13,7 @@
 
 #include <crm/fencing/internal.h>
 
-#include <glib.h>
+#include <glib.h>                       // g_*, G*, MIN
 #include <libxml/tree.h>                // xmlNode
 
 // Check whether we have a high-resolution monotonic clock
@@ -968,7 +968,8 @@ action_complete(svc_action_t * action)
         delay = timeout_left/2;
     }
 
-    delay = QB_MIN(2000, delay);
+    delay = MIN(2000, delay);
+
     if (delay < timeout_left) {
         cmd->start_delay = delay;
         cmd->timeout = timeout_left;

@@ -18,10 +18,9 @@
 #include <time.h>                           // time, time_t
 #include <unistd.h>                         // sleep, unlink
 
-#include <glib.h>                           // GList, g_list_free
+#include <glib.h>                           // g_*, G*, MIN, etc.
 #include <libxml/tree.h>                    // xmlNode
 #include <libxml/xpath.h>                   // xmlXPathObject, xmlXPathFreeObject
-#include <qb/qbdefs.h>                      // QB_MIN
 
 #include <crm/cib.h>                        // cib_t, cib_delete, cib_shadow_new
 #include <crm/common/actions.h>             // PCMK_ACTION_MONITOR
@@ -1619,7 +1618,7 @@ max_rsc_stop_timeout(pcmk_resource_t *rsc)
     meta = pcmk__unpack_action_meta(rsc, NULL, PCMK_ACTION_STOP, 0, config);
     if ((pcmk__scan_ll(g_hash_table_lookup(meta, PCMK_META_TIMEOUT),
                        &result_ll, -1LL) == pcmk_rc_ok) && (result_ll >= 0)) {
-        max_delay = (unsigned int) QB_MIN(result_ll, UINT_MAX);
+        max_delay = (unsigned int) MIN(result_ll, UINT_MAX);
     }
     g_hash_table_destroy(meta);
 
@@ -2395,8 +2394,8 @@ cli_resource_execute_from_params(pcmk__output_t *out, const char *rsc_name,
     // services__create_resource_action() takes ownership of params on success
     op = services__create_resource_action(rsc_name? rsc_name : "test",
                                           rsc_class, rsc_prov, rsc_type, action,
-                                          0, QB_MIN(timeout_ms, INT_MAX),
-                                          params, 0);
+                                          0, MIN(timeout_ms, INT_MAX), params,
+                                          0);
     if (op == NULL) {
         out->err(out, "Could not execute %s using %s%s%s:%s: %s",
                  action, rsc_class, (rsc_prov? ":" : ""),
@@ -2461,7 +2460,7 @@ get_action_timeout(pcmk_resource_t *rsc, const char *action)
         timeout_ms = PCMK_DEFAULT_ACTION_TIMEOUT_MS;
     }
     g_hash_table_destroy(meta);
-    return (unsigned int) QB_MIN(timeout_ms, UINT_MAX);
+    return (unsigned int) MIN(timeout_ms, UINT_MAX);
 }
 
 // Does not modify override_hash or its contents

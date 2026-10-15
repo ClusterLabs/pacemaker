@@ -22,7 +22,7 @@
 #include <string.h>
 #include <stdbool.h>
 
-#include <glib.h>                           // g_strchomp()
+#include <glib.h>                   // g_*, gchar, G*, MIN
 
 #include <crm/common/iso8601.h>
 #include "crmcommon_private.h"
@@ -2162,7 +2162,7 @@ pcmk__time_format_hr(const char *format, const crm_time_t *dt, int usec)
                     // Parse width field
                     frac_digits = atoi(&format[fmt_pos + 1]);
                     frac_digits = QB_MAX(frac_digits, 0);
-                    frac_digits = QB_MIN(frac_digits, 6);
+                    frac_digits = MIN(frac_digits, 6);
                     break;
 
                 default: // Some other specifier

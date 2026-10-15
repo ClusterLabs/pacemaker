@@ -11,6 +11,8 @@
 
 #include <stdbool.h>
 
+#include <glib.h>               // g_*, G*, MIN
+
 #include <crm/crm.h>
 #include <crm/lrmd.h>
 #include <crm/common/xml.h>
@@ -160,7 +162,7 @@ unpack_alert_options(xmlNode *xml, pcmk__alert_t *entry,
             }
 
         } else {
-            entry->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
+            entry->timeout = (int) MIN(timeout_ms, INT_MAX);
             pcmk__trace("Alert %s uses timeout of %s", entry->id,
                         pcmk__readable_interval(entry->timeout));
         }
