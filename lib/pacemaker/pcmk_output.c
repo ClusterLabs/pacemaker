@@ -19,10 +19,9 @@
 #include <string.h>                     // strdup, strlen
 #include <time.h>                       // clock_t, CLOCKS_PER_SEC, time_t
 
-#include <glib.h>                       // g_*, etc.
+#include <glib.h>                       // g_*, G*, MAX, etc.
 #include <libxml/tree.h>                // xmlGetNodePath, xmlNode
 #include <libxml/xmlstring.h>           // xmlChar
-#include <qb/qbdefs.h>                  // QB_MAX
 
 #include <crm/common/actions.h>         // PCMK_ACTION_*
 #include <crm/common/ipc_pacemakerd.h>  // pcmk_pacemakerd_*
@@ -2378,7 +2377,8 @@ result_code_text(pcmk__output_t *out, va_list args)
             // Get length of longest standard Pacemaker return code name
             for (int lpc = 0; lpc < pcmk__n_rc; lpc++) {
                 int len = (int) strlen(pcmk_rc_name(pcmk_rc_error - lpc));
-                name_width = QB_MAX(name_width, len);
+
+                name_width = MAX(name_width, len);
             }
         }
         return out->info(out, "% *d: %-*s  %s", code_width, code, name_width,

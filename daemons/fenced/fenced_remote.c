@@ -24,7 +24,7 @@
 #include <ctype.h>
 #include <regex.h>
 
-#include <glib.h>                       // g_*, G*, MIN
+#include <glib.h>                       // g_*, G*, MAX, MIN
 #include <libxml/tree.h>                // xmlNode
 
 #include <crm/crm.h>
@@ -1518,8 +1518,8 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
         return timeout;
     }
 
-    timeout = (int) MIN(QB_MAX(specified_timeout,
-                               pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
+    timeout = (int) MIN(MAX(specified_timeout,
+                            pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
                         INT_MAX);
 
     if (timeout > specified_timeout) {

@@ -16,10 +16,9 @@
 
 #include <stdint.h>                     // uint8_t
 
-#include <glib.h>                       // GString
+#include <glib.h>                       // GString, MAX
 #include <libxml/tree.h>                // xmlDoc, xmlNode
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
-#include <qb/qbdefs.h>                      // QB_MAX()
 
 #include <crm/common/options.h>             // PCMK_META_*, PCMK_VALUE_*
 #include <crm/common/output_internal.h>     // pcmk__output_t
@@ -75,7 +74,7 @@ pcmk__xpath_num_results(const xmlXPathObject *xpath_obj)
     }
 
     // Negative num_results doesn't make sense
-    return QB_MAX(num_results, 0);
+    return MAX(num_results, 0);
 }
 
 GString *pcmk__element_xpath(const xmlNode *xml);

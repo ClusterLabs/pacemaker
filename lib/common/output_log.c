@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <glib.h>           // g_*, G*, MAX
+
 typedef struct {
     /* gathered in log_begin_list */
     GQueue/*<char*>*/ *prefixes;
@@ -282,7 +284,7 @@ log_transient(pcmk__output_t *out, const char *format, ...)
     priv = out->priv;
 
     va_start(ap, format);
-    logger_va(priv, QB_MAX(priv->log_level, LOG_DEBUG), format, ap);
+    logger_va(priv, MAX(priv->log_level, LOG_DEBUG), format, ap);
     va_end(ap);
 
     return pcmk_rc_ok;

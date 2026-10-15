@@ -14,7 +14,7 @@
 #include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t
 
-#include <glib.h>       // MIN
+#include <glib.h>       // MAX, MIN
 
 int pcmk__score_red = 0;
 int pcmk__score_green = 0;
@@ -41,7 +41,7 @@ pcmk_parse_score(const char *score_s, int *score, int default_score)
 
     // Ensure default score is in bounds
     default_score = MIN(default_score, PCMK_SCORE_INFINITY);
-    default_score = QB_MAX(default_score, -PCMK_SCORE_INFINITY);
+    default_score = MAX(default_score, -PCMK_SCORE_INFINITY);
     local_score = default_score;
 
     if (score_s == NULL) {
