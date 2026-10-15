@@ -626,6 +626,20 @@ parse_date(const char *date_str)
         goto parse_time_segment;
     }
 
+    /* YYYY */
+    rc = sscanf(date_str, "%" SCNu32, &year);
+    if (rc == 1){
+        if ((year < 1U) || (year > INT_MAX)) {
+            pcmk__err("'%s' is not a valid ISO 8601 date/time specification "
+                      "because '%" PRIu32 "' is not a valid year",
+                      date_str, year);
+            goto invalid;
+        }
+        dt->years = year;
+        dt->days = 1;
+        goto parse_time_segment;
+    }
+
     pcmk__err("'%s' is not a valid ISO 8601 date/time specification", date_str);
     goto invalid;
 
