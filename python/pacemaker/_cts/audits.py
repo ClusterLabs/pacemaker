@@ -829,9 +829,10 @@ class CIBAudit(ClusterAudit):
             for line in proc.stdout.splitlines():
                 if "<diff/>" in line:
                     self.debug(f"CibDiff[{nodes[0]}-{node}] Ignoring: {line}")
-                else:
-                    passed = False
-                    self.debug(f"CibDiff[{nodes[0]}-{node}]: {line}")
+                    continue
+
+                passed = False
+                self.debug(f"CibDiff[{nodes[0]}-{node}]: {line}")
 
         return passed
 
