@@ -1522,20 +1522,20 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
                             pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
                         INT_MAX);
 
-    if (timeout > specified_timeout) {
-        if (action_specific) {
-            pcmk__warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
-                       PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " %ds), using %ds "
-                       "instead",
-                       op->action, specified_timeout,
-                       pcmk__s(device, "watchdog"), timeout, timeout);
+    if (timeout <= specified_timeout) {
+        return timeout;
+    }
 
-        } else {
-            pcmk__warn("Fencing timeout %ds is too short (must be >= "
-                       PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " %ds), using %ds "
-                       "instead",
-                       specified_timeout, timeout, timeout);
-        }
+    if (action_specific) {
+        pcmk__warn("pcmk_%s_timeout %ds for %s is too short (must be >= "
+                   PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " %ds), using %ds instead",
+                   op->action, specified_timeout, pcmk__s(device, "watchdog"),
+                   timeout, timeout);
+
+    } else {
+        pcmk__warn("Fencing timeout %ds is too short (must be >= "
+                   PCMK_OPT_FENCING_WATCHDOG_TIMEOUT " %ds), using %ds instead",
+                   specified_timeout, timeout, timeout);
     }
 
     return timeout;
