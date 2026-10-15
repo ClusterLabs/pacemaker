@@ -9,20 +9,33 @@
 
 #include <crm_internal.h>
 
+#include <errno.h>                      // EINVAL, ENOMEM
+#include <signal.h>                     // SIGTERM
+#include <stdbool.h>                    // false
+#include <stdio.h>                      // NULL, printf, snprintf
+#include <stdlib.h>                     // atexit, free
+#include <syslog.h>                     // LOG_INFO
+#include <unistd.h>                     // sleep
+
 #include <glib.h>
-#include <stdbool.h>
-#include <unistd.h>
+#include <libxml/tree.h>                // xmlNode
 
-#include <crm/crm.h>
-#include <crm/services.h>
-#include <crm/common/mainloop.h>
-
-#include <crm/pengine/status.h>
-#include <crm/pengine/internal.h>
-#include <crm/cib.h>
-#include <crm/cib/internal.h>
-#include <crm/lrmd.h>
-#include <crm/lrmd_internal.h>
+#include <crm/cib/internal.h>           // cib__signon_query
+#include <crm/common/actions.h>         // PCMK_ACTION_MONITOR
+#include <crm/common/iso8601.h>         // crm_time_new
+#include <crm/common/logging.h>         // crm_bump_log_level, crm_log_init
+#include <crm/common/mainloop.h>        // mainloop_*
+#include <crm/common/nvpair.h>          // crm_meta_name
+#include <crm/common/resources.h>       // pe_find, pcmk__resource
+#include <crm/common/results.h>         // CRM_EX_*, pcmk_rc_*, crm_exit_t, crm_exit
+#include <crm/common/scheduler.h>       // pcmk_free_scheduler
+#include <crm/common/scheduler_types.h> // pcmk_resource_t, pcmk_scheduler_t
+#include <crm/common/strings.h>         // pcmk_parse_interval_spec
+#include <crm/crm.h>                    // crm_system_name
+#include <crm/lrmd_events.h>            // lrmd_event_data_t
+#include <crm/lrmd_internal.h>          // lrmd__key_value_add_from_hash
+#include <crm/pengine/complex.h>        // pe_rsc_params
+#include <crm/pengine/status.h>         // cluster_status, pe_find_resource_with_flags
 
 #define SUMMARY "cts-exec-helper - inject commands into the Pacemaker executor and watch for events"
 
@@ -32,10 +45,10 @@ static void try_connect(void);
 
 static char *key = NULL;
 static char *val = NULL;
+static gchar **processed_args = NULL;
+static GOptionContext *context = NULL;
 
 static struct {
-    int verbose;
-    int quiet;
     unsigned int interval_ms;
     int timeout;
     int start_delay;
@@ -86,7 +99,7 @@ param_key_val_cb(const char *option_name, const char *optarg, void *data,
         pcmk__str_update(&val, optarg);
     }
 
-    if (key != NULL && val != NULL) {
+    if ((key != NULL) && (val != NULL)) {
         options.params = lrmd_key_value_add(options.params, key, val);
         g_clear_pointer(&key, free);
         g_clear_pointer(&val, free);
@@ -164,20 +177,7 @@ static GOptionEntry api_call_entries[] = {
     { NULL }
 };
 
-static GMainLoop *mainloop = NULL;
 static lrmd_t *lrmd_conn = NULL;
-
-static crm_exit_t
-test_exit(crm_exit_t exit_code)
-{
-    lrmd_api_delete(lrmd_conn);
-    return crm_exit(exit_code);
-}
-
-#define print_result(fmt, args...)  \
-    if (!options.quiet) {           \
-        printf(fmt "\n", ##args);   \
-    }
 
 static void
 test_shutdown(int nsig)
@@ -188,42 +188,46 @@ test_shutdown(int nsig)
 static void
 read_events(lrmd_event_data_t * event)
 {
-    char buf[1024] = { '\0', };
-
-    pcmk__assert(snprintf(buf, sizeof(buf),
-                          "NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s "
-                          "op_status:%s",
-                          lrmd_event_type2str(event->type), event->rsc_id,
-                          pcmk__s(event->op_type, "none"),
-                          crm_exit_str((crm_exit_t) event->rc),
-                          pcmk_exec_status_str(event->op_status)) >= 0);
+    char *buf =
+        pcmk__assert_asprintf("NEW_EVENT event_type:%s rsc_id:%s action:%s rc:%s "
+                              "op_status:%s",
+                              lrmd_event_type2str(event->type), event->rsc_id,
+                              pcmk__s(event->op_type, "none"),
+                              crm_exit_str((crm_exit_t) event->rc),
+                              pcmk_exec_status_str(event->op_status));
     pcmk__info("%s", buf);
 
-    if (options.listen && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
-        print_result("LISTEN EVENT SUCCESSFUL");
-        test_exit(CRM_EX_OK);
+    if ((options.listen != NULL)
+        && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
+        free(buf);
+        printf("LISTEN EVENT SUCCESSFUL\n");
+        crm_exit(CRM_EX_OK);
     }
 
-    if (exec_call_id && (event->call_id == exec_call_id)) {
-        if (event->op_status == 0 && event->rc == 0) {
-            print_result("API-CALL SUCCESSFUL for 'exec'");
-        } else {
-            print_result("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s",
-                         event->rc, pcmk_exec_status_str(event->op_status));
-            test_exit(CRM_EX_ERROR);
-        }
+    free(buf);
 
-        if (!options.listen) {
-            test_exit(CRM_EX_OK);
-        }
+    if ((exec_call_id == 0) || (event->call_id != exec_call_id)) {
+        return;
+    }
+
+    if ((event->op_status == 0) && (event->rc == 0)) {
+        printf("API-CALL SUCCESSFUL for 'exec'\n");
+    } else {
+        printf("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s\n",
+               event->rc, pcmk_exec_status_str(event->op_status));
+        crm_exit(CRM_EX_ERROR);
+    }
+
+    if (options.listen == NULL) {
+        crm_exit(CRM_EX_OK);
     }
 }
 
 static gboolean
 timeout_err(void *data)
 {
-    print_result("LISTEN EVENT FAILURE - timeout occurred, never found");
-    test_exit(CRM_EX_TIMEOUT);
+    printf("LISTEN EVENT FAILURE - timeout occurred, never found\n");
+    crm_exit(CRM_EX_TIMEOUT);
     return FALSE;
 }
 
@@ -237,15 +241,15 @@ connection_events(lrmd_event_data_t * event)
         return;
     }
 
-    if (!rc) {
+    if (rc == 0) {
         pcmk__info("Executor client connection established");
         start_test(NULL);
         return;
-    } else {
-        sleep(1);
-        try_connect();
-        pcmk__notice("Executor client connection failed");
     }
+
+    sleep(1);
+    try_connect();
+    pcmk__notice("Executor client connection failed");
 }
 
 static void
@@ -259,178 +263,239 @@ try_connect(void)
     for (; num_tries < tries; num_tries++) {
         rc = lrmd_conn->cmds->connect_async(lrmd_conn, crm_system_name, 3000);
 
-        if (!rc) {
+        if (rc == 0) {
             return;             /* we'll hear back in async callback */
         }
+
         sleep(1);
     }
 
-    print_result("API CONNECTION FAILURE");
-    test_exit(CRM_EX_ERROR);
+    printf("API CONNECTION FAILURE\n");
+    crm_exit(CRM_EX_ERROR);
 }
+
+static void
+print_op_info(gpointer data, gpointer user_data)
+{
+    lrmd_op_info_t *op_info = data;
+
+    printf("RECURRING_OP: %s_%s_%s timeout=%sms\n",
+           op_info->rsc_id, op_info->action, op_info->interval_ms_s,
+           op_info->timeout_ms_s);
+}
+
+static int
+cancel_test(void)
+{
+    return lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
+                                   options.interval_ms);
+}
+
+static int
+exec_test(void)
+{
+    int rc = lrmd_conn->cmds->exec(lrmd_conn, options.rsc_id, options.action,
+                                   NULL, options.interval_ms, options.timeout,
+                                   options.start_delay, options.exec_call_opts,
+                                   options.params);
+
+    if (rc > 0) {
+        exec_call_id = rc;
+        printf("API-CALL 'exec' action pending, waiting on response\n");
+    }
+
+    return rc;
+}
+
+static int
+get_recurring_ops_test(void)
+{
+    GList *op_list = NULL;
+    int rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
+                                                &op_list);
+
+    g_list_foreach(op_list, print_op_info, NULL);
+    g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
+    return rc;
+}
+
+static int
+get_rsc_info_test(void)
+{
+    lrmd_rsc_info_t *rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
+
+    if (rsc_info != NULL) {
+        printf("RSC_INFO: id:%s class:%s provider:%s type:%s\n",
+               rsc_info->id, rsc_info->standard,
+               (rsc_info->provider? rsc_info->provider : "<none>"),
+               rsc_info->type);
+        lrmd_free_rsc_info(rsc_info);
+        return pcmk_ok;
+    }
+
+    return -1;
+}
+
+static int
+list_agents_test(void)
+{
+    lrmd_list_t *list = NULL;
+    int rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, options.class,
+                                          options.provider);
+
+    if (rc > 0) {
+        printf("%d agents found\n", rc);
+
+        for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
+            printf("%s\n", iter->val);
+        }
+
+        lrmd_list_freeall(list);
+        return 0;
+    }
+
+    printf("API_CALL FAILURE - no agents found\n");
+    return -1;
+}
+
+static int
+list_ocf_providers_test(void)
+{
+    lrmd_list_t *list = NULL;
+    int rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, options.type, &list);
+
+    if (rc > 0) {
+        printf("%d providers found\n", rc);
+
+        for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
+            printf("%s\n", iter->val);
+        }
+
+        lrmd_list_freeall(list);
+        return 0;
+    }
+
+    printf("API_CALL FAILURE - no providers found\n");
+    return -1;
+}
+
+static int
+list_standards_test(void)
+{
+    lrmd_list_t *list = NULL;
+    int rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+
+    if (rc > 0) {
+        printf("%d standards found\n", rc);
+
+        for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
+            printf("%s\n", iter->val);
+        }
+
+        lrmd_list_freeall(list);
+        return 0;
+    }
+
+    printf("API_CALL FAILURE - no standards found\n");
+    return -1;
+}
+
+static int
+metadata_test(void)
+{
+    char *output = NULL;
+    int rc = lrmd_conn->cmds->get_metadata(lrmd_conn, options.class,
+                                           options.provider, options.type,
+                                           &output, 0);
+
+    if (rc == pcmk_ok) {
+        printf("%s\n", output);
+        free(output);
+    }
+
+    return rc;
+}
+
+static int
+register_rsc_test(void)
+{
+    return lrmd_conn->cmds->register_rsc(lrmd_conn,
+                                         options.rsc_id,
+                                         options.class, options.provider, options.type, 0);
+}
+
+static int
+unregister_rsc_test(void)
+{
+    return lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
+}
+
+static struct {
+    const char *command;
+    int (*handler)(void);
+} handlers[] = {
+    { "cancel", cancel_test },
+    { "exec", exec_test },
+    { "get_recurring_ops", get_recurring_ops_test },
+    { "get_rsc_info", get_rsc_info_test },
+    { "list_agents", list_agents_test },
+    { "list_ocf_providers", list_ocf_providers_test },
+    { "list_standards", list_standards_test },
+    { "metadata", metadata_test },
+    { "register_rsc", register_rsc_test },
+    { "unregister_rsc", unregister_rsc_test },
+    { NULL },
+};
 
 static gboolean
 start_test(void *user_data)
 {
     int rc = 0;
 
-    if (!options.no_connect) {
-        if (!lrmd_conn->cmds->is_connected(lrmd_conn)) {
-            try_connect();
-            /* async connect -- this function will get called back into */
-            return 0;
-        }
-    }
-    lrmd_conn->cmds->set_callback(lrmd_conn, read_events);
-
-    if (options.timeout) {
-        pcmk__create_timer(options.timeout, timeout_err, NULL);
-    }
-
-    if (!options.api_call) {
+    if (!options.no_connect && !lrmd_conn->cmds->is_connected(lrmd_conn)) {
+        try_connect();
+        /* async connect -- this function will get called back into */
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "exec", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->exec(lrmd_conn,
-                                   options.rsc_id,
-                                   options.action,
-                                   NULL,
-                                   options.interval_ms,
-                                   options.timeout,
-                                   options.start_delay,
-                                   options.exec_call_opts,
-                                   options.params);
+    lrmd_conn->cmds->set_callback(lrmd_conn, read_events);
 
-        if (rc > 0) {
-            exec_call_id = rc;
-            print_result("API-CALL 'exec' action pending, waiting on response");
-        }
-
-    } else if (pcmk__str_eq(options.api_call, "register_rsc", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->register_rsc(lrmd_conn,
-                                           options.rsc_id,
-                                           options.class, options.provider, options.type, 0);
-    } else if (pcmk__str_eq(options.api_call, "get_rsc_info", pcmk__str_casei)) {
-        lrmd_rsc_info_t *rsc_info;
-
-        rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
-
-        if (rsc_info) {
-            print_result("RSC_INFO: id:%s class:%s provider:%s type:%s",
-                         rsc_info->id, rsc_info->standard,
-                         (rsc_info->provider? rsc_info->provider : "<none>"),
-                         rsc_info->type);
-            lrmd_free_rsc_info(rsc_info);
-            rc = pcmk_ok;
-        } else {
-            rc = -1;
-        }
-    } else if (pcmk__str_eq(options.api_call, "unregister_rsc", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
-    } else if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
-                                     options.interval_ms);
-    } else if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
-        char *output = NULL;
-
-        rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
-                                           options.class,
-                                           options.provider, options.type, &output, 0);
-        if (rc == pcmk_ok) {
-            print_result("%s", output);
-            free(output);
-        }
-    } else if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
-        lrmd_list_t *list = NULL;
-        lrmd_list_t *iter = NULL;
-
-        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, options.class, options.provider);
-
-        if (rc > 0) {
-            print_result("%d agents found", rc);
-            for (iter = list; iter != NULL; iter = iter->next) {
-                print_result("%s", iter->val);
-            }
-            lrmd_list_freeall(list);
-            rc = 0;
-        } else {
-            print_result("API_CALL FAILURE - no agents found");
-            rc = -1;
-        }
-    } else if (pcmk__str_eq(options.api_call, "list_ocf_providers", pcmk__str_casei)) {
-        lrmd_list_t *list = NULL;
-        lrmd_list_t *iter = NULL;
-
-        rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, options.type, &list);
-
-        if (rc > 0) {
-            print_result("%d providers found", rc);
-            for (iter = list; iter != NULL; iter = iter->next) {
-                print_result("%s", iter->val);
-            }
-            lrmd_list_freeall(list);
-            rc = 0;
-        } else {
-            print_result("API_CALL FAILURE - no providers found");
-            rc = -1;
-        }
-
-    } else if (pcmk__str_eq(options.api_call, "list_standards", pcmk__str_casei)) {
-        lrmd_list_t *list = NULL;
-        lrmd_list_t *iter = NULL;
-
-        rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
-
-        if (rc > 0) {
-            print_result("%d standards found", rc);
-            for (iter = list; iter != NULL; iter = iter->next) {
-                print_result("%s", iter->val);
-            }
-            lrmd_list_freeall(list);
-            rc = 0;
-        } else {
-            print_result("API_CALL FAILURE - no providers found");
-            rc = -1;
-        }
-
-    } else if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
-        GList *op_list = NULL;
-        GList *op_item = NULL;
-        rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
-                                                &op_list);
-
-        for (op_item = op_list; op_item != NULL; op_item = op_item->next) {
-            lrmd_op_info_t *op_info = op_item->data;
-
-            print_result("RECURRING_OP: %s_%s_%s timeout=%sms",
-                         op_info->rsc_id, op_info->action,
-                         op_info->interval_ms_s, op_info->timeout_ms_s);
-            lrmd_free_op_info(op_info);
-        }
-        g_list_free(op_list);
-
-    } else if (options.api_call) {
-        print_result("API-CALL FAILURE unknown action '%s'", options.action);
-        test_exit(CRM_EX_ERROR);
+    if (options.timeout != 0) {
+        pcmk__create_timer(options.timeout, timeout_err, NULL);
     }
 
+    if (options.api_call == NULL) {
+        return 0;
+    }
+
+    for (int i = 0; handlers[i].command != NULL; i++) {
+        if (!pcmk__str_eq(options.api_call, handlers[i].command, pcmk__str_casei)) {
+            continue;
+        }
+
+        rc = handlers[i].handler();
+        goto done;
+    }
+
+    printf("API-CALL FAILURE unknown action '%s'\n", options.api_call);
+    crm_exit(CRM_EX_ERROR);
+
+done:
     if (rc < 0) {
-        print_result("API-CALL FAILURE for '%s' api_rc:%d",
-                     options.api_call, rc);
-        test_exit(CRM_EX_ERROR);
+        printf("API-CALL FAILURE for '%s' api_rc:%d\n", options.api_call, rc);
+        crm_exit(CRM_EX_ERROR);
     }
 
-    if (options.api_call && rc == pcmk_ok) {
-        print_result("API-CALL SUCCESSFUL for '%s'", options.api_call);
-        if (!options.listen) {
-            test_exit(CRM_EX_OK);
+    if (rc == pcmk_ok) {
+        printf("API-CALL SUCCESSFUL for '%s'\n", options.api_call);
+        if (options.listen == NULL) {
+            crm_exit(CRM_EX_OK);
         }
     }
 
     if (options.no_wait) {
         /* just make the call and exit regardless of anything else. */
-        test_exit(CRM_EX_OK);
+        crm_exit(CRM_EX_OK);
     }
 
     return 0;
@@ -523,21 +588,35 @@ build_arg_context(pcmk__common_args_t *args, GOptionGroup **group) {
     return context;
 }
 
+static void
+cleanup_cmdline(void)
+{
+    g_clear_pointer(&context, pcmk__free_arg_context);
+    g_clear_pointer(&key, free);
+    g_clear_pointer(&lrmd_conn, lrmd_api_delete);
+    g_clear_pointer(&processed_args, g_strfreev);
+    g_clear_pointer(&val, free);
+}
+
 int
 main(int argc, char **argv)
 {
     GError *error = NULL;
     crm_exit_t exit_code = CRM_EX_OK;
     crm_trigger_t *trig = NULL;
+    pcmk__common_args_t *args = NULL;
+    GMainLoop *mainloop = NULL;
 
-    pcmk__common_args_t *args = pcmk__new_common_args(SUMMARY);
+    atexit(cleanup_cmdline);
+
+    args = pcmk__new_common_args(SUMMARY);
     /* Typically we'd pass all the single character options that take an argument
      * as the second parameter here (and there's a bunch of those in this tool).
      * However, we control how this program is called so we can just not call it
      * in a way where the preprocessing ever matters.
      */
-    gchar **processed_args = pcmk__cmdline_preproc(argv, NULL);
-    GOptionContext *context = build_arg_context(args, NULL);
+    processed_args = pcmk__cmdline_preproc(argv, NULL);
+    context = build_arg_context(args, NULL);
 
     if (!g_option_context_parse_strv(context, &processed_args, &error)) {
         exit_code = CRM_EX_USAGE;
@@ -588,7 +667,7 @@ main(int argc, char **argv)
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
-    if (!options.api_call && !options.listen) {
+    if ((options.api_call == NULL) && !options.listen) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must specify at least one of --api-call, --listen, "
@@ -610,12 +689,6 @@ main(int argc, char **argv)
     g_main_loop_run(mainloop);
 
 done:
-    g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
-
-    free(key);
-    free(val);
-
     pcmk__output_and_clear_error(&error, NULL);
-    return test_exit(exit_code);
+    return crm_exit(exit_code);
 }
