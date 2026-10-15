@@ -1513,13 +1513,17 @@ valid_fencing_timeout(int specified_timeout, bool action_specific,
                       const remote_fencing_op_t *op, const char *device)
 {
     int timeout = specified_timeout;
+    unsigned int watchdog_timeout_ms = 0;
 
     if (!is_watchdog_fencing(op, device)) {
         return timeout;
     }
 
+    // pcmk__parse_fencing_watchdog_timeout() ensured >= 0 already
+    watchdog_timeout_ms = MIN(fencing_watchdog_timeout_ms, UINT_MAX);
+
     timeout = (int) MIN(MAX(specified_timeout,
-                            pcmk__timeout_ms2s(fencing_watchdog_timeout_ms)),
+                            pcmk__timeout_ms2s(watchdog_timeout_ms)),
                         INT_MAX);
 
     if (timeout <= specified_timeout) {
