@@ -49,6 +49,7 @@ enum cts_exec_cmd {
     cts_exec_cmd_get_rsc_info,
     cts_exec_cmd_list_agents,
     cts_exec_cmd_list_ocf_providers,
+    cts_exec_cmd_list_standards,
     cts_exec_cmd_metadata,
     cts_exec_cmd_register_rsc,
     cts_exec_cmd_unregister_rsc,
@@ -168,6 +169,8 @@ command_cb(const char *option_name, const char *optarg, void *data,
         options.cmd = cts_exec_cmd_list_agents;
     } else if (pcmk__str_eq(optarg, "list_ocf_providers", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_list_ocf_providers;
+    } else if (pcmk__str_eq(optarg, "list_standards", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_list_standards;
     } else if (pcmk__str_eq(optarg, "metadata", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_metadata;
     } else if (pcmk__str_eq(optarg, "register_rsc", pcmk__str_none)) {
@@ -454,6 +457,27 @@ list_ocf_providers_test(void)
 }
 
 static int
+list_standards_test(void)
+{
+    lrmd_list_t *list = NULL;
+    int rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
+
+    if (rc > 0) {
+        print_result("%d standards found", rc);
+
+        for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
+            print_result("%s", iter->val);
+        }
+
+        lrmd_list_freeall(list);
+        return 0;
+    }
+
+    print_result("API_CALL FAILURE - no standards found");
+    return -1;
+}
+
+static int
 metadata_test(void)
 {
     char *output = NULL;
@@ -504,6 +528,10 @@ static const cts_exec_cmd_info_t cts_exec_command_info[] = {
         list_ocf_providers_test,
         cts_exec_cf_no_connect,
     },
+    [cts_exec_cmd_list_standards] = {
+        list_standards_test,
+        cts_exec_cf_no_connect,
+    },
     [cts_exec_cmd_metadata] = {
         metadata_test,
         cts_exec_cf_no_connect,
@@ -546,24 +574,7 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "list_standards", pcmk__str_casei)) {
-        lrmd_list_t *list = NULL;
-
-        rc = lrmd_conn->cmds->list_standards(lrmd_conn, &list);
-
-        if (rc > 0) {
-            print_result("%d standards found", rc);
-            for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
-                print_result("%s", iter->val);
-            }
-            lrmd_list_freeall(list);
-            rc = 0;
-        } else {
-            print_result("API_CALL FAILURE - no providers found");
-            rc = -1;
-        }
-
-    } else if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
         GList *op_list = NULL;
 
         rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
