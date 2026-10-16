@@ -47,9 +47,10 @@ enum cts_exec_cmd {
     cts_exec_cmd_exec,
     cts_exec_cmd_get_rsc_info,
     cts_exec_cmd_register_rsc,
+    cts_exec_cmd_unregister_rsc,
 
     // Update this when adding new commands
-    cts_exec_cmd_max = cts_exec_cmd_register_rsc,
+    cts_exec_cmd_max = cts_exec_cmd_unregister_rsc,
 };
 
 /*!
@@ -156,6 +157,8 @@ command_cb(const char *option_name, const char *optarg, void *data,
         options.cmd = cts_exec_cmd_get_rsc_info;
     } else if (pcmk__str_eq(optarg, "register_rsc", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_register_rsc;
+    } else if (pcmk__str_eq(optarg, "unregister_rsc", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_unregister_rsc;
     } else {
         options.api_call = strdup(optarg);
     }
@@ -393,6 +396,12 @@ register_rsc_test(void)
                                          options.type, 0);
 }
 
+static int
+unregister_rsc_test(void)
+{
+    return lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
+}
+
 static const cts_exec_cmd_info_t cts_exec_command_info[] = {
     [cts_exec_cmd_exec] = {
         exec_test,
@@ -404,6 +413,10 @@ static const cts_exec_cmd_info_t cts_exec_command_info[] = {
     },
     [cts_exec_cmd_register_rsc] = {
         register_rsc_test,
+        cts_exec_cf_none,
+    },
+    [cts_exec_cmd_unregister_rsc] = {
+        unregister_rsc_test,
         cts_exec_cf_none,
     },
 };
@@ -436,9 +449,7 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "unregister_rsc", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
-    } else if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
                                      options.interval_ms);
     } else if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
