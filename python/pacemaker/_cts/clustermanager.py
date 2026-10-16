@@ -97,7 +97,7 @@ class ClusterManager(UserDict):
         """Return a LogWatcher object that watches for fencing log messages."""
         # If we don't have quorum now but get it as a result of starting this node,
         # then a bunch of nodes might get fenced
-        if self.has_quorum(None):
+        if self.has_quorum():
             logging.debug("Have quorum")
             return None
 
@@ -137,7 +137,7 @@ class ClusterManager(UserDict):
             logging.debug("Nothing to do")
             return peer_list
 
-        q = self.has_quorum(None)
+        q = self.has_quorum()
         if not q and len(self.env["nodes"]) > 2:
             # We didn't gain quorum - we shouldn't have shot anyone
             logging.debug(f"Quorum: {q} Len: {len(self.env['nodes'])}")
@@ -332,18 +332,13 @@ class ClusterManager(UserDict):
         self.rsh.call_async(node, self.templates["StopCmd"])
         self.expected_status[node] = "down"
 
-    def startall(self, nodelist=None, verbose=False, quick=False):
-        """Start the cluster manager on every node in the cluster, or on every node in nodelist."""
-        if not nodelist:
-            nodelist = self.env["nodes"]
+    def startall(self):
+        """Start the cluster manager on every node in the cluster."""
+        nodelist = self.env["nodes"]
 
         for node in nodelist:
             if self.expected_status[node] == "down":
                 self.ns.wait_for_all_nodes(nodelist, 300)
-
-        if not quick:
-            # This is used for "basic sanity checks", so only start one node ...
-            return self.start_cm(nodelist[0], verbose=verbose)
 
         # Approximation of SimulStartList for --boot
         watchpats = [
@@ -363,11 +358,11 @@ class ClusterManager(UserDict):
                            self.env["dead_time"] + 10)
         watch.set_watch()
 
-        if not self.start_cm(nodelist[0], verbose=verbose):
+        if not self.start_cm(nodelist[0], verbose=True):
             return False
 
         for node in nodelist:
-            self.start_cm_async(node, verbose=verbose)
+            self.start_cm_async(node, verbose=True)
 
         watch.look_for_all()
         if watch.unmatched:
@@ -380,28 +375,22 @@ class ClusterManager(UserDict):
 
         return True
 
-    def stopall(self, nodelist=None, verbose=False, force=False):
-        """Stop the cluster manager on every node in the cluster, or on every node in nodelist."""
+    def stopall(self, force=False):
+        """Stop the cluster manager on every node in the cluster."""
         ret = True
-
-        if not nodelist:
-            nodelist = self.env["nodes"]
 
         for node in self.env["nodes"]:
             if self.expected_status[node] == "up" or force:
-                if not self.stop_cm(node, verbose=verbose, force=force):
+                if not self.stop_cm(node, verbose=True, force=force):
                     ret = False
 
         return ret
 
-    def statall(self, nodelist=None):
-        """Return the status of the cluster manager on every node in the cluster, or on every node in nodelist."""
+    def statall(self):
+        """Return the status of the cluster manager on every node in the cluster."""
         result = {}
 
-        if not nodelist:
-            nodelist = self.env["nodes"]
-
-        for node in nodelist:
+        for node in self.env["nodes"]:
             if self.stat_cm(node):
                 result[node] = "up"
             else:
@@ -409,11 +398,8 @@ class ClusterManager(UserDict):
 
         return result
 
-    def isolate_node(self, target, nodes=None):
-        """Break communication between the target node and all other nodes in the cluster, or nodes."""
-        if not nodes:
-            nodes = self.env["nodes"]
-
+    def isolate_node(self, target, nodes):
+        """Break communication between the target node the given other nodes."""
         for node in nodes:
             if node == target:
                 continue
@@ -427,11 +413,8 @@ class ClusterManager(UserDict):
 
         return True
 
-    def unisolate_node(self, target, nodes=None):
-        """Re-establish communication between the target node and all other nodes in the cluster, or nodes."""
-        if not nodes:
-            nodes = self.env["nodes"]
-
+    def unisolate_node(self, target, nodes):
+        """Re-establish communication between the target node and the given other nodes."""
         for node in nodes:
             if node == target:
                 continue
@@ -536,7 +519,7 @@ class ClusterManager(UserDict):
         logging.log(f"Warn: Node {node} not stable")
         return False
 
-    def _partition_stable(self, nodes, timeout=None):
+    def _partition_stable(self, nodes, timeout):
         """Return whether or not all nodes in the given partition are stable."""
         watchpats = [
             "Current ping state: S_IDLE",
@@ -705,16 +688,9 @@ class ClusterManager(UserDict):
         logging.debug(f"Found partitions: {ccm_partitions!r}")
         return ccm_partitions
 
-    def has_quorum(self, node_list):
+    def has_quorum(self):
         """Return whether or not the cluster has quorum."""
-        # If we are auditing a partition, then one side will
-        #   have quorum and the other not.
-        # So the caller needs to tell us which we are checking
-        # If no value for node_list is specified... assume all nodes
-        if not node_list:
-            node_list = self.env["nodes"]
-
-        for node in node_list:
+        for node in self.env["nodes"]:
             if self.expected_status[node] != "up":
                 continue
 

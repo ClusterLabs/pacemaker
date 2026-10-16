@@ -47,10 +47,6 @@ class ClusterAudit:
         """
         raise NotImplementedError
 
-    def log(self, args):
-        """Log a message."""
-        logging.log(f"audit: {args}")
-
     def debug(self, args):
         """Log a debug message."""
         logging.debug(f"audit: {args}")
@@ -74,14 +70,11 @@ class LogAudit(ClusterAudit):
         ClusterAudit.__init__(self, cm)
         self.name = "LogAudit"
 
-    def _restart_cluster_logging(self, nodes=None):
-        """Restart logging on the given nodes, or all if none are given."""
-        if not nodes:
-            nodes = self._cm.env["nodes"]
+    def _restart_cluster_logging(self):
+        """Restart logging on all nodes."""
+        logging.debug("Restarting logging on all nodes")
 
-        logging.debug(f"Restarting logging on: {nodes!r}")
-
-        for node in nodes:
+        for node in self._cm.env["nodes"]:
             if self._cm.env["have_systemd"]:
                 (rc, _) = self._cm.rsh.call(node, "systemctl stop systemd-journald.socket")
                 if rc != 0:
@@ -283,8 +276,10 @@ class FileAudit(ClusterAudit):
         (_, lsout) = self._cm.rsh.call(node, "coredumpctl --no-legend --no-pager")
         return self._output_has_core(lsout, node)
 
-    def _find_core_on_fs(self, node, paths):
-        """Check for core dumps on the given node, under any of the given paths."""
+    def _find_core_on_fs(self, node):
+        """Check for Pacemaker and Corosync core dumps on the given node."""
+        paths = ["/var/lib/pacemaker/cores/*", "/var/lib/corosync"]
+
         (_, lsout) = self._cm.rsh.call(node, f"ls -al {' '.join(paths)} | grep core.[0-9]",
                                        verbose=1)
         return self._output_has_core(lsout, node)
@@ -311,8 +306,7 @@ class FileAudit(ClusterAudit):
             #
             # To handle the last two cases, check the other filesystem locations.
             if not found:
-                found = self._find_core_on_fs(node, ["/var/lib/pacemaker/cores/*",
-                                                     "/var/lib/corosync"])
+                found = self._find_core_on_fs(node)
                 if found:
                     passed = False
 
@@ -449,43 +443,49 @@ class PrimitiveAudit(ClusterAudit):
 
     def _audit_resource(self, resource, quorum):
         """Perform the audit of a single resource."""
-        rc = True
         active = self._cm.resource_location(resource.id)
 
         if len(active) == 1:
             if quorum:
                 self.debug(f"Resource {resource.id} active on {active!r}")
+                return True
 
-            elif resource.needs_quorum == 1:
+            if resource.needs_quorum == 1:
                 logging.log(f"Resource {resource.id} active without quorum: {active!r}")
-                rc = False
+                return False
 
-        elif not resource.managed:
+            return True
+
+        if not resource.managed:
             logging.log(f"Resource {resource.id} not managed. Active on {active!r}")
+            return True
 
-        elif not resource.unique:
+        if not resource.unique:
             # TODO: Figure out a clever way to actually audit these resource types
             if len(active) > 1:
                 self.debug(f"Non-unique resource {resource.id} is active on: {active!r}")
             else:
                 self.debug(f"Non-unique resource {resource.id} is not active")
 
-        elif len(active) > 1:
+            return True
+
+        if len(active) > 1:
             logging.log(f"Resource {resource.id} is active multiple times: {active!r}")
-            rc = False
+            return False
 
-        elif resource.orphan:
+        if resource.orphan:
             self.debug(f"Resource {resource.id} is an inactive orphan")
+            return True
 
-        elif not self._inactive_nodes:
+        if not self._inactive_nodes:
             logging.log(f"WARN: Resource {resource.id} not served anywhere")
-            rc = False
+            return False
 
-        elif quorum or not resource.needs_quorum:
+        if quorum or not resource.needs_quorum:
             self.debug(f"Resource {resource.id} not served anywhere "
                        f"(Inactive nodes: {self._inactive_nodes!r})")
 
-        return rc
+        return True
 
     def _setup(self):
         """
@@ -530,7 +530,7 @@ class PrimitiveAudit(ClusterAudit):
             return passed
 
         primitives = [r for r in self._resources if r.type == "primitive"]
-        quorum = self._cm.has_quorum(None)
+        quorum = self._cm.has_quorum()
 
         for primitive in primitives:
             if not self._audit_resource(primitive, quorum):

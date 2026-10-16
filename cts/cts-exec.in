@@ -7,7 +7,7 @@
 # pacemaker imports need to come after we modify sys.path, which pylint will complain about.
 # pylint: disable=wrong-import-position
 
-__copyright__ = "Copyright 2012-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2012-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -87,7 +87,7 @@ class ExecTest(Test):
 
     def _start_daemons(self):
         if self._corosync:
-            self._corosync.start(kill_first=True)
+            self._corosync.start()
             # pylint: disable=consider-using-with
             self._fencer = subprocess.Popen(["pacemaker-fenced", "-s"])
 
