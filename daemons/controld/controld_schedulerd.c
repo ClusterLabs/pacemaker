@@ -25,7 +25,7 @@
 
 static pcmk_ipc_api_t *schedulerd_api = NULL;
 
-static mainloop_timer_t *controld_cib_retry_timer = NULL;
+static pcmk__main_loop_timer_t *controld_cib_retry_timer = NULL;
 
 /*!
  * \internal
@@ -235,7 +235,7 @@ do_pe_control(long long action, enum crmd_fsa_cause cause,
 }
 
 static int fsa_pe_query = 0;
-static mainloop_timer_t *controld_sched_timer = NULL;
+static pcmk__main_loop_timer_t *controld_sched_timer = NULL;
 
 // @TODO Make this a configurable cluster option if there's demand for it
 #define SCHED_TIMEOUT_MS (120000)
@@ -246,7 +246,7 @@ static mainloop_timer_t *controld_sched_timer = NULL;
  *
  * \param[in] user_data  Ignored
  *
- * \return FALSE (indicating that timer should not be restarted)
+ * \return \c G_SOURCE_REMOVE (indicating that timer should not be restarted)
  */
 static gboolean
 controld_sched_timeout(void *user_data)
@@ -264,7 +264,8 @@ controld_sched_timeout(void *user_data)
          */
         crmd_exit(CRM_EX_FATAL);
     }
-    return FALSE;
+
+    return G_SOURCE_REMOVE;
 }
 
 void
@@ -275,7 +276,8 @@ controld_stop_sched_timer(void)
         pcmk__trace("Stopping timer for scheduler reply %s",
                     controld_globals.fsa_pe_ref);
     }
-    mainloop_timer_stop(controld_sched_timer);
+
+    pcmk__main_loop_timer_stop(controld_sched_timer);
 }
 
 /*!
@@ -291,12 +293,14 @@ controld_expect_sched_reply(char *ref)
 {
     if (ref) {
         if (controld_sched_timer == NULL) {
-            controld_sched_timer = mainloop_timer_add("scheduler_reply_timer",
-                                                      SCHED_TIMEOUT_MS, FALSE,
-                                                      controld_sched_timeout,
-                                                      NULL);
+            controld_sched_timer =
+                pcmk__main_loop_timer_new("scheduler_reply_timer",
+                                          SCHED_TIMEOUT_MS,
+                                          controld_sched_timeout, NULL);
         }
-        mainloop_timer_start(controld_sched_timer);
+
+        pcmk__main_loop_timer_start(controld_sched_timer);
+
     } else {
         controld_stop_sched_timer();
     }
@@ -311,7 +315,7 @@ controld_expect_sched_reply(char *ref)
 void
 controld_free_sched_timer(void)
 {
-    g_clear_pointer(&controld_sched_timer, mainloop_timer_del);
+    g_clear_pointer(&controld_sched_timer, pcmk__main_loop_timer_free);
 }
 
 // A_PE_INVOKE
@@ -450,7 +454,7 @@ sleep_timer(void *data)
 {
     controld_set_fsa_action_flags(A_PE_INVOKE);
     controld_trigger_fsa();
-    g_clear_pointer(&controld_cib_retry_timer, mainloop_timer_del);
+    g_clear_pointer(&controld_cib_retry_timer, pcmk__main_loop_timer_free);
     return G_SOURCE_REMOVE;
 }
 
@@ -487,9 +491,9 @@ do_pe_invoke_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, void
         pcmk__debug("Re-asking for the CIB: %d other peer updates still "
                     "pending", (num_cib_op_callbacks() - 1));
 
-        controld_cib_retry_timer = mainloop_timer_add("cib_retry", 1000, false,
-                                                      sleep_timer, NULL);
-        mainloop_timer_start(controld_cib_retry_timer);
+        controld_cib_retry_timer = pcmk__main_loop_timer_new("cib_retry", 1000,
+                                                             sleep_timer, NULL);
+        pcmk__main_loop_timer_start(controld_cib_retry_timer);
         return;
     }
 

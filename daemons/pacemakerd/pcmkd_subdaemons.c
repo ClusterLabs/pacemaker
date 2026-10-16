@@ -102,7 +102,7 @@ static bool fatal_error = false;
 static int child_liveness(pcmkd_child_t *child);
 static gboolean escalate_shutdown(void *data);
 static int start_child(pcmkd_child_t *child);
-static void pcmk_child_exit(mainloop_child_t *p, int core, int signo,
+static void pcmk_child_exit(pcmk__main_loop_child_t *p, int core, int signo,
                             int exitcode);
 static void pcmk_process_exit(pcmkd_child_t *child);
 static void stop_child(pcmkd_child_t *child, int signal);
@@ -251,30 +251,28 @@ escalate_shutdown(void *data)
 }
 
 static void
-pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
+pcmk_child_exit(pcmk__main_loop_child_t *p, int core, int signo, int exitcode)
 {
-    pcmkd_child_t *child = mainloop_child_userdata(p);
-    const char *name = mainloop_child_name(p);
+    pcmkd_child_t *child = p->user_data;
 
     if (signo) {
         // cts-lab looks for this message
         do_crm_log(((signo == SIGKILL)? LOG_WARNING : LOG_ERR),
-                   "%s[%d] terminated with signal %d (%s)%s",
-                   name, p->pid, signo, strsignal(signo),
-                   (core? " and dumped core" : ""));
+                   "%s[%d] terminated with signal %d (%s)%s", p->desc, p->pid,
+                   signo, strsignal(signo), (core? " and dumped core" : ""));
         pcmk_process_exit(child);
         return;
     }
 
     switch(exitcode) {
         case CRM_EX_OK:
-            pcmk__info("%s[%d] exited with status %d (%s)", name, p->pid,
+            pcmk__info("%s[%d] exited with status %d (%s)", p->desc, p->pid,
                        exitcode, crm_exit_str(exitcode));
             break;
 
         case CRM_EX_FATAL:
             pcmk__warn("Shutting cluster down because %s[%d] had fatal failure",
-                       name, p->pid);
+                       p->desc, p->pid);
             child->flags &= ~child_respawn;
             fatal_error = true;
             pcmk_shutdown(SIGTERM);
@@ -287,7 +285,7 @@ pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
                 child->flags &= ~child_respawn;
                 fatal_error = true;
                 msg = pcmk__assert_asprintf("Subdaemon %s[%d] requested panic",
-                                            name, p->pid);
+                                            p->desc, p->pid);
                 pcmk__panic(msg);
 
                 // Should never get here
@@ -298,7 +296,7 @@ pcmk_child_exit(mainloop_child_t *p, int core, int signo, int exitcode)
 
         default:
             // cts-lab looks for this message
-            pcmk__err("%s[%d] exited with status %d (%s)", name, p->pid,
+            pcmk__err("%s[%d] exited with status %d (%s)", p->desc, p->pid,
                       exitcode, crm_exit_str(exitcode));
             break;
     }
@@ -480,7 +478,8 @@ start_child(pcmkd_child_t * child)
             valgrind_s = " (valgrind enabled: " PCMK__VALGRIND_EXEC ")";
         }
 
-        mainloop_child_add(child->pid, 0, name, child, pcmk_child_exit);
+        pcmk__main_loop_child_create(child->pid, name, 0, child, true,
+                                     pcmk_child_exit);
 
         pcmk__info("Forked process %lld using user %lld (%s) and group %lld "
                    "for subdaemon %s%s",

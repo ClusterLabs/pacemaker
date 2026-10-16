@@ -201,7 +201,7 @@ get_schema_files(void)
  * saving them to disk.
  */
 static void
-get_schema_files_complete(mainloop_child_t *p, int core, int signo,
+get_schema_files_complete(pcmk__main_loop_child_t *p, int core, int signo,
                           int exitcode)
 {
     const char *errmsg = "Could not load additional schema files";
@@ -248,7 +248,7 @@ remoted_request_cib_schema_files(void)
      * directory.
      */
     if (schema_fetch_pid != 0) {
-        if (mainloop_child_kill(schema_fetch_pid) == FALSE) {
+        if (!pcmk__main_loop_child_kill(schema_fetch_pid)) {
             pcmk__warn("Unable to kill pre-existing schema-fetch process");
             return;
         }
@@ -287,9 +287,10 @@ remoted_request_cib_schema_files(void)
         default:
             /* parent */
             schema_fetch_pid = pid;
-            mainloop_child_add_with_flags(pid, 5 * 60 * 1000, "schema-fetch", NULL,
-                                          mainloop_leave_pid_group,
-                                          get_schema_files_complete);
+
+            // Five-minute timeout
+            pcmk__main_loop_child_create(pid, "schema-fetch", 300000, NULL,
+                                         false, get_schema_files_complete);
             break;
     }
 }

@@ -12,9 +12,9 @@
 
 #include <stdbool.h>    // bool
 #include <signal.h>     // sighandler_t
-#include <sys/types.h>  // pid_t, ssize_t
+#include <sys/types.h>  // ssize_t
 
-#include <glib.h>       // gboolean, GSourceFunc, GMainLoop
+#include <glib.h>       // gboolean, GMainLoop
 #include <qb/qbipcs.h>  // qb_ipcs_service_t, etc.
 
 #include <crm/common/ipc.h>
@@ -30,23 +30,10 @@ extern "C" {
  * \ingroup core
  */
 
-enum mainloop_child_flags {
-    /* don't kill pid group on timeout, only kill the pid */
-    mainloop_leave_pid_group = 0x01,
-};
-
 // NOTE: sbd (as of at least 1.5.2) uses this
 typedef struct trigger_s crm_trigger_t;
 
 typedef struct mainloop_io_s mainloop_io_t;
-typedef struct mainloop_child_s mainloop_child_t;
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-typedef struct mainloop_timer_s mainloop_timer_t;
-
-//! \deprecated This has been for internal use only since its creation.
-typedef void (*pcmk__mainloop_child_exit_fn_t)(mainloop_child_t *p, int core,
-                                               int signo, int exitcode);
 
 void mainloop_cleanup(void);
 
@@ -72,24 +59,6 @@ sighandler_t crm_signal_handler(int sig, sighandler_t dispatch);
 gboolean mainloop_add_signal(int sig, void (*dispatch) (int sig));
 
 gboolean mainloop_destroy_signal(int sig);
-
-bool mainloop_timer_running(mainloop_timer_t *t);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-void mainloop_timer_start(mainloop_timer_t *t);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-void mainloop_timer_stop(mainloop_timer_t *t);
-
-unsigned int mainloop_timer_set_period(mainloop_timer_t *t,
-                                       unsigned int period_ms);
-
-// NOTE: sbd (as of at least 1.5.2) uses this
-mainloop_timer_t *mainloop_timer_add(const char *name, unsigned int period_ms,
-                                     bool repeat, GSourceFunc cb,
-                                     void *userdata);
-
-void mainloop_timer_del(mainloop_timer_t *t);
 
 struct ipc_client_callbacks {
     /*!
@@ -171,26 +140,6 @@ mainloop_io_t *mainloop_add_fd(const char *name, int priority, int fd, void *use
 
 void mainloop_del_fd(mainloop_io_t * client);
 
-/*
- * Create a new tracked process
- * To track a process group, use -pid
- */
-void mainloop_child_add(pid_t pid, int timeout, const char *desc,
-                        void *userdata,
-                        pcmk__mainloop_child_exit_fn_t exit_fn);
-
-void mainloop_child_add_with_flags(pid_t pid, int timeout, const char *desc,
-                                   void *userdata, enum mainloop_child_flags,
-                                   pcmk__mainloop_child_exit_fn_t exit_fn);
-
-void *mainloop_child_userdata(mainloop_child_t * child);
-int mainloop_child_timeout(mainloop_child_t * child);
-const char *mainloop_child_name(mainloop_child_t * child);
-
-pid_t mainloop_child_pid(mainloop_child_t * child);
-void mainloop_clear_child_userdata(mainloop_child_t * child);
-gboolean mainloop_child_kill(pid_t pid);
-
 void pcmk_quit_main_loop(GMainLoop *mloop, unsigned int n);
 void pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
                           bool (*check)(unsigned int));
@@ -200,5 +149,9 @@ void pcmk_drain_main_loop(GMainLoop *mloop, unsigned int timer_ms,
 #ifdef __cplusplus
 }
 #endif
+
+#if !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
+#include <crm/common/mainloop_compat.h>
+#endif  // !defined(PCMK_ALLOW_DEPRECATED) || (PCMK_ALLOW_DEPRECATED == 1)
 
 #endif

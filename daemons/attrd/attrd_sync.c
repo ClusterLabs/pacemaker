@@ -66,7 +66,7 @@ struct confirmation_action {
      * \brief A timer that will be used to remove the client should it time out
      *        before receiving all confirmations
      */
-    mainloop_timer_t *timer;
+    pcmk__main_loop_timer_t *timer;
 
     /*!
      * \brief A function to run when all confirmations have been received
@@ -341,7 +341,7 @@ free_action(void *data)
 {
     struct confirmation_action *action = (struct confirmation_action *) data;
     g_list_free_full(action->respondents, free);
-    mainloop_timer_del(action->timer);
+    pcmk__main_loop_timer_free(action->timer);
     pcmk__xml_free(action->xml);
     free(action->client_id);
     free(action);
@@ -513,8 +513,9 @@ attrd_expect_confirmations(pcmk__request_t *request, attrd_confirmation_action_f
     action->ipc_id = request->ipc_id;
     action->flags = request->flags;
 
-    action->timer = mainloop_timer_add(NULL, 15000, FALSE, confirmation_timeout_cb, action);
-    mainloop_timer_start(action->timer);
+    action->timer = pcmk__main_loop_timer_new("attrd_confirmation", 15000,
+                                              confirmation_timeout_cb, action);
+    pcmk__main_loop_timer_start(action->timer);
 
     pcmk__intkey_table_insert(expected_confirmations, callid, action);
     pcmk__trace("Callid %d now waiting on %u confirmations", callid,

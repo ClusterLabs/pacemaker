@@ -134,7 +134,7 @@ typedef struct {
     int timeout_ms; // How long to wait for more changes before writing
     uint32_t flags; // Group of enum attrd_attr_flags
     GHashTable *values;         // Key: node name, value: attribute_value_t
-    mainloop_timer_t *timer;    // Timer to use for timeout_ms
+    pcmk__main_loop_timer_t *timer; // Timer to use for timeout_ms
 } attribute_t;
 
 #define attrd_set_attr_flags(attr, flags_to_set) do {               \
@@ -230,7 +230,8 @@ extern int minimum_protocol_version;
 void attrd_remove_peer_protocol_ver(const char *host);
 void attrd_update_minimum_protocol_ver(const char *host, const char *value);
 
-mainloop_timer_t *attrd_add_timer(const char *id, int timeout_ms, attribute_t *attr);
+pcmk__main_loop_timer_t *attrd_add_timer(const char *id, int timeout_ms,
+                                         attribute_t *attr);
 
 void attrd_unregister_handlers(void);
 void attrd_handle_request(pcmk__request_t *request);

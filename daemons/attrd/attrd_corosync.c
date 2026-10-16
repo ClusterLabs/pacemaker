@@ -360,7 +360,7 @@ update_attr_on_host(attribute_t *a, const pcmk__node_status_t *peer,
         if (a->timeout_ms && a->timer) {
             pcmk__trace("Delaying write of %s %s for dampening", attr,
                         pcmk__readable_interval(a->timeout_ms));
-            mainloop_timer_start(a->timer);
+            pcmk__main_loop_timer_start(a->timer);
         } else {
             attrd_write_or_elect_attribute(a);
         }

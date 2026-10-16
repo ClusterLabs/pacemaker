@@ -34,7 +34,7 @@
 #include "pcmkd_corosync.h"
 
 static corosync_cfg_handle_t cfg_handle = 0;
-static mainloop_timer_t *reconnect_timer = NULL;
+static pcmk__main_loop_timer_t *reconnect_timer = NULL;
 
 /* =::=::=::= CFG - Shutdown stuff =::=::=::= */
 
@@ -96,7 +96,7 @@ static gboolean
 cluster_reconnect_cb(void *data)
 {
     if (cluster_connect_cfg()) {
-        g_clear_pointer(&reconnect_timer, mainloop_timer_del);
+        g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
         pcmk__notice("Cluster reconnect succeeded");
         pcmkd_read_config();
         restart_cluster_subdaemons();
@@ -121,8 +121,10 @@ cfg_connection_destroy(void *user_data)
                "reattempted once per second)");
     corosync_cfg_finalize(cfg_handle);
     cfg_handle = 0;
-    reconnect_timer = mainloop_timer_add("corosync reconnect", 1000, TRUE, cluster_reconnect_cb, NULL);
-    mainloop_timer_start(reconnect_timer);
+    reconnect_timer = pcmk__main_loop_timer_new("pcmkd_corosync_reconnect",
+                                                1000, cluster_reconnect_cb,
+                                                NULL);
+    pcmk__main_loop_timer_start(reconnect_timer);
 }
 
 void
@@ -133,7 +135,7 @@ cluster_disconnect_cfg(void)
     /* The mainloop should be gone by this point, so this isn't necessary, but
      * cleaning up memory should make valgrind happier.
      */
-    g_clear_pointer(&reconnect_timer, mainloop_timer_del);
+    g_clear_pointer(&reconnect_timer, pcmk__main_loop_timer_free);
 }
 
 #define cs_repeat(counter, max, code) do {		\

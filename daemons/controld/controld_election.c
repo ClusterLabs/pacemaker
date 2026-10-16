@@ -45,7 +45,7 @@ controld_configure_election(GHashTable *options)
     unsigned int interval_ms = 0;
 
     pcmk_parse_interval_spec(value, &interval_ms);
-    election_timeout_set_period(controld_globals.cluster, interval_ms);
+    election_timeout_set_interval(controld_globals.cluster, interval_ms);
 }
 
 void

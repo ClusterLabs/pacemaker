@@ -34,7 +34,7 @@
 
 #include "pacemaker-based.h"
 
-static mainloop_timer_t *digest_timer = NULL;
+static pcmk__main_loop_timer_t *digest_timer = NULL;
 static long long ping_seq = 0;
 static char *ping_digest = NULL;
 static bool ping_modified_since = false;
@@ -102,8 +102,8 @@ void
 based_callbacks_init(void)
 {
     if (digest_timer == NULL) {
-        digest_timer = mainloop_timer_add("based_digest_timer", 5000, false,
-                                          digest_timer_cb, NULL);
+        digest_timer = pcmk__main_loop_timer_new("based_digest_timer", 5000,
+                                                 digest_timer_cb, NULL);
     }
 }
 
@@ -114,7 +114,7 @@ based_callbacks_init(void)
 void
 based_callbacks_cleanup(void)
 {
-    g_clear_pointer(&digest_timer, mainloop_timer_del);
+    g_clear_pointer(&digest_timer, pcmk__main_loop_timer_free);
     g_clear_pointer(&ping_digest, free);
 }
 
@@ -566,7 +566,7 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         ping_modified_since = true;
     }
 
-    mainloop_timer_start(digest_timer);
+    pcmk__main_loop_timer_start(digest_timer);
 
 done:
     if (!pcmk__any_flags_set(call_options,

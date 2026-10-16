@@ -728,7 +728,7 @@ notify_crmd(pcmk__graph_t *graph)
         case pcmk__graph_restart:
             type = "restart";
             if (controld_globals.fsa_state == S_TRANSITION_ENGINE) {
-                if (controld_get_period_transition_timer() > 0) {
+                if (controld_get_interval_transition_timer() > 0) {
                     controld_stop_transition_timer();
                     controld_start_transition_timer();
                 } else {

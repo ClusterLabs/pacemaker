@@ -560,7 +560,7 @@ recurring_action_timer(void *data)
     op->opaque->repeat_timer = 0;
 
     services_action_async(op, NULL);
-    return FALSE;
+    return G_SOURCE_REMOVE;
 }
 
 /*!
@@ -706,11 +706,13 @@ parse_exit_reason_from_stderr(svc_action_t *op)
  * \param[in]     exitcode  Exit status of child process
  */
 static void
-async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
+async_action_complete(pcmk__main_loop_child_t *p, int core, int signo,
+                      int exitcode)
 {
-    svc_action_t *op = mainloop_child_userdata(p);
+    svc_action_t *op = p->user_data;
 
-    mainloop_clear_child_userdata(p);
+    p->user_data = NULL;
+
     CRM_CHECK(op->pid == p->pid,
               services__set_result(op, services__generic_error(op),
                                    PCMK_EXEC_ERROR, "Bug in mainloop handling");
@@ -731,7 +733,7 @@ async_action_complete(mainloop_child_t *p, int core, int signo, int exitcode)
         log_op_output(op);
         parse_exit_reason_from_stderr(op);
 
-    } else if (mainloop_child_timeout(p)) {
+    } else if (p->timed_out) {
         const char *kind = services__action_kind(op);
 
         pcmk__info("%s %s[%d] timed out after %s", kind, op->id, op->pid,
@@ -1393,14 +1395,11 @@ services__execute_file(svc_action_t *op)
     }
 
     pcmk__trace("Waiting async for '%s'[%d]", op->opaque->exec, op->pid);
-    if (pcmk__is_set(op->flags, SVC_ACTION_LEAVE_GROUP)) {
-        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op,
-                                      mainloop_leave_pid_group,
-                                      async_action_complete);
-    } else {
-        mainloop_child_add_with_flags(op->pid, op->timeout, op->id, op, 0,
-                                      async_action_complete);
-    }
+
+    pcmk__main_loop_child_create(op->pid, op->id, op->timeout, op,
+                                 !pcmk__is_set(op->flags,
+                                               SVC_ACTION_LEAVE_GROUP),
+                                 async_action_complete);
 
     op->opaque->stdout_gsource = mainloop_add_fd(op->id,
                                                  G_PRIORITY_LOW,

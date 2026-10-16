@@ -27,6 +27,7 @@ header_HEADERS += iso8601_compat.h
 header_HEADERS += logging.h
 header_HEADERS += logging_compat.h
 header_HEADERS += mainloop.h
+header_HEADERS += mainloop_compat.h
 header_HEADERS += nodes.h
 header_HEADERS += nvpair.h
 header_HEADERS += nvpair_compat.h
