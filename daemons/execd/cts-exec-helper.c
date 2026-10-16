@@ -44,6 +44,7 @@
  */
 enum cts_exec_cmd {
     cts_exec_cmd_none,
+    cts_exec_cmd_cancel,
     cts_exec_cmd_exec,
     cts_exec_cmd_get_rsc_info,
     cts_exec_cmd_register_rsc,
@@ -151,7 +152,9 @@ static gboolean
 command_cb(const char *option_name, const char *optarg, void *data,
            GError **error)
 {
-    if (pcmk__str_eq(optarg, "exec", pcmk__str_none)) {
+    if (pcmk__str_eq(optarg, "cancel", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_cancel;
+    } else if (pcmk__str_eq(optarg, "exec", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_exec;
     } else if (pcmk__str_eq(optarg, "get_rsc_info", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_get_rsc_info;
@@ -355,6 +358,13 @@ print_op_info(gpointer data, gpointer user_data)
 }
 
 static int
+cancel_test(void)
+{
+    return lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
+                                   options.interval_ms);
+}
+
+static int
 exec_test(void)
 {
     int rc = lrmd_conn->cmds->exec(lrmd_conn, options.rsc_id, options.action,
@@ -403,6 +413,10 @@ unregister_rsc_test(void)
 }
 
 static const cts_exec_cmd_info_t cts_exec_command_info[] = {
+    [cts_exec_cmd_cancel] = {
+        cancel_test,
+        cts_exec_cf_none,
+    },
     [cts_exec_cmd_exec] = {
         exec_test,
         cts_exec_cf_none,
@@ -449,10 +463,7 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
-        rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
-                                     options.interval_ms);
-    } else if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
         char *output = NULL;
 
         rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
