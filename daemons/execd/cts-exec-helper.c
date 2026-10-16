@@ -45,6 +45,7 @@
 enum cts_exec_cmd {
     cts_exec_cmd_none,
     cts_exec_cmd_exec,
+    cts_exec_cmd_get_rsc_info,
     cts_exec_cmd_register_rsc,
 
     // Update this when adding new commands
@@ -151,6 +152,8 @@ command_cb(const char *option_name, const char *optarg, void *data,
 {
     if (pcmk__str_eq(optarg, "exec", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_exec;
+    } else if (pcmk__str_eq(optarg, "get_rsc_info", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_get_rsc_info;
     } else if (pcmk__str_eq(optarg, "register_rsc", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_register_rsc;
     } else {
@@ -365,6 +368,24 @@ exec_test(void)
 }
 
 static int
+get_rsc_info_test(void)
+{
+    lrmd_rsc_info_t *rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn,
+                                                              options.rsc_id, 0);
+
+    if (rsc_info != NULL) {
+        print_result("RSC_INFO: id:%s class:%s provider:%s type:%s",
+                     rsc_info->id, rsc_info->standard,
+                     (rsc_info->provider? rsc_info->provider : "<none>"),
+                     rsc_info->type);
+        lrmd_free_rsc_info(rsc_info);
+        return pcmk_ok;
+    }
+
+    return -1;
+}
+
+static int
 register_rsc_test(void)
 {
     return lrmd_conn->cmds->register_rsc(lrmd_conn, options.rsc_id,
@@ -375,6 +396,10 @@ register_rsc_test(void)
 static const cts_exec_cmd_info_t cts_exec_command_info[] = {
     [cts_exec_cmd_exec] = {
         exec_test,
+        cts_exec_cf_none,
+    },
+    [cts_exec_cmd_get_rsc_info] = {
+        get_rsc_info_test,
         cts_exec_cf_none,
     },
     [cts_exec_cmd_register_rsc] = {
@@ -411,22 +436,7 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "get_rsc_info", pcmk__str_casei)) {
-        lrmd_rsc_info_t *rsc_info;
-
-        rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn, options.rsc_id, 0);
-
-        if (rsc_info != NULL) {
-            print_result("RSC_INFO: id:%s class:%s provider:%s type:%s",
-                         rsc_info->id, rsc_info->standard,
-                         (rsc_info->provider? rsc_info->provider : "<none>"),
-                         rsc_info->type);
-            lrmd_free_rsc_info(rsc_info);
-            rc = pcmk_ok;
-        } else {
-            rc = -1;
-        }
-    } else if (pcmk__str_eq(options.api_call, "unregister_rsc", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "unregister_rsc", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->unregister_rsc(lrmd_conn, options.rsc_id, 0);
     } else if (pcmk__str_eq(options.api_call, "cancel", pcmk__str_casei)) {
         rc = lrmd_conn->cmds->cancel(lrmd_conn, options.rsc_id, options.action,
