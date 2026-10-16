@@ -47,6 +47,7 @@ enum cts_exec_cmd {
     cts_exec_cmd_cancel,
     cts_exec_cmd_exec,
     cts_exec_cmd_get_rsc_info,
+    cts_exec_cmd_metadata,
     cts_exec_cmd_register_rsc,
     cts_exec_cmd_unregister_rsc,
 
@@ -61,6 +62,9 @@ enum cts_exec_cmd {
 enum cts_exec_command_flags {
     //! This flag has no effect
     cts_exec_cf_none        = UINT32_C(0),
+
+    //! Do not connect to the executor
+    cts_exec_cf_no_connect  = (UINT32_C(1) << 0),
 };
 
 /*!
@@ -158,6 +162,8 @@ command_cb(const char *option_name, const char *optarg, void *data,
         options.cmd = cts_exec_cmd_exec;
     } else if (pcmk__str_eq(optarg, "get_rsc_info", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_get_rsc_info;
+    } else if (pcmk__str_eq(optarg, "metadata", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_metadata;
     } else if (pcmk__str_eq(optarg, "register_rsc", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_register_rsc;
     } else if (pcmk__str_eq(optarg, "unregister_rsc", pcmk__str_none)) {
@@ -399,6 +405,22 @@ get_rsc_info_test(void)
 }
 
 static int
+metadata_test(void)
+{
+    char *output = NULL;
+    int rc = lrmd_conn->cmds->get_metadata(lrmd_conn, options.class,
+                                           options.provider, options.type,
+                                           &output, 0);
+
+    if (rc == pcmk_ok) {
+        print_result("%s", output);
+        free(output);
+    }
+
+    return rc;
+}
+
+static int
 register_rsc_test(void)
 {
     return lrmd_conn->cmds->register_rsc(lrmd_conn, options.rsc_id,
@@ -424,6 +446,10 @@ static const cts_exec_cmd_info_t cts_exec_command_info[] = {
     [cts_exec_cmd_get_rsc_info] = {
         get_rsc_info_test,
         cts_exec_cf_none,
+    },
+    [cts_exec_cmd_metadata] = {
+        metadata_test,
+        cts_exec_cf_no_connect,
     },
     [cts_exec_cmd_register_rsc] = {
         register_rsc_test,
@@ -463,17 +489,7 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "metadata", pcmk__str_casei)) {
-        char *output = NULL;
-
-        rc = lrmd_conn->cmds->get_metadata(lrmd_conn,
-                                           options.class,
-                                           options.provider, options.type, &output, 0);
-        if (rc == pcmk_ok) {
-            print_result("%s", output);
-            free(output);
-        }
-    } else if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
         lrmd_list_t *list = NULL;
 
         rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, options.class, options.provider);
