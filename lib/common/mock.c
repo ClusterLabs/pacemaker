@@ -1,5 +1,5 @@
 /*
- * Copyright 2021-2025 the Pacemaker project contributors
+ * Copyright 2021-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -444,6 +444,29 @@ __wrap_strdup(const char *s)
     }
     check_expected_ptr(s);
     return NULL;
+}
+
+/* pcmk__add_mainloop_ipc_server()
+ *
+ * If pcmk__mock_add_mainloop_ipc_server is set to true, later calls must be
+ * preceded by expectations for name, callbacks, and flags, followed by a
+ * return value.
+ */
+
+bool pcmk__mock_add_mainloop_ipc_server = false;
+
+qb_ipcs_service_t *
+__wrap_pcmk__add_mainloop_ipc_server(
+    const char *name, struct qb_ipcs_service_handlers *callbacks,
+    uint32_t flags)
+{
+    if (!pcmk__mock_add_mainloop_ipc_server) {
+        return __real_pcmk__add_mainloop_ipc_server(name, callbacks, flags);
+    }
+    check_expected_ptr(name);
+    check_expected_ptr(callbacks);
+    check_expected_uint(flags);
+    return mock_ptr_type(qb_ipcs_service_t *);
 }
 
 // LCOV_EXCL_STOP

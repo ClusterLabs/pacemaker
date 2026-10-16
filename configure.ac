@@ -1404,6 +1404,9 @@ PKG_CHECK_MODULES([libqb], [libqb >= 1.0.1])
 CPPFLAGS="$libqb_CFLAGS $CPPFLAGS"
 LIBS="$libqb_LIBS $LIBS"
 
+dnl Support locking libqb shared-memory IPC mappings
+AC_CHECK_FUNCS([qb_ipcs_create_2])
+
 dnl libqb 2.0.5+ (2022-03)
 AC_CHECK_FUNCS([qb_ipcc_connect_async])
 
@@ -2049,6 +2052,7 @@ AC_CONFIG_FILES(Makefile                                            \
                 lib/common/tests/digest/Makefile                    \
                 lib/common/tests/flags/Makefile                     \
                 lib/common/tests/health/Makefile                    \
+                lib/common/tests/ipc/Makefile                       \
                 lib/common/tests/io/Makefile                        \
                 lib/common/tests/iso8601/Makefile                   \
                 lib/common/tests/lists/Makefile                     \
