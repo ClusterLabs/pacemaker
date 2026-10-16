@@ -47,6 +47,7 @@ enum cts_exec_cmd {
     cts_exec_cmd_cancel,
     cts_exec_cmd_exec,
     cts_exec_cmd_get_rsc_info,
+    cts_exec_cmd_list_agents,
     cts_exec_cmd_metadata,
     cts_exec_cmd_register_rsc,
     cts_exec_cmd_unregister_rsc,
@@ -162,6 +163,8 @@ command_cb(const char *option_name, const char *optarg, void *data,
         options.cmd = cts_exec_cmd_exec;
     } else if (pcmk__str_eq(optarg, "get_rsc_info", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_get_rsc_info;
+    } else if (pcmk__str_eq(optarg, "list_agents", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_list_agents;
     } else if (pcmk__str_eq(optarg, "metadata", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_metadata;
     } else if (pcmk__str_eq(optarg, "register_rsc", pcmk__str_none)) {
@@ -405,6 +408,28 @@ get_rsc_info_test(void)
 }
 
 static int
+list_agents_test(void)
+{
+    lrmd_list_t *list = NULL;
+    int rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, options.class,
+                                          options.provider);
+
+    if (rc > 0) {
+        print_result("%d agents found", rc);
+
+        for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
+            print_result("%s", iter->val);
+        }
+
+        lrmd_list_freeall(list);
+        return 0;
+    }
+
+    print_result("API_CALL FAILURE - no agents found");
+    return -1;
+}
+
+static int
 metadata_test(void)
 {
     char *output = NULL;
@@ -446,6 +471,10 @@ static const cts_exec_cmd_info_t cts_exec_command_info[] = {
     [cts_exec_cmd_get_rsc_info] = {
         get_rsc_info_test,
         cts_exec_cf_none,
+    },
+    [cts_exec_cmd_list_agents] = {
+        list_agents_test,
+        cts_exec_cf_no_connect,
     },
     [cts_exec_cmd_metadata] = {
         metadata_test,
@@ -489,23 +518,7 @@ start_test(void *user_data)
         return 0;
     }
 
-    if (pcmk__str_eq(options.api_call, "list_agents", pcmk__str_casei)) {
-        lrmd_list_t *list = NULL;
-
-        rc = lrmd_conn->cmds->list_agents(lrmd_conn, &list, options.class, options.provider);
-
-        if (rc > 0) {
-            print_result("%d agents found", rc);
-            for (const lrmd_list_t *iter = list; iter != NULL; iter = iter->next) {
-                print_result("%s", iter->val);
-            }
-            lrmd_list_freeall(list);
-            rc = 0;
-        } else {
-            print_result("API_CALL FAILURE - no agents found");
-            rc = -1;
-        }
-    } else if (pcmk__str_eq(options.api_call, "list_ocf_providers", pcmk__str_casei)) {
+    if (pcmk__str_eq(options.api_call, "list_ocf_providers", pcmk__str_casei)) {
         lrmd_list_t *list = NULL;
 
         rc = lrmd_conn->cmds->list_ocf_providers(lrmd_conn, options.type, &list);
