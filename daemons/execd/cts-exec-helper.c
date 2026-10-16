@@ -101,7 +101,6 @@ static struct {
     int cancel_call_id;
     gboolean no_wait;
     gboolean is_running;
-    gboolean no_connect;
     int exec_call_opts;
     char *api_call;
     const char *rsc_id;
@@ -571,9 +570,12 @@ static gboolean
 start_test(void *user_data)
 {
     int rc = 0;
-    const cts_exec_cmd_info_t *cmd_info = NULL;
+    const cts_exec_cmd_info_t *cmd_info = &cts_exec_command_info[options.cmd];
 
-    if (!options.no_connect && !lrmd_conn->cmds->is_connected(lrmd_conn)) {
+    if (((options.listen != NULL)
+        || !pcmk__is_set(cmd_info->flags, cts_exec_cf_no_connect))
+        && !lrmd_conn->cmds->is_connected(lrmd_conn)) {
+
         try_connect();
         /* async connect -- this function will get called back into */
         return 0;
@@ -586,7 +588,6 @@ start_test(void *user_data)
     }
 
     if (options.cmd != cts_exec_cmd_none) {
-        cmd_info = &cts_exec_command_info[options.cmd];
         rc = cmd_info->handler();
     }
 
@@ -743,12 +744,6 @@ main(int argc, char **argv)
 
     for (int i = 0; i < args->verbosity; i++) {
         crm_bump_log_level(argc, argv);
-    }
-
-    if ((options.listen == NULL)
-        && pcmk__strcase_any_of(options.api_call, "metadata", "list_agents",
-                                "list_standards", "list_ocf_providers", NULL)) {
-        options.no_connect = TRUE;
     }
 
     if (options.is_running) {
