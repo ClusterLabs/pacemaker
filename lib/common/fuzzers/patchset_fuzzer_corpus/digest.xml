@@ -1,0 +1,1 @@
+<diff format="2" digest="0123456789abcdef0123456789abcdef"><version><source admin_epoch="0" epoch="1" num_updates="0"/><target admin_epoch="0" epoch="1" num_updates="1"/></version><change operation="delete" path="/cib/status"/></diff>
