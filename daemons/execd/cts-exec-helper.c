@@ -90,6 +90,7 @@ static char *key = NULL;
 static char *val = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
+static bool user_given_params = false;
 
 static struct {
     enum cts_exec_cmd cmd;
@@ -145,6 +146,7 @@ param_key_val_cb(const char *option_name, const char *optarg, void *data,
     }
 
     if ((key != NULL) && (val != NULL)) {
+        user_given_params = true;
         options.params = lrmd_key_value_add(options.params, key, val);
         g_clear_pointer(&key, free);
         g_clear_pointer(&val, free);
@@ -699,6 +701,10 @@ cleanup_cmdline(void)
     g_free(options.type);
     g_free(options.action);
     g_free(options.listen);
+
+    if ((options.cmd != cts_exec_cmd_exec) && user_given_params) {
+        g_clear_pointer(&options.params, lrmd_key_value_freeall);
+    }
 }
 
 int
