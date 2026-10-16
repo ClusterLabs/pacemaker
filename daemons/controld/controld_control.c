@@ -210,7 +210,7 @@ crmd_exit(crm_exit_t exit_code)
     controld_execd_state_table_free();
     controld_remote_proxy_table_free();
 
-    g_clear_pointer(&config_read_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&config_read_trigger, pcmk__main_loop_trigger_free);
 
     controld_destroy_fsa_trigger();
     controld_destroy_transition_trigger();
@@ -285,8 +285,8 @@ do_startup(long long action, enum crmd_fsa_cause cause,
     mainloop_add_signal(SIGTERM, crm_shutdown);
     mainloop_add_signal(SIGPIPE, NULL); // Ignore SIGPIPE
 
-    config_read_trigger = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                               crm_read_options, NULL);
+    config_read_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                      crm_read_options, NULL);
     controld_init_fsa_trigger();
     controld_init_transition_trigger();
 
@@ -606,7 +606,7 @@ controld_trigger_config_as(const char *fn, int line)
 {
     if (config_read_trigger != NULL) {
         pcmk__trace("%s:%d - Triggered config processing", fn, line);
-        mainloop_set_trigger(config_read_trigger);
+        pcmk__main_loop_trigger_set(config_read_trigger);
     }
 }
 
