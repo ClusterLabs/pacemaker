@@ -91,6 +91,7 @@ static char *val = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 static bool user_given_params = false;
+static crm_exit_t exit_code = CRM_EX_OK;
 
 static struct {
     enum cts_exec_cmd cmd;
@@ -281,7 +282,7 @@ read_events(lrmd_event_data_t * event)
         && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
         free(buf);
         printf("LISTEN EVENT SUCCESSFUL\n");
-        crm_exit(CRM_EX_OK);
+        crm_exit(exit_code);
     }
 
     free(buf);
@@ -295,11 +296,12 @@ read_events(lrmd_event_data_t * event)
     } else {
         printf("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s\n",
                event->rc, pcmk_exec_status_str(event->op_status));
-        crm_exit(CRM_EX_ERROR);
+        exit_code = CRM_EX_ERROR;
+        crm_exit(exit_code);
     }
 
     if (options.listen == NULL) {
-        crm_exit(CRM_EX_OK);
+        crm_exit(exit_code);
     }
 }
 
@@ -307,7 +309,8 @@ static gboolean
 timeout_err(void *data)
 {
     printf("LISTEN EVENT FAILURE - timeout occurred, never found\n");
-    crm_exit(CRM_EX_TIMEOUT);
+    exit_code = CRM_EX_TIMEOUT;
+    crm_exit(exit_code);
     return G_SOURCE_REMOVE;
 }
 
@@ -351,7 +354,8 @@ try_connect(void)
     }
 
     printf("API CONNECTION FAILURE\n");
-    crm_exit(CRM_EX_ERROR);
+    exit_code = CRM_EX_ERROR;
+    crm_exit(exit_code);
 }
 
 static void
@@ -581,19 +585,20 @@ start_test(void *user_data)
 
     if (rc < 0) {
         printf("API-CALL FAILURE for '%s' api_rc:%d", options.api_call, rc);
-        crm_exit(CRM_EX_ERROR);
+        exit_code = CRM_EX_ERROR;
+        crm_exit(exit_code);
     }
 
     if (rc == pcmk_ok) {
         printf("API-CALL SUCCESSFUL for '%s'", options.api_call);
         if (options.listen == NULL) {
-            crm_exit(CRM_EX_OK);
+            crm_exit(exit_code);
         }
     }
 
     if (options.no_wait) {
         /* just make the call and exit regardless of anything else. */
-        crm_exit(CRM_EX_OK);
+        crm_exit(exit_code);
     }
 
     return 0;
@@ -711,7 +716,6 @@ int
 main(int argc, char **argv)
 {
     GError *error = NULL;
-    crm_exit_t exit_code = CRM_EX_OK;
     crm_trigger_t *trig = NULL;
     pcmk__common_args_t *args = NULL;
     GMainLoop *mainloop = NULL;
