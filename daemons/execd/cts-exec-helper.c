@@ -46,6 +46,7 @@ enum cts_exec_cmd {
     cts_exec_cmd_none,
     cts_exec_cmd_cancel,
     cts_exec_cmd_exec,
+    cts_exec_cmd_get_recurring_ops,
     cts_exec_cmd_get_rsc_info,
     cts_exec_cmd_list_agents,
     cts_exec_cmd_list_ocf_providers,
@@ -163,6 +164,8 @@ command_cb(const char *option_name, const char *optarg, void *data,
         options.cmd = cts_exec_cmd_cancel;
     } else if (pcmk__str_eq(optarg, "exec", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_exec;
+    } else if (pcmk__str_eq(optarg, "get_recurring_ops", pcmk__str_none)) {
+        options.cmd = cts_exec_cmd_get_recurring_ops;
     } else if (pcmk__str_eq(optarg, "get_rsc_info", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_get_rsc_info;
     } else if (pcmk__str_eq(optarg, "list_agents", pcmk__str_none)) {
@@ -178,9 +181,11 @@ command_cb(const char *option_name, const char *optarg, void *data,
     } else if (pcmk__str_eq(optarg, "unregister_rsc", pcmk__str_none)) {
         options.cmd = cts_exec_cmd_unregister_rsc;
     } else {
-        options.api_call = strdup(optarg);
+        return FALSE;
     }
 
+    /* Needed only for logging */
+    options.api_call = strdup(optarg);
     return TRUE;
 }
 
@@ -396,6 +401,18 @@ exec_test(void)
 }
 
 static int
+get_recurring_ops_test(void)
+{
+    GList *op_list = NULL;
+    int rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
+                                                &op_list);
+
+    g_list_foreach(op_list, print_op_info, NULL);
+    g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
+    return rc;
+}
+
+static int
 get_rsc_info_test(void)
 {
     lrmd_rsc_info_t *rsc_info = lrmd_conn->cmds->get_rsc_info(lrmd_conn,
@@ -516,6 +533,10 @@ static const cts_exec_cmd_info_t cts_exec_command_info[] = {
         exec_test,
         cts_exec_cf_none,
     },
+    [cts_exec_cmd_get_recurring_ops] = {
+        get_recurring_ops_test,
+        cts_exec_cf_none,
+    },
     [cts_exec_cmd_get_rsc_info] = {
         get_rsc_info_test,
         cts_exec_cf_none,
@@ -567,27 +588,8 @@ start_test(void *user_data)
     if (options.cmd != cts_exec_cmd_none) {
         cmd_info = &cts_exec_command_info[options.cmd];
         rc = cmd_info->handler();
-        goto done;
     }
 
-    if (options.api_call == NULL) {
-        return 0;
-    }
-
-    if (pcmk__str_eq(options.api_call, "get_recurring_ops", pcmk__str_casei)) {
-        GList *op_list = NULL;
-
-        rc = lrmd_conn->cmds->get_recurring_ops(lrmd_conn, options.rsc_id, 0, 0,
-                                                &op_list);
-        g_list_foreach(op_list, print_op_info, NULL);
-        g_list_free_full(op_list, (GDestroyNotify) lrmd_free_op_info);
-
-    } else {
-        print_result("API-CALL FAILURE unknown action '%s'", options.action);
-        test_exit(CRM_EX_ERROR);
-    }
-
-done:
     if (rc < 0) {
         print_result("API-CALL FAILURE for '%s' api_rc:%d",
                      options.api_call, rc);
@@ -774,12 +776,12 @@ main(int argc, char **argv)
         }
 
         options.cmd = cts_exec_cmd_exec;
+        options.api_call = strdup("exec");
         options.action = PCMK_ACTION_MONITOR;
         options.exec_call_opts = lrmd_opt_notify_orig_only;
     }
 
-    if ((options.cmd == cts_exec_cmd_none) && (options.api_call == NULL)
-        && (options.listen == NULL)) {
+    if ((options.cmd == cts_exec_cmd_none) && (options.listen == NULL)) {
         exit_code = CRM_EX_USAGE;
         g_set_error(&error, PCMK__EXITC_ERROR, exit_code,
                     "Must specify at least one of --api-call, --listen, "
