@@ -1251,11 +1251,14 @@ pcmk__main_loop_child_create(pid_t pid, const char *desc,
     child = pcmk__assert_alloc(1, sizeof(pcmk__main_loop_child_t));
     child->pid = pid;
     child->desc = pcmk__str_copy(desc);
-    child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
-                                         child);
     child->user_data = user_data;
     child->kill_group = kill_group;
     child->callback = callback;
+
+    if (timeout_ms > 0) {
+        child->timer_id = pcmk__create_timer(timeout_ms, child_timeout_callback,
+                                             child);
+    }
 
     child_list = g_list_append(child_list, child);
 
