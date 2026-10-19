@@ -107,10 +107,35 @@ based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
 }
 
 static void
+cib_notify_send_iov(pcmk__client_t *client, struct iovec *iov)
+{
+    int rc = pcmk__ipc_send_iov(client, iov, crm_ipc_server_event);
+
+    /* EAGAIN isn't an error for server events.  Sending did fail with EAGAIN,
+     * but the iov was added to the send queue and we will attempt to send it
+     * again the next time pcmk__ipc_send_iov is called, or when
+     * crm_ipcs_flush_events_cb happens.
+     */
+    if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
+        pcmk__err("Could not notify client %s: %s " QB_XS " id=%s",
+                  pcmk__client_name(client), pcmk_rc_str(rc),
+                  client->id);
+    }
+}
+
+static void
+cib_notify_send_xml(pcmk__client_t *client, const char *type,
+                    const xmlNode *xml)
+{
+    pcmk__debug("Sent %s notification to client %s (id %s)", type,
+                pcmk__client_name(client), client->id);
+    pcmk__remote_send_xml(client->remote, xml);
+}
+
+static void
 cib_notify_send_one(void *key, void *value, void *user_data)
 {
     const char *type = NULL;
-    int rc = pcmk_rc_ok;
 
     pcmk__client_t *client = value;
     struct cib_notification_s *update = user_data;
@@ -131,26 +156,12 @@ cib_notify_send_one(void *key, void *value, void *user_data)
 
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            rc = pcmk__ipc_send_iov(client, update->iov,
-                                    crm_ipc_server_event);
-
-            /* EAGAIN isn't an error for server events.  Sending did fail
-             * with EAGAIN, but the iov was added to the send queue and we
-             * will attempt to send it again the next time pcmk__ipc_send_iov
-             * is called, or when crm_ipcs_flush_events_cb happens.
-             */
-            if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
-                pcmk__err("Could not notify client %s: %s " QB_XS " id=%s",
-                          pcmk__client_name(client), pcmk_rc_str(rc),
-                          client->id);
-            }
+            cib_notify_send_iov(client, update->iov);
             break;
 
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            pcmk__debug("Sent %s notification to client %s (id %s)", type,
-                        pcmk__client_name(client), client->id);
-            pcmk__remote_send_xml(client->remote, update->msg);
+            cib_notify_send_xml(client, type, update->msg);
             break;
 
         default:
