@@ -140,9 +140,9 @@ cib_notify_send_one(void *key, void *value, void *user_data)
              * is called, or when crm_ipcs_flush_events_cb happens.
              */
             if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
-                pcmk__warn("Could not notify client %s: %s " QB_XS " id=%s",
-                           pcmk__client_name(client), pcmk_rc_str(rc),
-                           client->id);
+                pcmk__err("Could not notify client %s: %s " QB_XS " id=%s",
+                          pcmk__client_name(client), pcmk_rc_str(rc),
+                          client->id);
             }
             break;
 
@@ -177,8 +177,8 @@ cib_notify_send(const xmlNode *xml)
         rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-            pcmk__notice("Could not notify clients: %s " QB_XS " rc=%d",
-                         pcmk_rc_str(rc), rc);
+            pcmk__err("Could not notify clients: %s " QB_XS " rc=%d",
+                      pcmk_rc_str(rc), rc);
             break;
         }
 
