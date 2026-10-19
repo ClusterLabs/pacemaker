@@ -538,7 +538,9 @@ write_attribute(attribute_t *a, bool ignore_delay)
                        "lost", a->id, a->update);
             a->update = 0; // Don't log this message again
 
-        } else if (pcmk__main_loop_timer_running(a->timer)) {
+        } else if ((a->timer != NULL)
+                   && pcmk__main_loop_timer_running(a->timer)) {
+
             if (!ignore_delay) {
                 pcmk__info("Delaying write of '%s'", a->id);
                 goto done;

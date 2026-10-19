@@ -1433,6 +1433,8 @@ pcmk__main_loop_timer_running(const pcmk__main_loop_timer_t *timer)
 void
 pcmk__main_loop_timer_stop(pcmk__main_loop_timer_t *timer)
 {
+    CRM_CHECK(timer != NULL, return);
+
     if (!pcmk__main_loop_timer_running(timer)) {
         return;
     }
