@@ -1,0 +1,268 @@
+.TH CRM_ATTRIBUTE "8" "@BUILD_DATE@" "@PACKAGE@ @VERSION@" "Pacemaker Manual"
+.SH "NAME"
+crm_attribute \- query and update Pacemaker cluster options and node attributes
+.
+.SH "SYNOPSIS"
+.SY crm_attribute
+.B \-n \fIattribute\fB <command>
+.RI [ option\~ ...]
+.YS
+.
+.SH "DESCRIPTION"
+.B crm_attribute
+manages permanent and transient node attributes, as well as cluster options,
+resource defaults, and operation defaults.  Permanent node attributes are stored
+in the CIB directly, while transient node attributes go through the attribute
+manager to be recorded in the CIB.  Transient node attributes will be erased
+when the cluster is restarted.
+.P
+.B crm_attribute
+can also use shadow CIBs and saved CIB files in addition to the live CIB.
+.
+.SH "OPTIONS"
+.SS "Commands"
+One of the following commands must be provided.  These options are mutually
+exclusive.
+.TP
+.BR \-D ", " \-\-delete
+Delete the attribute/option (with \fB\-n\fR or \fB\-P\fR)
+.TP
+.BR \-G ", " \-\-query
+Query the current value of the attribute/option.  See also: \fB\-n\fR, \fB\-P\fR
+.TP
+.BR \-L ", " \-\-list\-options =\fITYPE\fR
+List all available options of the given type.  \fITYPE\fR may be one of:
+\fIcluster\fR.
+.TP
+.BR \-v ", " \-\-update =\fIVALUE\fR
+Update the value of the attribute/option (with \fB\-n\fR or \fB\-P\fR)
+.
+.SS "Selecting attributes:"
+.TP
+.BR \-P ", " \-\-pattern =\fIPATTERN\fR
+Operate on all attributes matching \fIPATTERN\fR (with \fB\-v\fR, \fB\-D\fR,
+or \fB\-G\fR).
+.TP
+.BR \-a ", " \-\-all
+With \fB\-L\fR/\fB\-\-list\-options\fR, include advanced and deprecated options
+in the output. This is always treated as true when \fB\-\-output\-as\fR=\fIxml\fR
+is specified.
+.TP
+.BR \-i ", " \-\-id =\fIXML_ID\fR
+(Advanced) Operate on instance of specified attribute with this \fIXML_ID\fR
+.TP
+.BR \-n ", " \-\-name =\fINAME\fR
+Operate on attribute or option with \fINAME\fR.  For queries, this is optional,
+in which case all matching attributes will be returned.
+.TP
+.BR \-p ", " \-\-promotion =\fIRESOURCE\fR
+Operate on node attribute used as promotion score for specified resource, or
+resource given in \fIOCF_RESOURCE_INSTANCE\fR environment variable if none is
+specified; this also defaults \fB\-l\fR/\fB\-\-lifetime\fR to reboot (normally
+invoked from an OCF resource agent)
+.TP
+.BR \-s ", " \-\-set\-name =\fINAME\fR
+(Advanced) Operate on instance of specified attribute that is within set with
+this XML ID
+.
+.SS "Additional options"
+.TP
+.BR \-N ", " \-\-node =\fINODE\fR
+Set a node attribute for named node (instead of a cluster option).  See
+also: \fB\-l\fR
+.TP
+.BR \-d ", " \-\-default =\fIVALUE\fR
+(Advanced) Default value to display if none is found in configuration
+.TP
+.BR \-l ", " \-\-lifetime =\fILIFETIME\fR
+Lifetime of the node attribute.  \fILIFETIME\fR may be one of:  \fIforever\fR,
+\fIreboot\fR.
+.TP
+.BR \-t ", " \-\-type =\fISECTION\fR
+Which part of the configuration to update, delete, or query the option in.
+\fISECTION\fR may be one of: \fIcrm_config\fR, \fIrsc_defaults\fR,
+\fIop_defaults\fR, \fItickets\fR.
+.TP
+.BR \-w ", " \-\-wait =\fIUNTIL\fR
+Wait for some event to occur before returning to the shell (with \fB\-N\fR
+and one of \fB\-D\fR or \fB\-v\fR).  Values are:
+.RS
+.IP \fIno\fR (default)
+Wait only for the attribute manager to acknowledge the request.
+.IP \fIlocal\fR
+Wait until the change has propagated to where a local query will return the
+request value, or the value set by a later request.
+.IP \fIcluster\fR
+Wait until the change has propagated to where a query anywhere on the cluster
+will return the requested value, or the value set by a later request.
+.RE
+.TP
+.BR \-z ", " \-\-utilization
+Set an utilization attribute for the node.
+.TP
+.BR \-\-score
+Treat new attribute values as atomic score updates where possible (with
+\fB\-\-update\fR/\fB\-v\fR, when running against a CIB file or updating an
+attribute outside the status section; enabled by default if
+\fB\-\-promotion\fR/\fB\-p\fR is specified)
+.IP
+This currently happens by default and cannot be disabled, but this default
+behavior is deprecated and will be removed in a future release (exception:
+this will remain the default with \fB\-\-promotion\fR/\fB\-p\fR). Set this
+flag if this behavior is desired.
+.IP
+This option takes effect when updating XML attributes. For an attribute named
+\fBname\fR, if the new value is \fBname++\fR or \fBname+=X\fR for some score
+\fBX\fR, the new value is set as follows:
+.RS
+.IP \(bu
+If attribute \fBname\fR is not already set to some value in the element being
+updated, the new value is set as a literal string.
+.IP \(bu
+If the new value is \fBname++\fR, then the attribute is set to its existing
+value (parsed as a score) plus 1.
+.IP \(bu
+If the new value is \fBname+=X\fR for some score \fBX\fR, then the attribute
+is set to its existing value plus \fBX\fR, where the existing value and
+\fBX\fR are parsed and added as scores.
+.RE
+.IP
+Scores are integer values capped at \fBINFINITY\fR and \fB\-INFINITY\fR.
+Refer to \fIPacemaker Explained\fR for more details on scores, including how
+they are parsed and added.
+.
+.SS "Output options"
+.TP
+.BI \-\-output\-as= FORMAT
+Specify output format as one of: text (default), xml.
+.TP
+.BI \-\-output\-to= DEST
+Specify file name for output (or "\-" for stdout).
+.
+.SS "Help options"
+.TP
+.BR \-h ", " \-\-help
+Show basic help options.
+.TP
+.B \-\-help\-additional
+Show additional options.
+.TP
+.B \-\-help\-all
+Show all help options.
+.TP
+.B \-\-help\-command
+Show program commands.
+.TP
+.B \-\-help\-output
+Show output-related help options.
+.TP
+.B \-\-help\-selections
+Show selecting options.
+.
+.SS "Application options"
+.TP
+.BR \-$ ", " \-\-version
+Display software version and exit.
+.TP
+.BR \-V ", " \-\-verbose
+Increase debug output (may be specified multiple times).
+.TP
+.BR \-q ", " \-\-quiet
+Print only the value on stdout.
+.
+.SH "EXIT STATUS"
+This is not an exhaustive list of exit statuses for \fBcrm_attribute\fR.  See
+.MR crm_error 8
+for more information on converting between error codes and their names.
+.TP
+.B CRM_EX_CONFIG
+The given XML is invalid, or results in an invalid CIB when applied.
+.TP
+.B CRM_EX_INSUFFICIENT_PRIV
+The given command is not allowed by the ACLs for the given user.
+.TP
+.B CRM_EX_MULTIPLE
+Multiple attributes exist with the same name.
+.TP
+.B CRM_EX_NOSUCH
+The given attribute does not exist.
+.TP
+.B ENOTCONN, ECONNREFUSED
+\fBcrm_attribute\fR had problems connecting to or communicating with
+\fBpacemaker-based\fR.
+.
+.SH "ENVIRONMENT"
+.TP
+.BR CIB_shadow ", " CIB_shadow_dir
+If \fBCIB_shadow\fR is set, use its value as the suffix of a CIB file named
+\fBshadow.<suffix>\fR.  If this file does not already exist, create it as a
+blank CIB.  If \fBCIB_shadow_dir\fR is set, look for (or create the new CIB)
+file in that directory.  Otherwise, use a directory specific to the current
+user instead.
+.TP
+.BR CIB_file
+If set, use the given file as the CIB.
+.TP
+.BR CIB_encrypted ", " CIB_port ", " CIB_server ", " CIB_user ", " CIB_passwd
+If set, use these values to access the CIB remotely.  If a password is required
+but \fBCIB_passwd\fR is not given, the user will be prompted for it.
+.TP
+.BR OCF_RESOURCE_INSTANCE
+Resource to be used when managing promotion scores.
+.
+.SH "EXAMPLES"
+.EX
+# \fBcrm_attribute \-\-node myhost \-\-name location \-\-update office
+.EE
+.RS
+Add new node attribute called \fBlocation\fR with the value of \fBoffice\fR
+for host \fBmyhost\fR
+.RE
+.P
+.EX
+# \fBcrm_attribute \-\-node myhost \-\-name location \-\-query
+.EE
+.RS
+Query the value of the \fBlocation\fR node attribute for host \fBmyhost\fR
+.RE
+.P
+.EX
+# \fBcrm_attribute \-\-node myhost \-\-name location \-\-update backoffice
+.EE
+.RS
+Change the value of the \fBlocation\fR node attribute for host \fBmyhost\fR
+.RE
+.P
+.EX
+# \fBcrm_attribute \-\-node myhost \-\-name location \-\-delete
+.EE
+.RS
+Delete the \fBlocation\fR node attribute for host \fBmyhost\fR
+.RE
+.P
+.EX
+# \fBcrm_attribute \-\-type crm_config \-\-name cluster\-delay \-\-query
+.EE
+.RS
+Query the value of the \fBcluster\-delay\fR cluster option
+.RE
+.P
+.EX
+# \fBcrm_attribute \-\-type crm_config \-\-name cluster\-delay \-\-query \-\-quiet
+.EE
+.RS
+Query value of the \fBcluster\-delay\fR cluster option and print only the value
+.RE
+.
+.SH "REPORTING BUGS"
+Report bugs to https://bugs.clusterlabs.org/enter_bug.cgi?product=Pacemaker
+.
+.SH "COPYRIGHT"
+Copyright © 2004-2026 the Pacemaker project contributors.
+.P
+This program is licensed under the GNU General Public License version 2 or
+later (GPLv2+) WITHOUT ANY WARRANTY.
+.
+.SH "SEE ALSO"
+.BR attrd_updater (8),
+.BR crm_error (8)
