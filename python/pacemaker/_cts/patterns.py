@@ -146,7 +146,6 @@ class Corosync2Patterns(BasePatterns):
             "StartCmd": "service corosync start && service pacemaker start",
             "StopCmd": "service pacemaker stop; [ ! -e /usr/sbin/pacemaker-remoted ] || service pacemaker_remote stop; service corosync stop",
 
-            "EpochCmd": "crm_node -e",
             "QuorumCmd": "crm_node -q",
             "PartitionCmd": "crm_node -p",
         })
