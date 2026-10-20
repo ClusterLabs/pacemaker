@@ -12,27 +12,11 @@ import psutil
 from pacemaker.exitstatus import ExitStatus
 
 
-def killall(process_names, terminate=False):
+def killall(process_names):
     """Kill all instances of every process in a list."""
-    if not process_names:
-        return
-
-    if not isinstance(process_names, list):
-        process_names = [process_names]
-
-    procs = []
     for proc in psutil.process_iter(["name"]):
         if proc.info["name"] in process_names:
-            procs.append(proc)
-
-    if terminate:
-        for proc in procs:
-            proc.terminate()
-        _, alive = psutil.wait_procs(procs, timeout=3)
-        procs = alive
-
-    for proc in procs:
-        proc.kill()
+            proc.kill()
 
 
 def is_proc_running(process_name):
