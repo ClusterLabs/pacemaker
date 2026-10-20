@@ -527,25 +527,27 @@ write_attribute(attribute_t *a, bool ignore_delay)
     /* If this attribute will be written to the CIB ... */
     if (should_write) {
         /* Defer the write if now's not a good time */
-        if (a->update && (a->update < last_cib_op_done)) {
+        if (a->update != 0) {
+            if (a->update >= last_cib_op_done) {
+                pcmk__info("Write out of '%s' delayed: update %d in progress",
+                           a->id, a->update);
+                goto done;
+            }
+
             pcmk__info("Write out of '%s' continuing: update %d considered "
-                       "lost",
-                       a->id, a->update);
+                       "lost", a->id, a->update);
             a->update = 0; // Don't log this message again
 
-        } else if (a->update) {
-            pcmk__info("Write out of '%s' delayed: update %d in progress",
-                       a->id, a->update);
-            goto done;
+        } else if ((a->timer != NULL)
+                   && pcmk__main_loop_timer_running(a->timer)) {
 
-        } else if (pcmk__main_loop_timer_running(a->timer)) {
-            if (ignore_delay) {
-                pcmk__main_loop_timer_stop(a->timer);
-                pcmk__debug("Overriding '%s' write delay", a->id);
-            } else {
+            if (!ignore_delay) {
                 pcmk__info("Delaying write of '%s'", a->id);
                 goto done;
             }
+
+            pcmk__main_loop_timer_stop(a->timer);
+            pcmk__debug("Overriding '%s' write delay", a->id);
         }
 
         // Initiate a transaction for all the peer value updates

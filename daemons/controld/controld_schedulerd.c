@@ -271,8 +271,11 @@ controld_sched_timeout(void *user_data)
 void
 controld_stop_sched_timer(void)
 {
-    if ((controld_sched_timer != NULL)
-        && (controld_globals.fsa_pe_ref != NULL)) {
+    if (controld_sched_timer == NULL) {
+        return;
+    }
+
+    if (controld_globals.fsa_pe_ref != NULL) {
         pcmk__trace("Stopping timer for scheduler reply %s",
                     controld_globals.fsa_pe_ref);
     }

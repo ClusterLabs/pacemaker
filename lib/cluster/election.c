@@ -132,11 +132,17 @@ election_remove(pcmk_cluster_t *cluster, const char *uname)
 void
 election_reset(pcmk_cluster_t *cluster)
 {
-    if ((cluster != NULL) && (cluster->priv->election != NULL)) {
-        pcmk__trace("Resetting election");
-        pcmk__main_loop_timer_stop(cluster->priv->election->timeout);
-        g_clear_pointer(&cluster->priv->election->voted, g_hash_table_destroy);
+    if ((cluster == NULL) || (cluster->priv->election == NULL)) {
+        return;
     }
+
+    pcmk__trace("Resetting election");
+
+    if (cluster->priv->election->timeout != NULL) {
+        pcmk__main_loop_timer_stop(cluster->priv->election->timeout);
+    }
+
+    g_clear_pointer(&cluster->priv->election->voted, g_hash_table_destroy);
 }
 
 /*!
@@ -174,9 +180,13 @@ election_timeout_start(pcmk_cluster_t *cluster)
 void
 election_timeout_stop(pcmk_cluster_t *cluster)
 {
-    if ((cluster != NULL) && (cluster->priv->election != NULL)) {
-        pcmk__main_loop_timer_stop(cluster->priv->election->timeout);
+    if ((cluster == NULL) || (cluster->priv->election == NULL)
+        || (cluster->priv->election->timeout == NULL)) {
+
+        return;
     }
+
+    pcmk__main_loop_timer_stop(cluster->priv->election->timeout);
 }
 
 /*!

@@ -913,10 +913,7 @@ free_device(void *data)
 
     g_list_free_full(device->targets, free);
 
-    if (device->timer != NULL) {
-        pcmk__main_loop_timer_stop(device->timer);
-        pcmk__main_loop_timer_free(device->timer);
-    }
+    pcmk__main_loop_timer_free(device->timer);
 
     mainloop_destroy_trigger(device->work);
 

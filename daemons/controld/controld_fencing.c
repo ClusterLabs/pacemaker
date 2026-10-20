@@ -443,9 +443,19 @@ destroy_fencer_connection(stonith_t *st, stonith_event_t *e)
 
     if (pcmk__is_set(controld_globals.fsa_input_register, R_ST_REQUIRED)) {
         pcmk__err("Lost fencer connection (will attempt to reconnect)");
-        if (!pcmk__main_loop_timer_running(controld_fencer_connect_timer)) {
+
+        /* @TODO controld_fencer_connect_timer may be NULL if
+         * controld_timer_fencer_connect() made the connection in a blocking
+         * manner. However, we may have still registered this function as a
+         * notification callback in that case. Check whether this is correct or
+         * needs improvement.
+         */
+        if ((controld_fencer_connect_timer != NULL)
+            && !pcmk__main_loop_timer_running(controld_fencer_connect_timer)) {
+
             pcmk__main_loop_timer_start(controld_fencer_connect_timer);
         }
+
     } else {
         pcmk__info("Disconnected from fencer");
     }
@@ -1031,8 +1041,13 @@ controld_cleanup_fencing_history_sync(stonith_t *st, bool free_timers)
                         pcmk__main_loop_timer_free);
 
     } else {
-        pcmk__main_loop_timer_stop(fencing_history_sync_timer_short);
-        pcmk__main_loop_timer_stop(fencing_history_sync_timer_long);
+        if (fencing_history_sync_timer_short != NULL) {
+            pcmk__main_loop_timer_stop(fencing_history_sync_timer_short);
+        }
+
+        if (fencing_history_sync_timer_long != NULL) {
+            pcmk__main_loop_timer_stop(fencing_history_sync_timer_long);
+        }
     }
 
     if (st) {
