@@ -92,6 +92,7 @@ static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 static bool user_given_params = false;
 static crm_exit_t exit_code = CRM_EX_OK;
+static GMainLoop *mainloop = NULL;
 
 static struct {
     enum cts_exec_cmd cmd;
@@ -282,7 +283,8 @@ read_events(lrmd_event_data_t * event)
         && pcmk__str_eq(options.listen, buf, pcmk__str_casei)) {
         free(buf);
         printf("LISTEN EVENT SUCCESSFUL\n");
-        crm_exit(exit_code);
+        g_main_loop_quit(mainloop);
+        return;
     }
 
     free(buf);
@@ -297,11 +299,12 @@ read_events(lrmd_event_data_t * event)
         printf("API-CALL FAILURE for 'exec', rc:%d lrmd_op_status:%s\n",
                event->rc, pcmk_exec_status_str(event->op_status));
         exit_code = CRM_EX_ERROR;
-        crm_exit(exit_code);
+        g_main_loop_quit(mainloop);
+        return;
     }
 
     if (options.listen == NULL) {
-        crm_exit(exit_code);
+        g_main_loop_quit(mainloop);
     }
 }
 
@@ -310,7 +313,7 @@ timeout_err(void *data)
 {
     printf("LISTEN EVENT FAILURE - timeout occurred, never found\n");
     exit_code = CRM_EX_TIMEOUT;
-    crm_exit(exit_code);
+    g_main_loop_quit(mainloop);
     return G_SOURCE_REMOVE;
 }
 
@@ -355,7 +358,7 @@ try_connect(void)
 
     printf("API CONNECTION FAILURE\n");
     exit_code = CRM_EX_ERROR;
-    crm_exit(exit_code);
+    g_main_loop_quit(mainloop);
 }
 
 static void
@@ -558,7 +561,7 @@ static const cts_exec_cmd_info_t cts_exec_command_info[] = {
     },
 };
 
-static gboolean
+static int
 start_test(void *user_data)
 {
     int rc = 0;
@@ -586,19 +589,22 @@ start_test(void *user_data)
     if (rc < 0) {
         printf("API-CALL FAILURE for '%s' api_rc:%d", options.api_call, rc);
         exit_code = CRM_EX_ERROR;
-        crm_exit(exit_code);
+        g_main_loop_quit(mainloop);
+        return 0;
     }
 
     if (rc == pcmk_ok) {
         printf("API-CALL SUCCESSFUL for '%s'", options.api_call);
         if (options.listen == NULL) {
-            crm_exit(exit_code);
+            g_main_loop_quit(mainloop);
+            return 0;
         }
     }
 
     if (options.no_wait) {
         /* just make the call and exit regardless of anything else. */
-        crm_exit(exit_code);
+        g_main_loop_quit(mainloop);
+        return 0;
     }
 
     return 0;
@@ -718,7 +724,6 @@ main(int argc, char **argv)
     GError *error = NULL;
     crm_trigger_t *trig = NULL;
     pcmk__common_args_t *args = NULL;
-    GMainLoop *mainloop = NULL;
 
     atexit(cleanup_cmdline);
 
@@ -790,6 +795,7 @@ main(int argc, char **argv)
     } else {
         lrmd_conn = lrmd_api_new();
     }
+
     trig = mainloop_add_trigger(G_PRIORITY_HIGH, start_test, NULL);
     mainloop_set_trigger(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
