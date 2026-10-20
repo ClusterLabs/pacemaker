@@ -634,7 +634,7 @@ main(int argc, char **argv)
     cib__clean_up_connection(&cib_conn);
 
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
     g_free(options.attr_default);
     g_free(options.attr_id);
     free(options.attr_name);
