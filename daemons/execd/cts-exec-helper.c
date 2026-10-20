@@ -806,5 +806,7 @@ main(int argc, char **argv)
 
 done:
     pcmk__output_and_clear_error(&error, NULL);
+
+    g_clear_pointer(&lrmd_conn, lrmd_api_delete);
     return crm_exit(exit_code);
 }
