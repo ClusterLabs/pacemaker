@@ -9,23 +9,20 @@
 
 #include <crm_internal.h>
 
-#include <errno.h>
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdlib.h>
-#include <inttypes.h>   // PRIu32
-#include <sys/types.h>
+#include <errno.h>                  // EINVAL
+#include <regex.h>                  // regcomp, regexec, regfree
+#include <stdbool.h>                // bool, false, true
+#include <stdlib.h>                 // NULL, free
 
-#include <crm/cluster.h>
-#include <crm/cluster/internal.h>
-#include <crm/common/logging.h>
-#include <crm/common/results.h>
-#include <crm/common/util.h>
-#include <crm/common/xml.h>
+#include <glib.h>                   // g_hash_table_*
+#include <libxml/tree.h>            // xmlNode
 
-#include "pacemaker-attrd.h"
+#include <crm/common/logging.h>     // CRM_CHECK
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/common/strings.h>     // pcmk_parse_interval_spec
+#include <crm/common/xml_names.h>   // PCMK_XE_OP, PCMK_XE_NODE
 
-static qb_ipcs_service_t *ipcs = NULL;
+#include "pacemaker-attrd.h"        // attrd_*
 
 /*!
  * \internal
@@ -37,10 +34,13 @@ static qb_ipcs_service_t *ipcs = NULL;
  * \return New XML reply
  * \note Caller is responsible for freeing the resulting XML
  */
-static xmlNode *build_query_reply(const char *attr, const char *host)
+static xmlNode *
+build_query_reply(const char *attr, const char *host)
 {
     xmlNode *reply = pcmk__xe_create(NULL, __func__);
-    attribute_t *a;
+    xmlNode *host_value = NULL;
+    attribute_t *a = NULL;
+    attribute_value_t *v = NULL;
 
     pcmk__xe_set(reply, PCMK__XA_T, PCMK__VALUE_ATTRD);
     pcmk__xe_set(reply, PCMK__XA_SUBT, PCMK__ATTRD_CMD_QUERY);
@@ -48,38 +48,38 @@ static xmlNode *build_query_reply(const char *attr, const char *host)
 
     /* If desired attribute exists, add its value(s) to the reply */
     a = g_hash_table_lookup(attributes, attr);
-    if (a) {
-        attribute_value_t *v;
-        xmlNode *host_value;
+    if (a == NULL) {
+        return reply;
+    }
 
-        pcmk__xe_set(reply, PCMK__XA_ATTR_NAME, attr);
+    pcmk__xe_set(reply, PCMK__XA_ATTR_NAME, attr);
 
-        /* Allow caller to use "localhost" to refer to local node */
-        if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
-            host = attrd_cluster->priv->node_name;
-            pcmk__trace("Mapped localhost to %s", host);
-        }
+    /* Allow caller to use "localhost" to refer to local node */
+    if (pcmk__str_eq(host, "localhost", pcmk__str_casei)) {
+        host = attrd_cluster->priv->node_name;
+        pcmk__trace("Mapped localhost to %s", host);
+    }
 
-        /* If a specific node was requested, add its value */
-        if (host) {
-            v = g_hash_table_lookup(a->values, host);
+    /* If a specific node was requested, add its value */
+    if (host != NULL) {
+        v = g_hash_table_lookup(a->values, host);
+        host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
+        pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, host);
+        pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE,
+                     ((v != NULL)? v->current : NULL));
+
+    /* Otherwise, add all nodes' values */
+    } else {
+        GHashTableIter iter;
+
+        g_hash_table_iter_init(&iter, a->values);
+        while (g_hash_table_iter_next(&iter, NULL, (void **) &v)) {
             host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-            pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, host);
-            pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE,
-                         ((v != NULL)? v->current : NULL));
-
-        /* Otherwise, add all nodes' values */
-        } else {
-            GHashTableIter iter;
-
-            g_hash_table_iter_init(&iter, a->values);
-            while (g_hash_table_iter_next(&iter, NULL, (void **) &v)) {
-                host_value = pcmk__xe_create(reply, PCMK_XE_NODE);
-                pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, v->nodename);
-                pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE, v->current);
-            }
+            pcmk__xe_set(host_value, PCMK__XA_ATTR_HOST, v->nodename);
+            pcmk__xe_set(host_value, PCMK__XA_ATTR_VALUE, v->current);
         }
     }
+
     return reply;
 }
 
@@ -87,7 +87,9 @@ void
 attrd_client_clear_failure(pcmk__request_t *request)
 {
     xmlNode *xml = request->xml;
-    const char *rsc, *op, *interval_spec;
+    const char *rsc = NULL;
+    const char *op = NULL;
+    const char *interval_spec = NULL;
 
     if (minimum_protocol_version >= 2) {
         /* Propagate to all peers (including ourselves).
@@ -103,12 +105,12 @@ attrd_client_clear_failure(pcmk__request_t *request)
     interval_spec = pcmk__xe_get(xml, PCMK__XA_ATTR_CLEAR_INTERVAL);
 
     /* Map this to an update */
-    pcmk__xe_set(xml, PCMK_XA_TASK, PCMK__ATTRD_CMD_UPDATE);
+    pcmk__xe_set(xml, attrd.op, PCMK__ATTRD_CMD_UPDATE);
 
     /* Add regular expression matching desired attributes */
 
-    if (rsc) {
-        char *pattern;
+    if (rsc != NULL) {
+        char *pattern = NULL;
 
         if (op == NULL) {
             pattern = pcmk__assert_asprintf(ATTRD_RE_CLEAR_ONE, rsc);
@@ -164,15 +166,17 @@ attrd_client_peer_remove(pcmk__request_t *request)
                 host_alloc = pcmk__cluster_node_name(nodeid);
                 host = host_alloc;
             }
+
             pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, host);
         }
     }
 
-    if (host) {
+    if (host != NULL) {
         pcmk__info("Client %s is requesting all values for %s be removed",
                    pcmk__client_name(request->ipc_client), host);
         attrd_send_message(NULL, xml, false); /* ends up at attrd_peer_message() */
         free(host_alloc);
+
     } else {
         pcmk__info("Ignoring request by client %s to remove all peer values "
                    "without specifying peer",
@@ -208,6 +212,7 @@ attrd_client_query(pcmk__request_t *request)
                             "Could not respond to query from %s: could not create XML reply",
                             pcmk__client_name(request->ipc_client));
         return NULL;
+
     } else {
         pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
     }
@@ -230,14 +235,15 @@ attrd_client_refresh(pcmk__request_t *request)
 static void
 handle_missing_host(xmlNode *xml)
 {
-    if (pcmk__xe_get(xml, PCMK__XA_ATTR_HOST) == NULL) {
-        pcmk__trace("Inferring local node %s with XML ID %s",
-                    attrd_cluster->priv->node_name,
-                    attrd_cluster->priv->node_xml_id);
-        pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
-        pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID,
-                     attrd_cluster->priv->node_xml_id);
+    if (pcmk__xe_get(xml, PCMK__XA_ATTR_HOST) != NULL) {
+        return;
     }
+
+    pcmk__trace("Inferring local node %s with XML ID %s",
+                attrd_cluster->priv->node_name,
+                attrd_cluster->priv->node_xml_id);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST, attrd_cluster->priv->node_name);
+    pcmk__xe_set(xml, PCMK__XA_ATTR_HOST_ID, attrd_cluster->priv->node_xml_id);
 }
 
 /* Convert a single IPC message with a regex into one with multiple children, one
@@ -246,48 +252,54 @@ handle_missing_host(xmlNode *xml)
 static int
 expand_regexes(xmlNode *xml, const char *attr, const char *value, const char *regex)
 {
-    if (attr == NULL && regex) {
-        bool matched = false;
-        GHashTableIter aIter;
-        regex_t r_patt;
+    bool matched = false;
+    GHashTableIter aIter;
+    regex_t r_patt;
 
-        pcmk__debug("Setting %s to %s", regex, value);
-        if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
-            return EINVAL;
-        }
+    if (attr != NULL) {
+        return pcmk_rc_ok;
+    }
 
-        g_hash_table_iter_init(&aIter, attributes);
-        while (g_hash_table_iter_next(&aIter, (void **) &attr, NULL)) {
-            int status = regexec(&r_patt, attr, 0, NULL, 0);
-
-            if (status == 0) {
-                xmlNode *child = pcmk__xe_create(xml, PCMK_XE_OP);
-
-                pcmk__trace("Matched %s with %s", attr, regex);
-                matched = true;
-
-                /* Copy all the non-conflicting attributes from the parent over,
-                 * but remove the regex and replace it with the name.
-                 */
-                pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
-                pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
-                pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
-            }
-        }
-
-        regfree(&r_patt);
-
-        /* Return a code if we never matched anything.  This should not be treated
-         * as an error.  It indicates there was a regex, and it was a valid regex,
-         * but simply did not match anything and the caller should not continue
-         * doing any regex-related processing.
-         */
-        if (!matched) {
-            return pcmk_rc_op_unsatisfied;
-        }
-
-    } else if (attr == NULL) {
+    if (regex == NULL) {
         return pcmk_rc_bad_nvpair;
+    }
+
+    pcmk__debug("Setting %s to %s", regex, value);
+    if (regcomp(&r_patt, regex, REG_EXTENDED|REG_NOSUB)) {
+        return EINVAL;
+    }
+
+    g_hash_table_iter_init(&aIter, attributes);
+    while (g_hash_table_iter_next(&aIter, (void **) &attr, NULL)) {
+        int status = regexec(&r_patt, attr, 0, NULL, 0);
+        xmlNode *child = NULL;
+
+        if (status != 0) {
+            continue;
+        }
+
+        child = pcmk__xe_create(xml, PCMK_XE_OP);
+
+        pcmk__trace("Matched %s with %s", attr, regex);
+        matched = true;
+
+        /* Copy all the non-conflicting attributes from the parent over,
+         * but remove the regex and replace it with the name.
+         */
+        pcmk__xe_copy_attrs(child, xml, pcmk__xaf_no_overwrite);
+        pcmk__xe_remove_attr(child, PCMK__XA_ATTR_REGEX);
+        pcmk__xe_set(child, PCMK__XA_ATTR_NAME, attr);
+    }
+
+    regfree(&r_patt);
+
+    /* Return a code if we never matched anything.  This should not be treated
+     * as an error.  It indicates there was a regex, and it was a valid regex,
+     * but simply did not match anything and the caller should not continue
+     * doing any regex-related processing.
+     */
+    if (!matched) {
+        return pcmk_rc_op_unsatisfied;
     }
 
     return pcmk_rc_ok;
@@ -326,28 +338,29 @@ handle_value_expansion(const char **value, xmlNode *xml, const char *op,
                        const char *attr)
 {
     attribute_t *a = g_hash_table_lookup(attributes, attr);
+    attribute_value_t *v = NULL;
+    int int_value;
 
-    if (a == NULL && pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
+    if ((a == NULL) && pcmk__str_eq(op, PCMK__ATTRD_CMD_UPDATE_DELAY, pcmk__str_none)) {
         return EINVAL;
     }
 
-    if (*value && attrd_value_needs_expansion(*value)) {
-        int int_value;
-        attribute_value_t *v = NULL;
-
-        if (a) {
-            const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
-            v = g_hash_table_lookup(a->values, host);
-        }
-
-        int_value = attrd_expand_value(*value, (v? v->current : NULL));
-
-        pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
-        pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
-
-        /* Replacing the value frees the previous memory, so re-query it */
-        *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
+    if ((*value == NULL) || !attrd_value_needs_expansion(*value)) {
+        return pcmk_rc_ok;
     }
+
+    if (a != NULL) {
+        const char *host = pcmk__xe_get(xml, PCMK__XA_ATTR_HOST);
+        v = g_hash_table_lookup(a->values, host);
+    }
+
+    int_value = attrd_expand_value(*value, ((v != NULL) ? v->current : NULL));
+
+    pcmk__info("Expanded %s=%s to %d", attr, *value, int_value);
+    pcmk__xe_set_int(xml, PCMK__XA_ATTR_VALUE, int_value);
+
+    /* Replacing the value frees the previous memory, so re-query it */
+    *value = pcmk__xe_get(xml, PCMK__XA_ATTR_VALUE);
 
     return pcmk_rc_ok;
 }
@@ -391,7 +404,9 @@ void
 attrd_client_update(pcmk__request_t *request)
 {
     xmlNode *xml = NULL;
-    const char *attr, *value, *regex;
+    const char *attr = NULL;
+    const char *value = NULL;
+    const char *regex = NULL;
 
     CRM_CHECK((request != NULL) && (request->xml != NULL), return);
 
@@ -478,180 +493,27 @@ attrd_client_update(pcmk__request_t *request)
     pcmk__set_result(&request->result, CRM_EX_OK, PCMK_EXEC_DONE, NULL);
 }
 
-/*!
- * \internal
- * \brief Accept a new client IPC connection
- *
- * \param[in,out] c    New connection
- * \param[in]     uid  Client user id
- * \param[in]     gid  Client group id
- *
- * \return pcmk_ok on success, -errno otherwise
- */
-static int32_t
-attrd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
-{
-    pcmk__trace("New client connection %p", c);
-    if (attrd.shutting_down) {
-        pcmk__info("Ignoring new connection from pid %d during shutdown",
-                   pcmk__client_pid(c));
-        return -ECONNREFUSED;
-    }
-
-    if (pcmk__new_client(c, uid, gid) == NULL) {
-        return -ENOMEM;
-    }
-    return pcmk_ok;
-}
-
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in] c  Connection to destroy
- *
- * \return 0 (do not re-run this callback)
- */
-static int32_t
-attrd_ipc_closed(qb_ipcs_connection_t *c)
-{
-    pcmk__client_t *client = pcmk__find_client(c);
-
-    if (client == NULL) {
-        pcmk__trace("Ignoring request to clean up unknown connection %p", c);
-    } else {
-        pcmk__trace("Cleaning up closed client connection %p", c);
-
-        /* Remove the client from the sync point waitlist if it's present. */
-        attrd_remove_client_from_waitlist(client);
-
-        /* And no longer wait for confirmations from any peers. */
-        attrd_do_not_wait_for_client(client);
-
-        pcmk__free_client(client);
-    }
-
-    return 0;
-}
-
-/*!
- * \internal
- * \brief Destroy a client IPC connection
- *
- * \param[in,out] c  Connection to destroy
- *
- * \note We handle a destroyed connection the same as a closed one,
- *       but we need a separate handler because the return type is different.
- */
-static void
-attrd_ipc_destroy(qb_ipcs_connection_t *c)
-{
-    pcmk__trace("Destroying client connection %p", c);
-    attrd_ipc_closed(c);
-}
-
-static int32_t
-attrd_ipc_dispatch(qb_ipcs_connection_t * c, void *data, size_t size)
-{
-    int rc = pcmk_rc_ok;
-    uint32_t id = 0;
-    uint32_t flags = 0;
-    pcmk__client_t *client = pcmk__find_client(c);
-    xmlNode *xml = NULL;
-
-    // Sanity-check, and parse XML from IPC data
-    CRM_CHECK(client != NULL, return 0);
-    if (data == NULL) {
-        pcmk__debug("No IPC data from PID %d", pcmk__client_pid(c));
-        return 0;
-    }
-
-    rc = pcmk__ipc_msg_append(&client->buffer, data);
-
-    if (rc == pcmk_rc_ipc_more) {
-        /* We haven't read the complete message yet, so just return. */
-        return 0;
-
-    } else if (rc == pcmk_rc_ok) {
-        /* We've read the complete message and there's already a header on
-         * the front.  Pass it off for processing.
-         */
-        xml = pcmk__client_data2xml(client, &id, &flags);
-        g_byte_array_free(client->buffer, TRUE);
-        client->buffer = NULL;
-
-    } else {
-        /* Some sort of error occurred reassembling the message.  All we can
-         * do is clean up, log an error and return.
-         */
-        pcmk__err("Error when reading IPC message: %s", pcmk_rc_str(rc));
-
-        if (client->buffer != NULL) {
-            g_byte_array_free(client->buffer, TRUE);
-            client->buffer = NULL;
-        }
-
-        return 0;
-    }
-
-    if (xml == NULL) {
-        pcmk__debug("Unrecognizable IPC data from PID %d", pcmk__client_pid(c));
-        pcmk__ipc_send_ack(client, id, flags, NULL, CRM_EX_PROTOCOL);
-        return 0;
-
-    } else {
-        pcmk__request_t request = {
-            .ipc_client     = client,
-            .ipc_id         = id,
-            .ipc_flags      = flags,
-            .peer           = NULL,
-            .xml            = xml,
-            .call_options   = 0,
-            .result         = PCMK__UNKNOWN_RESULT,
-        };
-
-        pcmk__assert(client->user != NULL);
-        pcmk__update_acl_user(xml, PCMK__XA_ATTR_USER, client->user);
-
-        request.op = pcmk__xe_get_copy(request.xml, PCMK_XA_TASK);
-        CRM_CHECK(request.op != NULL, goto done);
-
-        attrd_handle_request(&request);
-    }
-
-done:
-    pcmk__xml_free(xml);
-    return 0;
-}
-
-static struct qb_ipcs_service_handlers ipc_callbacks = {
-    .connection_accept = attrd_ipc_accept,
-    .connection_created = NULL,
-    .msg_process = attrd_ipc_dispatch,
-    .connection_closed = attrd_ipc_closed,
-    .connection_destroyed = attrd_ipc_destroy
-};
-
-/*!
- * \internal
- * \brief Clean up attrd IPC communication
- */
 void
-attrd_ipc_cleanup(void)
+attrd_ipc_closed(pcmk__daemon_t *d, pcmk__client_t *client)
 {
-    pcmk__drop_all_clients(ipcs);
-    g_clear_pointer(&ipcs, qb_ipcs_destroy);
+    /* Remove the client from the sync point waitlist if it's present. */
+    attrd_remove_client_from_waitlist(client);
 
-    pcmk__client_cleanup();
+    /* And no longer wait for confirmations from any peers. */
+    attrd_do_not_wait_for_client(client);
+
+    pcmk__free_client(client);
 }
 
-/*!
- * \internal
- * \brief Set up attrd IPC communication
- */
-bool
-attrd_ipc_init(void)
+void
+attrd_ipc_dispatch(pcmk__daemon_t *d, pcmk__request_t *request)
 {
-    pcmk__serve_attrd_ipc(&ipcs, &ipc_callbacks);
-    return ipcs != NULL;
+    request->op = pcmk__xe_get_copy(request->xml, d->op);
+    CRM_CHECK(request->op != NULL, return);
+
+    pcmk__assert(request->ipc_client->user != NULL);
+    pcmk__update_acl_user(request->xml, PCMK__XA_ATTR_USER,
+                          request->ipc_client->user);
+
+    attrd_handle_request(request);
 }

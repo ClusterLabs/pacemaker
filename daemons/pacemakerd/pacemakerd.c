@@ -22,6 +22,7 @@
 #include <unistd.h>                     // chown, geteuid, sleep
 
 #include <qb/qblog.h>                   // QB_XS
+#include <qb/qbloop.h>                  // QB_LOOP_MED
 
 #include <crm_config.h>                 // SUPPORT_COROSYNC, BUILD_VERSION
 #include <crm/common/ipc.h>             // pcmk_ipc_is_connected
@@ -39,9 +40,19 @@
 
 #define SUMMARY "pacemakerd - primary Pacemaker daemon that launches and monitors all subsidiary Pacemaker daemons"
 
+static pcmk__daemon_ipc_fns_t ipc_fns = {
+    .cleanup = pcmk__daemon_ipc_cleanup,
+    .closed = pacemakerd_ipc_closed,
+    .dispatch = pacemakerd_ipc_dispatch,
+    .init = pcmk__daemon_ipc_init,
+};
+
 pcmk__daemon_t pacemakerd = {
     .type = pcmk_ipc_pacemakerd,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_MED,
+    .op = PCMK__XA_CRM_TASK,
+    .ipc_fns = &ipc_fns,
 };
 
 struct {
@@ -347,8 +358,7 @@ pacemakerd_cleanup_cmdline(void)
 static void
 pacemakerd_cleanup(void)
 {
-    pacemakerd_ipc_cleanup();
-    pacemakerd_unregister_handlers();
+    pacemakerd.ipc_fns->cleanup(&pacemakerd);
 
 #if SUPPORT_COROSYNC
     cluster_disconnect_cfg();
@@ -454,11 +464,6 @@ main(int argc, char **argv)
         goto done;
     }
 
-    if (!pacemakerd_ipc_init()) {
-        pacemakerd.ec = CRM_EX_OSERR;
-        goto done;
-    }
-
 #if SUPPORT_COROSYNC
     /* Allows us to block shutdown */
     if (!cluster_connect_cfg()) {
@@ -496,9 +501,9 @@ main(int argc, char **argv)
         init_children_processes(NULL);
     }
 
-    rc = pcmk__daemon_init(&pacemakerd);
+    rc = pcmk__daemon_init(&pacemakerd, pacemakerd_handlers);
     if (rc != pcmk_rc_ok) {
-        pacemakerd.ec = CRM_EX_ERROR;
+        pacemakerd.ec = (rc == EIO) ? CRM_EX_OSERR : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, pacemakerd.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));

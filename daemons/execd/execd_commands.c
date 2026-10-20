@@ -648,7 +648,7 @@ send_cmd_complete_notify(lrmd_cmd_t * cmd)
     pcmk__xe_set_int(notify, PCMK__XA_LRMD_QUEUE_TIME, queue_time);
 #endif
 
-    pcmk__xe_set(notify, PCMK__XA_LRMD_OP, LRMD_OP_RSC_EXEC);
+    pcmk__xe_set(notify, execd.op, LRMD_OP_RSC_EXEC);
     pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ID, cmd->rsc_id);
     if(cmd->real_action) {
         pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ACTION, cmd->real_action);
@@ -705,7 +705,7 @@ execd_send_generic_notify(int rc, xmlNode *request)
                                                 "//" PCMK__XE_LRMD_RSC,
                                                 LOG_ERR);
         const char *rsc_id = pcmk__xe_get(rsc_xml, PCMK__XA_LRMD_RSC_ID);
-        const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
+        const char *op = pcmk__xe_get(request, execd.op);
 
         pcmk__xe_get_int(request, PCMK__XA_LRMD_CALLID, &call_id);
 
@@ -713,7 +713,7 @@ execd_send_generic_notify(int rc, xmlNode *request)
         pcmk__xe_set(notify, PCMK__XA_LRMD_ORIGIN, __func__);
         pcmk__xe_set_int(notify, PCMK__XA_LRMD_RC, rc);
         pcmk__xe_set_int(notify, PCMK__XA_LRMD_CALLID, call_id);
-        pcmk__xe_set(notify, PCMK__XA_LRMD_OP, op);
+        pcmk__xe_set(notify, execd.op, op);
         pcmk__xe_set(notify, PCMK__XA_LRMD_RSC_ID, rsc_id);
 
         pcmk__foreach_ipc_client(send_client_notify, notify);
@@ -800,7 +800,7 @@ notify_of_new_client(pcmk__client_t *new_client)
     data.new_client = new_client;
     data.notify = pcmk__xe_create(NULL, PCMK__XE_LRMD_NOTIFY);
     pcmk__xe_set(data.notify, PCMK__XA_LRMD_ORIGIN, __func__);
-    pcmk__xe_set(data.notify, PCMK__XA_LRMD_OP, LRMD_OP_NEW_CLIENT);
+    pcmk__xe_set(data.notify, execd.op, LRMD_OP_NEW_CLIENT);
     pcmk__foreach_ipc_client(notify_one_client, &data);
     pcmk__xml_free(data.notify);
 }
@@ -1543,7 +1543,7 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
         if ((client->remote != NULL)
             && pcmk__is_set(client->flags,
                             pcmk__client_tls_handshake_complete)) {
-            const char *op = pcmk__xe_get(request, PCMK__XA_LRMD_OP);
+            const char *op = pcmk__xe_get(request, execd.op);
 
             // This is a remote connection from a cluster node's controller
             ipc_proxy_add_provider(client);
@@ -1576,7 +1576,7 @@ execd_process_signon(pcmk__client_t *client, xmlNode *request, int call_id,
     pcmk__assert(reply != NULL);
 
     *reply = execd_create_reply(pcmk_rc2legacy(rc), call_id);
-    pcmk__xe_set(*reply, PCMK__XA_LRMD_OP, CRM_OP_REGISTER);
+    pcmk__xe_set(*reply, execd.op, CRM_OP_REGISTER);
     pcmk__xe_set(*reply, PCMK__XA_LRMD_CLIENTID, client->id);
     pcmk__xe_set(*reply, PCMK__XA_LRMD_PROTOCOL_VERSION, LRMD_PROTOCOL_VERSION);
     pcmk__xe_set_time(*reply, PCMK__XA_UPTIME, now - execd.start_time);

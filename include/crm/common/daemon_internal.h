@@ -14,13 +14,20 @@
 #ifndef PCMK__CRM_COMMON_DAEMON_INTERNAL__H
 #define PCMK__CRM_COMMON_DAEMON_INTERNAL__H
 
-#include <stdbool.h>            // bool
-#include <time.h>               // time_t
+#include <stdbool.h>                        // bool
+#include <stdint.h>                         // int32_t
+#include <sys/types.h>                      // gid_t, uid_t
+#include <time.h>                           // time_t
 
-#include <glib.h>               // GMainLoop
+#include <glib.h>                           // GMainLoop
+#include <libxml/tree.h>                    // xmlNode
+#include <qb/qbipcs.h>                      // qb_ipcs_service_*
+#include <qb/qbloop.h>                      // qb_loop_priority
 
-#include <crm/common/ipc.h>     // pcmk_ipc_server
-#include <crm/common/results.h> // crm_exit_t
+#include <crm/common/ipc.h>                 // pcmk_ipc_server
+#include <crm/common/ipc_internal.h>        // pcmk__client_t
+#include <crm/common/messages_internal.h>   // pcmk__request_t, pcmk__server_command_t
+#include <crm/common/results.h>             // crm_exit_t
 
 #ifdef __cplusplus
 extern "C" {
@@ -64,6 +71,70 @@ typedef struct {
      *         \c false if not
      */
     bool (*already_running)(pcmk__daemon_t *);
+
+    /*!
+     * \internal
+     * \brief Clean up IPC communication
+     *
+     * \param[in,out] d The daemon object
+     */
+    void (*cleanup)(pcmk__daemon_t *);
+
+    /*!
+     * \internal
+     * \brief Close a client IPC connection
+     *
+     * \note This function is optional - it does not need to be defined if
+     *       there's no daemon-specific action to take when closing a client's
+     *       connection.
+     *
+     * \note If this function is defined for a daemon, that function must call
+     *       pcmk__free_client on \p client.  If this function is not defined,
+     *       pcmk__daemon_ipc_closed will call pcmk__free_client instead.
+     *
+     * \param[in,out] d      The daemon object
+     * \param[in]     client The client to close
+     */
+    void (*closed)(pcmk__daemon_t *, pcmk__client_t *);
+
+    /*!
+     * \internal
+     * \brief Handle a newly created IPC connection
+     *
+     * \param[in,out] d      The daemon object
+     * \param[in]     client The new client connection
+     */
+    void (*created)(pcmk__daemon_t *, pcmk__client_t *);
+
+    /*!
+     * \internal
+     * \brief Handle an incoming IPC request
+     *
+     * \param[in,out] d       The daemon object
+     * \param[in,out] request The IPC request
+     */
+    void (*dispatch)(pcmk__daemon_t *, pcmk__request_t *);
+
+    /*!
+     * \internal
+     * \brief Initialize the IPC side of the server
+     *
+     * \param[in,out] d The daemon object
+     *
+     * \note The generic pcmk__daemon_ipc_init function should be assigned
+     *       to this function pointer for most every server
+     *
+     * \return Standard Pacemaker return code
+     */
+    int (*init)(pcmk__daemon_t *);
+
+    /*!
+     * \internal
+     * \brief Sanity check an IPC message for validity
+     *
+     * \return \c true if the IPC message is invalid, and \c false if not
+     */
+    bool (*invalid_msg)(xmlNode *);
 } pcmk__daemon_ipc_fns_t;
 
 /*!
@@ -90,6 +161,16 @@ struct pcmk__daemon_s {
     //! Main loop
     GMainLoop *mainloop;
 
+    //! IPC/cluster message handlers
+    GHashTable *handlers;
+
+    //! IPC server
+    enum qb_loop_priority priority;
+    qb_ipcs_service_t *ipcs;
+
+    //! The message's operation is found in this XML attribute
+    const char *op;
+
     pcmk__daemon_fns_t *fns;
 
     pcmk__daemon_ipc_fns_t *ipc_fns;
@@ -97,12 +178,21 @@ struct pcmk__daemon_s {
 
 // IPC functions
 
+int32_t pcmk__daemon_ipc_accept(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                                uid_t uid, gid_t gid);
+void pcmk__daemon_ipc_cleanup(pcmk__daemon_t *d);
+int32_t pcmk__daemon_ipc_closed(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
+void pcmk__daemon_ipc_created(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
+void pcmk__daemon_ipc_destroy(pcmk__daemon_t *d, qb_ipcs_connection_t *c);
+void pcmk__daemon_ipc_dispatch(pcmk__daemon_t *d, qb_ipcs_connection_t *c,
+                               void *data, size_t size);
 bool pcmk__daemon_ipc_running(pcmk__daemon_t *d);
+int pcmk__daemon_ipc_init(pcmk__daemon_t *d);
 bool pcmk__generic_ipc_running(pcmk__daemon_t *d);
 
 // Mainloop management functions
 
-int pcmk__daemon_init(pcmk__daemon_t *d);
+int pcmk__daemon_init(pcmk__daemon_t *d, const pcmk__server_command_t handler[]);
 void pcmk__daemon_quit(pcmk__daemon_t *d, crm_exit_t ec);
 void pcmk__daemon_run(pcmk__daemon_t *d);
 
