@@ -45,7 +45,7 @@ crm_trigger_t *mainloop_add_trigger(int priority,
 // NOTE: sbd (as of at least 1.5.2) uses this
 void mainloop_set_trigger(crm_trigger_t * source);
 
-void mainloop_trigger_complete(crm_trigger_t * trig);
+void mainloop_trigger_complete(crm_trigger_t *trigger);
 
 gboolean mainloop_destroy_trigger(crm_trigger_t * source);
 
