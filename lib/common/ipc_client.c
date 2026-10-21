@@ -1325,7 +1325,9 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
         /* Otherwise, there's more of the message to read so loop read
          * the next chunk.
          */
-    } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
+    } while (time(NULL) < timeout || (timeout == 0
+                                      && ((*bytes == -EAGAIN)
+                                          || (rc == pcmk_rc_ipc_more))));
 
     if (*bytes < 0) {
         rc = (int) -*bytes; // System errno
@@ -1334,9 +1336,17 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                     client->server_name, request_id, pcmk_rc_str(rc), rc);
 
     } else if ((client->buffer != NULL) && (client->buffer->len > 0)) {
-        pcmk__trace("Received %u-byte reply %d to %s IPC %d: %.100s",
-                    client->buffer->len, reply_id, client->server_name,
-                    request_id, crm_ipc_buffer(client));
+        /* This isn't strictly true for multipart messages - we would have
+         * read multiple headers, which means we read more than just the final
+         * length of the buffer.  However, this value is really only ever used
+         * to decide whether we read something or had an error.  The exact
+         * value is never used.  So, this is close enough.
+         */
+        *bytes = client->buffer->len;
+
+        pcmk__trace("Received %zd-byte reply %d to %s IPC %d: %.100s",
+                    *bytes, reply_id, client->server_name, request_id,
+                    crm_ipc_buffer(client));
 
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
