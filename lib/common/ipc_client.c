@@ -1263,9 +1263,6 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     buffer = g_malloc0(crm_ipc_default_buffer_size());
 
     do {
-        guint8 *data = NULL;
-        xmlNode *xml = NULL;
-
         *bytes = qb_ipcc_recv(client->ipc, buffer, crm_ipc_default_buffer_size(),
                               qb_timeout);
 
@@ -1290,36 +1287,47 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 
         reply_id = hdr->qb.id;
 
-        if (reply_id == request_id) {
-            /* Got the reply we were expecting. */
-            rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+        /* We did not get the reply we were expecting.  There's nothing we can
+         * do about this except print it out and try again.  Hopefully the next
+         * thing we read will be correct.
+         */
+        if (reply_id != request_id) {
+            guint8 *data = buffer + sizeof(pcmk__ipc_header_t);
+            xmlNode *xml = pcmk__xml_parse((const char *) data);
 
-            if (rc == pcmk_rc_ok) {
-                break;
+            if (reply_id < request_id) {
+                pcmk__err("Discarding old reply %d (need %d)", reply_id,
+                          request_id);
+                pcmk__log_xml_notice(xml, "OldIpcReply");
+
+            } else {
+                pcmk__err("Discarding newer reply %d (need %d)", reply_id,
+                          request_id);
+                pcmk__log_xml_notice(xml, "ImpossibleReply");
+                pcmk__assert(hdr->qb.id <= request_id);
             }
 
-            if (rc == pcmk_rc_ipc_more) {
-                continue;
-            }
+            continue;
+        }
 
+        rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+
+        /* We read the complete message, so quit this loop and process it. */
+        if (rc == pcmk_rc_ok) {
+            break;
+        }
+
+        /* We got an error, so clean up and return. */
+        if (rc != pcmk_rc_ipc_more) {
             goto done;
         }
 
-        data = buffer + sizeof(pcmk__ipc_header_t);
-        xml = pcmk__xml_parse((const char *) data);
-
-        if (reply_id < request_id) {
-            pcmk__err("Discarding old reply %d (need %d)", reply_id,
-                      request_id);
-            pcmk__log_xml_notice(xml, "OldIpcReply");
-
-        } else if (reply_id > request_id) {
-            pcmk__err("Discarding newer reply %d (need %d)", reply_id,
-                      request_id);
-            pcmk__log_xml_notice(xml, "ImpossibleReply");
-            pcmk__assert(hdr->qb.id <= request_id);
-        }
-    } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
+        /* Otherwise, there's more of the message to read so loop read
+         * the next chunk.
+         */
+    } while (time(NULL) < timeout || (timeout == 0
+                                      && ((*bytes == -EAGAIN)
+                                          || (rc == pcmk_rc_ipc_more))));
 
     if (*bytes < 0) {
         rc = (int) -*bytes; // System errno
@@ -1328,9 +1336,17 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
                     client->server_name, request_id, pcmk_rc_str(rc), rc);
 
     } else if ((client->buffer != NULL) && (client->buffer->len > 0)) {
-        pcmk__trace("Received %u-byte reply %d to %s IPC %d: %.100s",
-                    client->buffer->len, reply_id, client->server_name,
-                    request_id, crm_ipc_buffer(client));
+        /* This isn't strictly true for multipart messages - we would have
+         * read multiple headers, which means we read more than just the final
+         * length of the buffer.  However, this value is really only ever used
+         * to decide whether we read something or had an error.  The exact
+         * value is never used.  So, this is close enough.
+         */
+        *bytes = client->buffer->len;
+
+        pcmk__trace("Received %zd-byte reply %d to %s IPC %d: %.100s",
+                    *bytes, reply_id, client->server_name, request_id,
+                    crm_ipc_buffer(client));
 
         if (reply != NULL) {
             *reply = pcmk__xml_parse(crm_ipc_buffer(client));
