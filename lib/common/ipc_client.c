@@ -1263,9 +1263,6 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
     buffer = g_malloc0(crm_ipc_default_buffer_size());
 
     do {
-        guint8 *data = NULL;
-        xmlNode *xml = NULL;
-
         *bytes = qb_ipcc_recv(client->ipc, buffer, crm_ipc_default_buffer_size(),
                               qb_timeout);
 
@@ -1290,35 +1287,44 @@ internal_ipc_get_reply(crm_ipc_t *client, int request_id, int ms_timeout,
 
         reply_id = hdr->qb.id;
 
-        if (reply_id == request_id) {
-            /* Got the reply we were expecting. */
-            rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+        /* We did not get the reply we were expecting.  There's nothing we can
+         * do about this except print it out and try again.  Hopefully the next
+         * thing we read will be correct.
+         */
+        if (reply_id != request_id) {
+            guint8 *data = buffer + sizeof(pcmk__ipc_header_t);
+            xmlNode *xml = pcmk__xml_parse((const char *) data);
 
-            if (rc == pcmk_rc_ok) {
-                break;
+            if (reply_id < request_id) {
+                pcmk__err("Discarding old reply %d (need %d)", reply_id,
+                          request_id);
+                pcmk__log_xml_notice(xml, "OldIpcReply");
+
+            } else {
+                pcmk__err("Discarding newer reply %d (need %d)", reply_id,
+                          request_id);
+                pcmk__log_xml_notice(xml, "ImpossibleReply");
+                pcmk__assert(hdr->qb.id <= request_id);
             }
 
-            if (rc == pcmk_rc_ipc_more) {
-                continue;
-            }
+            continue;
+        }
 
+        rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+
+        /* We read the complete message, so quit this loop and process it. */
+        if (rc == pcmk_rc_ok) {
+            break;
+        }
+
+        /* We got an error, so clean up and return. */
+        if (rc != pcmk_rc_ipc_more) {
             goto done;
         }
 
-        data = buffer + sizeof(pcmk__ipc_header_t);
-        xml = pcmk__xml_parse((const char *) data);
-
-        if (reply_id < request_id) {
-            pcmk__err("Discarding old reply %d (need %d)", reply_id,
-                      request_id);
-            pcmk__log_xml_notice(xml, "OldIpcReply");
-
-        } else if (reply_id > request_id) {
-            pcmk__err("Discarding newer reply %d (need %d)", reply_id,
-                      request_id);
-            pcmk__log_xml_notice(xml, "ImpossibleReply");
-            pcmk__assert(hdr->qb.id <= request_id);
-        }
+        /* Otherwise, there's more of the message to read so loop read
+         * the next chunk.
+         */
     } while (time(NULL) < timeout || (timeout == 0 && *bytes == -EAGAIN));
 
     if (*bytes < 0) {
