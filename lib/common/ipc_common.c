@@ -10,7 +10,7 @@
 #include <crm_internal.h>
 
 #include <errno.h>                // EBADMSG, EINVAL
-#include <inttypes.h>             // PRId32, PRIu16, uint64_t
+#include <inttypes.h>             // PRId32, PRIu16, PRIu32, uint64_t
 #include <stdbool.h>              // bool, false, true
 #include <stdlib.h>               // NULL
 
@@ -46,7 +46,8 @@ crm_ipc_default_buffer_size(void)
  *
  * \param[in] header  IPC header to check
  *
- * \return true if IPC header has a supported version, false otherwise
+ * \return true if IPC header has a supported version and a payload size that
+ *         matches the message size, false otherwise
  */
 bool
 pcmk__valid_ipc_header(const pcmk__ipc_header_t *header)
@@ -60,6 +61,19 @@ pcmk__valid_ipc_header(const pcmk__ipc_header_t *header)
         pcmk__err("Filtering incompatible v%d IPC message (only versions <= %d "
                   "supported)",
                   header->version, PCMK__IPC_VERSION);
+        return false;
+    }
+
+    /* The payload size is set by the sender, but libqb has checked the message
+     * size against the buffer it read the message into.  Every message must
+     * have at least one payload byte (the null terminator).
+     */
+    if ((header->qb.size <= (int32_t) sizeof(pcmk__ipc_header_t))
+        || (header->size == 0)
+        || (header->size != (header->qb.size - sizeof(pcmk__ipc_header_t)))) {
+        pcmk__err("Filtering IPC message with payload size %" PRIu32 " that "
+                  "does not match message size %" PRId32,
+                  header->size, header->qb.size);
         return false;
     }
 
