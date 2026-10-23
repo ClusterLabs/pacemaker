@@ -125,6 +125,10 @@ Date: 2019-12-01 18:12:11Z
 Date: 2020-01-01 00:00:00Z
 =#=#=#= End test: 24:00:00 equivalent to 00:00:00 of next day - OK (0) =#=#=#=
 * Passed: iso8601               - 24:00:00 equivalent to 00:00:00 of next day
+=#=#=#= Begin test: Valid date - just year =#=#=#=
+Date: 2026-01-01 00:00:00Z
+=#=#=#= End test: Valid date - just year - OK (0) =#=#=#=
+* Passed: iso8601               - Valid date - just year
 =#=#=#= Begin test: 2006-W01-7 =#=#=#=
 Date: 2006-01-08 00:00:00Z
 =#=#=#= End test: 2006-W01-7 - OK (0) =#=#=#=
