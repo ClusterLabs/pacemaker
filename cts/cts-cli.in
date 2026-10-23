@@ -1151,6 +1151,8 @@ class DatesRegressionTest(RegressionTest):
                  "iso8601 -d '20191201T131211 -05:00' -E '2019-12-01 18:12:11Z'"),
             Test("24:00:00 equivalent to 00:00:00 of next day",
                  "iso8601 -d '2019-12-31 24:00:00Z' -E '2020-01-01 00:00:00Z'"),
+            Test("Valid date - just year",
+                 "iso8601 -d 2026 -E '2026-01-01 00:00:00Z'"),
         ] + year_tests + [
             make_test_group("2009-W53-07",
                             "iso8601 -d '2009-W53-7 00:00:00Z' -W -E '2009-W53-7 00:00:00Z'"),
