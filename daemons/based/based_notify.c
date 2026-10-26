@@ -27,6 +27,11 @@
 
 #include "pacemaker-based.h"
 
+struct cib_notification_s {
+    const xmlNode *msg;
+    bool (*send_to_client)(pcmk__client_t *client, const xmlNode *xml);
+};
+
 /*!
  * \internal
  * \brief Flags for CIB manager client notification types
@@ -149,9 +154,10 @@ done:
 }
 
 static void
-cib_notify_send_xml(pcmk__client_t *client, const char *type,
-                    const xmlNode *xml)
+cib_notify_send_xml(pcmk__client_t *client, const xmlNode *xml)
 {
+    const char *type = pcmk__xe_get(xml, PCMK__XA_SUBT);
+
     pcmk__debug("Sent %s notification to client %s (id %s)", type,
                 pcmk__client_name(client), client->id);
     pcmk__remote_send_xml(client->remote, xml);
@@ -160,21 +166,16 @@ cib_notify_send_xml(pcmk__client_t *client, const char *type,
 static void
 cib_notify_send_to_client(void *key, void *value, void *user_data)
 {
+    struct cib_notification_s *notification = user_data;
     pcmk__client_t *client = value;
-    xmlNode *xml = user_data;
-    const char *type = NULL;
+    const xmlNode *xml = notification->msg;
 
     if ((client->ipcs == NULL) && (client->remote == NULL)) {
         pcmk__warn("Skipping client with NULL channel");
         return;
     }
 
-    type = pcmk__xe_get(xml, PCMK__XA_SUBT);
-    CRM_LOG_ASSERT(type != NULL);
-
-    if (!pcmk__is_set(client->flags, based_nf_diff)
-        || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
-
+    if (!notification->send_to_client(client, xml)) {
         return;
     }
 
@@ -185,7 +186,7 @@ cib_notify_send_to_client(void *key, void *value, void *user_data)
 
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            cib_notify_send_xml(client, type, xml);
+            cib_notify_send_xml(client, xml);
             break;
 
         default:
@@ -195,11 +196,22 @@ cib_notify_send_to_client(void *key, void *value, void *user_data)
     }
 }
 
+static bool
+send_diff_notification(pcmk__client_t *client, const xmlNode *xml)
+{
+    const char *type = pcmk__xe_get(xml, PCMK__XA_SUBT);
+
+    CRM_LOG_ASSERT(type != NULL);
+    return (pcmk__is_set(client->flags, based_nf_diff)
+            && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none));
+}
+
 void
 based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
 {
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
+    struct cib_notification_s notification;
 
     if (diff == NULL) {
         return;
@@ -232,7 +244,10 @@ based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);
 
+    notification.msg = update_msg;
+    notification.send_to_client = send_diff_notification;
+
     pcmk__log_xml_trace(update_msg, "diff-notify");
-    pcmk__foreach_ipc_client(cib_notify_send_to_client, update_msg);
+    pcmk__foreach_ipc_client(cib_notify_send_to_client, &notification);
     pcmk__xml_free(update_msg);
 }
