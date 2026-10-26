@@ -902,7 +902,25 @@ struct crm_ipc_s {
     GByteArray *buffer;
     char *server_name;          // server IPC name being connected to
     qb_ipcc_connection_t *ipc;
+    GByteArray *event_buffer;
 };
+
+/*!
+ * \internal
+ * \brief Free the event-specific IPC buffer
+ *
+ * \param[in,out] ipc Generic IPC object
+ */
+static void
+free_event_buffer(crm_ipc_t *ipc)
+{
+    if (ipc->event_buffer == NULL) {
+        return;
+    }
+
+    g_byte_array_free(ipc->event_buffer, TRUE);
+    ipc->event_buffer = NULL;
+}
 
 /*!
  * \brief Create a new (legacy) object for using Pacemaker daemon IPC
@@ -1013,6 +1031,7 @@ crm_ipc_close(crm_ipc_t *client)
     }
 
     g_clear_pointer(&client->ipc, qb_ipcc_disconnect);
+    free_event_buffer(client);
 }
 
 void
@@ -1153,7 +1172,7 @@ crm_ipc_read(crm_ipc_t *client)
             if (!crm_ipc_connected(client) || bytes == -ENOTCONN) {
                 pcmk__err("Connection to %s IPC failed", client->server_name);
                 rc = -ENOTCONN;
-                pcmk__ipc_free_client_buffer(client);
+                free_event_buffer(client);
 
             } else if (bytes == -EAGAIN) {
                 rc = -EAGAIN;
@@ -1165,14 +1184,14 @@ crm_ipc_read(crm_ipc_t *client)
         if (bytes != header->size + sizeof(pcmk__ipc_header_t)) {
             pcmk__err("Message size does not match header");
             rc = -EBADMSG;
-            pcmk__ipc_free_client_buffer(client);
+            free_event_buffer(client);
             goto done;
         }
 
         pcmk__trace("Received %s IPC event %" PRId32 " size=%" PRIu32 " rc=%zu",
                     client->server_name, header->qb.id, header->qb.size, bytes);
 
-        rc = pcmk__ipc_msg_append(&client->buffer, buffer);
+        rc = pcmk__ipc_msg_append(&client->event_buffer, buffer);
 
         if (rc == pcmk_rc_ok) {
             break;
@@ -1182,10 +1201,14 @@ crm_ipc_read(crm_ipc_t *client)
             continue;
         }
 
-        pcmk__ipc_free_client_buffer(client);
+        free_event_buffer(client);
         rc = pcmk_rc2legacy(rc);
         goto done;
     } while (true);
+
+    pcmk__ipc_free_client_buffer(client);
+    client->buffer = client->event_buffer;
+    client->event_buffer = NULL;
 
     if (client->buffer->len > 0) {
         /* Data length excluding the header */
