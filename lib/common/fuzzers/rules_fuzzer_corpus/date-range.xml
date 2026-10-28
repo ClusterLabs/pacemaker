@@ -1,0 +1,1 @@
+<rules-fuzz now="2026-06-15 12:00:00"><rule id="r-date1"><date_expression id="d1" operation="in_range" start="2026-01-01" end="2026-12-31"/></rule><rule id="r-date2"><date_expression id="d2" operation="gt" start="2026-06-01 00:00:00"/></rule></rules-fuzz>
