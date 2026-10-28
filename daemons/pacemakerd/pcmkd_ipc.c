@@ -32,7 +32,7 @@ static qb_ipcs_service_t *ipcs = NULL;
  *
  * \param[in,out] c    New connection
  * \param[in]     uid  Client user id
- * \param[in]     gid  Client group id
+ * \param[in]     gid  Ignored
  *
  * \return 0 on success, -errno otherwise
  */
@@ -40,7 +40,7 @@ static int32_t
 pacemakerd_ipc_accept(qb_ipcs_connection_t *c, uid_t uid, gid_t gid)
 {
     pcmk__trace("New client connection %p", c);
-    if (pcmk__new_client(c, uid, gid) == NULL) {
+    if (pcmk__new_client(c, uid) == NULL) {
         return -ENOMEM;
     }
     return 0;
