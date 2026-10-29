@@ -511,8 +511,7 @@ class Resource(XmlBase):
         Create a colocation constraint between this resource and some other.
 
         Arguments:
-        resource -- The name of the resource that should be located relative
-                    this one
+        resource -- The name of the primary resource in the colocation
         score    -- Apply this score to the colocation constraint
         role     -- Apply this colocation constraint only to promotable clones
                     in this role ("started", "promoted", "unpromoted")
@@ -546,7 +545,7 @@ class Resource(XmlBase):
 
         for (k, kargs) in self._coloc.items():
             attrs = {"id": f"{self.name}-with-{k}", "rsc": self.name, "with-rsc": k}
-            text += element("rsc_colocation", **attrs)
+            text += element("rsc_colocation", **attrs, **kargs)
 
         text += "</constraints>"
         return text
