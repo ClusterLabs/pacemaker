@@ -18,6 +18,7 @@ SUBDIRS += digest
 SUBDIRS += flags
 SUBDIRS += health
 SUBDIRS += io
+SUBDIRS += ipc
 SUBDIRS += iso8601
 SUBDIRS += lists
 SUBDIRS += messages
