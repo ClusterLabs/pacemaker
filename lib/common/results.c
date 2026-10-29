@@ -16,6 +16,8 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+
+#include <glib.h>                   // gboolean, g_clear_pointer, G_*, TRUE
 #include <qb/qbdefs.h>
 
 #include <crm/common/mainloop.h>
@@ -451,7 +453,7 @@ static const struct pcmk__rc_info {
  * These represent Pacemaker-custom error codes. The count does not include
  * positive system error numbers, nor does it include \c pcmk_rc_ok (success).
  */
-const size_t pcmk__n_rc = PCMK__NELEM(pcmk__rcs);
+const size_t pcmk__n_rc = G_N_ELEMENTS(pcmk__rcs);
 
 /*!
  * \brief Get a return code constant name as a string

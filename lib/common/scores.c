@@ -1,5 +1,5 @@
 /*
- * Copyright 2004-2025 the Pacemaker project contributors
+ * Copyright 2004-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -13,6 +13,8 @@
 #include <stdio.h>      // snprintf(), NULL
 #include <string.h>     // strcpy(), strdup()
 #include <sys/types.h>  // size_t
+
+#include <glib.h>       // CLAMP
 
 int pcmk__score_red = 0;
 int pcmk__score_green = 0;
@@ -37,9 +39,8 @@ pcmk_parse_score(const char *score_s, int *score, int default_score)
     int rc = pcmk_rc_ok;
     int local_score = 0;
 
-    // Ensure default score is in bounds
-    default_score = QB_MIN(default_score, PCMK_SCORE_INFINITY);
-    default_score = QB_MAX(default_score, -PCMK_SCORE_INFINITY);
+    default_score = CLAMP(default_score, -PCMK_SCORE_INFINITY,
+                          PCMK_SCORE_INFINITY);
     local_score = default_score;
 
     if (score_s == NULL) {

@@ -18,7 +18,7 @@
 #include <sys/stat.h>                   // stat(), S_ISREG, etc.
 #include <sys/types.h>
 
-#include <glib.h>                       // gboolean, GString
+#include <glib.h>                       // gchar, g_*, FALSE, G*, TRUE
 #include <libxml/tree.h>                // xmlNode, etc.
 #include <libxml/xmlstring.h>           // xmlChar, xmlGetUTF8Char()
 
@@ -1206,7 +1206,7 @@ pcmk__xml_escape(const char *text, enum pcmk__xml_escape_type type)
     append_xml_escaped_fn_t append_char_fn = NULL;
     GString *copy = NULL;
 
-    pcmk__assert((type >= 0) && (type < PCMK__NELEM(append_xml_escaped_fns)));
+    pcmk__assert((type >= 0) && (type < G_N_ELEMENTS(append_xml_escaped_fns)));
 
     append_char_fn = append_xml_escaped_fns[type];
     pcmk__assert(append_char_fn != NULL);

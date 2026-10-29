@@ -21,6 +21,8 @@
 #include <sys/types.h>
 #include <dirent.h>
 
+#include <glib.h>                           // g_*, G*, MAX, etc.
+
 #include <crm/crm.h>
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
@@ -567,7 +569,7 @@ main(int argc, char **argv)
 
     if (options.test_dir != NULL) {
         rc = pcmk__profile_dir(out, options.flags, options.test_dir,
-                               (unsigned int) QB_MAX(options.repeat, 0),
+                               (unsigned int) MAX(options.repeat, 0),
                                options.use_date);
         goto done;
     }

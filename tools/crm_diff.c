@@ -13,7 +13,7 @@
 #include <stdio.h>          // NULL, printf(), etc.
 #include <stdlib.h>         // free()
 
-#include <glib.h>           // GOption, etc.
+#include <glib.h>           // gboolean, gchar, g_*, G*, TRUE
 #include <libxml/tree.h>    // xmlNode
 
 #include <crm/common/xml.h> // xml_{create,apply}_patchset()
@@ -156,7 +156,7 @@ generate_patch(pcmk__output_t *out, xmlNode *source, xmlNode *target,
      * it isn't detected as a change.
      */
     if (no_version) {
-        for (int i = 0; i < PCMK__NELEM(vfields); i++) {
+        for (int i = 0; i < G_N_ELEMENTS(vfields); i++) {
             pcmk__xe_set(target, vfields[i], pcmk__xe_get(source, vfields[i]));
         }
     }

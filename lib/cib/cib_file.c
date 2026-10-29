@@ -21,7 +21,8 @@
 
 #include <sys/stat.h>
 #include <sys/types.h>
-#include <glib.h>
+
+#include <glib.h>               // g_*, GHashTable, G_N_ELEMENTS
 
 #include <crm/crm.h>
 #include <crm/cib/internal.h>
@@ -377,7 +378,7 @@ get_op_function(const cib__operation_t *operation)
 
     pcmk__assert(type >= 0);
 
-    if (type >= PCMK__NELEM(op_functions)) {
+    if (type >= G_N_ELEMENTS(op_functions)) {
         return NULL;
     }
     return op_functions[type];

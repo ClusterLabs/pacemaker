@@ -12,7 +12,8 @@
 #include <time.h>
 #include <stdbool.h>
 #include <stdlib.h>
-#include <glib.h>
+
+#include <glib.h>                   // g_*, GHashTable, MIN
 
 #include <crm/crm.h>
 #include <crm/common/xml.h>
@@ -380,8 +381,7 @@ controld_start_recheck_timer(void)
             // We're already past the desired time
             interval_ms = 500;
         } else {
-            interval_ms = (unsigned int) QB_MIN(UINT_MAX,
-                                                (diff_seconds * 1000LL));
+            interval_ms = (unsigned int) MIN(UINT_MAX, diff_seconds * 1000LL);
         }
 
         // Use "recheck by" only if it's sooner than interval from CIB

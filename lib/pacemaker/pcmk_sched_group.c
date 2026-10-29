@@ -11,7 +11,7 @@
 
 #include <stdbool.h>
 
-#include <qb/qbdefs.h>              // QB_ABS()
+#include <glib.h>                   // g_*, G*, ABS
 
 #include <crm/common/xml.h>
 
@@ -422,7 +422,7 @@ colocate_group_with(pcmk_resource_t *dependent, const pcmk_resource_t *primary,
                         colocation->id, dependent->id,
                         pcmk_readable_score(dependent->priv->priority),
                         ((priority_delta > 0)? "adding" : "subtracting"),
-                        QB_ABS(priority_delta));
+                        ABS(priority_delta));
     }
     return priority_delta;
 }

@@ -23,6 +23,7 @@
 #include <fcntl.h>
 #include <ctype.h>
 
+#include <glib.h>                       // g_*, G*, MIN
 #include <libxml/tree.h>                // xmlNode
 #include <libxml/xpath.h>               // xmlXPathObject, etc.
 
@@ -400,10 +401,10 @@ get_action_timeout(const fenced_device_t *device, const char *action,
         return default_timeout;
     }
 
-    timeout_ms = QB_MIN(timeout_ms, UINT_MAX);
+    timeout_ms = MIN(timeout_ms, UINT_MAX);
     timeout_sec = pcmk__timeout_ms2s((unsigned int) timeout_ms);
 
-    return QB_MIN(timeout_sec, INT_MAX);
+    return MIN(timeout_sec, INT_MAX);
 }
 
 /*!
@@ -3059,7 +3060,7 @@ fenced_construct_reply(const xmlNode *request, xmlNode *data,
             PCMK__XA_ST_CALLOPT,
         };
 
-        for (int lpc = 0; lpc < PCMK__NELEM(names); lpc++) {
+        for (int lpc = 0; lpc < G_N_ELEMENTS(names); lpc++) {
             name = names[lpc];
             value = pcmk__xe_get(request, name);
             pcmk__xe_set(reply, name, value);

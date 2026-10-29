@@ -15,6 +15,8 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+#include <glib.h>               // g_*, G*, MIN
+
 #include <crm/crm.h>
 #include <crm/lrmd.h>           // lrmd_event_data_t, lrmd_rsc_info_t, etc.
 #include <crm/services.h>
@@ -1516,7 +1518,7 @@ construct_op(const lrm_state_t *lrm_state, const xmlNode *rsc_op,
             if ((pcmk__parse_ms(op_timeout, &timeout_ms) == pcmk_rc_ok)
                 && (timeout_ms >= 0)) {
 
-                op->timeout = (int) QB_MIN(timeout_ms, INT_MAX);
+                op->timeout = (int) MIN(timeout_ms, INT_MAX);
             }
         }
     }

@@ -16,9 +16,8 @@
 #include <stdlib.h>                     // free
 #include <string.h>                     // strcmp, strchr
 
-#include <glib.h>                       // g_*, etc.
+#include <glib.h>                       // g_*, G*, FALSE, MAX, MIN, TRUE, etc.
 #include <libxml/tree.h>                // xmlNode
-#include <qb/qbdefs.h>                  // QB_MAX, QB_MIN
 #include <qb/qblog.h>                   // LOG_TRACE
 
 #include <crm/common/actions.h>         // PCMK_ACTION_*
@@ -230,8 +229,8 @@ pe__force_anon(const char *standard, pcmk_resource_t *rsc, const char *rid,
                           "anonymous clones", rsc->id, standard, rid);
 
         clone_data->clone_node_max = 1;
-        clone_data->clone_max = QB_MIN(clone_data->clone_max,
-                                       g_list_length(scheduler->nodes));
+        clone_data->clone_max = MIN(clone_data->clone_max,
+                                    g_list_length(scheduler->nodes));
     }
 }
 
@@ -373,7 +372,7 @@ clone_unpack(pcmk_resource_t *rsc)
      * @TODO Exclude bundle nodes when counting
      */
     clone_data->clone_max = unpack_meta_int(rsc, PCMK_META_CLONE_MAX, NULL,
-                                            QB_MAX(1, num_nodes));
+                                            MAX(1, num_nodes));
 
     if (pcmk__is_true(g_hash_table_lookup(rsc->priv->meta,
                                           PCMK_META_ORDERED))) {

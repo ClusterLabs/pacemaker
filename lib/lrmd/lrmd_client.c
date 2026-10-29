@@ -18,10 +18,9 @@
 #include <time.h>                   // time
 #include <unistd.h>                 // close
 
-#include <glib.h>                   // g_list_free_full
+#include <glib.h>                   // gboolean, g_*, G*, FALSE, MAX, TRUE
 #include <gnutls/gnutls.h>          // gnutls_deinit, gnutls_bye
 #include <libxml/parser.h>          // xmlNode
-#include <qb/qbdefs.h>              // QB_MAX
 #include <qb/qblog.h>               // QB_XS
 
 #include <crm/common/actions.h>     // PCMK_DEFAULT_ACTION_TIMEOUT_MS
@@ -352,10 +351,10 @@ lrmd_dispatch_internal(void *data, void *user_data)
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_EXEC_TIME, &exec_time);
         CRM_LOG_ASSERT(exec_time >= 0);
-        event->exec_time = QB_MAX(0, exec_time);
+        event->exec_time = MAX(0, exec_time);
 
         pcmk__xe_get_int(msg, PCMK__XA_LRMD_QUEUE_TIME, &queue_time);
-        event->queue_time = QB_MAX(0, queue_time);
+        event->queue_time = MAX(0, queue_time);
 
         event->user_data = pcmk__xe_get_copy(msg,
                                              PCMK__XA_LRMD_RSC_USERDATA_STR);

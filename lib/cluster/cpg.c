@@ -23,9 +23,8 @@
 #include <bzlib.h>                  // BZ2_bzBuffToBuffDecompress
 #include <corosync/corotypes.h>     // CS_OK, CS_ERR_QUEUE_FULL
 #include <corosync/cpg.h>           // cpg_address, cpg_name, cpg_fd_get
-#include <glib.h>                   // FALSE, TRUE, g_list_append, gboolean
+#include <glib.h>                   // g_*, gboolean, FALSE, MIN, TRUE
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbdefs.h>              // QB_MIN
 #include <qb/qbipc_common.h>        // qb_ipc_response_header
 #include <qb/qblog.h>               // QB_XS, LOG_TRACE
 
@@ -261,7 +260,7 @@ crm_cs_flush(void *data)
         uint32_t delay_ms = 100;
         if (rc != CS_OK) {
             /* Proportionally more if sending failed but cap at 1s */
-            delay_ms = QB_MIN(1000, CS_SEND_MAX + (10 * queue_len));
+            delay_ms = MIN(1000, CS_SEND_MAX + (10 * queue_len));
         }
         cs_message_timer = pcmk__create_timer(delay_ms, crm_cs_flush_cb, data);
     }

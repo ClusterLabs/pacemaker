@@ -16,10 +16,9 @@
 #include <string.h>                    // strdup
 #include <time.h>                       // time_t
 
-#include <glib.h>                       // g_*, etc.
+#include <glib.h>                       // gboolean, g_*, FALSE, MAX, TRUE
 #include <libxml/tree.h>                // xmlNode
 #include <libxml/xpath.h>               // xmlXPathObject, xmlXPathFreeObject
-#include <qb/qbdefs.h>                  // QB_MAX
 #include <qb/qblog.h>                   // QB_XS
 
 #include <crm/common/actions.h>         // PCMK_ACTION_CLEAR_FAILCOUNT
@@ -337,7 +336,7 @@ update_failcount_for_attr(void *key, void *value, void *user_data)
                        pcmk_rc_str(rc));
             return;
         }
-        fc_data->last_failure = (time_t) QB_MAX(fc_data->last_failure, last_ll);
+        fc_data->last_failure = (time_t) MAX(fc_data->last_failure, last_ll);
     }
 }
 
@@ -358,7 +357,7 @@ update_launched_failcount(void *data, void *user_data)
     fc_data->failcount += pe_get_failcount(fc_data->node, launched,
                                            &launched_last_failure,
                                            fc_data->flags, fc_data->xml_op);
-    fc_data->last_failure = QB_MAX(fc_data->last_failure, launched_last_failure);
+    fc_data->last_failure = MAX(fc_data->last_failure, launched_last_failure);
 }
 
 #define readable_expiration(rsc)    \
