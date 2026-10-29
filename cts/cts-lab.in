@@ -9,6 +9,7 @@
 __copyright__ = "Copyright 2001-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
+from functools import partial
 import signal
 import sys
 
@@ -20,13 +21,10 @@ from pacemaker._cts import logging
 from pacemaker._cts.scenarios import AllOnce, Boot, BootCluster, LeaveBooted, RandomTests, Sequence
 from pacemaker._cts.tests import test_list
 
-# This is a global so it can be used by the signal handler
-scenario = None
-
 logging.add_stderr()
 
 
-def term_handler(signum, _frame):
+def term_handler(scenario, signum, _frame):
     """Handle a SIGTERM by exiting gracefully."""
     logging.log(f"Interrupted by signal {signum}")
 
@@ -42,13 +40,11 @@ def plural_s(n):
     return "" if n == 1 else "S"
 
 
-if __name__ == '__main__':
+def main():
+    """Run Pacemaker CTS lab as specified by arguments."""
     env = Environment(sys.argv[1:])
     lab = CtsLab(env)
     iters = lab["iterations"]
-
-    # Set the signal handler
-    signal.signal(15, term_handler)
 
     # Create the Cluster Manager object.
     # Currently Corosync2 is the only available cluster manager.
@@ -101,8 +97,10 @@ if __name__ == '__main__':
     logging.log(f"Scenario:               {scenario.__doc__}")
     logging.log(f"CTS Exerciser:          {lab['cts-exerciser']}")
     logging.log(f"CTS Logfile:            {lab['OutputFile']}")
+
     if "syslogd" in lab:
         logging.log(f"Syslog variant:         {lab['syslogd']}")
+
     logging.log(f"System log files:       {lab['LogFileName']}")
 
     if "IPBase" in lab:
@@ -111,7 +109,15 @@ if __name__ == '__main__':
     logging.log(f"Cluster starts at boot: {lab['at-boot']}")
 
     lab.dump()
+
+    # On SIGTERM during lab run, print a summary and do teardown
+    signal.signal(15, partial(term_handler, scenario))
+
     rc = lab.run(scenario, iters)
     sys.exit(rc)
+
+
+if __name__ == '__main__':
+    main()
 
 # vim: set filetype=python:
