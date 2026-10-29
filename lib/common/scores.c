@@ -110,14 +110,8 @@ pcmk_readable_score(int score)
         return PCMK_VALUE_MINUS_INFINITY;
 
     } else {
-        // https://gcc.gnu.org/onlinedocs/gcc-15.1.0/cpp/Stringizing.html
-#define xstr(s) str(s)
-#define str(s) #s
-
         // Result must be shorter than stringized -PCMK_SCORE_INFINITY
-        static char score_s[sizeof(xstr(-PCMK_SCORE_INFINITY))];
-#undef xstr
-#undef str
+        static char score_s[sizeof(G_STRINGIFY(-PCMK_SCORE_INFINITY))];
 
         pcmk__assert(snprintf(score_s, sizeof(score_s), "%d", score) >= 0);
         return score_s;
