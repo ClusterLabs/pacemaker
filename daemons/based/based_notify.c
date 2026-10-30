@@ -29,8 +29,7 @@
 
 struct cib_notification_s {
     const xmlNode *msg;
-    struct iovec *iov;
-    int32_t iov_size;
+    bool (*send_to_client)(pcmk__client_t *client, const xmlNode *xml);
 };
 
 /*!
@@ -107,64 +106,9 @@ based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
 }
 
 static void
-cib_notify_send_one(void *key, void *value, void *user_data)
+cib_notify_send_iov(pcmk__client_t *client, const xmlNode *xml)
 {
-    const char *type = NULL;
-    int rc = pcmk_rc_ok;
-
-    pcmk__client_t *client = value;
-    struct cib_notification_s *update = user_data;
-
-    if (client->ipcs == NULL && client->remote == NULL) {
-        pcmk__warn("Skipping client with NULL channel");
-        return;
-    }
-
-    type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
-    CRM_LOG_ASSERT(type != NULL);
-
-    if (!pcmk__is_set(client->flags, based_nf_diff)
-        || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
-
-        return;
-    }
-
-    switch (PCMK__CLIENT_TYPE(client)) {
-        case pcmk__client_ipc:
-            rc = pcmk__ipc_send_iov(client, update->iov,
-                                    crm_ipc_server_event);
-
-            /* EAGAIN isn't an error for server events.  Sending did fail
-             * with EAGAIN, but the iov was added to the send queue and we
-             * will attempt to send it again the next time pcmk__ipc_send_iov
-             * is called, or when crm_ipcs_flush_events_cb happens.
-             */
-            if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
-                pcmk__warn("Could not notify client %s: %s " QB_XS " id=%s",
-                           pcmk__client_name(client), pcmk_rc_str(rc),
-                           client->id);
-            }
-            break;
-
-        case pcmk__client_tls:
-        case pcmk__client_tcp:
-            pcmk__debug("Sent %s notification to client %s (id %s)", type,
-                        pcmk__client_name(client), client->id);
-            pcmk__remote_send_xml(client->remote, update->msg);
-            break;
-
-        default:
-            pcmk__err("Unknown transport for client %s "
-                      QB_XS " flags=%#016" PRIx64,
-                      pcmk__client_name(client), client->flags);
-    }
-}
-
-static void
-cib_notify_send(const xmlNode *xml)
-{
-    struct iovec *iov;
-    struct cib_notification_s update;
+    struct iovec *iov = NULL;
     GString *iov_buffer = NULL;
     ssize_t bytes = 0;
     int rc = pcmk_rc_ok;
@@ -177,15 +121,25 @@ cib_notify_send(const xmlNode *xml)
         rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-            pcmk__notice("Could not notify clients: %s " QB_XS " rc=%d",
-                         pcmk_rc_str(rc), rc);
-            break;
+            pcmk__err("Could not notify client %s: %s " QB_XS " rc=%d",
+                      pcmk__client_name(client), pcmk_rc_str(rc), rc);
+            goto done;
         }
 
-        update.msg = xml;
-        update.iov = iov;
-        update.iov_size = bytes;
-        pcmk__foreach_ipc_client(cib_notify_send_one, &update);
+        rc = pcmk__ipc_send_iov(client, iov, crm_ipc_server_event);
+
+        /* EAGAIN isn't an error for server events.  Sending did fail with EAGAIN,
+         * but the iov was added to the send queue and we will attempt to send it
+         * again the next time pcmk__ipc_send_iov is called, or when
+         * crm_ipcs_flush_events_cb happens.
+         */
+        if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
+            pcmk__err("Could not notify client %s: %s " QB_XS " id=%s",
+                      pcmk__client_name(client), pcmk_rc_str(rc),
+                      client->id);
+            goto done;
+        }
+
         pcmk_free_ipc_event(iov);
 
         if (rc == pcmk_rc_ok) {
@@ -195,7 +149,61 @@ cib_notify_send(const xmlNode *xml)
         index++;
     } while (true);
 
+done:
     g_string_free(iov_buffer, TRUE);
+}
+
+static void
+cib_notify_send_xml(pcmk__client_t *client, const xmlNode *xml)
+{
+    const char *type = pcmk__xe_get(xml, PCMK__XA_SUBT);
+
+    pcmk__debug("Sent %s notification to client %s (id %s)", type,
+                pcmk__client_name(client), client->id);
+    pcmk__remote_send_xml(client->remote, xml);
+}
+
+static void
+cib_notify_send_to_client(void *key, void *value, void *user_data)
+{
+    struct cib_notification_s *notification = user_data;
+    pcmk__client_t *client = value;
+    const xmlNode *xml = notification->msg;
+
+    if ((client->ipcs == NULL) && (client->remote == NULL)) {
+        pcmk__warn("Skipping client with NULL channel");
+        return;
+    }
+
+    if (!notification->send_to_client(client, xml)) {
+        return;
+    }
+
+    switch (PCMK__CLIENT_TYPE(client)) {
+        case pcmk__client_ipc:
+            cib_notify_send_iov(client, xml);
+            break;
+
+        case pcmk__client_tls:
+        case pcmk__client_tcp:
+            cib_notify_send_xml(client, xml);
+            break;
+
+        default:
+            pcmk__err("Unknown transport for client %s "
+                      QB_XS " flags=%#016" PRIx64,
+                      pcmk__client_name(client), client->flags);
+    }
+}
+
+static bool
+send_diff_notification(pcmk__client_t *client, const xmlNode *xml)
+{
+    const char *type = pcmk__xe_get(xml, PCMK__XA_SUBT);
+
+    CRM_LOG_ASSERT(type != NULL);
+    return (pcmk__is_set(client->flags, based_nf_diff)
+            && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none));
 }
 
 void
@@ -203,6 +211,7 @@ based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
 {
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
+    struct cib_notification_s notification;
 
     if (diff == NULL) {
         return;
@@ -235,7 +244,10 @@ based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);
 
+    notification.msg = update_msg;
+    notification.send_to_client = send_diff_notification;
+
     pcmk__log_xml_trace(update_msg, "diff-notify");
-    cib_notify_send(update_msg);
+    pcmk__foreach_ipc_client(cib_notify_send_to_client, &notification);
     pcmk__xml_free(update_msg);
 }
