@@ -152,9 +152,9 @@ void pe__show_node_scores_as(const char *file, const char *function,
                              const char *comment, GHashTable *nodes,
                              pcmk_scheduler_t *scheduler);
 
-#define pe__show_node_scores(level, rsc, text, nodes, scheduler)    \
+#define pe__show_node_scores(to_log, rsc, text, nodes, scheduler)   \
         pe__show_node_scores_as(__FILE__, __func__, __LINE__,      \
-                                (level), (rsc), (text), (nodes), (scheduler))
+                                (to_log), (rsc), (text), (nodes), (scheduler))
 
 GHashTable *pcmk__unpack_action_meta(pcmk_resource_t *rsc,
                                      const pcmk_node_t *node,
