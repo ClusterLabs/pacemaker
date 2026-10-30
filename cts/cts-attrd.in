@@ -7,7 +7,7 @@
 # pacemaker imports need to come after we modify sys.path, which pylint will complain about.
 # pylint: disable=wrong-import-position
 
-__copyright__ = "Copyright 2023-2025 the Pacemaker project contributors"
+__copyright__ = "Copyright 2023-2026 the Pacemaker project contributors"
 __license__ = "GNU General Public License version 2 or later (GPLv2+) WITHOUT ANY WARRANTY"
 
 import argparse
@@ -81,7 +81,7 @@ class AttributeTests(Tests):
     def setup_environment(self, use_corosync):
         """Prepare the host before executing any tests."""
         if use_corosync:
-            self._corosync.start(kill_first=True)
+            self._corosync.start()
 
     def cleanup_environment(self, use_corosync):
         """Clean up the host after executing desired tests."""

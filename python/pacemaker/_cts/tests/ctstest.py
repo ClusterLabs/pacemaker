@@ -83,10 +83,7 @@ class CTSTest:
 
     def incr(self, name):
         """Increment the given stats key."""
-        if name not in self.stats:
-            self.stats[name] = 0
-
-        self.stats[name] += 1
+        self.stats[name] = self.stats.get(name, 0) + 1
 
         # Reset the test passed boolean
         if name == "calls":
