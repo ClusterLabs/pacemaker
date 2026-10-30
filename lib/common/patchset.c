@@ -809,6 +809,37 @@ sort_change_obj_by_position(const void *a, const void *b)
 
 /*!
  * \internal
+ * \brief Check whether a node is referenced by a pending create/move change
+ *
+ * A v2 patchset applies its create and move changes in a second pass, so the
+ * target node found for each is held in \p change_objs while the first pass
+ * continues. A delete change in the first pass that frees one of those targets
+ * (or an ancestor of one) would leave a dangling pointer for the second pass.
+ *
+ * \param[in] node         Node that a delete change is about to free
+ * \param[in] change_objs  List of pending create/move changes
+ *
+ * \return \c true if \p node is an ancestor-or-self of any pending change's
+ *         target, otherwise \c false
+ */
+static bool
+node_used_by_pending_change(const xmlNode *node, GList *change_objs)
+{
+    for (GList *iter = change_objs; iter != NULL; iter = iter->next) {
+        const xml_change_obj_t *change_obj = iter->data;
+
+        for (const xmlNode *match = change_obj->match; match != NULL;
+             match = match->parent) {
+            if (match == node) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Apply a version 2 patchset to an XML node
  *
  * \param[in,out] xml       XML to apply patchset to
@@ -874,6 +905,26 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
             }
 
         } else if (strcmp(op, PCMK_VALUE_DELETE) == 0) {
+            /* Freeing the document's root element frees the whole document,
+             * which the caller still uses after we return.
+             */
+            if (xmlDocGetRootElement(match->doc) == match) {
+                pcmk__err("Ignoring %s of document root element %s", op, xpath);
+                rc = pcmk_rc_diff_failed;
+                continue;
+            }
+
+            /* Freeing a node that a pending create or move still points to
+             * would leave that pending change with a dangling pointer for the
+             * second pass below.
+             */
+            if (node_used_by_pending_change(match, change_objs)) {
+                pcmk__err("Ignoring %s of %s still referenced by a pending "
+                          "change", op, xpath);
+                rc = pcmk_rc_diff_failed;
+                continue;
+            }
+
             pcmk__xml_free(match);
 
         } else if (strcmp(op, PCMK_VALUE_MODIFY) == 0) {
