@@ -606,7 +606,7 @@ main(int argc, char **argv)
     free(options.xml_file);
 
     pcmk_free_injections(options.injections);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
     g_strfreev(processed_args);
 
     pcmk_free_scheduler(scheduler);
