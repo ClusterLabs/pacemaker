@@ -887,7 +887,7 @@ mon_winresize(int nsig)
         /* Alert the mainloop code we'd like the refresh_trigger to run next
          * time the mainloop gets around to checking.
          */
-        mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
+        pcmk__main_loop_trigger_set((crm_trigger_t *) refresh_trigger);
     }
     not_done--;
 }
@@ -1706,10 +1706,11 @@ main(int argc, char **argv)
     }
 #endif
 
-    /* When refresh_trigger->trigger is set to TRUE, call mon_refresh_display.  In
-     * this file, that is anywhere mainloop_set_trigger is called.
+    /* When refresh_trigger->ready is set to true, call mon_refresh_display().
+     * In this file, that is anywhere pcmk__main_loop_trigger_set() is called.
      */
-    refresh_trigger = mainloop_add_trigger(G_PRIORITY_LOW, mon_refresh_display, NULL);
+    refresh_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_LOW,
+                                                  mon_refresh_display, NULL);
 
     g_main_loop_run(mainloop);
     g_main_loop_unref(mainloop);
@@ -1856,14 +1857,14 @@ handle_rsc_op(xmlNode *xml, void *userdata)
     return pcmk_rc_ok;
 }
 
-/* This function is just a wrapper around mainloop_set_trigger so that it can be
- * called from a mainloop directly.  It's simply another way of ensuring the screen
- * gets redrawn.
+/* This function is just a wrapper around pcmk__main_loop_trigger_set() so that
+ * it can be called from a main loop directly. It's simply another way of
+ * ensuring the screen gets redrawn.
  */
 static gboolean
 mon_trigger_refresh(void *user_data)
 {
-    mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
+    pcmk__main_loop_trigger_set((crm_trigger_t *) refresh_trigger);
     return G_SOURCE_REMOVE;
 }
 
@@ -2094,7 +2095,8 @@ crm_mon_fencer_event_cb(stonith_t *st, stonith_event_t *e)
     }
 }
 
-/* Cause the screen to be redrawn (via mainloop_set_trigger) when various conditions are met:
+/* Cause the screen to be redrawn (via pcmk__main_loop_trigger_set()) when
+ * various conditions are met:
  *
  * - If the last update occurred more than reconnect_ms ago (defaults to 5s, but
  *   can be changed via the -i command line option), or
@@ -2134,7 +2136,7 @@ refresh_after_event(gboolean data_updated, gboolean enforce)
     if (enforce ||
         ((now - last_refresh) > pcmk__timeout_ms2s(options.reconnect_ms)) ||
         updates >= 10) {
-        mainloop_set_trigger((crm_trigger_t *) refresh_trigger);
+        pcmk__main_loop_trigger_set((crm_trigger_t *) refresh_trigger);
         pcmk__main_loop_timer_stop(refresh_timer);
         updates = 0;
 
