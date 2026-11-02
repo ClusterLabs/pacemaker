@@ -30,7 +30,6 @@
 struct cib_notification_s {
     const xmlNode *msg;
     struct iovec *iov;
-    int32_t iov_size;
 };
 
 /*!
@@ -177,7 +176,6 @@ cib_notify_send(const xmlNode *xml)
     struct iovec *iov;
     struct cib_notification_s update;
     GString *iov_buffer = NULL;
-    ssize_t bytes = 0;
     int rc = pcmk_rc_ok;
     uint16_t index = 0;
 
@@ -185,7 +183,7 @@ cib_notify_send(const xmlNode *xml)
     pcmk__xml_string(xml, 0, iov_buffer, 0);
 
     do {
-        rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
+        rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, NULL);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
             pcmk__err("Could not notify clients: %s " QB_XS " rc=%d",
@@ -195,7 +193,6 @@ cib_notify_send(const xmlNode *xml)
 
         update.msg = xml;
         update.iov = iov;
-        update.iov_size = bytes;
         pcmk__foreach_ipc_client(cib_notify_send_one, &update);
         pcmk_free_ipc_event(iov);
 
