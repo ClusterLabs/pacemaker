@@ -134,12 +134,12 @@ notify_send_xml(pcmk__client_t *client, const xmlNode *xml)
 }
 
 static void
-cib_notify_send_one(void *key, void *value, void *user_data)
+notify_send_to_client(void *key, void *value, void *user_data)
 {
     pcmk__client_t *client = value;
     struct cib_notification *notification = user_data;
 
-    if (client->ipcs == NULL && client->remote == NULL) {
+    if ((client->ipcs == NULL) && (client->remote == NULL)) {
         pcmk__warn("Skipping client with NULL channel");
         return;
     }
@@ -166,9 +166,8 @@ cib_notify_send_one(void *key, void *value, void *user_data)
 }
 
 static void
-cib_notify_send(struct cib_notification *notification)
+send_notification(struct cib_notification *notification)
 {
-    struct iovec *iov;
     GString *iov_buffer = NULL;
     int rc = pcmk_rc_ok;
     uint16_t index = 0;
@@ -176,7 +175,9 @@ cib_notify_send(struct cib_notification *notification)
     iov_buffer = g_string_sized_new(1024);
     pcmk__xml_string(notification->msg, 0, iov_buffer, 0);
 
-    do {
+    while (true) {
+        struct iovec *iov = NULL;
+
         rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, NULL);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
@@ -186,7 +187,7 @@ cib_notify_send(struct cib_notification *notification)
         }
 
         notification->iov = iov;
-        pcmk__foreach_ipc_client(cib_notify_send_one, notification);
+        pcmk__foreach_ipc_client(notify_send_to_client, notification);
         pcmk_free_ipc_event(iov);
 
         if (rc == pcmk_rc_ok) {
@@ -194,7 +195,7 @@ cib_notify_send(struct cib_notification *notification)
         }
 
         index++;
-    } while (true);
+    }
 
     g_string_free(iov_buffer, TRUE);
 }
@@ -252,6 +253,6 @@ based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
     notification.msg = update_msg;
 
     pcmk__log_xml_trace(update_msg, "diff-notify");
-    cib_notify_send(&notification);
+    send_notification(&notification);
     pcmk__xml_free(update_msg);
 }
