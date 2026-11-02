@@ -29,6 +29,7 @@
 
 struct cib_notification {
     const xmlNode *msg;
+    GList *iovs;
     bool (*msg_valid_for_client)(const pcmk__client_t *, const xmlNode *);
 };
 
@@ -105,27 +106,38 @@ based_update_notify_flags(const xmlNode *xml, pcmk__client_t *client)
     return pcmk_rc_ok;
 }
 
-static void
-notify_send_iov(pcmk__client_t *client, const xmlNode *xml)
+static int
+prepare_iovs(const xmlNode *xml, GList **iovs)
 {
-    GString *iov_buffer = NULL;
+    int rc = pcmk_rc_ok;
     uint16_t index = 0;
+    GString *buf = g_string_sized_new(1024);
 
-    iov_buffer = g_string_sized_new(1024);
-    pcmk__xml_string(xml, 0, iov_buffer, 0);
+    pcmk__xml_string(xml, 0, buf, 0);
 
-    while (true) {
+    do {
         struct iovec *iov = NULL;
-        ssize_t bytes = 0;
-        int rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, &bytes);
+
+        rc = pcmk__ipc_prepare_iov(0, buf, index, &iov, NULL);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
-            pcmk__err("Could not notify client %s: %s " QB_XS " rc=%d",
-                      pcmk__client_name(client), pcmk_rc_str(rc), rc);
-            goto done;
+            break;
         }
 
-        rc = pcmk__ipc_send_iov(client, iov, crm_ipc_server_event);
+        *iovs = g_list_append(*iovs, iov);
+        index++;
+    } while (rc == pcmk_rc_ipc_more);
+
+    g_string_free(buf, TRUE);
+    return rc;
+}
+
+static void
+notify_send_iovs(pcmk__client_t *client, GList *iovs)
+{
+    for (; iovs != NULL; iovs = iovs->next) {
+        int rc = pcmk__ipc_send_iov(client, (struct iovec *) iovs->data,
+                                    crm_ipc_server_event);
 
         /* EAGAIN isn't an error for server events.  Sending did fail with
          * EAGAIN, but the iov was added to the send queue and we will attempt
@@ -135,21 +147,13 @@ notify_send_iov(pcmk__client_t *client, const xmlNode *xml)
         if ((rc != EAGAIN) && (rc != pcmk_rc_ok)) {
             pcmk__err("Could not notify client %s: %s " QB_XS " id=%s",
                       pcmk__client_name(client), pcmk_rc_str(rc), client->id);
-            pcmk_free_ipc_event(iov);
-            goto done;
+            return;
         }
-
-        pcmk_free_ipc_event(iov);
 
         if (rc == pcmk_rc_ok) {
             break;
         }
-
-        index++;
     }
-
-done:
-    g_string_free(iov_buffer, TRUE);
 }
 
 static void
@@ -167,25 +171,24 @@ notify_send_to_client(void *key, void *value, void *user_data)
 {
     pcmk__client_t *client = value;
     struct cib_notification *notification = user_data;
-    const xmlNode *xml = notification->msg;
 
     if ((client->ipcs == NULL) && (client->remote == NULL)) {
         pcmk__warn("Skipping client with NULL channel");
         return;
     }
 
-    if (!notification->msg_valid_for_client(client, xml)) {
+    if (!notification->msg_valid_for_client(client, notification->msg)) {
         return;
     }
 
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            notify_send_iov(client, xml);
+            notify_send_iovs(client, notification->iovs);
             break;
 
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            notify_send_xml(client, xml);
+            notify_send_xml(client, notification->msg);
             break;
 
         default:
@@ -247,7 +250,16 @@ based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
 
     notification.msg = update_msg;
 
+    rc = prepare_iovs(update_msg, &notification.iovs);
+    if (rc != pcmk_rc_ok) {
+        pcmk__err("Could not prepare message for sending: %s", pcmk_rc_str(rc));
+        goto done;
+    }
+
     pcmk__log_xml_trace(update_msg, "diff-notify");
     pcmk__foreach_ipc_client(notify_send_to_client, &notification);
+
+done:
+    g_list_free_full(notification.iovs, (GDestroyNotify) pcmk_free_ipc_event);
     pcmk__xml_free(update_msg);
 }
