@@ -27,9 +27,10 @@
 
 #include "pacemaker-based.h"
 
-struct cib_notification_s {
+struct cib_notification {
     const xmlNode *msg;
     struct iovec *iov;
+    bool (*valid_for_client)(const pcmk__client_t *, const xmlNode *);
 };
 
 /*!
@@ -123,9 +124,10 @@ notify_send_iov(pcmk__client_t *client, struct iovec *iov)
 }
 
 static void
-notify_send_xml(pcmk__client_t *client, const char *type,
-                const xmlNode *xml)
+notify_send_xml(pcmk__client_t *client, const xmlNode *xml)
 {
+    const char *type = pcmk__xe_get(xml, PCMK__XA_SUBT);
+
     pcmk__debug("Sent %s notification to client %s (id %s)", type,
                 pcmk__client_name(client), client->id);
     pcmk__remote_send_xml(client->remote, xml);
@@ -134,33 +136,26 @@ notify_send_xml(pcmk__client_t *client, const char *type,
 static void
 cib_notify_send_one(void *key, void *value, void *user_data)
 {
-    const char *type = NULL;
-
     pcmk__client_t *client = value;
-    struct cib_notification_s *update = user_data;
+    struct cib_notification *notification = user_data;
 
     if (client->ipcs == NULL && client->remote == NULL) {
         pcmk__warn("Skipping client with NULL channel");
         return;
     }
 
-    type = pcmk__xe_get(update->msg, PCMK__XA_SUBT);
-    CRM_LOG_ASSERT(type != NULL);
-
-    if (!pcmk__is_set(client->flags, based_nf_diff)
-        || !pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none)) {
-
+    if (!notification->valid_for_client(client, notification->msg)) {
         return;
     }
 
     switch (PCMK__CLIENT_TYPE(client)) {
         case pcmk__client_ipc:
-            notify_send_iov(client, update->iov);
+            notify_send_iov(client, notification->iov);
             break;
 
         case pcmk__client_tls:
         case pcmk__client_tcp:
-            notify_send_xml(client, type, update->msg);
+            notify_send_xml(client, notification->msg);
             break;
 
         default:
@@ -171,16 +166,15 @@ cib_notify_send_one(void *key, void *value, void *user_data)
 }
 
 static void
-cib_notify_send(const xmlNode *xml)
+cib_notify_send(struct cib_notification *notification)
 {
     struct iovec *iov;
-    struct cib_notification_s update;
     GString *iov_buffer = NULL;
     int rc = pcmk_rc_ok;
     uint16_t index = 0;
 
     iov_buffer = g_string_sized_new(1024);
-    pcmk__xml_string(xml, 0, iov_buffer, 0);
+    pcmk__xml_string(notification->msg, 0, iov_buffer, 0);
 
     do {
         rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, NULL);
@@ -191,9 +185,8 @@ cib_notify_send(const xmlNode *xml)
             break;
         }
 
-        update.msg = xml;
-        update.iov = iov;
-        pcmk__foreach_ipc_client(cib_notify_send_one, &update);
+        notification->iov = iov;
+        pcmk__foreach_ipc_client(cib_notify_send_one, notification);
         pcmk_free_ipc_event(iov);
 
         if (rc == pcmk_rc_ok) {
@@ -206,11 +199,24 @@ cib_notify_send(const xmlNode *xml)
     g_string_free(iov_buffer, TRUE);
 }
 
+static bool
+send_diff_notification(const pcmk__client_t *client, const xmlNode *xml)
+{
+    const char *type = pcmk__xe_get(xml, PCMK__XA_SUBT);
+
+    CRM_LOG_ASSERT(type != NULL);
+    return (pcmk__is_set(client->flags, based_nf_diff)
+            && pcmk__str_eq(type, PCMK__VALUE_CIB_DIFF_NOTIFY, pcmk__str_none));
+}
+
 void
 based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
 {
     xmlNode *update_msg = NULL;
     xmlNode *wrapper = NULL;
+    struct cib_notification notification = {
+        .valid_for_client = send_diff_notification,
+    };
 
     if (diff == NULL) {
         return;
@@ -243,7 +249,9 @@ based_diff_notify(const xmlNode *request, int rc, xmlNode *diff)
     wrapper = pcmk__xe_create(update_msg, PCMK__XE_CIB_UPDATE_RESULT);
     pcmk__xml_copy(wrapper, diff);
 
+    notification.msg = update_msg;
+
     pcmk__log_xml_trace(update_msg, "diff-notify");
-    cib_notify_send(update_msg);
+    cib_notify_send(&notification);
     pcmk__xml_free(update_msg);
 }
