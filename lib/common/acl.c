@@ -1131,13 +1131,9 @@ xml_acl_disable(xmlNode *xml)
                 if ((attr_name) != NULL) {                                  \
                     pcmk__g_strcat(xpath, "[@", attr_name, "]", NULL);      \
                 }                                                           \
-                qb_log_from_external_source(__func__, __FILE__,             \
-                                            "%sACL denies user '%s' %s "    \
-                                            "access to %s",                 \
-                                            LOG_TRACE, __LINE__, 0 ,        \
-                                            prefix, user,                   \
-                                            acl_mode_text(mode),            \
-                                            xpath->str);                    \
+                                                                            \
+                qb_log(LOG_TRACE, "%sACL denies user '%s' %s access to %s", \
+                       prefix, user, acl_mode_text(mode), xpath->str);      \
                 g_string_free(xpath, TRUE);                                 \
             },                                                              \
             {}                                                              \

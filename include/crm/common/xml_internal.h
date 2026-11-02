@@ -112,16 +112,12 @@ do {                                                                            
                 CXLB_buf[CXLB_len - 1] = '\0';                                  \
             }                                                                   \
             if (CXLB_buffer) {                                                  \
-                qb_log_from_external_source(__func__, __FILE__, "%s%s%s",       \
-                                            CXLB_priority, __LINE__, 0,         \
-                                            (prefix) != NULL ? (prefix) : "",   \
-                                            CXLB_buffer, CXLB_buf);             \
+                qb_log(CXLB_priority, "%s%s%s", pcmk__s(prefix, ""),            \
+                       CXLB_buffer, CXLB_buf);                                  \
                 free(CXLB_buffer);                                              \
+                                                                                \
             } else {                                                            \
-                qb_log_from_external_source(__func__, __FILE__, "%s%s",         \
-                                            (priority), __LINE__, 0,            \
-                                            (prefix) != NULL ? (prefix) : "",   \
-                                            CXLB_buf);                          \
+                qb_log(priority, "%s%s", pcmk__s(prefix, ""), CXLB_buf);        \
             }                                                                   \
             if (CXLB_len < 0) {                                                 \
                 CXLB_buf = NULL;  /* restore temporary override */              \

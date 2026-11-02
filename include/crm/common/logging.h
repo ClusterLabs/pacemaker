@@ -147,21 +147,24 @@ pcmk__clip_log_level(int level)
         uint8_t _level = pcmk__clip_log_level(level);                       \
                                                                             \
         switch (_level) {                                                   \
-            case LOG_STDOUT: case LOG_NEVER:                                \
+            case LOG_STDOUT:                                                \
+            case LOG_NEVER:                                                 \
                 break;                                                      \
+                                                                            \
             default: {                                                      \
                 static struct qb_log_callsite *trace_cs = NULL;             \
+                                                                            \
                 if (trace_cs == NULL) {                                     \
                     trace_cs = qb_log_callsite_get(__func__, __FILE__, fmt, \
                                                    _level, __LINE__, 0);    \
                 }                                                           \
+                                                                            \
                 if (crm_is_callsite_active(trace_cs, _level, 0)) {          \
-                    qb_log_from_external_source(__func__, __FILE__, fmt,    \
-                                                _level, __LINE__, 0,        \
-                                                ##args);                    \
+                    qb_log(_level, fmt, ##args);                            \
                 }                                                           \
+                                                                            \
+                break;                                                      \
             }                                                               \
-            break;                                                          \
         }                                                                   \
     } while (0)
 
@@ -267,23 +270,28 @@ pcmk__clip_log_level(int level)
         uint8_t _level = pcmk__clip_log_level(level);                       \
                                                                             \
         switch (_level) {                                                   \
-            case LOG_STDOUT: case LOG_NEVER:                                \
+            case LOG_STDOUT:                                                \
+            case LOG_NEVER:                                                 \
                 break;                                                      \
+                                                                            \
             default: {                                                      \
                 static struct qb_log_callsite *trace_tag_cs = NULL;         \
                 int converted_tag = g_quark_try_string(tag);                \
+                                                                            \
                 if (trace_tag_cs == NULL) {                                 \
                     trace_tag_cs = qb_log_callsite_get(__func__, __FILE__,  \
                                                        fmt, _level,         \
                                                        __LINE__,            \
                                                        converted_tag);      \
                 }                                                           \
+                                                                            \
                 if (crm_is_callsite_active(trace_tag_cs, _level,            \
                                            converted_tag)) {                \
-                    qb_log_from_external_source(__func__, __FILE__, fmt,    \
-                                                _level, __LINE__,           \
-                                                converted_tag, ##args);     \
+                                                                            \
+                    qb_logt(_level, converted_tag, fmt, ##args);            \
                 }                                                           \
+                                                                            \
+                break;                                                      \
             }                                                               \
         }                                                                   \
     } while (0)
