@@ -70,7 +70,7 @@ parse_location_role(const char *role_spec, enum rsc_role_e *role)
  */
 static const char *
 score_attribute_name(const xmlNode *rule_xml, char **allocated,
-                     const pcmk_rule_input_t *rule_input)
+                     const pcmk__rule_input_t *rule_input)
 {
     const char *name = NULL;
 
@@ -79,10 +79,10 @@ score_attribute_name(const xmlNode *rule_xml, char **allocated,
         return NULL;
     }
 
-    /* A score attribute name may use submatches extracted from a
-     * resource ID regular expression. For example, if score-attribute is
-     * "loc-\1", rsc-pattern is "ip-(.*)", and the resource ID is "ip-db", then
-     * the score attribute name is "loc-db".
+    /* A score attribute name may use submatches extracted from a resource ID
+     * regular expression. For example, if score-attribute is "loc-%1",
+     * rsc-pattern is "ip-(.*)", and the resource ID is "ip-db", then the score
+     * attribute name is "loc-db".
      */
     if ((rule_input->rsc_id != NULL) && (rule_input->rsc_id_nmatches > 0)) {
         *allocated = pcmk__replace_submatches(name, rule_input->rsc_id,
@@ -191,7 +191,8 @@ score_from_attr(const char *constraint_id, const char *attr_name,
 static bool
 generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
                        const char *discovery, crm_time_t *next_change,
-                       pcmk_rule_input_t *rule_input, const char *constraint_id)
+                       pcmk__rule_input_t *rule_input,
+                       const char *constraint_id)
 {
     const char *rule_id = NULL;
     const char *score_attr = NULL;
@@ -269,8 +270,8 @@ generate_location_rule(pcmk_resource_t *rsc, xmlNode *rule_xml,
         rule_input->rsc_params = pe_rsc_params(rsc, node,
                                                rsc->priv->scheduler);
 
-        if (pcmk_evaluate_rule(rule_xml, rule_input,
-                               next_change) != pcmk_rc_ok) {
+        if (pcmk__evaluate_rule(rule_xml, rule_input,
+                                next_change) != pcmk_rc_ok) {
             continue;
         }
 
@@ -365,7 +366,7 @@ unpack_rsc_location(xmlNode *xml_obj, pcmk_resource_t *rsc,
         crm_time_t *next_change = pcmk__assert_alloc(1, sizeof(crm_time_t));
         xmlNode *rule_xml = pcmk__xe_first_child(xml_obj, PCMK_XE_RULE, NULL,
                                                  NULL);
-        pcmk_rule_input_t rule_input = {
+        pcmk__rule_input_t rule_input = {
             .now = rsc->priv->scheduler->priv->now,
             .rsc_meta = rsc->priv->meta,
             .rsc_id = rsc_id_match,
@@ -395,11 +396,12 @@ unpack_simple_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
     const char *id = pcmk__xe_get(xml_obj, PCMK_XA_ID);
     const char *value = pcmk__xe_get(xml_obj, PCMK_XA_RSC);
 
-    if (value) {
-        pcmk_resource_t *rsc;
+    if (value != NULL) {
+        pcmk_resource_t *rsc =
+            pcmk__find_constraint_resource(scheduler->priv->resources, value);
 
-        rsc = pcmk__find_constraint_resource(scheduler->priv->resources, value);
         unpack_rsc_location(xml_obj, rsc, NULL, NULL, NULL, 0, NULL);
+        return;
     }
 
     value = pcmk__xe_get(xml_obj, PCMK_XA_RSC_PATTERN);
@@ -472,10 +474,6 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
     pcmk__idref_t *tag = NULL;
     xmlNode *rsc_set = NULL;
 
-    *expanded_xml = NULL;
-
-    CRM_CHECK(xml_obj != NULL, return EINVAL);
-
     id = pcmk__xe_id(xml_obj);
     if (id == NULL) {
         pcmk__config_err("Ignoring <%s> constraint without " PCMK_XA_ID,
@@ -499,41 +497,40 @@ unpack_location_tags(xmlNode *xml_obj, xmlNode **expanded_xml,
         pcmk__config_err("Ignoring constraint '%s' because '%s' is not a "
                          "valid resource or tag", id, rsc_id);
         return pcmk_rc_unpack_error;
+    }
 
-    } else if (rsc != NULL) {
+    if (rsc != NULL) {
         // No template is referenced
         return pcmk_rc_ok;
     }
-
-    state = pcmk__xe_get(xml_obj, PCMK_XA_ROLE);
 
     *expanded_xml = pcmk__xml_copy(NULL, xml_obj);
 
     /* Convert any template or tag reference into constraint
      * PCMK_XE_RESOURCE_SET
      */
-    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC,
-                          false, scheduler)) {
+    if (!pcmk__tag_to_set(*expanded_xml, &rsc_set, PCMK_XA_RSC, false,
+                          scheduler)) {
 
         g_clear_pointer(expanded_xml, pcmk__xml_free);
         return pcmk_rc_unpack_error;
     }
 
-    if (rsc_set != NULL) {
-        if (state != NULL) {
-            /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
-             * PCMK_XA_ROLE attribute
-             */
-            pcmk__xe_set(rsc_set, PCMK_XA_ROLE, state);
-            pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
-        }
-        pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
-
-    } else {
-        // No sets
+    if (rsc_set == NULL) {
         g_clear_pointer(expanded_xml, pcmk__xml_free);
+        return pcmk_rc_ok;
     }
 
+    state = pcmk__xe_get(xml_obj, PCMK_XA_ROLE);
+    if (state != NULL) {
+        /* Move PCMK_XA_RSC_ROLE into converted PCMK_XE_RESOURCE_SET as
+         * PCMK_XA_ROLE attribute
+         */
+        pcmk__xe_set(rsc_set, PCMK_XA_ROLE, state);
+        pcmk__xe_remove_attr(*expanded_xml, PCMK_XA_ROLE);
+    }
+
+    pcmk__log_xml_trace(*expanded_xml, "Expanded " PCMK_XE_RSC_LOCATION);
     return pcmk_rc_ok;
 }
 
@@ -583,22 +580,23 @@ unpack_location_set(xmlNode *location, xmlNode *set,
 void
 pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
 {
-    xmlNode *set = NULL;
     bool any_sets = false;
 
-    xmlNode *orig_xml = NULL;
+    xmlNode *orig_xml = xml_obj;
     xmlNode *expanded_xml = NULL;
+
+    CRM_CHECK(xml_obj != NULL, return);
 
     if (unpack_location_tags(xml_obj, &expanded_xml, scheduler) != pcmk_rc_ok) {
         return;
     }
 
-    if (expanded_xml) {
-        orig_xml = xml_obj;
+    if (expanded_xml != NULL) {
         xml_obj = expanded_xml;
     }
 
-    for (set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET, NULL, NULL);
+    for (xmlNode *set = pcmk__xe_first_child(xml_obj, PCMK_XE_RESOURCE_SET,
+                                             NULL, NULL);
          set != NULL; set = pcmk__xe_next(set, PCMK_XE_RESOURCE_SET)) {
 
         any_sets = true;
@@ -606,21 +604,18 @@ pcmk__unpack_location(xmlNode *xml_obj, pcmk_scheduler_t *scheduler)
         if ((set == NULL) // Configuration error, message already logged
             || (unpack_location_set(xml_obj, set, scheduler) != pcmk_rc_ok)) {
 
-            if (expanded_xml) {
-                pcmk__xml_free(expanded_xml);
-            }
+            pcmk__xml_free(expanded_xml);
             return;
         }
     }
 
-    if (expanded_xml) {
-        pcmk__xml_free(expanded_xml);
-        xml_obj = orig_xml;
+    pcmk__xml_free(expanded_xml);
+
+    if (any_sets) {
+        return;
     }
 
-    if (!any_sets) {
-        unpack_simple_location(xml_obj, scheduler);
-    }
+    unpack_simple_location(orig_xml, scheduler);
 }
 
 /*!
