@@ -1,0 +1,1 @@
+<rules-fuzz><node-attrs><nvpair id="#uname-k" name="#uname" value="node1"/><nvpair id="mem-k" name="mem" value="16"/></node-attrs><rule id="r-basic" boolean-op="and"><expression id="e-uname" attribute="#uname" operation="eq" value="node1" type="string"/></rule></rules-fuzz>
