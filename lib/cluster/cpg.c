@@ -396,12 +396,14 @@ truncate_peer_name(size_t cur_len, const char *name)
  * \internal
  * \brief Extract text data from a Corosync CPG message
  *
- * \param[in]     handle     CPG connection (to get local node ID if not known)
- * \param[in]     sender_id  Corosync ID of node that sent message
- * \param[in]     pid        Process ID of message sender (for logging only)
- * \param[in,out] content    CPG message
- * \param[out]    from       If not \c NULL, will be set to sender uname
- *                           (valid for the lifetime of \p content)
+ * \param[in]     handle       CPG connection (to get local node ID if not
+ *                             known)
+ * \param[in]     sender_id    Corosync ID of node that sent message
+ * \param[in]     pid          Process ID of message sender (for logging only)
+ * \param[in,out] content      CPG message
+ * \param[in]     content_len  Size of \p content as delivered by Corosync
+ * \param[out]    from         If not \c NULL, will be set to sender uname
+ *                             (valid for the lifetime of \p content)
  *
  * \return Newly allocated string with message data, or NULL for errors and
  *         messages not intended for the local node
@@ -410,7 +412,7 @@ truncate_peer_name(size_t cur_len, const char *name)
  */
 char *
 pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
-                       void *content, const char **from)
+                       void *content, size_t content_len, const char **from)
 {
     char *data = NULL;
     pcmk__cpg_msg_t *msg = content;
@@ -418,6 +420,28 @@ pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id, uint32_t pid,
     if (from != NULL) {
         *from = NULL;
     }
+
+    /* Corosync hands us whatever a peer sent, which may be malformed (due to a
+     * buggy or malicious sender, or a struct mismatch during a rolling
+     * upgrade). Make sure the delivered message is at least as large as the
+     * fixed-size header and that it holds everything header.size claims, before
+     * dereferencing any field. Otherwise a short message leads to an
+     * out-of-bounds read.
+     */
+    if ((content_len < sizeof(pcmk__cpg_msg_t))
+        || (content_len < (size_t) msg->header.size)) {
+        pcmk__warn("Ignoring %zu-byte CPG message from node %" PRIu32 " PID %"
+                   PRIu32 ": truncated or inconsistent size",
+                   content_len, sender_id, pid);
+        return NULL;
+    }
+
+    /* The uname fields are fixed-size buffers that a peer is expected to
+     * null-terminate, but a malformed message might not, so terminate them
+     * before they are used as strings (for example, by pcmk__get_node()).
+     */
+    msg->host.uname[sizeof(msg->host.uname) - 1] = '\0';
+    msg->sender.uname[sizeof(msg->sender.uname) - 1] = '\0';
 
     if (handle != 0) {
         uint32_t local_nodeid = pcmk__cpg_local_nodeid(handle);
