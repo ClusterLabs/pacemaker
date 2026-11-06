@@ -345,6 +345,21 @@ do_dc_join_offer_one(long long action, enum crmd_fsa_cause cause,
         pcmk__info("Making join-%d offers to any unconfirmed nodes because an "
                    "unknown node joined", current_join_id);
         g_hash_table_foreach(pcmk__peer_cache, join_make_offer, &member);
+
+        /* As for a join request below: if an offer went out, make one to the
+         * local node as well.  Otherwise max_generation_from keeps whatever it
+         * was when this join round began, and a node whose CIB is newer than
+         * that becomes the source for the finalization sync.  If that node is
+         * then lost (fenced, say) before finalization, nothing is left to sync
+         * from, R_HAVE_CIB is never set, and the DC waits in S_FINALIZE_JOIN
+         * until join-finalization-timeout.
+         */
+        if (crmd_join_phase_count(controld_join_welcomed) > 0) {
+            member = controld_get_local_node_status();
+            if (controld_get_join_phase(member) != controld_join_welcomed) {
+                join_make_offer(NULL, member, NULL);
+            }
+        }
         check_join_state(cur_state, __func__);
         return;
     }
