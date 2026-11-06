@@ -210,7 +210,7 @@ based_process_shutdown(xmlNode *req, xmlNode **cib, xmlNode **answer)
 int
 based_process_sync(xmlNode *req, xmlNode **cib, xmlNode **answer)
 {
-    return sync_our_cib(req, true);
+    return sync_our_cib(req, true, true);
 }
 
 int
@@ -336,7 +336,7 @@ cib_msg_copy(const xmlNode *msg)
 }
 
 int
-sync_our_cib(const xmlNode *request, bool all)
+sync_our_cib(const xmlNode *request, bool all, bool join_finalize_sync)
 {
     int rc = pcmk_rc_ok;
     char *digest = NULL;
@@ -356,6 +356,12 @@ sync_our_cib(const xmlNode *request, bool all)
     }
     if (all) {
         pcmk__xe_remove_attr(replace_request, PCMK__XA_CIB_HOST);
+    }
+
+    // When synchronizing in a cluster configuration, if the synchronization request comes from the DC node,
+    // the CIB of that DC node is forcibly synchronized. 
+    if (join_finalize_sync && pcmk__str_eq(host, based_cluster_node_name(), pcmk__str_casei)) {
+        pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_REPLACE_FORCE, true);
     }
 
     pcmk__xe_set(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
