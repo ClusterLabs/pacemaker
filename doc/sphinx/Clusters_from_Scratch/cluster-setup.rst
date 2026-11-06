@@ -49,7 +49,7 @@ that will make our lives easier:
 
 .. code-block:: console
 
-    # dnf install -y pacemaker pcs psmisc policycoreutils-python3
+    # dnf install -y pacemaker pcs psmisc policycoreutils-python3 policycoreutils-python-utils
 
 .. NOTE::
 
@@ -303,11 +303,167 @@ example of all the options available under the status category.
         xml
             View xml version of status (output from crm_mon -r -1 -X).
 
+        wait [<timeout>]
+            Wait for the cluster to settle into stable state. Timeout can be
+            specified as bare number which describes number of seconds or number
+            with unit (s or sec for seconds, m or min for minutes, h or hr for
+            hours). If 'timeout' is not specified or set to zero, it defaults to
+            60 minutes.
+            Example: pcs status wait 30min
+
+        query resource <resource-id> exists [--quiet]
+            Query the existence of the resource.
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> is-stonith [--quiet]
+            Query if the resource is a stonith resource.
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> is-type [--quiet]
+                (primitive | group | clone [unique] [promotable] | bundle [unique])
+            Query if the resource is of given type. Allows to query whether clones
+            are globally unique or promotable. Allows to query whether bundles are
+            globally unique.
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> get-type
+            Get type of the resource. The output is one of 'primitive', 'group',
+            'clone', 'clone unique', 'clone promotable', 'clone unique promotable',
+            'bundle' or 'bundle unique'.
+
+        query resource <resource-id> is-state <state> [on-node <node-name>]
+                [members all|any|none] [instances all|any|none] [--quiet]
+            Query if the resource is in the given state. <state> can be one of
+            'active', 'blocked', 'demoting', 'disabled', 'enabled', 'failed',
+            'failure_ignored', 'locked_to', 'maintenance', 'managed', 'migrating',
+            'monitoring', 'orphaned', 'pending', 'promoted', 'promoting', 'started',
+            'starting', 'stopped', 'stopping', 'unmanaged' or 'unpromoted'.
+
+            States 'starting', 'stopping', 'promoting', 'demoting', 'migrating' and
+            'monitoring' describe that resource operation (start, stop, promote,
+            demote, migrate_from/to, or monitor) is currently in progress on the
+            resource. 'pending' will evaluate to true if any of these operations is
+            currently in progress on the resource.
+
+            State 'locked_to' allows to specify node name of the node that the
+            resource is locked to.
+
+            With groups, the state is read and evaluated on the group first. If the
+            state cannot be determined from only the group, evaluate the state of
+            the member resources and return true if the query is true for ALL of
+            the members. 'members' can be used to specify how to evaluate the states
+            of the members. If 'members' is specified, then always evaluate the
+            query only on the member resources without looking at the group itself.
+            This means that for example queries for 'started' and 'stopped' on a
+            group with one started and one stopped member will both evaluate as
+            false at the same time if 'members' is not specified or it is set to
+            'all'.
+
+            With clones and bundles, the state is read and evaluated on the clone
+            or bundle first. If the state cannot be determined from only the clone
+            or bundle, evaluate the state on the instances and return true if the
+            query is true for ANY of the instances. 'instances' can be used to
+            specify how to evaluate the state of the instances. If 'instances'
+            is specified, then always evaluate the query only on the instances
+            without looking at the clone or bundle themselves. This means that for
+            example queries for 'started' and 'stopped' on a clone with one started
+            and one stopped instance will both evaluate as true at the same time if
+            'instances' is not specified or it is set to 'any'.
+
+            'on-node' can be used to test whether the resource is in given state on
+            the node with the given name. If 'on-node' is used, then always check
+            only the member resources for groups and instances for clones or
+            bundles.
+
+            Queries on the state of cloned or bundled resources are evaluated
+            similarly to queries on clones or bundles. Evaluate the state of every
+            instance and return true if the query is true for ANY of the instances.
+            'instances' can be used to specify how the query should be evaluated.
+            It is possible to query single specific instance of unique clones or
+            bundles by using resource id together with the suffix that distinguishes
+            instances for unique clones and bundles.
+            Example: Query if any instance of resource is started
+                pcs status query resource resource_id is-state started
+            Example: Query if one specific instance is started
+                pcs status query resource resource_id:0 is-state started
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> is-in-group [<group-id>] [--quiet]
+            Query if the resource is in any group or in a group with the
+            specified id.
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            Print the id of the group on new line if the resource is in any group.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> is-in-clone [<clone-id>] [--quiet]
+            Query if the resource is in any clone or in a clone with the specified
+            id. Resource that is in a cloned group is considered to be in the clone
+            itself.
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            Print the id of the clone on new line if the resource is in any clone.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> is-in-bundle [<bundle-id>] [--quiet]
+            Query if the resource is in any bundle or in a bundle with the
+            specified id.
+
+            Print 'True' and exit with 0 if the query evaluates to true. Exit with
+            1 if an error occurs while performing the query. Print 'False' and exit
+            with 2 otherwise.
+            Print the id of the bundle on new line if the resource is in any bundle.
+            If --quiet is specified, do not print any output and just exit with
+            the appropriate return code.
+
+        query resource <resource-id> get-nodes
+            Get all nodes on which the resource is running. With groups, return
+            nodes on which any of the members is running. For clones or bundles,
+            return nodes on which any of the instances or replicas are running.
+
+            Print each node name on new line.
+
+        query resource <resource-id> get-members
+            Get ids of member resources of the resource. Only useful for group,
+            clone and bundle resources.
+
+            Print each member id on new line.
+
+        query resource <resource-id> get-index-in-group
+            Get an index of the resource in a group. The first resource in a group
+            has an index of 0. Usable only for resources that are in a group.
+
 Additionally, if you are interested in the version and supported cluster stack(s)
 available with your Pacemaker installation, run:
 
 .. code-block:: console
 
     [root@pcmk-1 ~]# pacemakerd --features
-     Pacemaker 2.1.2-4.el9 (Build: ada5c3b36e2)
-     Supporting v3.13.0: agent-manpages cibsecrets corosync-ge-2 default-resource-stickiness default-sbd-sync generated-manpages monotonic nagios ncurses remote systemd
+     Pacemaker 3.0.1-3.el10 (Build: 6a90427)
+     Supporting v3.21.1: agent-manpages cibsecrets corosync-ge-2 default-resource-stickiness default-sbd-sync generated-manpages lsb monotonic ncurses service systemd
