@@ -120,6 +120,56 @@ is_dangling_guest_node(pcmk_node_t *node)
 }
 
 /*!
+ * \internal
+ * \brief Check whether a probe found the resource not running
+ *
+ * \param[in] op  Operation history entry to check
+ *
+ * \return false if \p op is a probe that found the resource stopped
+ *         (PCMK_OCF_NOT_RUNNING), otherwise true
+ */
+static bool
+probe_started(xmlNode *op)
+{
+    int rc = PCMK_OCF_OK;
+
+    pcmk__xe_get_int(op, PCMK__XA_RC_CODE, &rc);
+    // For anonymous clones: monitor with rc=7 means probed and not running
+    if (pcmk_xe_is_probe(op) && rc == PCMK_OCF_NOT_RUNNING) {
+        return false;
+    }
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Record that a resource's state is known on a node
+ *
+ * \param[in,out] rsc   Resource whose probed-node history is updated
+ * \param[in]     node  Node where the resource's state is known
+ */
+static void
+mark_probed_node(pcmk_resource_t *rsc, const pcmk_node_t *node)
+{
+    for (pcmk_resource_t *iter = rsc; iter != NULL; iter = iter->priv->parent) {
+        if (g_hash_table_lookup(iter->priv->probed_nodes,
+                                node->priv->id) == NULL) {
+            pcmk_node_t *n = pe__copy_node(node);
+
+            pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
+                            rsc->id,
+                            pcmk__s(rsc->priv->history_id, "the same"),
+                            pcmk__node_name(n));
+            g_hash_table_insert(iter->priv->probed_nodes,
+                                (void *) n->priv->id, n);
+        }
+        if (pcmk__is_set(iter->flags, pcmk__rsc_unique)) {
+            break;
+        }
+    }
+}
+
+/*!
  * \brief Schedule a fence action for a node
  *
  * \param[in,out] scheduler       Scheduler data
@@ -2128,16 +2178,25 @@ create_anonymous_removed_instance(pcmk_resource_t *parent, const char *rsc_id,
  * preference: (1) the instance running on the specified node, if any;
  * (2) an inactive instance (i.e. within the total of \c PCMK_META_CLONE_MAX
  * instances); (3) a newly created "removed" instance (that is,
- * \c PCMK_META_CLONE_MAX instances are already active).
+ * \c PCMK_META_CLONE_MAX instances are already active); (4) NULL, while noting
+ * the node in the resource's probed-nodes history, if the clone instance is
+ * just a failed probe.
  *
- * \param[in,out] scheduler  Scheduler data
- * \param[in]     node       Node on which to check for instance
- * \param[in,out] parent     Clone to check
- * \param[in]     rsc_id     Name of cloned resource in history (no instance)
+ * \param[in,out] scheduler         Scheduler data
+ * \param[in]     node              Node on which to check for instance
+ * \param[in,out] parent            Clone to check
+ * \param[in]     rsc_id            Name of cloned resource in history (no
+ *                                  instance)
+ * \param[in]     resource_running  Whether the resource is actually running
+ *                                  (used to avoid scheduling unnecessary
+ *                                  "remove" operations for failed probes)
+ * \param[out] dead_probe           Set to true if dead probe was encountered
+ *                                  (monitor with rc=PCMK_OCF_NOT_RUNNING)
  */
 static pcmk_resource_t *
 find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
-                     pcmk_resource_t *parent, const char *rsc_id)
+                     pcmk_resource_t *parent, const char *rsc_id,
+                     bool resource_running, bool *dead_probe)
 {
     GList *rIter = NULL;
     pcmk_resource_t *rsc = NULL;
@@ -2266,16 +2325,34 @@ find_anonymous_clone(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
     }
 
     if (rsc == NULL) {
-        rsc = create_anonymous_removed_instance(parent, rsc_id, node,
-                                                scheduler);
-        pcmk__rsc_trace(parent, "Resource %s, removed", rsc->id);
+        if (resource_running) {
+            rsc = create_anonymous_removed_instance(parent, rsc_id, node,
+                                                    scheduler);
+            pcmk__rsc_trace(parent, "Resource %s, removed", rsc->id);
+
+        } else {
+            /* Dead probe with all clone-max slots full: don't create an orphan
+             * instance, but record that the clone's state is known here so we
+             * don't schedule a redundant probe.
+             */
+            char *clone0_id = clone_zero(rsc_id);
+            pcmk_resource_t *clone0 = NULL;
+
+            clone0 = pe_find_resource(scheduler->priv->resources, clone0_id);
+            free(clone0_id);
+            pcmk__assert(clone0 != NULL);
+
+            mark_probed_node(clone0, node);
+            *dead_probe = true;
+
+        }
     }
     return rsc;
 }
 
 static pcmk_resource_t *
 unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
-                     const char *rsc_id)
+                     const char *rsc_id, bool resource_running, bool *dead_probe)
 {
     pcmk_resource_t *rsc = NULL;
     pcmk_resource_t *parent = NULL;
@@ -2320,9 +2397,10 @@ unpack_find_resource(pcmk_scheduler_t *scheduler, const pcmk_node_t *node,
         } else {
             char *base = clone_strip(rsc_id);
 
-            rsc = find_anonymous_clone(scheduler, node, parent, base);
+            rsc = find_anonymous_clone(scheduler, node, parent, base,
+                                       resource_running, dead_probe);
             free(base);
-            pcmk__assert(rsc != NULL);
+            // We can return NULL from the function, as it will be handled later
         }
     }
 
@@ -2384,25 +2462,7 @@ process_rsc_state(pcmk_resource_t *rsc, pcmk_node_t *node,
 
     /* process current state */
     if (rsc->priv->orig_role != pcmk_role_unknown) {
-        pcmk_resource_t *iter = rsc;
-
-        while (iter) {
-            if (g_hash_table_lookup(iter->priv->probed_nodes,
-                                    node->priv->id) == NULL) {
-                pcmk_node_t *n = pe__copy_node(node);
-
-                pcmk__rsc_trace(rsc, "%s (%s in history) known on %s",
-                                rsc->id,
-                                pcmk__s(rsc->priv->history_id, "the same"),
-                                pcmk__node_name(n));
-                g_hash_table_insert(iter->priv->probed_nodes,
-                                    (void *) n->priv->id, n);
-            }
-            if (pcmk__is_set(iter->flags, pcmk__rsc_unique)) {
-                break;
-            }
-            iter = iter->priv->parent;
-        }
+        mark_probed_node(rsc, node);
     }
 
     /* If a managed resource is believed to be running, but node is down ... */
@@ -2806,6 +2866,8 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
 {
     int stop_index = -1;
     int start_index = -1;
+    bool resource_running = false;
+    bool dead_probe = false;
     enum rsc_role_e req_role = pcmk_role_unknown;
 
     const char *rsc_id = pcmk__xe_id(lrm_resource);
@@ -2839,6 +2901,15 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
         op_list = g_list_prepend(op_list, rsc_op);
     }
 
+    if (op_list != NULL) {
+        // Sort by call-id to find LAST operation
+        xmlNode *last_op = NULL;
+        sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
+        last_op = g_list_last(sorted_op_list)->data;
+
+        resource_running = probe_started(last_op);
+    }
+
     if (!pcmk__is_set(scheduler->flags, pcmk__sched_shutdown_lock)) {
         if (op_list == NULL) {
             // If there are no operations, there is nothing to do
@@ -2847,10 +2918,11 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     }
 
     /* find the resource */
-    rsc = unpack_find_resource(scheduler, node, rsc_id);
+    rsc = unpack_find_resource(scheduler, node, rsc_id, resource_running,
+                               &dead_probe);
     if (rsc == NULL) {
-        if (op_list == NULL) {
-            // If there are no operations, there is nothing to do
+        if (op_list == NULL || dead_probe) {
+            // If there are no operations or it was a dead_probe, there is nothing to do
             return NULL;
         } else {
             rsc = process_removed_resource(lrm_resource, node, scheduler);
@@ -2866,7 +2938,6 @@ unpack_lrm_resource(pcmk_node_t *node, const xmlNode *lrm_resource,
     /* process operations */
     saved_role = rsc->priv->orig_role;
     rsc->priv->orig_role = pcmk_role_unknown;
-    sorted_op_list = g_list_sort(op_list, sort_op_by_callid);
 
     for (GList *iter = sorted_op_list; iter != NULL; iter = iter->next) {
         xmlNode *rsc_op = iter->data;

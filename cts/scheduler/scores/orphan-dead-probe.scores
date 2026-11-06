@@ -1,0 +1,16 @@
+
+pcmk__clone_assign: test-clone allocation score on node1: 0
+pcmk__clone_assign: test-clone allocation score on node2: 0
+pcmk__clone_assign: test-clone allocation score on node3: 0
+pcmk__clone_assign: test-resource:0 allocation score on node1: 1
+pcmk__clone_assign: test-resource:0 allocation score on node2: 0
+pcmk__clone_assign: test-resource:0 allocation score on node3: 0
+pcmk__clone_assign: test-resource:1 allocation score on node1: 0
+pcmk__clone_assign: test-resource:1 allocation score on node2: 1
+pcmk__clone_assign: test-resource:1 allocation score on node3: 0
+pcmk__primitive_assign: test-resource:0 allocation score on node1: 1
+pcmk__primitive_assign: test-resource:0 allocation score on node2: 0
+pcmk__primitive_assign: test-resource:0 allocation score on node3: 0
+pcmk__primitive_assign: test-resource:1 allocation score on node1: -INFINITY
+pcmk__primitive_assign: test-resource:1 allocation score on node2: 1
+pcmk__primitive_assign: test-resource:1 allocation score on node3: 0
