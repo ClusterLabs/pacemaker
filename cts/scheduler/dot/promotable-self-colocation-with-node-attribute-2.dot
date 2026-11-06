@@ -1,0 +1,16 @@
+ digraph "g" {
+"site-clone_promote_0" -> "site-rsc_promote_0 node3" [ style = bold]
+"site-clone_promote_0" -> "site-rsc_promote_0 node4" [ style = bold]
+"site-clone_promote_0" [ style=bold color="green" fontcolor="orange"]
+"site-clone_promoted_0" [ style=bold color="green" fontcolor="orange"]
+"site-rsc_monitor_10000 node3" [ style=bold color="green" fontcolor="black"]
+"site-rsc_monitor_10000 node4" [ style=bold color="green" fontcolor="black"]
+"site-rsc_monitor_11000 node1" [ style=bold color="green" fontcolor="black"]
+"site-rsc_monitor_11000 node2" [ style=bold color="green" fontcolor="black"]
+"site-rsc_promote_0 node3" -> "site-clone_promoted_0" [ style = bold]
+"site-rsc_promote_0 node3" -> "site-rsc_monitor_10000 node3" [ style = bold]
+"site-rsc_promote_0 node3" [ style=bold color="green" fontcolor="black"]
+"site-rsc_promote_0 node4" -> "site-clone_promoted_0" [ style = bold]
+"site-rsc_promote_0 node4" -> "site-rsc_monitor_10000 node4" [ style = bold]
+"site-rsc_promote_0 node4" [ style=bold color="green" fontcolor="black"]
+}
