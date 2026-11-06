@@ -34,7 +34,8 @@ crmd_cs_dispatch(cpg_handle_t handle, const struct cpg_name *groupName,
                  uint32_t nodeid, uint32_t pid, void *msg, size_t msg_len)
 {
     const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, msg_len,
+                                        &from);
     pcmk__node_status_t *peer = NULL;
     xmlNode *xml = NULL;
 

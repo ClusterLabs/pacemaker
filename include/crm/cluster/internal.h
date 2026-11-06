@@ -213,7 +213,8 @@ void pcmk__cpg_confchg_cb(cpg_handle_t handle,
                           size_t joined_list_entries);
 
 char *pcmk__cpg_message_data(cpg_handle_t handle, uint32_t sender_id,
-                             uint32_t pid, void *content, const char **from);
+                             uint32_t pid, void *content, size_t content_len,
+                             const char **from);
 
 #  endif
 
