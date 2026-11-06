@@ -296,8 +296,8 @@ build_rsc_from_xml(xmlNode * msg)
     rsc->class = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_CLASS);
     rsc->provider = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_PROVIDER);
     rsc->type = pcmk__xe_get_copy(rsc_xml, PCMK__XA_LRMD_TYPE);
-    rsc->work = mainloop_add_trigger(G_PRIORITY_HIGH, execute_resource_action,
-                                     rsc);
+    rsc->work = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                            execute_resource_action, rsc);
 
     // Initialize fence device probes (to return "not running")
     pcmk__set_result(&rsc->fence_probe_result, CRM_EX_ERROR,
@@ -400,7 +400,7 @@ stonith_recurring_op_helper(void *data)
 #ifdef PCMK__TIME_USE_CGT
     get_current_time(&cmd->t_queue, &cmd->t_first_queue);
 #endif
-    mainloop_set_trigger(rsc->work);
+    pcmk__main_loop_trigger_set(rsc->work);
 
     return G_SOURCE_REMOVE;
 }
@@ -427,7 +427,7 @@ start_delay_helper(void *data)
     rsc = cmd->rsc_id ? g_hash_table_lookup(rsc_list, cmd->rsc_id) : NULL;
 
     if (rsc) {
-        mainloop_set_trigger(rsc->work);
+        pcmk__main_loop_trigger_set(rsc->work);
     }
 
     return G_SOURCE_REMOVE;
@@ -540,7 +540,7 @@ schedule_lrmd_cmd(lrmd_rsc_t * rsc, lrmd_cmd_t * cmd)
 #ifdef PCMK__TIME_USE_CGT
     get_current_time(&cmd->t_queue, &cmd->t_first_queue);
 #endif
-    mainloop_set_trigger(rsc->work);
+    pcmk__main_loop_trigger_set(rsc->work);
 
     if (cmd->start_delay) {
         cmd->delay_id = pcmk__create_timer(cmd->start_delay, start_delay_helper, cmd);
@@ -745,7 +745,7 @@ cmd_finalize(lrmd_cmd_t * cmd, lrmd_rsc_t * rsc)
 
     if (rsc && (rsc->active == cmd)) {
         rsc->active = NULL;
-        mainloop_set_trigger(rsc->work);
+        pcmk__main_loop_trigger_set(rsc->work);
     }
 
     if (!rsc) {
@@ -1516,7 +1516,7 @@ execd_free_rsc(void *data)
     free(rsc->class);
     free(rsc->provider);
     free(rsc->type);
-    mainloop_destroy_trigger(rsc->work);
+    pcmk__main_loop_trigger_free(rsc->work);
 
     free(rsc);
 }

@@ -90,7 +90,7 @@ mainloop_test_done(const char *origin, bool pass)
     if (pass) {
         pcmk__info("SUCCESS - %s", origin);
         mainloop_iter++;
-        mainloop_set_trigger(trig);
+        pcmk__main_loop_trigger_set(trig);
         result.execution_status = PCMK_EXEC_DONE;
         result.exit_status = CRM_EX_OK;
     } else {
@@ -599,8 +599,9 @@ test_shutdown(int nsig)
 static void
 mainloop_tests(void)
 {
-    trig = mainloop_add_trigger(G_PRIORITY_HIGH, trigger_iterate_mainloop_tests, NULL);
-    mainloop_set_trigger(trig);
+    trig = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                       trigger_iterate_mainloop_tests, NULL);
+    pcmk__main_loop_trigger_set(trig);
     mainloop_add_signal(SIGTERM, test_shutdown);
 
     pcmk__info("Starting");

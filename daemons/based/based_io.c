@@ -73,7 +73,7 @@ write_cib_cb(pcmk__main_loop_child_t *child, int core, int signo, int exit_code)
                   ((core != 0)? " and dumped core" : ""));
     }
 
-    mainloop_trigger_complete(write_trigger);
+    pcmk__main_loop_trigger_complete(write_trigger);
 }
 
 /*!
@@ -196,7 +196,8 @@ based_io_init(void)
      */
     mainloop_add_signal(SIGPIPE, based_enable_writes);
 
-    write_trigger = mainloop_add_trigger(G_PRIORITY_LOW, write_cib_async, NULL);
+    write_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_LOW, write_cib_async,
+                                                NULL);
 }
 
 /*!
@@ -206,7 +207,7 @@ based_io_init(void)
 void
 based_io_cleanup(void)
 {
-    g_clear_pointer(&write_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&write_trigger, pcmk__main_loop_trigger_free);
 }
 
 /*!
@@ -634,7 +635,7 @@ based_activate_cib(xmlNode *new_cib, bool to_disk, const char *op)
 
     if (to_disk && writes_enabled && (cib_status == pcmk_rc_ok)) {
         pcmk__debug("Triggering CIB write for %s op", op);
-        mainloop_set_trigger(write_trigger);
+        pcmk__main_loop_trigger_set(write_trigger);
     }
 
     return pcmk_rc_ok;

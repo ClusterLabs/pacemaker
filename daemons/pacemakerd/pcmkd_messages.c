@@ -18,7 +18,6 @@
 
 #include <crm/crm.h>                    // CRM_OP_PING, CRM_OP_QUIT
 #include <crm/common/ipc.h>             // crm_ipc_flags
-#include <crm/common/mainloop.h>        // mainloop_set_trigger
 #include <crm/common/results.h>         // CRM_EX_*, pcmk_exec_status_str
 #include <crm/common/xml.h>             // PCMK_XA_*
 
@@ -91,7 +90,7 @@ handle_ping_request(pcmk__request_t *request)
                                 pcmk__str_none)) {
             pcmk__notice("Received startup-trigger from SBD");
             pacemakerd_state = PCMK__VALUE_STARTING_DAEMONS;
-            mainloop_set_trigger(startup_trigger);
+            pcmk__main_loop_trigger_set(startup_trigger);
         }
     }
 
