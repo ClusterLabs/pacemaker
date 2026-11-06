@@ -9,41 +9,39 @@
 
 #include <crm_internal.h>
 
-#include <sys/param.h>
-#include <stdbool.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <sys/utsname.h>
+#include <errno.h>                  // EIO
+#include <stddef.h>                 // NULL
+#include <stdint.h>                 // uint32_t
+#include <stdlib.h>                 // atexit
 
-#include <stdlib.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <inttypes.h>  // PRIu32, PRIx32
+#include <glib.h>
+#include <libxml/tree.h>            // xmlNode
+#include <qb/qblog.h>               // QB_XS
 
-#include <crm/crm.h>
-#include <crm/common/ipc.h>
+#include <crm/common/internal.h>
+#include <crm/common/ipc.h>         // crm_ipc_*
+#include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT, crm_log_*, crm_exit
+#include <crm/common/mainloop.h>    // mainloop_add_signal
+#include <crm/common/results.h>     // CRM_EX_*, pcmk_rc_*
+#include <crm/fencing/internal.h>   // STONITH_OP_*
+#include <crm/stonith-ng.h>         // st_opt_*
 
-#include <crm/stonith-ng.h>
-#include <crm/fencing/internal.h>
-#include <crm/common/xml.h>
-
-#include <crm/common/mainloop.h>
-
-#include <crm/cib/internal.h>
-
-#include <pacemaker-fenced.h>
+#include "pacemaker-fenced.h"
 
 #define SUMMARY "daemon for executing fencing devices in a Pacemaker cluster"
 
 static pcmk__daemon_ipc_fns_t ipc_fns = {
     .already_running = pcmk__generic_ipc_running,
+    .cleanup = pcmk__daemon_ipc_cleanup,
+    .dispatch = fenced_ipc_dispatch,
+    .init = pcmk__daemon_ipc_init,
 };
 
 pcmk__daemon_t fenced = {
     .type = pcmk_ipc_fenced,
     .ec = CRM_EX_OK,
+    .priority = QB_LOOP_HIGH,
+    .op = PCMK__XA_ST_OP,
     .ipc_fns = &ipc_fns,
 };
 
@@ -197,7 +195,7 @@ fenced_send_notification(const char *type, const pcmk__action_result_t *result,
 
     pcmk__xe_set(update_msg, PCMK__XA_T, PCMK__VALUE_ST_NOTIFY);
     pcmk__xe_set(update_msg, PCMK__XA_SUBT, type);
-    pcmk__xe_set(update_msg, PCMK__XA_ST_OP, type);
+    pcmk__xe_set(update_msg, fenced.op, type);
     stonith__xe_set_result(update_msg, result);
 
     if (data != NULL) {
@@ -320,8 +318,7 @@ static void
 fenced_cleanup(void)
 {
     fenced_cib_cleanup();
-    fenced_ipc_cleanup();
-    fenced_unregister_handlers();
+    fenced.ipc_fns->cleanup(&fenced);
     fenced_cluster_disconnect();
     fenced_scheduler_cleanup();
 
@@ -422,14 +419,9 @@ main(int argc, char **argv)
     fenced_init_device_table();
     init_topology_list();
 
-    if (!fenced_ipc_init()) {
-        fenced.ec = CRM_EX_FATAL;
-        goto done;
-    }
-
-    rc = pcmk__daemon_init(&fenced);
+    rc = pcmk__daemon_init(&fenced, fenced_handlers);
     if (rc != pcmk_rc_ok) {
-        fenced.ec = CRM_EX_ERROR;
+        fenced.ec = (rc == EIO) ? CRM_EX_FATAL : CRM_EX_ERROR;
         g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
                     "Error initializing daemon object: %s",
                     pcmk_rc_str(rc));
