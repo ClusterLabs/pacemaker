@@ -116,15 +116,6 @@ pcmk__build_arg_context(pcmk__common_args_t *common_args, const char *fmts,
 }
 
 void
-pcmk__free_arg_context(GOptionContext *context) {
-    if (context == NULL) {
-        return;
-    }
-
-    g_option_context_free(context);
-}
-
-void
 pcmk__add_main_args(GOptionContext *context, const GOptionEntry entries[])
 {
     GOptionGroup *main_group = g_option_context_get_main_group(context);

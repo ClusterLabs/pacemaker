@@ -1140,7 +1140,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     g_free(options.cib_user);
     g_free(options.dest_node);
