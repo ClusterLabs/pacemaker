@@ -16,5 +16,6 @@ LDADD += $(top_builddir)/lib/cluster/libcrmcluster.la
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pcmk_cpg_set_confchg_fn_test
 check_PROGRAMS += pcmk_cpg_set_deliver_fn_test
+check_PROGRAMS += pcmk__cpg_message_data_test
 
 TESTS = $(check_PROGRAMS)
