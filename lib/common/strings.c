@@ -381,7 +381,11 @@ pcmk_parse_interval_spec(const char *input, unsigned int *result_ms)
         }
 
         msec = pcmk__time_get_seconds(period_s);
-        msec = MIN(msec, UINT_MAX / 1000) * 1000;
+
+        if (msec > 0) {
+            msec = MIN(msec, UINT_MAX / 1000) * 1000;
+        }
+
         free(period_s);
 
     } else {
