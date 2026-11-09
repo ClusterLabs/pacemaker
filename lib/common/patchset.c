@@ -412,12 +412,14 @@ xml_create_patchset(int format, const xmlNode *source, xmlNode *target,
     if (format == 0) {
         format = 2;
     }
+
     if (format != 2) {
         pcmk__err("Unknown patch format: %d", format);
         return NULL;
     }
 
     xml_acl_disable(target);
+
     if ((target == NULL)
         || !pcmk__xml_doc_all_flags_set(target->doc, pcmk__xf_dirty)) {
 
@@ -425,24 +427,26 @@ xml_create_patchset(int format, const xmlNode *source, xmlNode *target,
         return NULL;
     }
 
-    if (config_changed == NULL) {
-        config_changed = &local_config_changed;
-    }
-    *config_changed = is_config_change(target);
+    local_config_changed = is_config_change(target);
 
     if (manage_version) {
+        const char *attr = NULL;
         int counter = 0;
 
-        if (*config_changed) {
+        if (local_config_changed) {
             pcmk__xe_set(target, PCMK_XA_NUM_UPDATES, "0");
-
-            pcmk__xe_get_int(target, PCMK_XA_EPOCH, &counter);
-            pcmk__xe_set_int(target, PCMK_XA_EPOCH, counter + 1);
+            attr = PCMK_XA_EPOCH;
 
         } else {
-            pcmk__xe_get_int(target, PCMK_XA_NUM_UPDATES, &counter);
-            pcmk__xe_set_int(target, PCMK_XA_NUM_UPDATES, counter + 1);
+            attr = PCMK_XA_NUM_UPDATES;
         }
+
+        pcmk__xe_get_int(target, attr, &counter);
+        pcmk__xe_set_int(target, attr, counter + 1);
+    }
+
+    if (config_changed != NULL) {
+        *config_changed = local_config_changed;
     }
 
     return xml_create_patchset_v2(source, target);
