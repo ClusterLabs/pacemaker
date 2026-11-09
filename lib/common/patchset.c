@@ -442,6 +442,13 @@ xml_create_patchset(int format, const xmlNode *source, xmlNode *target,
         }
 
         pcmk__xe_get_int(target, attr, &counter);
+
+        if (counter == INT_MAX) {
+            pcmk__err("Patchset creation failed: %s is already at max value %d",
+                      attr, INT_MAX);
+            return NULL;
+        }
+
         pcmk__xe_set_int(target, attr, counter + 1);
     }
 
