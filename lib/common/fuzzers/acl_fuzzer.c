@@ -36,6 +36,14 @@
  *       <probe> optional document to filter and probe instead of the CIB </probe>
  *     </acl-fuzz>
  *
+ * libFuzzer passes the input as raw bytes in \c data: either a seed corpus
+ * file or a mutation of one. Mutations splice in, overwrite, or delete
+ * strings from acl_fuzzer.dict, which contains the envelope element and
+ * attribute names, common user names, the ACL elements and attributes,
+ * permission kinds, and common CIB elements. A typical input is therefore
+ * a plausible envelope with the occasional surprise, rather than random
+ * bytes.
+ *
  * For one input, this enables ACLs on the CIB document exactly as the CIB
  * manager does before an operation (pcmk__enable_acls()), takes an
  * ACL-filtered copy of the probe (pcmk__acl_filtered_copy()), and probes
@@ -54,6 +62,52 @@
 
 static int num_probes = 0;
 
+static void probe_element(xmlNode *xml);
+
+/*!
+ * \internal
+ * \brief Probe read/write permission on one attribute of an element
+ *
+ * \param[in]     attr       Attribute to probe
+ * \param[in,out] user_data  Ignored
+ *
+ * \return \c true to continue iterating, \c false to stop at the probe cap
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_attr().
+ */
+static bool
+probe_attr(xmlAttr *attr, void *user_data)
+{
+    xmlNode *xml = attr->parent;
+
+    if (num_probes >= MAX_PROBES) {
+        return false; // Stop iterating
+    }
+    (void) pcmk__check_acl(xml, (const char *) attr->name,
+                           pcmk__xf_acl_read);
+    (void) pcmk__check_acl(xml, (const char *) attr->name,
+                           pcmk__xf_acl_write);
+    return true;
+}
+
+/*!
+ * \internal
+ * \brief Recursively probe read/write permission on one child element
+ *
+ * \param[in]     child     Child element to probe
+ * \param[in,out] userdata  Ignored
+ *
+ * \return \c pcmk_rc_ok
+ *
+ * \note This is compatible with \c pcmk__xe_foreach_child().
+ */
+static int
+probe_child(xmlNode *child, void *userdata)
+{
+    probe_element(child);
+    return pcmk_rc_ok;
+}
+
 /*!
  * \internal
  * \brief Probe read/write permission on an element and each of its attributes
@@ -69,21 +123,8 @@ probe_element(xmlNode *xml)
     (void) pcmk__check_acl(xml, NULL, pcmk__xf_acl_read);
     (void) pcmk__check_acl(xml, NULL, pcmk__xf_acl_write);
 
-    for (xmlAttr *attr = xml->properties; attr != NULL; attr = attr->next) {
-        if (num_probes >= MAX_PROBES) {
-            return;
-        }
-        (void) pcmk__check_acl(xml, (const char *) attr->name,
-                               pcmk__xf_acl_read);
-        (void) pcmk__check_acl(xml, (const char *) attr->name,
-                               pcmk__xf_acl_write);
-    }
-
-    for (xmlNode *child = pcmk__xe_first_child(xml, NULL, NULL, NULL);
-         child != NULL;
-         child = pcmk__xe_next(child, NULL)) {
-        probe_element(child);
-    }
+    pcmk__xe_foreach_attr(xml, probe_attr, NULL);
+    pcmk__xe_foreach_child(xml, NULL, probe_child, NULL);
 }
 
 int
@@ -106,20 +147,16 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     envelope = pcmk__xml_parse(ns);
     free(ns);
     if (envelope == NULL) {
-        return 0;
+        goto done;
     }
 
     cib = pcmk__xe_first_child(envelope, ENVELOPE_CIB, NULL, NULL);
     if (cib == NULL) {
-        pcmk__xml_free(envelope);
-        return 0;
+        goto done;
     }
 
     // An unprivileged user forces the ACL path; privileged users bypass it
-    user = pcmk__xe_get(envelope, "user");
-    if (user == NULL) {
-        user = "alice";
-    }
+    user = pcmk__xe_get(envelope, PCMK_XA_USER);
 
     pcmk__enable_acls(cib->doc, cib->doc, user);
     num_probes = 0;
@@ -133,6 +170,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
         pcmk__xml_free(filtered);
     }
 
+done:
     pcmk__xml_free(envelope);
     return 0;
 }
