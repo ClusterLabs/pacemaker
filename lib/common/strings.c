@@ -376,11 +376,17 @@ pcmk_parse_interval_spec(const char *input, unsigned int *result_ms)
     if (input[0] == 'P') {
         crm_time_t *period_s = pcmk__time_parse_duration(input);
 
-        if (period_s != NULL) {
-            msec = pcmk__time_get_seconds(period_s);
-            msec = MIN(msec, UINT_MAX / 1000) * 1000;
-            free(period_s);
+        if (period_s == NULL) {
+            goto done;
         }
+
+        msec = pcmk__time_get_seconds(period_s);
+
+        if (msec > 0) {
+            msec = MIN(msec, UINT_MAX / 1000) * 1000;
+        }
+
+        free(period_s);
 
     } else {
         rc = pcmk__parse_ms(input, &msec);

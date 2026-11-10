@@ -583,7 +583,12 @@ pcmk__xml_position(const xmlNode *xml, enum pcmk__xml_flags ignore_if_set)
     for (const xmlNode *cIter = xml; cIter->prev; cIter = cIter->prev) {
         xml_node_private_t *nodepriv = ((xmlNode*)cIter->prev)->_private;
 
-        if (!pcmk__is_set(nodepriv->flags, ignore_if_set)) {
+        /* This can be called via xml_create_patchset's call chain, with XML
+         * created outside of Pacemaker. In that case, nodepriv may be NULL.
+         */
+        if ((nodepriv == NULL)
+            || !pcmk__is_set(nodepriv->flags, ignore_if_set)) {
+
             position++;
         }
     }
