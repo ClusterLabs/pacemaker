@@ -9,13 +9,11 @@
 
 #include <crm_internal.h>
 
-#include <libgen.h>                 // dirname()
-#include <limits.h>                 // PATH_MAX
 #include <stdbool.h>                // bool, false, true
 #include <stdint.h>                 // uint8_t
-#include <stdlib.h>                 // free(), getenv(), mkstemp(), setenv()
+#include <stdlib.h>                 // free(), getenv(), mkstemp()
 #include <string.h>                 // memcpy()
-#include <unistd.h>                 // close(), readlink(), unlink(), write()
+#include <unistd.h>                 // close(), unlink()
 
 #include <crm/cib.h>
 #include <crm/cib/internal.h>
@@ -45,6 +43,13 @@
  * cib_utils.c, along with the ACL filtering, patchset generation, and version
  * checks that wrap every operation. One input covers one full operation, so
  * corpus entries built from real CIB files reach the op logic immediately.
+ *
+ * libFuzzer passes the input as raw bytes in \c data: either a seed corpus
+ * file or a mutation of one. Mutations splice in, overwrite, or delete
+ * strings from cib_file_ops_fuzzer.dict, which contains the envelope element
+ * and attribute names, the CIB request op names, and common CIB elements,
+ * attributes, and XPath sections. A typical input is therefore a plausible
+ * envelope with the occasional surprise, rather than random bytes.
  */
 
 // Envelope element names
@@ -56,36 +61,6 @@
 #define MIN_INPUT_SIZE      20
 
 static bool initialized = false;
-
-/*!
- * \internal
- * \brief Point \c PCMK_schema_directory at the schema copy beside this binary
- *
- * \note The schema cache reads .rng and upgrade .xsl files from disk, so the
- *       sign-on validation stage returns early unless it can find them. An
- *       existing value is left alone, so a caller can override the location.
- */
-static void
-set_schema_dir(void)
-{
-    char exe[PATH_MAX] = { '\0', };
-    char *schema_dir = NULL;
-    ssize_t len = 0;
-
-    if (getenv("PCMK_schema_directory") != NULL) {
-        return;
-    }
-
-    len = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
-    if (len <= 0) {
-        return;
-    }
-    exe[len] = '\0';
-
-    schema_dir = pcmk__assert_asprintf("%s/pacemaker-schemas", dirname(exe));
-    setenv("PCMK_schema_directory", schema_dir, 0);
-    free(schema_dir);
-}
 
 /*!
  * \internal
@@ -131,6 +106,7 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     const char *op = NULL;
     const char *section = NULL;
     const char *user = NULL;
+    cib_t *cib_client = NULL;
     char *ns = NULL;
     char *filename = NULL;
     int call_options = 0;
@@ -152,43 +128,49 @@ LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     envelope = pcmk__xml_parse(ns);
     free(ns);
     if (envelope == NULL) {
-        return 0;
+        goto done;
     }
 
     cib = pcmk__xe_first_child(envelope, ENVELOPE_CIB, NULL, NULL);
     if (cib == NULL) {
-        pcmk__xml_free(envelope);
-        return 0;
+        goto done;
     }
 
     // Request parameters; cib__get_operation() rejects unknown values
-    op = pcmk__xe_get(envelope, "op");
+    op = pcmk__xe_get(envelope, PCMK_XA_OP);
     if (op == NULL) {
         op = PCMK__CIB_REQUEST_QUERY;
     }
     section = pcmk__xe_get(envelope, "section");
-    user = pcmk__xe_get(envelope, "user");
+    user = pcmk__xe_get(envelope, PCMK_XA_USER);
     pcmk__xe_get_int(envelope, "callop", &call_options);
     request_data = pcmk__xe_first_child(envelope, ENVELOPE_DATA, NULL, NULL);
 
     filename = write_temp_cib(cib);
+    if (filename == NULL) {
+        goto done;
+    }
+
+    cib_client = cib_file_new(filename);
+    if (cib_client == NULL) {
+        goto done;
+    }
+
+    if (cib_client->cmds->signon(cib_client, "cib_file_ops_fuzzer",
+                                 cib_command) == pcmk_ok) {
+        xmlNode *output = NULL;
+
+        cib_internal_op(cib_client, op, NULL, section,
+                        (xmlNode *) request_data, &output,
+                        call_options, user);
+
+        pcmk__xml_free(output);
+        cib_client->cmds->signoff(cib_client);
+    }
+    cib_delete(cib_client);
+
+done:
     if (filename != NULL) {
-        cib_t *cib_client = cib_file_new(filename);
-
-        if (cib_client != NULL) {
-            if (cib_client->cmds->signon(cib_client, "cib_file_ops_fuzzer",
-                                         cib_command) == pcmk_ok) {
-                xmlNode *output = NULL;
-
-                cib_internal_op(cib_client, op, NULL, section,
-                                (xmlNode *) request_data, &output,
-                                call_options, user);
-
-                pcmk__xml_free(output);
-                cib_client->cmds->signoff(cib_client);
-            }
-            cib_delete(cib_client);
-        }
         unlink(filename);
         free(filename);
     }
