@@ -173,7 +173,7 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
     const char *client_type = NULL;
     const char *client_name = NULL;
     const char *client_desc = "";
-    const char *sync_s = (sync_reply? "synchronously" : "asynchronously");
+    const char *sync_s = (sync_reply? "synchronous" : "asynchronous");
 
     CRM_CHECK((xml != NULL) && (client_id != NULL), return);
 
@@ -187,7 +187,7 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
 
     client = pcmk__find_client_by_id(client_id);
     if (client == NULL) {
-        pcmk__debug("Could not notify client %s%s %s of call %d result: client "
+        pcmk__debug("Could not notify client %s%s %sly of call %d result: client "
                     "no longer exists", client_id, client_desc, sync_s,
                     call_id);
         return;
@@ -218,10 +218,10 @@ do_local_notify(const xmlNode *xml, const char *client_id, bool sync_reply,
     }
 
     if (rc == pcmk_rc_ok) {
-        pcmk__trace("Notified %s client %s%s %s of call %d result",
+        pcmk__trace("Notified %s client %s%s %sly of call %d result",
                     client_type, client_name, client_desc, sync_s, call_id);
     } else {
-        pcmk__warn("Could not notify %s client %s%s %s of call %d result: %s",
+        pcmk__warn("Could not notify %s client %s%s %sly of call %d result: %s",
                    client_type, client_name, client_desc, sync_s, call_id,
                    pcmk_rc_str(rc));
     }
