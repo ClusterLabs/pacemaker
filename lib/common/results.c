@@ -124,16 +124,17 @@ pcmk__result_bounds(enum pcmk_result_type type, int *lower, int *upper)
  * \param[in] function          Function making the assertion
  * \param[in] line              Line of file making the assertion
  * \param[in] assert_condition  String representation of assertion
+ * \param[in] fatal             Is this a fatal assertion?
  */
 static void
 log_assertion_as(const char *file, const char *function, int line,
-                 const char *assert_condition)
+                 const char *assert_condition, bool fatal)
 {
     if (!pcmk__is_daemon) {
         crm_enable_stderr(TRUE); // Make sure command-line user sees message
     }
-    pcmk__err("%s: Triggered fatal assertion at %s:%d : %s", function, file,
-              line, assert_condition);
+    pcmk__err("%s: Triggered %sfatal assertion at %s:%d : %s", function,
+              (fatal ? "" : "non-"), file, line, assert_condition);
 }
 
 /*!
@@ -151,7 +152,7 @@ _Noreturn void
 pcmk__abort_as(const char *file, const char *function, int line,
                const char *assert_condition)
 {
-    log_assertion_as(file, function, line, assert_condition);
+    log_assertion_as(file, function, line, assert_condition, true);
     abort();
 }
 
@@ -221,7 +222,7 @@ crm_abort(const char *file, const char *function, int line,
     } else if (do_core) {
         fail_assert_as(file, function, line, assert_condition);
     } else {
-        log_assertion_as(file, function, line, assert_condition);
+        log_assertion_as(file, function, line, assert_condition, false);
     }
 }
 
