@@ -22,6 +22,7 @@
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <libxml/xmlstring.h>           // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
+#include <qb/qbipcs.h>      // qb_ipcs_service_t, qb_ipcs_service_handlers
 
 #include <crm/common/internal.h>
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
