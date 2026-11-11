@@ -341,7 +341,7 @@ typedef struct {
 G_GNUC_INTERNAL
 qb_ipcs_service_t *pcmk__add_mainloop_ipc_server(
     const char *name, struct qb_ipcs_service_handlers *callbacks,
-    uint32_t flags);
+    enum qb_loop_priority prio, uint32_t flags);
 
 G_GNUC_INTERNAL
 int pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request);

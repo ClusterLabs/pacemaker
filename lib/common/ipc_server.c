@@ -1161,7 +1161,7 @@ pcmk__serve_execd_ipc(qb_ipcs_service_t **ipcs,
 #endif
 
     *ipcs = pcmk__add_mainloop_ipc_server(
-        pcmk__server_ipc_name(pcmk_ipc_execd), cb, flags);
+        pcmk__server_ipc_name(pcmk_ipc_execd), cb, QB_LOOP_MED, flags);
 
     if (*ipcs == NULL) {
         pcmk__crit("Failed to create %s IPC server; shutting down",
