@@ -179,6 +179,26 @@ pcmk__xe_next(const xmlNode *xml, const char *element_name)
 
 /*!
  * \internal
+ * \brief Check if node is an ancestor
+ *
+ * \param[in] node      Node whose ancestor to look for
+ * \param[in] ancestor  Ancestor with whom we are comparing
+ *
+ * \return True is node is ancestor, false otherwise
+ */
+bool
+is_ancestor(const xmlNode *node, const xmlNode *ancestor)
+{
+    for(const xmlNode *n = node; n != NULL; n = n->parent){
+        if (n == ancestor){
+            return true;
+        }
+    }
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Parse an integer score from an XML attribute
  *
  * \param[in]  xml            XML element with attribute to parse
