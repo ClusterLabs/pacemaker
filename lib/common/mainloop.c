@@ -656,8 +656,8 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
-    if (condition & G_IO_IN) {
-        if (client->ipc) {
+    if ((condition & G_IO_IN) != 0) {
+        if (client->ipc != NULL) {
             long read_rc = 0L;
             int max = 10;
 
@@ -671,13 +671,16 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                         continue;
                     }
 
-                } else if (client->dispatch_fn_ipc) {
+                } else if (client->dispatch_fn_ipc != NULL) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
 
                     pcmk__trace("New %ld-byte IPC message from %s after I/O "
-                                "condition %d",
-                                read_rc, client->name, (int) condition);
-                    if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
+                                "condition %d", read_rc, client->name,
+                                (int) condition);
+
+                    if (client->dispatch_fn_ipc(buffer, read_rc,
+                                                client->userdata) < 0) {
+
                         pcmk__trace("Connection to %s no longer required",
                                     client->name);
                         rc = G_SOURCE_REMOVE;
@@ -692,27 +695,30 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
         } else {
             pcmk__trace("New I/O event for %s after I/O condition %d",
                         client->name, (int) condition);
-            if (client->dispatch_fn_io) {
-                if (client->dispatch_fn_io(client->userdata) < 0) {
-                    pcmk__trace("Connection to %s no longer required",
-                                client->name);
-                    rc = G_SOURCE_REMOVE;
-                }
+
+            if ((client->dispatch_fn_io != NULL)
+                && (client->dispatch_fn_io(client->userdata) < 0)) {
+
+                pcmk__trace("Connection to %s no longer required",
+                            client->name);
+                rc = G_SOURCE_REMOVE;
             }
         }
     }
 
-    if (client->ipc && !crm_ipc_connected(client->ipc)) {
+    if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
         pcmk__err("Connection to %s closed " QB_XS " client=%p condition=%d",
                   client->name, client, condition);
-        rc = G_SOURCE_REMOVE;
+        return G_SOURCE_REMOVE;
+    }
 
-    } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
+    if ((condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) != 0) {
         pcmk__trace("The connection %s[%p] has been closed (I/O condition=%d)",
                     client->name, client, condition);
-        rc = G_SOURCE_REMOVE;
+        return G_SOURCE_REMOVE;
+    }
 
-    } else if ((condition & G_IO_IN) == 0) {
+    if ((condition & G_IO_IN) == 0) {
         /*
            #define      GLIB_SYSDEF_POLLIN     =1
            #define      GLIB_SYSDEF_POLLPRI    =2
@@ -731,16 +737,18 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
            G_IO_NVAL    GLIB_SYSDEF_POLLNVAL
            } GIOCondition;
 
-           A bitwise combination representing a condition to watch for on an event source.
+           A bitwise combination representing a condition to watch for on an
+           event source.
 
            G_IO_IN      There is data to read.
            G_IO_OUT     Data can be written (without blocking).
            G_IO_PRI     There is urgent data to read.
            G_IO_ERR     Error condition.
-           G_IO_HUP     Hung up (the connection has been broken, usually for pipes and sockets).
+           G_IO_HUP     Hung up (the connection has been broken, usually for
+                        pipes and sockets).
            G_IO_NVAL    Invalid request. The file descriptor is not open.
          */
-        pcmk__err("Strange condition: %d", condition);
+        pcmk__err("Strange condition: %d", (int) condition);
     }
 
     /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called
