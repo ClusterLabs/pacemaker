@@ -1573,7 +1573,7 @@ crm_ipc_send(crm_ipc_t *client, const xmlNode *message,
         ssize_t qb_rc = 0;
         time_t timeout = 0;
 
-        rc = pcmk__ipc_prepare_iov(id, iov_buffer, index, &iov, &bytes);
+        rc = pcmk__ipc_prepare_iov(id, iov_buffer, index, &iov);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
             pcmk__warn("Couldn't prepare %s IPC request: %s " QB_XS " rc=%d",

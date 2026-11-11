@@ -178,7 +178,7 @@ send_notification(struct cib_notification *notification)
     while (true) {
         struct iovec *iov = NULL;
 
-        rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov, NULL);
+        rc = pcmk__ipc_prepare_iov(0, iov_buffer, index, &iov);
 
         if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
             pcmk__err("Could not notify clients: %s " QB_XS " rc=%d",
