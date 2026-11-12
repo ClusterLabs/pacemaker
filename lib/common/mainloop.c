@@ -654,7 +654,6 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
     long read_rc = 0L;
-    int max = 10;
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
@@ -685,7 +684,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                         client->name, pcmk_strerror(read_rc), read_rc);
 
             if (read_rc == -EAGAIN) {
-                continue;
+                goto done;
             }
 
             pcmk__ipc_free_client_buffer(client->ipc);
@@ -708,7 +707,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
         pcmk__ipc_free_client_buffer(client->ipc);
         goto done;
 
-    } while (--max > 0);
+    } while (false);
 
 done:
     if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
