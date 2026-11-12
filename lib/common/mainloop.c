@@ -656,56 +656,58 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
-    if ((condition & G_IO_IN) != 0) {
-        if (client->ipc != NULL) {
-            long read_rc = 0L;
-            int max = 10;
+    if ((condition & G_IO_IN) == 0) {
+        goto done;
+    }
 
-            do {
-                read_rc = crm_ipc_read(client->ipc);
-                if (read_rc <= 0) {
-                    pcmk__trace("Could not read IPC message from %s: %s (%ld)",
-                                client->name, pcmk_strerror(read_rc), read_rc);
+    if (client->ipc != NULL) {
+        long read_rc = 0L;
+        int max = 10;
 
-                    if (read_rc == -EAGAIN) {
-                        continue;
-                    }
+        do {
+            read_rc = crm_ipc_read(client->ipc);
+            if (read_rc <= 0) {
+                pcmk__trace("Could not read IPC message from %s: %s (%ld)",
+                            client->name, pcmk_strerror(read_rc), read_rc);
 
-                } else if (client->dispatch_fn_ipc != NULL) {
-                    const char *buffer = crm_ipc_buffer(client->ipc);
-
-                    pcmk__trace("New %ld-byte IPC message from %s after I/O "
-                                "condition %d", read_rc, client->name,
-                                (int) condition);
-
-                    if (client->dispatch_fn_ipc(buffer, read_rc,
-                                                client->userdata) < 0) {
-
-                        pcmk__trace("Connection to %s no longer required",
-                                    client->name);
-                        rc = G_SOURCE_REMOVE;
-                    }
+                if (read_rc == -EAGAIN) {
+                    continue;
                 }
 
-                pcmk__ipc_free_client_buffer(client->ipc);
+            } else if (client->dispatch_fn_ipc != NULL) {
+                const char *buffer = crm_ipc_buffer(client->ipc);
 
-            } while ((rc == G_SOURCE_CONTINUE) && (--max > 0)
-                      && ((read_rc > 0) || (read_rc == -EAGAIN)));
+                pcmk__trace("New %ld-byte IPC message from %s after I/O "
+                            "condition %d", read_rc, client->name,
+                            (int) condition);
 
-        } else {
-            pcmk__trace("New I/O event for %s after I/O condition %d",
-                        client->name, (int) condition);
+                if (client->dispatch_fn_ipc(buffer, read_rc,
+                                            client->userdata) < 0) {
 
-            if ((client->dispatch_fn_io != NULL)
-                && (client->dispatch_fn_io(client->userdata) < 0)) {
-
-                pcmk__trace("Connection to %s no longer required",
-                            client->name);
-                rc = G_SOURCE_REMOVE;
+                    pcmk__trace("Connection to %s no longer required",
+                                client->name);
+                    rc = G_SOURCE_REMOVE;
+                }
             }
+
+            pcmk__ipc_free_client_buffer(client->ipc);
+
+        } while ((rc == G_SOURCE_CONTINUE) && (--max > 0)
+                 && ((read_rc > 0) || (read_rc == -EAGAIN)));
+
+    } else {
+        pcmk__trace("New I/O event for %s after I/O condition %d", client->name,
+                    (int) condition);
+
+        if ((client->dispatch_fn_io != NULL)
+            && (client->dispatch_fn_io(client->userdata) < 0)) {
+
+            pcmk__trace("Connection to %s no longer required", client->name);
+            rc = G_SOURCE_REMOVE;
         }
     }
 
+done:
     if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
         pcmk__err("Connection to %s closed " QB_XS " client=%p condition=%d",
                   client->name, client, condition);
