@@ -657,7 +657,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
     if (condition & G_IO_IN) {
-        if (client->ipc) {
+        if (client->ipc != NULL) {
             long read_rc = 0L;
 
             do {
@@ -670,7 +670,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                         return G_SOURCE_CONTINUE;
                     }
 
-                } else if (client->dispatch_fn_ipc) {
+                } else if (client->dispatch_fn_ipc != NULL) {
                     const char *buffer = crm_ipc_buffer(client->ipc);
 
                     pcmk__trace("New %ld-byte IPC message from %s after I/O "
@@ -690,7 +690,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
         } else {
             pcmk__trace("New I/O event for %s after I/O condition %d",
                         client->name, (int) condition);
-            if (client->dispatch_fn_io) {
+            if (client->dispatch_fn_io != NULL) {
                 if (client->dispatch_fn_io(client->userdata) < 0) {
                     pcmk__trace("Connection to %s no longer required",
                                 client->name);
@@ -700,7 +700,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
         }
     }
 
-    if (client->ipc && !crm_ipc_connected(client->ipc)) {
+    if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
         pcmk__err("Connection to %s closed " QB_XS " client=%p condition=%d",
                   client->name, client, condition);
         rc = G_SOURCE_REMOVE;
