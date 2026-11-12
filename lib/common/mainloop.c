@@ -690,11 +690,11 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
             goto done;
         }
 
+        pcmk__trace("New %ld-byte IPC message from %s after I/O condition %d",
+                    read_rc, client->name, (int) condition);
+
         if (client->dispatch_fn_ipc != NULL) {
             const char *buffer = crm_ipc_buffer(client->ipc);
-
-            pcmk__trace("New %ld-byte IPC message from %s after I/O "
-                        "condition %d", read_rc, client->name, (int) condition);
 
             if (client->dispatch_fn_ipc(buffer, read_rc,
                                         client->userdata) < 0) {
