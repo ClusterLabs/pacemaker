@@ -724,38 +724,8 @@ done:
         return G_SOURCE_REMOVE;
     }
 
-    if ((condition & G_IO_IN) == 0) {
-        /*
-           #define      GLIB_SYSDEF_POLLIN     =1
-           #define      GLIB_SYSDEF_POLLPRI    =2
-           #define      GLIB_SYSDEF_POLLOUT    =4
-           #define      GLIB_SYSDEF_POLLERR    =8
-           #define      GLIB_SYSDEF_POLLHUP    =16
-           #define      GLIB_SYSDEF_POLLNVAL   =32
-
-           typedef enum
-           {
-           G_IO_IN      GLIB_SYSDEF_POLLIN,
-           G_IO_OUT     GLIB_SYSDEF_POLLOUT,
-           G_IO_PRI     GLIB_SYSDEF_POLLPRI,
-           G_IO_ERR     GLIB_SYSDEF_POLLERR,
-           G_IO_HUP     GLIB_SYSDEF_POLLHUP,
-           G_IO_NVAL    GLIB_SYSDEF_POLLNVAL
-           } GIOCondition;
-
-           A bitwise combination representing a condition to watch for on an
-           event source.
-
-           G_IO_IN      There is data to read.
-           G_IO_OUT     Data can be written (without blocking).
-           G_IO_PRI     There is urgent data to read.
-           G_IO_ERR     Error condition.
-           G_IO_HUP     Hung up (the connection has been broken, usually for
-                        pipes and sockets).
-           G_IO_NVAL    Invalid request. The file descriptor is not open.
-         */
-        pcmk__err("Strange condition: %d", (int) condition);
-    }
+    // We're watching for G_IO_IN|G_IO_HUP|G_IO_NVAL|G_IO_ERR
+    CRM_LOG_ASSERT((condition & G_IO_IN) != 0);
 
     /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called
      * just before the source is removed from mainloop
