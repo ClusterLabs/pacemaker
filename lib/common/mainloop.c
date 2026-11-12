@@ -659,7 +659,6 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     if (condition & G_IO_IN) {
         if (client->ipc) {
             long read_rc = 0L;
-            int max = 10;
 
             do {
                 read_rc = crm_ipc_read(client->ipc);
@@ -668,7 +667,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                                 client->name, pcmk_strerror(read_rc), read_rc);
 
                     if (read_rc == -EAGAIN) {
-                        continue;
+                        return G_SOURCE_CONTINUE;
                     }
 
                 } else if (client->dispatch_fn_ipc) {
@@ -686,8 +685,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 
                 pcmk__ipc_free_client_buffer(client->ipc);
 
-            } while ((rc == G_SOURCE_CONTINUE) && (--max > 0)
-                      && ((read_rc > 0) || (read_rc == -EAGAIN)));
+            } while ((rc == G_SOURCE_CONTINUE) && (read_rc > 0));
 
         } else {
             pcmk__trace("New I/O event for %s after I/O condition %d",
