@@ -1170,6 +1170,9 @@ crm_ipc_read(crm_ipc_t *client)
     long rc = 0;
 
     pcmk__assert((client != NULL) && (client->ipc != NULL));
+
+    CRM_CHECK(client->buffer == NULL, pcmk__ipc_free_client_buffer(client));
+
     buffer = g_malloc0(crm_ipc_default_buffer_size());
 
     do {
@@ -1218,7 +1221,6 @@ crm_ipc_read(crm_ipc_t *client)
         goto done;
     } while (true);
 
-    pcmk__ipc_free_client_buffer(client);
     client->buffer = client->event_buffer;
     client->event_buffer = NULL;
 
