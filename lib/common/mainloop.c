@@ -686,7 +686,11 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                 continue;
             }
 
-        } else if (client->dispatch_fn_ipc != NULL) {
+            pcmk__ipc_free_client_buffer(client->ipc);
+            goto done;
+        }
+
+        if (client->dispatch_fn_ipc != NULL) {
             const char *buffer = crm_ipc_buffer(client->ipc);
 
             pcmk__trace("New %ld-byte IPC message from %s after I/O "
@@ -705,7 +709,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 
         pcmk__ipc_free_client_buffer(client->ipc);
 
-    } while ((--max > 0) && ((read_rc > 0) || (read_rc == -EAGAIN)));
+    } while (--max > 0);
 
 done:
     if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
