@@ -718,7 +718,6 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     int rc = pcmk_rc_ok;
     xmlNode *reply = NULL;
     enum crm_ipc_flags flags = crm_ipc_flags_none;
-    bool more = false;
 
     if ((api == NULL) || (api->ipc == NULL) || (request == NULL)) {
         return EINVAL;
@@ -753,11 +752,16 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     }
 
     // With synchronous dispatch, we dispatch any reply now
-    more = call_api_dispatch(api, reply);
+
+    if (!call_api_dispatch(api, reply)) {
+        // No more messages expected
+        pcmk__xml_free(reply);
+        return pcmk_rc_ok;
+    }
 
     pcmk__xml_free(reply);
 
-    while (more) {
+    while (true) {
         rc = crm_ipc_read(api->ipc);
 
         if (rc == -EAGAIN) {
@@ -776,15 +780,17 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
         pcmk__ipc_free_client_buffer(api->ipc);
 
         if (rc == pcmk_rc_ok) {
-            more = false;
-        } else if (rc == EINPROGRESS) {
-            more = true;
-        } else {
-            continue;
+            return pcmk_rc_ok;
         }
-    }
 
-    return pcmk_rc_ok;
+        /* dispatch_ipc_data() returned either EINPROGRESS (indicating that we
+         * expect more messages) or an error.
+         *
+         * @TODO We currently ignore errors and treat them the same as
+         * EINPROGRESS, continuing this read-and-dispatch loop. Should we handle
+         * errors?
+         */
+    }
 }
 
 /*!
