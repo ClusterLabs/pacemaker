@@ -768,12 +768,14 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
             continue;
         }
 
-        if (rc == pcmk_ok) {
-            return pcmk_rc_ok;
+        if (rc < 0) {
+            return pcmk_legacy2rc(rc);
         }
 
-        if (rc < 0) {
-            return -rc;
+        if (rc == 0) {
+            // Empty message, so nothing to dispatch
+            pcmk__ipc_free_client_buffer(api->ipc);
+            return pcmk_rc_ok;
         }
 
         rc = dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
@@ -1334,10 +1336,17 @@ crm_ipc_read(crm_ipc_t *client)
     client->buffer = client->event_buffer;
     client->event_buffer = NULL;
 
-    if (client->buffer->len > 0) {
-        /* Data length excluding the header */
-        rc = client->buffer->len - sizeof(pcmk__ipc_header_t);
+    if (client->buffer->len == 0) {
+        rc = 0;
+        goto done;
     }
+
+    /* Data length excluding the header.
+     *
+     * @FIXME client->buffer->len is an unsigned int. It could overflow a long
+     * if both are 32 bits wide.
+     */
+    rc = client->buffer->len - sizeof(pcmk__ipc_header_t);
 
 done:
     g_free(buffer);
