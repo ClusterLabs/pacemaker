@@ -726,7 +726,17 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
                    sync_from, current_join_id, pcmk_strerror(rc));
 
         if (rc != -pcmk_err_old_data) {
-            record_failed_sync_node(sync_from, current_join_id);
+            const pcmk__node_status_t *node =
+                pcmk__search_node_caches(0, sync_from, NULL,
+                                         pcmk__node_search_cluster_member);
+
+            /* Don't remember a failure for a node that has already left: its
+             * entry would only be removed when it leaves again, so its next
+             * join would be rejected.
+             */
+            if (pcmk__cluster_is_node_active(node)) {
+                record_failed_sync_node(sync_from, current_join_id);
+            }
         }
 
         /* restart the whole join process */
