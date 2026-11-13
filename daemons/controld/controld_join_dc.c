@@ -647,6 +647,27 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
         controld_set_fsa_input_flags(R_HAVE_CIB);
     }
 
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+        const pcmk__node_status_t *source =
+            pcmk__search_node_caches(0, max_generation_from, NULL,
+                                     pcmk__node_search_cluster_member);
+
+        if (!pcmk__cluster_is_node_active(source)) {
+            /* The node with the newest CIB is gone (for example, it was fenced
+             * while this join was delayed), so it can't send us its CIB.
+             * Start over with the nodes that are still active instead of
+             * waiting for the sync to time out. There is no need to wait for
+             * a transition in progress first: the new join will wait for it
+             * before it is finalized.
+             */
+            pcmk__warn("Restarting join-%d because %s, which has the newest "
+                       "CIB, is no longer active",
+                       current_join_id, max_generation_from);
+            register_fsa_error(I_ELECTION_DC, NULL);
+            return;
+        }
+    }
+
     if (!controld_globals.transition_graph->complete) {
         pcmk__warn("Delaying join-%d finalization while transition in progress",
                    current_join_id);
