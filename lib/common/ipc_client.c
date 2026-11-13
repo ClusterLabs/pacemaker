@@ -722,6 +722,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
     int rc = pcmk_rc_ok;
     xmlNode *reply = NULL;
     enum crm_ipc_flags flags = crm_ipc_flags_none;
+    bool more = false;
 
     if ((api == NULL) || (api->ipc == NULL) || (request == NULL)) {
         return EINVAL;
@@ -751,39 +752,42 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
         return ENODATA;
     }
 
+    if (reply == NULL) {
+        return pcmk_rc_ok;
+    }
+
     // With synchronous dispatch, we dispatch any reply now
-    if (reply != NULL) {
-        bool more = call_api_dispatch(api, reply);
+    more = call_api_dispatch(api, reply);
 
-        pcmk__xml_free(reply);
+    pcmk__xml_free(reply);
 
-        while (more) {
-            rc = crm_ipc_read(api->ipc);
+    while (more) {
+        rc = crm_ipc_read(api->ipc);
 
-            if (rc == -EAGAIN) {
-                continue;
-            }
+        if (rc == -EAGAIN) {
+            continue;
+        }
 
-            if (rc == -ENOMSG || rc == pcmk_ok) {
-                return pcmk_rc_ok;
-            }
+        if ((rc == -ENOMSG) || (rc == pcmk_ok)) {
+            return pcmk_rc_ok;
+        }
 
-            if (rc < 0) {
-                return -rc;
-            }
+        if (rc < 0) {
+            return -rc;
+        }
 
-            rc = dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
-            pcmk__ipc_free_client_buffer(api->ipc);
+        rc = dispatch_ipc_data(crm_ipc_buffer(api->ipc), api);
+        pcmk__ipc_free_client_buffer(api->ipc);
 
-            if (rc == pcmk_rc_ok) {
-                more = false;
-            } else if (rc == EINPROGRESS) {
-                more = true;
-            } else {
-                continue;
-            }
+        if (rc == pcmk_rc_ok) {
+            more = false;
+        } else if (rc == EINPROGRESS) {
+            more = true;
+        } else {
+            continue;
         }
     }
+
     return pcmk_rc_ok;
 }
 
