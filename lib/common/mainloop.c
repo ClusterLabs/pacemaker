@@ -680,11 +680,6 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     if (read_rc <= 0) {
         pcmk__trace("Could not read IPC message from %s: %s (%ld)",
                     client->name, pcmk_strerror(read_rc), read_rc);
-
-        if (read_rc == -EAGAIN) {
-            goto done;
-        }
-
         pcmk__ipc_free_client_buffer(client->ipc);
         goto done;
     }
