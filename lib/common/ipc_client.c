@@ -772,7 +772,7 @@ pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request)
             continue;
         }
 
-        if ((rc == -ENOMSG) || (rc == pcmk_ok)) {
+        if (rc == pcmk_ok) {
             return pcmk_rc_ok;
         }
 
@@ -1165,7 +1165,7 @@ long
 crm_ipc_read(crm_ipc_t *client)
 {
     guint8 *buffer = NULL;
-    long rc = -ENOMSG;
+    long rc = 0;
 
     pcmk__assert((client != NULL) && (client->ipc != NULL));
     buffer = g_malloc0(crm_ipc_default_buffer_size());
