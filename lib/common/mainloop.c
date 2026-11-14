@@ -33,6 +33,8 @@
 #include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // pcmk_rc_*, pcmk_strerror
 
+#include "crmcommon_private.h"
+
 struct trigger_s {
     GSource source;
     bool running;
@@ -586,16 +588,9 @@ struct qb_ipcs_poll_handlers gio_poll_funcs = {
 };
 
 qb_ipcs_service_t *
-mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
-                        struct qb_ipcs_service_handlers *callbacks)
-{
-    return mainloop_add_ipc_server_with_prio(name, type, callbacks, QB_LOOP_MED);
-}
-
-qb_ipcs_service_t *
-mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
-                                  struct qb_ipcs_service_handlers *callbacks,
-                                  enum qb_loop_priority prio)
+pcmk__add_mainloop_ipc_server(const char *name,
+                              struct qb_ipcs_service_handlers *callbacks,
+                              enum qb_loop_priority prio, uint32_t flags)
 {
     int rc = 0;
     qb_ipcs_service_t *server = NULL;
@@ -604,7 +599,11 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
         gio_map = qb_array_create_2(64, sizeof(struct gio_to_qb_poll), 1);
     }
 
+#ifdef HAVE_QB_IPCS_CREATE_2
+    server = qb_ipcs_create_2(name, 0, QB_IPC_SHM, callbacks, flags);
+#else
     server = qb_ipcs_create(name, 0, QB_IPC_SHM, callbacks);
+#endif
 
     if (server == NULL) {
         pcmk__err("Could not create %s IPC server: %s (%d)", name,
@@ -628,6 +627,21 @@ mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
     }
 
     return server;
+}
+
+qb_ipcs_service_t *
+mainloop_add_ipc_server(const char *name, enum qb_ipc_type type,
+                        struct qb_ipcs_service_handlers *callbacks)
+{
+    return pcmk__add_mainloop_ipc_server(name, callbacks, QB_LOOP_MED, 0U);
+}
+
+qb_ipcs_service_t *
+mainloop_add_ipc_server_with_prio(const char *name, enum qb_ipc_type type,
+                                  struct qb_ipcs_service_handlers *callbacks,
+                                  enum qb_loop_priority prio)
+{
+    return pcmk__add_mainloop_ipc_server(name, callbacks, prio, 0U);
 }
 
 void
