@@ -104,6 +104,17 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
                          "a valid object " QB_XS " xpath=%s",
                          xml->name, ref, xpath);
     }
+
+    if (result != NULL && is_ancestor(xml, result)) {
+        pcmk__config_err("Ignoring recursive %s configuration: "
+                     PCMK_XA_ID_REF " '%s' references an ancestor "
+                     QB_XS " xpath=%s",
+                     xml->name, ref, xpath);
+
+        free(xpath);
+        return NULL;
+    }
+
     free(xpath);
     return result;
 }
