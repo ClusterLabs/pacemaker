@@ -634,6 +634,9 @@ TESTS = [
         SchedulerTest("no-promote-on-unrunnable-guest", "Don't select bundle instance for promotion when container can't run"),
         SchedulerTest("leftover-pending-monitor", "Prevent a leftover pending monitor from causing unexpected stop of other instances"),
         SchedulerTest("promotable-colocation-with-node-attribute", "Promote dependent clone on nodes belonging to a site that has a primary clone promoted"),
+        SchedulerTest("promotable-self-colocation-with-node-attribute", "Group promotions on a single site via self-colocation with node attribute"),
+        SchedulerTest("promotable-self-colocation-with-node-attribute-2", "Group promotions on siteB (not siteA) via self-colocation with node attribute"),
+        SchedulerTest("promotable-self-colocation-with-node-attribute-3", "Correct wrong-site promotions via self-colocation with node attribute"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("history-1", "Correctly parse stateful-1 resource state"),
