@@ -139,7 +139,8 @@ fenced_cpg_dispatch(cpg_handle_t handle, const struct cpg_name *group_name,
 {
     xmlNode *xml = NULL;
     const char *from = NULL;
-    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, &from);
+    char *data = pcmk__cpg_message_data(handle, nodeid, pid, msg, msg_len,
+                                        &from);
 
     if (data == NULL) {
         return;
