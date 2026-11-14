@@ -9,13 +9,10 @@
 
 #include <crm_internal.h>
 
-#include <libgen.h>                 // dirname()
-#include <limits.h>                 // PATH_MAX
 #include <stdbool.h>                // bool, false, true
 #include <stdint.h>                 // uint8_t
-#include <stdlib.h>                 // free(), getenv(), setenv()
+#include <stdlib.h>                 // free()
 #include <string.h>                 // memcpy()
-#include <unistd.h>                 // readlink()
 
 #include <glib.h>                   // GString, g_string_sized_new()
 
@@ -27,43 +24,10 @@
  * source file, so one input covers the whole XML pipeline.
  */
 
-// Schema copy shipped beside the fuzzer binary
-#define SCHEMA_SUBDIR "pacemaker-schemas"
-
 // Maximum element depth to walk (a deep document costs more to walk than parse)
 #define MAX_DEPTH 8
 
 static bool initialized = false;
-
-/*!
- * \internal
- * \brief Point \c PCMK_schema_directory at the schema copy beside this binary
- *
- * \note The schema cache reads .rng and upgrade .xsl files from disk, so the
- *       validate and upgrade stages return early unless it can find them. An
- *       existing value is left alone, so a caller can override the location.
- */
-static void
-set_schema_dir(void)
-{
-    char exe[PATH_MAX] = { '\0', };
-    char *schema_dir = NULL;
-    ssize_t len = 0;
-
-    if (getenv("PCMK_schema_directory") != NULL) {
-        return;
-    }
-
-    len = readlink("/proc/self/exe", exe, sizeof(exe) - 1);
-    if (len <= 0) {
-        return;
-    }
-    exe[len] = '\0';
-
-    schema_dir = pcmk__assert_asprintf("%s/%s", dirname(exe), SCHEMA_SUBDIR);
-    setenv("PCMK_schema_directory", schema_dir, 0);
-    free(schema_dir);
-}
 
 /*!
  * \internal
