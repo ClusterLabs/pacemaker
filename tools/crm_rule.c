@@ -197,7 +197,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     free(rule_date);
     pcmk__xml_free(input);

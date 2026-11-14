@@ -164,7 +164,7 @@ main(int argc, char **argv)
 
 done:
     g_strfreev(processed_args);
-    pcmk__free_arg_context(context);
+    g_clear_pointer(&context, g_option_context_free);
 
     // We no longer need output
     pcmk__output_and_clear_error(&error, out);
