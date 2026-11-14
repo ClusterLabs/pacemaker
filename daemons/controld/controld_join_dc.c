@@ -655,6 +655,25 @@ do_dc_join_finalize(long long action, enum crmd_fsa_cause cause,
         return;
     }
 
+    if (!pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
+        const pcmk__node_status_t *source =
+            pcmk__search_node_caches(0, max_generation_from, NULL,
+                                     pcmk__node_search_cluster_member);
+
+        if (!pcmk__cluster_is_node_active(source)) {
+            /* The node with the newest CIB is gone (for example, it was fenced
+             * while this join was delayed), so it can't send us its CIB.
+             * Start over with the nodes that are still active instead of
+             * waiting for the sync to time out.
+             */
+            pcmk__warn("Restarting join-%d because %s, which has the newest "
+                       "CIB, is no longer active",
+                       current_join_id, max_generation_from);
+            register_fsa_error(I_ELECTION_DC, NULL);
+            return;
+        }
+    }
+
     if (pcmk__is_set(controld_globals.fsa_input_register, R_HAVE_CIB)) {
         // Send our CIB out to everyone
         sync_from = pcmk__str_copy(controld_globals.cluster->priv->node_name);
@@ -707,7 +726,17 @@ finalize_sync_callback(xmlNode * msg, int call_id, int rc, xmlNode * output, voi
                    sync_from, current_join_id, pcmk_strerror(rc));
 
         if (rc != -pcmk_err_old_data) {
-            record_failed_sync_node(sync_from, current_join_id);
+            const pcmk__node_status_t *node =
+                pcmk__search_node_caches(0, sync_from, NULL,
+                                         pcmk__node_search_cluster_member);
+
+            /* Don't remember a failure for a node that has already left: its
+             * entry would only be removed when it leaves again, so its next
+             * join would be rejected.
+             */
+            if (pcmk__cluster_is_node_active(node)) {
+                record_failed_sync_node(sync_from, current_join_id);
+            }
         }
 
         /* restart the whole join process */
