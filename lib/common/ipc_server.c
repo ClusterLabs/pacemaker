@@ -581,13 +581,12 @@ no_more_retries:
  *                     a count of how many chunks of \p message have already
  *                     been sent
  * \param[out] result  Where to store prepared I/O vector - NULL on error
- * \param[out] bytes   Size of prepared data in bytes (includes header)
  *
  * \return Standard Pacemaker return code
  */
 int
 pcmk__ipc_prepare_iov(uint32_t request, const GString *message, uint16_t index,
-                      struct iovec **result, ssize_t *bytes)
+                      struct iovec **result)
 {
     struct iovec *iov = NULL;
     unsigned int payload_size = 0;
@@ -680,9 +679,6 @@ pcmk__ipc_prepare_iov(uint32_t request, const GString *message, uint16_t index,
 
     *result = iov;
     pcmk__assert(header->qb.size > 0);
-    if (bytes != NULL) {
-        *bytes = header->qb.size;
-    }
 
 done:
     if ((rc != pcmk_rc_ok) && (rc != pcmk_rc_ipc_more)) {
@@ -841,7 +837,7 @@ pcmk__ipc_send_xml(pcmk__client_t *c, uint32_t request, const xmlNode *message,
                        || pcmk__is_set(c->flags, pcmk__client_proxied);
 
     do {
-        rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov, NULL);
+        rc = pcmk__ipc_prepare_iov(request, iov_buffer, index, &iov);
 
         switch (rc) {
             case pcmk_rc_ok:
