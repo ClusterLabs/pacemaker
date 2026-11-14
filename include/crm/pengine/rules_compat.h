@@ -30,7 +30,7 @@ extern "C" {
  */
 
 // @COMPAT sbd's configure script checks for this (as of at least 1.5.2)
-//! \deprecated Use pcmk_evaluate_rule() instead
+//! \deprecated Do not use
 gboolean test_rule(xmlNode *rule, GHashTable *node_hash, enum rsc_role_e role,
                    crm_time_t *now);
 
