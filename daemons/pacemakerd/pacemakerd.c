@@ -485,7 +485,9 @@ main(int argc, char **argv)
     if ((running_with_sbd) && pcmk__get_sbd_sync_resource_startup()) {
         pcmk__notice("Waiting for startup-trigger from SBD");
         pacemakerd_state = PCMK__VALUE_WAIT_FOR_PING;
-        startup_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, init_children_processes, NULL);
+        startup_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                      init_children_processes,
+                                                      NULL);
     } else {
         if (running_with_sbd) {
             pcmk__warn("Enabling SBD_SYNC_RESOURCE_STARTUP would (if supported "

@@ -28,7 +28,7 @@
 #include <crm/common/internal.h>
 #include <crm/common/ipc.h>         // crm_ipc_*
 #include <crm/common/logging.h>     // CRM_CHECK, CRM_LOG_ASSERT
-#include <crm/common/mainloop.h>    // mainloop_set_trigger
+#include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/nvpair.h>      // hash2smartfield, xml2list
 #include <crm/common/options.h>     // PCMK_OPT_FENCING_WATCHDOG_TIMEOUT
 #include <crm/common/results.h>     // pcmk_rc_*, pcmk_rc2legacy
@@ -825,7 +825,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
             native->pending_notify = g_list_append(native->pending_notify, *reply);
             if (native->process_notify) {
                 pcmk__info("notify trigger set");
-                mainloop_set_trigger(native->process_notify);
+                pcmk__main_loop_trigger_set(native->process_notify);
             }
             *reply = NULL;
         } else if (!pcmk__str_eq(msg_type, "reply", pcmk__str_casei)) {
@@ -846,7 +846,7 @@ read_remote_reply(lrmd_t *lrmd, int total_timeout, int expected_reply_id,
     }
 
     if (native->remote->buffer && native->process_notify) {
-        mainloop_set_trigger(native->process_notify);
+        pcmk__main_loop_trigger_set(native->process_notify);
     }
 
     return rc;
@@ -1139,12 +1139,12 @@ lrmd_tls_connection_destroy(void *userdata)
         close(native->sock);
     }
 
-    g_clear_pointer(&native->process_notify, mainloop_destroy_trigger);
+    g_clear_pointer(&native->process_notify, pcmk__main_loop_trigger_free);
 
     g_list_free_full(native->pending_notify, (GDestroyNotify) pcmk__xml_free);
     native->pending_notify = NULL;
 
-    g_clear_pointer(&native->handshake_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&native->handshake_trigger, pcmk__main_loop_trigger_free);
 
     g_clear_pointer(&native->remote->buffer, free);
     g_clear_pointer(&native->remote->start_state, free);
@@ -1287,8 +1287,9 @@ add_tls_to_mainloop(lrmd_t *lrmd, bool do_api_handshake)
         .destroy = lrmd_tls_connection_destroy,
     };
 
-    native->process_notify = mainloop_add_trigger(G_PRIORITY_HIGH,
-                                                  process_pending_notifies, lrmd);
+    native->process_notify =
+        pcmk__main_loop_trigger_new(G_PRIORITY_HIGH, process_pending_notifies,
+                                    lrmd);
     native->source = mainloop_add_fd(name, G_PRIORITY_HIGH, native->sock, lrmd,
                                      &tls_fd_callbacks);
 
@@ -1483,7 +1484,7 @@ try_handshake_cb(void *user_data)
         free(hs);
         return 0;
     } else if (rc == EAGAIN) {
-        mainloop_set_trigger(native->handshake_trigger);
+        pcmk__main_loop_trigger_set(native->handshake_trigger);
         return 1;
     } else {
         rc = EKEYREJECTED;
@@ -1567,8 +1568,9 @@ lrmd_tcp_connect_cb(void *userdata, int rc, int sock)
         hs->start_time = time(NULL);
         hs->timeout_sec = TLS_HANDSHAKE_TIMEOUT;
 
-        native->handshake_trigger = mainloop_add_trigger(G_PRIORITY_LOW, try_handshake_cb, hs);
-        mainloop_set_trigger(native->handshake_trigger);
+        native->handshake_trigger =
+            pcmk__main_loop_trigger_new(G_PRIORITY_LOW, try_handshake_cb, hs);
+        pcmk__main_loop_trigger_set(native->handshake_trigger);
 
     } else if (rc == pcmk_rc_ok) {
         tls_handshake_succeeded(lrmd);

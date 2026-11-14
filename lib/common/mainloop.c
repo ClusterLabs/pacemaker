@@ -33,12 +33,27 @@
 #include <crm/common/mainloop.h>    // mainloop_*
 #include <crm/common/results.h>     // pcmk_rc_*, pcmk_strerror
 
+/*!
+ * \internal
+ * \brief Main loop trigger
+ *
+ * This derived event source type attaches boolean values to a \c GSource,
+ * indicating whether the source is ready to be dispatched and whether an event
+ * handler job is currently running.
+ *
+ * \note This is a new source type derived from \c GSource. Note that the first
+ *       field is a \c GSource, not a pointer to \c GSource. This is a
+ *       documented idiom; see the GLib "Main Event Loop" documentation.
+ */
 struct trigger_s {
+    //! Event source (base type)
     GSource source;
+
+    //! If \c true, this source is ready to be dispatched
+    bool ready;
+
+    //! If \c true, an event handler job is currently running for this source
     bool running;
-    bool trigger;
-    void *user_data;
-    unsigned int id;
 };
 
 static GList *child_list = NULL;
@@ -47,7 +62,7 @@ static qb_array_t *gio_map = NULL;
 static gboolean
 crm_trigger_prepare(GSource *source, int *timeout)
 {
-    crm_trigger_t *trig = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
     /* cluster-glue's FD and IPC related sources make use of
      * g_source_add_poll() but do not set a timeout in their prepare
@@ -68,45 +83,49 @@ crm_trigger_prepare(GSource *source, int *timeout)
      */
     *timeout = 500;             /* Timeout in ms */
 
-    return trig->trigger;
+    return trigger->ready;
 }
 
 static gboolean
-crm_trigger_check(GSource * source)
+crm_trigger_check(GSource *source)
 {
-    crm_trigger_t *trig = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
-    return trig->trigger;
+    return trigger->ready;
 }
 
 /*!
  * \internal
- * \brief GSource dispatch function for crm_trigger_t
+ * \brief \c GSource dispatch function for \c crm_trigger_t
  *
- * \param[in] source        crm_trigger_t being dispatched
- * \param[in] callback      Callback passed at source creation
+ * \param[in]     source    \c crm_trigger_t being dispatched
+ * \param[in]     callback  Callback passed at source creation
  * \param[in,out] userdata  User data passed at source creation
  *
- * \return G_SOURCE_REMOVE to remove source, G_SOURCE_CONTINUE to keep it
+ * \return \c G_SOURCE_REMOVE to remove source, \c G_SOURCE_CONTINUE to keep it
  */
 static gboolean
 crm_trigger_dispatch(GSource *source, GSourceFunc callback, void *userdata)
 {
     gboolean rc = G_SOURCE_CONTINUE;
-    crm_trigger_t *trig = (crm_trigger_t *) source;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
-    if (trig->running) {
-        /* Wait until the existing job is complete before starting the next one */
+    if (trigger->running) {
+        /* Wait until the existing job is complete before starting the next
+         * one
+         */
         return G_SOURCE_CONTINUE;
     }
-    trig->trigger = false;
 
-    if (callback) {
-        int callback_rc = callback(trig->user_data);
+    trigger->ready = false;
+
+    if (callback != NULL) {
+        int callback_rc = callback(userdata);
 
         if (callback_rc < 0) {
-            pcmk__trace("Trigger handler %p not yet complete", trig);
-            trig->running = true;
+            pcmk__trace("Handler for trigger %p is not yet complete", trigger);
+            trigger->running = true;
+
         } else if (callback_rc == 0) {
             rc = G_SOURCE_REMOVE;
         }
@@ -128,39 +147,36 @@ static GSourceFuncs crm_trigger_funcs = {
 };
 
 static crm_trigger_t *
-mainloop_setup_trigger(GSource * source, int priority,
+mainloop_setup_trigger(GSource *source, int priority,
                        int (*dispatch)(void *user_data), void *userdata)
 {
-    crm_trigger_t *trigger = NULL;
+    crm_trigger_t *trigger = (crm_trigger_t *) source;
 
-    trigger = (crm_trigger_t *) source;
+    trigger->ready = false;
 
-    trigger->id = 0;
-    trigger->trigger = false;
-    trigger->user_data = userdata;
-
-    if (dispatch) {
-        g_source_set_callback(source, dispatch, trigger, NULL);
+    if (dispatch != NULL) {
+        g_source_set_callback(source, dispatch, userdata, NULL);
     }
 
     g_source_set_priority(source, priority);
-    g_source_set_can_recurse(source, FALSE);
+    g_source_set_can_recurse(source, false);
+    g_source_attach(source, NULL);
 
-    trigger->id = g_source_attach(source, NULL);
     return trigger;
 }
 
 void
-mainloop_trigger_complete(crm_trigger_t * trig)
+mainloop_trigger_complete(crm_trigger_t *trigger)
 {
-    pcmk__trace("Trigger handler %p complete", trig);
-    trig->running = false;
+    pcmk__trace("Handler for trigger %p complete", trigger);
+    trigger->running = false;
 }
 
 /*!
  * \brief Create a trigger to be used as a mainloop source
  *
- * \param[in] priority  Relative priority of source (lower number is higher priority)
+ * \param[in] priority  Relative priority of source (lower number is higher
+ *                      priority)
  * \param[in] dispatch  Trigger dispatch function (should return 0 to remove the
  *                      trigger from the mainloop, -1 if the trigger should be
  *                      kept but the job is still running and not complete, and
@@ -182,23 +198,25 @@ mainloop_add_trigger(int priority, int (*dispatch) (void *user_data),
 }
 
 void
-mainloop_set_trigger(crm_trigger_t * source)
+mainloop_set_trigger(crm_trigger_t *source)
 {
-    if(source) {
-        source->trigger = true;
+    if (source == NULL) {
+        return;
     }
+
+    source->ready = true;
 }
 
 gboolean
-mainloop_destroy_trigger(crm_trigger_t * source)
+mainloop_destroy_trigger(crm_trigger_t *source)
 {
     GSource *gs = NULL;
 
-    if(source == NULL) {
+    if (source == NULL) {
         return TRUE;
     }
 
-    gs = (GSource *)source;
+    gs = (GSource *) source;
 
     g_source_destroy(gs); /* Remove from mainloop, ref_count-- */
     g_source_unref(gs); /* The caller no longer carries a reference to source
@@ -210,6 +228,86 @@ mainloop_destroy_trigger(crm_trigger_t * source)
                          * once our processing completes
                          */
     return TRUE;
+}
+
+/*!
+ * \internal
+ * \brief Create a main loop trigger (a type of event source)
+ *
+ * \param[in] priority     Priority
+ * \param[in] dispatch_fn  Dispatch function (returns 0 to remove the trigger
+ *                         from the main loop, -1 if the trigger should be kept
+ *                         but the job is still running, and 1 if the trigger
+ *                         should be kept and the job is complete)
+ * \param[in] user_data    User data for \p dispatch_fn
+ *
+ * \return Newly allocated main loop trigger (guaranteed not to be \c NULL)
+ */
+crm_trigger_t *
+pcmk__main_loop_trigger_new(int priority, int (*dispatch_fn)(void *user_data),
+                            void *user_data)
+{
+    GSource *source = g_source_new(&crm_trigger_funcs, sizeof(crm_trigger_t));
+
+    return mainloop_setup_trigger(source, priority, dispatch_fn, user_data);
+}
+
+/*!
+ * \internal
+ * \brief Mark a main loop trigger as ready to be dispatched
+ *
+ * \param[in,out] trigger  Main loop trigger
+ */
+void
+pcmk__main_loop_trigger_set(crm_trigger_t *trigger)
+{
+    CRM_CHECK(trigger != NULL, return);
+
+    trigger->ready = true;
+}
+
+/*!
+ * \internal
+ * \brief Mark a main loop trigger as complete when its job has finished running
+ *
+ * \param[in,out] trigger  Main loop trigger
+ */
+void
+pcmk__main_loop_trigger_complete(crm_trigger_t *trigger)
+{
+    pcmk__trace("Handler for trigger %p complete", trigger);
+    trigger->running = false;
+}
+
+/*!
+ * \internal
+ * \brief Free a main loop trigger
+ *
+ * \param[in,out] trigger  Main loop trigger
+ */
+void
+pcmk__main_loop_trigger_free(crm_trigger_t *trigger)
+{
+    GSource *source = (GSource *) trigger;
+
+    if (source == NULL) {
+        return;
+    }
+
+    // Remove from main loop, which decrements the ref count
+    g_source_destroy(source);
+
+    /* The caller no longer carries a reference to source.
+     *
+     * At this point the source should be freed, unless we're currently
+     * processing said source. In that case, the main loop holds an additional
+     * reference, and it will be freed once our processing completes.
+     *
+     * @TODO Confirm correctness. The g_source_destroy() documentation says it
+     * doesn't unref the source, but g_source_destroy_internal() does call
+     * g_source_unref_internal().
+     */
+    g_source_unref(source);
 }
 
 // Define a custom glib source for signal handling
@@ -246,7 +344,7 @@ crm_signal_dispatch(GSource *source, GSourceFunc callback, void *userdata)
                      ((sig->handler != NULL)? "invoking" : "no"));
     }
 
-    sig->trigger.trigger = false;
+    sig->trigger.ready = false;
     if (sig->handler) {
         sig->handler(sig->signal);
     }
@@ -266,7 +364,7 @@ static void
 mainloop_signal_handler(int sig)
 {
     if (sig > 0 && sig < NSIG && crm_signals[sig] != NULL) {
-        mainloop_set_trigger((crm_trigger_t *) crm_signals[sig]);
+        pcmk__main_loop_trigger_set((crm_trigger_t *) crm_signals[sig]);
     }
 }
 
@@ -324,7 +422,7 @@ mainloop_destroy_signal_entry(int sig)
     if (tmp != NULL) {
         crm_signals[sig] = NULL;
         pcmk__trace("Unregistering mainloop handler for signal %d", sig);
-        mainloop_destroy_trigger((crm_trigger_t *) tmp);
+        pcmk__main_loop_trigger_free((crm_trigger_t *) tmp);
     }
 }
 

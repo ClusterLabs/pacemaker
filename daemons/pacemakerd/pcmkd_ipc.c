@@ -19,7 +19,6 @@
 #include <libxml/tree.h>                // xmlNode
 #include <qb/qbipcs.h>                  // qb_ipcs_connection_t
 
-#include <crm/common/mainloop.h>        // mainloop_set_trigger
 #include <crm/common/results.h>         // pcmk_rc_*, pcmk_rc_str
 
 #include "pacemakerd.h"                 // pacemakerd_handle_request
@@ -66,7 +65,7 @@ pacemakerd_ipc_closed(qb_ipcs_connection_t *c)
 
         if (shutdown_complete_state_reported_to == client->pid) {
             shutdown_complete_state_reported_client_closed = true;
-            mainloop_set_trigger(shutdown_trigger);
+            pcmk__main_loop_trigger_set(shutdown_trigger);
         }
 
         pcmk__free_client(client);
