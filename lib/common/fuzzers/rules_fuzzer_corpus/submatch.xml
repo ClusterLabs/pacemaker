@@ -1,0 +1,1 @@
+<rules-fuzz rsc-id="r7" rsc-pattern="^r(\d)$"><node-attrs><nvpair id="load7-k" name="load7" value="0.5"/></node-attrs><rule id="r-sub"><expression id="e1" attribute="load%0" operation="lt" value="1.0" type="number"/></rule></rules-fuzz>

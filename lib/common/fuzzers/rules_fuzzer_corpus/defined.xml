@@ -1,0 +1,1 @@
+<rules-fuzz><node-attrs><nvpair id="site-k" name="site" value="dc1"/></node-attrs><rule id="r-def"><expression id="e1" attribute="site" operation="defined"/></rule><rule id="r-ndef"><expression id="e2" attribute="missing" operation="not_defined"/></rule></rules-fuzz>
