@@ -846,7 +846,7 @@ replace_cib(xmlNode *request, xmlNode **cib)
     xmlNode *input = cib__get_calldata(request);
     bool replace_force = false;
 
-    (void) pcmk__xe_get_bool(request, PCMK__XA_CIB_REPLACE_FORCE, &replace_force);
+    (void) pcmk__xe_get_bool(request, PCMK__XA_CIB_FORCE_REPLACE, &replace_force);
 
     cib_version_details(*cib, &admin_epoch, &epoch, &updates);
     cib_version_details(input, &replace_admin_epoch, &replace_epoch,
@@ -878,18 +878,18 @@ replace_cib(xmlNode *request, xmlNode **cib)
 
         if (reason != NULL) {
             pcmk__info("Replacement %d.%d.%d from %s not applied to %d.%d.%d: "
-                   "current %s is greater than the replacement",
-                   replace_admin_epoch, replace_epoch, replace_updates, peer,
-                   admin_epoch, epoch, updates, reason);
+                       "current %s is greater than the replacement",
+                       replace_admin_epoch, replace_epoch, replace_updates, peer,
+                       admin_epoch, epoch, updates, reason);
             return pcmk_rc_old_data;
         }
     }
 
     *cib = pcmk__xml_replace_with_copy(*cib, input);
 
-    pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s %s", admin_epoch, epoch,
+    pcmk__info("Replaced %d.%d.%d with %d.%d.%d from %s%s", admin_epoch, epoch,
                updates, replace_admin_epoch, replace_epoch, replace_updates,
-               peer, replace_force ? "(force)" : "");
+               peer, replace_force ? " (force)" : "");
     return pcmk_rc_ok;
 }
 

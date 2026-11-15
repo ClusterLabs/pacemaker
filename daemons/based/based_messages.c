@@ -361,7 +361,7 @@ sync_our_cib(const xmlNode *request, bool all, bool join_finalize_sync)
     // When synchronizing in a cluster configuration, if the synchronization request comes from the DC node,
     // the CIB of that DC node is forcibly synchronized. 
     if (join_finalize_sync && pcmk__str_eq(host, based_cluster_node_name(), pcmk__str_casei)) {
-        pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_REPLACE_FORCE, true);
+        pcmk__xe_set_bool(replace_request, PCMK__XA_CIB_FORCE_REPLACE, true);
     }
 
     pcmk__xe_set(replace_request, PCMK__XA_CIB_OP, PCMK__CIB_REQUEST_REPLACE);
