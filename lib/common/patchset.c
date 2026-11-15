@@ -794,7 +794,6 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 
 typedef struct {
     const xmlNode *change;
-    xmlNode *match;
 } xml_change_obj_t;
 
 static int
@@ -873,8 +872,6 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 pcmk__assert_alloc(1, sizeof(xml_change_obj_t));
 
             change_obj->change = change;
-            change_obj->match = match;
-
             change_objs = g_list_append(change_objs, change_obj);
 
             if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
@@ -920,7 +917,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
     for (gIter = change_objs; gIter; gIter = gIter->next) {
         xml_change_obj_t *change_obj = gIter->data;
-        xmlNode *match = change_obj->match;
+        xmlNode *match = NULL;
         const char *op = NULL;
         const char *xpath = NULL;
 
@@ -928,6 +925,13 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         op = pcmk__xe_get(change, PCMK_XA_OPERATION);
         xpath = pcmk__xe_get(change, PCMK_XA_PATH);
+        match = search_v2_xpath(xml, xpath, -1);
+
+        if (match == NULL) {
+            pcmk__err("No %s match for %s in %p", op, xpath, xml->doc);
+            rc = pcmk_rc_diff_failed;
+            continue;
+        }
 
         pcmk__trace("Continue performing %s on %s with %p", op, xpath, match);
 
