@@ -1,5 +1,5 @@
 /*
- * Copyright 2020-2024 the Pacemaker project contributors
+ * Copyright 2020-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,12 +20,17 @@
 #include <glib.h>                   // G_GNUC_INTERNAL, gboolean
 #include <libxml/tree.h>            // xmlNode
 
+#include <crm_config.h>             // SUPPORT_COROSYNC
+
 #if SUPPORT_COROSYNC
 #include <corosync/cpg.h>           // cpg_handle_t
+#include <qb/qbipc_common.h>        // qb_ipc_response_header
 #endif  // SUPPORT_COROSYNC
 
 #include <crm/cluster.h>            // pcmk_cluster_t
 #include <crm/cluster/internal.h>   // pcmk__node_status_t
+#include <crm/common/ipc.h>         // pcmk_ipc_server
+#include <crm/crm.h>                // MAX_NAME
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +43,39 @@ G_GNUC_INTERNAL
 void election_fini(pcmk_cluster_t *cluster);
 
 #if SUPPORT_COROSYNC
+
+/* @COMPAT Any changes to these structs (other than renames) will break all
+ * rolling upgrades, and should be avoided if possible or done at a major
+ * version bump if not
+ */
+
+struct pcmk__cpg_host_s {
+    uint32_t id;
+    uint32_t pid;
+    gboolean local;             // Unused but needed for compatibility
+    enum pcmk_ipc_server type;  // For logging only
+    uint32_t size;
+    char uname[MAX_NAME];
+} __attribute__ ((packed));
+
+typedef struct pcmk__cpg_host_s pcmk__cpg_host_t;
+
+struct pcmk__cpg_msg_s {
+    struct qb_ipc_response_header header __attribute__ ((aligned(8)));
+    uint32_t id;
+    gboolean is_compressed;
+
+    pcmk__cpg_host_t host;
+    pcmk__cpg_host_t sender;
+
+    uint32_t size;
+    uint32_t compressed_size;
+    /* 584 bytes */
+    char data[0];
+
+} __attribute__ ((packed));
+
+typedef struct pcmk__cpg_msg_s pcmk__cpg_msg_t;
 
 G_GNUC_INTERNAL
 bool pcmk__corosync_is_active(void);

@@ -25,7 +25,6 @@
 #include <corosync/cpg.h>           // cpg_address, cpg_name, cpg_fd_get
 #include <glib.h>                   // g_*, gboolean, FALSE, MIN, TRUE
 #include <libxml/tree.h>            // xmlNode
-#include <qb/qbipc_common.h>        // qb_ipc_response_header
 #include <qb/qblog.h>               // QB_XS, LOG_TRACE
 
 #include <crm/cluster.h>            // pcmk_cluster_t
@@ -49,39 +48,6 @@ static cpg_handle_t pcmk_cpg_handle = 0;
 static bool cpg_evicted = false;
 static GList *cs_message_queue = NULL;
 static int cs_message_timer = 0;
-
-/* @COMPAT Any changes to these structs (other than renames) will break all
- * rolling upgrades, and should be avoided if possible or done at a major
- * version bump if not
- */
-
-struct pcmk__cpg_host_s {
-    uint32_t id;
-    uint32_t pid;
-    gboolean local;             // Unused but needed for compatibility
-    enum pcmk_ipc_server type;  // For logging only
-    uint32_t size;
-    char uname[MAX_NAME];
-} __attribute__ ((packed));
-
-typedef struct pcmk__cpg_host_s pcmk__cpg_host_t;
-
-struct pcmk__cpg_msg_s {
-    struct qb_ipc_response_header header __attribute__ ((aligned(8)));
-    uint32_t id;
-    gboolean is_compressed;
-
-    pcmk__cpg_host_t host;
-    pcmk__cpg_host_t sender;
-
-    uint32_t size;
-    uint32_t compressed_size;
-    /* 584 bytes */
-    char data[0];
-
-} __attribute__ ((packed));
-
-typedef struct pcmk__cpg_msg_s pcmk__cpg_msg_t;
 
 static void crm_cs_flush(void *data);
 
