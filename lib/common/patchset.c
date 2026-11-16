@@ -953,7 +953,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 match_child = match_child->next;
             }
 
-            child = pcmk__xml_copy(match, change->children);
+            child = pcmk__xml_copy(match, pcmk__xml_first_child(change));
 
             if (match_child != NULL) {
                 pcmk__trace("Adding %s at position %d", child->name, position);
