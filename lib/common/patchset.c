@@ -715,7 +715,7 @@ first_matching_xml_child(const xmlNode *parent, const char *name,
 static xmlNode *
 search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 {
-    xmlNode *target = (xmlNode *) top->doc;
+    xmlNode *target = NULL;
     const char *current = key;
     char *section;
     char *remainder;
@@ -743,6 +743,11 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
             // Separate FIRST_COMPONENT into TAG[@id='ID']
             int f = sscanf(section, "%[^[][@" PCMK_XA_ID "='%[^']", tag, id);
             int current_position = -1;
+
+            // First iteration
+            if (target == NULL) {
+                target = (xmlNode *) top->doc;
+            }
 
             /* The target position is for the final component tag, so only use
              * it if there is nothing left to search after this component.
