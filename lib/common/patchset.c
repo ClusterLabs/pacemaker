@@ -973,6 +973,13 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 int p = position;
 
                 if (p > pcmk__xml_position(match, pcmk__xf_skip)) {
+                    if (p == INT_MAX) {
+                        pcmk__err("Skipping " PCMK_VALUE_MOVE " change because "
+                                  "target position %d is too large", p);
+                        rc = pcmk_rc_diff_failed;
+                        continue;
+                    }
+
                     p++; // Skip ourselves
                 }
 
