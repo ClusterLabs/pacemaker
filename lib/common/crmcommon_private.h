@@ -22,6 +22,7 @@
 #include <libxml/tree.h>    // xmlNode, xmlAttr
 #include <libxml/xmlstring.h>           // xmlChar
 #include <qb/qbipcc.h>      // struct qb_ipc_response_header
+#include <qb/qbipcs.h>      // qb_ipcs_service_t, qb_ipcs_service_handlers
 
 #include <crm/common/internal.h>
 #include <crm/common/ipc.h>             // pcmk_ipc_api_t, crm_ipc_t, etc.
@@ -336,6 +337,11 @@ typedef struct {
     uint8_t version;
     uint16_t part_id;               // If this is a multipart message, which part is this?
 } pcmk__ipc_header_t;
+
+G_GNUC_INTERNAL
+qb_ipcs_service_t *pcmk__add_mainloop_ipc_server(
+    const char *name, struct qb_ipcs_service_handlers *callbacks,
+    enum qb_loop_priority prio, uint32_t flags);
 
 G_GNUC_INTERNAL
 int pcmk__send_ipc_request(pcmk_ipc_api_t *api, const xmlNode *request);
