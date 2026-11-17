@@ -85,7 +85,8 @@ do_log(long long action, enum crmd_fsa_cause cause,
 void
 controld_init_fsa_trigger(void)
 {
-    fsa_trigger = mainloop_add_trigger(G_PRIORITY_HIGH, crm_fsa_trigger, NULL);
+    fsa_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH, crm_fsa_trigger,
+                                              NULL);
 }
 
 /*!
@@ -96,7 +97,7 @@ void
 controld_destroy_fsa_trigger(void)
 {
     // This basically will not work, since mainloop has a reference to it
-    g_clear_pointer(&fsa_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&fsa_trigger, pcmk__main_loop_trigger_free);
 }
 
 /*!
@@ -111,7 +112,7 @@ controld_trigger_fsa_as(const char *fn, int line)
 {
     if (fsa_trigger != NULL) {
         pcmk__trace("%s:%d - Triggered FSA invocation", fn, line);
-        mainloop_set_trigger(fsa_trigger);
+        pcmk__main_loop_trigger_set(fsa_trigger);
     }
 }
 

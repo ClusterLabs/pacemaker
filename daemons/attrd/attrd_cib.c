@@ -58,7 +58,7 @@ attrd_cib_updated_cb(const char *event, xmlNode *msg)
         if (attrd.shutting_down) {
             pcmk__debug("Ignoring alerts change in CIB during shutdown");
         } else {
-            mainloop_set_trigger(attrd_config_read);
+            pcmk__main_loop_trigger_set(attrd_config_read);
         }
     }
 
@@ -160,7 +160,7 @@ attrd_cib_disconnect(void)
     the_cib->cmds->del_notify_callback(the_cib, PCMK__VALUE_CIB_DIFF_NOTIFY,
                                        attrd_cib_updated_cb);
     cib__clean_up_connection(&the_cib);
-    mainloop_destroy_trigger(attrd_config_read);
+    pcmk__main_loop_trigger_free(attrd_config_read);
 }
 
 static void
@@ -230,10 +230,11 @@ attrd_cib_init(void)
     attrd_cib_erase_transient_attrs(attrd_cluster->priv->node_name);
 
     // Set a trigger for reading the CIB (for the alerts section)
-    attrd_config_read = mainloop_add_trigger(G_PRIORITY_HIGH, attrd_read_options, NULL);
+    attrd_config_read = pcmk__main_loop_trigger_new(G_PRIORITY_HIGH,
+                                                    attrd_read_options, NULL);
 
     // Always read the CIB at start-up
-    mainloop_set_trigger(attrd_config_read);
+    pcmk__main_loop_trigger_set(attrd_config_read);
 }
 
 static gboolean
