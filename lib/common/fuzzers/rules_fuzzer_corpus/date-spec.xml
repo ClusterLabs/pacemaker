@@ -1,0 +1,1 @@
+<rules-fuzz now="2026-06-15 09:30:00"><rule id="r-spec"><date_expression id="d1" operation="date_spec"><date_spec id="s1" hours="9-17" weekdays="1-5" monthdays="1-31" months="1-12"/></date_expression></rule><rule id="r-dur"><date_expression id="d2" operation="in_range" start="2026-01-01"><duration id="du1" hours="72"/></date_expression></rule></rules-fuzz>
