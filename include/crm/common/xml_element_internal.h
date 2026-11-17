@@ -72,6 +72,7 @@ pcmk__xe_is(const xmlNode *xml, const char *name)
 
 xmlNode *pcmk__xe_create(xmlNode *parent, const char *name);
 xmlNode *pcmk__xe_next(const xmlNode *node, const char *element_name);
+bool is_ancestor(const xmlNode *node, const xmlNode *ancestor);
 
 void pcmk__xe_set_content(xmlNode *node, const char *format, ...)
     G_GNUC_PRINTF(2, 3);
