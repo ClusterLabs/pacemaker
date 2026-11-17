@@ -1,5 +1,5 @@
 #
-# Copyright 2024 the Pacemaker project contributors
+# Copyright 2024-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -11,10 +11,12 @@ include $(top_srcdir)/mk/common.mk
 include $(top_srcdir)/mk/tap.mk
 include $(top_srcdir)/mk/unittest.mk
 
+AM_CPPFLAGS += -I$(top_srcdir)/lib/cluster
 LDADD += $(top_builddir)/lib/cluster/libcrmcluster.la
 
 # Add "_test" to the end of all test program names to simplify .gitignore.
 check_PROGRAMS = pcmk_cpg_set_confchg_fn_test
 check_PROGRAMS += pcmk_cpg_set_deliver_fn_test
+check_PROGRAMS += pcmk__cpg_message_data_test
 
 TESTS = $(check_PROGRAMS)
