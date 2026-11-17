@@ -653,94 +653,64 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 {
     gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
+    long read_rc = 0L;
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
-    if (condition & G_IO_IN) {
-        if (client->ipc) {
-            long read_rc = 0L;
-            int max = 10;
-
-            do {
-                read_rc = crm_ipc_read(client->ipc);
-                if (read_rc <= 0) {
-                    pcmk__trace("Could not read IPC message from %s: %s (%ld)",
-                                client->name, pcmk_strerror(read_rc), read_rc);
-
-                    if (read_rc == -EAGAIN) {
-                        continue;
-                    }
-
-                } else if (client->dispatch_fn_ipc) {
-                    const char *buffer = crm_ipc_buffer(client->ipc);
-
-                    pcmk__trace("New %ld-byte IPC message from %s after I/O "
-                                "condition %d",
-                                read_rc, client->name, (int) condition);
-                    if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
-                        pcmk__trace("Connection to %s no longer required",
-                                    client->name);
-                        rc = G_SOURCE_REMOVE;
-                    }
-                }
-
-                pcmk__ipc_free_client_buffer(client->ipc);
-
-            } while ((rc == G_SOURCE_CONTINUE) && (--max > 0)
-                      && ((read_rc > 0) || (read_rc == -EAGAIN)));
-
-        } else {
-            pcmk__trace("New I/O event for %s after I/O condition %d",
-                        client->name, (int) condition);
-            if (client->dispatch_fn_io) {
-                if (client->dispatch_fn_io(client->userdata) < 0) {
-                    pcmk__trace("Connection to %s no longer required",
-                                client->name);
-                    rc = G_SOURCE_REMOVE;
-                }
-            }
-        }
+    if (!pcmk__is_set(condition, G_IO_IN)) {
+        goto done;
     }
 
-    if (client->ipc && !crm_ipc_connected(client->ipc)) {
+    if (client->ipc == NULL) {
+        pcmk__trace("New I/O event for %s after I/O condition %d",
+                    client->name, (int) condition);
+
+        if ((client->dispatch_fn_io != NULL)
+            && (client->dispatch_fn_io(client->userdata) < 0)) {
+            pcmk__trace("Connection to %s no longer required",
+                        client->name);
+            rc = G_SOURCE_REMOVE;
+        }
+
+        goto done;
+    }
+
+    do {
+        read_rc = crm_ipc_read(client->ipc);
+        if (read_rc <= 0) {
+            pcmk__trace("Could not read IPC message from %s: %s (%ld)",
+                        client->name, pcmk_strerror(read_rc), read_rc);
+
+            if (read_rc == -EAGAIN) {
+                return G_SOURCE_CONTINUE;
+            }
+
+        } else if (client->dispatch_fn_ipc != NULL) {
+            const char *buffer = crm_ipc_buffer(client->ipc);
+
+            pcmk__trace("New %ld-byte IPC message from %s after I/O "
+                        "condition %d",
+                        read_rc, client->name, (int) condition);
+            if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
+                pcmk__trace("Connection to %s no longer required",
+                            client->name);
+                rc = G_SOURCE_REMOVE;
+            }
+        }
+
+        pcmk__ipc_free_client_buffer(client->ipc);
+    } while ((rc == G_SOURCE_CONTINUE) && (read_rc > 0));
+
+done:
+    if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
         pcmk__err("Connection to %s closed " QB_XS " client=%p condition=%d",
                   client->name, client, condition);
         rc = G_SOURCE_REMOVE;
 
-    } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
+    } else if (pcmk__any_flags_set(condition, G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
         pcmk__trace("The connection %s[%p] has been closed (I/O condition=%d)",
                     client->name, client, condition);
         rc = G_SOURCE_REMOVE;
-
-    } else if ((condition & G_IO_IN) == 0) {
-        /*
-           #define      GLIB_SYSDEF_POLLIN     =1
-           #define      GLIB_SYSDEF_POLLPRI    =2
-           #define      GLIB_SYSDEF_POLLOUT    =4
-           #define      GLIB_SYSDEF_POLLERR    =8
-           #define      GLIB_SYSDEF_POLLHUP    =16
-           #define      GLIB_SYSDEF_POLLNVAL   =32
-
-           typedef enum
-           {
-           G_IO_IN      GLIB_SYSDEF_POLLIN,
-           G_IO_OUT     GLIB_SYSDEF_POLLOUT,
-           G_IO_PRI     GLIB_SYSDEF_POLLPRI,
-           G_IO_ERR     GLIB_SYSDEF_POLLERR,
-           G_IO_HUP     GLIB_SYSDEF_POLLHUP,
-           G_IO_NVAL    GLIB_SYSDEF_POLLNVAL
-           } GIOCondition;
-
-           A bitwise combination representing a condition to watch for on an event source.
-
-           G_IO_IN      There is data to read.
-           G_IO_OUT     Data can be written (without blocking).
-           G_IO_PRI     There is urgent data to read.
-           G_IO_ERR     Error condition.
-           G_IO_HUP     Hung up (the connection has been broken, usually for pipes and sockets).
-           G_IO_NVAL    Invalid request. The file descriptor is not open.
-         */
-        pcmk__err("Strange condition: %d", condition);
     }
 
     /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called
