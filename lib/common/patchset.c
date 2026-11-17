@@ -715,7 +715,7 @@ first_matching_xml_child(const xmlNode *parent, const char *name,
 static xmlNode *
 search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 {
-    xmlNode *target = (xmlNode *) top->doc;
+    xmlNode *target = NULL;
     const char *current = key;
     char *section;
     char *remainder;
@@ -743,6 +743,11 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
             // Separate FIRST_COMPONENT into TAG[@id='ID']
             int f = sscanf(section, "%[^[][@" PCMK_XA_ID "='%[^']", tag, id);
             int current_position = -1;
+
+            // First iteration
+            if (target == NULL) {
+                target = (xmlNode *) top->doc;
+            }
 
             /* The target position is for the final component tag, so only use
              * it if there is nothing left to search after this component.
@@ -794,7 +799,6 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
 
 typedef struct {
     const xmlNode *change;
-    xmlNode *match;
 } xml_change_obj_t;
 
 static int
@@ -873,8 +877,6 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 pcmk__assert_alloc(1, sizeof(xml_change_obj_t));
 
             change_obj->change = change;
-            change_obj->match = match;
-
             change_objs = g_list_append(change_objs, change_obj);
 
             if (strcmp(op, PCMK_VALUE_MOVE) == 0) {
@@ -920,7 +922,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
     for (gIter = change_objs; gIter; gIter = gIter->next) {
         xml_change_obj_t *change_obj = gIter->data;
-        xmlNode *match = change_obj->match;
+        xmlNode *match = NULL;
         const char *op = NULL;
         const char *xpath = NULL;
 
@@ -928,6 +930,13 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
 
         op = pcmk__xe_get(change, PCMK_XA_OPERATION);
         xpath = pcmk__xe_get(change, PCMK_XA_PATH);
+        match = search_v2_xpath(xml, xpath, -1);
+
+        if (match == NULL) {
+            pcmk__err("No %s match for %s in %p", op, xpath, xml->doc);
+            rc = pcmk_rc_diff_failed;
+            continue;
+        }
 
         pcmk__trace("Continue performing %s on %s with %p", op, xpath, match);
 
@@ -944,7 +953,7 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 match_child = match_child->next;
             }
 
-            child = pcmk__xml_copy(match, change->children);
+            child = pcmk__xml_copy(match, pcmk__xml_first_child(change));
 
             if (match_child != NULL) {
                 pcmk__trace("Adding %s at position %d", child->name, position);
@@ -964,6 +973,13 @@ apply_v2_patchset(xmlNode *xml, const xmlNode *patchset)
                 int p = position;
 
                 if (p > pcmk__xml_position(match, pcmk__xf_skip)) {
+                    if (p == INT_MAX) {
+                        pcmk__err("Skipping " PCMK_VALUE_MOVE " change because "
+                                  "target position %d is too large", p);
+                        rc = pcmk_rc_diff_failed;
+                        continue;
+                    }
+
                     p++; // Skip ourselves
                 }
 
