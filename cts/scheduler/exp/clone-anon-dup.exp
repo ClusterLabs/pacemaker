@@ -68,7 +68,7 @@
     </action_set>
     <inputs>
       <trigger>
-        <pseudo_event id="36" operation="stop" operation_key="clone_webservice_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="clone_webservice_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
@@ -87,7 +87,7 @@
   </synapse>
   <synapse id="7" priority="1000000">
     <action_set>
-      <pseudo_event id="37" operation="stopped" operation_key="clone_webservice_stopped_0">
+      <pseudo_event id="33" operation="stopped" operation_key="clone_webservice_stopped_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>
@@ -96,13 +96,13 @@
         <pseudo_event id="29" operation="stopped" operation_key="group_webservice:2_stopped_0"/>
       </trigger>
       <trigger>
-        <pseudo_event id="36" operation="stop" operation_key="clone_webservice_stop_0"/>
+        <pseudo_event id="32" operation="stop" operation_key="clone_webservice_stop_0"/>
       </trigger>
     </inputs>
   </synapse>
   <synapse id="8">
     <action_set>
-      <pseudo_event id="36" operation="stop" operation_key="clone_webservice_stop_0">
+      <pseudo_event id="32" operation="stop" operation_key="clone_webservice_stop_0">
         <attributes CRM_meta_clone_max="2" CRM_meta_clone_node_max="1" CRM_meta_globally_unique="false" CRM_meta_notify="false" CRM_meta_timeout="20000" />
       </pseudo_event>
     </action_set>

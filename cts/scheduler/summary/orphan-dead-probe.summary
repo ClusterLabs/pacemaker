@@ -1,0 +1,43 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * Clone Set: test-clone [test-resource]:
+      * Started: [ node1 node2 ]
+
+Transition Summary:
+  * Restart    test-resource:0     ( node1 )
+  * Restart    test-resource:1     ( node2 )
+
+Executing Cluster Transition:
+  * Pseudo action:   test-clone_pre_notify_stop_0
+  * Resource action: test-resource   notify on node1
+  * Resource action: test-resource   notify on node2
+  * Pseudo action:   test-clone_confirmed-pre_notify_stop_0
+  * Pseudo action:   test-clone_stop_0
+  * Resource action: test-resource   stop on node1
+  * Resource action: test-resource   stop on node2
+  * Pseudo action:   test-clone_stopped_0
+  * Pseudo action:   test-clone_post_notify_stopped_0
+  * Pseudo action:   test-clone_confirmed-post_notify_stopped_0
+  * Pseudo action:   test-clone_pre_notify_start_0
+  * Pseudo action:   test-clone_confirmed-pre_notify_start_0
+  * Pseudo action:   test-clone_start_0
+  * Resource action: test-resource   start on node1
+  * Resource action: test-resource   start on node2
+  * Pseudo action:   test-clone_running_0
+  * Pseudo action:   test-clone_post_notify_running_0
+  * Resource action: test-resource   notify on node1
+  * Resource action: test-resource   notify on node2
+  * Pseudo action:   test-clone_confirmed-post_notify_running_0
+  * Resource action: test-resource   monitor=10000 on node1
+  * Resource action: test-resource   monitor=10000 on node2
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 ]
+
+  * Full List of Resources:
+    * Clone Set: test-clone [test-resource]:
+      * Started: [ node1 node2 ]

@@ -133,6 +133,7 @@ TESTS = [
         SchedulerTest("orphan-0", "Orphan ignore"),
         SchedulerTest("orphan-1", "Orphan stop"),
         SchedulerTest("orphan-2", "Orphan stop, remove failcount"),
+        SchedulerTest("orphan-dead-probe", "No orphans for the dead probe"),
     ]),
     SchedulerTestGroup([
         SchedulerTest("params-0", "Params: No change"),
