@@ -126,6 +126,7 @@ extern "C" {
 #define PCMK__XA_CIB_CLIENTID           "cib_clientid"
 #define PCMK__XA_CIB_CLIENTNAME         "cib_clientname"
 #define PCMK__XA_CIB_DELEGATED_FROM     "cib_delegated_from"
+#define PCMK__XA_CIB_FORCE_REPLACE      "force_replace"
 #define PCMK__XA_CIB_HOST               "cib_host"
 #define PCMK__XA_CIB_ISREPLYTO          "cib_isreplyto"
 #define PCMK__XA_CIB_NOTIFY_ACTIVATE    "cib_notify_activate"
