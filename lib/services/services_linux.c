@@ -547,6 +547,42 @@ pipe_in_action_stdin_parameters(const svc_action_t *op)
     }
 }
 
+/*!
+ * \internal
+ * \brief Check whether an action's parameters can be safely passed via stdin
+ *
+ * Parameters are passed via stdin as one "name=value" line each, so a name or
+ * value containing a line break would be read by the agent as additional
+ * parameters.
+ *
+ * \param[in] op  Action to check
+ *
+ * \return \c true if no parameter name or value contains a line break,
+ *         otherwise \c false
+ */
+static bool
+stdin_parameters_valid(const svc_action_t *op)
+{
+    GHashTableIter iter;
+    char *name = NULL;
+    char *value = NULL;
+
+    if (op->params == NULL) {
+        return true;
+    }
+
+    g_hash_table_iter_init(&iter, op->params);
+    while (g_hash_table_iter_next(&iter, (void **) &name, (void **) &value)) {
+        if ((strpbrk(name, "\r\n") != NULL)
+            || ((value != NULL) && (strpbrk(value, "\r\n") != NULL))) {
+            pcmk__err("Not executing %s: Parameter %.40s has a line break",
+                      op->opaque->exec, name);
+            return false;
+        }
+    }
+    return true;
+}
+
 gboolean
 recurring_action_timer(void *data)
 {
@@ -1241,6 +1277,13 @@ services__execute_file(svc_action_t *op)
         pcmk__info("Cannot execute '%s': %s " QB_XS " stat rc=%d",
                    op->opaque->exec, pcmk_rc_str(rc), rc);
         services__handle_exec_error(op, rc);
+        goto done;
+    }
+
+    if (pcmk__is_set(pcmk_get_ra_caps(op->standard), pcmk_ra_cap_stdin)
+        && !stdin_parameters_valid(op)) {
+        services__set_result(op, services__generic_error(op), PCMK_EXEC_ERROR,
+                             "Parameter contains a line break");
         goto done;
     }
 
