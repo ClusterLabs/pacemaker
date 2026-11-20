@@ -572,6 +572,39 @@ init_cib_cache_cb(xmlNode * msg, int call_id, int rc, xmlNode * output, void *us
     watchdog_device_update();
 }
 
+/*!
+ * \internal
+ * \brief Process a CIB loaded from a file
+ *
+ * \param[in] path  Path to CIB file to load
+ *
+ * \return Standard Pacemaker return code
+ * \note This is intended for regression testing with \c --stand-alone. It
+ *       processes the file the same way the initial CIB query reply would be
+ *       processed (see \c init_cib_cache_cb()).
+ */
+int
+fenced_load_cib_file(const char *path)
+{
+    xmlNode *cib = pcmk__xml_read(path);
+
+    if (cib == NULL) {
+        return EINVAL;
+    }
+
+    pcmk__info("Updating device list from CIB file %s", path);
+    have_cib_devices = TRUE;
+    local_cib = cib;
+
+    pcmk__refresh_node_caches_from_cib(local_cib);
+    fencing_watchdog_timeout_ms = get_fencing_watchdog_timeout(local_cib);
+
+    fencing_topology_init();
+    cib_devices_update();
+    watchdog_device_update();
+    return pcmk_rc_ok;
+}
+
 static void
 cib_connection_destroy(void *user_data)
 {
