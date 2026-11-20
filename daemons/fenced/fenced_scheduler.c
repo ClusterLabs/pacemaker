@@ -150,6 +150,7 @@ register_if_fencing_device(void *data, void *user_data)
     const char *agent = NULL;
     const char *rsc_provides = NULL;
     stonith_key_value_t *params = NULL;
+    int rc = pcmk_rc_ok;
 
     // If this is a collective resource, check children instead
     if (rsc->priv->children != NULL) {
@@ -229,7 +230,16 @@ register_if_fencing_device(void *data, void *user_data)
     xml = create_device_registration_xml(rsc_id, st_namespace_any, agent,
                                          params, rsc_provides);
     stonith__key_value_freeall(params, true, true);
-    pcmk__assert(fenced_device_register(xml, true) == pcmk_rc_ok);
+
+    /* Device registration can legitimately fail for user configuration (for
+     * example, a misconfigured watchdog fence device). Such a failure must
+     * not take down the fencer.
+     */
+    rc = fenced_device_register(xml, true);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Could not register fencing device %s: %s",
+                   rsc_id, pcmk_rc_str(rc));
+    }
     pcmk__xml_free(xml);
 }
 
