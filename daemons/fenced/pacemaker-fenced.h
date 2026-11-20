@@ -366,6 +366,7 @@ gboolean node_does_watchdog_fencing(const char *node);
 void fencing_topology_init(void);
 void setup_cib(void);
 void fenced_cib_cleanup(void);
+int fenced_load_cib_file(const char *path);
 
 int fenced_scheduler_init(void);
 void fenced_set_local_node(const char *node_name);

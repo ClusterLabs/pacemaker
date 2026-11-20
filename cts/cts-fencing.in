@@ -45,16 +45,20 @@ class FenceTest(Test):
                        command line to specify that only a specific test should
                        be executed.
         description -- A meaningful description for the test.
+        daemon_args -- Additional command line arguments to pass to
+                       pacemaker-fenced (as a list).
         """
         Test.__init__(self, name, description, **kwargs)
 
         self._daemon_location = "pacemaker-fenced"
+        self._daemon_args = kwargs.get("daemon_args") or []
 
     def _kill_daemons(self):
         killall(["pacemakerd", "pacemaker-fenced"])
 
     def _start_daemons(self):
         cmd = ["pacemaker-fenced", "--stand-alone", "--logfile", self.logpath]
+        cmd += self._daemon_args
         if self.verbose:
             cmd += ["-V"]
             s = " ".join(cmd)
@@ -73,11 +77,11 @@ class FenceTests(Tests):
 
         self._corosync = Corosync(self.verbose, self.logdir, "cts-fencing")
 
-    def new_test(self, name, description):
+    def new_test(self, name, description, daemon_args=None):
         """Create a named test."""
         test = FenceTest(name, description, verbose=self.verbose,
                          timeout=self.timeout, force_wait=self.force_wait,
-                         logdir=self.logdir)
+                         logdir=self.logdir, daemon_args=daemon_args)
         self._tests.append(test)
         return test
 
@@ -817,6 +821,66 @@ class FenceTests(Tests):
         test.add_cmd("stonith_admin", args='-a fence_dummy --validate -o delay=15 --output-as=xml',
                      expected_exitcode=ExitStatus.ERROR)
 
+    def build_watchdog_tests(self):
+        """Register tests to verify handling of watchdog fence device resources."""
+
+        def watchdog_cib(resource_xml):
+            """Return CIB content enabling watchdog fencing with the given resource."""
+            return f"""<?xml version="1.0"?>
+<cib validate-with="pacemaker-4.0" epoch="1" num_updates="0" admin_epoch="0">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-fencing-watchdog-timeout"
+                name="fencing-watchdog-timeout" value="10s"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="{localname()}"/>
+    </nodes>
+    <resources>
+      {resource_xml}
+    </resources>
+    <constraints/>
+  </configuration>
+  <status/>
+</cib>
+"""
+
+        def write_cib(filename, resource_xml):
+            """Write a CIB file for a watchdog fence device test, and return its path."""
+            path = os.path.join(self.logdir, filename)
+            with open(path, "w", encoding="utf-8") as cib_file:
+                cib_file.write(watchdog_cib(resource_xml))
+            return path
+
+        # A fence_watchdog resource not named "watchdog" cannot be registered
+        # as the watchdog fence device and must be ignored gracefully rather
+        # than aborting the fencer
+        path = write_cib("watchdog-misnamed.xml",
+                         '<primitive id="mywd" class="stonith" '
+                         'type="fence_watchdog"/>')
+        test = self.new_test("watchdog_misnamed_device",
+                             "Verify fencer ignores a misnamed watchdog fence "
+                             "device instead of aborting",
+                             daemon_args=["--cib-file", path])
+        test.add_cmd("stonith_admin", args="-L", validate=False,
+                     stdout_no_match="mywd")
+        test.add_log_pattern("Ignoring fencing device mywd")
+
+        # A watchdog fence device named "watchdog" with agent fence_watchdog
+        # is registered as usual
+        path = write_cib("watchdog-correct.xml",
+                         '<primitive id="watchdog" class="stonith" '
+                         'type="fence_watchdog"/>')
+        test = self.new_test("watchdog_device",
+                             "Verify fencer registers a correctly configured "
+                             "watchdog fence device",
+                             daemon_args=["--cib-file", path])
+        test.add_cmd("stonith_admin", args="-L", validate=False,
+                     stdout_match="watchdog")
+        test.add_log_pattern("Ignoring fencing device watchdog", negative=True)
+
     def setup_environment(self):
         """Prepare the host before executing any tests."""
         self._corosync.start()
@@ -884,6 +948,7 @@ def main():
         tests.build_query_tests()
         tests.build_metadata_tests()
         tests.build_validate_tests()
+        tests.build_watchdog_tests()
 
         if opts.list_tests:
             tests.print_list()
