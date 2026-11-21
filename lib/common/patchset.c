@@ -766,6 +766,12 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
                     break;
             }
             current = remainder;
+
+        } else {
+            /* No leading slash or an empty component, so don't return the
+             * document node or a partial match
+             */
+            target = NULL;
         }
 
     // Continue if something remains to search, and we've matched so far
