@@ -1,5 +1,5 @@
 /*
- * Copyright 2024-2026 the Pacemaker project contributors
+ * Copyright 2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -9,7 +9,7 @@
 
 #include <crm_internal.h>
 
-#include <glib.h>   // GList, GHashTable, etc.
+#include <libxml/tree.h>        // xmlDoc, xmlNode
 
 #include <crm/common/unittest_internal.h>
 
@@ -24,22 +24,22 @@
 static void
 assert_id_deref(xmlNode *xml, xmlDoc* doc, xmlNode* expected_xml)
 {
-    xmlNode* result = pcmk__xe_resolve_idref(xml, doc);
+    xmlNode *result = pcmk__xe_resolve_idref(xml, doc);
+
     assert_ptr_equal(result, expected_xml);
 }
 
-/*!
- * \internal
- * \brief Test an invocation of pcmk__xe_dereference_children()
- *
- * \param[in] xml_string    XML to parse, with "test" child to pass to tested
- *                          function
- * \param[in] element_name  Element name to pass to tested function
- * \param[in] ...           NULL-terminated list of child "testattr" values to
- *                          expect in tested function's returned list
- */
+#define RECURSIVE_REF_XML                                   \
+    "<xml>\n"                                               \
+    "  <test>\n"                                            \
+    "    <rule id='rule1'>\n"                               \
+    "       <rule id-ref='rule1'/>\n"                       \
+    "    </rule>\n"                                         \
+    "  </test>\n"                                           \
+    "</xml>\n"
+
 static void
-recursive_deref(const char *xml_string)
+recursive_ref(void **state)
 {
     xmlNode *xml = NULL;
     xmlNode *parent = NULL;
@@ -48,8 +48,8 @@ recursive_deref(const char *xml_string)
     xmlNode *ref = NULL;
 
     // Parse given XML
-    if (xml_string != NULL) {
-        xml = pcmk__xml_parse(xml_string);
+    if (RECURSIVE_REF_XML != NULL) {
+        xml = pcmk__xml_parse(RECURSIVE_REF_XML);
         assert_non_null(xml);
         doc = xml->doc;
     }
@@ -63,21 +63,6 @@ recursive_deref(const char *xml_string)
 
     pcmk__xml_free(parent);
     pcmk__xml_free(xml);
-}
-
-#define XML_RECURSIVE_REF                                   \
-    "<xml>\n"                                               \
-    "  <test>\n"                                            \
-    "    <rule id='rule1'>\n"                               \
-    "       <rule id-ref='rule1'/>\n"                       \
-    "    </rule>\n"                                         \
-    "  </test>\n"                                           \
-    "</xml>\n"
-
-static void
-recursive_ref(void **state)
-{
-    recursive_deref(XML_RECURSIVE_REF);
 }
 
 PCMK__UNIT_TEST(pcmk__xml_test_setup_group, pcmk__xml_test_teardown_group,
