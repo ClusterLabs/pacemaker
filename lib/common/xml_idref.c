@@ -112,7 +112,7 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
         return NULL;
     }
 
-    xml_name = xml->name;
+    xml_name = (const char *)xml->name;
 
     ref = pcmk__xe_get(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
