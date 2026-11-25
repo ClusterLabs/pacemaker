@@ -48,7 +48,7 @@ stonith_send_broadcast_history(xmlNode *history,
 
     pcmk__xe_set(bcast, PCMK__XA_T, PCMK__VALUE_STONITH_NG);
     pcmk__xe_set(bcast, PCMK__XA_SUBT, PCMK__VALUE_BROADCAST);
-    pcmk__xe_set(bcast, PCMK__XA_ST_OP, STONITH_OP_FENCE_HISTORY);
+    pcmk__xe_set(bcast, fenced.op, STONITH_OP_FENCE_HISTORY);
     pcmk__xe_set_int(bcast, PCMK__XA_ST_CALLOPT, callopts);
 
     pcmk__xml_copy(call_data, history);

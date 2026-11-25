@@ -24,8 +24,6 @@
 
 #include "pacemakerd.h"                 // pacemakerd_*
 
-static GHashTable *pacemakerd_handlers = NULL;
-
 static xmlNode *
 handle_node_cache_request(pcmk__request_t *request)
 {
@@ -160,24 +158,12 @@ handle_unknown_request(pcmk__request_t *request)
     return NULL;
 }
 
-static void
-pacemakerd_register_handlers(void)
-{
-    pcmk__server_command_t handlers[] = {
-        { CRM_OP_RM_NODE_CACHE, handle_node_cache_request },
-        { CRM_OP_PING, handle_ping_request },
-        { CRM_OP_QUIT, handle_shutdown_request },
-        { NULL, handle_unknown_request },
-    };
-
-    pacemakerd_handlers = pcmk__register_handlers(handlers);
-}
-
-void
-pacemakerd_unregister_handlers(void)
-{
-    g_clear_pointer(&pacemakerd_handlers, g_hash_table_destroy);
-}
+pcmk__server_command_t pacemakerd_handlers[] = {
+    { CRM_OP_RM_NODE_CACHE, handle_node_cache_request },
+    { CRM_OP_PING, handle_ping_request },
+    { CRM_OP_QUIT, handle_shutdown_request },
+    { NULL, handle_unknown_request },
+};
 
 void
 pacemakerd_handle_request(pcmk__request_t *request)
@@ -187,11 +173,7 @@ pacemakerd_handle_request(pcmk__request_t *request)
     const char *exec_status_s = NULL;
     const char *reason = NULL;
 
-    if (pacemakerd_handlers == NULL) {
-        pacemakerd_register_handlers();
-    }
-
-    reply = pcmk__process_request(request, pacemakerd_handlers);
+    reply = pcmk__process_request(request, pacemakerd.handlers);
 
     if (reply != NULL) {
         pcmk__log_xml_trace(reply, "Reply");
