@@ -703,19 +703,20 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     pcmk__ipc_free_client_buffer(client->ipc);
 
 done:
-    if (client->ipc && !crm_ipc_connected(client->ipc)) {
+    if ((client->ipc != NULL) && !crm_ipc_connected(client->ipc)) {
         pcmk__err("Connection to %s closed " QB_XS " client=%p condition=%d",
                   client->name, client, condition);
-        rc = G_SOURCE_REMOVE;
-
-    } else if (condition & (G_IO_HUP | G_IO_NVAL | G_IO_ERR)) {
-        pcmk__trace("The connection %s[%p] has been closed (I/O condition=%d)",
-                    client->name, client, condition);
-        rc = G_SOURCE_REMOVE;
+        return G_SOURCE_REMOVE;
     }
 
-    /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called
-     * just before the source is removed from mainloop
+    if (pcmk__any_flags_set(condition, G_IO_HUP|G_IO_NVAL|G_IO_ERR)) {
+        pcmk__trace("The connection %s[%p] has been closed (I/O condition=%d)",
+                    client->name, client, condition);
+        return G_SOURCE_REMOVE;
+    }
+
+    /* G_SOURCE_REMOVE results in mainloop_gio_destroy() being called just
+     * before the source is removed from the main loop
      */
     return rc;
 }
