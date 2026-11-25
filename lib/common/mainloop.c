@@ -684,12 +684,11 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                         pcmk__trace("Connection to %s no longer required",
                                     client->name);
                         rc = G_SOURCE_REMOVE;
-                        pcmk__ipc_free_client_buffer(client->ipc);
-                        break;
                     }
                 }
 
                 pcmk__ipc_free_client_buffer(client->ipc);
+                break;
 
             } while (--max > 0);
 
