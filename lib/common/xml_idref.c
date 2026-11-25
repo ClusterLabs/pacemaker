@@ -19,6 +19,27 @@
 
 /*!
  * \internal
+ * \brief Check if given \p node is a descendant of the given \p ancestor
+ *
+ * \param[in] node      Node whose ancestor to look for
+ * \param[in] ancestor  Ancestor with whom we are comparing
+ *
+ * \return \c true if \p node is a descendant of \p ancestor, or \c false otherwise
+ */
+static bool
+is_descendant(const xmlNode *node, const xmlNode *ancestor)
+{
+    for (const xmlNode *n = node; n != NULL; n = n->parent) {
+        if (n == ancestor) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * \internal
  * \brief Add an XML ID reference to a table
  *
  * \param[in,out] table      Table of ID references to add to
@@ -85,10 +106,13 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
     char *xpath = NULL;
     const char *ref = NULL;
     xmlNode *result = NULL;
+    const char *xml_name = NULL;
 
     if ((xml == NULL) || (doc == NULL)) {
         return NULL;
     }
+
+    xml_name = (const char *)xml->name;
 
     ref = pcmk__xe_get(xml, PCMK_XA_ID_REF);
     if (ref == NULL) {
@@ -102,8 +126,19 @@ pcmk__xe_resolve_idref(xmlNode *xml, xmlDoc *doc)
         pcmk__config_err("Ignoring invalid %s configuration: "
                          PCMK_XA_ID_REF " '%s' does not reference "
                          "a valid object " QB_XS " xpath=%s",
-                         xml->name, ref, xpath);
+                         xml_name, ref, xpath);
     }
+
+    if ((result != NULL) && is_descendant(xml, result)) {
+        pcmk__config_err("Ignoring recursive %s configuration: "
+                         PCMK_XA_ID_REF " '%s' references an ancestor "
+                         QB_XS " xpath=%s",
+                         xml_name, ref, xpath);
+
+        free(xpath);
+        return NULL;
+    }
+
     free(xpath);
     return result;
 }
