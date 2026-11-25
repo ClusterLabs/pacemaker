@@ -1,0 +1,30 @@
+Current cluster status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 ]
+
+  * Full List of Resources:
+    * Clone Set: site-clone [site-rsc] (promotable):
+      * Unpromoted: [ node1 node2 node3 node4 ]
+
+Transition Summary:
+  * Promote    site-rsc:2     ( Unpromoted -> Promoted node3 )
+  * Promote    site-rsc:3     ( Unpromoted -> Promoted node4 )
+
+Executing Cluster Transition:
+  * Resource action: site-rsc        monitor=11000 on node1
+  * Resource action: site-rsc        monitor=11000 on node2
+  * Pseudo action:   site-clone_promote_0
+  * Resource action: site-rsc        promote on node3
+  * Resource action: site-rsc        promote on node4
+  * Pseudo action:   site-clone_promoted_0
+  * Resource action: site-rsc        monitor=10000 on node3
+  * Resource action: site-rsc        monitor=10000 on node4
+
+Revised Cluster Status:
+  * Node List:
+    * Online: [ node1 node2 node3 node4 ]
+
+  * Full List of Resources:
+    * Clone Set: site-clone [site-rsc] (promotable):
+      * Promoted: [ node3 node4 ]
+      * Unpromoted: [ node1 node2 ]
