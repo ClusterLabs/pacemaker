@@ -654,6 +654,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
     long read_rc = 0;
+    const char *buffer = NULL;
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
@@ -664,12 +665,12 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     if (client->ipc == NULL) {
         pcmk__trace("New I/O event for %s after I/O condition %d", client->name,
                     (int) condition);
-        if (client->dispatch_fn_io) {
-            if (client->dispatch_fn_io(client->userdata) < 0) {
-                pcmk__trace("Connection to %s no longer required",
-                            client->name);
-                rc = G_SOURCE_REMOVE;
-            }
+
+        if ((client->dispatch_fn_io != NULL)
+            && (client->dispatch_fn_io(client->userdata) < 0)) {
+
+            pcmk__trace("Connection to %s no longer required", client->name);
+            rc = G_SOURCE_REMOVE;
         }
 
         goto done;
@@ -690,13 +691,13 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
     pcmk__trace("New %ld-byte IPC message from %s after I/O condition %d",
                 read_rc, client->name, (int) condition);
 
-    if (client->dispatch_fn_ipc != NULL) {
-        const char *buffer = crm_ipc_buffer(client->ipc);
+    buffer = crm_ipc_buffer(client->ipc);
 
-        if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
-            pcmk__trace("Connection to %s no longer required", client->name);
-            rc = G_SOURCE_REMOVE;
-        }
+    if ((client->dispatch_fn_ipc != NULL)
+        && (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0)) {
+
+        pcmk__trace("Connection to %s no longer required", client->name);
+        rc = G_SOURCE_REMOVE;
     }
 
     pcmk__ipc_free_client_buffer(client->ipc);
