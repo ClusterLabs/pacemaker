@@ -1283,11 +1283,13 @@ crm_ipc_read(crm_ipc_t *client)
     guint8 *buffer = NULL;
     long rc = 0;
 
-    pcmk__assert((client != NULL) && (client->ipc != NULL));
-
     /* @COMPAT An internal replacement for this function can pcmk__assert() that
-     * client->buffer is NULL
+     * client and client->ipc are non-NULL, and that client->buffer is NULL
      */
+    if ((client == NULL) || (client->ipc == NULL)) {
+        return -EINVAL;
+    }
+
     pcmk__ipc_free_client_buffer(client);
 
     buffer = g_malloc0(crm_ipc_default_buffer_size());
