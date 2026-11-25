@@ -122,6 +122,13 @@ void pcmk__main_loop_timer_stop(pcmk__main_loop_timer_t *timer);
 void pcmk__main_loop_timer_start(pcmk__main_loop_timer_t *timer);
 void pcmk__main_loop_timer_free(pcmk__main_loop_timer_t *timer);
 
+crm_trigger_t *pcmk__main_loop_trigger_new(int priority,
+                                           int (*dispatch_fn)(void *user_data),
+                                           void *user_data);
+void pcmk__main_loop_trigger_set(crm_trigger_t *trigger);
+void pcmk__main_loop_trigger_complete(crm_trigger_t *trigger);
+void pcmk__main_loop_trigger_free(crm_trigger_t *trigger);
+
 #ifdef __cplusplus
 }
 #endif

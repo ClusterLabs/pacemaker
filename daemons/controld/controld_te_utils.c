@@ -101,8 +101,8 @@ te_graph_trigger(void *user_data)
 void
 controld_init_transition_trigger(void)
 {
-    transition_trigger = mainloop_add_trigger(G_PRIORITY_LOW, te_graph_trigger,
-                                              NULL);
+    transition_trigger = pcmk__main_loop_trigger_new(G_PRIORITY_LOW,
+                                                     te_graph_trigger, NULL);
 }
 
 /*!
@@ -112,14 +112,14 @@ controld_init_transition_trigger(void)
 void
 controld_destroy_transition_trigger(void)
 {
-    g_clear_pointer(&transition_trigger, mainloop_destroy_trigger);
+    g_clear_pointer(&transition_trigger, pcmk__main_loop_trigger_free);
 }
 
 void
 controld_trigger_graph_as(const char *fn, int line)
 {
     pcmk__trace("%s:%d - Triggered graph processing", fn, line);
-    mainloop_set_trigger(transition_trigger);
+    pcmk__main_loop_trigger_set(transition_trigger);
 }
 
 static struct abort_timer_s {

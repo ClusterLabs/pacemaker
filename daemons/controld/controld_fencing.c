@@ -1065,7 +1065,7 @@ fencing_history_synced(stonith_t *st, stonith_event_t *st_event)
 static gboolean
 fencing_history_sync_set_trigger(void *user_data)
 {
-    mainloop_set_trigger(fencing_history_sync_trigger);
+    pcmk__main_loop_trigger_set(fencing_history_sync_trigger);
     return G_SOURCE_REMOVE;
 }
 
@@ -1092,7 +1092,8 @@ controld_trigger_fencing_history_sync(bool long_timeout)
      */
     if (fencing_history_sync_trigger == NULL) {
         fencing_history_sync_trigger =
-            mainloop_add_trigger(G_PRIORITY_LOW, sync_fencing_history, NULL);
+            pcmk__main_loop_trigger_new(G_PRIORITY_LOW, sync_fencing_history,
+                                        NULL);
     }
 
     if (long_timeout) {
