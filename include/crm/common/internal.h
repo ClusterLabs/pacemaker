@@ -27,6 +27,7 @@
 #include <crm/common/digest_internal.h>
 #include <crm/common/failcounts_internal.h>
 #include <crm/common/flags_internal.h>
+#include <crm/common/fuzzers_internal.h>
 #include <crm/common/group_internal.h>
 #include <crm/common/health_internal.h>
 #include <crm/common/history_internal.h>
