@@ -307,7 +307,7 @@ process_ping_reply(const xmlNode *reply)
                  pcmk__xe_get(remote_versions, PCMK_XA_EPOCH),
                  pcmk__xe_get(remote_versions, PCMK_XA_NUM_UPDATES), digest);
 
-    sync_our_cib(reply, false);
+    sync_our_cib(reply, false, false);
 }
 
 static void
@@ -559,7 +559,7 @@ based_perform_op_rw(xmlNode *request, const cib__operation_t *operation,
         && pcmk__str_eq(originator, based_cluster_node_name(), pcmk__str_casei)
         && (pcmk__compare_versions(feature_set, "3.19.0") < 0)) {
 
-        sync_our_cib(request, true);
+        sync_our_cib(request, true, false);
     }
 
     if (cib_diff != NULL) {
