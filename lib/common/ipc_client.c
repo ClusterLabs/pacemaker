@@ -1277,6 +1277,27 @@ crm_ipc_ready(crm_ipc_t *client)
     return (rc < 0)? -errno : rc;
 }
 
+/*!
+ * \brief Read a client's available IPC data into the client's buffer
+ *
+ * Data is read in chunks and appended to an intermediate buffer. When a whole
+ * message has been read, the data is assigned to the client's main buffer, and
+ * the intermediate buffer is set to \c NULL.
+ *
+ * If a read returns \c -EAGAIN, the intermediate buffer is left intact so that
+ * the caller can try to finish reading the message again later.
+ *
+ * On any other error, the intermediate buffer is freed and set to \c NULL.
+ *
+ * \param[in,out] client  IPC client
+ *
+ * \return On success, number of bytes in the client buffer excluding the
+ *         header. On failure, legacy Pacemaker return code. In particular,
+ *         \c -EAGAIN indicates that the data read so far has been preserved and
+ *         the caller can try again later.
+ *
+ * \note \p client->buffer will be freed at the beginning of this function.
+ */
 long
 crm_ipc_read(crm_ipc_t *client)
 {
