@@ -150,6 +150,7 @@ register_if_fencing_device(void *data, void *user_data)
     const char *agent = NULL;
     const char *rsc_provides = NULL;
     stonith_key_value_t *params = NULL;
+    int rc = pcmk_rc_ok;
 
     // If this is a collective resource, check children instead
     if (rsc->priv->children != NULL) {
@@ -175,12 +176,36 @@ register_if_fencing_device(void *data, void *user_data)
         return;
     }
 
-    if ((fencing_watchdog_timeout_ms <= 0)
-        && pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)) {
+    agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
 
-        pcmk__info("Ignoring fencing device %s because watchdog fencing is "
-                   "disabled", rsc->id);
-        return;
+    /* A fencing device is treated as the watchdog device only if it is named
+     * "watchdog" with agent fence_watchdog, and watchdog fencing is enabled.
+     * Skip other combinations, which device registration would reject.
+     */
+    if (pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID, pcmk__str_none)
+        || pcmk__str_any_of(agent, STONITH_WATCHDOG_AGENT,
+                            STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
+
+        if (fencing_watchdog_timeout_ms <= 0) {
+            pcmk__info("Ignoring fencing device %s because watchdog fencing "
+                       "is disabled", rsc->id);
+            return;
+
+        } else if (!pcmk__str_any_of(agent, STONITH_WATCHDOG_AGENT,
+                                     STONITH_WATCHDOG_AGENT_INTERNAL, NULL)) {
+            pcmk__warn("Ignoring fencing device %s because a fencing device "
+                       "named '" STONITH_WATCHDOG_ID "' must use agent "
+                       "'" STONITH_WATCHDOG_AGENT "'", rsc->id);
+            return;
+
+        } else if (!pcmk__str_eq(rsc->id, STONITH_WATCHDOG_ID,
+                                 pcmk__str_none)) {
+            pcmk__warn("Ignoring fencing device %s because agent "
+                       "'" STONITH_WATCHDOG_AGENT "' can be used only by a "
+                       "fencing device named '" STONITH_WATCHDOG_ID "'",
+                       rsc->id);
+            return;
+        }
     }
 
     // Check whether local node is allowed to run resource
@@ -212,8 +237,6 @@ register_if_fencing_device(void *data, void *user_data)
 
     pcmk__debug("Reloading configuration of fencing device %s", rsc->id);
 
-    agent = pcmk__xe_get(rsc->priv->xml, PCMK_XA_TYPE);
-
     rsc_provides = g_hash_table_lookup(rsc->priv->meta,
                                        PCMK_FENCING_PROVIDES);
 
@@ -229,7 +252,16 @@ register_if_fencing_device(void *data, void *user_data)
     xml = create_device_registration_xml(rsc_id, st_namespace_any, agent,
                                          params, rsc_provides);
     stonith__key_value_freeall(params, true, true);
-    pcmk__assert(fenced_device_register(xml, true) == pcmk_rc_ok);
+
+    /* Device registration can legitimately fail for user configuration (for
+     * example, a misconfigured watchdog fence device). Such a failure must
+     * not take down the fencer.
+     */
+    rc = fenced_device_register(xml, true);
+    if (rc != pcmk_rc_ok) {
+        pcmk__warn("Could not register fencing device %s: %s",
+                   rsc_id, pcmk_rc_str(rc));
+    }
     pcmk__xml_free(xml);
 }
 

@@ -56,6 +56,7 @@ static pcmk__output_t *out = NULL;
 static gchar **processed_args = NULL;
 static GOptionContext *context = NULL;
 static gchar **log_files = NULL;
+static gchar *cib_filename = NULL;
 
 void
 do_local_reply(const xmlNode *notify_src, pcmk__client_t *client,
@@ -277,6 +278,11 @@ static GOptionEntry entries[] = {
       &fenced.stand_alone, N_("Intended for use in regression testing only"),
       NULL },
 
+    { "cib-file", 0, G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME, &cib_filename,
+      N_("Process CIB from named file (with --stand-alone, intended for use "
+         "in regression testing only)"),
+      NULL },
+
     { "logfile", 'l', G_OPTION_FLAG_NONE, G_OPTION_ARG_FILENAME_ARRAY,
       &log_files, N_("Send logs to the additional named logfile"), NULL },
 
@@ -421,6 +427,24 @@ main(int argc, char **argv)
 
     fenced_init_device_table();
     init_topology_list();
+
+    if (cib_filename != NULL) {
+        // Load fencing-related configuration from a file (for testing)
+        if (!fenced.stand_alone) {
+            fenced.ec = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
+                        "--cib-file is supported only with --stand-alone");
+            goto done;
+        }
+        rc = fenced_load_cib_file(cib_filename);
+        if (rc != pcmk_rc_ok) {
+            fenced.ec = CRM_EX_FATAL;
+            g_set_error(&error, PCMK__EXITC_ERROR, fenced.ec,
+                        "Could not process CIB file %s: %s",
+                        cib_filename, pcmk_rc_str(rc));
+            goto done;
+        }
+    }
 
     if (!fenced_ipc_init()) {
         fenced.ec = CRM_EX_FATAL;
