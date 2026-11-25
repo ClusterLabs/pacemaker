@@ -118,6 +118,11 @@ pcmk__client_type_str(uint64_t client_type)
  * \param[in]     data   The received IPC message or message portion.
  *
  * \return Standard Pacemaker return code
+ *
+ * \note On \c pcmk_rc_ok or \c pcmk_rc_ipc_more, the buffer begins with a valid
+ *       header. This header's \c size field is guaranteed to match the size of
+ *       the payload received thus far -- that is, the current length of the
+ *       buffer minus the size of the header itself.
  */
 int
 pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
@@ -216,6 +221,9 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
 
     /* The buffer's header should have a size that matches the full size of
      * the received message, not just the last chunk of it.
+     *
+     * @FIXME (*buffer)->len is a gsize, while full_header->size is a uint32_t.
+     * The assignment could overflow if *buffer is very long.
      */
     full_header = (void *) (*buffer)->data;
     full_header->size = (*buffer)->len - sizeof(pcmk__ipc_header_t);

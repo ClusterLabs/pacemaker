@@ -1343,11 +1343,6 @@ crm_ipc_read(crm_ipc_t *client)
     client->buffer = client->event_buffer;
     client->event_buffer = NULL;
 
-    if (client->buffer->len == 0) {
-        rc = 0;
-        goto done;
-    }
-
     /* Data length excluding the header.
      *
      * @FIXME client->buffer->len is an unsigned int. It could overflow a long
