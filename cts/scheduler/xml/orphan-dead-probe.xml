@@ -1,0 +1,71 @@
+<!-- Test clone notify operations with dead probes beyond clone-max
+     - clone-max=2 (only 2 instances allowed)
+     - 1 instance Started on node1
+     - rc=7 (NOT_RUNNING) probes on node3
+     - Without fix: creates orphan stopped instance for node3
+     - With fix: no phantom, clean notify metadata
+     Fake op-digest are intentional, to trigger the restart, as orphaned instance
+     test-clone:2 is seen only in full cluster status or in the transition graphs
+-->
+<cib crm_feature_set="3.19.7" validate-with="pacemaker-3.0" epoch="1" num_updates="1" admin_epoch="0" have-quorum="1" dc-uuid="1">
+  <configuration>
+    <crm_config>
+      <cluster_property_set id="cib-bootstrap-options">
+        <nvpair id="cib-bootstrap-options-stonith-enabled" name="stonith-enabled" value="false"/>
+        <nvpair id="cib-bootstrap-options-no-quorum-policy" name="no-quorum-policy" value="ignore"/>
+      </cluster_property_set>
+    </crm_config>
+    <nodes>
+      <node id="1" uname="node1"/>
+      <node id="2" uname="node2"/>
+      <node id="3" uname="node3"/>
+    </nodes>
+    <resources>
+      <clone id="test-clone">
+        <primitive id="test-resource" class="ocf" provider="pacemaker" type="Dummy">
+          <operations>
+            <op id="test-resource-monitor" name="monitor" interval="10s"/>
+            <op id="test-resource-start" name="start" interval="0s" timeout="20s"/>
+            <op id="test-resource-stop" name="stop" interval="0s" timeout="20s"/>
+          </operations>
+        </primitive>
+        <meta_attributes id="test-clone-meta">
+          <nvpair id="test-clone-meta-clone-max" name="clone-max" value="2"/>
+          <nvpair id="test-clone-meta-notify" name="notify" value="true"/>
+        </meta_attributes>
+      </clone>
+    </resources>
+    <constraints/>
+  </configuration>
+  <status>
+    <node_state id="1" uname="node1" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="1">
+        <lrm_resources>
+          <lrm_resource id="test-resource" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="test-resource_last_0" operation_key="test-resource_start_0" operation="start" crm-debug-origin="do_update_resource" transition-key="1:1:0:00000000-0000-0000-0000-000000000001" transition-magic="0:0;1:1:0:00000000-0000-0000-0000-000000000001" exit-reason="" on_node="node1" call-id="10" rc-code="0" op-status="0" interval="0" last-rc-change="1000000" exec-time="50" queue-time="0" op-digest="abc123"/>
+            <lrm_rsc_op id="test-resource_monitor_10000" operation_key="test-resource_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" transition-key="2:1:0:00000000-0000-0000-0000-000000000001" transition-magic="0:0;2:1:0:00000000-0000-0000-0000-000000000001" exit-reason="" on_node="node1" call-id="11" rc-code="0" op-status="0" interval="10000" last-rc-change="1000050" exec-time="20" queue-time="0" op-digest="def456"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="2" uname="node2" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="2">
+        <lrm_resources>
+          <lrm_resource id="test-resource" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="test-resource_last_0" operation_key="test-resource_start_0" operation="start" crm-debug-origin="do_update_resource" transition-key="5:1:0:00000000-0000-0000-0000-000000000001" transition-magic="0:0;5:1:0:00000000-0000-0000-0000-000000000001" exit-reason="" on_node="node2" call-id="10" rc-code="0" op-status="0" interval="0" last-rc-change="1000000" exec-time="50" queue-time="0" op-digest="abc123"/>
+            <lrm_rsc_op id="test-resource_monitor_10000" operation_key="test-resource_monitor_10000" operation="monitor" crm-debug-origin="do_update_resource" transition-key="6:1:0:00000000-0000-0000-0000-000000000001" transition-magic="0:0;6:1:0:00000000-0000-0000-0000-000000000001" exit-reason="" on_node="node2" call-id="11" rc-code="0" op-status="0" interval="10000" last-rc-change="1000050" exec-time="20" queue-time="0" op-digest="def456"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+    <node_state id="3" uname="node3" in_ccm="true" crmd="online" join="member" expected="member">
+      <lrm id="3">
+        <lrm_resources>
+          <lrm_resource id="test-resource" type="Dummy" class="ocf" provider="pacemaker">
+            <lrm_rsc_op id="test-resource_last_0" operation_key="test-resource_monitor_0" operation="monitor" crm-debug-origin="do_update_resource" transition-key="7:1:7:00000000-0000-0000-0000-000000000001" transition-magic="0:7;7:1:7:00000000-0000-0000-0000-000000000001" exit-reason="" on_node="node3" call-id="5" rc-code="7" op-status="0" interval="0" last-rc-change="1000000" exec-time="10" queue-time="0" op-digest="abc123"/>
+          </lrm_resource>
+        </lrm_resources>
+      </lrm>
+    </node_state>
+  </status>
+</cib>
