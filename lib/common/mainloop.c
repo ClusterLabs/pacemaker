@@ -684,12 +684,14 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                         pcmk__trace("Connection to %s no longer required",
                                     client->name);
                         rc = G_SOURCE_REMOVE;
+                        pcmk__ipc_free_client_buffer(client->ipc);
+                        break;
                     }
                 }
 
                 pcmk__ipc_free_client_buffer(client->ipc);
 
-            } while ((rc == G_SOURCE_CONTINUE) && (--max > 0));
+            } while (--max > 0);
 
         } else {
             pcmk__trace("New I/O event for %s after I/O condition %d",
