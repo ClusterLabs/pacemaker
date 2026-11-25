@@ -1,5 +1,5 @@
 /*
- * Copyright 2024 the Pacemaker project contributors
+ * Copyright 2024-2026 the Pacemaker project contributors
  *
  * The version control history for this file may have further details.
  *
@@ -20,7 +20,7 @@
  * Shared data
  */
 
-static pcmk_rule_input_t rule_input = {
+static pcmk__rule_input_t rule_input = {
     // These are the only members used to evaluate operation expressions
     .op_name = PCMK_ACTION_MONITOR,
     .op_interval_ms = 10000,
