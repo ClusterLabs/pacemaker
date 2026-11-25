@@ -653,6 +653,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
 {
     gboolean rc = G_SOURCE_CONTINUE;
     mainloop_io_t *client = data;
+    long read_rc = 0;
 
     pcmk__assert(client->fd == g_io_channel_unix_get_fd(gio));
 
@@ -660,39 +661,7 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
         goto done;
     }
 
-    if (client->ipc) {
-        long read_rc = crm_ipc_read(client->ipc);
-
-        if (read_rc <= 0) {
-            pcmk__trace("Could not read IPC message from %s: %s (%ld)",
-                        client->name, pcmk_strerror(read_rc), read_rc);
-
-            if (read_rc != -EAGAIN) {
-                pcmk__ipc_free_client_buffer(client->ipc);
-            }
-
-            goto done;
-        }
-
-        pcmk__trace("New %ld-byte IPC message from %s after I/O condition %d",
-                    read_rc, client->name, (int) condition);
-
-        if (client->dispatch_fn_ipc != NULL) {
-            const char *buffer = crm_ipc_buffer(client->ipc);
-
-            if (client->dispatch_fn_ipc(buffer, read_rc,
-                                        client->userdata) < 0) {
-
-                pcmk__trace("Connection to %s no longer required",
-                            client->name);
-                rc = G_SOURCE_REMOVE;
-            }
-        }
-
-        pcmk__ipc_free_client_buffer(client->ipc);
-        goto done;
-
-    } else {
+    if (client->ipc == NULL) {
         pcmk__trace("New I/O event for %s after I/O condition %d", client->name,
                     (int) condition);
         if (client->dispatch_fn_io) {
@@ -702,7 +671,35 @@ mainloop_gio_callback(GIOChannel *gio, GIOCondition condition, void *data)
                 rc = G_SOURCE_REMOVE;
             }
         }
+
+        goto done;
     }
+
+    read_rc = crm_ipc_read(client->ipc);
+    if (read_rc <= 0) {
+        pcmk__trace("Could not read IPC message from %s: %s (%ld)",
+                    client->name, pcmk_strerror(read_rc), read_rc);
+
+        if (read_rc != -EAGAIN) {
+            pcmk__ipc_free_client_buffer(client->ipc);
+        }
+
+        goto done;
+    }
+
+    pcmk__trace("New %ld-byte IPC message from %s after I/O condition %d",
+                read_rc, client->name, (int) condition);
+
+    if (client->dispatch_fn_ipc != NULL) {
+        const char *buffer = crm_ipc_buffer(client->ipc);
+
+        if (client->dispatch_fn_ipc(buffer, read_rc, client->userdata) < 0) {
+            pcmk__trace("Connection to %s no longer required", client->name);
+            rc = G_SOURCE_REMOVE;
+        }
+    }
+
+    pcmk__ipc_free_client_buffer(client->ipc);
 
 done:
     if (client->ipc && !crm_ipc_connected(client->ipc)) {
