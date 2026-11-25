@@ -1281,6 +1281,7 @@ long
 crm_ipc_read(crm_ipc_t *client)
 {
     guint8 *buffer = NULL;
+    const pcmk__ipc_header_t *header = NULL;
     long rc = 0;
 
     /* @COMPAT An internal replacement for this function can pcmk__assert() that
@@ -1297,7 +1298,6 @@ crm_ipc_read(crm_ipc_t *client)
     do {
         ssize_t bytes = qb_ipcc_event_recv(client->ipc, buffer,
                                            crm_ipc_default_buffer_size(), 0);
-        pcmk__ipc_header_t *header = (void *) buffer;
 
         if (bytes <= 0) {
             pcmk__trace("No message received from %s IPC: %s",
@@ -1314,6 +1314,8 @@ crm_ipc_read(crm_ipc_t *client)
 
             goto done;
         }
+
+        header = (const pcmk__ipc_header_t *) buffer;
 
         if (bytes != header->size + sizeof(pcmk__ipc_header_t)) {
             pcmk__err("Message size does not match header");
@@ -1343,12 +1345,8 @@ crm_ipc_read(crm_ipc_t *client)
     client->buffer = client->event_buffer;
     client->event_buffer = NULL;
 
-    /* Data length excluding the header.
-     *
-     * @FIXME client->buffer->len is an unsigned int. It could overflow a long
-     * if both are 32 bits wide.
-     */
-    rc = client->buffer->len - sizeof(pcmk__ipc_header_t);
+    header = (const pcmk__ipc_header_t *) client->buffer->data;
+    rc = (long) header->size;
 
 done:
     g_free(buffer);

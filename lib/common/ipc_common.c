@@ -14,7 +14,7 @@
 #include <stdbool.h>              // bool, false, true
 #include <stdlib.h>               // NULL
 
-#include <glib.h>                 // GByteArray, g_byte_array_append, guint8
+#include <glib.h>                 // GByteArray, g_*, guint8, MIN
 #include <qb/qbipc_common.h>      // qb_ipc_response_header
 
 #include <crm/common/ipc.h>       // crm_ipc_flags
@@ -130,6 +130,7 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
     pcmk__ipc_header_t *full_header = NULL;
     pcmk__ipc_header_t *header = (void *) data;
     const guint8 *payload = (guint8 *) data + sizeof(pcmk__ipc_header_t);
+    long long full_payload_size = 0;
     int rc = pcmk_rc_ok;
 
     if (!pcmk__valid_ipc_header(header)) {
@@ -216,17 +217,33 @@ pcmk__ipc_msg_append(GByteArray **buffer, guint8 *data)
         g_byte_array_append(*buffer, &zero, 1);
     }
 
+    full_payload_size = (*buffer)->len - sizeof(pcmk__ipc_header_t);
+
+#if (UINT_MAX > MIN(UINT32_MAX, LONG_MAX))
+    /* (*buffer)->len is an unsigned int. full_header->size is a uint32_t, and
+     * caller crm_ipc_read() casts full_header->size to a long. If overflow is
+     * possible, check for it here.
+     *
+     * It is still possible for the g_byte_array_append() calls to have
+     * overflowed (*buffer)->len, but that's a GLib implementation problem.
+     *
+     * An overflow here would mean the message is impractically huge anyway.
+     */
+    if (full_payload_size > MIN(UINT32_MAX, LONG_MAX)) {
+        pcmk__err("Message size %lld is greater than the max (%lld)",
+                  full_payload_size, MIN(UINT32_MAX, LONG_MAX));
+        return EBADMSG;
+    }
+#endif  // (UINT_MAX > MIN(UINT32_MAX, LONG_MAX))
+
     pcmk__trace("Text = %s", payload);
     pcmk__trace("Buffer = %s", (*buffer)->data + sizeof(pcmk__ipc_header_t));
 
     /* The buffer's header should have a size that matches the full size of
      * the received message, not just the last chunk of it.
-     *
-     * @FIXME (*buffer)->len is a gsize, while full_header->size is a uint32_t.
-     * The assignment could overflow if *buffer is very long.
      */
     full_header = (void *) (*buffer)->data;
-    full_header->size = (*buffer)->len - sizeof(pcmk__ipc_header_t);
+    full_header->size = full_payload_size;
 
     return rc;
 }
