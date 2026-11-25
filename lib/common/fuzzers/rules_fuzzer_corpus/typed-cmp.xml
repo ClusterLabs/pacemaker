@@ -1,0 +1,1 @@
+<rules-fuzz><node-attrs><nvpair id="mem-k" name="mem" value="16"/><nvpair id="ra-version-k" name="ra-version" value="1.2.10"/></node-attrs><rule id="r-num"><expression id="e1" attribute="mem" operation="gte" value="8" type="integer"/></rule><rule id="r-ver"><expression id="e2" attribute="ra-version" operation="lt" value="2.0" type="version"/></rule></rules-fuzz>
