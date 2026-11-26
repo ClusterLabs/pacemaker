@@ -775,9 +775,9 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
         }
 
     // Continue if something remains to search, and we've matched so far
-    } while ((rc == 2) && target);
+    } while ((rc == 2) && (target != NULL));
 
-    if (target) {
+    if (target != NULL) {
         pcmk__if_tracing(
             {
                 char *path = (char *) xmlGetNodePath(target);
