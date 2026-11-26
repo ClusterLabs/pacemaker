@@ -12,7 +12,6 @@
 #include <crm/common/unittest_internal.h>
 
 #include <float.h>  // DBL_MAX, etc.
-#include <math.h>   // fabs()
 
 static void
 empty_input_string(void **state)
