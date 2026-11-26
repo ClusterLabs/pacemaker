@@ -106,6 +106,160 @@ main(int argc, char **argv)
     }
 
     if (args->version) {
+        {
+            #define ORIG_CIB                                                            \
+    "<" PCMK_XE_CIB " " PCMK_XA_ADMIN_EPOCH "=\"0\""                        \
+                    " " PCMK_XA_EPOCH "=\"0\""                              \
+                    " " PCMK_XA_NUM_UPDATES "=\"0\">"                       \
+      "<" PCMK_XE_CONFIGURATION ">"                                         \
+        "<" PCMK_XE_CRM_CONFIG "/>"                                         \
+        "<" PCMK_XE_NODES "/>"                                              \
+        "<" PCMK_XE_RESOURCES "/>"                                          \
+        "<" PCMK_XE_CONSTRAINTS "/>"                                        \
+      "</" PCMK_XE_CONFIGURATION ">"                                        \
+      "<" PCMK_XE_STATUS "/>"                                               \
+    "</" PCMK_XE_CIB ">"
+
+            #define BASE_CIB                                                              \
+    "<cib crm_feature_set=\"3.19.0\" validate-with=\"pacemaker-3.10\""        \
+    "     admin_epoch=\"0\" epoch=\"1\" num_updates=\"0\">"                   \
+    "  <configuration>"                                                       \
+    "    <crm_config>"                                                        \
+    "      <cluster_property_set id=\"cib-bootstrap-options\">"               \
+    "        <nvpair id=\"cib-bootstrap-options-stonith-enabled\""            \
+    "               name=\"stonith-enabled\" value=\"false\"/>"               \
+    "      </cluster_property_set>"                                           \
+    "    </crm_config>"                                                       \
+    "    <nodes>"                                                             \
+    "      <node id=\"1\" uname=\"node1\"/>"                                  \
+    "      <node id=\"2\" uname=\"node2\"/>"                                  \
+    "    </nodes>"                                                            \
+    "    <resources>"                                                         \
+    "      <primitive id=\"r1\" class=\"ocf\" provider=\"heartbeat\""         \
+    "                 type=\"Dummy\">"                                        \
+    "        <operations>"                                                    \
+    "          <op id=\"r1-monitor\" name=\"monitor\" interval=\"10s\"/>"     \
+    "        </operations>"                                                   \
+    "      </primitive>"                                                      \
+    "      <primitive id=\"r2\" class=\"ocf\" provider=\"heartbeat\""         \
+    "                 type=\"Stateful\"/>"                                    \
+    "    </resources>"                                                        \
+    "    <constraints>"                                                       \
+    "      <rsc_location id=\"loc1\" rsc=\"r1\" node=\"node1\" score=\"100\"/>" \
+    "    </constraints>"                                                      \
+    "  </configuration>"                                                      \
+    "  <status/>"                                                             \
+    "</cib>"
+
+            #define CREATE_THEN_DELETE                                                  \
+    "<" PCMK_XE_DIFF " " PCMK_XA_FORMAT "=\"2\">"                           \
+      "<" PCMK_XE_CHANGE " " PCMK_XA_OPERATION "=\"" PCMK_VALUE_CREATE "\"" \
+                        " " PCMK_XA_PATH "=\"/" PCMK_XE_CIB                 \
+                            "/" PCMK_XE_CONFIGURATION                       \
+                            "/" PCMK_XE_RESOURCES "\""                      \
+                        " position=\"0\">"                      \
+        "<" PCMK_XE_PRIMITIVE " " PCMK_XA_ID "=\"r\"/>"                     \
+      "</" PCMK_XE_CHANGE ">"                                               \
+      "<" PCMK_XE_CHANGE " " PCMK_XA_OPERATION "=\"" PCMK_VALUE_DELETE "\"" \
+                        " " PCMK_XA_PATH "=\"/" PCMK_XE_CIB                 \
+                            "/" PCMK_XE_CONFIGURATION                       \
+                            "/" PCMK_XE_RESOURCES "\"/>"                    \
+    "</" PCMK_XE_DIFF ">"
+
+        #define PATCHSET_585479762                                          \
+            "<diff format=\"2\" digest=\"0123456789abcdef0abcdef0123456789abcdef\">"    \
+                "<version>"                                                             \
+                    "<source admin_epoch=\"0\" epoch=\"1\" num_updates=\"1\"/>"         \
+                "</version>"                                                            \
+                "<change operation=\"delete\" path=\"\"/>"                              \
+                "/status\" />"                                                          \
+            "</diff>"
+
+        #define PATCHSET_585402262                                          \
+            "<diff format=\"2\">"   \
+                "<version>"         \
+                    "KKKKKKKKKKKKKKKKn_epoch=\"0\" epoch=\"1\" num_ustatuspdates=\"6866crm_f\"/>"    \
+                "</version>"        \
+                    "<change operation=\"create\" path=\"ocib/config@'dri1']/operations/op[@id='r1-monitor']\"><op interval=\"30s\" name=\"monitor\" id=\"r2-monitor\" />%%%%%%%%%%%'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%    <change-result>"    \
+                            "/cib/cjnfiguration   <op id=\"r2-monitor\" name=\"monitor\" interval=\"30s\" />"   \
+                        "</change-result>"  \
+                    "</change>29"           \
+            "</diff>"
+
+        #define PATCHSET_584890034  \
+            "<df format=\"2\"><e operation=\"move\" path=\"\" position=\"2\"/></df>"
+
+        #define PATCHSET_583469453  \
+            "<diff format=\"2\">" \
+  "<version>" \
+    "<source admin_epoch=\"0\" epoch=\"1\" num_upd=\"0\"/>" \
+    "<target admin_epoch=\"0\" epoch=\"1\" num_updates=\"1\"/>" \
+  "</version>" \
+  "<change operation=\"delete\" path=\"/cib/configuration/nodes/node[@id='1']\" />" \
+  "<change operation=\"create\" path=\"/cib/configuration/constraints\" position=\"1\">t    <rsc_location id=\"loc2\" rsc=\"r2\" node=\"node2\" score=\"-IitioITY\"/>" \
+  "</change><change operation=\"create\" path=\"/cib/configuration/constraints\" position=\"1\">t    <rsc_location id=\"loc2\" rsc=\"r2\" node=\"node2\" score=\"-IitioITY\"/>" \
+  "</change>" \
+  "<change operation=\"modify\" path=\"Acib/configuration/crm_config/cluster_property_set[@id='cib-bootstrap-options']\">" \
+    "<change-list>" \
+      "<change-attr name=\"id\" operatfon=\"set\" value=\"cib-bootstrap-options\"/>" \
+    "</change-list>" \
+    "<change-result>" \
+      "<cluster_property_set id=\"cib-bootstge-list> " \
+  "\" score=\"6\"/>" \
+    "</change-result>" \
+  "</change>" \
+"</diff>"
+
+            #define PATCHSET_586237603 \
+            "<diff format=\"2\">" \
+  "<version>" \
+    "<source admin_hiddeepoch=\"0\" epoch=\"1\" num_updates=\"0\"/>" \
+    "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY=YYYYYYYYYYYYYYYYYYY<trgaet admin_epoch=\"6\" epoch=\"1\" num_updates=\"1\"/>" \
+ "z </version>" \
+ "`<change operation=\"modify\" path=\"/cib/configurationr/esouxmlrces/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"modify\" path=\"/cib/configuration/resources/primi\" patth=\"/cib/configuration/resources/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"mqdify\" path=\"/cib/configuration/resourcns/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"modify\" path=\"/cib/configuration/resources/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"modify\" path=\"/cib/bonfiguration/resources/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"codefy\" path=\"/cib/configuration/resources/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change oqeration=\"modifyation/resources/primitive[@id='r1']/operations/op[@id='r1-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"modify\" path=\"/cib/configuration/resources/primitive[@id='r1']/operations/op[@id='r!-monitor']\">" \
+"change-result>" \
+  "</change><change operation=\"codefy\" path=\"/cib/ionfiguratio[@id='r1-monitor']\">" \
+"change-result/><ce /><ce />s /><ce />s /><st /><us />ib/>/><?ce />/>&><ce />?<ce /><ce /><status /><statss /><cta /><ce /><ce /><ce /><ce /><?ctusapi-vere /><ce /><ce /><cf />?><ce /><ce /><ce /><ce /><?ce />/>?><ce />?<ce /><sta/><ss /><ce /><ce /><ce />s /><ce />s /><st /><us />ib />><st />=us />><s/><ss />i4us />ib /><s/> s<s/><st /><t /><us /><st /><us /><st /><us /><us />/n/><atus />><sfzgupation />hange></change><version>" \
+"</version></diff>"
+
+
+            //xmlNode *cib = pcmk__xml_parse(ORIG_CIB);
+            //xmlNode *patchset = pcmk__xml_parse(CREATE_THEN_DELETE);
+            xmlNode *cib = pcmk__xml_parse(BASE_CIB);
+            //xmlNode *patchset = pcmk__xml_parse(PATCHSET_585479762);
+            //xmlNode *patchset = pcmk__xml_parse(PATCHSET_585402262);
+            //xmlNode *patchset = pcmk__xml_parse(PATCHSET_584890034);
+            //xmlNode *patchset = pcmk__xml_parse(PATCHSET_583469453);
+            xmlNode *patchset = pcmk__xml_parse(PATCHSET_586237603);
+            xmlNode *source = pcmk__xml_parse(BASE_CIB);
+
+            xml_apply_patchset(cib, patchset, false);
+
+            pcmk__xml_mark_changes(source, patchset);
+
+            // The tree must still be intact (not freed out from under us)
+            pcmk__assert(pcmk__str_eq((const char *) cib->name, PCMK_XE_CIB,
+                                      pcmk__str_none));
+
+            pcmk__xml_free(patchset);
+            pcmk__xml_free(cib);
+            goto done;
+        }
+
         out->version(out);
         goto done;
     }
