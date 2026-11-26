@@ -77,4 +77,3 @@ libpe_status_test_la_CFLAGS += -fno-inline
 
 libpe_status_test_la_LIBADD = $(top_builddir)/lib/common/libcrmcommon_test.la
 libpe_status_test_la_LIBADD += -lcmocka
-libpe_status_test_la_LIBADD += -lm

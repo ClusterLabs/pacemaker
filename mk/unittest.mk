@@ -1,5 +1,5 @@
 #
-# Copyright 2022-2024 the Pacemaker project contributors
+# Copyright 2022-2026 the Pacemaker project contributors
 #
 # The version control history for this file may have further details.
 #
@@ -21,6 +21,3 @@ if BUILD_COVERAGE
 LDADD += -lgcov
 endif
 LDADD += -lcmocka
-# When -fno-builtin is used, -lm also needs to be added.  See the comments in
-# lib/common/Makefile.am for libcrmcommon_test_la_CFLAGS.
-LDADD += -lm

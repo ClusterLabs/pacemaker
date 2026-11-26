@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #include <cmocka.h>
+#include <glib.h>                       // G_APPROX_VALUE
 
 #include <crm/common/internal.h>        // pcmk__output_t
 
@@ -35,7 +36,7 @@ extern "C" {
 
 #ifndef assert_float_equal
 #define assert_float_equal(a, b, epsilon)   \
-        assert_true(fabs((a) - (b)) < (epsilon))
+        assert_true(G_APPROX_VALUE(a, b, epsilon))
 #endif  // ifndef assert_float_equal
 
 /* @COMPAT CMocka 2.0.0:

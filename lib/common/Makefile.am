@@ -35,15 +35,6 @@ libcrmcommon_la_LDFLAGS	= -version-info 70:1:2
 libcrmcommon_la_CFLAGS	= $(CFLAGS_HARDENED_LIB)
 libcrmcommon_la_LDFLAGS	+= $(LDFLAGS_HARDENED_LIB)
 
-# If configured with --with-profiling or --with-coverage, BUILD_PROFILING will
-# be set and -fno-builtin will be added to the CFLAGS.  However, libcrmcommon
-# uses the fabs() function which is normally supplied by gcc as one of its
-# builtins.  Therefore we need to explicitly link against libm here or the
-# tests won't link.
-if BUILD_PROFILING
-libcrmcommon_la_LIBADD	= -lm
-endif
-
 ## Library sources (*must* use += format for bumplibs)
 libcrmcommon_la_SOURCES	= acl.c
 libcrmcommon_la_SOURCES	+= action_relation.c
@@ -138,13 +129,10 @@ libcrmcommon_test_la_CFLAGS += -fno-builtin
 libcrmcommon_test_la_CFLAGS += -fno-inline
 libcrmcommon_test_la_CFLAGS += -Wno-error=aggregate-return
 
-# If -fno-builtin is used, -lm also needs to be added.  See the comment at
-# BUILD_PROFILING above.
 libcrmcommon_test_la_LIBADD	= $(libcrmcommon_la_LIBADD)
 if BUILD_COVERAGE
 libcrmcommon_test_la_LIBADD 	+= -lgcov
 endif
 libcrmcommon_test_la_LIBADD 	+= -lcmocka
-libcrmcommon_test_la_LIBADD 	+= -lm
 
 nodist_libcrmcommon_test_la_SOURCES = $(nodist_libcrmcommon_la_SOURCES)
