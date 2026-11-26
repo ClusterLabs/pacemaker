@@ -766,12 +766,18 @@ search_v2_xpath(const xmlNode *top, const char *key, int target_position)
                     break;
             }
             current = remainder;
+
+        } else {
+            /* No leading slash or an empty component, so don't return the
+             * document node or a partial match
+             */
+            target = NULL;
         }
 
     // Continue if something remains to search, and we've matched so far
-    } while ((rc == 2) && target);
+    } while ((rc == 2) && (target != NULL));
 
-    if (target) {
+    if (target != NULL) {
         pcmk__if_tracing(
             {
                 char *path = (char *) xmlGetNodePath(target);
